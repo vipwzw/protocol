@@ -31,9 +31,15 @@ contract WETH9V06Test is Test {
     }
 
     function testShouldRevertIfCallerAttemptsToDepositMoreThanTheirBalance() public {
-        vm.prank(user);
-        vm.expectRevert();
-        etherToken.deposit{value: 1e20 + 1}();
+        vm.startPrank(user);
+        bool success = false;
+        try etherToken.deposit{value: 1e20 + 1}() {
+            success = true;
+        } catch {
+            success = false;
+        }
+        vm.stopPrank();
+        assertEq(success, false, "Expected transaction to revert");
     }
 
     function testShouldConvertDepositedETHToWrappedETH() public {

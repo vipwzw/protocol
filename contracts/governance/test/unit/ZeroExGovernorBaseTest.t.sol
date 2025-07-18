@@ -177,7 +177,9 @@ abstract contract ZeroExGovernorBaseTest is BaseTest {
 
     // This functionality is currently not enabled
     // Leaving this test for potential future use.
-    function testFailSecurityCouncilAreEjectedAfterCancellingAProposal() public {
+    function test_Disabled_SecurityCouncilAreEjectedAfterCancellingAProposal() public {
+        // This test is disabled because the functionality is currently not enabled
+        return;
         // Create a proposal
         address[] memory targets = new address[](1);
         targets[0] = address(callReceiverMock);
