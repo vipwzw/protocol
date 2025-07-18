@@ -205,14 +205,16 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Generate coverage for Governance contracts
+      - name: Build and generate coverage for Governance contracts
         working-directory: contracts/governance
         run: |
+          forge build
           forge coverage --report lcov --report summary
 
-      - name: Generate coverage for ERC20 contracts
+      - name: Build and generate coverage for ERC20 contracts
         working-directory: contracts/erc20
         run: |
+          forge build
           forge coverage --report lcov --report summary
 
       - name: Upload coverage to Codecov
