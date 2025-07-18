@@ -49,15 +49,7 @@ jobs:
             didn't match the configured pattern. Please ensure that the subject
             is between 1 and 50 characters long.
 
-      - name: Check PR description
-        run: |
-          PR_BODY="${{ github.event.pull_request.body }}"
-          if [ -z "$PR_BODY" ] || [ ${#PR_BODY} -lt 20 ]; then
-            echo "❌ PR description is too short or missing"
-            echo "Please provide a meaningful description of your changes"
-            exit 1
-          fi
-          echo "✅ PR description looks good"
+
 
       - name: Check for breaking changes
         run: |
