@@ -14,42 +14,22 @@ env:
 
 jobs:
   dependency-review:
-    name: Dependency Security Audit
+    name: Dependency Review
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Check for known vulnerabilities
+          fail-on-severity: moderate
+          
+      - name: Additional Security Audit (backup)
         run: |
-          echo "Checking for security vulnerabilities..."
-          
-          # Try yarn audit first (preferred for yarn projects)
-          if yarn audit --level moderate; then
-            echo "✅ No moderate+ vulnerabilities found with yarn audit"
-          else
-            echo "⚠️ Some vulnerabilities found or audit service unavailable"
-          fi
-          
-          # Alternative: Use npm audit with generated lockfile
-          if [ ! -f package-lock.json ]; then
-            npm i --package-lock-only --silent
-          fi
-          
-          if npm audit --audit-level moderate; then
-            echo "✅ No moderate+ vulnerabilities found with npm audit"
-          else
-            echo "⚠️ Some vulnerabilities found with npm audit"
-          fi
+          echo "Running additional dependency security checks..."
+          yarn audit --level moderate || echo "⚠️ Some vulnerabilities found"
         continue-on-error: true
 
   security-audit:
