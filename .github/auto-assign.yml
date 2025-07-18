@@ -1,0 +1,88 @@
+# Configuration for auto-assign action
+# See https://github.com/kentaro-m/auto-assign-action for more details
+
+# Set to true to add reviewers to pull requests
+addReviewers: true
+
+# Set to true to add assignees to pull requests
+addAssignees: false
+
+# A list of reviewers to be added to pull requests (GitHub user names)
+reviewers:
+  - vipwzw  # Repository owner
+
+# A number of reviewers added to the pull request
+# Set 0 to add all the reviewers (default: 0)
+numberOfReviewers: 1
+
+# A list of assignees, overrides reviewers if set
+# assignees:
+#   - assigneeA
+
+# A number of assignees to add to the pull request
+# Set to 0 to add all the assignees (default: 0)
+numberOfAssignees: 0
+
+# A list of keywords to be skipped the process that add reviewers if pull requests include it
+skipKeywords:
+  - wip
+  - draft
+  - '[skip review]'
+
+# Configuration for different types of changes
+reviewGroups:
+  # Smart contract changes
+  contracts:
+    reviewers:
+      - vipwzw
+    numberOfReviewers: 1
+    pathPatterns:
+      - 'contracts/**/*.sol'
+      - 'contracts/**/foundry.toml'
+      - 'contracts/**/script/**'
+
+  # TypeScript/JavaScript changes
+  typescript:
+    reviewers:
+      - vipwzw
+    numberOfReviewers: 1
+    pathPatterns:
+      - 'packages/**/*.ts'
+      - 'packages/**/*.tsx'
+      - 'packages/**/*.js'
+      - 'packages/**/package.json'
+
+  # Documentation changes
+  docs:
+    reviewers:
+      - vipwzw
+    numberOfReviewers: 1
+    pathPatterns:
+      - 'docs/**'
+      - '*.md'
+      - 'README.md'
+
+  # CI/CD changes
+  ci:
+    reviewers:
+      - vipwzw
+    numberOfReviewers: 1
+    pathPatterns:
+      - '.github/**'
+      - '.github/workflows/**'
+
+# Configuration for PR size-based review assignment
+sizeBasedReview:
+  # Large PRs (>500 lines) require additional review
+  large:
+    threshold: 500
+    additionalReviewers: 1
+    reviewers:
+      - vipwzw
+
+  # Extra large PRs (>1000 lines) require even more scrutiny
+  extraLarge:
+    threshold: 1000
+    additionalReviewers: 1
+    reviewers:
+      - vipwzw 

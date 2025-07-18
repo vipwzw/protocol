@@ -1,0 +1,278 @@
+name: Code Quality and Security
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+  schedule:
+    # Run security checks weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3
+        with:
+          fail-on-severity: moderate
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run Yarn Audit
+        run: |
+          yarn audit --json > audit-results.json || true
+          cat audit-results.json
+
+      - name: Upload audit results
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-results
+          path: audit-results.json
+
+  codeql-analysis:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      matrix:
+        language: ['javascript', 'typescript']
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build TypeScript
+        run: yarn build
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+  smart-contract-analysis:
+    name: Smart Contract Security Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Slither
+        run: |
+          pip3 install slither-analyzer
+          pip3 install solc-select
+          solc-select install 0.8.19
+          solc-select use 0.8.19
+
+      - name: Run Slither on Governance contracts
+        working-directory: contracts/governance
+        run: |
+          slither src/ --json slither-governance.json --exclude-dependencies || true
+        continue-on-error: true
+
+      - name: Run Slither on ERC20 contracts
+        working-directory: contracts/erc20
+        run: |
+          slither src/ --json slither-erc20.json --exclude-dependencies || true
+        continue-on-error: true
+
+      - name: Upload Slither results
+        uses: actions/upload-artifact@v4
+        with:
+          name: slither-analysis-results
+          path: |
+            contracts/governance/slither-governance.json
+            contracts/erc20/slither-erc20.json
+
+      - name: Install Mythril
+        run: |
+          pip3 install mythril
+        continue-on-error: true
+
+      - name: Run Mythril analysis
+        working-directory: contracts/governance/src
+        run: |
+          myth analyze *.sol --json > mythril-results.json || true
+        continue-on-error: true
+
+      - name: Upload Mythril results
+        uses: actions/upload-artifact@v4
+        with:
+          name: mythril-analysis-results
+          path: contracts/governance/src/mythril-results.json
+        continue-on-error: true
+
+  license-check:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install license-checker
+        run: npm install -g license-checker
+
+      - name: Check licenses
+        run: |
+          yarn install --frozen-lockfile
+          license-checker --json > licenses.json
+          license-checker --summary
+
+      - name: Upload license report
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: licenses.json
+
+  code-coverage:
+    name: Code Coverage Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Generate coverage for Governance contracts
+        working-directory: contracts/governance
+        run: |
+          forge coverage --report lcov --report summary
+
+      - name: Generate coverage for ERC20 contracts
+        working-directory: contracts/erc20
+        run: |
+          forge coverage --report lcov --report summary
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: |
+            ./contracts/governance/lcov.info
+            ./contracts/erc20/lcov.info
+          name: smart-contracts-coverage
+          fail_ci_if_error: false
+
+  performance-benchmarks:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run gas benchmarks for Governance
+        working-directory: contracts/governance
+        run: |
+          forge test --gas-report > gas-report-governance.txt
+
+      - name: Run gas benchmarks for ERC20
+        working-directory: contracts/erc20
+        run: |
+          forge test --gas-report > gas-report-erc20.txt
+
+      - name: Upload gas reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: gas-benchmarks
+          path: |
+            contracts/governance/gas-report-governance.txt
+            contracts/erc20/gas-report-erc20.txt
+
+  quality-summary:
+    name: Quality Summary
+    runs-on: ubuntu-latest
+    needs: [security-audit, codeql-analysis, smart-contract-analysis, license-check, code-coverage]
+    if: always()
+    steps:
+      - name: Quality Gate Summary
+        run: |
+          echo "## Code Quality Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Audit | ${{ needs.security-audit.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CodeQL Analysis | ${{ needs.codeql-analysis.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Smart Contract Analysis | ${{ needs.smart-contract-analysis.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| License Check | ${{ needs.license-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Coverage | ${{ needs.code-coverage.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Quality checks completed at $(date)" >> $GITHUB_STEP_SUMMARY 

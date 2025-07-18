@@ -1,0 +1,316 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, development]
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          scopes: |
+            contracts
+            governance
+            erc20
+            zero-ex
+            utils
+            ci
+            deps
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" found in the pull request title "{title}"
+            didn't match the configured pattern. Please ensure that the subject
+            doesn't start with an uppercase character.
+
+      - name: Check PR description
+        run: |
+          PR_BODY="${{ github.event.pull_request.body }}"
+          if [ -z "$PR_BODY" ] || [ ${#PR_BODY} -lt 20 ]; then
+            echo "❌ PR description is too short or missing"
+            echo "Please provide a meaningful description of your changes"
+            exit 1
+          fi
+          echo "✅ PR description looks good"
+
+      - name: Check for breaking changes
+        run: |
+          # Check if PR title contains BREAKING or if files suggest breaking changes
+          TITLE="${{ github.event.pull_request.title }}"
+          if echo "$TITLE" | grep -i "breaking"; then
+            echo "⚠️ This PR contains breaking changes"
+            echo "breaking-change=true" >> $GITHUB_OUTPUT
+          fi
+
+  file-changes-analysis:
+    name: File Changes Analysis
+    runs-on: ubuntu-latest
+    outputs:
+      contracts-changed: ${{ steps.changes.outputs.contracts }}
+      typescript-changed: ${{ steps.changes.outputs.typescript }}
+      docs-changed: ${{ steps.changes.outputs.docs }}
+      ci-changed: ${{ steps.changes.outputs.ci }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Detect changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            contracts:
+              - 'contracts/**/*.sol'
+              - 'contracts/**/foundry.toml'
+            typescript:
+              - 'packages/**/*.ts'
+              - 'packages/**/*.tsx'
+              - 'packages/**/package.json'
+            docs:
+              - 'docs/**/*'
+              - '*.md'
+              - 'README.md'
+            ci:
+              - '.github/workflows/**'
+              - '.github/**'
+
+  contract-specific-checks:
+    name: Contract Specific Checks
+    runs-on: ubuntu-latest
+    needs: file-changes-analysis
+    if: needs.file-changes-analysis.outputs.contracts-changed == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Check contract compilation
+        run: |
+          echo "🔍 Checking contract compilation..."
+          for dir in contracts/*/; do
+            if [ -f "$dir/foundry.toml" ]; then
+              echo "Compiling contracts in $dir"
+              cd "$dir"
+              forge build --sizes || exit 1
+              cd - > /dev/null
+            fi
+          done
+
+      - name: Run contract tests
+        run: |
+          echo "🧪 Running contract tests..."
+          for dir in contracts/*/; do
+            if [ -f "$dir/foundry.toml" ]; then
+              echo "Testing contracts in $dir"
+              cd "$dir"
+              forge test || exit 1
+              cd - > /dev/null
+            fi
+          done
+
+      - name: Check for proper natspec documentation
+        run: |
+          echo "📚 Checking for NatSpec documentation..."
+          # Look for contracts without proper documentation
+          find contracts -name "*.sol" -exec grep -L "@dev\|@notice\|@param\|@return" {} \; > undocumented.txt || true
+          if [ -s undocumented.txt ]; then
+            echo "⚠️  The following contracts may need better documentation:"
+            cat undocumented.txt
+          else
+            echo "✅ All contracts appear to have documentation"
+          fi
+
+  typescript-specific-checks:
+    name: TypeScript Specific Checks
+    runs-on: ubuntu-latest
+    needs: file-changes-analysis
+    if: needs.file-changes-analysis.outputs.typescript-changed == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Type checking
+        run: |
+          echo "🔍 Running TypeScript type checking..."
+          yarn build
+
+      - name: Check for proper exports
+        run: |
+          echo "📦 Checking package exports..."
+          # Ensure all packages have proper main/types fields
+          find packages -name "package.json" | while read pkg; do
+            if ! grep -q '"main"' "$pkg" || ! grep -q '"types"' "$pkg"; then
+              echo "⚠️  $pkg may be missing main or types field"
+            fi
+          done
+
+  security-check:
+    name: Security Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run security audit
+        run: |
+          echo "🔒 Running security audit..."
+          yarn audit --level moderate || {
+            echo "⚠️  Security vulnerabilities found. Please review and fix."
+            exit 1
+          }
+
+      - name: Check for hardcoded secrets
+        run: |
+          echo "🔍 Checking for hardcoded secrets..."
+          # Simple check for common secret patterns
+          if grep -r -i "password\|secret\|key.*=" --exclude-dir=node_modules --exclude-dir=.git . | grep -v "test\|spec\|mock"; then
+            echo "⚠️  Potential hardcoded secrets found. Please review."
+          else
+            echo "✅ No obvious hardcoded secrets found"
+          fi
+
+  pr-size-check:
+    name: PR Size Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check PR size
+        run: |
+          FILES_CHANGED=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD | wc -l)
+          LINES_ADDED=$(git diff --numstat origin/${{ github.event.pull_request.base.ref }}...HEAD | awk '{sum += $1} END {print sum}')
+          LINES_REMOVED=$(git diff --numstat origin/${{ github.event.pull_request.base.ref }}...HEAD | awk '{sum += $2} END {print sum}')
+          
+          echo "📊 PR Statistics:"
+          echo "- Files changed: $FILES_CHANGED"
+          echo "- Lines added: $LINES_ADDED"
+          echo "- Lines removed: $LINES_REMOVED"
+          
+          # Set size labels based on changes
+          if [ $FILES_CHANGED -gt 50 ] || [ $LINES_ADDED -gt 1000 ]; then
+            echo "size=XL" >> $GITHUB_OUTPUT
+            echo "⚠️  This is a large PR. Consider breaking it into smaller PRs."
+          elif [ $FILES_CHANGED -gt 20 ] || [ $LINES_ADDED -gt 500 ]; then
+            echo "size=L" >> $GITHUB_OUTPUT
+            echo "📋 This is a medium-large PR."
+          elif [ $FILES_CHANGED -gt 5 ] || [ $LINES_ADDED -gt 100 ]; then
+            echo "size=M" >> $GITHUB_OUTPUT
+            echo "📝 This is a medium PR."
+          else
+            echo "size=S" >> $GITHUB_OUTPUT
+            echo "✅ This is a small PR."
+          fi
+
+  test-coverage-check:
+    name: Test Coverage Check
+    runs-on: ubuntu-latest
+    needs: file-changes-analysis
+    if: needs.file-changes-analysis.outputs.contracts-changed == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Generate coverage report
+        run: |
+          echo "📊 Generating test coverage report..."
+          for dir in contracts/*/; do
+            if [ -f "$dir/foundry.toml" ]; then
+              echo "Generating coverage for $dir"
+              cd "$dir"
+              forge coverage --report summary || echo "Coverage generation failed for $dir"
+              cd - > /dev/null
+            fi
+          done
+
+  auto-assign-reviewers:
+    name: Auto Assign Reviewers
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    steps:
+      - name: Auto assign reviewers
+        uses: kentaro-m/auto-assign-action@v1.2.5
+        with:
+          configuration-path: '.github/auto-assign.yml'
+
+  pr-summary:
+    name: PR Summary
+    runs-on: ubuntu-latest
+    needs: [pr-validation, file-changes-analysis, contract-specific-checks, typescript-specific-checks, security-check, pr-size-check]
+    if: always()
+    steps:
+      - name: Generate PR summary
+        run: |
+          echo "## 🔍 Pull Request Analysis Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Changes Detected" >> $GITHUB_STEP_SUMMARY
+          echo "- 📋 Contracts Changed: ${{ needs.file-changes-analysis.outputs.contracts-changed }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 📝 TypeScript Changed: ${{ needs.file-changes-analysis.outputs.typescript-changed }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 📚 Docs Changed: ${{ needs.file-changes-analysis.outputs.docs-changed }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ⚙️  CI Changed: ${{ needs.file-changes-analysis.outputs.ci-changed }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| PR Validation | ${{ needs.pr-validation.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Contract Checks | ${{ needs.contract-specific-checks.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| TypeScript Checks | ${{ needs.typescript-specific-checks.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Check | ${{ needs.security-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| PR Size Check | ${{ needs.pr-size-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Analysis completed at $(date)" >> $GITHUB_STEP_SUMMARY 
