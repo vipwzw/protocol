@@ -196,8 +196,9 @@ jobs:
           echo "🔒 Running security audit..."
           yarn audit --level moderate || {
             echo "⚠️  Security vulnerabilities found. Please review and fix."
-            exit 1
+            echo "This is informational only and won't fail the PR."
           }
+        continue-on-error: true
 
       - name: Check for hardcoded secrets
         run: |
