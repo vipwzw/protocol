@@ -6,7 +6,7 @@ on:
     branches: [main, development]
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '24'
 
 jobs:
   pr-validation:

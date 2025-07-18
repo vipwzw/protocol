@@ -2,7 +2,7 @@
     "name": "@0x/protocol-utils",
     "version": "11.24.1",
     "engines": {
-        "node": ">=6.12"
+        "node": ">=24.0.0"
     },
     "description": "0x protocol utils",
     "main": "lib/src/index.js",

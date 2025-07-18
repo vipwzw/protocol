@@ -2,7 +2,7 @@
     "name": "@0x/contract-artifacts",
     "version": "3.19.0",
     "engines": {
-        "node": ">=6.12"
+        "node": ">=24.0.0"
     },
     "description": "0x smart contract compilation artifacts",
     "main": "lib/src/index.js",
