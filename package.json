@@ -11,6 +11,8 @@
     "scripts": {
         "fix": "wsrun --fast-exit --parallel --exclude-missing -p $PKG -c fix",
         "ganache": "ganache-cli -p 8545 --gasLimit 10000000 --networkId 50 -m \"${npm_package_config_mnemonic}\"",
+        "foundry:install": "curl -L https://foundry.paradigm.xyz | bash && ~/.foundry/bin/foundryup",
+        "foundry:check": "forge --version && cast --version && anvil --version",
         "prettier": "prettier --write '**/*.{ts,tsx,json,sol}' --config .prettierrc",
         "prettier:ci": "prettier --list-different '**/*.{ts,tsx,json,sol}' --config .prettierrc",
         "install:all": "yarn install",

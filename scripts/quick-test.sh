@@ -5,8 +5,9 @@ echo "🚀 Quick GitHub Actions Test"
 echo "============================"
 
 # Set up Foundry PATH
-if [ -d "/Users/kingwang/.foundry/bin" ]; then
-    export PATH="/Users/kingwang/.foundry/bin:$PATH"
+if [ -d "$HOME/.foundry/bin" ]; then
+    export PATH="$HOME/.foundry/bin:$PATH"
+    echo "ℹ️  Added Foundry to PATH"
 fi
 
 # Test basic environment

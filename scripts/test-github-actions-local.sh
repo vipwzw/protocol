@@ -11,6 +11,12 @@ NC='\033[0m' # No Color
 TESTS_PASSED=0
 TESTS_FAILED=0
 
+# 设置 Foundry PATH (如果存在)
+if [ -d "$HOME/.foundry/bin" ]; then
+    export PATH="$HOME/.foundry/bin:$PATH"
+    echo -e "${BLUE}Info: Added Foundry to PATH${NC}"
+fi
+
 # Function to print test results
 print_test_result() {
     local test_name="$1"

@@ -125,6 +125,18 @@ jobs:
         with:
           version: nightly
 
+      - name: Add Foundry to PATH
+        run: echo "$HOME/.foundry/bin" >> $GITHUB_PATH
+
+      - name: Verify Foundry installation
+        run: |
+          which forge || echo "forge not in PATH"
+          which cast || echo "cast not in PATH" 
+          which anvil || echo "anvil not in PATH"
+          forge --version
+          cast --version
+          anvil --version
+
       - name: Restore node_modules cache
         uses: actions/cache@v4
         with:
