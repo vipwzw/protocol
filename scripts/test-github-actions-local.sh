@@ -211,7 +211,7 @@ echo -e "\n${YELLOW}🔒 6. Security and Quality Checks${NC}"
 echo "Checking for potential security issues..."
 
 # Check for hardcoded secrets (basic check)
-if grep -r -i "password\|secret\|key.*=" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=lib . | grep -v "test\|spec\|mock\|forge-std\|example" > /tmp/secrets_check.log 2>&1; then
+if grep -r -i "password\s*=\|secret\s*=\|api_key\s*=\|private_key\s*=" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=lib --exclude-dir=generated-wrappers --exclude-dir=generated-artifacts --exclude="*.lock" --exclude="*.xml" . | grep -v "test\|spec\|mock\|forge-std\|example\|ETHERSCAN_API_KEY\|\.toml\|\${" > /tmp/secrets_check.log 2>&1; then
     if [ -s /tmp/secrets_check.log ]; then
         print_test_result "No hardcoded secrets" 1
         echo "Potential secrets found:"

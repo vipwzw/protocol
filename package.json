@@ -11,17 +11,17 @@
     "scripts": {
         "fix": "wsrun --fast-exit --parallel --exclude-missing -p $PKG -c fix",
         "ganache": "ganache-cli -p 8545 --gasLimit 10000000 --networkId 50 -m \"${npm_package_config_mnemonic}\"",
-        "foundry:install": "curl -L https://foundry.paradigm.xyz | bash && source ~/.bashrc && foundryup",
-        "foundry:check": "which forge && which cast && which anvil && forge --version && cast --version && anvil --version",
+        "foundry:install": "curl -L https://foundry.paradigm.xyz | bash && export PATH=\"$HOME/.foundry/bin:$PATH\" && foundryup && echo 'Foundry installed successfully. PATH updated.'",
+        "foundry:check": "export PATH=\"$HOME/.foundry/bin:$PATH\" && which forge && which cast && which anvil && forge --version && cast --version && anvil --version",
         "prettier": "prettier --write '**/*.{ts,tsx,json,sol}' --config .prettierrc",
         "prettier:ci": "prettier --list-different '**/*.{ts,tsx,json,sol}' --config .prettierrc",
         "install:all": "yarn install && yarn foundry:install",
         "setup": "yarn install && yarn foundry:install",
         "wsrun": "wsrun",
         "lerna": "lerna",
-        "build": "lerna link && wsrun -r --stages --fast-exit --exclude-missing -p $PKG -c build",
-        "build:ci": "lerna link && wsrun --fast-exit -r --stages --exclude-missing -p $PKG -c build:ci",
-        "build:contracts": "lerna link && wsrun -p ${npm_package_config_contractsPackages} --fast-exit -r --stages --exclude-missing -c build",
+        "build": "export PATH=\"$HOME/.foundry/bin:$PATH\" && lerna link && wsrun -r --stages --fast-exit --exclude-missing -p $PKG -c build",
+        "build:ci": "export PATH=\"$HOME/.foundry/bin:$PATH\" && lerna link && wsrun --fast-exit -r --stages --exclude-missing -p $PKG -c build:ci",
+        "build:contracts": "export PATH=\"$HOME/.foundry/bin:$PATH\" && lerna link && wsrun -p ${npm_package_config_contractsPackages} --fast-exit -r --stages --exclude-missing -c build",
         "build:ts": "tsc -b",
         "watch:ts": "tsc -b -w",
         "clean": "wsrun --fast-exit -r --parallel --exclude-missing -p $PKG -c clean",
@@ -83,7 +83,10 @@
         "wsrun": "^5.2.4"
     },
     "resolutions": {
-        "**/bignumber.js": "^9.0.2"
+        "**/bignumber.js": "^9.0.2",
+        "**/micromatch": "^4.0.8",
+        "**/yargs-parser": "^13.1.2",
+        "**/parse-path": "^5.0.0"
     },
     "dependencies": {
         "@openzeppelin/contracts": "^4.8.1"
