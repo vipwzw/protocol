@@ -15,11 +15,8 @@
         "test": "mocha --require source-map-support/register  'lib/test/**/*_test.js' --timeout 10000 --bail --exit",
         "test:ci": "yarn test",
         "clean": "shx rm -rf lib",
-        "publish:private": "yarn build && gitpkg publish"
-    },
-    "gitpkg": {
-        "registry": "git@github.com:0xProject/gitpkg-registry.git"
-    },
+        "publish:private": "yarn build && echo 'gitpkg publish disabled'"
+          },
     "repository": {
         "type": "git",
         "url": "https://github.com/0xProject/protocol.git"
@@ -32,8 +29,7 @@
     "devDependencies": {
         "@types/mocha": "^5.2.7",
         "chai": "^4.0.1",
-        "ethereumjs-util": "^7.1.5",
-        "gitpkg": "https://github.com/0xProject/gitpkg.git",
+                "ethereumjs-util": "^7.1.5",
         "mocha": "^6.2.0",
         "shx": "^0.2.2",
         "typescript": "4.6.3"

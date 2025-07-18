@@ -17,7 +17,7 @@
         "build": "tsc -b",
         "rebuild": "yarn wrappers:clean && yarn wrappers:generate && yarn wrappers:prettier && yarn build",
         "build:ci": "yarn build",
-        "publish:private": "yarn rebuild && gitpkg publish",
+        "publish:private": "yarn rebuild && echo 'gitpkg publish disabled'",
         "lint": "eslint src",
         "fix": "eslint --fix src",
         "prettier": "prettier --write **/* --config ../../.prettierrc",
@@ -33,10 +33,7 @@
     },
     "config": {
         "abis": "../contract-artifacts/artifacts/@(DevUtils|ERC20Token|ERC721Token|Exchange|Forwarder|IAssetData|LibTransactionDecoder|WETH9|Coordinator|Staking|StakingProxy|GodsUnchainedValidator|Broker|ILiquidityProvider|ILiquidityProviderRegistry|MaximumGasPrice|ITransformERC20|IZeroEx).json"
-    },
-    "gitpkg": {
-        "registry": "git@github.com:0xProject/gitpkg-registry.git"
-    },
+          },
     "repository": {
         "type": "git",
         "url": "https://github.com/0xProject/protocol.git"
@@ -51,8 +48,7 @@
         "@typescript-eslint/eslint-plugin": "^5.38.0",
         "@typescript-eslint/parser": "^5.38.0",
         "eslint": "^8.23.1",
-        "eslint-config-prettier": "^8.5.0",
-        "gitpkg": "https://github.com/0xProject/gitpkg.git",
+                "eslint-config-prettier": "^8.5.0",
         "typedoc": "~0.16.11",
         "typescript": "4.6.3"
     },
