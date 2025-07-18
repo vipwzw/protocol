@@ -11,10 +11,10 @@
     "scripts": {
         "fix": "wsrun --fast-exit --parallel --exclude-missing -p $PKG -c fix",
         "ganache": "ganache-cli -p 8545 --gasLimit 10000000 --networkId 50 -m \"${npm_package_config_mnemonic}\"",
-        "foundry:install": "curl -L https://foundry.paradigm.xyz | bash && ~/.foundry/bin/foundryup",
-        "foundry:check": "forge --version && cast --version && anvil --version",
-        "foundry:npm": "npx forge --version && npx cast --version && npx anvil --version",
-        "postinstall": "yarn foundry:npm || echo '⚠️ Foundry NPM package installed but may need PATH setup'",
+        "foundry:install": "bash scripts/setup-foundry.sh",
+        "foundry:check": "which forge && which cast && which anvil && forge --version && cast --version && anvil --version",
+        "foundry:setup": "bash scripts/setup-foundry.sh",
+        "postinstall": "yarn foundry:setup || echo '⚠️ Foundry setup failed. You may need to run: yarn foundry:install'",
         "prettier": "prettier --write '**/*.{ts,tsx,json,sol}' --config .prettierrc",
         "prettier:ci": "prettier --list-different '**/*.{ts,tsx,json,sol}' --config .prettierrc",
         "install:all": "yarn install",
@@ -68,7 +68,7 @@
         "async-child-process": "^1.1.1",
         "check-md": "^1.0.2",
         "coveralls": "^3.0.0",
-        "foundry-up": "^0.2.3",
+
         "ganache-cli": "6.12.2",
         "husky": "^8.0.3",
         "lerna": "^3.0.0-beta.25",
