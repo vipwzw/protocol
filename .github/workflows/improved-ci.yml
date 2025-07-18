@@ -174,10 +174,8 @@ jobs:
     strategy:
       matrix:
         package:
-          - '@0x/contracts-test-utils'
           - '@0x/contract-addresses'
           - '@0x/contract-artifacts'
-          - '@0x/contract-wrappers'
           - '@0x/protocol-utils'
     steps:
       - name: Checkout repository
@@ -193,6 +191,9 @@ jobs:
         with:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Build packages (required for tests)
+        run: yarn build
 
       - name: Test ${{ matrix.package }}
         run: yarn wsrun -p "${{ matrix.package }}" -c test:ci

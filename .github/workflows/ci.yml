@@ -1,10 +1,7 @@
-name: Continuous Integration
+name: Continuous Integration (Legacy - Disabled)
+# Disabled in favor of improved-ci.yml - triggers manually only
 on:
-    push:
-        branches:
-            - main
-            - development
-    pull_request:
+  workflow_dispatch:  # Manual trigger only
 
 jobs:
     build:
@@ -48,8 +45,8 @@ jobs:
             - name: Run prettier
               run: yarn prettier:ci
 
-            - name: Check dependent packages have consistent versions
-              run: yarn deps_versions:ci
+            # - name: Check dependent packages have consistent versions
+            #   run: yarn deps_versions:ci  # Script not found
 
             - name: Check diff in docs
               run: yarn diff_md_docs:ci
