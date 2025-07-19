@@ -1,0 +1,52 @@
+# 0x Protocol项目结构指南
+
+## 总体架构
+这是一个基于Lerna的多包monorepo项目，包含智能合约和TypeScript包。
+
+## 主要目录结构
+
+### 合约目录 (`contracts/`)
+- **erc20/**: ERC20代币合约实现
+- **governance/**: 治理合约和投票机制
+- **zero-ex/**: 核心0x协议合约
+- **treasury/**: 国库管理合约
+- **utils/**: 通用工具合约
+
+### 包目录 (`packages/`)
+- **contract-addresses/**: 合约地址管理
+- **contract-artifacts/**: 编译后的合约工件
+- **contract-wrappers/**: TypeScript合约包装器
+- **protocol-utils/**: 协议工具函数
+
+## 开发工作流
+
+### 本地CI测试
+运行完整的CI测试套件：
+```bash
+# 安装依赖
+yarn install --frozen-lockfile
+
+# 代码质量检查
+yarn lint:contracts
+yarn prettier:ci
+
+# 构建项目
+yarn build
+
+# 运行Foundry测试
+cd contracts/governance && forge test -vvv
+```
+
+### 已知问题
+- 旧版Solidity编译器在Apple Silicon上有兼容性问题
+- TypeScript 3.7.7版本过旧，建议升级到4.x+
+- 部分ERC20和zero-ex合约需要特殊编译器版本
+
+### 配置文件
+- [package.json](mdc:package.json): 根级配置和脚本
+- [lerna.json](mdc:lerna.json): Lerna多包管理配置
+- [tsconfig.json](mdc:tsconfig.json): TypeScript项目引用配置
+---
+alwaysApply: true
+description: Project structure and organization guide
+---

@@ -1,0 +1,80 @@
+# Solidity编程最佳实践
+
+## 代码风格
+- 使用4个空格缩进，不使用制表符
+- 函数名使用驼峰命名法（camelCase）
+- 常量使用大写字母和下划线（CONSTANT_NAME）
+- 合约名使用帕斯卡命名法（PascalCase）
+
+## 安全最佳实践
+
+### 重入攻击防护
+```solidity
+// 使用ReentrancyGuard修饰符
+modifier nonReentrant() {
+    require(!locked, "ReentrancyGuard: reentrant call");
+    locked = true;
+    _;
+    locked = false;
+}
+```
+
+### 检查-效果-交互模式
+```solidity
+function withdraw(uint256 amount) external {
+    // 检查
+    require(balances[msg.sender] >= amount, "Insufficient balance");
+    
+    // 效果
+    balances[msg.sender] -= amount;
+    
+    // 交互
+    payable(msg.sender).transfer(amount);
+}
+```
+
+### 使用自定义错误而非require字符串
+```solidity
+// 推荐
+error InsufficientBalance(uint256 available, uint256 required);
+
+function withdraw(uint256 amount) external {
+    if (balances[msg.sender] < amount) {
+        revert InsufficientBalance(balances[msg.sender], amount);
+    }
+}
+
+// 避免
+require(balances[msg.sender] >= amount, "Insufficient balance");
+```
+
+## 项目特定规范
+
+### 版本兼容性
+- 新合约使用Solidity 0.8.19+
+- 遗留合约保持原版本以确保兼容性
+- 避免使用已废弃的Solidity特性
+
+### 导入规范
+```solidity
+// 使用具体导入而非全局导入
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+// 避免
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+```
+
+### 测试要求
+- 每个功能都必须有对应的单元测试
+- 使用Foundry进行测试
+- 测试函数以`test`开头，使用描述性名称
+
+## Gas优化
+- 使用`calldata`而非`memory`用于只读参数
+- 合理使用`packed`结构体
+- 避免不必要的存储操作
+- 考虑使用事件而非存储来记录历史数据
+---
+globs: *.sol
+description: Solidity coding standards and best practices
+---

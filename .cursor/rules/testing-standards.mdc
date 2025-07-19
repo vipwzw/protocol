@@ -1,0 +1,212 @@
+# 测试标准和最佳实践
+
+## 通用测试原则
+
+### 测试命名
+- 使用描述性和具体的测试名称
+- 描述期望的行为而非实现细节
+- 使用"should"、"when"、"given"等关键词
+
+```typescript
+// 好的命名
+it('should revert when insufficient balance for withdrawal', async () => {});
+
+// 避免的命名
+it('test withdrawal', async () => {});
+```
+
+### 测试结构（AAA模式）
+```typescript
+it('should transfer tokens correctly', async () => {
+    // Arrange - 准备测试数据
+    const amount = ethers.utils.parseEther('100');
+    await token.mint(sender.address, amount);
+    
+    // Act - 执行被测试的行为
+    await token.connect(sender).transfer(receiver.address, amount);
+    
+    // Assert - 验证结果
+    expect(await token.balanceOf(receiver.address)).to.equal(amount);
+});
+```
+
+## Solidity测试（Foundry）
+
+### 测试合约结构
+```solidity
+// 测试合约应该继承Test
+contract MyContractTest is Test {
+    MyContract public myContract;
+    
+    function setUp() public {
+        myContract = new MyContract();
+    }
+    
+    function testShouldDoSomething() public {
+        // 测试逻辑
+    }
+    
+    function testFail_ShouldRevertWhen() public {
+        // 期望失败的测试
+    }
+}
+```
+
+### 使用Foundry断言
+```solidity
+// 使用具体的断言
+assertEq(actual, expected, "Values should be equal");
+assertTrue(condition, "Condition should be true");
+assertGt(larger, smaller, "First value should be greater");
+
+// 测试revert
+vm.expectRevert("Insufficient balance");
+contract.withdraw(tooMuchAmount);
+```
+
+### 测试事件
+```solidity
+// 设置事件期望
+vm.expectEmit(true, true, false, true);
+emit Transfer(from, to, amount);
+
+// 执行触发事件的操作
+token.transfer(to, amount);
+```
+
+## TypeScript测试
+
+### 测试环境设置
+```typescript
+// 使用beforeEach进行清理
+describe('OrderUtils', () => {
+    let orderUtils: OrderUtils;
+    
+    beforeEach(() => {
+        orderUtils = new OrderUtils();
+    });
+    
+    afterEach(() => {
+        // 清理资源
+    });
+});
+```
+
+### 异步测试
+```typescript
+// 正确处理异步操作
+it('should handle async operations', async () => {
+    const result = await asyncOperation();
+    expect(result).toBeDefined();
+});
+
+// 测试异常
+it('should throw on invalid input', async () => {
+    await expect(asyncOperation(invalidInput))
+        .rejects
+        .toThrow('Invalid input');
+});
+```
+
+### Mock和Stub
+```typescript
+// 合理使用mock
+const mockProvider = {
+    call: jest.fn().mockResolvedValue('0x123'),
+    send: jest.fn()
+} as jest.Mocked<Provider>;
+
+// 验证mock调用
+expect(mockProvider.call).toHaveBeenCalledWith({
+    to: contractAddress,
+    data: encodedCall
+});
+```
+
+## 测试覆盖率
+
+### 目标覆盖率
+- 智能合约：>90%
+- TypeScript代码：>80%
+- 关键业务逻辑：100%
+
+### 覆盖率命令
+```bash
+# Solidity覆盖率
+forge coverage --report summary
+
+# TypeScript覆盖率
+yarn test --coverage
+```
+
+## 集成测试
+
+### 端到端测试
+```typescript
+// 测试完整的用户流程
+describe('Trading Flow', () => {
+    it('should complete a full trade', async () => {
+        // 1. 创建订单
+        const order = await createOrder();
+        
+        // 2. 签名订单
+        const signedOrder = await signOrder(order);
+        
+        // 3. 填充订单
+        const result = await fillOrder(signedOrder);
+        
+        // 4. 验证状态变化
+        expect(result.success).toBe(true);
+    });
+});
+```
+
+### 分叉测试
+```solidity
+// 使用mainnet分叉进行测试
+contract MainnetForkTest is Test {
+    function setUp() public {
+        vm.createFork(vm.envString("MAINNET_RPC_URL"));
+        vm.selectFork(0);
+    }
+    
+    function testRealWorldScenario() public {
+        // 使用真实的合约状态测试
+    }
+}
+```
+
+## 项目特定要求
+
+### CI/CD集成
+- 所有测试必须在CI中通过
+- 新功能必须包含相应测试
+- 不允许降低测试覆盖率
+
+### 性能测试
+```solidity
+// 测试gas消耗
+function testGasConsumption() public {
+    uint256 gasStart = gasleft();
+    contract.expensiveOperation();
+    uint256 gasUsed = gasStart - gasleft();
+    
+    assertLt(gasUsed, 100000, "Gas usage too high");
+}
+```
+
+### 安全测试
+```typescript
+// 测试权限控制
+it('should reject unauthorized access', async () => {
+    const unauthorizedUser = accounts[1];
+    
+    await expect(
+        contract.connect(unauthorizedUser).adminFunction()
+    ).to.be.revertedWith('Unauthorized');
+});
+```
+---
+globs: *.test.ts,*.test.sol,*.t.sol,test/**/*
+description: Testing standards and best practices
+---

@@ -1,0 +1,133 @@
+# TypeScript开发指南
+
+## 代码风格
+- 使用分号结尾
+- 使用4个空格缩进
+- 优先使用`const`和`let`，避免`var`
+- 使用模板字符串而非字符串拼接
+
+## 类型安全
+
+### 严格类型定义
+```typescript
+// 推荐：明确的类型定义
+interface ContractConfig {
+    address: string;
+    abi: readonly unknown[];
+    chainId: number;
+}
+
+// 避免：any类型
+const config: any = { ... };
+```
+
+### 泛型使用
+```typescript
+// 为可重用组件使用泛型
+interface ApiResponse<T> {
+    data: T;
+    status: number;
+    message: string;
+}
+
+function fetchData<T>(url: string): Promise<ApiResponse<T>> {
+    // 实现
+}
+```
+
+## 项目特定模式
+
+### 合约交互
+```typescript
+// 使用类型安全的合约包装器
+import { ZeroEx } from '@0x/contract-wrappers';
+
+const zeroEx = new ZeroEx(provider, {
+    chainId: 1,
+    contractAddresses: addresses
+});
+```
+
+### 错误处理
+```typescript
+// 使用Result类型模式
+type Result<T, E = Error> = 
+    | { success: true; data: T }
+    | { success: false; error: E };
+
+async function safeContractCall(): Promise<Result<string>> {
+    try {
+        const result = await contract.method();
+        return { success: true, data: result };
+    } catch (error) {
+        return { success: false, error: error as Error };
+    }
+}
+```
+
+### 配置管理
+```typescript
+// 使用环境变量配置
+interface NetworkConfig {
+    rpcUrl: string;
+    chainId: number;
+    contracts: Record<string, string>;
+}
+
+const getNetworkConfig = (network: string): NetworkConfig => {
+    const config = process.env[`${network.toUpperCase()}_CONFIG`];
+    if (!config) {
+        throw new Error(`Configuration for ${network} not found`);
+    }
+    return JSON.parse(config);
+};
+```
+
+## 测试模式
+
+### 单元测试
+```typescript
+// 使用描述性的测试名称
+describe('OrderUtils', () => {
+    it('should correctly calculate order hash', async () => {
+        const order = createTestOrder();
+        const hash = orderUtils.getOrderHash(order);
+        expect(hash).toMatch(/^0x[a-fA-F0-9]{64}$/);
+    });
+});
+```
+
+### Mock和Stub
+```typescript
+// 使用类型安全的mock
+const mockProvider = {
+    call: jest.fn(),
+    send: jest.fn()
+} as jest.Mocked<Web3Provider>;
+```
+
+## 已知问题和解决方案
+
+### TypeScript版本
+- 当前使用3.7.7版本，建议升级到4.x+
+- 升级时注意检查类型兼容性
+- 逐步迁移新特性
+
+### 依赖管理
+- 优先使用确定的版本号
+- 定期更新安全补丁
+- 检查类型定义的兼容性
+
+## 导入导出规范
+```typescript
+// 推荐：具名导入导出
+export { OrderUtils } from './order-utils';
+import { OrderUtils } from '@0x/order-utils';
+
+// 避免：默认导出（除非必要）
+export default OrderUtils; // 谨慎使用
+```
+---
+globs: *.ts,*.tsx
+description: TypeScript development guidelines and patterns
+---
