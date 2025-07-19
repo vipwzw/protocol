@@ -94,6 +94,15 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
 
+      - name: Install dependencies (fallback if cache miss)
+        run: |
+          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/wsrun" ]; then
+            echo "Cache miss or incomplete, installing dependencies..."
+            yarn install --frozen-lockfile
+          else
+            echo "Using cached dependencies"
+          fi
+
       - name: Lint TypeScript
         run: yarn lint:ts
 
@@ -131,6 +140,15 @@ jobs:
         with:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install dependencies (fallback if cache miss)
+        run: |
+          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/wsrun" ]; then
+            echo "Cache miss or incomplete, installing dependencies..."
+            yarn install --frozen-lockfile
+          else
+            echo "Using cached dependencies"
+          fi
 
       - name: Build TypeScript packages
         run: yarn build
@@ -235,6 +253,15 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
 
+      - name: Install dependencies (fallback if cache miss)
+        run: |
+          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/wsrun" ]; then
+            echo "Cache miss or incomplete, installing dependencies..."
+            yarn install --frozen-lockfile
+          else
+            echo "Using cached dependencies"
+          fi
+
       - name: Build packages (required for tests)
         run: yarn build
 
@@ -269,6 +296,15 @@ jobs:
         with:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install dependencies (fallback if cache miss)
+        run: |
+          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/wsrun" ]; then
+            echo "Cache miss or incomplete, installing dependencies..."
+            yarn install --frozen-lockfile
+          else
+            echo "Using cached dependencies"
+          fi
 
       - name: Run yarn audit
         run: yarn audit --level moderate
@@ -312,6 +348,15 @@ jobs:
         with:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install dependencies (fallback if cache miss)
+        run: |
+          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/wsrun" ]; then
+            echo "Cache miss or incomplete, installing dependencies..."
+            yarn install --frozen-lockfile
+          else
+            echo "Using cached dependencies"
+          fi
 
       - name: Run integration tests
         run: yarn test:integration
