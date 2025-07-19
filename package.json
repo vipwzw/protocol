@@ -12,7 +12,7 @@
         "fix": "wsrun --fast-exit --parallel --exclude-missing -p $PKG -c fix",
         "ganache": "ganache-cli -p 8545 --gasLimit 10000000 --networkId 50 -m \"${npm_package_config_mnemonic}\"",
         "prettier": "prettier --write '**/*.{ts,tsx,json,sol}' --config .prettierrc",
-        "prettier:ci": "prettier --list-different '**/*.{ts,tsx,json,sol}' --config .prettierrc",
+        "prettier:ci": "./scripts/lint-prettier.sh",
         "install:all": "yarn install",
         "wsrun": "wsrun",
         "lerna": "lerna",
@@ -36,7 +36,7 @@
         "diff_md_docs:ci": "wsrun --exclude-missing -c diff_docs",
         "test:generate_docs:ci": "for i in ${npm_package_config_packagesWithDocPages}; do yarn generate_doc --package $i || break -1; done;",
         "bundlewatch": "bundlewatch",
-        "lint:ts": "wsrun --fast-exit --parallel --exclude-missing -p $PKG -c lint",
+        "lint:ts": "./scripts/lint-typescript.sh",
         "lint": "yarn lint:ts && yarn lint:contracts",
         "verdaccio": "docker run --rm -i -p 4873:4873 0xorg/verdaccio"
     },
