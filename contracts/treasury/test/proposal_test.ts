@@ -1,4 +1,7 @@
-import { artifacts as erc20Artifacts, ERC20TokenEvents } from '@0x/contracts-erc20';
+import { DummyERC20Token } from '@0x/contract-artifacts';
+
+const erc20Artifacts = { DummyERC20Token };
+import { ERC20TokenEvents } from '@0x/contract-wrappers';
 import { StakingContract, StakingProxyContract } from '@0x/contracts-staking';
 import { blockchainTests, constants, verifyEventsFromLogs } from '@0x/contracts-test-utils';
 import { BigNumber, hexUtils, logUtils } from '@0x/utils';

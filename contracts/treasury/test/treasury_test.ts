@@ -1,5 +1,8 @@
 import { artifacts as assetProxyArtifacts, ERC20ProxyContract } from '@0x/contracts-asset-proxy';
-import { artifacts as erc20Artifacts, DummyERC20TokenContract } from '@0x/contracts-erc20';
+import { DummyERC20Token } from '@0x/contract-artifacts';
+import { ERC20TokenContract } from '@0x/contract-wrappers';
+
+const erc20Artifacts = { DummyERC20Token };
 import {
     artifacts as stakingArtifacts,
     constants as stakingConstants,
@@ -45,8 +48,8 @@ blockchainTests.resets('Treasury governance', env => {
         value: BigNumber;
     }
 
-    let zrx: DummyERC20TokenContract;
-    let weth: DummyERC20TokenContract;
+    let zrx: ERC20TokenContract;
+    let weth: ERC20TokenContract;
     let erc20ProxyContract: ERC20ProxyContract;
     let staking: TestStakingContract;
     let treasury: ZrxTreasuryContract;

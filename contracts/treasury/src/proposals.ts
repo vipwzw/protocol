@@ -1,5 +1,5 @@
 import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses';
-import { ERC20TokenContract } from '@0x/contracts-erc20';
+import { ERC20TokenContract } from '@0x/contract-wrappers';
 import { Web3ProviderEngine } from '@0x/subproviders';
 import { BigNumber } from '@0x/utils';
 
