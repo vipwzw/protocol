@@ -1,7 +1,177 @@
 version: 2
 updates:
+  # GitHub Actions dependencies
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
     target-branch: "development"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    reviewers:
+      - "0x-protocol/core-team"
+    open-pull-requests-limit: 5
+
+  # NPM dependencies for packages
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: "tuesday"
+      time: "09:00"
+      timezone: "UTC"
+    target-branch: "development"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "javascript"
+    reviewers:
+      - "0x-protocol/core-team"
+    open-pull-requests-limit: 10
+    ignore:
+      # Ignore major version updates for critical dependencies
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+    groups:
+      eslint:
+        patterns:
+          - "eslint*"
+          - "@typescript-eslint/*"
+      jest:
+        patterns:
+          - "jest*"
+          - "@types/jest"
+      babel:
+        patterns:
+          - "@babel/*"
+          - "babel-*"
+
+  # NPM dependencies for contract packages
+  - package-ecosystem: npm
+    directory: /packages/contract-addresses
+    schedule:
+      interval: weekly
+      day: "tuesday" 
+      time: "10:00"
+      timezone: "UTC"
+    target-branch: "development"
+    commit-message:
+      prefix: "deps(contract-addresses)"
+    labels:
+      - "dependencies"
+      - "contract-addresses"
+
+  - package-ecosystem: npm
+    directory: /packages/contract-artifacts
+    schedule:
+      interval: weekly
+      day: "tuesday"
+      time: "10:00"
+      timezone: "UTC"
+    target-branch: "development"
+    commit-message:
+      prefix: "deps(contract-artifacts)"
+    labels:
+      - "dependencies"
+      - "contract-artifacts"
+
+  - package-ecosystem: npm
+    directory: /packages/contract-wrappers
+    schedule:
+      interval: weekly
+      day: "tuesday"
+      time: "10:00"
+      timezone: "UTC"
+    target-branch: "development"
+    commit-message:
+      prefix: "deps(contract-wrappers)"
+    labels:
+      - "dependencies"
+      - "contract-wrappers"
+
+  - package-ecosystem: npm
+    directory: /packages/protocol-utils
+    schedule:
+      interval: weekly
+      day: "tuesday"
+      time: "10:00"
+      timezone: "UTC"
+    target-branch: "development"
+    commit-message:
+      prefix: "deps(protocol-utils)"
+    labels:
+      - "dependencies"
+      - "protocol-utils"
+
+  # NPM dependencies for contracts
+  - package-ecosystem: npm
+    directory: /contracts/test-utils
+    schedule:
+      interval: weekly
+      day: "wednesday"
+      time: "09:00"
+      timezone: "UTC"
+    target-branch: "development"
+    commit-message:
+      prefix: "deps(test-utils)"
+    labels:
+      - "dependencies"
+      - "test-utils"
+
+  - package-ecosystem: npm
+    directory: /contracts/zero-ex
+    schedule:
+      interval: weekly
+      day: "wednesday"
+      time: "09:00"
+      timezone: "UTC"
+    target-branch: "development"
+    commit-message:
+      prefix: "deps(zero-ex)"
+    labels:
+      - "dependencies"
+      - "zero-ex"
+
+  # Python dependencies for documentation and scripts
+  - package-ecosystem: pip
+    directory: /docs
+    schedule:
+      interval: monthly
+      day: "wednesday"
+      time: "10:00"
+      timezone: "UTC"
+    target-branch: "development"
+    commit-message:
+      prefix: "deps(docs)"
+    labels:
+      - "dependencies"
+      - "documentation"
+      - "python"
+    open-pull-requests-limit: 5
+
+  # Docker dependencies if any Dockerfiles exist
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly
+      day: "thursday"
+      time: "09:00"
+      timezone: "UTC"
+    target-branch: "development"
+    commit-message:
+      prefix: "deps(docker)"
+    labels:
+      - "dependencies"
+      - "docker"
+    open-pull-requests-limit: 3
