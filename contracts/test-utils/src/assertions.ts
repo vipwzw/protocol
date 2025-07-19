@@ -182,7 +182,7 @@ export async function expectContractCallFailedWithoutReasonAsync<T>(p: Promise<T
  * @returns a new Promise which will reject if the conditions are not met and
  * otherwise resolve with no value.
  */
-export async function expectContractCreationFailedAsync<T>(
+export async function expectContractCreationFailedAsync(
     p: sendTransactionResult,
     reason: RevertReason,
 ): Promise<void> {

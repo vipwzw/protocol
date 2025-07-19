@@ -17,9 +17,9 @@ SOLHINT_EXIT_CODE=$?
 
 echo "$LINT_OUTPUT"
 
-# 检查输出中是否包含错误
-ERROR_COUNT=$(echo "$LINT_OUTPUT" | grep -c " error " || true)
-WARNING_COUNT=$(echo "$LINT_OUTPUT" | grep -c " warning " || true)
+# 检查输出中是否包含错误（只计算真正的error级别，不包括warning中的"error"文本）
+ERROR_COUNT=$(echo "$LINT_OUTPUT" | grep -E "^\s*[0-9]+:[0-9]+\s+error\s+" | wc -l || true)
+WARNING_COUNT=$(echo "$LINT_OUTPUT" | grep -E "^\s*[0-9]+:[0-9]+\s+warning\s+" | wc -l || true)
 
 echo ""
 echo "📊 Lint Summary:"

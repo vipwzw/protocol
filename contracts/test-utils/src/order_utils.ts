@@ -1,7 +1,6 @@
 import { generatePseudoRandomSalt } from '@0x/order-utils';
 import { Order, SignedOrder } from '@0x/types';
 import { BigNumber, hexUtils } from '@0x/utils';
-import * as _ from 'lodash';
 
 import { constants } from './constants';
 import { BatchMatchOrder, CancelOrder, MatchOrder } from './types';
@@ -27,7 +26,7 @@ export const orderUtils = {
         return cancel;
     },
     createOrderWithoutSignature(signedOrder: SignedOrder): Order {
-        const { signature, ...order } = signedOrder;
+        const { signature: _signature, ...order } = signedOrder;
         return order;
     },
     createBatchMatchOrders(signedOrdersLeft: SignedOrder[], signedOrdersRight: SignedOrder[]): BatchMatchOrder {
