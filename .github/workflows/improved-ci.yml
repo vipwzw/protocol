@@ -175,16 +175,15 @@ jobs:
           echo "Running lerna link..."
           yarn lerna link
           
-          echo "Building TypeScript packages with proper pre-build..."
-          # Use targeted build for TypeScript packages only, which handles pre_build automatically
-          yarn wsrun -p "@0x/contract-addresses @0x/contract-artifacts @0x/protocol-utils @0x/contract-wrappers" -c build --exclude-missing || echo "Some packages may not have build script"
+          echo "Building contract packages first (generates artifacts)..."
+          yarn build:contracts
           
           echo "Debugging: Checking generated artifacts..."
           echo "Current working directory: $(pwd)"
           echo "Contents of contracts/utils/generated-artifacts:"
           ls -la contracts/utils/generated-artifacts/ || echo "Directory not found"
           
-          echo "Building remaining TypeScript packages..."
+          echo "Building TypeScript packages..."
           yarn build:ts
 
   test-contracts-foundry:
@@ -316,9 +315,10 @@ jobs:
           export PATH="$HOME/.foundry/bin:$PATH"
           yarn lerna link
           
-          echo "Building TypeScript packages with proper pre-build..."
-          yarn wsrun -p "@0x/contract-addresses @0x/contract-artifacts @0x/protocol-utils @0x/contract-wrappers" -c build --exclude-missing || echo "Some packages may not have build script"
+          echo "Building contract packages first (generates artifacts)..."
+          yarn build:contracts
           
+          echo "Building TypeScript packages..."
           yarn build:ts
 
       - name: Test ${{ matrix.package }}
