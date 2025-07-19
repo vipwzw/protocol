@@ -57,7 +57,13 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: |
+          echo "Installing dependencies..."
+          yarn install --frozen-lockfile
+          echo "Verifying installation..."
+          yarn lerna --version
+          yarn wsrun --version || echo "wsrun version check failed"
+          echo "Dependencies installed successfully"
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -96,11 +102,17 @@ jobs:
 
       - name: Install dependencies (fallback if cache miss)
         run: |
-          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/wsrun" ]; then
+          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/wsrun" ] || [ ! -f "node_modules/.bin/lerna" ]; then
             echo "Cache miss or incomplete, installing dependencies..."
             yarn install --frozen-lockfile
+            echo "Verifying critical dependencies..."
+            yarn lerna --version
+            yarn wsrun --version || echo "wsrun version check failed"
           else
             echo "Using cached dependencies"
+            echo "Verifying cached dependencies..."
+            yarn lerna --version
+            yarn wsrun --version || echo "wsrun version check failed"
           fi
 
       - name: Lint TypeScript
@@ -143,15 +155,27 @@ jobs:
 
       - name: Install dependencies (fallback if cache miss)
         run: |
-          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/wsrun" ]; then
+          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/wsrun" ] || [ ! -f "node_modules/.bin/lerna" ]; then
             echo "Cache miss or incomplete, installing dependencies..."
             yarn install --frozen-lockfile
+            echo "Verifying critical dependencies..."
+            yarn lerna --version
+            yarn wsrun --version || echo "wsrun version check failed"
           else
             echo "Using cached dependencies"
+            echo "Verifying cached dependencies..."
+            yarn lerna --version
+            yarn wsrun --version || echo "wsrun version check failed"
           fi
 
       - name: Build TypeScript packages
-        run: yarn build
+        run: |
+          echo "Setting up environment for TypeScript build..."
+          export PATH="$HOME/.foundry/bin:$PATH"
+          echo "Running lerna link..."
+          yarn lerna link
+          echo "Building TypeScript packages..."
+          yarn build:ts
 
   test-contracts-foundry:
     name: Test Contracts with Foundry
@@ -263,15 +287,25 @@ jobs:
 
       - name: Install dependencies (fallback if cache miss)
         run: |
-          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/wsrun" ]; then
+          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/wsrun" ] || [ ! -f "node_modules/.bin/lerna" ]; then
             echo "Cache miss or incomplete, installing dependencies..."
             yarn install --frozen-lockfile
+            echo "Verifying critical dependencies..."
+            yarn lerna --version
+            yarn wsrun --version || echo "wsrun version check failed"
           else
             echo "Using cached dependencies"
+            echo "Verifying cached dependencies..."
+            yarn lerna --version
+            yarn wsrun --version || echo "wsrun version check failed"
           fi
 
       - name: Build packages (required for tests)
-        run: yarn build
+        run: |
+          echo "Building packages for testing..."
+          export PATH="$HOME/.foundry/bin:$PATH"
+          yarn lerna link
+          yarn build:ts
 
       - name: Test ${{ matrix.package }}
         run: yarn wsrun -p "${{ matrix.package }}" -c test:ci
@@ -307,11 +341,17 @@ jobs:
 
       - name: Install dependencies (fallback if cache miss)
         run: |
-          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/wsrun" ]; then
+          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/wsrun" ] || [ ! -f "node_modules/.bin/lerna" ]; then
             echo "Cache miss or incomplete, installing dependencies..."
             yarn install --frozen-lockfile
+            echo "Verifying critical dependencies..."
+            yarn lerna --version
+            yarn wsrun --version || echo "wsrun version check failed"
           else
             echo "Using cached dependencies"
+            echo "Verifying cached dependencies..."
+            yarn lerna --version
+            yarn wsrun --version || echo "wsrun version check failed"
           fi
 
       - name: Run yarn audit
@@ -359,11 +399,17 @@ jobs:
 
       - name: Install dependencies (fallback if cache miss)
         run: |
-          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/wsrun" ]; then
+          if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/wsrun" ] || [ ! -f "node_modules/.bin/lerna" ]; then
             echo "Cache miss or incomplete, installing dependencies..."
             yarn install --frozen-lockfile
+            echo "Verifying critical dependencies..."
+            yarn lerna --version
+            yarn wsrun --version || echo "wsrun version check failed"
           else
             echo "Using cached dependencies"
+            echo "Verifying cached dependencies..."
+            yarn lerna --version
+            yarn wsrun --version || echo "wsrun version check failed"
           fi
 
       - name: Run integration tests
