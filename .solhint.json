@@ -4,7 +4,7 @@
     "rules": {
         "prettier/prettier": "error",
         "avoid-low-level-calls": "off",
-        "avoid-tx-origin": "warn",
+        "avoid-tx-origin": "error",
         "code-complexity": "off",
         "const-name-snakecase": "error",
         "function-max-lines": ["error", 350],
@@ -12,6 +12,18 @@
         "no-inline-assembly": "off",
         "quotes": ["error", "double"],
         "no-empty-blocks": "off",
-        "compiler-version": "off"
+        "compiler-version": "off",
+        "custom-errors": "error",
+        "no-unused-vars": "error",
+        "no-unused-import": "error",
+        "func-name-mixedcase": "error",
+        "var-name-mixedcase": "error",
+        "state-visibility": "error",
+        "no-global-import": "warn",
+        "explicit-types": "warn",
+        "one-contract-per-file": "warn",
+        "max-states-count": "warn",
+        "reason-string": "warn",
+        "no-complex-fallback": "error"
     }
 }

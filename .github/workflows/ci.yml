@@ -143,13 +143,25 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Lint TypeScript
-        run: yarn lint:ts
+        run: |
+          set -e
+          echo "🔍 Running TypeScript lint..."
+          yarn lint:ts
+          echo "✅ TypeScript lint passed"
 
-      - name: Lint Solidity
-        run: yarn lint:contracts
+      - name: Lint Solidity contracts
+        run: |
+          set -e
+          echo "🔍 Running Solidity lint..."
+          yarn lint:contracts
+          echo "✅ Solidity lint passed"
 
       - name: Check Prettier formatting
-        run: yarn prettier:ci
+        run: |
+          set -e
+          echo "🔍 Checking code formatting..."
+          yarn prettier:ci
+          echo "✅ Code formatting check passed"
 
   quality-checks:
     name: Quality checks
