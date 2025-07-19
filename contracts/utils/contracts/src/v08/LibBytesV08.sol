@@ -102,11 +102,7 @@ library LibBytesV08 {
                     // Copy whole words front to back
                     // Note: the first check is always true,
                     // this could have been a do-while loop.
-                    for {
-
-                    } lt(source, sEnd) {
-
-                    } {
+                    for {} lt(source, sEnd) {} {
                         mstore(dest, mload(source))
                         source := add(source, 32)
                         dest := add(dest, 32)
@@ -136,11 +132,7 @@ library LibBytesV08 {
                     // 2**255, so they can be safely re-interpreted as signed.
                     // Note: the first check is always true,
                     // this could have been a do-while loop.
-                    for {
-
-                    } slt(dest, dEnd) {
-
-                    } {
+                    for {} slt(dest, dEnd) {} {
                         mstore(dEnd, mload(sEnd))
                         sEnd := sub(sEnd, 32)
                         dEnd := sub(dEnd, 32)
