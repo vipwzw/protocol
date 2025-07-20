@@ -12,8 +12,16 @@ allow_paths = [
     '../utils/'
 ]
 
+# Legacy contracts moved to legacy_contracts/ for Apple Silicon compatibility
+# These contracts use older Solidity versions incompatible with Apple Silicon:
+# - ZRXToken.sol (0.4.11)
+# - WETH9.sol (0.5.9) 
+# - v06/*.sol (0.6.x)
+# They can be accessed directly if needed for specific use cases
+
 fs_permissions = [{ access = "read", path = "./out/ZRXToken.sol" }]
 
+# Force compatible Solidity version for Apple Silicon
 solc_version = "0.8.19"
 optimizer = true
 optimizer_runs = 1_000_000
