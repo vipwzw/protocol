@@ -247,7 +247,7 @@ contract ForkUtils is Test {
     //utility mapping to get indexingChainId by Chain
     mapping(string => string) public indexChainsByChain;
 
-    function createForks() public returns (uint256[] memory) {
+    function createForks() public {
         for (uint256 i = 0; i < chains.length; i++) {
             forkIds[chains[i]] = vm.createFork(vm.rpcUrl(chains[i]), blockNumber[i]);
         }

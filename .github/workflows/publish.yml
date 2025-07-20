@@ -1,77 +1,199 @@
-name: publish
+name: Publish Packages
 
 on:
-    workflow_dispatch:
-        inputs:
-            ci_status:
-                description: 'required CI status'
-                default: 'success'
-                required: true
-            prerelease:
-                description: 'prerelease name'
-                required: false
+  workflow_dispatch:
+    inputs:
+      ci_status:
+        description: 'Required CI status'
+        default: 'success'
+        required: true
+        type: choice
+        options:
+          - success
+          - failure
+      prerelease:
+        description: 'Prerelease name (optional)'
+        required: false
+        type: string
+
+env:
+  NODE_VERSION: '24'
+  PUBLISH_BRANCH: publish/${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_number }}
 
 jobs:
-    publish:
-        runs-on: ubuntu-latest
+  publish:
+    name: Publish packages to NPM
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check CI status
+        run: |
+          echo "Checking CI status for ref: ${{ github.ref }}"
+          REF_STATUS=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            'https://api.github.com/repos/${{ github.repository }}/commits/${{ github.ref }}/status' \
+            | jq -r .state)
+          echo "Current CI status: ${REF_STATUS}"
+          
+          if [[ "${REF_STATUS}" != "${{ github.event.inputs.ci_status }}" ]]; then
+            echo "::error ::${{ github.ref }} does not have the required CI status (${{ github.event.inputs.ci_status }})"
+            echo "::error ::Current status: ${REF_STATUS}"
+            exit 1
+          fi
+          echo "✅ CI status check passed"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Setup Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Configure Git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+      - name: Create publish branch
+        run: |
+          echo "Creating branch: ${{ env.PUBLISH_BRANCH }}"
+          git checkout -b ${{ env.PUBLISH_BRANCH }}
+          git push -u origin ${{ env.PUBLISH_BRANCH }}
+
+      - name: Install dependencies
+        run: |
+          echo "Installing dependencies..."
+          yarn install --frozen-lockfile
+
+      - name: Build packages
+        run: |
+          echo "Building packages..."
+          yarn build
+
+      - name: Run tests before publish
+        run: |
+          echo "Running quick tests before publish..."
+          yarn lint:ts
+          yarn prettier:ci
+
+      - name: Configure NPM authentication
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_PUBLISH_TOKEN }}" > .npmrc
+          npm whoami
+
+      - name: Publish packages
+        run: |
+          echo "Publishing packages..."
+          if [[ -n "${{ github.event.inputs.prerelease }}" ]]; then
+            echo "Publishing as prerelease: ${{ github.event.inputs.prerelease }}"
+            export PUBLISH_PRERELEASE="${{ github.event.inputs.prerelease }}"
+          fi
+          npm run run:publish:gha
         env:
-            PublishBranch: publish/${{github.ref_name }}-${{ github.run_id }}-${{ github.run_number }}
-        steps:
-            - name: 'check successful status'
-              run: |
-                  REF_STATUS=$(curl -s \
-                  'https://api.github.com/repos/${{ github.repository }}/commits/${{ github.ref }}/status' \
-                  | jq .state)
-                  [[ "${REF_STATUS}" == '"${{ github.event.inputs.ci_status }}"' ]] || \
-                  (echo "::error ::${{ github.ref }} does not have a successful CI status" && false)
-            - name: Add foundry
-              uses: foundry-rs/foundry-toolchain@v1
-              with:
-                  version: nightly
-            - uses: actions/checkout@v2
-              with:
-                  ref: ${{ github.ref }}
-                  fetch-depth: 0
-            - uses: actions/setup-node@v1
-              with:
-                  node-version: 16
-            - uses: actions/setup-python@v2
-            - name: 'configure git'
-              run: |
-                  git config --global user.email "github-actions@github.com"
-                  git config --global user.name "Github Actions"
-            - name: 'Checkout new branch'
-              run: |
-                  git checkout -b $PublishBranch
-                  git push -u origin $PublishBranch
-            - name: 'install dependencies'
-              run: |
-                  yarn -D
-            - name: 'build and publish'
-              run: |
-                  echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > .npmrc
-                  npm run run:publish:gha
-              env:
-                  NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
-                  GITHUB_TOKEN: ${{ github.token }}
-                  PUBLISH_PRERELEASE: ${{ github.event.inputs.prerelease }}
-            - name: 'Create PR to merge into ref branch'
-              run: |
-                  gh pr create \
-                    -B ${{ github.ref_name }} \
-                    -H $PublishBranch \
-                    --title "Publish: CHANGELOG and Package Version Updates into ${{ github.ref_name }}" \
-                    --body "Syncing CHANGELOG and package version updates from publish action ${{github.run_id}}-${{github.run_number}} into ${{ github.ref_name}} branch" \
-                    --reviewer ${{ github.actor }}
-              env:
-                  GITHUB_TOKEN: ${{ github.token }}
-            - name: 'Create PR to merge ref branch into main'
-              run: |
-                  gh pr create \
-                    -B main \
-                    -H ${{ github.ref_name }} \
-                    --title "Publish: Sync ${{ github.ref_name }} into main " \
-                    --body "Syncing ${{ github.ref_name }} back into main after publish action. NOTE: this PR should be merged after CHANGELOG and package version updates have been merged into ${{ github.ref_name }}" \
-                    --reviewer ${{ github.actor }}
-              env:
-                  GITHUB_TOKEN: ${{ github.token }}
+          NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISH_PRERELEASE: ${{ github.event.inputs.prerelease }}
+
+      - name: Create PR for version updates
+        run: |
+          echo "Creating PR to merge version updates..."
+          gh pr create \
+            --base ${{ github.ref_name }} \
+            --head ${{ env.PUBLISH_BRANCH }} \
+            --title "🚀 Publish: CHANGELOG and Package Version Updates" \
+            --body "## 📦 Package Publish Updates
+
+          This PR contains automated updates from the publish action:
+          
+          - 📝 CHANGELOG updates
+          - 🔢 Package version bumps
+          - 🏷️ Git tags
+          
+          **Publish Details:**
+          - Run ID: ${{ github.run_id }}
+          - Run Number: ${{ github.run_number }}
+          - Triggered by: @${{ github.actor }}
+          - Prerelease: ${{ github.event.inputs.prerelease || 'No' }}
+          
+          ## ✅ Next Steps
+          1. Review and merge this PR into \`${{ github.ref_name }}\`
+          2. The follow-up PR will sync \`${{ github.ref_name }}\` back to \`main\`
+          
+          ---
+          *This PR was automatically created by the publish workflow.*" \
+            --reviewer ${{ github.actor }} \
+            --label "publish" \
+            --label "automated"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create PR to sync back to main
+        if: github.ref_name != 'main'
+        run: |
+          echo "Creating PR to sync ${{ github.ref_name }} back to main..."
+          gh pr create \
+            --base main \
+            --head ${{ github.ref_name }} \
+            --title "🔄 Sync: ${{ github.ref_name }} → main after publish" \
+            --body "## 🔄 Post-Publish Sync
+
+          This PR syncs \`${{ github.ref_name }}\` back into \`main\` after the publish action.
+          
+          **⚠️ Important:** This PR should be merged **AFTER** the version update PR has been merged into \`${{ github.ref_name }}\`.
+          
+          **Publish Details:**
+          - Run ID: ${{ github.run_id }}
+          - Run Number: ${{ github.run_number }}
+          - Triggered by: @${{ github.actor }}
+          
+          ## ✅ Merge Order
+          1. ✅ Merge version updates into \`${{ github.ref_name }}\`
+          2. 🔄 Merge this PR (\`${{ github.ref_name }}\` → \`main\`)
+          
+          ---
+          *This PR was automatically created by the publish workflow.*" \
+            --reviewer ${{ github.actor }} \
+            --label "sync" \
+            --label "automated"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## 🎉 Publish Completed Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Published Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Prerelease:** ${{ github.event.inputs.prerelease || 'No' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Publish Branch:** ${{ env.PUBLISH_BRANCH }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review the created PRs" >> $GITHUB_STEP_SUMMARY
+          echo "2. Merge version updates PR first" >> $GITHUB_STEP_SUMMARY
+          echo "3. Then merge sync PR (if applicable)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Cleanup on failure
+        if: failure()
+        run: |
+          echo "Cleaning up failed publish attempt..."
+          git push origin --delete ${{ env.PUBLISH_BRANCH }} || true
+          echo "Publish branch deleted due to failure"

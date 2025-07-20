@@ -22,7 +22,7 @@ contract ZRXTokenTest is Test {
     address payable internal user = payable(vm.addr(2));
     address payable internal anotherUser = payable(vm.addr(3));
     uint256 internal totalSupply = 1_000_000_000 * 1e18;
-    IERC20Token zrxToken;
+    IERC20Token internal zrxToken;
 
     function setUp() public {
         vm.deal(owner, 1e20);

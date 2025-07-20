@@ -14,5 +14,6 @@ allow_paths = [
 
 fs_permissions = [{ access = "read", path = "./out/ZRXToken.sol" }]
 
+optimizer = true
 optimizer_runs = 1_000_000
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

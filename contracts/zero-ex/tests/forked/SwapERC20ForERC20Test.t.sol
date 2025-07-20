@@ -42,6 +42,7 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
             if (i == 4) {
                 continue;
             }
+            
             vm.selectFork(forkIds[chains[i]]);
             labelAddresses(
                 chains[i],
@@ -60,6 +61,7 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
             if (i != 3 && i != 6) {
                 continue;
             }
+            
             vm.selectFork(forkIds[chains[i]]);
             labelAddresses(
                 chains[i],
