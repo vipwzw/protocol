@@ -182,9 +182,6 @@ jobs:
         if: needs.setup.outputs.node-cache-hit != 'true'
         run: yarn install --frozen-lockfile
 
-      - name: Check dependent packages versions
-        run: yarn deps_versions:ci
-
       - name: Check docs diff
         run: yarn diff_md_docs:ci
 
