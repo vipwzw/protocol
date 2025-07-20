@@ -100,6 +100,20 @@ jobs:
         if: needs.setup.outputs.node-cache-hit != 'true'
         run: yarn install --frozen-lockfile
 
+      - name: Setup Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: ${{ env.FORGE_VERSION }}
+
+      - name: Restore Foundry cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.foundry
+            contracts/*/cache
+            contracts/*/out
+          key: ${{ runner.os }}-foundry-${{ env.FORGE_VERSION }}-${{ hashFiles('contracts/**/foundry.toml', 'contracts/**/*.sol') }}
+
       - name: Build solution
         run: yarn build
 
@@ -221,6 +235,20 @@ jobs:
       - name: Install dependencies
         if: needs.setup.outputs.node-cache-hit != 'true'
         run: yarn install --frozen-lockfile
+
+      - name: Setup Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: ${{ env.FORGE_VERSION }}
+
+      - name: Restore Foundry cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.foundry
+            contracts/*/cache
+            contracts/*/out
+          key: ${{ runner.os }}-foundry-${{ env.FORGE_VERSION }}-${{ hashFiles('contracts/**/foundry.toml', 'contracts/**/*.sol') }}
 
       - name: Test @0x/contracts-*
         run: |
