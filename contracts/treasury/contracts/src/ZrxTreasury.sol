@@ -17,19 +17,15 @@
 
 */
 
-pragma solidity ^0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.19;
 
-import "@0x/contracts-utils/contracts/src/v06/LibBytesV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-zero-ex/contracts/src/features/libs/LibSignature.sol";
+import "@0x/contracts-utils/contracts/src/v08/LibBytesV08.sol";
+import "@0x/contracts-utils/contracts/src/v08/errors/LibRichErrorsV08.sol";
 import "./IZrxTreasury.sol";
 
 contract ZrxTreasury is IZrxTreasury {
-    using LibSafeMathV06 for uint256;
-    using LibRichErrorsV06 for bytes;
-    using LibBytesV06 for bytes;
+    using LibRichErrorsV08 for bytes;
+    using LibBytesV08 for bytes;
 
     /// Contract name
     string private constant CONTRACT_NAME = "Zrx Treasury";
@@ -63,7 +59,7 @@ contract ZrxTreasury is IZrxTreasury {
     ///      staking pool.
     /// @param stakingProxy_ The 0x staking proxy contract.
     /// @param params Immutable treasury parameters.
-    constructor(IStaking stakingProxy_, TreasuryParameters memory params) public {
+    constructor(IStaking stakingProxy_, TreasuryParameters memory params) {
         require(params.votingPeriod < stakingProxy_.epochDurationInSeconds(), "VOTING_PERIOD_TOO_LONG");
         stakingProxy = stakingProxy_;
         votingPeriod = params.votingPeriod;
@@ -229,7 +225,7 @@ contract ZrxTreasury is IZrxTreasury {
         // Voting power for ZRX delegated to the default pool is not diluted,
         // so we double-count the balance delegated to the default pool before
         // dividing by 2.
-        votingPower = delegatedBalance.safeAdd(balanceDelegatedToDefaultPool).safeDiv(2);
+        votingPower = (delegatedBalance + balanceDelegatedToDefaultPool) / 2;
 
         // Add voting power for operated staking pools.
         for (uint256 i = 0; i != operatedPoolIds.length; i++) {
@@ -241,8 +237,8 @@ contract ZrxTreasury is IZrxTreasury {
             uint96 stakeDelegatedToPool = stakingProxy
                 .getTotalStakeDelegatedToPool(operatedPoolIds[i])
                 .currentEpochBalance;
-            uint256 poolVotingPower = uint256(stakeDelegatedToPool).safeDiv(2);
-            votingPower = votingPower.safeAdd(poolVotingPower);
+            uint256 poolVotingPower = uint256(stakeDelegatedToPool) / 2;
+            votingPower = votingPower + poolVotingPower;
         }
 
         return votingPower;
@@ -294,7 +290,7 @@ contract ZrxTreasury is IZrxTreasury {
         }
         // voteEpoch == currentEpoch
         // Vote ends at currentEpochStartTime + votingPeriod
-        uint256 voteEndTime = stakingProxy.currentEpochStartTimeInSeconds().safeAdd(votingPeriod);
+        uint256 voteEndTime = stakingProxy.currentEpochStartTimeInSeconds() + votingPeriod;
         return block.timestamp > voteEndTime;
     }
 
@@ -320,9 +316,9 @@ contract ZrxTreasury is IZrxTreasury {
         }
 
         if (support) {
-            proposals[proposalId].votesFor = proposals[proposalId].votesFor.safeAdd(votingPower);
+            proposals[proposalId].votesFor = proposals[proposalId].votesFor + votingPower;
         } else {
-            proposals[proposalId].votesAgainst = proposals[proposalId].votesAgainst.safeAdd(votingPower);
+            proposals[proposalId].votesAgainst = proposals[proposalId].votesAgainst + votingPower;
         }
         hasVoted[proposalId][voter] = true;
 
@@ -330,7 +326,7 @@ contract ZrxTreasury is IZrxTreasury {
     }
 
     /// @dev Gets the Ethereum chain id
-    function _getChainId() private pure returns (uint256) {
+    function _getChainId() private view returns (uint256) {
         uint256 chainId;
         assembly {
             chainId := chainid()
