@@ -17,10 +17,10 @@
 
 */
 
-pragma solidity ^0.6.5;
+pragma solidity ^0.8.19;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibBytesV06.sol";
+import "@0x/contracts-utils/contracts/src/v08/errors/LibRichErrorsV08.sol";
+import "@0x/contracts-utils/contracts/src/v08/LibBytesV08.sol";
 import "../IERC20Token.sol";
 
 library LibERC20TokenV06 {
@@ -44,7 +44,7 @@ library LibERC20TokenV06 {
     /// @param amount The minimum allowance needed.
     function approveIfBelow(IERC20Token token, address spender, uint256 amount) internal {
         if (token.allowance(address(this), spender) < amount) {
-            compatApprove(token, spender, uint256(-1));
+            compatApprove(token, spender, type(uint256).max);
         }
     }
 
@@ -77,7 +77,7 @@ library LibERC20TokenV06 {
         tokenDecimals = 18;
         (bool didSucceed, bytes memory resultData) = address(token).staticcall(DECIMALS_CALL_DATA);
         if (didSucceed && resultData.length >= 32) {
-            tokenDecimals = uint8(LibBytesV06.readUint256(resultData, 0));
+            tokenDecimals = uint8(LibBytesV08.readUint256(resultData, 0));
         }
     }
 
@@ -96,7 +96,7 @@ library LibERC20TokenV06 {
             abi.encodeWithSelector(token.allowance.selector, owner, spender)
         );
         if (didSucceed && resultData.length >= 32) {
-            allowance_ = LibBytesV06.readUint256(resultData, 0);
+            allowance_ = LibBytesV08.readUint256(resultData, 0);
         }
     }
 
@@ -110,7 +110,7 @@ library LibERC20TokenV06 {
             abi.encodeWithSelector(token.balanceOf.selector, owner)
         );
         if (didSucceed && resultData.length >= 32) {
-            balance = LibBytesV06.readUint256(resultData, 0);
+            balance = LibBytesV08.readUint256(resultData, 0);
         }
     }
 
@@ -123,7 +123,7 @@ library LibERC20TokenV06 {
         (bool didSucceed, bytes memory resultData) = target.call(callData);
         // Revert if the call reverted.
         if (!didSucceed) {
-            LibRichErrorsV06.rrevert(resultData);
+            LibRichErrorsV08.rrevert(resultData);
         }
         // If we get back 0 returndata, this may be a non-standard ERC-20 that
         // does not return a boolean. Check that it at least contains code.
@@ -139,15 +139,15 @@ library LibERC20TokenV06 {
         // contains code, and we assume it is a token that returned a boolean
         // success value, which must be true.
         if (resultData.length >= 32) {
-            uint256 result = LibBytesV06.readUint256(resultData, 0);
+            uint256 result = LibBytesV08.readUint256(resultData, 0);
             if (result == 1) {
                 return;
             } else {
-                LibRichErrorsV06.rrevert(resultData);
+                LibRichErrorsV08.rrevert(resultData);
             }
         }
         // If 0 < returndatasize < 32, the target is a contract, but not a
         // valid token.
-        LibRichErrorsV06.rrevert(resultData);
+        LibRichErrorsV08.rrevert(resultData);
     }
 }

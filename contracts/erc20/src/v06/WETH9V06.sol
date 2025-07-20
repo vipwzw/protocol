@@ -14,7 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // solhint-disable
-pragma solidity ^0.6.0;
+pragma solidity ^0.8.19;
 
 contract WETH9V06 {
     string public name = "Wrapped Ether";
@@ -41,7 +41,7 @@ contract WETH9V06 {
     function withdraw(uint wad) public {
         require(balanceOf[msg.sender] >= wad);
         balanceOf[msg.sender] -= wad;
-        msg.sender.transfer(wad);
+        payable(msg.sender).transfer(wad);  // 修复：0.8.x 需要显式转换为 payable
         emit Withdrawal(msg.sender, wad);
     }
 
@@ -62,7 +62,7 @@ contract WETH9V06 {
     function transferFrom(address src, address dst, uint wad) public returns (bool) {
         require(balanceOf[src] >= wad);
 
-        if (src != msg.sender && allowance[src][msg.sender] != uint(-1)) {
+        if (src != msg.sender && allowance[src][msg.sender] != type(uint256).max) {
             require(allowance[src][msg.sender] >= wad);
             allowance[src][msg.sender] -= wad;
         }
