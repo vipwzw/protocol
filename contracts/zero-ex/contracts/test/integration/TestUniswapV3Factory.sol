@@ -35,7 +35,10 @@ contract TestUniswapV3Factory {
 
     function createPool(IERC20Token tokenA, IERC20Token tokenB, uint24 fee) external returns (TestUniswapV3Pool pool) {
         (IERC20Token token0, IERC20Token token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        require(getPool[token0][token1][fee] == TestUniswapV3Pool(address(0)), "TestUniswapV3Factory/POOL_ALREADY_EXISTS");
+        require(
+            getPool[token0][token1][fee] == TestUniswapV3Pool(address(0)),
+            "TestUniswapV3Factory/POOL_ALREADY_EXISTS"
+        );
         creationParameters = CreationParameters({token0: token0, token1: token1, fee: fee});
         pool = new TestUniswapV3Pool{salt: keccak256(abi.encode(token0, token1, fee))}();
         getPool[token0][token1][fee] = pool;

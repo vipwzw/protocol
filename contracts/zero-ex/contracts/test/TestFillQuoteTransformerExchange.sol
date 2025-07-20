@@ -44,7 +44,7 @@ contract TestFillQuoteTransformerExchange {
         }
         uint256 protocolFee = PROTOCOL_FEE_MULTIPLIER * tx.gasprice;
         // Return excess protocol fee.
-        msg.sender.transfer(msg.value - protocolFee);
+        payable(msg.sender).transfer(msg.value - protocolFee);
         takerTokenFilledAmount = LibSafeMathV06.min128(
             order.takerAmount - takerTokenPreFilledAmount,
             takerTokenFillAmount

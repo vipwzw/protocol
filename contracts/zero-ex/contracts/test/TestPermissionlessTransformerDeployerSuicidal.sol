@@ -16,6 +16,6 @@ pragma solidity 0.8.19;
 
 contract TestPermissionlessTransformerDeployerSuicidal {
     function kill() external {
-        selfdestruct(msg.sender);
+        selfdestruct(payable(msg.sender));
     }
 }

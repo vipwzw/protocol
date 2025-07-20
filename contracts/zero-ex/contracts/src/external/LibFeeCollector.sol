@@ -27,19 +27,21 @@ library LibFeeCollector {
     ) internal pure returns (address payable feeCollectorAddress) {
         // Compute the CREATE2 address for the fee collector.
         return
-            payable(address(
-                uint160(
-                    uint256(
-                        keccak256(
-                            abi.encodePacked(
-                                bytes1(0xff),
-                                controller,
-                                poolId, // pool ID is salt
-                                initCodeHash
+            payable(
+                address(
+                    uint160(
+                        uint256(
+                            keccak256(
+                                abi.encodePacked(
+                                    bytes1(0xff),
+                                    controller,
+                                    poolId, // pool ID is salt
+                                    initCodeHash
+                                )
                             )
                         )
                     )
                 )
-            ));
+            );
     }
 }

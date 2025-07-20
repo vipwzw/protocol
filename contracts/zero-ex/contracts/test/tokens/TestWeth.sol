@@ -33,7 +33,7 @@ contract TestWeth is TestMintableERC20Token {
     function withdraw(uint256 amount) external {
         require(balanceOf[msg.sender] >= amount, "TestWeth/INSUFFICIENT_FUNDS");
         balanceOf[msg.sender] -= amount;
-        msg.sender.transfer(amount);
+        payable(msg.sender).transfer(amount);
         emit Withdrawal(msg.sender, amount);
     }
 }

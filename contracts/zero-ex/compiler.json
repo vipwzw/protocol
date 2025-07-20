@@ -210,7 +210,7 @@
     "shouldSaveStandardInput": true,
     "shouldCompileIndependently": true,
     "compilerSettings": {
-        "evmVersion": "istanbul",
+        "evmVersion": "london",
         "optimizer": {
             "enabled": true,
             "runs": 1000000,

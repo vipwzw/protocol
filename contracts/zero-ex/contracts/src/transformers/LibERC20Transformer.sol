@@ -125,19 +125,21 @@ library LibERC20Transformer {
         // See: https://ethereum.stackexchange.com/questions/760/how-is-the-address-of-an-ethereum-contract-computed
         bytes memory rlpNonce = rlpEncodeNonce(deploymentNonce);
         return
-            payable(address(
-                uint160(
-                    uint256(
-                        keccak256(
-                            abi.encodePacked(
-                                bytes1(uint8(0xC0 + 21 + rlpNonce.length)),
-                                bytes1(uint8(0x80 + 20)),
-                                deployer,
-                                rlpNonce
+            payable(
+                address(
+                    uint160(
+                        uint256(
+                            keccak256(
+                                abi.encodePacked(
+                                    bytes1(uint8(0xC0 + 21 + rlpNonce.length)),
+                                    bytes1(uint8(0x80 + 20)),
+                                    deployer,
+                                    rlpNonce
+                                )
                             )
                         )
                     )
                 )
-            ));
+            );
     }
 }

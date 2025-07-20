@@ -12,9 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity >=0.6;
-
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "../utils/ForkUtils.sol";
 import "../utils/TestUtils.sol";
@@ -42,7 +40,7 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
             if (i == 4) {
                 continue;
             }
-            
+
             vm.selectFork(forkIds[chains[i]]);
             labelAddresses(
                 chains[i],
@@ -61,7 +59,7 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
             if (i != 3 && i != 6) {
                 continue;
             }
-            
+
             vm.selectFork(forkIds[chains[i]]);
             labelAddresses(
                 chains[i],
