@@ -1,0 +1,64 @@
+---
+description: Foundry configuration best practices for 0x Protocol
+globs: "foundry.toml"
+---
+
+# Foundry 配置最佳实践
+
+## 标准配置模板
+
+所有模块的 foundry.toml 应遵循以下标准：
+
+```toml
+[profile.default]
+src = 'src'  # 或 'contracts/src'
+out = 'out'  # 或 'foundry-artifacts'
+test = 'test'
+libs = ["lib/", "../utils/", "../erc20/"]
+remappings = [
+    '@0x/contracts-utils/=../utils/',
+    '@0x/contracts-erc20/=../erc20/',
+    '@0x/contracts-zero-ex/=../zero-ex/',
+]
+solc_version = "0.8.19"
+optimizer = true
+optimizer_runs = 1_000_000
+evm_version = "shanghai"
+fs_permissions = [
+    { access = "read", path = "./" },
+    { access = "read", path = "../" }
+]
+```
+
+## 关键配置说明
+
+### Apple Silicon 兼容性
+- **solc_version = "0.8.19"**: 确保 Apple Silicon 原生支持
+- **evm_version = "shanghai"**: 现代 EVM 特性
+
+### 性能优化
+- **optimizer_runs = 1_000_000**: 高度优化的字节码
+- **optimizer = true**: 启用优化器
+
+### 跨模块引用
+- **libs**: 包含相邻模块路径
+- **remappings**: 标准化的 @0x/ 命名空间
+- **fs_permissions**: 允许读取相邻目录
+
+## 特殊配置
+
+### ERC20 模块 ([contracts/erc20/foundry.toml](mdc:contracts/erc20/foundry.toml))
+- 遗留合约已移至 `legacy_contracts/`
+- 仅编译兼容 0.8.19 的现代合约
+
+### Treasury 模块 ([contracts/treasury/foundry.toml](mdc:contracts/treasury/foundry.toml))
+- 参考实现，完全升级到 0.8.19
+- 包含完整的跨模块依赖配置
+
+## 故障排除
+
+如果遇到编译错误：
+1. 检查 solc_version 是否为 "0.8.19"
+2. 确认 fs_permissions 包含必要路径
+3. 验证 remappings 路径是否正确
+4. 检查是否有不兼容的遗留合约

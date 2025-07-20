@@ -1,0 +1,40 @@
+---
+alwaysApply: true
+---
+
+# 0x Protocol 项目结构
+
+## 主要模块
+
+### 合约目录 ([contracts/](mdc:contracts/))
+- **treasury/** - 国库治理合约 (Solidity 0.8.19)
+- **governance/** - 治理机制合约 (Solidity 0.8.19) 
+- **erc20/** - ERC20 代币相关合约 (混合版本)
+- **zero-ex/** - 0x 协议核心合约 (待升级)
+- **utils/** - 工具库，包含 v06 和 v08 版本
+- **test-utils/** - 测试工具和辅助函数
+
+### 工具和配置
+- **packages/** - TypeScript/JavaScript 包
+- **docs/** - 项目文档
+- **scripts/** - 构建和部署脚本
+
+## 编译配置
+
+每个合约模块都有独立的 [foundry.toml](mdc:foundry.toml) 配置：
+- 统一使用 Solidity 0.8.19 (兼容 Apple Silicon)
+- Shanghai EVM 版本
+- 1,000,000 optimizer runs
+
+## 开发工作流
+
+1. **合约开发**: 在对应的 `contracts/*/src/` 目录
+2. **测试**: 在对应的 `contracts/*/test/` 目录  
+3. **编译**: 在模块目录下运行 `forge build`
+4. **测试**: 运行 `forge test`
+
+## 依赖关系
+
+- utils 为其他模块提供基础库
+- governance 依赖 treasury 合约
+- zero-ex 是协议核心，依赖多个模块
