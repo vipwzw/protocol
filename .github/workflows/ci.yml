@@ -208,7 +208,7 @@ jobs:
   test-contracts:
     name: Test smart contracts
     runs-on: ubuntu-latest
-    needs: setup
+    needs: [setup, build]
     timeout-minutes: 20
     steps:
       - name: Checkout code
@@ -250,6 +250,14 @@ jobs:
             contracts/*/out
           key: ${{ runner.os }}-foundry-${{ env.FORGE_VERSION }}-${{ hashFiles('contracts/**/foundry.toml', 'contracts/**/*.sol') }}
 
+      - name: Restore build artifacts cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            packages/*/lib
+            contracts/*/generated-*
+          key: ${{ runner.os }}-build-${{ github.sha }}
+
       - name: Test @0x/contracts-*
         run: |
           yarn wsrun \
@@ -266,7 +274,7 @@ jobs:
   test-packages:
     name: Test local packages
     runs-on: ubuntu-latest
-    needs: setup
+    needs: [setup, build]
     timeout-minutes: 15
     steps:
       - name: Checkout code
@@ -293,6 +301,14 @@ jobs:
       - name: Install dependencies
         if: needs.setup.outputs.node-cache-hit != 'true'
         run: yarn install --frozen-lockfile
+
+      - name: Restore build artifacts cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            packages/*/lib
+            contracts/*/generated-*
+          key: ${{ runner.os }}-build-${{ github.sha }}
 
       - name: Test local @0x/contracts-*
         run: |
