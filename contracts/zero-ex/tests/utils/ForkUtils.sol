@@ -247,9 +247,15 @@ contract ForkUtils is Test {
     //utility mapping to get indexingChainId by Chain
     mapping(string => string) public indexChainsByChain;
 
-    function createForks() public returns (uint256[] memory) {
+    function createForks() public {
         for (uint256 i = 0; i < chains.length; i++) {
-            forkIds[chains[i]] = vm.createFork(vm.rpcUrl(chains[i]), blockNumber[i]);
+            try vm.createFork(vm.rpcUrl(chains[i]), blockNumber[i]) returns (uint256 forkId) {
+                forkIds[chains[i]] = forkId;
+            } catch {
+                // Skip chains with invalid RPC URLs
+                console.log("Warning: Skipping fork creation for chain", chains[i], "due to invalid RPC URL");
+                forkIds[chains[i]] = 0; // Set to 0 to indicate invalid fork
+            }
         }
     }
 

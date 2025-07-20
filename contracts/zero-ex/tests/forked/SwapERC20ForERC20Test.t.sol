@@ -42,6 +42,13 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
             if (i == 4) {
                 continue;
             }
+            
+            // Skip if fork is invalid (RPC URL not available)
+            if (forkIds[chains[i]] == 0) {
+                console.log("Skipping test for chain", chains[i], "- fork not available");
+                continue;
+            }
+            
             vm.selectFork(forkIds[chains[i]]);
             labelAddresses(
                 chains[i],
@@ -60,6 +67,13 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
             if (i != 3 && i != 6) {
                 continue;
             }
+            
+            // Skip if fork is invalid (RPC URL not available)
+            if (forkIds[chains[i]] == 0) {
+                console.log("Skipping test for chain", chains[i], "- fork not available");
+                continue;
+            }
+            
             vm.selectFork(forkIds[chains[i]]);
             labelAddresses(
                 chains[i],
