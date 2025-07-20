@@ -12,26 +12,9 @@ remappings = [
     'samplers/=contracts/test/samplers',
     'utils/=./tests/utils',
 ]
+optimizer = true
 optimizer_runs = 1000000
 fs_permissions = [{ access = "read", path = "./" }]
-
-# Coverage profile with optimizer enabled for accurate reports
-[profile.coverage]
-optimizer = true
-optimizer_runs = 200
-src = 'contracts/src'
-out = 'foundry-artifacts'
-test = 'tests'
-libs = ["contracts/deps/", "../utils/contracts/src/"]
-remappings = [
-    'forge-std/=contracts/deps/forge-std/src/',
-    'ds-test/=contracts/deps/forge-std/lib/ds-test/src/',
-    '@0x/contracts-utils/=../utils/',
-    '@0x/contracts-erc20/=../erc20/',
-    'src/=./contracts/src',
-    'samplers/=contracts/test/samplers',
-    'utils/=./tests/utils',
-]
 
 [rpc_endpoints]
 # Use public RPC URLs - these work reliably for CI/testing

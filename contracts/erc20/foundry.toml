@@ -14,23 +14,6 @@ allow_paths = [
 
 fs_permissions = [{ access = "read", path = "./out/ZRXToken.sol" }]
 
-optimizer_runs = 1_000_000
-
-# Coverage profile with optimizer enabled for accurate reports
-[profile.coverage]
 optimizer = true
-optimizer_runs = 200
-src = 'src'
-out = 'out'
-libs = [
-    'lib',
-    'node_modules',
-]
-remappings = [
-    '@0x/contracts-utils/=../utils/'
-]
-allow_paths = [
-    '../utils/'
-]
-
+optimizer_runs = 1_000_000
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
