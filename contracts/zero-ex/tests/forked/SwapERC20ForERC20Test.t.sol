@@ -43,12 +43,6 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
                 continue;
             }
             
-            // Skip if fork is invalid (RPC URL not available)
-            if (forkIds[chains[i]] == 0) {
-                console.log("Skipping test for chain", chains[i], "- fork not available");
-                continue;
-            }
-            
             vm.selectFork(forkIds[chains[i]]);
             labelAddresses(
                 chains[i],
@@ -65,12 +59,6 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
         for (uint256 i = 0; i < chains.length; i++) {
             // TraderJoeV2 mixin only enabled on Avalanche and Arbitrum
             if (i != 3 && i != 6) {
-                continue;
-            }
-            
-            // Skip if fork is invalid (RPC URL not available)
-            if (forkIds[chains[i]] == 0) {
-                console.log("Skipping test for chain", chains[i], "- fork not available");
                 continue;
             }
             
