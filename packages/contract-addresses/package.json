@@ -27,6 +27,7 @@
     },
     "homepage": "https://github.com/0xProject/protocol/tree/main/packages/contract-addresses",
     "devDependencies": {
+        "@types/minimatch": "^3.0.5",
         "@types/mocha": "^5.2.7",
         "chai": "^4.0.1",
                 "ethereumjs-util": "^7.1.5",
