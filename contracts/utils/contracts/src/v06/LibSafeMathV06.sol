@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity ^0.6.5;
+pragma solidity 0.8.19;
 
 import "./errors/LibRichErrorsV06.sol";
 import "./errors/LibSafeMathRichErrorsV06.sol";

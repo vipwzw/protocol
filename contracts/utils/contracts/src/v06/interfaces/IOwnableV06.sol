@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity ^0.6.5;
+pragma solidity 0.8.19;
 
 interface IOwnableV06 {
     /// @dev Emitted by Ownable when ownership is transferred.
