@@ -290,6 +290,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
             const args = getRandomTransformERC20Args();
             const mtx = getRandomMetaTransaction({
                 sender: NULL_ADDRESS,
+                value: ZERO_AMOUNT, // 设置为 0 避免余额不足问题
                 callData: transformERC20Feature
                     .transformERC20(
                         args.inputToken,
