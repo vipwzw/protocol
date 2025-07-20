@@ -17,8 +17,7 @@
 
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import {LibNativeOrder} from "src/features/libs/LibNativeOrder.sol";
 import {IMultiplexFeature} from "src/features/interfaces/IMultiplexFeature.sol";

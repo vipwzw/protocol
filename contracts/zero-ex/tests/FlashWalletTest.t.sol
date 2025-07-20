@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "utils/BaseTest.sol";
 import "../contracts/src/external/FlashWallet.sol";
@@ -45,21 +44,21 @@ contract FlashWalletTest is BaseTest {
     function test_executeCall_nonOwnerCannotExecute() public {
         vm.expectRevert(LibOwnableRichErrorsV06.OnlyOwnerError(account2, owner));
         vm.startPrank(account2);
-        wallet.executeCall(address(callTarget), "0x1", 123);
+        wallet.executeCall(payable(address(callTarget)), "0x1", 123);
     }
 
     function test_executeCall_ownerCanCallWithZeroValue() public {
         vm.expectEmit(true, true, true, true);
         emit CallTargetCalled(address(wallet), "0x1", 0);
         vm.startPrank(owner);
-        wallet.executeCall(address(callTarget), "0x1", 0);
+        wallet.executeCall(payable(address(callTarget)), "0x1", 0);
     }
 
     function test_executeCall_ownerCanCallWithNonZeroValue() public {
         vm.expectEmit(true, true, true, true);
         emit CallTargetCalled(address(wallet), "0x1", 1);
         vm.startPrank(owner);
-        wallet.executeCall{value: 1}(address(callTarget), "0x1", 1);
+        wallet.executeCall{value: 1}(payable(address(callTarget)), "0x1", 1);
     }
 
     function test_executeCall_ownerCanTransferLessETHThanAttached() public {
@@ -67,12 +66,12 @@ contract FlashWalletTest is BaseTest {
         emit CallTargetCalled(address(wallet), "0x1", 1);
         vm.startPrank(owner);
         // Send value 2 but execute call with 1
-        wallet.executeCall{value: 2}(address(callTarget), "0x1", 1);
+        wallet.executeCall{value: 2}(payable(address(callTarget)), "0x1", 1);
     }
 
     function test_executeCall_walletReturnsCallResult() public {
         vm.startPrank(owner);
-        bytes memory result = wallet.executeCall(address(callTarget), "0x1", 0);
+        bytes memory result = wallet.executeCall(payable(address(callTarget)), "0x1", 0);
         assertEq0(result, MAGIC_BYTES);
     }
 
@@ -89,7 +88,7 @@ contract FlashWalletTest is BaseTest {
         vm.expectRevert(error);
 
         vm.startPrank(owner);
-        wallet.executeCall(address(callTarget), REVERTING_DATA, 0);
+        wallet.executeCall(payable(address(callTarget)), REVERTING_DATA, 0);
     }
 
     function test_executeCall_walletCanReceiveETH() public {
@@ -102,26 +101,26 @@ contract FlashWalletTest is BaseTest {
     function test_executeDelegateCall_nonOwnerCannotExecute() public {
         vm.expectRevert(LibOwnableRichErrorsV06.OnlyOwnerError(account2, owner));
         vm.startPrank(account2);
-        wallet.executeDelegateCall(address(callTarget), "0x1");
+        wallet.executeDelegateCall(payable(address(callTarget)), "0x1");
     }
 
     function test_executeDelegateCall_ownerCanExecute() public {
         vm.expectEmit(true, true, true, true);
         emit CallTargetCalled(owner, "0x1", 0);
         vm.startPrank(owner);
-        wallet.executeDelegateCall(address(callTarget), "0x1");
+        wallet.executeDelegateCall(payable(address(callTarget)), "0x1");
     }
 
     function test_executeDelegateCall_ownerCanExecuteWithValue() public {
         vm.expectEmit(true, true, true, true);
         emit CallTargetCalled(owner, "0x1", 1);
         vm.startPrank(owner);
-        wallet.executeDelegateCall{value: 1}(address(callTarget), "0x1");
+        wallet.executeDelegateCall{value: 1}(payable(address(callTarget)), "0x1");
     }
 
     function test_executeDelegateCall_walletReturnsCallResult() public {
         vm.startPrank(owner);
-        bytes memory result = wallet.executeDelegateCall(address(callTarget), "0x1");
+        bytes memory result = wallet.executeDelegateCall(payable(address(callTarget)), "0x1");
         assertEq0(result, MAGIC_BYTES);
     }
 
@@ -137,6 +136,6 @@ contract FlashWalletTest is BaseTest {
         vm.expectRevert(error);
 
         vm.startPrank(owner);
-        wallet.executeDelegateCall(address(callTarget), REVERTING_DATA);
+        wallet.executeDelegateCall(payable(address(callTarget)), REVERTING_DATA);
     }
 }

@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "@0x/contracts-erc20/src/IEtherToken.sol";
@@ -44,6 +43,7 @@ contract MultiplexFeature is
     MultiplexUniswapV2,
     MultiplexUniswapV3
 {
+    using LibSafeMathV06 for uint256;
     /// @dev Name of this feature.
     string public constant override FEATURE_NAME = "MultiplexFeature";
     /// @dev Version of this feature.
@@ -151,7 +151,7 @@ contract MultiplexFeature is
         // Unwrap WETH.
         WETH.withdraw(boughtAmount);
         // Transfer ETH to `msg.sender`.
-        _transferEth(msg.sender, boughtAmount);
+        _transferEth(payable(msg.sender), boughtAmount);
     }
 
     /// @dev Sells `sellAmount` of the given `inputToken` for
@@ -295,7 +295,7 @@ contract MultiplexFeature is
         // Unwrap WETH.
         WETH.withdraw(boughtAmount);
         // Transfer ETH to `msg.sender`.
-        _transferEth(msg.sender, boughtAmount);
+        _transferEth(payable(msg.sender), boughtAmount);
     }
 
     /// @dev Sells `sellAmount` of the input token (`tokens[0]`)

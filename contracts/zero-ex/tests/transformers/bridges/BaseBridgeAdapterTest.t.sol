@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
 import "../../../contracts/src/transformers/bridges/BaseBridgeAdapter.sol";

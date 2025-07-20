@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
 import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
@@ -157,8 +156,8 @@ contract MooniswapLiquidityProvider is ILiquidityProvider {
         }
 
         boughtAmount = pool.swap{value: ethValue}(
-            _isTokenEthLike(inputToken) ? IERC20Token(0) : inputToken,
-            _isTokenEthLike(outputToken) ? IERC20Token(0) : outputToken,
+            _isTokenEthLike(inputToken) ? IERC20Token(address(0)) : inputToken,
+            _isTokenEthLike(outputToken) ? IERC20Token(address(0)) : outputToken,
             sellAmount,
             minBuyAmount,
             address(0)

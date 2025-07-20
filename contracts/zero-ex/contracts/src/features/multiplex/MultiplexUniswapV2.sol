@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
@@ -164,13 +163,15 @@ abstract contract MultiplexUniswapV2 is FixinCommon, FixinTokenSpender {
             // Use the Sushiswap factory address and codehash
             return
                 address(
-                    uint256(
-                        keccak256(
-                            abi.encodePacked(
-                                hex"ff",
-                                SUSHISWAP_FACTORY,
-                                keccak256(abi.encodePacked(token0, token1)),
-                                SUSHISWAP_PAIR_INIT_CODE_HASH
+                    uint160(
+                        uint256(
+                            keccak256(
+                                abi.encodePacked(
+                                    hex"ff",
+                                    SUSHISWAP_FACTORY,
+                                    keccak256(abi.encodePacked(token0, token1)),
+                                    SUSHISWAP_PAIR_INIT_CODE_HASH
+                                )
                             )
                         )
                     )
@@ -179,13 +180,15 @@ abstract contract MultiplexUniswapV2 is FixinCommon, FixinTokenSpender {
             // Use the Uniswap factory address and codehash
             return
                 address(
-                    uint256(
-                        keccak256(
-                            abi.encodePacked(
-                                hex"ff",
-                                UNISWAP_FACTORY,
-                                keccak256(abi.encodePacked(token0, token1)),
-                                UNISWAP_PAIR_INIT_CODE_HASH
+                    uint160(
+                        uint256(
+                            keccak256(
+                                abi.encodePacked(
+                                    hex"ff",
+                                    UNISWAP_FACTORY,
+                                    keccak256(abi.encodePacked(token0, token1)),
+                                    UNISWAP_PAIR_INIT_CODE_HASH
+                                )
                             )
                         )
                     )

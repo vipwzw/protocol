@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
@@ -63,7 +62,7 @@ contract TransformERC20Feature is IFeature, ITransformERC20Feature, FixinCommon,
         _registerFeatureFunction(this.getQuoteSigner.selector);
         _registerFeatureFunction(this.transformERC20.selector);
         _registerFeatureFunction(this._transformERC20.selector);
-        if (this.getTransformWallet() == IFlashWallet(address(0))) {
+        if (this.getTransformWallet() == IFlashWallet(payable(address(0)))) {
             // Create the transform wallet if it doesn't exist.
             this.createTransformWallet();
         }
@@ -133,14 +132,14 @@ contract TransformERC20Feature is IFeature, ITransformERC20Feature, FixinCommon,
         return
             _transformERC20Private(
                 TransformERC20Args({
-                    taker: msg.sender,
+                    taker: payable(msg.sender),
                     inputToken: inputToken,
                     outputToken: outputToken,
                     inputTokenAmount: inputTokenAmount,
                     minOutputTokenAmount: minOutputTokenAmount,
                     transformations: transformations,
                     useSelfBalance: false,
-                    recipient: msg.sender
+                    recipient: payable(msg.sender)
                 })
             );
     }
@@ -160,7 +159,7 @@ contract TransformERC20Feature is IFeature, ITransformERC20Feature, FixinCommon,
     function _transformERC20Private(TransformERC20Args memory args) private returns (uint256 outputTokenAmount) {
         // If the input token amount is -1 and we are not selling ETH,
         // transform the taker's entire spendable balance.
-        if (!args.useSelfBalance && args.inputTokenAmount == uint256(-1)) {
+        if (!args.useSelfBalance && args.inputTokenAmount == type(uint256).max) {
             if (LibERC20Transformer.isTokenETH(args.inputToken)) {
                 // We can't pull more ETH from the taker, so we just set the
                 // input token amount to the value attached to the call.
@@ -181,7 +180,7 @@ contract TransformERC20Feature is IFeature, ITransformERC20Feature, FixinCommon,
         );
 
         // Pull input tokens from the taker to the wallet and transfer attached ETH.
-        _transferInputTokensAndAttachedEth(args, address(state.wallet));
+        _transferInputTokensAndAttachedEth(args, payable(address(state.wallet)));
 
         {
             // Perform transformations.
@@ -288,7 +287,7 @@ contract TransformERC20Feature is IFeature, ITransformERC20Feature, FixinCommon,
             abi.encodeWithSelector(
                 IERC20Transformer.transform.selector,
                 IERC20Transformer.TransformContext({
-                    sender: msg.sender,
+                    sender: payable(msg.sender),
                     recipient: recipient,
                     data: transformation.data
                 })

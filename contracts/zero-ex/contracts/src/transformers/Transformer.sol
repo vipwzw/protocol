@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
 import "../errors/LibTransformERC20RichErrors.sol";
@@ -29,7 +28,7 @@ abstract contract Transformer is IERC20Transformer {
     address internal immutable _implementation;
 
     /// @dev Create this contract.
-    constructor() public {
+    constructor() internal {
         deployer = msg.sender;
         _implementation = address(this);
     }

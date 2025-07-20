@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "../src/transformers/IERC20Transformer.sol";
@@ -54,7 +53,7 @@ contract TestMintTokenERC20Transformer is IERC20Transformer {
         );
         // "Burn" input tokens.
         if (LibERC20Transformer.isTokenETH(data.inputToken)) {
-            address(0).transfer(data.burnAmount);
+            payable(address(0)).transfer(data.burnAmount);
         } else {
             data.inputToken.transfer(address(0), data.burnAmount);
         }

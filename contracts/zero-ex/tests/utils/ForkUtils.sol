@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
 import "src/features/TransformERC20Feature.sol";
@@ -212,6 +211,7 @@ interface IUniswapV3Pool {
 
 contract ForkUtils is Test {
     using stdJson for string;
+    using stdStorage for StdStorage;
 
     string json;
 
@@ -331,7 +331,7 @@ contract ForkUtils is Test {
         ContractAddresses memory addresses,
         LiquiditySources memory sources
     ) public {
-        log_named_string("   Using contract addresses on chain", chainName);
+        emit log_named_string("   Using contract addresses on chain", chainName);
         vm.label(addresses.transformers.affiliateFeeTransformer, "zeroEx/affiliateFeeTransformer");
         vm.label(addresses.erc20BridgeProxy, "zeroEx/erc20BridgeProxy");
         vm.label(addresses.erc20BridgeSampler, "zeroEx/erc20BridgeSampler");
@@ -796,6 +796,6 @@ contract ForkUtils is Test {
     }
 
     function writeTokenBalance(address who, address token, uint256 amt) internal {
-        stdstore.target(token).sig(IERC20Token(token).balanceOf.selector).with_key(who).checked_write(amt);
+        stdstore.target(token).sig(IERC20Token(token).balanceOf.selector).with_key(who).depth(0).checked_write(amt);
     }
 }

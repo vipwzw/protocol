@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "./features/BootstrapFeature.sol";
 import "./storage/LibProxyStorage.sol";
@@ -51,7 +50,7 @@ contract ZeroExOptimized {
 
             // Slot for impls[selector] is keccak256(selector . impls_slot).
             mstore(0, selector)
-            mstore(0x20, impls_slot)
+            mstore(0x20, impls.slot)
             let slot := keccak256(0, 0x40)
 
             let delegate := sload(slot)

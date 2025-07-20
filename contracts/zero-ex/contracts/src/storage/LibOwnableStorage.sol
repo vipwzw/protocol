@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "./LibStorage.sol";
 
@@ -33,7 +32,7 @@ library LibOwnableStorage {
         // solhint-disable-next-line max-line-length
         // See https://solidity.readthedocs.io/en/v0.6.8/assembly.html?highlight=slot#access-to-external-variables-functions-and-libraries
         assembly {
-            stor_slot := storageSlot
+            stor.slot := storageSlot
         }
     }
 }

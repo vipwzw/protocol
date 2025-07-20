@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 interface IPropertyValidator {
     /// @dev Checks that the given ERC721/ERC1155 asset satisfies the properties encoded in `propertyData`.

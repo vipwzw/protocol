@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
+pragma solidity 0.8.19;
 
 library LibOwnableRichErrors {
     function OnlyOwnerError(address sender, address owner) internal pure returns (bytes memory) {

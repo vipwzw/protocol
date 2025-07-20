@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "../migrations/LibMigrate.sol";
@@ -45,7 +44,7 @@ contract FundRecoveryFeature is IFeature, IFundRecoveryFeature, FixinCommon {
         uint256 amountOut,
         address payable recipientWallet
     ) external override onlyOwner {
-        if (amountOut == uint256(-1)) {
+        if (amountOut == type(uint256).max) {
             amountOut = LibERC20Transformer.getTokenBalanceOf(erc20, address(this));
         }
         LibERC20Transformer.transformerTransfer(erc20, recipientWallet, amountOut);

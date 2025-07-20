@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "@0x/contracts-erc20/src/IEtherToken.sol";
@@ -110,7 +109,6 @@ abstract contract NativeOrdersSettlement is
         FeeCollectorController feeCollectorController,
         uint32 protocolFeeMultiplier
     )
-        public
         NativeOrdersCancellation(zeroExAddress)
         NativeOrdersProtocolFees(weth, staking, feeCollectorController, protocolFeeMultiplier)
     {}

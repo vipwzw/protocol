@@ -12,12 +12,12 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-erc20/src/IEtherToken.sol";
 import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
 import "@0x/contracts-utils/contracts/src/v06/LibMathV06.sol";
+import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
 import "../errors/LibNativeOrdersRichErrors.sol";
 import "../fixins/FixinCommon.sol";
 import "../fixins/FixinEIP712.sol";
@@ -34,6 +34,7 @@ import "./libs/LibSignature.sol";
 contract OtcOrdersFeature is IFeature, IOtcOrdersFeature, FixinCommon, FixinEIP712, FixinTokenSpender {
     using LibSafeMathV06 for uint256;
     using LibSafeMathV06 for uint128;
+    using LibRichErrorsV06 for bytes;
 
     /// @dev Name of this feature.
     string public constant override FEATURE_NAME = "OtcOrders";
@@ -123,7 +124,7 @@ contract OtcOrdersFeature is IFeature, IOtcOrdersFeature, FixinCommon, FixinEIP7
         // Unwrap WETH
         WETH.withdraw(makerTokenFilledAmount);
         // Transfer ETH to taker
-        _transferEth(msg.sender, makerTokenFilledAmount);
+        _transferEth(payable(msg.sender), makerTokenFilledAmount);
 
         emit OtcOrderFilled(
             orderInfo.orderHash,
@@ -171,7 +172,7 @@ contract OtcOrdersFeature is IFeature, IOtcOrdersFeature, FixinCommon, FixinEIP7
                 WETH.withdraw(refundAmount);
             }
             // Refund unused ETH
-            _transferEth(msg.sender, refundAmount);
+            _transferEth(payable(msg.sender), refundAmount);
         }
 
         emit OtcOrderFilled(

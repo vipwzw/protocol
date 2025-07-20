@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
 import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
@@ -41,7 +40,7 @@ contract AffiliateFeeTransformer is Transformer {
         address payable recipient;
     }
 
-    uint256 private constant MAX_UINT256 = uint256(-1);
+    uint256 private constant MAX_UINT256 = type(uint256).max;
 
     /// @dev Transfers tokens to recipients.
     /// @param context Context information.

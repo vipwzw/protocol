@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import {ForkUtils} from "../utils/ForkUtils.sol";
 import "../utils/TestUtils.sol";

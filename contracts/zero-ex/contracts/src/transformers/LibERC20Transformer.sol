@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
@@ -126,7 +125,7 @@ library LibERC20Transformer {
         // See: https://ethereum.stackexchange.com/questions/760/how-is-the-address-of-an-ethereum-contract-computed
         bytes memory rlpNonce = rlpEncodeNonce(deploymentNonce);
         return
-            address(
+            payable(address(
                 uint160(
                     uint256(
                         keccak256(
@@ -139,6 +138,6 @@ library LibERC20Transformer {
                         )
                     )
                 )
-            );
+            ));
     }
 }

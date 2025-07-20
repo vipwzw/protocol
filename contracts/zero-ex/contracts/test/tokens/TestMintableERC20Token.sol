@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 contract TestMintableERC20Token {
     event Transfer(address token, address from, address to, uint256 value);

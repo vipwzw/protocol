@@ -12,13 +12,12 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "./IBridgeAdapter.sol";
 
 abstract contract AbstractBridgeAdapter is IBridgeAdapter {
-    constructor(uint256 expectedChainId, string memory expectedChainName) public {
+    constructor(uint256 expectedChainId, string memory expectedChainName) internal {
         uint256 chainId;
         assembly {
             chainId := chainid()

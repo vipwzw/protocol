@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
 
@@ -49,8 +48,8 @@ import "@0x/contracts-erc20/src/IEtherToken.sol";
 import "@0x/contracts-erc20/src/v06/WETH9V06.sol";
 
 contract DeployZeroEx is Test {
-    ZeroEx public ZERO_EX = ZeroEx(0xDef1C0ded9bec7F1a1670819833240f027b25EfF);
-    IZeroEx public IZERO_EX = IZeroEx(address(ZERO_EX));
+    ZeroEx public ZERO_EX = ZeroEx(payable(0xDef1C0ded9bec7F1a1670819833240f027b25EfF));
+    IZeroEx public IZERO_EX = IZeroEx(payable(address(ZERO_EX)));
     address VANITY_DEPLOYER_ADDRESS = 0xe750ad66DE350F8110E305fb78Ec6A9f594445E3;
     /* solhint-disable max-line-length */
     bytes deployerBytecode =

@@ -12,12 +12,12 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-erc20/src/IEtherToken.sol";
 import "@0x/contracts-utils/contracts/src/v06/LibMathV06.sol";
 import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
 import "../../errors/LibNFTOrdersRichErrors.sol";
 import "../../fixins/FixinCommon.sol";
 import "../../fixins/FixinEIP712.sol";
@@ -31,6 +31,7 @@ import "../libs/LibNFTOrder.sol";
 /// @dev Abstract base contract inherited by ERC721OrdersFeature and NFTOrders
 abstract contract NFTOrders is FixinCommon, FixinEIP712, FixinTokenSpender {
     using LibSafeMathV06 for uint256;
+    using LibRichErrorsV06 for bytes;
 
     /// @dev Native token pseudo-address.
     address internal constant NATIVE_TOKEN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -42,7 +43,7 @@ abstract contract NFTOrders is FixinCommon, FixinEIP712, FixinTokenSpender {
     /// @dev The magic return value indicating the success of a `zeroExTakerCallback`.
     bytes4 private constant TAKER_CALLBACK_MAGIC_BYTES = ITakerCallback.zeroExTakerCallback.selector;
 
-    constructor(address zeroExAddress, IEtherToken weth) public FixinEIP712(zeroExAddress) {
+    constructor(address zeroExAddress, IEtherToken weth) internal FixinEIP712(zeroExAddress) {
         WETH = weth;
     }
 

@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-erc20/src/IEtherToken.sol";
 import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
@@ -253,7 +252,7 @@ contract MetaTransactionsFeatureV2 is
         } else {
             LibMetaTransactionsRichErrors.MetaTransactionUnsupportedFunctionError(state.hash, state.selector).rrevert();
         }
-        emit MetaTransactionExecuted(state.hash, state.selector, state.mtx.signer, state.mtx.sender);
+        emit MetaTransactionExecutedV2(state.hash, state.selector, state.mtx.signer, state.mtx.sender);
     }
 
     /// @dev Validate that a meta-transaction is executable.

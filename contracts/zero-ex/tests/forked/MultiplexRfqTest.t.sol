@@ -12,10 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-
-pragma experimental ABIEncoderV2;
-
+pragma solidity 0.8.19;
 import "../utils/ForkUtils.sol";
 import "../utils/TestUtils.sol";
 import "src/IZeroEx.sol";
@@ -37,7 +34,7 @@ contract MultiplexRfqtTest is Test, ForkUtils, TestUtils {
     }
 
     function test_swapEthForUSDTThroughFqtOtcs() public {
-        log_string("SwapEthForUSDTThroughFqtOtc");
+        emit log_string("SwapEthForUSDTThroughFqtOtc");
         /* */
         for (uint256 i = 0; i < 1; i++) {
             //skip fantom/avax failing test
@@ -45,7 +42,7 @@ contract MultiplexRfqtTest is Test, ForkUtils, TestUtils {
                 continue;
             }
             vm.selectFork(forkIds[chains[i]]);
-            log_named_string("  Selecting Fork On", chains[i]);
+            emit log_named_string("  Selecting Fork On", chains[i]);
             vm.deal(address(this), 1e18);
             labelAddresses(
                 chains[i],
@@ -107,7 +104,7 @@ contract MultiplexRfqtTest is Test, ForkUtils, TestUtils {
 
         deal(tradeTokens[0], address(this), 1e18);
 
-        tokens.WrappedNativeToken.approveIfBelow(addresses.exchangeProxy, uint(-1));
+        tokens.WrappedNativeToken.approveIfBelow(addresses.exchangeProxy, type(uint256).max);
         uint inputAmount = 1e18;
         uint outputAmount = 5e17;
 

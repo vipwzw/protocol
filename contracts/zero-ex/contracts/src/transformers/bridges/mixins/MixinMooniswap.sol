@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
 import "@0x/contracts-erc20/src/IERC20Token.sol";
@@ -62,8 +61,8 @@ contract MixinMooniswap {
         }
 
         boughtAmount = pool.swap{value: ethValue}(
-            sellToken == WETH ? IERC20Token(0) : sellToken,
-            buyToken == WETH ? IERC20Token(0) : buyToken,
+            sellToken == WETH ? IERC20Token(address(0)) : sellToken,
+            buyToken == WETH ? IERC20Token(address(0)) : buyToken,
             sellAmount,
             1,
             address(0)

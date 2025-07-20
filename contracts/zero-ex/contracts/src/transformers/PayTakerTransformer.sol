@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
 import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
@@ -39,7 +38,7 @@ contract PayTakerTransformer is Transformer {
     }
 
     /// @dev Maximum uint256 value.
-    uint256 private constant MAX_UINT256 = uint256(-1);
+    uint256 private constant MAX_UINT256 = type(uint256).max;
 
     /// @dev Create this contract.
     constructor() public Transformer() {}
@@ -54,7 +53,7 @@ contract PayTakerTransformer is Transformer {
         for (uint256 i = 0; i < data.tokens.length; ++i) {
             // The `amounts` array can be shorter than the `tokens` array.
             // Missing elements are treated as `uint256(-1)`.
-            uint256 amount = data.amounts.length > i ? data.amounts[i] : uint256(-1);
+            uint256 amount = data.amounts.length > i ? data.amounts[i] : type(uint256).max;
             if (amount == MAX_UINT256) {
                 amount = data.tokens[i].getTokenBalanceOf(address(this));
             }

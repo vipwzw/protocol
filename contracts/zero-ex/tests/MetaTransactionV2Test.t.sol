@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "./utils/BaseTest.sol";
 import "forge-std/Test.sol";
@@ -32,7 +31,7 @@ contract MetaTransactionTest is LocalTest {
     address private constant USER_ADDRESS = 0x6dc3a54FeAE57B65d185A7B159c5d3FA7fD7FD0F;
     uint256 private constant USER_KEY = 0x1fc1630343b31e60b7a197a53149ca571ed9d9791e2833337bbd8110c30710ec;
 
-    event MetaTransactionExecuted(bytes32 hash, bytes4 indexed selector, address signer, address sender);
+    event MetaTransactionExecutedV2(bytes32 hash, bytes4 indexed selector, address signer, address sender);
 
     function _mtxSignature(
         IMetaTransactionsFeatureV2.MetaTransactionDataV2 memory mtx
@@ -240,7 +239,7 @@ contract MetaTransactionTest is LocalTest {
         IERC20Token usdcToken = IERC20Token(address(0x2e234DAe75C793f67A35089C9d99245E1C58470b));
 
         IMetaTransactionsFeatureV2.MetaTransactionDataV2 memory mtx = IMetaTransactionsFeatureV2.MetaTransactionDataV2({
-            signer: address(0),
+            signer: payable(address(0)),
             sender: address(0),
             expirationTimeSeconds: 99999999,
             salt: 1234,
@@ -267,7 +266,7 @@ contract MetaTransactionTest is LocalTest {
 
         assertEq(dai.balanceOf(USER_ADDRESS), 1e18);
         vm.expectEmit(true, false, false, true);
-        emit MetaTransactionExecuted(
+        emit MetaTransactionExecutedV2(
             zeroExDeployed.features.metaTransactionsFeatureV2.getMetaTransactionV2Hash(mtxData),
             zeroExDeployed.zeroEx.transformERC20.selector, // 0x415565b0
             USER_ADDRESS,
@@ -288,7 +287,7 @@ contract MetaTransactionTest is LocalTest {
 
         assertEq(dai.balanceOf(USER_ADDRESS), 1e18);
         vm.expectEmit(true, false, false, true);
-        emit MetaTransactionExecuted(
+        emit MetaTransactionExecutedV2(
             zeroExDeployed.features.metaTransactionsFeatureV2.getMetaTransactionV2Hash(mtxData),
             INativeOrdersFeature.fillRfqOrder.selector, // 0xaa77476c
             USER_ADDRESS,
@@ -311,7 +310,7 @@ contract MetaTransactionTest is LocalTest {
 
         assertEq(dai.balanceOf(USER_ADDRESS), 1e18);
         vm.expectEmit(true, false, false, true);
-        emit MetaTransactionExecuted(
+        emit MetaTransactionExecutedV2(
             zeroExDeployed.features.metaTransactionsFeatureV2.getMetaTransactionV2Hash(mtxData),
             INativeOrdersFeature.fillLimitOrder.selector, // 0xf6274f66
             USER_ADDRESS,

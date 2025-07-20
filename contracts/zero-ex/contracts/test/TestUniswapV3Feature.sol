@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 import "../src/features/UniswapV3Feature.sol";
 
 contract TestUniswapV3Feature is UniswapV3Feature {

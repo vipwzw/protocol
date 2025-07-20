@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
 import "@0x/contracts-utils/contracts/src/v06/LibBytesV06.sol";
@@ -96,7 +95,7 @@ contract MetaTransactionsFeature is
         _;
         uint256 remainingBalance = LibSafeMathV06.min256(msg.value, address(this).balance);
         if (remainingBalance > 0) {
-            msg.sender.transfer(remainingBalance);
+            payable(msg.sender).transfer(remainingBalance);
         }
     }
 

@@ -12,10 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-
-pragma experimental ABIEncoderV2;
-
+pragma solidity 0.8.19;
 import "utils/ForkUtils.sol";
 import "utils/TestUtils.sol";
 import "src/IZeroEx.sol";
@@ -42,7 +39,7 @@ contract ForkUtilsTest is Test, ForkUtils, TestUtils {
     function test_addressesExist() public {}
 
     function logAddresses(string memory chainName, string memory chainId) public {
-        bytes memory details = json.parseRaw(chainId);
+        bytes memory details = vm.parseJson(json, chainId);
         addresses = abi.decode(details, (ContractAddresses));
     }
 }

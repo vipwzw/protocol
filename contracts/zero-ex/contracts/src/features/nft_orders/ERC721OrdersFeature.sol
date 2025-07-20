@@ -12,11 +12,11 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-erc20/src/IEtherToken.sol";
 import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
 import "../../fixins/FixinERC721Spender.sol";
 import "../../migrations/LibMigrate.sol";
 import "../../storage/LibERC721OrdersStorage.sol";
@@ -29,6 +29,7 @@ import "./NFTOrders.sol";
 /// @dev Feature for interacting with ERC721 orders.
 contract ERC721OrdersFeature is IFeature, IERC721OrdersFeature, FixinERC721Spender, NFTOrders {
     using LibSafeMathV06 for uint256;
+    using LibRichErrorsV06 for bytes;
     using LibNFTOrder for LibNFTOrder.ERC721Order;
     using LibNFTOrder for LibNFTOrder.NFTOrder;
 
@@ -118,7 +119,7 @@ contract ERC721OrdersFeature is IFeature, IERC721OrdersFeature, FixinERC721Spend
                 .rrevert();
         }
         // Refund
-        _transferEth(msg.sender, ethBalanceAfter - ethBalanceBefore);
+        _transferEth(payable(msg.sender), ethBalanceAfter - ethBalanceBefore);
     }
 
     /// @dev Cancel a single ERC721 order by its nonce. The caller
@@ -205,7 +206,7 @@ contract ERC721OrdersFeature is IFeature, IERC721OrdersFeature, FixinERC721Spend
         }
 
         // Refund
-        _transferEth(msg.sender, ethBalanceAfter - ethBalanceBefore);
+        _transferEth(payable(msg.sender), ethBalanceAfter - ethBalanceBefore);
     }
 
     /// @dev Matches a pair of complementary orders that have
@@ -321,7 +322,7 @@ contract ERC721OrdersFeature is IFeature, IERC721OrdersFeature, FixinERC721Spend
             //         the profit from matching these two orders.
             profit = spread - sellOrderFees;
             if (profit > 0) {
-                _transferEth(msg.sender, profit);
+                _transferEth(payable(msg.sender), profit);
             }
         } else {
             // ERC20 tokens must match

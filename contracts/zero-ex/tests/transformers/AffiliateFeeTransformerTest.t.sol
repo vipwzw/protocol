@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-erc20/src/v06/WETH9V06.sol";
 
@@ -64,7 +63,7 @@ contract AffiliateFeeTransformerTest is BaseTest {
         AffiliateFeeTransformer.TokenFee[] memory fees = new AffiliateFeeTransformer.TokenFee[](1);
         fees[0] = AffiliateFeeTransformer.TokenFee({
             token: IERC20Token(token1),
-            amount: uint256(-1),
+            amount: type(uint256).max,
             recipient: payable(feeRecipient)
         });
 

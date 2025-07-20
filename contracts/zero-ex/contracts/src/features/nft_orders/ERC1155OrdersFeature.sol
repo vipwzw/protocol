@@ -12,11 +12,11 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import "@0x/contracts-erc20/src/IEtherToken.sol";
 import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
 import "../../fixins/FixinERC1155Spender.sol";
 import "../../migrations/LibMigrate.sol";
 import "../../storage/LibERC1155OrdersStorage.sol";
@@ -30,6 +30,7 @@ import "./NFTOrders.sol";
 contract ERC1155OrdersFeature is IFeature, IERC1155OrdersFeature, FixinERC1155Spender, NFTOrders {
     using LibSafeMathV06 for uint256;
     using LibSafeMathV06 for uint128;
+    using LibRichErrorsV06 for bytes;
     using LibNFTOrder for LibNFTOrder.ERC1155Order;
     using LibNFTOrder for LibNFTOrder.NFTOrder;
 
@@ -125,7 +126,7 @@ contract ERC1155OrdersFeature is IFeature, IERC1155OrdersFeature, FixinERC1155Sp
                 .rrevert();
         }
         // Refund
-        _transferEth(msg.sender, ethBalanceAfter - ethBalanceBefore);
+        _transferEth(payable(msg.sender), ethBalanceAfter - ethBalanceBefore);
     }
 
     /// @dev Cancel a single ERC1155 order by its nonce. The caller
@@ -227,7 +228,7 @@ contract ERC1155OrdersFeature is IFeature, IERC1155OrdersFeature, FixinERC1155Sp
         }
 
         // Refund
-        _transferEth(msg.sender, ethBalanceAfter - ethBalanceBefore);
+        _transferEth(payable(msg.sender), ethBalanceAfter - ethBalanceBefore);
     }
 
     /// @dev Callback for the ERC1155 `safeTransferFrom` function.

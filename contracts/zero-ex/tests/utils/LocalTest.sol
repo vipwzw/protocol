@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC20Token} from "@0x/contracts-erc20/src/IERC20Token.sol";
