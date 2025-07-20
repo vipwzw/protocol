@@ -20,7 +20,7 @@ fs_permissions = [{ access = "read", path = "./" }]
 arbitrum = "https://arb1.arbitrum.io/rpc"
 avalanche = "https://api.avax.network/ext/bc/C/rpc"
 bsc = "https://bsc-dataseed1.binance.org"
-fantom = "https://rpc.ftm.tools"
+fantom = "https://fantom-rpc.publicnode.com"
 mainnet = "https://mainnet.infura.io/v3/6770454bc6ea42c58aac12978531b93f"
 optimism = "https://mainnet.optimism.io"
 polygon = "https://polygon-rpc.com"
