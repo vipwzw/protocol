@@ -122,6 +122,7 @@ jobs:
         with:
           path: |
             packages/*/lib
+            contracts/*/lib
             contracts/*/generated-*
           key: ${{ runner.os }}-build-${{ github.sha }}
 
@@ -255,6 +256,7 @@ jobs:
         with:
           path: |
             packages/*/lib
+            contracts/*/lib
             contracts/*/generated-*
           key: ${{ runner.os }}-build-${{ github.sha }}
 
@@ -307,6 +309,7 @@ jobs:
         with:
           path: |
             packages/*/lib
+            contracts/*/lib
             contracts/*/generated-*
           key: ${{ runner.os }}-build-${{ github.sha }}
 
