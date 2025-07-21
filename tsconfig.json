@@ -11,6 +11,7 @@
         "skipDefaultLibCheck": true,
         "typeRoots": ["node_modules/@0x/typescript-typings/types", "node_modules/@types"],
         "strict": true,
+        "useUnknownInCatchVariables": false,
         // These settings are required for TypeScript project references
         "declaration": true,
         "declarationMap": true,

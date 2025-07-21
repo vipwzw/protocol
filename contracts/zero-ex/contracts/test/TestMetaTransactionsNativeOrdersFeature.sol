@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 import "../src/features/interfaces/IMetaTransactionsFeature.sol";
 import "../src/features/NativeOrdersFeature.sol";
@@ -20,7 +20,6 @@ import "./TestFeeCollectorController.sol";
 
 contract TestMetaTransactionsNativeOrdersFeature is NativeOrdersFeature {
     constructor()
-        public
         NativeOrdersFeature(
             address(0),
             IEtherToken(0),

@@ -1,19 +1,7 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "lib": ["es2017", "dom"],
-        "target": "es5",
-        "typeRoots": ["node_modules/@types"],
-        "declaration": true,
-        "declarationMap": true,
-        "outDir": "lib",
-        "noImplicitReturns": true,
-        "pretty": true,
-        "strict": true,
-        "useUnknownInCatchVariables": false
-    },
-    "include": ["src/**/*", "test/**/*.ts"],
-    "exclude": ["lib/**/*", "**/*.json"],
+    "extends": "../../tsconfig",
+    "compilerOptions": { "outDir": "lib", "rootDir": ".", "resolveJsonModule": true },
+    "include": ["./src/**/*", "./test/**/*", "./generated-wrappers/**/*", "./scripts/**/*"],
     "files": [
         "generated-artifacts/AffiliateFeeTransformer.json",
         "generated-artifacts/AvalancheBridgeAdapter.json",
@@ -259,5 +247,6 @@
         "test/generated-artifacts/WethTransformer.json",
         "test/generated-artifacts/ZeroEx.json",
         "test/generated-artifacts/ZeroExOptimized.json"
-    ]
+    ],
+    "exclude": ["./deploy/solc/solc_bin"]
 }
