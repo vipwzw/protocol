@@ -22,6 +22,7 @@ import { BigNumber, hexUtils } from '@0x/utils';
 import * as ethUtil from 'ethereumjs-util';
 
 import { artifacts } from './artifacts';
+import { deployFromFoundryArtifactAsync } from '../src/foundry-types';
 import { DefaultPoolOperatorContract, ZrxTreasuryContract, ZrxTreasuryEvents } from './wrappers';
 
 blockchainTests.resets('Treasury governance', env => {
@@ -81,7 +82,7 @@ blockchainTests.resets('Treasury governance', env => {
             stakingArtifacts.TestStaking,
             env.provider,
             env.txDefaults,
-            artifacts,
+            artifacts as any,
             weth.address,
             zrxVaultContract.address,
         );
@@ -89,7 +90,7 @@ blockchainTests.resets('Treasury governance', env => {
             stakingArtifacts.StakingProxy,
             env.provider,
             env.txDefaults,
-            artifacts,
+            artifacts as any,
             stakingLogic.address,
         );
         await stakingProxyContract.addAuthorizedAddress(admin).awaitTransactionSuccessAsync();
@@ -142,11 +143,12 @@ blockchainTests.resets('Treasury governance', env => {
             .approve(erc20ProxyContract.address, constants.INITIAL_ERC20_ALLOWANCE)
             .awaitTransactionSuccessAsync({ from: delegator });
 
-        defaultPoolOperator = await DefaultPoolOperatorContract.deployFrom0xArtifactAsync(
+        defaultPoolOperator = await deployFromFoundryArtifactAsync<DefaultPoolOperatorContract>(
+            DefaultPoolOperatorContract,
             artifacts.DefaultPoolOperator,
             env.provider,
             env.txDefaults,
-            { ...artifacts, ...erc20Artifacts },
+            artifacts,
             staking.address,
             weth.address,
         );
@@ -156,11 +158,12 @@ blockchainTests.resets('Treasury governance', env => {
         nonDefaultPoolId = await createStakingPoolTx.callAsync({ from: poolOperator });
         await createStakingPoolTx.awaitTransactionSuccessAsync({ from: poolOperator });
 
-        treasury = await ZrxTreasuryContract.deployFrom0xArtifactAsync(
+        treasury = await deployFromFoundryArtifactAsync<ZrxTreasuryContract>(
+            ZrxTreasuryContract,
             artifacts.ZrxTreasury,
             env.provider,
             env.txDefaults,
-            { ...artifacts, ...erc20Artifacts },
+            artifacts,
             staking.address,
             TREASURY_PARAMS,
         );

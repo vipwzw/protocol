@@ -83,7 +83,11 @@ blockchainTests.fork.skip('Treasury proposal mainnet fork tests', env => {
     }
 
     before(async () => {
-        const abis = _.mapValues({ ...artifacts, ...erc20Artifacts }, v => v.compilerOutput.abi);
+        // Handle both Foundry and legacy artifact formats
+        const abis = _.mapValues({ ...artifacts, ...erc20Artifacts }, v => {
+            // Foundry format has abi directly, legacy format has compilerOutput.abi
+            return (v as any).abi || (v as any).compilerOutput?.abi;
+        });
         treasury = new ZrxTreasuryContract(TREASURY_ADDRESS, env.provider, env.txDefaults, abis);
         votingPeriod = await treasury.votingPeriod().callAsync();
         staking = new StakingContract(STAKING_PROXY_ADDRESS, env.provider, env.txDefaults);

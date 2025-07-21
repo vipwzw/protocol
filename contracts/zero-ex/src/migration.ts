@@ -1,9 +1,15 @@
-import { SimpleContractArtifact } from '@0x/types';
 import { NULL_ADDRESS } from '@0x/utils';
 import { TxData, SupportedProvider } from 'ethereum-types';
 import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
+import { deployFromFoundryArtifactAsync } from './foundry-deployer';
+import type { 
+    FoundryArtifact, 
+    FoundryArtifacts,
+    BootstrapFeatureArtifacts, 
+    FullFeatureArtifacts 
+} from './foundry-types';
 import {
     FeeCollectorControllerContract,
     FullMigrationContract,
@@ -27,14 +33,9 @@ export interface BootstrapFeatures {
 }
 
 /**
- * Artifacts to use when deploying bootstrap features.
+ * 默认的引导功能 artifacts
  */
-export interface BootstrapFeatureArtifacts {
-    registry: SimpleContractArtifact;
-    ownable: SimpleContractArtifact;
-}
-
-const DEFAULT_BOOTSTRAP_FEATURE_ARTIFACTS = {
+const DEFAULT_BOOTSTRAP_FEATURE_ARTIFACTS: BootstrapFeatureArtifacts = {
     registry: artifacts.SimpleFunctionRegistryFeature,
     ownable: artifacts.OwnableFeature,
 };
@@ -56,7 +57,8 @@ export async function deployBootstrapFeaturesAsync(
         registry:
             features.registry ||
             (
-                await SimpleFunctionRegistryFeatureContract.deployFrom0xArtifactAsync(
+                await deployFromFoundryArtifactAsync<SimpleFunctionRegistryFeatureContract>(
+                    SimpleFunctionRegistryFeatureContract,
                     _featureArtifacts.registry,
                     provider,
                     txDefaults,
@@ -66,7 +68,8 @@ export async function deployBootstrapFeaturesAsync(
         ownable:
             features.ownable ||
             (
-                await OwnableFeatureContract.deployFrom0xArtifactAsync(
+                await deployFromFoundryArtifactAsync<OwnableFeatureContract>(
+                    OwnableFeatureContract,
                     _featureArtifacts.ownable,
                     provider,
                     txDefaults,
@@ -85,27 +88,28 @@ export async function initialMigrateAsync(
     txDefaults: Partial<TxData>,
     features: Partial<BootstrapFeatures> = {},
 ): Promise<ZeroExContract> {
-    const migrator = await InitialMigrationContract.deployFrom0xArtifactAsync(
+    const migrator = await deployFromFoundryArtifactAsync<InitialMigrationContract>(
+        InitialMigrationContract,
         artifacts.InitialMigration,
         provider,
         txDefaults,
         artifacts,
         txDefaults.from as string,
     );
-    const zeroEx = await ZeroExContract.deployFrom0xArtifactAsync(
+    const zeroEx = await deployFromFoundryArtifactAsync<ZeroExContract>(
+        ZeroExContract,
         artifacts.ZeroEx,
         provider,
         txDefaults,
         artifacts,
         migrator.address,
     );
-    const _features = await deployBootstrapFeaturesAsync(provider, txDefaults, features);
-    await migrator.initializeZeroEx(owner, zeroEx.address, _features).awaitTransactionSuccessAsync();
+    await migrator.initializeZeroEx(owner, zeroEx.address, await deployBootstrapFeaturesAsync(provider, txDefaults, features)).callAsync();
     return zeroEx;
 }
 
 /**
- * Addresses of features for a full deployment of the Exchange Proxy.
+ * Full features for a deployment of the Exchange Proxy.
  */
 export interface FullFeatures extends BootstrapFeatures {
     transformERC20: string;
@@ -115,42 +119,24 @@ export interface FullFeatures extends BootstrapFeatures {
 }
 
 /**
- * Artifacts to use when deploying full features.
+ * Configuration options for a full migration.
  */
-export interface FullFeatureArtifacts extends BootstrapFeatureArtifacts {
-    transformERC20: SimpleContractArtifact;
-    metaTransactions: SimpleContractArtifact;
-    nativeOrders: SimpleContractArtifact;
-    feeCollectorController: SimpleContractArtifact;
-    otcOrders: SimpleContractArtifact;
-}
-
-/**
- * Configuration for deploying full features..
- */
-export interface FullFeaturesDeployConfig {
+export interface FullMigrationConfig {
+    transformerDeployer: string;
+    exchangeProxyFlashWallet: string;
     zeroExAddress: string;
     wethAddress: string;
     stakingAddress: string;
+    feeCollectorController: string;
     protocolFeeMultiplier: number;
 }
 
 /**
- * Configuration options for a full migration of the Exchange Proxy.
+ * Default full feature artifacts
  */
-export interface FullMigrationConfig extends FullFeaturesDeployConfig {
-    transformerDeployer?: string;
-}
-
-const DEFAULT_FULL_FEATURES_DEPLOY_CONFIG = {
-    zeroExAddress: NULL_ADDRESS,
-    wethAddress: NULL_ADDRESS,
-    stakingAddress: NULL_ADDRESS,
-    feeCollectorController: NULL_ADDRESS,
-    protocolFeeMultiplier: 70e3,
-};
-
-const DEFAULT_FULL_FEATURES_ARTIFACTS = {
+const DEFAULT_FULL_FEATURE_ARTIFACTS: FullFeatureArtifacts = {
+    registry: artifacts.SimpleFunctionRegistryFeature,
+    ownable: artifacts.OwnableFeature,
     transformERC20: artifacts.TransformERC20Feature,
     metaTransactions: artifacts.MetaTransactionsFeature,
     nativeOrders: artifacts.NativeOrdersFeature,
@@ -159,23 +145,39 @@ const DEFAULT_FULL_FEATURES_ARTIFACTS = {
 };
 
 /**
- * Deploy all the features for a full Exchange Proxy.
+ * Deploy all the features for the Exchange Proxy.
  */
-export async function deployFullFeaturesAsync(
+export async function deployAllFeaturesAsync(
     provider: SupportedProvider,
     txDefaults: Partial<TxData>,
-    config: Partial<FullFeaturesDeployConfig> = {},
     features: Partial<FullFeatures> = {},
+    config: Partial<FullMigrationConfig> = {},
     featureArtifacts: Partial<FullFeatureArtifacts> = {},
 ): Promise<FullFeatures> {
-    const _config = { ...DEFAULT_FULL_FEATURES_DEPLOY_CONFIG, ...config };
     const _featureArtifacts = {
-        ...DEFAULT_FULL_FEATURES_ARTIFACTS,
+        ...DEFAULT_FULL_FEATURE_ARTIFACTS,
         ...featureArtifacts,
     };
+    // 验证必需的配置参数
+    if (!config.wethAddress || !config.stakingAddress || !config.zeroExAddress) {
+        throw new Error('wethAddress, stakingAddress, and zeroExAddress are required for feature deployment');
+    }
+    const _config = { 
+        ...config,
+        wethAddress: config.wethAddress,
+        stakingAddress: config.stakingAddress,
+        zeroExAddress: config.zeroExAddress,
+        feeCollectorController: config.feeCollectorController || NULL_ADDRESS,
+        protocolFeeMultiplier: config.protocolFeeMultiplier || 0,
+    };
+    
     if (_config.feeCollectorController === NULL_ADDRESS) {
+        if (!_config.wethAddress || !_config.stakingAddress) {
+            throw new Error('wethAddress and stakingAddress are required for FeeCollectorController deployment');
+        }
         _config.feeCollectorController = (
-            await FeeCollectorControllerContract.deployFrom0xArtifactAsync(
+            await deployFromFoundryArtifactAsync<FeeCollectorControllerContract>(
+                FeeCollectorControllerContract,
                 _featureArtifacts.feeCollectorController,
                 provider,
                 txDefaults,
@@ -190,7 +192,8 @@ export async function deployFullFeaturesAsync(
         transformERC20:
             features.transformERC20 ||
             (
-                await TransformERC20FeatureContract.deployFrom0xArtifactAsync(
+                await deployFromFoundryArtifactAsync<TransformERC20FeatureContract>(
+                    TransformERC20FeatureContract,
                     _featureArtifacts.transformERC20,
                     provider,
                     txDefaults,
@@ -200,7 +203,8 @@ export async function deployFullFeaturesAsync(
         metaTransactions:
             features.metaTransactions ||
             (
-                await MetaTransactionsFeatureContract.deployFrom0xArtifactAsync(
+                await deployFromFoundryArtifactAsync<MetaTransactionsFeatureContract>(
+                    MetaTransactionsFeatureContract,
                     _featureArtifacts.metaTransactions,
                     provider,
                     txDefaults,
@@ -211,7 +215,8 @@ export async function deployFullFeaturesAsync(
         nativeOrders:
             features.nativeOrders ||
             (
-                await NativeOrdersFeatureContract.deployFrom0xArtifactAsync(
+                await deployFromFoundryArtifactAsync<NativeOrdersFeatureContract>(
+                    NativeOrdersFeatureContract,
                     _featureArtifacts.nativeOrders,
                     provider,
                     txDefaults,
@@ -226,7 +231,8 @@ export async function deployFullFeaturesAsync(
         otcOrders:
             features.otcOrders ||
             (
-                await OtcOrdersFeatureContract.deployFrom0xArtifactAsync(
+                await deployFromFoundryArtifactAsync<OtcOrdersFeatureContract>(
+                    OtcOrdersFeatureContract,
                     _featureArtifacts.otcOrders,
                     provider,
                     txDefaults,
@@ -249,14 +255,16 @@ export async function fullMigrateAsync(
     config: Partial<FullMigrationConfig> = {},
     featureArtifacts: Partial<FullFeatureArtifacts> = {},
 ): Promise<IZeroExContract> {
-    const migrator = await FullMigrationContract.deployFrom0xArtifactAsync(
+    const migrator = await deployFromFoundryArtifactAsync<FullMigrationContract>(
+        FullMigrationContract,
         artifacts.FullMigration,
         provider,
         txDefaults,
         artifacts,
         txDefaults.from as string,
     );
-    const zeroEx = await ZeroExContract.deployFrom0xArtifactAsync(
+    const zeroEx = await deployFromFoundryArtifactAsync<ZeroExContract>(
+        ZeroExContract,
         artifacts.ZeroEx,
         provider,
         txDefaults,
@@ -264,11 +272,7 @@ export async function fullMigrateAsync(
         await migrator.getBootstrapper().callAsync(),
     );
     const _config = { ...config, zeroExAddress: zeroEx.address };
-    const _features = await deployFullFeaturesAsync(provider, txDefaults, _config, features, featureArtifacts);
-    const migrateOpts = {
-        transformerDeployer: txDefaults.from as string,
-        ..._config,
-    };
-    await migrator.migrateZeroEx(owner, zeroEx.address, _features, migrateOpts).awaitTransactionSuccessAsync();
-    return new IZeroExContract(zeroEx.address, provider, txDefaults);
+    const allFeatures = await deployAllFeaturesAsync(provider, txDefaults, features, _config, featureArtifacts);
+    await migrator.migrateZeroEx(owner, zeroEx.address, allFeatures, { transformerDeployer: config.transformerDeployer || '0x0000000000000000000000000000000000000000' }).callAsync();
+    return (zeroEx as any) as IZeroExContract;
 }

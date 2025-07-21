@@ -10,8 +10,9 @@
         "noImplicitReturns": true,
         "pretty": true,
         "strict": true,
-        "useUnknownInCatchVariables": false
+        "useUnknownInCatchVariables": false,
+        "resolveJsonModule": true
     },
-    "include": ["src/**/*", "test/**/*.ts"],
-    "exclude": ["lib/**/*", "**/*.json", "out/**/*", "test/generated-artifacts/**/*"]
+    "include": ["src/**/*"],
+    "exclude": ["lib/**/*", "test/**/*", "out/**/*"]
 }
