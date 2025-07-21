@@ -10,7 +10,6 @@
     ],
     "scripts": {
         "fix": "wsrun --fast-exit --parallel --exclude-missing -p $PKG -c fix",
-        "ganache": "ganache-cli -p 8545 --gasLimit 10000000 --networkId 50 -m \"${npm_package_config_mnemonic}\"",
         "prettier": "prettier --write '**/*.{ts,tsx,json,sol}' --config .prettierrc",
         "prettier:ci": "./scripts/lint-prettier.sh",
         "install:all": "yarn install",
@@ -65,7 +64,6 @@
         "async-child-process": "^1.1.1",
         "check-md": "^1.0.2",
         "coveralls": "^3.0.0",
-        "ganache-cli": "6.12.2",
         "husky": "^8.0.3",
         "lerna": "^3.0.0-beta.25",
         "lint-staged": "^13.1.0",
@@ -82,6 +80,15 @@
         "**/bignumber.js": "^9.0.2"
     },
     "dependencies": {
-        "@openzeppelin/contracts": "^4.8.1"
-    }
+        "@nomiclabs/hardhat-ethers": "^2.2.3",
+        "@nomiclabs/hardhat-waffle": "^2.0.6",
+        "@openzeppelin/contracts": "^4.8.1",
+        "@types/chai": "^5.2.2",
+        "@types/node": "^24.0.15",
+        "chai": "^5.2.1",
+        "ethereum-waffle": "^4.0.10",
+        "ethers": "^6.15.0",
+        "hardhat": "^2.26.0"
+    },
+    "version": "0.0.0"
 }
