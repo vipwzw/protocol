@@ -6,7 +6,7 @@ libs = [
     'node_modules',
 ]
 remappings = [
-    '@0x/contracts-utils/=../utils/'
+    '@0x/contracts-utils/=../utils/contracts/'
 ]
 allow_paths = [
     '../utils/'

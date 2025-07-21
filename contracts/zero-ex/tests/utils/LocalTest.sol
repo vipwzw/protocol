@@ -17,7 +17,7 @@ pragma solidity 0.8.30;
 import {Test} from "forge-std/Test.sol";
 import {IERC20Token} from "@0x/contracts-erc20/src/IERC20Token.sol";
 import {IEtherToken} from "@0x/contracts-erc20/src/IEtherToken.sol";
-import {WETH9V06} from "@0x/contracts-erc20/src/v06/WETH9V06.sol";
+import {WETH9} from "@0x/contracts-erc20/src/WETH9.sol";
 import {IFlashWallet} from "src/external/IFlashWallet.sol";
 import {LibERC20Transformer} from "src/transformers/LibERC20Transformer.sol";
 import {LibNativeOrder} from "src/features/libs/LibNativeOrder.sol";
@@ -116,7 +116,7 @@ contract LocalTest is Test, TestUtils {
     function _mintTo(address token, address recipient, uint256 amount) internal {
         if (token == address(weth)) {
             IEtherToken(token).deposit{value: amount}();
-            WETH9V06(payable(token)).transfer(recipient, amount);
+            WETH9(payable(token)).transfer(recipient, amount);
         } else {
             TestMintableERC20Token(token).mint(recipient, amount);
         }

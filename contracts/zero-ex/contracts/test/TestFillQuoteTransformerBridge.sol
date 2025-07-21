@@ -14,7 +14,7 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/LibMathV06.sol";
+import "@0x/contracts-utils/contracts/src/LibMath.sol";
 import "../src/vendor/v3/IERC20Bridge.sol";
 import "./tokens/TestMintableERC20Token.sol";
 

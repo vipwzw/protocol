@@ -26,8 +26,8 @@ import "src/transformers/bridges/BridgeProtocols.sol";
 import "src/features/OtcOrdersFeature.sol";
 
 contract MultiplexRfqtTest is Test, ForkUtils, TestUtils {
-    using LibERC20TokenV06 for IERC20Token;
-    using LibERC20TokenV06 for IEtherToken;
+    using LibERC20Token for IERC20Token;
+    using LibERC20Token for IEtherToken;
 
     function setUp() public {
         _setup();

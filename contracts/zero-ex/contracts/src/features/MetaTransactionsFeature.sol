@@ -14,9 +14,9 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibBytesV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/LibBytes.sol";
+import "@0x/contracts-utils/contracts/src/LibMath.sol";
 import "../errors/LibMetaTransactionsRichErrors.sol";
 import "../fixins/FixinCommon.sol";
 import "../fixins/FixinReentrancyGuard.sol";
@@ -39,8 +39,8 @@ contract MetaTransactionsFeature is
     FixinEIP712,
     FixinTokenSpender
 {
-    using LibBytesV06 for bytes;
-    using LibRichErrorsV06 for bytes;
+    using LibBytes for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev Describes the state of a meta transaction.
     struct ExecuteState {
@@ -93,7 +93,7 @@ contract MetaTransactionsFeature is
     /// @dev Refunds up to `msg.value` leftover ETH at the end of the call.
     modifier refundsAttachedEth() {
         _;
-        uint256 remainingBalance = LibSafeMathV06.min256(msg.value, address(this).balance);
+        uint256 remainingBalance = LibMath.min256(msg.value, address(this).balance);
         if (remainingBalance > 0) {
             payable(msg.sender).transfer(remainingBalance);
         }
@@ -349,7 +349,7 @@ contract MetaTransactionsFeature is
                 // Start copying after the struct offset.
                 toMem := add(encodedStructArgs, 64)
             }
-            LibBytesV06.memCopy(toMem, fromMem, fromCallData.length - 4);
+            LibBytes.memCopy(toMem, fromMem, fromCallData.length - 4);
             // Decode call args for `ITransformERC20Feature.transformERC20()` as a struct.
             args = abi.decode(encodedStructArgs, (ExternalTransformERC20Args));
         }
@@ -388,7 +388,7 @@ contract MetaTransactionsFeature is
             toMem := add(args, 32) // write after length prefix
         }
 
-        LibBytesV06.memCopy(toMem, fromMem, args.length);
+        LibBytes.memCopy(toMem, fromMem, args.length);
 
         return args;
     }

@@ -1,0 +1,142 @@
+# Solidity 版本升级和代码清理指南
+
+## 升级状态
+✅ **目标版本**: Solidity 0.8.30 (从0.8.19升级)
+✅ **EVM版本**: cancun (从shanghai升级)  
+✅ **编译器**: Foundry 1.2.3+ (统一使用)
+
+## 版本清理工作
+
+### ✅ 已完成的模块清理
+
+#### Utils模块 ([contracts/utils/](mdc:contracts/utils/))
+- ✅ **删除旧版本**: 移除v06目录和根目录旧文件
+- ✅ **统一命名**: LibBytesV08 → LibBytes
+- ✅ **更新导入**: 所有V08后缀已清理
+- ✅ **配置更新**: foundry.toml指向统一路径
+
+#### ERC20模块 ([contracts/erc20/](mdc:contracts/erc20/))  
+- ✅ **删除旧版本**: 移除v06目录
+- ✅ **统一结构**: v08文件移至根目录
+- ✅ **重命名清理**: LibERC20TokenV08 → LibERC20Token
+- ✅ **路径修正**: 更新所有导入路径
+
+### 📋 标准升级清单
+
+升级任何模块时必须检查：
+- [ ] 更新 pragma 版本到 0.8.30
+- [ ] 移除 SafeMath 库调用
+- [ ] 移除 `pragma experimental ABIEncoderV2`
+- [ ] 修复构造函数语法 (`public` → 移除)
+- [ ] 检查 `chainid()` 函数可见性 (`pure` → `view`)
+- [ ] 更新 foundry.toml 配置
+
+### 🏗️ 目录结构标准
+
+#### 推荐结构
+```
+contracts/module/
+├── foundry.toml           # Foundry配置
+├── src/                   # 统一的Solidity源码目录
+│   ├── LibExample.sol     # 无版本后缀
+│   ├── interfaces/        # 接口文件
+│   └── errors/           # 错误定义
+├── test/                  # 测试目录
+└── lib/                  # 依赖库
+```
+
+#### ❌ 避免的结构
+```
+contracts/module/
+├── src/
+│   ├── v06/              # 旧版本目录
+│   ├── v08/              # 版本化目录
+│   └── LibExampleV08.sol # 版本化文件名
+```
+
+## 配置标准
+
+### Foundry配置 ([foundry.toml](mdc:foundry.toml))
+```toml
+[profile.default]
+src = 'contracts/src'      # 统一源码路径
+out = 'out'
+libs = ['lib']
+solc_version = "0.8.30"    # 统一版本
+optimizer = true
+optimizer_runs = 1000000   # 高优化
+evm_version = "cancun"     # 最新EVM
+```
+
+### 内存引用 [[memory:3840863]]
+项目已决定将 Solidity 版本标准从 0.8.19 升级到 0.8.30。所有新合约和现有合约升级都应使用 pragma solidity 0.8.30。
+
+## 代码现代化
+
+### SafeMath移除示例
+```solidity
+// ❌ 旧版本 (0.6.x)
+using SafeMath for uint256;
+votingPower = delegatedBalance.safeAdd(balanceDelegatedToDefaultPool).safeDiv(2);
+
+// ✅ 新版本 (0.8.30)
+votingPower = (delegatedBalance + balanceDelegatedToDefaultPool) / 2;
+```
+
+### 构造函数现代化
+```solidity
+// ❌ 旧版本
+constructor(...) public { }
+
+// ✅ 新版本  
+constructor(...) { }
+```
+
+### 编码器声明清理
+```solidity
+// ❌ 移除这一行
+// pragma experimental ABIEncoderV2;
+```
+
+## 兼容性指南
+
+### Apple Silicon支持 [[memory:solidity-apple-silicon]]
+- **问题**: `Bad CPU type in executable (os error 86)`
+- **解决**: 统一使用0.8.0+版本
+- **策略**: 优先升级，必要时分离到legacy_contracts/
+
+### 依赖管理
+- **工具库**: contracts/utils 为其他模块提供基础
+- **导入路径**: 使用统一的相对路径
+- **版本后缀**: 新代码禁止使用版本后缀
+
+## 迁移检查清单
+
+### 代码检查
+```bash
+# 检查是否有遗留的版本后缀
+find . -name "*V08*" -o -name "*v06*" -o -name "*v08*"
+
+# 检查SafeMath使用
+grep -r "SafeMath" contracts/
+
+# 检查实验性编码器
+grep -r "experimental ABIEncoderV2" contracts/
+```
+
+### 编译验证
+```bash
+# 在模块目录下
+forge build --sizes  # 检查编译和合约大小
+forge test           # 验证测试通过
+```
+
+## 参考实现
+
+完整升级参考: [contracts/treasury/contracts/src/ZrxTreasury.sol](mdc:contracts/treasury/contracts/src/ZrxTreasury.sol)
+
+最佳实践模块: [contracts/utils/](mdc:contracts/utils/)
+description:
+globs:
+alwaysApply: false
+---

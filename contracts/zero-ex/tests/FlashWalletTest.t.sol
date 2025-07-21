@@ -42,7 +42,7 @@ contract FlashWalletTest is BaseTest {
     }
 
     function test_executeCall_nonOwnerCannotExecute() public {
-        vm.expectRevert(LibOwnableRichErrorsV06.OnlyOwnerError(account2, owner));
+        vm.expectRevert(LibOwnableRichErrors.OnlyOwnerError(account2, owner));
         vm.startPrank(account2);
         wallet.executeCall(payable(address(callTarget)), "0x1", 123);
     }
@@ -99,7 +99,7 @@ contract FlashWalletTest is BaseTest {
     }
 
     function test_executeDelegateCall_nonOwnerCannotExecute() public {
-        vm.expectRevert(LibOwnableRichErrorsV06.OnlyOwnerError(account2, owner));
+        vm.expectRevert(LibOwnableRichErrors.OnlyOwnerError(account2, owner));
         vm.startPrank(account2);
         wallet.executeDelegateCall(payable(address(callTarget)), "0x1");
     }

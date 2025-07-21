@@ -14,7 +14,7 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
+import "@0x/contracts-erc20/src/LibERC20Token.sol";
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "@0x/contracts-erc20/src/IEtherToken.sol";
 
@@ -58,8 +58,8 @@ interface IWstETH {
 }
 
 contract MixinLido {
-    using LibERC20TokenV06 for IERC20Token;
-    using LibERC20TokenV06 for IEtherToken;
+    using LibERC20Token for IERC20Token;
+    using LibERC20Token for IEtherToken;
 
     IEtherToken private immutable WETH;
 

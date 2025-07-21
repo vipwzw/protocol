@@ -14,12 +14,12 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../../errors/LibSignatureRichErrors.sol";
 
 /// @dev A library for validating signatures.
 library LibSignature {
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     // '\x19Ethereum Signed Message:\n32\x00\x00\x00\x00' in a word.
     uint256 private constant ETH_SIGN_HASH_PREFIX = 0x19457468657265756d205369676e6564204d6573736167653a0a333200000000;

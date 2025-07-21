@@ -14,13 +14,13 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../errors/LibTransformERC20RichErrors.sol";
 import "./IERC20Transformer.sol";
 
 /// @dev Abstract base class for transformers.
 abstract contract Transformer is IERC20Transformer {
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev The address of the deployer.
     address public immutable deployer;

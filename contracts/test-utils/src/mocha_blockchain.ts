@@ -23,7 +23,7 @@ export interface ContextDefinition extends mocha.IContextDefinition {
  */
 export interface BlockchainContextConfig {
     fork: Partial<{
-        // Accounts to unlock on ganache.
+        // Accounts to unlock on hardhat.
         unlockedAccounts: string[];
     }>;
 }
@@ -89,7 +89,7 @@ interface BlockchainEnvironmentFactory {
 }
 
 /**
- * `BlockchainTestsEnvironment` that uses the default ganache provider.
+ * `BlockchainTestsEnvironment` that uses the default hardhat provider.
  */
 export class StandardBlockchainTestsEnvironmentSingleton extends BlockchainTestsEnvironmentBase {
     private static _instance: StandardBlockchainTestsEnvironmentSingleton | undefined;
@@ -122,7 +122,7 @@ export class StandardBlockchainTestsEnvironmentSingleton extends BlockchainTests
 }
 
 /**
- * `BlockchainTestsEnvironment` that uses a forked ganache provider.
+ * `BlockchainTestsEnvironment` that uses a forked hardhat provider.
  */
 export class ForkedBlockchainTestsEnvironmentSingleton extends BlockchainTestsEnvironmentBase {
     private static _instance: ForkedBlockchainTestsEnvironmentSingleton | undefined;

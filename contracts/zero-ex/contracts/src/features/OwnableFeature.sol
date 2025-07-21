@@ -14,9 +14,9 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../fixins/FixinCommon.sol";
-import "../errors/LibOwnableRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibOwnableRichErrors.sol";
 import "../storage/LibOwnableStorage.sol";
 import "../migrations/LibBootstrap.sol";
 import "../migrations/LibMigrate.sol";
@@ -31,7 +31,7 @@ contract OwnableFeature is IFeature, IOwnableFeature, FixinCommon {
     /// @dev Version of this feature.
     uint256 public immutable override FEATURE_VERSION = _encodeVersion(1, 0, 0);
 
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev Initializes this feature. The intial owner will be set to this (ZeroEx)
     ///      to allow the bootstrappers to call `extend()`. Ownership should be

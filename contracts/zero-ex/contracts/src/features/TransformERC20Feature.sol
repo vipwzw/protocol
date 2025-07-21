@@ -15,10 +15,10 @@
 pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibBytesV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-erc20/src/LibERC20Token.sol";
+import "@0x/contracts-utils/contracts/src/LibBytes.sol";
+import "@0x/contracts-utils/contracts/src/LibMath.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../errors/LibTransformERC20RichErrors.sol";
 import "../fixins/FixinCommon.sol";
 import "../fixins/FixinTokenSpender.sol";
@@ -33,8 +33,7 @@ import "./interfaces/ITransformERC20Feature.sol";
 
 /// @dev Feature to composably transform between ERC20 tokens.
 contract TransformERC20Feature is IFeature, ITransformERC20Feature, FixinCommon, FixinTokenSpender {
-    using LibSafeMathV06 for uint256;
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev Stack vars for `_transformERC20Private()`.
     struct TransformERC20PrivateState {
@@ -209,9 +208,9 @@ contract TransformERC20Feature is IFeature, ITransformERC20Feature, FixinCommon,
                 )
                 .rrevert();
         }
-        outputTokenAmount = LibSafeMathV06.min256(
+        outputTokenAmount = LibMath.min256(
             outputTokenAmount,
-            state.recipientOutputTokenBalanceAfter.safeSub(state.recipientOutputTokenBalanceBefore)
+            state.recipientOutputTokenBalanceAfter-(state.recipientOutputTokenBalanceBefore)
         );
         // Ensure enough output token has been sent to the taker.
         if (outputTokenAmount < args.minOutputTokenAmount) {
@@ -325,14 +324,14 @@ contract TransformERC20Feature is IFeature, ITransformERC20Feature, FixinCommon,
                 // If we get back at least 32 bytes, we know the target address
                 // contains code, and we assume it is a token that returned a boolean
                 // success value, which must be true.
-                uint256 result = LibBytesV06.readUint256(resultData, 0);
+                uint256 result = LibBytes.readUint256(resultData, 0);
                 if (result != 1) {
-                    LibRichErrorsV06.rrevert(resultData);
+                    LibRichErrors.rrevert(resultData);
                 }
             } else {
                 // If 0 < returndatasize < 32, the target is a contract, but not a
                 // valid token.
-                LibRichErrorsV06.rrevert(resultData);
+                LibRichErrors.rrevert(resultData);
             }
         }
     }

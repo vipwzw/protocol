@@ -16,7 +16,7 @@ pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-utils/contracts/src/LibMath.sol";
 import "../../external/ILiquidityProviderSandbox.sol";
 import "../../fixins/FixinCommon.sol";
 import "../../fixins/FixinEIP712.sol";
@@ -43,7 +43,6 @@ contract MultiplexFeature is
     MultiplexUniswapV2,
     MultiplexUniswapV3
 {
-    using LibSafeMathV06 for uint256;
     /// @dev Name of this feature.
     string public constant override FEATURE_NAME = "MultiplexFeature";
     /// @dev Version of this feature.
@@ -213,10 +212,10 @@ contract MultiplexFeature is
         // Execute the batch sell.
         BatchSellState memory state = _executeBatchSell(params);
         // Compute the change in balance of the output token.
-        uint256 balanceDelta = params.outputToken.balanceOf(params.recipient).safeSub(balanceBefore);
+        uint256 balanceDelta = params.outputToken.balanceOf(params.recipient) - balanceBefore;
         // Use the minimum of the balanceDelta and the returned bought
         // amount in case of weird tokens and whatnot.
-        boughtAmount = LibSafeMathV06.min256(balanceDelta, state.boughtAmount);
+        boughtAmount = LibMath.min256(balanceDelta, state.boughtAmount);
         // Enforce `minBuyAmount`.
         require(boughtAmount >= minBuyAmount, "MultiplexFeature::_multiplexBatchSell/UNDERBOUGHT");
     }
@@ -366,10 +365,10 @@ contract MultiplexFeature is
         // Execute the multi-hop sell.
         MultiHopSellState memory state = _executeMultiHopSell(params);
         // Compute the change in balance of the output token.
-        uint256 balanceDelta = outputToken.balanceOf(params.recipient).safeSub(balanceBefore);
+        uint256 balanceDelta = outputToken.balanceOf(params.recipient) - balanceBefore;
         // Use the minimum of the balanceDelta and the returned bought
         // amount in case of weird tokens and whatnot.
-        boughtAmount = LibSafeMathV06.min256(balanceDelta, state.outputTokenAmount);
+        boughtAmount = LibMath.min256(balanceDelta, state.outputTokenAmount);
         // Enforce `minBuyAmount`.
         require(boughtAmount >= minBuyAmount, "MultiplexFeature::_multiplexMultiHopSell/UNDERBOUGHT");
     }
@@ -483,8 +482,8 @@ contract MultiplexFeature is
         // Execute the nested multi-hop sell.
         uint256 outputTokenAmount = _executeMultiHopSell(multiHopParams).outputTokenAmount;
         // Increment the sold and bought amounts.
-        state.soldAmount = state.soldAmount.safeAdd(sellAmount);
-        state.boughtAmount = state.boughtAmount.safeAdd(outputTokenAmount);
+        state.soldAmount = state.soldAmount + sellAmount;
+        state.boughtAmount = state.boughtAmount + outputTokenAmount;
     }
 
     function _nestedBatchSell(
@@ -593,12 +592,12 @@ contract MultiplexFeature is
             // If the high bit of `rawAmount` is set then the lower 255 bits
             // specify a fraction of `totalSellAmount`.
             return
-                LibSafeMathV06.min256(
-                    (totalSellAmount * LibSafeMathV06.min256(rawAmount & LOWER_255_BITS, 1e18)) / 1e18,
-                    totalSellAmount.safeSub(soldAmount)
+                LibMath.min256(
+                    (totalSellAmount * LibMath.min256(rawAmount & LOWER_255_BITS, 1e18)) / 1e18,
+                    totalSellAmount-(soldAmount)
                 );
         } else {
-            return LibSafeMathV06.min256(rawAmount, totalSellAmount.safeSub(soldAmount));
+            return LibMath.min256(rawAmount, totalSellAmount-(soldAmount));
         }
     }
 }

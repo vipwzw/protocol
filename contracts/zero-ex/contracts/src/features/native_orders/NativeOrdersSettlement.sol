@@ -16,9 +16,8 @@ pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibMathV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/LibMath.sol";
 import "../../errors/LibNativeOrdersRichErrors.sol";
 import "../../fixins/FixinCommon.sol";
 import "../../storage/LibNativeOrdersStorage.sol";
@@ -36,8 +35,7 @@ abstract contract NativeOrdersSettlement is
     NativeOrdersProtocolFees,
     FixinCommon
 {
-    using LibSafeMathV06 for uint128;
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev Params for `_settleOrder()`.
     struct SettleOrderInfo {
@@ -362,7 +360,7 @@ abstract contract NativeOrdersSettlement is
         // Pay the fee recipient.
         if (params.order.takerTokenFeeAmount > 0) {
             results.takerTokenFeeFilledAmount = uint128(
-                LibMathV06.getPartialAmountFloor(
+                LibMath.getPartialAmountFloor(
                     results.takerTokenFilledAmount,
                     params.order.takerAmount,
                     params.order.takerTokenFeeAmount
@@ -468,15 +466,15 @@ abstract contract NativeOrdersSettlement is
         SettleOrderInfo memory settleInfo
     ) private returns (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount) {
         // Clamp the taker token fill amount to the fillable amount.
-        takerTokenFilledAmount = LibSafeMathV06.min128(
+        takerTokenFilledAmount = LibMath.min128(
             settleInfo.takerTokenFillAmount,
-            settleInfo.takerAmount.safeSub128(settleInfo.takerTokenFilledAmount)
+            settleInfo.takerAmount - settleInfo.takerTokenFilledAmount
         );
         // Compute the maker token amount.
         // This should never overflow because the values are all clamped to
         // (2^128-1).
         makerTokenFilledAmount = uint128(
-            LibMathV06.getPartialAmountFloor(
+            LibMath.getPartialAmountFloor(
                 uint256(takerTokenFilledAmount),
                 uint256(settleInfo.takerAmount),
                 uint256(settleInfo.makerAmount)
@@ -490,9 +488,8 @@ abstract contract NativeOrdersSettlement is
 
         // Update filled state for the order.
         // solhint-disable-next-line max-line-length
-        LibNativeOrdersStorage.getStorage().orderHashToTakerTokenFilledAmount[settleInfo.orderHash] = settleInfo // function if the order is cancelled. // OK to overwrite the whole word because we shouldn't get to this
-            .takerTokenFilledAmount
-            .safeAdd128(takerTokenFilledAmount);
+        LibNativeOrdersStorage.getStorage().orderHashToTakerTokenFilledAmount[settleInfo.orderHash] = 
+            settleInfo.takerTokenFilledAmount + takerTokenFilledAmount;
 
         if (settleInfo.payer == address(this)) {
             // Transfer this -> maker.

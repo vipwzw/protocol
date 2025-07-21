@@ -15,8 +15,7 @@
 pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibMathV06.sol";
+import "@0x/contracts-utils/contracts/src/LibMath.sol";
 import "../../fixins/FixinEIP712.sol";
 import "../../fixins/FixinTokenSpender.sol";
 import "../../storage/LibNativeOrdersStorage.sol";
@@ -25,8 +24,7 @@ import "../libs/LibNativeOrder.sol";
 
 /// @dev Feature for getting info about limit and RFQ orders.
 abstract contract NativeOrdersInfo is FixinEIP712, FixinTokenSpender {
-    using LibSafeMathV06 for uint256;
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     // @dev Params for `_getActualFillableTakerTokenAmount()`.
     struct GetActualFillableTakerTokenAmountParams {
@@ -300,26 +298,26 @@ abstract contract NativeOrdersInfo is FixinEIP712, FixinTokenSpender {
 
         // Get the fillable maker amount based on the order quantities and
         // previously filled amount
-        uint256 fillableMakerTokenAmount = LibMathV06.getPartialAmountFloor(
+        uint256 fillableMakerTokenAmount = LibMath.getPartialAmountFloor(
             uint256(params.orderTakerAmount - params.orderInfo.takerTokenFilledAmount),
             uint256(params.orderTakerAmount),
             uint256(params.orderMakerAmount)
         );
         // Clamp it to the amount of maker tokens we can spend on behalf of the
         // maker.
-        fillableMakerTokenAmount = LibSafeMathV06.min256(
+        fillableMakerTokenAmount = LibMath.min256(
             fillableMakerTokenAmount,
             _getSpendableERC20BalanceOf(params.makerToken, params.maker)
         );
         // Convert to taker token amount.
         return
-            LibMathV06
-                .getPartialAmountCeil(
+            LibMath.safeDowncastToUint128(
+                LibMath.getPartialAmountCeil(
                     fillableMakerTokenAmount,
                     uint256(params.orderMakerAmount),
                     uint256(params.orderTakerAmount)
                 )
-                .safeDowncastToUint128();
+            );
     }
 
     /// @dev checks if a given address is registered to sign on behalf of a maker address

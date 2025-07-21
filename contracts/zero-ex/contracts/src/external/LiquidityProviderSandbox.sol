@@ -14,8 +14,8 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/errors/LibOwnableRichErrorsV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibOwnableRichErrors.sol";
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "../vendor/ILiquidityProvider.sol";
 import "../vendor/v3/IERC20Bridge.sol";
@@ -24,7 +24,7 @@ import "./ILiquidityProviderSandbox.sol";
 /// @dev A permissionless contract through which the ZeroEx contract can
 ///      safely trigger a trade on an external `ILiquidityProvider` contract.
 contract LiquidityProviderSandbox is ILiquidityProviderSandbox {
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev Store the owner as an immutable.
     address public immutable owner;
@@ -36,7 +36,7 @@ contract LiquidityProviderSandbox is ILiquidityProviderSandbox {
     /// @dev Allows only the (immutable) owner to call a function.
     modifier onlyOwner() virtual {
         if (msg.sender != owner) {
-            LibOwnableRichErrorsV06.OnlyOwnerError(msg.sender, owner).rrevert();
+            LibOwnableRichErrors.OnlyOwnerError(msg.sender, owner).rrevert();
         }
         _;
     }

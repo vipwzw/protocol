@@ -14,12 +14,10 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
 import "../interfaces/IMultiplexFeature.sol";
 import "../interfaces/ITransformERC20Feature.sol";
 
 abstract contract MultiplexTransformERC20 {
-    using LibSafeMathV06 for uint256;
 
     function _batchSellTransformERC20(
         IMultiplexFeature.BatchSellState memory state,
@@ -41,8 +39,8 @@ abstract contract MultiplexTransformERC20 {
         // Execute the transformations and swallow reverts.
         try ITransformERC20Feature(address(this))._transformERC20(args) returns (uint256 outputTokenAmount) {
             // Increment the sold and bought amounts.
-            state.soldAmount = state.soldAmount.safeAdd(sellAmount);
-            state.boughtAmount = state.boughtAmount.safeAdd(outputTokenAmount);
+            state.soldAmount = state.soldAmount + sellAmount;
+            state.boughtAmount = state.boughtAmount + outputTokenAmount;
         } catch {}
     }
 }

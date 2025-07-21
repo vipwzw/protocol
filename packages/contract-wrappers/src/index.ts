@@ -48,7 +48,6 @@ export {
     EvmOutput,
     FallbackAbi,
     FunctionAbi,
-    GanacheProvider,
     GethCallOverrides,
     JSONRPCErrorCallback,
     JSONRPCRequestPayload,

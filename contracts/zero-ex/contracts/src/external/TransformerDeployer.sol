@@ -14,7 +14,7 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/AuthorizableV06.sol";
+import "@0x/contracts-utils/contracts/src/Authorizable.sol";
 
 /// @dev A contract with a `die()` function.
 interface IKillable {
@@ -23,7 +23,7 @@ interface IKillable {
 
 /// @dev Deployer contract for ERC20 transformers.
 ///      Only authorities may call `deploy()` and `kill()`.
-contract TransformerDeployer is AuthorizableV06 {
+contract TransformerDeployer is Authorizable {
     /// @dev Emitted when a contract is deployed via `deploy()`.
     /// @param deployedAddress The address of the deployed contract.
     /// @param nonce The deployment nonce.

@@ -14,10 +14,10 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v08/interfaces/IOwnableV08.sol";
+import "@0x/contracts-utils/contracts/src/interfaces/IOwnable.sol";
 
 /// @dev Owner management and migration features.
-interface IOwnableFeature is IOwnableV08 {
+interface IOwnableFeature is IOwnable {
     /// @dev Emitted when `migrate()` is called.
     /// @param caller The caller of `migrate()`.
     /// @param migrator The migration contract.

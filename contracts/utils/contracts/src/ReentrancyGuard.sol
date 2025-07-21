@@ -1,6 +1,7 @@
+// SPDX-License-Identifier: Apache-2.0
 /*
 
-  Copyright 2019 ZeroEx Intl.
+  Copyright 2020 ZeroEx Intl.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -16,10 +17,10 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity 0.8.30;
 
-import "./LibReentrancyGuardRichErrors.sol";
-import "./LibRichErrors.sol";
+import "./errors/LibReentrancyGuardRichErrors.sol";
+import "./errors/LibRichErrors.sol";
 
 contract ReentrancyGuard {
     // Locked state of mutex.

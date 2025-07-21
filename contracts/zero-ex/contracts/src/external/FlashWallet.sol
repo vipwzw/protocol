@@ -14,14 +14,14 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/errors/LibOwnableRichErrorsV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibOwnableRichErrors.sol";
 import "../errors/LibWalletRichErrors.sol";
 import "./IFlashWallet.sol";
 
 /// @dev A contract that can execute arbitrary calls from its owner.
 contract FlashWallet is IFlashWallet {
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev Store the owner/deployer as an immutable to make this contract stateless.
     address public immutable override owner;
@@ -34,7 +34,7 @@ contract FlashWallet is IFlashWallet {
     /// @dev Allows only the (immutable) owner to call a function.
     modifier onlyOwner() virtual {
         if (msg.sender != owner) {
-            LibOwnableRichErrorsV06.OnlyOwnerError(msg.sender, owner).rrevert();
+            LibOwnableRichErrors.OnlyOwnerError(msg.sender, owner).rrevert();
         }
         _;
     }

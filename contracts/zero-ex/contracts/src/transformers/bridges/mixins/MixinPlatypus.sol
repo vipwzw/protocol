@@ -14,9 +14,8 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
+import "@0x/contracts-erc20/src/LibERC20Token.sol";
 import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
 
 interface IPlatypusRouter {
     function swapTokensForTokens(
@@ -30,8 +29,7 @@ interface IPlatypusRouter {
 }
 
 contract MixinPlatypus {
-    using LibERC20TokenV06 for IERC20Token;
-    using LibSafeMathV06 for uint256;
+    using LibERC20Token for IERC20Token;
 
     function _tradePlatypus(
         IERC20Token buyToken,
@@ -78,7 +76,7 @@ contract MixinPlatypus {
             block.timestamp + 1
         );
         //calculate the buy amount from the tokens we recieved
-        boughtAmount = buyToken.balanceOf(address(this)).safeSub(beforeBalance);
+        boughtAmount = buyToken.balanceOf(address(this)) - beforeBalance;
         return boughtAmount;
     }
 }

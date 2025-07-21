@@ -14,7 +14,7 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-erc20/src/v06/WETH9V06.sol";
+import "@0x/contracts-erc20/src/WETH9.sol";
 
 import "utils/BaseTest.sol";
 import "../../contracts/src/transformers/PositiveSlippageFeeTransformer.sol";
@@ -23,7 +23,7 @@ import "../../contracts/src/transformers/IERC20Transformer.sol";
 contract PositiveSlippageFeeTransformerTest is BaseTest {
     address public owner = account1;
     address public feeRecipient = account2;
-    WETH9V06 weth = new WETH9V06();
+    WETH9 weth = new WETH9();
     IERC20Token token1 = IERC20Token(address(weth));
 
     PositiveSlippageFeeTransformer target = new PositiveSlippageFeeTransformer();

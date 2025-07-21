@@ -14,14 +14,13 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-utils/contracts/src/LibMath.sol";
 import "../../fixins/FixinEIP712.sol";
 import "../interfaces/IMultiplexFeature.sol";
 import "../interfaces/INativeOrdersFeature.sol";
 import "../libs/LibNativeOrder.sol";
 
 abstract contract MultiplexRfq is FixinEIP712 {
-    using LibSafeMathV06 for uint256;
 
     event ExpiredRfqOrder(bytes32 orderHash, address maker, uint64 expiry);
 
@@ -52,15 +51,15 @@ abstract contract MultiplexRfq is FixinEIP712 {
             INativeOrdersFeature(address(this))._fillRfqOrder(
                 order,
                 signature,
-                sellAmount.safeDowncastToUint128(),
+                LibMath.safeDowncastToUint128(sellAmount),
                 params.payer,
                 params.useSelfBalance,
                 params.recipient
             )
         returns (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount) {
             // Increment the sold and bought amounts.
-            state.soldAmount = state.soldAmount.safeAdd(takerTokenFilledAmount);
-            state.boughtAmount = state.boughtAmount.safeAdd(makerTokenFilledAmount);
+            state.soldAmount = state.soldAmount + takerTokenFilledAmount;
+            state.boughtAmount = state.boughtAmount + makerTokenFilledAmount;
         } catch {}
     }
 }

@@ -14,15 +14,15 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/LibBytesV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
+import "@0x/contracts-utils/contracts/src/LibBytes.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../errors/LibCommonRichErrors.sol";
 import "../storage/LibReentrancyGuardStorage.sol";
 
 /// @dev Common feature utilities.
 abstract contract FixinReentrancyGuard {
-    using LibRichErrorsV06 for bytes;
-    using LibBytesV06 for bytes;
+    using LibRichErrors for bytes;
+    using LibBytes for bytes;
 
     // Combinable reentrancy flags.
     /// @dev Reentrancy guard flag for meta-transaction functions.

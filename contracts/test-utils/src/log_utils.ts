@@ -1,25 +1,25 @@
-import { LogEntry, LogWithDecodedArgs, TransactionReceiptWithDecodedLogs } from 'ethereum-types';
+import { DecodedLogArgs, LogEntry, LogWithDecodedArgs, TransactionReceiptWithDecodedLogs } from 'ethereum-types';
 
 import { expect } from './chai_setup';
 
 /**
  * Filter logs by event name/type.
  */
-export function filterLogs<TEventArgs>(logs: LogEntry[], event: string): Array<LogWithDecodedArgs<TEventArgs>> {
+export function filterLogs<TEventArgs extends DecodedLogArgs>(logs: LogEntry[], event: string): Array<LogWithDecodedArgs<TEventArgs>> {
     return (logs as Array<LogWithDecodedArgs<any>>).filter(log => log.event === event);
 }
 
 /**
  * Filter logs by event name/type and convert to arguments.
  */
-export function filterLogsToArguments<TEventArgs>(logs: LogEntry[], event: string): TEventArgs[] {
+export function filterLogsToArguments<TEventArgs extends DecodedLogArgs>(logs: LogEntry[], event: string): TEventArgs[] {
     return filterLogs<TEventArgs>(logs, event).map(log => log.args);
 }
 
 /**
  * Verifies that a transaction emitted the expected events of a particular type.
  */
-export function verifyEvents<TEventArgs>(
+export function verifyEvents<TEventArgs extends DecodedLogArgs>(
     txReceipt: TransactionReceiptWithDecodedLogs,
     expectedEvents: TEventArgs[],
     eventName: string,
@@ -30,7 +30,7 @@ export function verifyEvents<TEventArgs>(
 /**
  * Given a collection of logs, verifies that matching events are identical.
  */
-export function verifyEventsFromLogs<TEventArgs>(
+export function verifyEventsFromLogs<TEventArgs extends DecodedLogArgs>(
     logs: LogEntry[],
     expectedEvents: TEventArgs[],
     eventName: string,

@@ -14,9 +14,9 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibOwnableRichErrors.sol";
 import "../errors/LibCommonRichErrors.sol";
-import "../errors/LibOwnableRichErrors.sol";
 
 /// @dev EIP712 helpers for features.
 abstract contract FixinEIP712 {

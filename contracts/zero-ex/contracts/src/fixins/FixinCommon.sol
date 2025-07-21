@@ -14,15 +14,15 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibOwnableRichErrors.sol";
 import "../errors/LibCommonRichErrors.sol";
-import "../errors/LibOwnableRichErrors.sol";
 import "../features/interfaces/IOwnableFeature.sol";
 import "../features/interfaces/ISimpleFunctionRegistryFeature.sol";
 
 /// @dev Common feature utilities.
 abstract contract FixinCommon {
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev The implementation address of this feature.
     address internal immutable _implementation;

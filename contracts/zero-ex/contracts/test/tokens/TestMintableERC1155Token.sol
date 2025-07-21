@@ -19,7 +19,6 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
 
 interface IERC1155Receiver {
     /// @notice Handle the receipt of a single ERC1155 token type
@@ -64,7 +63,6 @@ interface IERC1155Receiver {
 }
 
 contract TestMintableERC1155Token {
-    using LibSafeMathV06 for uint256;
 
     /// @dev Either TransferSingle or TransferBatch MUST emit when tokens are transferred,
     ///      including zero value transfers as well as minting or burning.

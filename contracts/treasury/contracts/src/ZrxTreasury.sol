@@ -19,13 +19,13 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v08/LibBytesV08.sol";
-import "@0x/contracts-utils/contracts/src/v08/errors/LibRichErrorsV08.sol";
+import "@0x/contracts-utils/contracts/src/LibBytes.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "./IZrxTreasury.sol";
 
 contract ZrxTreasury is IZrxTreasury {
-    using LibRichErrorsV08 for bytes;
-    using LibBytesV08 for bytes;
+    using LibRichErrors for bytes;
+using LibBytes for bytes;
 
     /// Contract name
     string private constant CONTRACT_NAME = "Zrx Treasury";

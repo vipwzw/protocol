@@ -17,11 +17,11 @@ export type sendTransactionResult = Promise<TransactionReceipt | TransactionRece
 
 /**
  * Returns ganacheError if the backing Ethereum node is Ganache and gethError
- * if it is Geth.
+ * if the backing node is Geth.
  * @param ganacheError the error to be returned if the backing node is Ganache.
  * @param gethError the error to be returned if the backing node is Geth.
  * @returns either the given ganacheError or gethError depending on the backing
- * node.
+ * Ethereum node.
  */
 async function _getGanacheOrGethErrorAsync(ganacheError: string, gethError: string): Promise<string> {
     if (nodeType === undefined) {

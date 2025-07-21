@@ -12,8 +12,8 @@
     "scripts": {
         "build": "tsc -b",
         "build:ci": "yarn build",
-        "test": "yarn run_mocha",
-        "run_mocha": "mocha --require source-map-support/register --require make-promises-safe 'lib/test/**/*.js' --timeout 100000 --bail --exit",
+        "test": "npx hardhat test",
+        "run_mocha": "npx hardhat test",
         "clean": "shx rm -rf lib",
         "lint": "eslint src test",
         "fix": "eslint --fix src test",
@@ -35,7 +35,7 @@
         "eslint-config-prettier": "^8.5.0",
         "npm-run-all": "^4.1.2",
         "shx": "^0.2.2",
-        "typescript": "4.6.3"
+        "typescript": "^5.0.0"
     },
     "dependencies": {
         "@0x/assert": "^3.0.36",

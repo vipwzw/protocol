@@ -14,7 +14,6 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
 
 interface IERC721Receiver {
     /// @notice Handle the receipt of an NFT
@@ -38,7 +37,6 @@ interface IERC721Receiver {
 }
 
 contract TestMintableERC721Token {
-    using LibSafeMathV06 for uint256;
 
     /// @dev This emits when ownership of any NFT changes by any mechanism.
     ///      This event emits when NFTs are created (`from` == 0) and destroyed

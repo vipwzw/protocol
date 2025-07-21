@@ -14,14 +14,12 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
+import "@0x/contracts-erc20/src/LibERC20Token.sol";
 import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
 import "../../../vendor/ILiquidityProvider.sol";
 
 contract MixinZeroExBridge {
-    using LibERC20TokenV06 for IERC20Token;
-    using LibSafeMathV06 for uint256;
+    using LibERC20Token for IERC20Token;
 
     function _tradeZeroExBridge(
         IERC20Token sellToken,

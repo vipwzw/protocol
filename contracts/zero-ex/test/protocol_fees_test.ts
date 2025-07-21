@@ -10,7 +10,7 @@ import {
     TestWethContract,
 } from './wrappers';
 
-// TODO: dekz Ganache gasPrice opcode is returning 0, cannot influence it up to test this case
+// TODO: dekz Hardhat gasPrice opcode is returning 0, cannot influence it up to test this case
 blockchainTests.resets.skip('ProtocolFees', env => {
     const FEE_MULTIPLIER = 70e3;
     let taker: string;
@@ -90,7 +90,7 @@ blockchainTests.resets.skip('ProtocolFees', env => {
             feeCollector2Address = await protocolFees.getFeeCollector(pool2).callAsync();
         });
 
-        // Ganache gasPrice opcode is returning 0, cannot influence it up to test this case
+        // Hardhat gasPrice opcode is returning 0, cannot influence it up to test this case
         it('should revert if insufficient ETH transferred', async () => {
             const tooLittle = singleFeeAmount.minus(1);
             const tx = protocolFees.collectProtocolFee(pool1).awaitTransactionSuccessAsync({ value: tooLittle });

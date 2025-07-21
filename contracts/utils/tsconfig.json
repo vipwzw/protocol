@@ -11,7 +11,8 @@
         "pretty": true,
         "strict": true,
         "useUnknownInCatchVariables": false,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "skipLibCheck": true
     },
     "include": ["src/**/*"],
     "exclude": ["lib/**/*", "test/**/*", "out/**/*"]

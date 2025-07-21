@@ -15,16 +15,14 @@
 pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../../fixins/FixinProtocolFees.sol";
 import "../../errors/LibNativeOrdersRichErrors.sol";
 import "../../vendor/v3/IStaking.sol";
 
 /// @dev Mixin for protocol fee utility functions.
 abstract contract NativeOrdersProtocolFees is FixinProtocolFees {
-    using LibSafeMathV06 for uint256;
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     constructor(
         IEtherToken weth,

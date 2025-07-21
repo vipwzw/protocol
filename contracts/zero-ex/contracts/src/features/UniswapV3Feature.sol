@@ -16,7 +16,7 @@ pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../vendor/IUniswapV3Pool.sol";
 import "../migrations/LibMigrate.sol";
 import "../fixins/FixinCommon.sol";
@@ -26,7 +26,7 @@ import "./interfaces/IUniswapV3Feature.sol";
 
 /// @dev VIP uniswap fill functions.
 contract UniswapV3Feature is IFeature, IUniswapV3Feature, FixinCommon, FixinTokenSpender {
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
     /// @dev Name of this feature.
     string public constant override FEATURE_NAME = "UniswapV3Feature";
     /// @dev Version of this feature.
@@ -247,7 +247,7 @@ contract UniswapV3Feature is IFeature, IUniswapV3Feature, FixinCommon, FixinToke
                     swapCallbackData
                 );
                 {
-                    int256 _buyAmount = -(zeroForOne ? amount1 : amount0);
+                    int256 _buyAmount = zeroForOne ? -amount1 : -amount0;
                     require(_buyAmount >= 0, "UniswapV3Feature/INVALID_BUY_AMOUNT");
                     buyAmount = uint256(_buyAmount);
                 }

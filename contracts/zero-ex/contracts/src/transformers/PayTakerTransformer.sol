@@ -14,18 +14,16 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
+import "@0x/contracts-erc20/src/LibERC20Token.sol";
 import "../errors/LibTransformERC20RichErrors.sol";
 import "./Transformer.sol";
 import "./LibERC20Transformer.sol";
 
 /// @dev A transformer that transfers tokens to the taker.
 contract PayTakerTransformer is Transformer {
-    using LibRichErrorsV06 for bytes;
-    using LibSafeMathV06 for uint256;
+    using LibRichErrors for bytes;
     using LibERC20Transformer for IERC20Token;
 
     /// @dev Transform data to ABI-encode and pass into `transform()`.

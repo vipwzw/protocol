@@ -45,7 +45,7 @@ import "src/transformers/bridges/IBridgeAdapter.sol";
 import "src/transformers/bridges/EthereumBridgeAdapter.sol";
 
 import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-erc20/src/v06/WETH9V06.sol";
+import "@0x/contracts-erc20/src/WETH9.sol";
 
 contract DeployZeroEx is Test {
     ZeroEx public ZERO_EX = ZeroEx(payable(0xDef1C0ded9bec7F1a1670819833240f027b25EfF));
@@ -161,7 +161,7 @@ contract DeployZeroEx is Test {
             return ZERO_EX_DEPLOYED;
         }
 
-        ZERO_EX_DEPLOYED.weth = IEtherToken(address(new WETH9V06()));
+        ZERO_EX_DEPLOYED.weth = IEtherToken(address(new WETH9()));
         InitialMigration initialMigration = new InitialMigration(address(this));
         // Append the required ZeroEx constructor arguments (address bootstrapper)
         bytes memory zeroExDeploycode = abi.encodePacked(type(ZeroEx).creationCode, abi.encode(initialMigration));

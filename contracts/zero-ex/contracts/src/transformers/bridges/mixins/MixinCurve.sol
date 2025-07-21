@@ -14,16 +14,14 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
+import "@0x/contracts-erc20/src/LibERC20Token.sol";
 import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
 
 contract MixinCurve {
-    using LibERC20TokenV06 for IERC20Token;
-    using LibSafeMathV06 for uint256;
-    using LibRichErrorsV06 for bytes;
+    using LibERC20Token for IERC20Token;
+    using LibRichErrors for bytes;
 
     /// @dev Mainnet address of the WETH contract.
     IEtherToken private immutable WETH;
@@ -76,6 +74,6 @@ contract MixinCurve {
             WETH.deposit{value: boughtAmount}();
         }
 
-        return buyToken.balanceOf(address(this)).safeSub(beforeBalance);
+        return buyToken.balanceOf(address(this))-(beforeBalance);
     }
 }

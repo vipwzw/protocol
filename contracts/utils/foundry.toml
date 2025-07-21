@@ -1,5 +1,5 @@
 [profile.default]
-src = 'contracts/src/v08'
+src = 'contracts/src'
 out = 'out'
 test = 'test'
 libs = ['lib', "../erc20/contracts/src/", "../governance/src/"]

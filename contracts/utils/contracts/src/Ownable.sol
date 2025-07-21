@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /*
 
   Copyright 2019 ZeroEx Intl.
@@ -16,18 +17,18 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity 0.8.30;
 
 import "./interfaces/IOwnable.sol";
-import "./LibOwnableRichErrors.sol";
-import "./LibRichErrors.sol";
+import "./errors/LibRichErrors.sol";
+import "./errors/LibOwnableRichErrors.sol";
 
 contract Ownable is IOwnable {
     /// @dev The owner of this contract.
     /// @return 0 The owner address.
-    address public owner;
+    address public override owner;
 
-    constructor() public {
+    constructor() {
         owner = msg.sender;
     }
 
@@ -38,7 +39,7 @@ contract Ownable is IOwnable {
 
     /// @dev Change the owner of this contract.
     /// @param newOwner New owner address.
-    function transferOwnership(address newOwner) public onlyOwner {
+    function transferOwnership(address newOwner) public override onlyOwner {
         if (newOwner == address(0)) {
             LibRichErrors.rrevert(LibOwnableRichErrors.TransferOwnerToZeroError());
         } else {
