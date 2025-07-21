@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 import "../ZeroEx.sol";
 import "../features/interfaces/IOwnableFeature.sol";

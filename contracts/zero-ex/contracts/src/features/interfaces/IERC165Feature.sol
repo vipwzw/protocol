@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 /// @dev Implements the ERC165 `supportsInterface` function
 interface IERC165Feature {

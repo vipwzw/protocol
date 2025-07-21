@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 library LibNFTOrdersRichErrors {
     function OverspentEthError(uint256 ethSpent, uint256 ethAvailable) internal pure returns (bytes memory) {

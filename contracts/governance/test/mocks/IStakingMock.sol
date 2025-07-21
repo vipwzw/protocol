@@ -21,7 +21,7 @@ import "./IZrxVaultMock.sol";
 import "./IStructs.sol";
 import "./IStorageMock.sol";
 
-pragma solidity ^0.8.19;
+pragma solidity 0.8.30;
 
 interface IStakingMock is IStorageMock {
     /// @dev Adds a new exchange address

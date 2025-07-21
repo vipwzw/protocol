@@ -16,7 +16,7 @@
   limitations under the License.
 
 */
-pragma solidity ^0.8.19;
+pragma solidity 0.8.30;
 
 import "@openzeppelin/token/ERC20/ERC20.sol";
 import "../BaseTest.t.sol";

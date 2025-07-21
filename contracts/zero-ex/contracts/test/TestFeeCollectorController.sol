@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 /// @dev FeeCollectorControllerContract-like contract with a null init code hash.
 //       Does not implement anything else, so finalization will fail.

@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 interface IERC1155Token {
     /// @dev Either TransferSingle or TransferBatch MUST emit when tokens are transferred,

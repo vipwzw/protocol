@@ -9,10 +9,12 @@ remappings = [
     '@openzeppelin-contracts-upgradeable/=./lib/openzeppelin-contracts-upgradeable/contracts/',
     '@0x/contracts-utils/=../utils/',
 ]
-solc = '0.8.19'
-optimizer_runs = 20_000
+solc = '0.8.30'
+optimizer_runs = 1_000_000
+optimizer = true
+
 via_ir = true
-evm_version = "shanghai"
+evm_version = "cancun"
 
 [profile.integration]
 match_path = "test/integration/*.sol"

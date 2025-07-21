@@ -16,7 +16,7 @@
   limitations under the License.
 
 */
-pragma solidity ^0.8.19;
+pragma solidity 0.8.30;
 
 import {ZeroExVotes} from "../../src/ZeroExVotes.sol";
 import {SafeCast} from "@openzeppelin/utils/math/SafeCast.sol";

@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 interface IFeeRecipient {
     /// @dev A callback function invoked in the ERC721Feature for each ERC721

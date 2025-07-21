@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity ^0.8.19;
+pragma solidity 0.8.30;
 
 import "forge-std/Test.sol";
 import "@openzeppelin/token/ERC20/ERC20.sol";

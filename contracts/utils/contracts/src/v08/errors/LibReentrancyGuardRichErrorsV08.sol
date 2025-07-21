@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity ^0.8;
+pragma solidity 0.8.30;
 
 library LibReentrancyGuardRichErrorsV08 {
     // bytes4(keccak256("IllegalReentrancyError()"))

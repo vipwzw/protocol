@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity ^0.8.19;
+pragma solidity 0.8.30;
 
 import "./DefaultPoolOperator.sol";
 import "./IStaking.sol";

@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.8.19;
+pragma solidity 0.8.30;
 
 import "forge-std/Test.sol";
 import "../src/v06/WETH9V06.sol";

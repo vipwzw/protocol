@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 library LibAuthorizableRichErrorsV06 {
     // bytes4(keccak256("AuthorizedAddressMismatchError(address,address)"))

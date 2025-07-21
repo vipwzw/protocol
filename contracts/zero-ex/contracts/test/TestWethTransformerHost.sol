@@ -33,7 +33,7 @@ contract TestWethTransformerHost is TestTransformerHost {
         // Have to make this call externally because transformers aren't payable.
         this.rawExecuteTransform(
             transformer,
-            IERC20Transformer.TransformContext({sender: payable(msg.sender), recipient: payable(msg.sender), data: data})
+            IERC20Transformer.TransformContext({sender: msg.sender, recipient: msg.sender, data: data})
         );
     }
 }

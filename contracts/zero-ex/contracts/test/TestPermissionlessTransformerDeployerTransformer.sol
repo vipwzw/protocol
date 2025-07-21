@@ -21,7 +21,7 @@ contract TestPermissionlessTransformerDeployerTransformer {
     address payable public immutable deployer;
 
     constructor() public payable {
-        deployer = payable(msg.sender);
+        deployer = msg.sender;
         require(msg.value != CONSTRUCTOR_FAIL_VALUE, "TestTransformerDeployerTransformer/CONSTRUCTOR_FAIL");
     }
 }

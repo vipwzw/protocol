@@ -16,7 +16,7 @@
   limitations under the License.
 
 */
-pragma solidity ^0.8;
+pragma solidity 0.8.30;
 
 library LibOwnableRichErrorsV08 {
     // bytes4(keccak256("OnlyOwnerError(address,address)"))

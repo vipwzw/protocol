@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 import "./interfaces/IAuthorizableV06.sol";
 import "./errors/LibRichErrorsV06.sol";

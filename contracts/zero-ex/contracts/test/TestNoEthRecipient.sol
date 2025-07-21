@@ -12,6 +12,6 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 contract TestNoEthRecipient {}

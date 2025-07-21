@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 interface IUniswapV3Pool {
     /// @notice Swap token0 for token1, or token1 for token0

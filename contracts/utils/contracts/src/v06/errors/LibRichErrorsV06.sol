@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 library LibRichErrorsV06 {
     // bytes4(keccak256("Error(string)"))

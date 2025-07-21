@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 interface IPropertyValidator {
     /// @dev Checks that the given ERC721/ERC1155 asset satisfies the properties encoded in `propertyData`.

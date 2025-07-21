@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/IEtherToken.sol";
 import "../vendor/v3/IStaking.sol";

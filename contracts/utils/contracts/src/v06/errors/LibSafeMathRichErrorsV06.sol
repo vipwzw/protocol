@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 library LibSafeMathRichErrorsV06 {
     // bytes4(keccak256("Uint256BinOpError(uint8,uint256,uint256)"))

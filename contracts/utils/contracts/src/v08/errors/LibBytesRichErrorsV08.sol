@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity ^0.8;
+pragma solidity 0.8.30;
 
 library LibBytesRichErrorsV08 {
     enum InvalidByteOperationErrorCodes {

@@ -36,7 +36,7 @@ contract TestMetaTransactionsTransformERC20Feature is TransformERC20Feature {
         TransformERC20Args memory args
     ) public payable override returns (uint256 outputTokenAmount) {
         if (msg.value == 555) {
-            payable(tx.origin).transfer(1);
+            tx.origin.transfer(1);
         }
 
         if (msg.value == 666) {
@@ -49,7 +49,7 @@ contract TestMetaTransactionsTransformERC20Feature is TransformERC20Feature {
             // Try to reenter `executeMetaTransaction()`
             IMetaTransactionsFeature(address(this)).executeMetaTransaction(
                 IMetaTransactionsFeature.MetaTransactionData({
-                    signer: payable(address(0)),
+                    signer: address(0),
                     sender: address(0),
                     minGasPrice: 0,
                     maxGasPrice: 0,
@@ -57,7 +57,7 @@ contract TestMetaTransactionsTransformERC20Feature is TransformERC20Feature {
                     salt: 0,
                     callData: "",
                     value: 0,
-                    feeToken: IERC20Token(address(0)),
+                    feeToken: IERC20Token(0),
                     feeAmount: 0
                 }),
                 signature
@@ -70,7 +70,7 @@ contract TestMetaTransactionsTransformERC20Feature is TransformERC20Feature {
                 memory mtxs = new IMetaTransactionsFeature.MetaTransactionData[](1);
             LibSignature.Signature[] memory signatures = new LibSignature.Signature[](1);
             mtxs[0] = IMetaTransactionsFeature.MetaTransactionData({
-                signer: payable(address(0)),
+                signer: address(0),
                 sender: address(0),
                 minGasPrice: 0,
                 maxGasPrice: 0,
@@ -78,7 +78,7 @@ contract TestMetaTransactionsTransformERC20Feature is TransformERC20Feature {
                 salt: 0,
                 callData: "",
                 value: 0,
-                feeToken: IERC20Token(address(0)),
+                feeToken: IERC20Token(0),
                 feeAmount: 0
             });
             IMetaTransactionsFeature(address(this)).batchExecuteMetaTransactions(mtxs, signatures);

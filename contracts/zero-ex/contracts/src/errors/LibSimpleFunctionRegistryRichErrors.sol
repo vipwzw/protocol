@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 library LibSimpleFunctionRegistryRichErrors {
     function NotInRollbackHistoryError(bytes4 selector, address targetImpl) internal pure returns (bytes memory) {

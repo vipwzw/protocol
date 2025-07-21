@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
 

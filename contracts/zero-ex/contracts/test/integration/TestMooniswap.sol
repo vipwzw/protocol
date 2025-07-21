@@ -44,13 +44,13 @@ contract TestMooniswap {
         boughtAmount = nextBuyAmount;
         nextBuyAmount = 0;
         require(boughtAmount >= minBuyAmount, "UNDERBOUGHT");
-        if (sellToken != IERC20Token(address(0))) {
+        if (sellToken != IERC20Token(0)) {
             sellToken.transferFrom(msg.sender, address(this), sellAmount);
         } else {
             require(sellAmount == msg.value, "NOT_ENOUGH_ETH");
         }
         if (address(buyToken) == address(0)) {
-            payable(msg.sender).transfer(boughtAmount);
+            msg.sender.transfer(boughtAmount);
         } else {
             buyToken.mint(msg.sender, boughtAmount);
         }

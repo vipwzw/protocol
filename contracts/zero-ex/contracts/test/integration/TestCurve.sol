@@ -62,12 +62,12 @@ contract TestCurve {
         if (toCoinIdx == BUY_TOKEN_COIN_IDX) {
             buyToken.mint(msg.sender, buyAmount);
         } else if (toCoinIdx == ETH_COIN_IDX) {
-            payable(msg.sender).transfer(buyAmount);
+            msg.sender.transfer(buyAmount);
         }
         emit CurveCalled(msg.value, selector, fromCoinIdx, toCoinIdx, sellAmount, minBuyAmount);
         if (shouldReturnBoughtAmount) {
             assembly {
-                mstore(0, sload(buyAmount.slot))
+                mstore(0, sload(buyAmount_slot))
                 return(0, 32)
             }
         }

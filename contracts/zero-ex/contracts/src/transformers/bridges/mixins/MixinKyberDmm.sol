@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
 import "@0x/contracts-erc20/src/IERC20Token.sol";

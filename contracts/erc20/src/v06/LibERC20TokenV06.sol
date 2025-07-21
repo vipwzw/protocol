@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity ^0.8.19;
+pragma solidity 0.8.30;
 
 import "@0x/contracts-utils/contracts/src/v08/errors/LibRichErrorsV08.sol";
 import "@0x/contracts-utils/contracts/src/v08/LibBytesV08.sol";

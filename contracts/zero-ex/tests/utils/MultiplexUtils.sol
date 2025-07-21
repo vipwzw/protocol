@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 import {IERC20Token} from "@0x/contracts-erc20/src/IERC20Token.sol";
 import {LibNativeOrder} from "src/features/libs/LibNativeOrder.sol";

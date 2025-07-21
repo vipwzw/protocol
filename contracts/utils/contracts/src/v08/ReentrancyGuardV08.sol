@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity ^0.8;
+pragma solidity 0.8.30;
 
 import "./errors/LibReentrancyGuardRichErrorsV08.sol";
 import "./errors/LibRichErrorsV08.sol";

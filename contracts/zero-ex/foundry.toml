@@ -15,8 +15,8 @@ remappings = [
 optimizer = true
 optimizer_runs = 1000000
 fs_permissions = [{ access = "read", path = "./" }]
-solc_version = "0.8.19"
-evm_version = "shanghai"
+solc_version = "0.8.30"
+evm_version = "cancun"
 
 [rpc_endpoints]
 # Use public RPC URLs - these work reliably for CI/testing

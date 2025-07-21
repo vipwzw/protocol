@@ -46,7 +46,7 @@ contract TestNFTOrderPresigner {
     }
 
     function approveERC20(IERC20Token token) external {
-        token.approve(address(zeroEx), type(uint256).max);
+        token.approve(address(zeroEx), uint256(-1));
     }
 
     function preSignERC721Order(LibNFTOrder.ERC721Order calldata order) external {
