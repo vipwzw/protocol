@@ -1,4 +1,3 @@
-import { artifacts as erc20Artifacts, ERC20TokenEvents } from '@0x/contracts-erc20';
 import { StakingContract, StakingProxyContract } from '@0x/contracts-staking';
 import { blockchainTests, constants, verifyEventsFromLogs } from '@0x/contracts-test-utils';
 import { BigNumber, hexUtils, logUtils } from '@0x/utils';
@@ -8,6 +7,12 @@ import { proposals } from '../src/proposals';
 
 import { artifacts } from './artifacts';
 import { ISablierEvents, ZrxTreasuryContract, ZrxTreasuryEvents } from './wrappers';
+
+// Define the event types locally since we're not importing from @0x/contracts-erc20
+export enum ERC20TokenEvents {
+    Transfer = 'Transfer',
+    Approval = 'Approval',
+}
 
 const SUBGRAPH_URL = 'https://api.thegraph.com/subgraphs/name/mzhu25/zeroex-staking';
 const STAKING_PROXY_ADDRESS = '0xa26e80e7dea86279c6d778d702cc413e6cffa777';
@@ -84,7 +89,7 @@ blockchainTests.fork.skip('Treasury proposal mainnet fork tests', env => {
 
     before(async () => {
         // Handle both Foundry and legacy artifact formats
-        const abis = _.mapValues({ ...artifacts, ...erc20Artifacts }, v => {
+        const abis = _.mapValues({ ...artifacts }, v => {
             // Foundry format has abi directly, legacy format has compilerOutput.abi
             return (v as any).abi || (v as any).compilerOutput?.abi;
         });

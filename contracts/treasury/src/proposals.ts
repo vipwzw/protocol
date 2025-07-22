@@ -1,5 +1,4 @@
 import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses';
-import { ERC20TokenContract } from '@0x/contracts-erc20';
 import { Web3ProviderEngine } from '@0x/subproviders';
 import { BigNumber } from '@0x/utils';
 
@@ -17,7 +16,36 @@ interface Proposal {
     executionEpoch?: BigNumber;
 }
 
+// Simple ERC20 interface for proposals
+class ERC20TokenContract {
+    public address: string;
+    
+    constructor(address: string, provider: any) {
+        this.address = address;
+    }
+    
+    public transfer(to: string, value: BigNumber) {
+        const selector = '0xa9059cbb';
+        const encodedTo = to.toLowerCase().replace('0x', '').padStart(64, '0');
+        const encodedValue = value.toString(16).padStart(64, '0');
+        return {
+            getABIEncodedTransactionData: () => selector + encodedTo + encodedValue
+        };
+    }
+    
+    public approve(spender: string, value: BigNumber) {
+        const selector = '0x095ea7b3';
+        const encodedSpender = spender.toLowerCase().replace('0x', '').padStart(64, '0');
+        const encodedValue = value.toString(16).padStart(64, '0');
+        return {
+            getABIEncodedTransactionData: () => selector + encodedSpender + encodedValue
+        };
+    }
+}
+
 const { zrxToken } = getContractAddressesForChainOrThrow(1);
+
+// Create ERC20 contract instances
 const zrx = new ERC20TokenContract(zrxToken, new Web3ProviderEngine());
 const maticToken = new ERC20TokenContract('0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0', new Web3ProviderEngine());
 const sablier = new ISablierContract('0xcd18eaa163733da39c232722cbc4e8940b1d8888', new Web3ProviderEngine());

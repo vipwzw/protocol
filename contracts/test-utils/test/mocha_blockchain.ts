@@ -9,17 +9,17 @@ import { append } from './subtests/mocha_blockchain_1';
 blockchainTests('mocha blockchain extensions', env => {
     describe('blockchainTests()', () => {
         it('passes a valid environment object', () => {
-            expect(env.blockchainLifecycle).to.exist('');
-            expect(env.provider).to.exist('');
-            expect(env.txDefaults).to.exist('');
-            expect(env.web3Wrapper).to.exist('');
+            expect(env.blockchainLifecycle).to.exist;
+            expect(env.provider).to.exist;
+            expect(env.txDefaults).to.exist;
+            expect(env.web3Wrapper).to.exist;
             expect(typeof env.getChainIdAsync).to.eq('function');
             expect(typeof env.getAccountAddressesAsync).to.eq('function');
         });
 
         it('initializes the test environment', async () => {
             expect(await env.getChainIdAsync()).to.eq(constants.TESTRPC_CHAIN_ID);
-            expect(await env.getAccountAddressesAsync()).to.be.not.empty('');
+            expect(await env.getAccountAddressesAsync()).to.not.be.empty;
         });
 
         describe('modifiers', () => {

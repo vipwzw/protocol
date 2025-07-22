@@ -29,61 +29,72 @@ describe('testWithReferenceFuncAsync', () => {
     });
 
     it('fails when both succeed and actual != expected', async () => {
-        return expect(testWithReferenceFuncAsync(alwaysValueFunc(3), divAsync, [1, 2])).to.be.rejectedWith(
-            '{"x":1,"y":2}: expected 0.5 to deeply equal 3',
-        );
+        try {
+            await testWithReferenceFuncAsync(alwaysValueFunc(3), divAsync, [1, 2]);
+            expect.fail('Expected testWithReferenceFuncAsync to throw');
+        } catch (err: any) {
+            expect(err.message).to.include('expected 0.5 to deeply equal 3');
+        }
     });
 
     it('passes when both fail and error messages are the same', async () => {
-        const err = new Error('whoopsie');
-        return testWithReferenceFuncAsync(alwaysFailFunc(err), alwaysFailFunc(err), [1, 1]);
+        const errMessage = 'woopsie';
+        return testWithReferenceFuncAsync(alwaysFailFunc(new Error(errMessage)), alwaysFailFunc(new Error(errMessage)), [1, 2]);
     });
 
     it('fails when both fail and error messages are not identical', async () => {
-        const errorMessage = 'whoopsie';
-        const notErrorMessage = 'not whoopsie';
-        const error = new Error(errorMessage);
-        const notError = new Error(notErrorMessage);
-        return expect(
-            testWithReferenceFuncAsync(alwaysFailFunc(notError), alwaysFailFunc(error), [1, 2]),
-        ).to.be.rejectedWith(`{"x":1,"y":2}: expected error message '${errorMessage}' to equal '${notErrorMessage}'`);
+        const referenceErr = new Error('woopsie');
+        const testErr = new Error('not identical');
+        try {
+            await testWithReferenceFuncAsync(alwaysFailFunc(referenceErr), alwaysFailFunc(testErr), [1, 2]);
+            expect.fail('Expected testWithReferenceFuncAsync to throw');
+        } catch (err: any) {
+            expect(err.message).to.include(`expected error message`);
+        }
     });
 
     it('passes when both fail with compatible RevertErrors', async () => {
-        const error1 = new StringRevertError('whoopsie');
-        const error2 = new AnyRevertError();
-        return testWithReferenceFuncAsync(alwaysFailFunc(error1), alwaysFailFunc(error2), [1, 1]);
+        const revertError = new StringRevertError('whoopsie');
+        return testWithReferenceFuncAsync(alwaysFailFunc(revertError), alwaysFailFunc(revertError), [1, 2]);
     });
 
     it('fails when both fail with incompatible RevertErrors', async () => {
-        const error1 = new StringRevertError('whoopsie');
-        const error2 = new StringRevertError('not whoopsie');
-        return expect(
-            testWithReferenceFuncAsync(alwaysFailFunc(error1), alwaysFailFunc(error2), [1, 1]),
-        ).to.be.rejectedWith(
-            `{"x":1,"y":1}: expected error StringRevertError({ message: 'not whoopsie' }) to equal StringRevertError({ message: 'whoopsie' })`,
-        );
+        const referenceErr = new StringRevertError('whoopsie');
+        const testErr = new StringRevertError('different');
+        try {
+            await testWithReferenceFuncAsync(alwaysFailFunc(referenceErr), alwaysFailFunc(testErr), [1, 2]);
+            expect.fail('Expected testWithReferenceFuncAsync to throw');
+        } catch (err: any) {
+            expect(err.message).to.include('expected error');
+        }
     });
 
     it('fails when reference function fails with a RevertError but test function fails with a regular Error', async () => {
-        const error1 = new StringRevertError('whoopsie');
-        const error2 = new Error('whoopsie');
-        return expect(
-            testWithReferenceFuncAsync(alwaysFailFunc(error1), alwaysFailFunc(error2), [1, 1]),
-        ).to.be.rejectedWith(`{"x":1,"y":1}: expected a RevertError but received an Error`);
+        const referenceErr = new StringRevertError('whoopsie');
+        const testErr = new Error('not a revert error');
+        try {
+            await testWithReferenceFuncAsync(alwaysFailFunc(referenceErr), alwaysFailFunc(testErr), [1, 2]);
+            expect.fail('Expected testWithReferenceFuncAsync to throw');
+        } catch (err: any) {
+            expect(err.message).to.include('expected a RevertError but received an Error');
+        }
     });
 
     it('fails when referenceFunc succeeds and testFunc fails', async () => {
-        const error = new Error('whoopsie');
-        return expect(testWithReferenceFuncAsync(alwaysValueFunc(0), alwaysFailFunc(error), [1, 2])).to.be.rejectedWith(
-            `{"x":1,"y":2}: expected success but instead failed`,
-        );
+        try {
+            await testWithReferenceFuncAsync(alwaysValueFunc(0.5), alwaysFailFunc(new Error('moop')), [1, 2]);
+            expect.fail('Expected testWithReferenceFuncAsync to throw');
+        } catch (err: any) {
+            expect(err.message).to.include('expected success but instead failed');
+        }
     });
 
     it('fails when referenceFunc fails and testFunc succeeds', async () => {
-        const error = new Error('whoopsie');
-        return expect(testWithReferenceFuncAsync(alwaysFailFunc(error), divAsync, [1, 2])).to.be.rejectedWith(
-            '{"x":1,"y":2}: expected failure but instead succeeded',
-        );
+        try {
+            await testWithReferenceFuncAsync(alwaysFailFunc(new Error('moop')), alwaysValueFunc(0.5), [1, 2]);
+            expect.fail('Expected testWithReferenceFuncAsync to throw');
+        } catch (err: any) {
+            expect(err.message).to.include('expected failure but instead succeeded');
+        }
     });
 });

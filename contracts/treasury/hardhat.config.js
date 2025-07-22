@@ -1,5 +1,6 @@
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
+const path = require("path");
 
 module.exports = {
   solidity: {
@@ -10,10 +11,6 @@ module.exports = {
         runs: 1000000,
       },
       evmVersion: "cancun",
-      remappings: [
-        "@0x/contracts-erc20/=../erc20/",
-        "@0x/contracts-utils/=../utils/contracts/",
-      ],
     },
   },
   networks: {

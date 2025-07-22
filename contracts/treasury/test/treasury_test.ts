@@ -1,5 +1,4 @@
 import { artifacts as assetProxyArtifacts, ERC20ProxyContract } from '@0x/contracts-asset-proxy';
-import { artifacts as erc20Artifacts, DummyERC20TokenContract } from '@0x/contracts-erc20';
 import {
     artifacts as stakingArtifacts,
     constants as stakingConstants,
@@ -20,6 +19,8 @@ import {
 import { TreasuryVote } from '@0x/protocol-utils';
 import { BigNumber, hexUtils } from '@0x/utils';
 import * as ethUtil from 'ethereumjs-util';
+import { BaseContract } from '@0x/base-contract';
+import { Web3Wrapper } from '@0x/web3-wrapper';
 
 import { artifacts } from './artifacts';
 import { deployFromFoundryArtifactAsync } from '../src/foundry-types';
@@ -46,8 +47,8 @@ blockchainTests.resets('Treasury governance', env => {
         value: BigNumber;
     }
 
-    let zrx: DummyERC20TokenContract;
-    let weth: DummyERC20TokenContract;
+    let zrx: any;
+    let weth: any;
     let erc20ProxyContract: ERC20ProxyContract;
     let staking: TestStakingContract;
     let treasury: ZrxTreasuryContract;
@@ -113,29 +114,140 @@ blockchainTests.resets('Treasury governance', env => {
         [admin, poolOperator, delegator, relayer] = accounts;
         delegatorPrivateKey = hexUtils.toHex(constants.TESTRPC_PRIVATE_KEYS[accounts.indexOf(delegator)]);
 
-        zrx = await DummyERC20TokenContract.deployFrom0xArtifactAsync(
-            erc20Artifacts.DummyERC20Token,
+        // Deploy DummyERC20Token contracts using deployFromFoundryArtifactAsync
+        // This is a minimal wrapper class to enable deployment
+        class DummyERC20TokenContract extends BaseContract {
+            public static async deployAsync(
+                bytecode: string,
+                abi: any,
+                provider: any,
+                txDefaults: any,
+                logDecodeDependencies: any,
+                name: string,
+                symbol: string,
+                decimals: BigNumber,
+                totalSupply: BigNumber,
+            ): Promise<DummyERC20TokenContract> {
+                const web3Wrapper = new Web3Wrapper(provider);
+                const constructorABI = abi.find((item: any) => item.type === 'constructor');
+                const encodedConstructorArgs = web3Wrapper.abiCoder.encodeParameters(
+                    constructorABI.inputs.map((i: any) => i.type),
+                    [name, symbol, decimals.toNumber(), totalSupply.toString()]
+                );
+                
+                const deploymentData = bytecode + encodedConstructorArgs.slice(2);
+                const txHash = await web3Wrapper.sendTransactionAsync({
+                    from: txDefaults.from,
+                    data: deploymentData,
+                    gas: 3000000,
+                });
+                const txReceipt = await web3Wrapper.awaitTransactionSuccessAsync(txHash);
+                
+                return new DummyERC20TokenContract(
+                    txReceipt.contractAddress as string,
+                    provider,
+                    txDefaults,
+                    logDecodeDependencies
+                );
+            }
+            
+            constructor(address: string, provider: any, txDefaults?: any, logDecodeDependencies?: any) {
+                const abi = artifacts.DummyERC20Token.abi;
+                super('DummyERC20Token', abi, address, provider, txDefaults, logDecodeDependencies);
+            }
+            
+            public mint(to: string, value: BigNumber): any {
+                const self = this;
+                const encodedData = self._strictEncodeArguments('mint', [to, value]);
+                return {
+                    awaitTransactionSuccessAsync: async (overrides: any = {}) => {
+                        const txHash = await self._web3Wrapper.sendTransactionAsync({
+                            to: self.address,
+                            data: encodedData,
+                            ...self._txDefaults,
+                            ...overrides,
+                        });
+                        return self._web3Wrapper.awaitTransactionSuccessAsync(txHash);
+                    },
+                };
+            }
+            
+            public transfer(to: string, value: BigNumber): any {
+                const self = this;
+                const encodedData = self._strictEncodeArguments('transfer', [to, value]);
+                return {
+                    awaitTransactionSuccessAsync: async (overrides: any = {}) => {
+                        const txHash = await self._web3Wrapper.sendTransactionAsync({
+                            to: self.address,
+                            data: encodedData,
+                            ...self._txDefaults,
+                            ...overrides,
+                        });
+                        return self._web3Wrapper.awaitTransactionSuccessAsync(txHash);
+                    },
+                    getABIEncodedTransactionData: () => encodedData,
+                };
+            }
+            
+            public approve(spender: string, value: BigNumber): any {
+                const self = this;
+                const encodedData = self._strictEncodeArguments('approve', [spender, value]);
+                return {
+                    awaitTransactionSuccessAsync: async (overrides: any = {}) => {
+                        const txHash = await self._web3Wrapper.sendTransactionAsync({
+                            to: self.address,
+                            data: encodedData,
+                            ...self._txDefaults,
+                            ...overrides,
+                        });
+                        return self._web3Wrapper.awaitTransactionSuccessAsync(txHash);
+                    },
+                };
+            }
+            
+            public balanceOf(owner: string): any {
+                const self = this;
+                const encodedData = self._strictEncodeArguments('balanceOf', [owner]);
+                return {
+                    callAsync: async () => {
+                        const result = await self._web3Wrapper.callAsync({
+                            to: self.address,
+                            data: encodedData,
+                        });
+                        const abiEncoder = self._lookupAbiEncoder('balanceOf');
+                        return abiEncoder.strictDecodeReturnValue(result);
+                    },
+                };
+            }
+        }
+        
+        // Deploy tokens using the wrapper
+        zrx = await deployFromFoundryArtifactAsync(
+            DummyERC20TokenContract,
+            artifacts.DummyERC20Token,
             env.provider,
             env.txDefaults,
-            erc20Artifacts,
+            artifacts,
             constants.DUMMY_TOKEN_NAME,
             constants.DUMMY_TOKEN_SYMBOL,
-            constants.DUMMY_TOKEN_DECIMALS,
+            new BigNumber(constants.DUMMY_TOKEN_DECIMALS),
             constants.DUMMY_TOKEN_TOTAL_SUPPLY,
         );
-        weth = await DummyERC20TokenContract.deployFrom0xArtifactAsync(
-            erc20Artifacts.DummyERC20Token,
+        
+        weth = await deployFromFoundryArtifactAsync(
+            DummyERC20TokenContract,
+            artifacts.DummyERC20Token,
             env.provider,
             env.txDefaults,
-            erc20Artifacts,
+            artifacts,
             constants.DUMMY_TOKEN_NAME,
             constants.DUMMY_TOKEN_SYMBOL,
-            constants.DUMMY_TOKEN_DECIMALS,
+            new BigNumber(constants.DUMMY_TOKEN_DECIMALS),
             constants.DUMMY_TOKEN_TOTAL_SUPPLY,
         );
         await deployStakingAsync();
-        await zrx.mint(constants.INITIAL_ERC20_BALANCE).awaitTransactionSuccessAsync({ from: poolOperator });
-        await zrx.mint(constants.INITIAL_ERC20_BALANCE).awaitTransactionSuccessAsync({ from: delegator });
+        await zrx.mint(poolOperator, constants.INITIAL_ERC20_BALANCE).awaitTransactionSuccessAsync();
+        await zrx.mint(delegator, constants.INITIAL_ERC20_BALANCE).awaitTransactionSuccessAsync();
         await zrx
             .approve(erc20ProxyContract.address, constants.INITIAL_ERC20_ALLOWANCE)
             .awaitTransactionSuccessAsync({ from: poolOperator });
@@ -168,7 +280,7 @@ blockchainTests.resets('Treasury governance', env => {
             TREASURY_PARAMS,
         );
 
-        await zrx.mint(TREASURY_BALANCE).awaitTransactionSuccessAsync();
+        await zrx.mint(poolOperator, TREASURY_BALANCE).awaitTransactionSuccessAsync();
         await zrx.transfer(treasury.address, TREASURY_BALANCE).awaitTransactionSuccessAsync();
         actions = [
             {
@@ -703,7 +815,7 @@ blockchainTests.resets('Treasury governance', env => {
     describe('Default pool operator contract', () => {
         it('Returns WETH to the staking proxy', async () => {
             const wethAmount = new BigNumber(1337);
-            await weth.mint(wethAmount).awaitTransactionSuccessAsync();
+            await weth.mint(poolOperator, wethAmount).awaitTransactionSuccessAsync();
             // Some amount of WETH ends up in the default pool operator
             // contract, e.g. from errant staking rewards.
             await weth.transfer(defaultPoolOperator.address, wethAmount).awaitTransactionSuccessAsync();
