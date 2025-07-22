@@ -5,40 +5,40 @@
  */
 import type { UtilsFoundryArtifacts, FoundryArtifact } from './foundry-types';
 
-// 导入 Foundry 生成的 JSON artifacts (V08 合约)
-import * as AuthorizableV08 from '../out/AuthorizableV08.sol/AuthorizableV08.json';
-import * as IAuthorizableV08 from '../out/IAuthorizableV08.sol/IAuthorizableV08.json';
-import * as IOwnableV08 from '../out/IOwnableV08.sol/IOwnableV08.json';
-import * as LibAuthorizableRichErrorsV08 from '../out/LibAuthorizableRichErrorsV08.sol/LibAuthorizableRichErrorsV08.json';
-import * as LibBytesRichErrorsV08 from '../out/LibBytesRichErrorsV08.sol/LibBytesRichErrorsV08.json';
-import * as LibBytesV08 from '../out/LibBytesV08.sol/LibBytesV08.json';
-import * as LibMathRichErrorsV08 from '../out/LibMathRichErrorsV08.sol/LibMathRichErrorsV08.json';
-import * as LibMathV08 from '../out/LibMathV08.sol/LibMathV08.json';
-import * as LibOwnableRichErrorsV08 from '../out/LibOwnableRichErrorsV08.sol/LibOwnableRichErrorsV08.json';
-import * as LibReentrancyGuardRichErrorsV08 from '../out/LibReentrancyGuardRichErrorsV08.sol/LibReentrancyGuardRichErrorsV08.json';
-import * as LibRichErrorsV08 from '../out/LibRichErrorsV08.sol/LibRichErrorsV08.json';
-import * as LibSafeMathRichErrorsV08 from '../out/LibSafeMathRichErrorsV08.sol/LibSafeMathRichErrorsV08.json';
-import * as OwnableV08 from '../out/OwnableV08.sol/OwnableV08.json';
-import * as ReentrancyGuardV08 from '../out/ReentrancyGuardV08.sol/ReentrancyGuardV08.json';
+// 导入 Foundry 生成的 JSON artifacts（统一版本合约）
+import * as Authorizable from '../out/Authorizable.sol/Authorizable.json';
+import * as IAuthorizable from '../out/IAuthorizable.sol/IAuthorizable.json';
+import * as IOwnable from '../out/IOwnable.sol/IOwnable.json';
+import * as LibAuthorizableRichErrors from '../out/LibAuthorizableRichErrors.sol/LibAuthorizableRichErrors.json';
+import * as LibBytesRichErrors from '../out/LibBytesRichErrors.sol/LibBytesRichErrors.json';
+import * as LibBytes from '../out/LibBytes.sol/LibBytes.json';
+import * as LibMathRichErrors from '../out/LibMathRichErrors.sol/LibMathRichErrors.json';
+import * as LibMath from '../out/LibMath.sol/LibMath.json';
+import * as LibOwnableRichErrors from '../out/LibOwnableRichErrors.sol/LibOwnableRichErrors.json';
+import * as LibReentrancyGuardRichErrors from '../out/LibReentrancyGuardRichErrors.sol/LibReentrancyGuardRichErrors.json';
+import * as LibRichErrors from '../out/LibRichErrors.sol/LibRichErrors.json';
+import * as LibSafeMathRichErrors from '../out/LibSafeMathRichErrors.sol/LibSafeMathRichErrors.json';
+import * as Ownable from '../out/Ownable.sol/Ownable.json';
+import * as ReentrancyGuard from '../out/ReentrancyGuard.sol/ReentrancyGuard.json';
 
 /**
  * Utils 包的 Foundry 原生 artifacts
- * 专注于 V08 版本的合约，直接使用 Foundry JSON 格式
+ * 使用统一版本的合约，直接使用 Foundry JSON 格式
  */
 export const artifacts: UtilsFoundryArtifacts = {
-    // V08 合约
-    AuthorizableV08: AuthorizableV08 as FoundryArtifact,
-    IAuthorizableV08: IAuthorizableV08 as FoundryArtifact,
-    IOwnableV08: IOwnableV08 as FoundryArtifact,
-    LibAuthorizableRichErrorsV08: LibAuthorizableRichErrorsV08 as FoundryArtifact,
-    LibBytesRichErrorsV08: LibBytesRichErrorsV08 as FoundryArtifact,
-    LibBytesV08: LibBytesV08 as FoundryArtifact,
-    LibMathRichErrorsV08: LibMathRichErrorsV08 as FoundryArtifact,
-    LibMathV08: LibMathV08 as FoundryArtifact,
-    LibOwnableRichErrorsV08: LibOwnableRichErrorsV08 as FoundryArtifact,
-    LibReentrancyGuardRichErrorsV08: LibReentrancyGuardRichErrorsV08 as FoundryArtifact,
-    LibRichErrorsV08: LibRichErrorsV08 as FoundryArtifact,
-    LibSafeMathRichErrorsV08: LibSafeMathRichErrorsV08 as FoundryArtifact,
-    OwnableV08: OwnableV08 as FoundryArtifact,
-    ReentrancyGuardV08: ReentrancyGuardV08 as FoundryArtifact,
+    // 统一版本合约
+    Authorizable: Authorizable as FoundryArtifact,
+    IAuthorizable: IAuthorizable as FoundryArtifact,
+    IOwnable: IOwnable as FoundryArtifact,
+    LibAuthorizableRichErrors: LibAuthorizableRichErrors as FoundryArtifact,
+    LibBytesRichErrors: LibBytesRichErrors as FoundryArtifact,
+    LibBytes: LibBytes as FoundryArtifact,
+    LibMathRichErrors: LibMathRichErrors as FoundryArtifact,
+    LibMath: LibMath as FoundryArtifact,
+    LibOwnableRichErrors: LibOwnableRichErrors as FoundryArtifact,
+    LibReentrancyGuardRichErrors: LibReentrancyGuardRichErrors as FoundryArtifact,
+    LibRichErrors: LibRichErrors as FoundryArtifact,
+    LibSafeMathRichErrors: LibSafeMathRichErrors as FoundryArtifact,
+    Ownable: Ownable as FoundryArtifact,
+    ReentrancyGuard: ReentrancyGuard as FoundryArtifact,
 };

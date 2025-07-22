@@ -75,24 +75,24 @@ export type FoundryArtifacts = Record<string, FoundryArtifact>;
 
 /**
  * Utils 包特定的 Foundry Artifacts 接口
- * 基于 v08 版本的合约
+ * 基于统一版本的合约（移除版本化后缀）
  */
 export interface UtilsFoundryArtifacts extends FoundryArtifacts {
-    // V08 合约
-    AuthorizableV08: FoundryArtifact;
-    IAuthorizableV08: FoundryArtifact;
-    IOwnableV08: FoundryArtifact;
-    LibAuthorizableRichErrorsV08: FoundryArtifact;
-    LibBytesRichErrorsV08: FoundryArtifact;
-    LibBytesV08: FoundryArtifact;
-    LibMathRichErrorsV08: FoundryArtifact;
-    LibMathV08: FoundryArtifact;
-    LibOwnableRichErrorsV08: FoundryArtifact;
-    LibReentrancyGuardRichErrorsV08: FoundryArtifact;
-    LibRichErrorsV08: FoundryArtifact;
-    LibSafeMathRichErrorsV08: FoundryArtifact;
-    OwnableV08: FoundryArtifact;
-    ReentrancyGuardV08: FoundryArtifact;
+    // 统一版本合约
+    Authorizable: FoundryArtifact;
+    IAuthorizable: FoundryArtifact;
+    IOwnable: FoundryArtifact;
+    LibAuthorizableRichErrors: FoundryArtifact;
+    LibBytesRichErrors: FoundryArtifact;
+    LibBytes: FoundryArtifact;
+    LibMathRichErrors: FoundryArtifact;
+    LibMath: FoundryArtifact;
+    LibOwnableRichErrors: FoundryArtifact;
+    LibReentrancyGuardRichErrors: FoundryArtifact;
+    LibRichErrors: FoundryArtifact;
+    LibSafeMathRichErrors: FoundryArtifact;
+    Ownable: FoundryArtifact;
+    ReentrancyGuard: FoundryArtifact;
 }
 
 /**
