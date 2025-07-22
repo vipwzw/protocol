@@ -112,9 +112,7 @@ contract Authorizable is Ownable, IAuthorizable {
             LibRichErrors.rrevert(LibAuthorizableRichErrors.IndexOutOfBoundsError(index, authorities.length));
         }
         if (authorities[index] != target) {
-            LibRichErrors.rrevert(
-                LibAuthorizableRichErrors.AuthorizedAddressMismatchError(authorities[index], target)
-            );
+            LibRichErrors.rrevert(LibAuthorizableRichErrors.AuthorizedAddressMismatchError(authorities[index], target));
         }
 
         delete authorized[target];

@@ -26,7 +26,6 @@ contract TestFillQuoteTransformerExchange {
     uint256 private constant REVERT_AMOUNT = 0xdeadbeef;
     uint256 private constant PROTOCOL_FEE_MULTIPLIER = 1337;
 
-
     function fillLimitOrder(
         LibNativeOrder.LimitOrder calldata order,
         LibSignature.Signature calldata signature,
@@ -43,10 +42,7 @@ contract TestFillQuoteTransformerExchange {
         uint256 protocolFee = PROTOCOL_FEE_MULTIPLIER * tx.gasprice;
         // Return excess protocol fee.
         msg.sender.transfer(msg.value - protocolFee);
-        takerTokenFilledAmount = LibMath.min128(
-            order.takerAmount - takerTokenPreFilledAmount,
-            takerTokenFillAmount
-        );
+        takerTokenFilledAmount = LibMath.min128(order.takerAmount - takerTokenPreFilledAmount, takerTokenFillAmount);
 
         // Take taker tokens.
         order.takerToken.transferFrom(msg.sender, order.maker, takerTokenFilledAmount);
@@ -77,10 +73,7 @@ contract TestFillQuoteTransformerExchange {
         if (takerTokenPreFilledAmount >= order.takerAmount) {
             revert("FILLED");
         }
-        takerTokenFilledAmount = LibMath.min128(
-            order.takerAmount - takerTokenPreFilledAmount,
-            takerTokenFillAmount
-        );
+        takerTokenFilledAmount = LibMath.min128(order.takerAmount - takerTokenPreFilledAmount, takerTokenFillAmount);
 
         // Take taker tokens.
         order.takerToken.transferFrom(msg.sender, order.maker, takerTokenFilledAmount);

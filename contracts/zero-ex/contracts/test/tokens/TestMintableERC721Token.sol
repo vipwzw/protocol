@@ -14,7 +14,6 @@
 
 pragma solidity 0.8.30;
 
-
 interface IERC721Receiver {
     /// @notice Handle the receipt of an NFT
     /// @dev The ERC721 smart contract calls this function on the recipient
@@ -37,7 +36,6 @@ interface IERC721Receiver {
 }
 
 contract TestMintableERC721Token {
-
     /// @dev This emits when ownership of any NFT changes by any mechanism.
     ///      This event emits when NFTs are created (`from` == 0) and destroyed
     ///      (`to` == 0). Exception: during contract creation, any number of NFTs

@@ -25,7 +25,7 @@ import "./IZrxTreasury.sol";
 
 contract ZrxTreasury is IZrxTreasury {
     using LibRichErrors for bytes;
-using LibBytes for bytes;
+    using LibBytes for bytes;
 
     /// Contract name
     string private constant CONTRACT_NAME = "Zrx Treasury";

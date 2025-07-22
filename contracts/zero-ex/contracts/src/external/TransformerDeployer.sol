@@ -14,7 +14,7 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/Authorizable.sol";
+import "@0x/contracts-utils/src/Authorizable.sol";
 
 /// @dev A contract with a `die()` function.
 interface IKillable {

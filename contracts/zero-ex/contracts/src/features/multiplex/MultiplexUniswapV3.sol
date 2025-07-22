@@ -19,7 +19,6 @@ import "../interfaces/IMultiplexFeature.sol";
 import "../interfaces/IUniswapV3Feature.sol";
 
 abstract contract MultiplexUniswapV3 is FixinTokenSpender {
-
     function _batchSellUniswapV3(
         IMultiplexFeature.BatchSellState memory state,
         IMultiplexFeature.BatchSellParams memory params,

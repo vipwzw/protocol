@@ -19,7 +19,6 @@
 
 pragma solidity 0.8.30;
 
-
 interface IERC1155Receiver {
     /// @notice Handle the receipt of a single ERC1155 token type
     /// @dev The smart contract calls this function on the recipient
@@ -63,7 +62,6 @@ interface IERC1155Receiver {
 }
 
 contract TestMintableERC1155Token {
-
     /// @dev Either TransferSingle or TransferBatch MUST emit when tokens are transferred,
     ///      including zero value transfers as well as minting or burning.
     /// Operator will always be msg.sender.

@@ -1,4 +1,5 @@
-import { chaiSetup, web3Factory, Web3Wrapper } from '@0x/dev-utils';
+import { chaiSetup } from './chai_setup';
+import { web3Factory, Web3Wrapper } from './web3_factory';
 import { Web3ProviderEngine } from '@0x/subproviders';
 import { BigNumber } from '@0x/utils';
 import { expect } from 'chai';
@@ -16,7 +17,7 @@ describe('orders', () => {
     const keyMaker = ethjs.bufferToHex(ethjs.privateToAddress(ethjs.toBuffer(key)));
 
     before(async () => {
-        provider = web3Factory.getRpcProvider({ shouldUseInProcessGanache: true });
+        provider = web3Factory.getRpcProvider();
         [providerMaker] = await new Web3Wrapper(provider).getAvailableAddressesAsync();
     });
 

@@ -62,8 +62,8 @@ export interface FoundryArtifact {
     abi: ContractAbi;
     bytecode: FoundryBytecode;
     deployedBytecode: FoundryBytecode;
-    methodIdentifiers: Record<string, string>;  // 函数名 -> 选择器映射
-    rawMetadata: string;                         // JSON 字符串
+    methodIdentifiers: Record<string, string>; // 函数名 -> 选择器映射
+    rawMetadata: string; // JSON 字符串
     metadata: FoundryMetadata;
     id: number;
 }
@@ -116,7 +116,7 @@ export async function deployFromFoundryArtifactAsync<T>(
     // 从 Foundry artifact 中提取字节码和 ABI
     const bytecode = foundryArtifact.bytecode.object;
     const abi = foundryArtifact.abi;
-    
+
     // 使用现有的 deployAsync 方法
     return await ContractClass.deployAsync(
         bytecode,
@@ -126,4 +126,4 @@ export async function deployFromFoundryArtifactAsync<T>(
         logDecodeDependencies,
         ...constructorArgs,
     );
-} 
+}

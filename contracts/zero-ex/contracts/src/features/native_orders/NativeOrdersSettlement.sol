@@ -16,8 +16,8 @@ pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
-import "@0x/contracts-utils/contracts/src/LibMath.sol";
+import "@0x/contracts-utils/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/src/LibMath.sol";
 import "../../errors/LibNativeOrdersRichErrors.sol";
 import "../../fixins/FixinCommon.sol";
 import "../../storage/LibNativeOrdersStorage.sol";
@@ -488,8 +488,9 @@ abstract contract NativeOrdersSettlement is
 
         // Update filled state for the order.
         // solhint-disable-next-line max-line-length
-        LibNativeOrdersStorage.getStorage().orderHashToTakerTokenFilledAmount[settleInfo.orderHash] = 
-            settleInfo.takerTokenFilledAmount + takerTokenFilledAmount;
+        LibNativeOrdersStorage.getStorage().orderHashToTakerTokenFilledAmount[settleInfo.orderHash] =
+            settleInfo.takerTokenFilledAmount +
+            takerTokenFilledAmount;
 
         if (settleInfo.payer == address(this)) {
             // Transfer this -> maker.

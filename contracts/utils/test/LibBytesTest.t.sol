@@ -23,7 +23,7 @@ contract LibBytesTest {
         bytes memory data1 = hex"deadbeef";
         bytes memory data2 = hex"deadbeef";
         bytes memory data3 = hex"cafebabe";
-        
+
         require(data1.equals(data2), "Equal bytes comparison failed");
         require(!data1.equals(data3), "Unequal bytes comparison failed");
     }
@@ -34,4 +34,4 @@ contract LibBytesTest {
         bytes memory expected = hex"adbeefca";
         require(result.equals(expected), "Slice test failed");
     }
-} 
+}

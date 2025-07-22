@@ -14,14 +14,13 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/LibMath.sol";
+import "@0x/contracts-utils/src/LibMath.sol";
 import "../../fixins/FixinEIP712.sol";
 import "../interfaces/IMultiplexFeature.sol";
 import "../interfaces/IOtcOrdersFeature.sol";
 import "../libs/LibNativeOrder.sol";
 
 abstract contract MultiplexOtc is FixinEIP712 {
-
     event ExpiredOtcOrder(bytes32 orderHash, address maker, uint64 expiry);
 
     function _batchSellOtcOrder(

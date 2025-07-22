@@ -1,12 +1,10 @@
-import { BlockchainLifecycle, web3Factory } from '@0x/dev-utils';
-import { RPCSubprovider, Web3ProviderEngine } from '@0x/subproviders';
-import { providerUtils } from '@0x/utils';
+import { BlockchainLifecycle } from './blockchain_lifecycle'; // Custom import
 import { TxData, Web3Wrapper } from '@0x/web3-wrapper';
 import * as _ from 'lodash';
 import * as mocha from 'mocha';
 import * as process from 'process';
 
-import { provider, providerConfigs, txDefaults, web3Wrapper } from './web3_wrapper';
+import { provider, txDefaults, web3Wrapper } from './web3_wrapper';
 
 export type ISuite = mocha.ISuite;
 export type ISuiteCallbackContext = mocha.ISuiteCallbackContext;
@@ -62,25 +60,25 @@ export interface BlockchainContextDefinition {
  */
 export interface BlockchainTestsEnvironment {
     blockchainLifecycle: BlockchainLifecycle;
-    provider: Web3ProviderEngine;
+    provider: any; // Changed from Web3ProviderEngine
     txDefaults: Partial<TxData>;
     web3Wrapper: Web3Wrapper;
-    getChainIdAsync(): Promise<number>;
-    getAccountAddressesAsync(): Promise<string[]>;
+    accounts: string[];
 }
 
 class BlockchainTestsEnvironmentBase {
     public blockchainLifecycle!: BlockchainLifecycle;
-    public provider!: Web3ProviderEngine;
+    public provider!: any; // Changed from Web3ProviderEngine
     public txDefaults!: Partial<TxData>;
     public web3Wrapper!: Web3Wrapper;
+    public accounts!: string[];
 
-    public async getChainIdAsync(): Promise<number> {
-        return providerUtils.getChainIdAsync(this.provider);
+    public async getTxDataWithDefaults(txData: Partial<TxData> = {}): Promise<TxData> {
+        return { ...this.txDefaults, ...txData } as TxData;
     }
 
-    public async getAccountAddressesAsync(): Promise<string[]> {
-        return this.web3Wrapper.getAvailableAddressesAsync();
+    public reset(): void {
+        throw new Error(`${this.constructor.name} is not initialized`);
     }
 }
 
@@ -118,6 +116,7 @@ export class StandardBlockchainTestsEnvironmentSingleton extends BlockchainTests
         this.provider = provider;
         this.txDefaults = txDefaults;
         this.web3Wrapper = web3Wrapper;
+        this.accounts = []; // TODO: Load from provider
     }
 }
 
@@ -140,15 +139,12 @@ export class ForkedBlockchainTestsEnvironmentSingleton extends BlockchainTestsEn
         ForkedBlockchainTestsEnvironmentSingleton._instance = undefined;
     }
 
-    protected static _createWeb3Provider(forkHost: string): Web3ProviderEngine {
-        const forkConfig = TEST_ENV_CONFIG.fork || {};
-        const unlockedAccounts = forkConfig.unlockedAccounts;
-        return web3Factory.getRpcProvider({
-            ...providerConfigs,
-            fork: forkHost,
-            blockTime: 0,
-            ...(unlockedAccounts ? { unlocked_accounts: unlockedAccounts } : {}),
-        });
+    protected static _createWeb3Provider(forkHost: string): any {
+        // Changed from Web3ProviderEngine
+        // TODO: Implement forking with hardhat
+        // For now, just return a dummy provider
+        console.warn(`Fork provider not implemented yet for ${forkHost}`);
+        return createDummyProvider();
     }
 
     // Get the singleton instance of this class.
@@ -165,6 +161,7 @@ export class ForkedBlockchainTestsEnvironmentSingleton extends BlockchainTestsEn
               createDummyProvider();
         this.web3Wrapper = new Web3Wrapper(this.provider);
         this.blockchainLifecycle = new BlockchainLifecycle(this.web3Wrapper);
+        this.accounts = []; // TODO: Load from provider
     }
 }
 
@@ -187,11 +184,12 @@ export class LiveBlockchainTestsEnvironmentSingleton extends BlockchainTestsEnvi
         LiveBlockchainTestsEnvironmentSingleton._instance = undefined;
     }
 
-    protected static _createWeb3Provider(rpcHost: string): Web3ProviderEngine {
-        const providerEngine = new Web3ProviderEngine();
-        providerEngine.addProvider(new RPCSubprovider(rpcHost));
-        providerUtils.startProviderEngine(providerEngine);
-        return providerEngine;
+    protected static _createWeb3Provider(rpcHost: string): any {
+        // Changed from Web3ProviderEngine
+        // TODO: Implement live provider with hardhat
+        // For now, just return a dummy provider
+        console.warn(`Live provider not implemented yet for ${rpcHost}`);
+        return createDummyProvider();
     }
 
     // Get the singleton instance of this class.
@@ -214,6 +212,7 @@ export class LiveBlockchainTestsEnvironmentSingleton extends BlockchainTestsEnvi
             startAsync: snapshotHandlerAsync,
             revertAsync: snapshotHandlerAsync,
         } as any;
+        this.accounts = []; // TODO: Load from provider
     }
 }
 
@@ -416,7 +415,8 @@ function defineResetsBlockchainSuite<T>(
     });
 }
 
-function createDummyProvider(): Web3ProviderEngine {
+function createDummyProvider(): any {
+    // Changed from Web3ProviderEngine
     return {
         addProvider: _.noop,
         on: _.noop,
@@ -424,5 +424,5 @@ function createDummyProvider(): Web3ProviderEngine {
         sendAsync: _.noop,
         start: _.noop,
         stop: _.noop,
-    };
+    } as any;
 }

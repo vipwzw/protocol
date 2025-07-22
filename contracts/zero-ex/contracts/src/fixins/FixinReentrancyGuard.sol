@@ -14,8 +14,8 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/LibBytes.sol";
-import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/src/LibBytes.sol";
+import "@0x/contracts-utils/src/errors/LibRichErrors.sol";
 import "../errors/LibCommonRichErrors.sol";
 import "../storage/LibReentrancyGuardStorage.sol";
 

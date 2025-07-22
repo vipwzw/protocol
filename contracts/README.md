@@ -157,7 +157,7 @@ graph TD
 
 - [协议规范](https://protocol.0x.org/)
 - [开发者文档](https://0x.org/docs/)
-- [审计报告](/contracts/governance/audits/)
+- [审计报告](./governance/README.md)
 
 ---
 

@@ -1,4 +1,5 @@
-import { chaiSetup, web3Factory, Web3Wrapper } from '@0x/dev-utils';
+import { chaiSetup } from './chai_setup';
+import { web3Factory, Web3Wrapper } from './web3_factory';
 import { Web3ProviderEngine } from '@0x/subproviders';
 import { expect } from 'chai';
 
@@ -19,7 +20,7 @@ describe('signature_utils', () => {
     const key = '0xee094b79aa0315914955f2f09be9abe541dcdc51f0aae5bec5453e9f73a471a6';
 
     before(async () => {
-        provider = web3Factory.getRpcProvider({ shouldUseInProcessGanache: true });
+        provider = web3Factory.getRpcProvider();
         [signer] = await new Web3Wrapper(provider).getAvailableAddressesAsync();
     });
 

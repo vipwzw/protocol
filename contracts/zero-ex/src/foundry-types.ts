@@ -50,11 +50,14 @@ export interface FoundryMetadata {
         userdoc: Record<string, any>;
     };
     settings: FoundryCompilerSettings;
-    sources: Record<string, {
-        keccak256: string;
-        urls: string[];
-        license: string;
-    }>;
+    sources: Record<
+        string,
+        {
+            keccak256: string;
+            urls: string[];
+            license: string;
+        }
+    >;
     version: number;
 }
 
@@ -66,8 +69,8 @@ export interface FoundryArtifact {
     abi: ContractAbi;
     bytecode: FoundryBytecode;
     deployedBytecode: FoundryBytecode;
-    methodIdentifiers: Record<string, string>;  // 函数名 -> 选择器映射
-    rawMetadata: string;                         // JSON 字符串
+    methodIdentifiers: Record<string, string>; // 函数名 -> 选择器映射
+    rawMetadata: string; // JSON 字符串
     metadata: FoundryMetadata;
     id: number;
 }
@@ -86,7 +89,7 @@ export interface BootstrapFeatureArtifacts {
 }
 
 /**
- * 完整功能所需的 artifacts  
+ * 完整功能所需的 artifacts
  */
 export interface FullFeatureArtifacts extends BootstrapFeatureArtifacts {
     transformERC20: FoundryArtifact;
@@ -142,4 +145,4 @@ export function getDeployedBytecode(artifact: FoundryArtifact): string {
  */
 export function getMethodIdentifiers(artifact: FoundryArtifact): Record<string, string> {
     return artifact.methodIdentifiers;
-} 
+}

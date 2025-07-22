@@ -14,7 +14,7 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/interfaces/IOwnable.sol";
+import "@0x/contracts-utils/src/interfaces/IOwnable.sol";
 
 /// @dev Owner management and migration features.
 interface IOwnableFeature is IOwnable {

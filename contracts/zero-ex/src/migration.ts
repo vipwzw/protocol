@@ -4,11 +4,11 @@ import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
 import { deployFromFoundryArtifactAsync } from './foundry-deployer';
-import type { 
-    FoundryArtifact, 
+import type {
+    FoundryArtifact,
     FoundryArtifacts,
-    BootstrapFeatureArtifacts, 
-    FullFeatureArtifacts 
+    BootstrapFeatureArtifacts,
+    FullFeatureArtifacts,
 } from './foundry-types';
 import {
     FeeCollectorControllerContract,
@@ -104,7 +104,9 @@ export async function initialMigrateAsync(
         artifacts,
         migrator.address,
     );
-    await migrator.initializeZeroEx(owner, zeroEx.address, await deployBootstrapFeaturesAsync(provider, txDefaults, features)).callAsync();
+    await migrator
+        .initializeZeroEx(owner, zeroEx.address, await deployBootstrapFeaturesAsync(provider, txDefaults, features))
+        .callAsync();
     return zeroEx;
 }
 
@@ -162,7 +164,7 @@ export async function deployAllFeaturesAsync(
     if (!config.wethAddress || !config.stakingAddress || !config.zeroExAddress) {
         throw new Error('wethAddress, stakingAddress, and zeroExAddress are required for feature deployment');
     }
-    const _config = { 
+    const _config = {
         ...config,
         wethAddress: config.wethAddress,
         stakingAddress: config.stakingAddress,
@@ -170,7 +172,7 @@ export async function deployAllFeaturesAsync(
         feeCollectorController: config.feeCollectorController || NULL_ADDRESS,
         protocolFeeMultiplier: config.protocolFeeMultiplier || 0,
     };
-    
+
     if (_config.feeCollectorController === NULL_ADDRESS) {
         if (!_config.wethAddress || !_config.stakingAddress) {
             throw new Error('wethAddress and stakingAddress are required for FeeCollectorController deployment');
@@ -273,6 +275,10 @@ export async function fullMigrateAsync(
     );
     const _config = { ...config, zeroExAddress: zeroEx.address };
     const allFeatures = await deployAllFeaturesAsync(provider, txDefaults, features, _config, featureArtifacts);
-    await migrator.migrateZeroEx(owner, zeroEx.address, allFeatures, { transformerDeployer: config.transformerDeployer || '0x0000000000000000000000000000000000000000' }).callAsync();
-    return (zeroEx as any) as IZeroExContract;
+    await migrator
+        .migrateZeroEx(owner, zeroEx.address, allFeatures, {
+            transformerDeployer: config.transformerDeployer || '0x0000000000000000000000000000000000000000',
+        })
+        .callAsync();
+    return zeroEx as any as IZeroExContract;
 }

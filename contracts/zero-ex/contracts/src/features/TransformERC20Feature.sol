@@ -16,9 +16,9 @@ pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/LibBytes.sol";
-import "@0x/contracts-utils/contracts/src/LibMath.sol";
-import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/src/LibBytes.sol";
+import "@0x/contracts-utils/src/LibMath.sol";
+import "@0x/contracts-utils/src/errors/LibRichErrors.sol";
 import "../errors/LibTransformERC20RichErrors.sol";
 import "../fixins/FixinCommon.sol";
 import "../fixins/FixinTokenSpender.sol";
@@ -210,7 +210,7 @@ contract TransformERC20Feature is IFeature, ITransformERC20Feature, FixinCommon,
         }
         outputTokenAmount = LibMath.min256(
             outputTokenAmount,
-            state.recipientOutputTokenBalanceAfter-(state.recipientOutputTokenBalanceBefore)
+            state.recipientOutputTokenBalanceAfter - (state.recipientOutputTokenBalanceBefore)
         );
         // Ensure enough output token has been sent to the taker.
         if (outputTokenAmount < args.minOutputTokenAmount) {

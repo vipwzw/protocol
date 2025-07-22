@@ -20,7 +20,6 @@ export { signingUtils } from './signing_utils';
 export { orderUtils } from './order_utils';
 export { typeEncodingUtils } from './type_encoding_utils';
 export { profiler } from './profiler';
-export { Web3ProviderEngine } from '@0x/subproviders';
 export { randomAddress } from './address_utils';
 export { OrderFactory } from './order_factory';
 export { bytes32Values, testCombinatoriallyWithReferenceFunc, uint256Values } from './combinatorial_utils';
@@ -42,6 +41,7 @@ export {
     ExchangeFunctionName,
 } from './types';
 export { blockchainTests, BlockchainTestsEnvironment, describe } from './mocha_blockchain';
+export { BlockchainLifecycle } from './blockchain_lifecycle';
 export { chaiSetup, expect } from './chai_setup';
 export { getCodesizeFromArtifact } from './codesize';
 export { replaceKeysDeep, shortZip } from './lang_utils';

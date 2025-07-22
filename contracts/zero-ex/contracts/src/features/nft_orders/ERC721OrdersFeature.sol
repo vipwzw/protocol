@@ -15,7 +15,7 @@
 pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/src/errors/LibRichErrors.sol";
 import "../../fixins/FixinERC721Spender.sol";
 import "../../migrations/LibMigrate.sol";
 import "../../storage/LibERC721OrdersStorage.sol";
@@ -169,12 +169,7 @@ contract ERC721OrdersFeature is IFeature, IERC721OrdersFeature, FixinERC721Spend
         if (revertIfIncomplete) {
             for (uint256 i = 0; i < sellOrders.length; i++) {
                 // Will revert if _buyERC721 reverts.
-                _buyERC721(
-                    sellOrders[i],
-                    signatures[i],
-                    address(this).balance-(ethBalanceBefore),
-                    callbackData[i]
-                );
+                _buyERC721(sellOrders[i], signatures[i], address(this).balance - (ethBalanceBefore), callbackData[i]);
                 successes[i] = true;
             }
         } else {
@@ -188,7 +183,7 @@ contract ERC721OrdersFeature is IFeature, IERC721OrdersFeature, FixinERC721Spend
                         this._buyERC721.selector,
                         sellOrders[i],
                         signatures[i],
-                        address(this).balance-(ethBalanceBefore), // Remaining ETH available
+                        address(this).balance - (ethBalanceBefore), // Remaining ETH available
                         callbackData[i]
                     )
                 );

@@ -14,8 +14,8 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
-import "@0x/contracts-utils/contracts/src/LibMath.sol";
+import "@0x/contracts-utils/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/src/LibMath.sol";
 import "../errors/LibNativeOrdersRichErrors.sol";
 import "../fixins/FixinCommon.sol";
 import "../fixins/FixinEIP712.sol";

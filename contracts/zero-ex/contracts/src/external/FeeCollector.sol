@@ -15,7 +15,7 @@
 pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/Authorizable.sol";
+import "@0x/contracts-utils/src/Authorizable.sol";
 import "../vendor/v3/IStaking.sol";
 
 /// @dev The collector contract for protocol fees

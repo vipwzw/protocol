@@ -80,7 +80,7 @@ contract MixinMakerPSM {
 
             psm.sellGem(address(this), sellAmount);
         } else if (address(buyToken) == data.gemTokenAddres) {
-            uint256 feeDivisor = WAD+(psm.tout()); // eg. 1.001 * 10 ** 18 with 0.1% fee [tout is in wad];
+            uint256 feeDivisor = WAD + (psm.tout()); // eg. 1.001 * 10 ** 18 with 0.1% fee [tout is in wad];
             uint256 buyTokenBaseUnit = uint256(10) ** uint256(buyToken.decimals());
             uint256 gemAmount = (sellAmount * buyTokenBaseUnit) / feeDivisor;
 
@@ -88,6 +88,6 @@ contract MixinMakerPSM {
             psm.buyGem(address(this), gemAmount);
         }
 
-        return buyToken.balanceOf(address(this))-(beforeBalance);
+        return buyToken.balanceOf(address(this)) - (beforeBalance);
     }
 }

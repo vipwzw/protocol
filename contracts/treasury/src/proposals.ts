@@ -19,26 +19,26 @@ interface Proposal {
 // Simple ERC20 interface for proposals
 class ERC20TokenContract {
     public address: string;
-    
+
     constructor(address: string, provider: any) {
         this.address = address;
     }
-    
+
     public transfer(to: string, value: BigNumber) {
         const selector = '0xa9059cbb';
         const encodedTo = to.toLowerCase().replace('0x', '').padStart(64, '0');
         const encodedValue = value.toString(16).padStart(64, '0');
         return {
-            getABIEncodedTransactionData: () => selector + encodedTo + encodedValue
+            getABIEncodedTransactionData: () => selector + encodedTo + encodedValue,
         };
     }
-    
+
     public approve(spender: string, value: BigNumber) {
         const selector = '0x095ea7b3';
         const encodedSpender = spender.toLowerCase().replace('0x', '').padStart(64, '0');
         const encodedValue = value.toString(16).padStart(64, '0');
         return {
-            getABIEncodedTransactionData: () => selector + encodedSpender + encodedValue
+            getABIEncodedTransactionData: () => selector + encodedSpender + encodedValue,
         };
     }
 }

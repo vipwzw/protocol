@@ -21,6 +21,7 @@ import { BigNumber, hexUtils } from '@0x/utils';
 import * as ethUtil from 'ethereumjs-util';
 import { BaseContract } from '@0x/base-contract';
 import { Web3Wrapper } from '@0x/web3-wrapper';
+import { AbiEncoder } from '@0x/utils';
 
 import { artifacts } from './artifacts';
 import { deployFromFoundryArtifactAsync } from '../src/foundry-types';
@@ -74,7 +75,7 @@ blockchainTests.resets('Treasury governance', env => {
             env.provider,
             env.txDefaults,
             stakingArtifacts,
-            erc20ProxyContract.address,
+            zrx.address,
             zrx.address,
         );
         await erc20ProxyContract.addAuthorizedAddress(zrxVaultContract.address).awaitTransactionSuccessAsync();
@@ -110,7 +111,7 @@ blockchainTests.resets('Treasury governance', env => {
     }
 
     before(async () => {
-        const accounts = await env.getAccountAddressesAsync();
+        const accounts = await env.web3Wrapper.getAvailableAddressesAsync();
         [admin, poolOperator, delegator, relayer] = accounts;
         delegatorPrivateKey = hexUtils.toHex(constants.TESTRPC_PRIVATE_KEYS[accounts.indexOf(delegator)]);
 
@@ -118,8 +119,6 @@ blockchainTests.resets('Treasury governance', env => {
         // This is a minimal wrapper class to enable deployment
         class DummyERC20TokenContract extends BaseContract {
             public static async deployAsync(
-                bytecode: string,
-                abi: any,
                 provider: any,
                 txDefaults: any,
                 logDecodeDependencies: any,
@@ -129,102 +128,106 @@ blockchainTests.resets('Treasury governance', env => {
                 totalSupply: BigNumber,
             ): Promise<DummyERC20TokenContract> {
                 const web3Wrapper = new Web3Wrapper(provider);
+                const abi = artifacts.DummyERC20Token.abi;
+                const bytecode = artifacts.DummyERC20Token.bytecode.object;
                 const constructorABI = abi.find((item: any) => item.type === 'constructor');
-                const encodedConstructorArgs = web3Wrapper.abiCoder.encodeParameters(
-                    constructorABI.inputs.map((i: any) => i.type),
-                    [name, symbol, decimals.toNumber(), totalSupply.toString()]
-                );
-                
-                const deploymentData = bytecode + encodedConstructorArgs.slice(2);
+                const abiEncoder = AbiEncoder.create(constructorABI.inputs || []);
+                const encodedConstructorArgs = abiEncoder.encode([
+                    name,
+                    symbol,
+                    decimals.toNumber(),
+                    totalSupply.toString(),
+                ]);
+
+                const deploymentData = `${bytecode}${encodedConstructorArgs.slice(2)}`;
                 const txHash = await web3Wrapper.sendTransactionAsync({
                     from: txDefaults.from,
                     data: deploymentData,
                     gas: 3000000,
                 });
                 const txReceipt = await web3Wrapper.awaitTransactionSuccessAsync(txHash);
-                
+
                 return new DummyERC20TokenContract(
                     txReceipt.contractAddress as string,
                     provider,
                     txDefaults,
-                    logDecodeDependencies
+                    logDecodeDependencies,
                 );
             }
-            
+
+            public txDefaults: any;
+
             constructor(address: string, provider: any, txDefaults?: any, logDecodeDependencies?: any) {
                 const abi = artifacts.DummyERC20Token.abi;
                 super('DummyERC20Token', abi, address, provider, txDefaults, logDecodeDependencies);
+                this.txDefaults = txDefaults;
             }
-            
+
             public mint(to: string, value: BigNumber): any {
-                const self = this;
-                const encodedData = self._strictEncodeArguments('mint', [to, value]);
+                const encodedData = this._strictEncodeArguments('mint', [to, value]);
                 return {
                     awaitTransactionSuccessAsync: async (overrides: any = {}) => {
-                        const txHash = await self._web3Wrapper.sendTransactionAsync({
-                            to: self.address,
+                        const txHash = await this._web3Wrapper.sendTransactionAsync({
+                            to: this.address,
                             data: encodedData,
-                            ...self._txDefaults,
+                            ...this.txDefaults,
                             ...overrides,
                         });
-                        return self._web3Wrapper.awaitTransactionSuccessAsync(txHash);
+                        const txReceipt = await this._web3Wrapper.awaitTransactionSuccessAsync(txHash);
+                        return txReceipt;
                     },
                 };
             }
-            
+
             public transfer(to: string, value: BigNumber): any {
-                const self = this;
-                const encodedData = self._strictEncodeArguments('transfer', [to, value]);
+                const encodedData = this._strictEncodeArguments('transfer', [to, value]);
                 return {
                     awaitTransactionSuccessAsync: async (overrides: any = {}) => {
-                        const txHash = await self._web3Wrapper.sendTransactionAsync({
-                            to: self.address,
+                        const txHash = await this._web3Wrapper.sendTransactionAsync({
+                            to: this.address,
                             data: encodedData,
-                            ...self._txDefaults,
+                            ...this.txDefaults,
                             ...overrides,
                         });
-                        return self._web3Wrapper.awaitTransactionSuccessAsync(txHash);
+                        const txReceipt = await this._web3Wrapper.awaitTransactionSuccessAsync(txHash);
+                        return txReceipt;
                     },
-                    getABIEncodedTransactionData: () => encodedData,
                 };
             }
-            
+
             public approve(spender: string, value: BigNumber): any {
-                const self = this;
-                const encodedData = self._strictEncodeArguments('approve', [spender, value]);
+                const encodedData = this._strictEncodeArguments('approve', [spender, value]);
                 return {
                     awaitTransactionSuccessAsync: async (overrides: any = {}) => {
-                        const txHash = await self._web3Wrapper.sendTransactionAsync({
-                            to: self.address,
+                        const txHash = await this._web3Wrapper.sendTransactionAsync({
+                            to: this.address,
                             data: encodedData,
-                            ...self._txDefaults,
+                            ...this.txDefaults,
                             ...overrides,
                         });
-                        return self._web3Wrapper.awaitTransactionSuccessAsync(txHash);
+                        const txReceipt = await this._web3Wrapper.awaitTransactionSuccessAsync(txHash);
+                        return txReceipt;
                     },
                 };
             }
-            
+
             public balanceOf(owner: string): any {
-                const self = this;
-                const encodedData = self._strictEncodeArguments('balanceOf', [owner]);
+                const encodedData = this._strictEncodeArguments('balanceOf', [owner]);
                 return {
                     callAsync: async () => {
-                        const result = await self._web3Wrapper.callAsync({
-                            to: self.address,
+                        const result = await this._web3Wrapper.callAsync({
+                            to: this.address,
                             data: encodedData,
                         });
-                        const abiEncoder = self._lookupAbiEncoder('balanceOf');
+                        const abiEncoder = this._lookupAbiEncoder('balanceOf');
                         return abiEncoder.strictDecodeReturnValue(result);
                     },
                 };
             }
         }
-        
+
         // Deploy tokens using the wrapper
-        zrx = await deployFromFoundryArtifactAsync(
-            DummyERC20TokenContract,
-            artifacts.DummyERC20Token,
+        zrx = await DummyERC20TokenContract.deployAsync(
             env.provider,
             env.txDefaults,
             artifacts,
@@ -233,10 +236,8 @@ blockchainTests.resets('Treasury governance', env => {
             new BigNumber(constants.DUMMY_TOKEN_DECIMALS),
             constants.DUMMY_TOKEN_TOTAL_SUPPLY,
         );
-        
-        weth = await deployFromFoundryArtifactAsync(
-            DummyERC20TokenContract,
-            artifacts.DummyERC20Token,
+
+        weth = await DummyERC20TokenContract.deployAsync(
             env.provider,
             env.txDefaults,
             artifacts,
@@ -361,7 +362,7 @@ blockchainTests.resets('Treasury governance', env => {
                 .awaitTransactionSuccessAsync({ from: delegator });
             await fastForwardToNextEpochAsync();
             const tx = treasury.getVotingPower(poolOperator, [nonDefaultPoolId, nonDefaultPoolId]).callAsync();
-            return expect(tx).to.revertWith('getVotingPower/DUPLICATE_POOL_ID');
+            return expect(tx).to.be.rejectedWith('getVotingPower/DUPLICATE_POOL_ID');
         });
         it('Correctly sums voting power delegated to multiple pools', async () => {
             await staking
@@ -450,7 +451,7 @@ blockchainTests.resets('Treasury governance', env => {
             const tx = treasury
                 .propose(actions, currentEpoch.plus(2), PROPOSAL_DESCRIPTION, [])
                 .awaitTransactionSuccessAsync({ from: delegator });
-            return expect(tx).to.revertWith('propose/INSUFFICIENT_VOTING_POWER');
+            return expect(tx).to.be.rejectedWith('propose/INSUFFICIENT_VOTING_POWER');
         });
         it('Cannot create proposal with no actions', async () => {
             const votingPower = TREASURY_PARAMS.proposalThreshold;
@@ -467,7 +468,7 @@ blockchainTests.resets('Treasury governance', env => {
             const tx = treasury
                 .propose([], currentEpoch.plus(2), PROPOSAL_DESCRIPTION, [])
                 .awaitTransactionSuccessAsync({ from: delegator });
-            return expect(tx).to.revertWith('propose/NO_ACTIONS_PROPOSED');
+            return expect(tx).to.be.rejectedWith('propose/NO_ACTIONS_PROPOSED');
         });
         it('Cannot create proposal with an invalid execution epoch', async () => {
             const votingPower = TREASURY_PARAMS.proposalThreshold;
@@ -484,7 +485,7 @@ blockchainTests.resets('Treasury governance', env => {
             const tx = treasury
                 .propose(actions, currentEpoch.plus(1), PROPOSAL_DESCRIPTION, [])
                 .awaitTransactionSuccessAsync({ from: delegator });
-            return expect(tx).to.revertWith('propose/INVALID_EXECUTION_EPOCH');
+            return expect(tx).to.be.rejectedWith('propose/INVALID_EXECUTION_EPOCH');
         });
         it('Can create a valid proposal', async () => {
             const votingPower = TREASURY_PARAMS.proposalThreshold;
@@ -546,11 +547,11 @@ blockchainTests.resets('Treasury governance', env => {
             const tx = treasury
                 .castVote(INVALID_PROPOSAL_ID, true, [])
                 .awaitTransactionSuccessAsync({ from: delegator });
-            return expect(tx).to.revertWith('_castVote/INVALID_PROPOSAL_ID');
+            return expect(tx).to.be.rejectedWith('_castVote/INVALID_PROPOSAL_ID');
         });
         it('Cannot vote before voting period starts', async () => {
             const tx = treasury.castVote(VOTE_PROPOSAL_ID, true, []).awaitTransactionSuccessAsync({ from: delegator });
-            return expect(tx).to.revertWith('_castVote/VOTING_IS_CLOSED');
+            return expect(tx).to.be.rejectedWith('_castVote/VOTING_IS_CLOSED');
         });
         it('Cannot vote after voting period ends', async () => {
             await fastForwardToNextEpochAsync();
@@ -558,14 +559,14 @@ blockchainTests.resets('Treasury governance', env => {
             await env.web3Wrapper.increaseTimeAsync(TREASURY_PARAMS.votingPeriod.plus(1).toNumber());
             await env.web3Wrapper.mineBlockAsync();
             const tx = treasury.castVote(VOTE_PROPOSAL_ID, true, []).awaitTransactionSuccessAsync({ from: delegator });
-            return expect(tx).to.revertWith('_castVote/VOTING_IS_CLOSED');
+            return expect(tx).to.be.rejectedWith('_castVote/VOTING_IS_CLOSED');
         });
         it('Cannot vote twice on same proposal', async () => {
             await fastForwardToNextEpochAsync();
             await fastForwardToNextEpochAsync();
             await treasury.castVote(VOTE_PROPOSAL_ID, true, []).awaitTransactionSuccessAsync({ from: delegator });
             const tx = treasury.castVote(VOTE_PROPOSAL_ID, false, []).awaitTransactionSuccessAsync({ from: delegator });
-            return expect(tx).to.revertWith('_castVote/ALREADY_VOTED');
+            return expect(tx).to.be.rejectedWith('_castVote/ALREADY_VOTED');
         });
         it('Can cast a valid vote', async () => {
             await fastForwardToNextEpochAsync();
@@ -599,7 +600,7 @@ blockchainTests.resets('Treasury governance', env => {
             const tx = treasury
                 .castVoteBySignature(INVALID_PROPOSAL_ID, true, [], signature.v, signature.r, signature.s)
                 .awaitTransactionSuccessAsync({ from: relayer });
-            return expect(tx).to.revertWith('_castVote/INVALID_PROPOSAL_ID');
+            return expect(tx).to.be.rejectedWith('_castVote/INVALID_PROPOSAL_ID');
         });
         it('Cannot vote by signature before voting period starts', async () => {
             const vote = new TreasuryVote({
@@ -610,7 +611,7 @@ blockchainTests.resets('Treasury governance', env => {
             const tx = treasury
                 .castVoteBySignature(VOTE_PROPOSAL_ID, true, [], signature.v, signature.r, signature.s)
                 .awaitTransactionSuccessAsync({ from: relayer });
-            return expect(tx).to.revertWith('_castVote/VOTING_IS_CLOSED');
+            return expect(tx).to.be.rejectedWith('_castVote/VOTING_IS_CLOSED');
         });
         it('Cannot vote by signature after voting period ends', async () => {
             await fastForwardToNextEpochAsync();
@@ -626,7 +627,7 @@ blockchainTests.resets('Treasury governance', env => {
             const tx = treasury
                 .castVoteBySignature(VOTE_PROPOSAL_ID, true, [], signature.v, signature.r, signature.s)
                 .awaitTransactionSuccessAsync({ from: relayer });
-            return expect(tx).to.revertWith('_castVote/VOTING_IS_CLOSED');
+            return expect(tx).to.be.rejectedWith('_castVote/VOTING_IS_CLOSED');
         });
         it('Can recover the address from signature correctly', async () => {
             const vote = new TreasuryVote({
@@ -688,7 +689,7 @@ blockchainTests.resets('Treasury governance', env => {
             const secondVoteTx = treasury
                 .castVoteBySignature(VOTE_PROPOSAL_ID, false, [], signature.v, signature.r, signature.s)
                 .awaitTransactionSuccessAsync({ from: relayer });
-            return expect(secondVoteTx).to.revertWith('_castVote/ALREADY_VOTED');
+            return expect(secondVoteTx).to.be.rejectedWith('_castVote/ALREADY_VOTED');
         });
     });
     describe('execute()', () => {
@@ -758,34 +759,34 @@ blockchainTests.resets('Treasury governance', env => {
         });
         it('Cannot execute an invalid proposalId', async () => {
             const tx = treasury.execute(INVALID_PROPOSAL_ID, actions).awaitTransactionSuccessAsync();
-            return expect(tx).to.revertWith('execute/INVALID_PROPOSAL_ID');
+            return expect(tx).to.be.rejectedWith('execute/INVALID_PROPOSAL_ID');
         });
         it('Cannot execute a proposal whose vote is ongoing', async () => {
             const tx = treasury.execute(ongoingVoteProposalId, actions).awaitTransactionSuccessAsync();
-            return expect(tx).to.revertWith('_assertProposalExecutable/PROPOSAL_HAS_NOT_PASSED');
+            return expect(tx).to.be.rejectedWith('_assertProposalExecutable/PROPOSAL_HAS_NOT_PASSED');
         });
         it('Cannot execute a proposal that failed to reach quorum', async () => {
             const tx = treasury.execute(failedProposalId, actions).awaitTransactionSuccessAsync();
-            return expect(tx).to.revertWith('_assertProposalExecutable/PROPOSAL_HAS_NOT_PASSED');
+            return expect(tx).to.be.rejectedWith('_assertProposalExecutable/PROPOSAL_HAS_NOT_PASSED');
         });
         it('Cannot execute a proposal that was defeated in its vote', async () => {
             const tx = treasury.execute(defeatedProposalId, actions).awaitTransactionSuccessAsync();
-            return expect(tx).to.revertWith('_assertProposalExecutable/PROPOSAL_HAS_NOT_PASSED');
+            return expect(tx).to.be.rejectedWith('_assertProposalExecutable/PROPOSAL_HAS_NOT_PASSED');
         });
         it('Cannot execute before or after the execution epoch', async () => {
             const tooEarly = treasury.execute(passedProposalId, actions).awaitTransactionSuccessAsync();
-            await expect(tooEarly).to.revertWith('_assertProposalExecutable/CANNOT_EXECUTE_THIS_EPOCH');
+            await expect(tooEarly).to.be.rejectedWith('_assertProposalExecutable/CANNOT_EXECUTE_THIS_EPOCH');
             await fastForwardToNextEpochAsync();
             // Proposal 0 is executable here
             await fastForwardToNextEpochAsync();
             const tooLate = treasury.execute(passedProposalId, actions).awaitTransactionSuccessAsync();
-            return expect(tooLate).to.revertWith('_assertProposalExecutable/CANNOT_EXECUTE_THIS_EPOCH');
+            return expect(tooLate).to.be.rejectedWith('_assertProposalExecutable/CANNOT_EXECUTE_THIS_EPOCH');
         });
         it('Cannot execute the same proposal twice', async () => {
             await fastForwardToNextEpochAsync();
             await treasury.execute(passedProposalId, actions).awaitTransactionSuccessAsync();
             const tx = treasury.execute(passedProposalId, actions).awaitTransactionSuccessAsync();
-            return expect(tx).to.revertWith('_assertProposalExecutable/PROPOSAL_ALREADY_EXECUTED');
+            return expect(tx).to.be.rejectedWith('_assertProposalExecutable/PROPOSAL_ALREADY_EXECUTED');
         });
         it('Cannot execute actions that do not match the proposal `actionsHash`', async () => {
             await fastForwardToNextEpochAsync();
@@ -798,7 +799,7 @@ blockchainTests.resets('Treasury governance', env => {
                     },
                 ])
                 .awaitTransactionSuccessAsync();
-            return expect(tx).to.revertWith('_assertProposalExecutable/INVALID_ACTIONS');
+            return expect(tx).to.be.rejectedWith('_assertProposalExecutable/INVALID_ACTIONS');
         });
         it('Can execute a valid proposal', async () => {
             await fastForwardToNextEpochAsync();

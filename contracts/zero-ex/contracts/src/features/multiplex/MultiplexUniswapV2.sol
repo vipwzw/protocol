@@ -21,7 +21,6 @@ import "../../vendor/IUniswapV2Pair.sol";
 import "../interfaces/IMultiplexFeature.sol";
 
 abstract contract MultiplexUniswapV2 is FixinCommon, FixinTokenSpender {
-
     // address of the UniswapV2Factory contract.
     address private immutable UNISWAP_FACTORY;
     // address of the (Sushiswap) UniswapV2Factory contract.

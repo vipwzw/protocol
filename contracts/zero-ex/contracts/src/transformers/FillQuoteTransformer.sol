@@ -14,10 +14,10 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/src/errors/LibRichErrors.sol";
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/LibMath.sol";
+import "@0x/contracts-utils/src/LibMath.sol";
 import "../errors/LibTransformERC20RichErrors.sol";
 import "../features/interfaces/INativeOrdersFeature.sol";
 import "../features/libs/LibNativeOrder.sol";
@@ -336,7 +336,8 @@ contract FillQuoteTransformer is Transformer {
             )
         returns (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount) {
             if (orderInfo.order.takerTokenFeeAmount > 0) {
-                takerTokenFilledAmount = takerTokenFilledAmount + 
+                takerTokenFilledAmount =
+                    takerTokenFilledAmount +
                     LibMath.safeDowncastToUint128(
                         LibMath.getPartialAmountFloor(
                             takerTokenFilledAmount,
@@ -363,7 +364,11 @@ contract FillQuoteTransformer is Transformer {
         );
 
         try
-            zeroEx.fillRfqOrder(orderInfo.order, orderInfo.signature, LibMath.safeDowncastToUint128(takerTokenFillAmount))
+            zeroEx.fillRfqOrder(
+                orderInfo.order,
+                orderInfo.signature,
+                LibMath.safeDowncastToUint128(takerTokenFillAmount)
+            )
         returns (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount) {
             results.takerTokenSoldAmount = takerTokenFilledAmount;
             results.makerTokenBoughtAmount = makerTokenFilledAmount;
@@ -381,7 +386,11 @@ contract FillQuoteTransformer is Transformer {
             orderInfo.maxTakerTokenFillAmount
         );
         try
-            zeroEx.fillOtcOrder(orderInfo.order, orderInfo.signature, LibMath.safeDowncastToUint128(takerTokenFillAmount))
+            zeroEx.fillOtcOrder(
+                orderInfo.order,
+                orderInfo.signature,
+                LibMath.safeDowncastToUint128(takerTokenFillAmount)
+            )
         returns (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount) {
             results.takerTokenSoldAmount = takerTokenFilledAmount;
             results.makerTokenBoughtAmount = makerTokenFilledAmount;
@@ -403,23 +412,19 @@ contract FillQuoteTransformer is Transformer {
             if (orderTakerTokenFeeAmount != 0) {
                 takerTokenFillAmount = LibMath.getPartialAmountCeil(
                     takerTokenFillAmount,
-                    orderTakerAmount+(orderTakerTokenFeeAmount),
+                    orderTakerAmount + (orderTakerTokenFeeAmount),
                     orderTakerAmount
                 );
             }
         } else {
             // Buy
             takerTokenFillAmount = LibMath.getPartialAmountCeil(
-                data.fillAmount-(state.boughtAmount),
+                data.fillAmount - (state.boughtAmount),
                 orderMakerAmount,
                 orderTakerAmount
             );
         }
-        return
-            LibMath.min256(
-                LibMath.min256(takerTokenFillAmount, orderTakerAmount),
-                state.takerTokenBalanceRemaining
-            );
+        return LibMath.min256(LibMath.min256(takerTokenFillAmount, orderTakerAmount), state.takerTokenBalanceRemaining);
     }
 
     // Convert possible proportional values to absolute quantities.
@@ -427,11 +432,7 @@ contract FillQuoteTransformer is Transformer {
         if ((rawAmount & HIGH_BIT) == HIGH_BIT) {
             // If the high bit of `rawAmount` is set then the lower 255 bits
             // specify a fraction of `balance`.
-            return
-                LibMath.min256(
-                    (balance * LibMath.min256(rawAmount & LOWER_255_BITS, 1e18)) / 1e18,
-                    balance
-                );
+            return LibMath.min256((balance * LibMath.min256(rawAmount & LOWER_255_BITS, 1e18)) / 1e18, balance);
         }
         return rawAmount;
     }

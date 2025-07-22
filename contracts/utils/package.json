@@ -41,7 +41,6 @@
     "devDependencies": {
         "@0x/abi-gen": "^5.8.5",
         "@0x/contracts-test-utils": "^5.4.59",
-        "@0x/dev-utils": "^5.0.2",
         "@0x/order-utils": "^10.4.28",
         "@0x/types": "^3.3.7",
         "@0x/typescript-typings": "^5.3.2",

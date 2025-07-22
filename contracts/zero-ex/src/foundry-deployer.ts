@@ -27,7 +27,7 @@ export async function deployFromFoundryArtifactAsync<T>(
     // 从 Foundry artifact 中提取字节码和 ABI
     const bytecode = foundryArtifact.bytecode.object;
     const abi = foundryArtifact.abi;
-    
+
     // 使用现有的 deployAsync 方法
     return await ContractClass.deployAsync(
         bytecode,
@@ -52,11 +52,7 @@ export class FoundryDeployer {
     /**
      * 部署单个合约
      */
-    async deploy<T>(
-        ContractClass: any,
-        artifactKey: keyof FoundryArtifacts,
-        ...constructorArgs: any[]
-    ): Promise<T> {
+    async deploy<T>(ContractClass: any, artifactKey: keyof FoundryArtifacts, ...constructorArgs: any[]): Promise<T> {
         const artifact = this.artifacts[artifactKey] as FoundryArtifact;
         return deployFromFoundryArtifactAsync<T>(
             ContractClass,
@@ -72,11 +68,8 @@ export class FoundryDeployer {
      * 创建一个绑定到特定合约类的部署函数
      */
     createDeployer<T>(ContractClass: any) {
-        return async (
-            artifactKey: keyof FoundryArtifacts,
-            ...constructorArgs: any[]
-        ): Promise<T> => {
+        return async (artifactKey: keyof FoundryArtifacts, ...constructorArgs: any[]): Promise<T> => {
             return this.deploy<T>(ContractClass, artifactKey, ...constructorArgs);
         };
     }
-} 
+}

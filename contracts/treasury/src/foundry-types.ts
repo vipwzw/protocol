@@ -3,7 +3,20 @@
  * 基于 Foundry JSON 输出格式的原生类型
  */
 
-import { TxData, SupportedProvider, ContractAbi } from 'ethereum-types';
+import { EncoderOverrides } from '@0x/base-contract';
+import { BaseContract } from '@0x/base-contract';
+import {
+    ContractAbi,
+    DataItem,
+    DevdocOutput,
+    EventAbi,
+    EvmBytecodeOutput,
+    EvmOutput,
+    FunctionAbi,
+    MethodAbi,
+    TupleDataItem,
+    TxData,
+} from 'ethereum-types';
 
 /**
  * Foundry 字节码格式
@@ -62,8 +75,8 @@ export interface FoundryArtifact {
     abi: ContractAbi;
     bytecode: FoundryBytecode;
     deployedBytecode: FoundryBytecode;
-    methodIdentifiers: Record<string, string>;  // 函数名 -> 选择器映射
-    rawMetadata: string;                         // JSON 字符串
+    methodIdentifiers: Record<string, string>; // 函数名 -> 选择器映射
+    rawMetadata: string; // JSON 字符串
     metadata: FoundryMetadata;
     id: number;
 }
@@ -91,25 +104,20 @@ export interface TreasuryFoundryArtifacts extends FoundryArtifacts {
  * @param constructorArgs 构造函数参数
  * @returns 部署的合约实例
  */
-export async function deployFromFoundryArtifactAsync<T>(
+export async function deployFromFoundryArtifactAsync<T extends BaseContract>(
     ContractClass: any,
     foundryArtifact: FoundryArtifact,
-    provider: SupportedProvider,
-    txDefaults: Partial<TxData>,
-    logDecodeDependencies: FoundryArtifacts,
+    provider: any,
+    txDefaults: any,
+    logDecodeDependencies: any,
     ...constructorArgs: any[]
 ): Promise<T> {
-    // 从 Foundry artifact 中提取字节码和 ABI
-    const bytecode = foundryArtifact.bytecode.object;
-    const abi = foundryArtifact.abi;
-    
-    // 使用现有的 deployAsync 方法
-    return await ContractClass.deployAsync(
-        bytecode,
-        abi,
+    // 使用 deployFrom0xArtifactAsync 方法
+    return await ContractClass.deployFrom0xArtifactAsync(
+        foundryArtifact,
         provider,
         txDefaults,
         logDecodeDependencies,
         ...constructorArgs,
     );
-} 
+}

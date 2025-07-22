@@ -14,9 +14,9 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/src/errors/LibRichErrors.sol";
 import "../fixins/FixinCommon.sol";
-import "@0x/contracts-utils/contracts/src/errors/LibOwnableRichErrors.sol";
+import "@0x/contracts-utils/src/errors/LibOwnableRichErrors.sol";
 import "../storage/LibOwnableStorage.sol";
 import "../migrations/LibBootstrap.sol";
 import "../migrations/LibMigrate.sol";

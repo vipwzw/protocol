@@ -1,6 +1,4 @@
-import { chaiSetup } from '@0x/dev-utils';
-import { expect } from 'chai';
-
+import { chaiSetup, expect } from './chai_setup';
 import { getExchangeProxyEIP712DomainHash, getExchangeProxyEIP712Hash } from '../src/eip712_utils';
 
 chaiSetup.configure();

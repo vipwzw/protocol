@@ -14,7 +14,7 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/LibBytes.sol";
+import "@0x/contracts-utils/src/LibBytes.sol";
 import "./migrations/LibBootstrap.sol";
 import "./features/BootstrapFeature.sol";
 import "./storage/LibProxyStorage.sol";

@@ -1,6 +1,8 @@
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 
+const path = require("path");
+
 module.exports = {
   solidity: {
     version: "0.8.30",
@@ -32,6 +34,7 @@ module.exports = {
     tests: "./lib/test",
     cache: "./cache/hardhat",
     artifacts: "./artifacts",
+    root: path.join(__dirname, "."),
   },
   mocha: {
     timeout: 100000,

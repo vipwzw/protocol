@@ -5,30 +5,37 @@ import * as _ from 'lodash';
 
 import { ExchangeFunctionName } from './types';
 
-const TESTRPC_PRIVATE_KEYS_STRINGS = [
-    '0xf2f48ee19680706196e2e339e5da3491186e0c4c5030670656b0e0164837257d',
-    '0x5d862464fe9303452126c8bc94274b8c5f9874cbd219789b3eb2128075a76f72',
-    '0xdf02719c4df8b9b8ac7f551fcb5d9ef48fa27eef7a66453879f4d8fdc6e78fb1',
-    '0xff12e391b79415e941a94de3bf3a9aee577aed0731e297d5cfa0b8a1e02fa1d0',
-    '0x752dd9cf65e68cfaba7d60225cbdbc1f4729dd5e5507def72815ed0d8abc6249',
-    '0xefb595a0178eb79a8df953f87c5148402a224cdf725e88c0146727c6aceadccd',
-    '0x83c6d2cc5ddcf9711a6d59b417dc20eb48afd58d45290099e5987e3d768f328f',
-    '0xbb2d3f7c9583780a7d3904a2f55d792707c345f21de1bacb2d389934d82796b2',
-    '0xb2fd4d29c1390b71b8795ae81196bfd60293adf99f9d32a0aff06288fcdac55f',
-    '0x23cb7121166b9a2f93ae0b7c05bde02eae50d64449b2cbb42bc84e9d38d6cc89',
-    '0x5ad34d7f8704ed33ab9e8dc30a76a8c48060649204c1f7b21b973235bba8092f',
-    '0xf18b03c1ae8e3876d76f20c7a5127a169dd6108c55fe9ce78bc7a91aca67dee3',
-    '0x4ccc4e7d7843e0701295e8fd671332a0e2f1e92d0dab16e8792e91cb0b719c9d',
-    '0xd7638ae813450e710e6f1b09921cc1593181073ce2099fb418fc03a933c7f41f',
-    '0xbc7bbca8ca15eb567be60df82e4452b13072dcb60db89747e3c85df63d8270ca',
-    '0x55131517839bf782e6e573bc3ac8f262efd2b6cb0ac86e8f147db26fcbdb15a5',
-    '0x6c2b5a16e327e0c4e7fafca5ae35616141de81f77da66ee0857bc3101d446e68',
-    '0xfd79b71625eec963e6ec42e9b5b10602c938dfec29cbbc7d17a492dd4f403859',
-    '0x3003eace3d4997c52ba69c2ca97a6b5d0d1216d894035a97071590ee284c1023',
-    '0x84a8bb71450a1b82be2b1cdd25d079cbf23dc8054e94c47ad14510aa967f45de',
+// The private keys are for the hardhat accounts, not ganache.
+const HARDHAT_PRIVATE_KEYS_STRINGS = [
+    '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+    '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+    '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a',
+    '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6',
+    '0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a',
+    '0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba',
+    '0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e',
+    '0x4bbbf85ce3377467afe5d46f804f221813b2bb87f24d81f60f1fcdbf7cbf4356',
+    '0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97',
+    '0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6',
+    '0xf214f2b2cd398c806f84e317254e0f0b801d0643303237d97a22a48e01628897',
+    '0x701b615bbdfb9de65240bc28bd21bbc0d996645a3dd57e7b12bc2bdf6f192c82',
+    '0xa267530f49f8280200edf313ee7af6b827f2a8bce2897751d06a843f644967b1',
+    '0x47c99abed3324a2707c28affff1267e45918ec8c3f20b8aa892e8b065d2942dd',
+    '0xc526ee95bf44d8fc405a158bb884d9d1238d99f0612e9f33d006bb0789009aaa',
+    '0x8166f546bab6da521a8369cab06c5d2b9e46670292d85c875ee9ec20e84ffb61',
+    '0xea6c44ac03bff858b476bba40716402b03e41b8e97e276d1baec7c37d42484a0',
+    '0x689af8efa8c651a91ad287602527f3af2fe9f6501a7ac4b061667b5a93e037fd',
+    '0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0',
+    '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e',
 ];
 
+export const NUM_TEST_ACCOUNTS = HARDHAT_PRIVATE_KEYS_STRINGS.length;
+export { HARDHAT_PRIVATE_KEYS_STRINGS as TESTRPC_PRIVATE_KEYS_STRINGS };
+
 const MAX_UINT256 = new BigNumber(2).pow(256).minus(1);
+
+// Default gas price for tests
+export const DEFAULT_GAS_PRICE = 0;
 
 export const constants = {
     BASE_16: 16,
@@ -61,7 +68,7 @@ export const constants = {
     UNLIMITED_ALLOWANCE_IN_BASE_UNITS: MAX_UINT256,
     MAX_UINT256,
     MAX_UINT32: new BigNumber(2).pow(32).minus(1),
-    TESTRPC_PRIVATE_KEYS: _.map(TESTRPC_PRIVATE_KEYS_STRINGS, privateKeyString => ethUtil.toBuffer(privateKeyString)),
+    TESTRPC_PRIVATE_KEYS: _.map(HARDHAT_PRIVATE_KEYS_STRINGS, privateKeyString => ethUtil.toBuffer(privateKeyString)),
     INITIAL_ERC20_BALANCE: Web3Wrapper.toBaseUnitAmount(new BigNumber(10000), 18),
     INITIAL_ERC20_ALLOWANCE: Web3Wrapper.toBaseUnitAmount(new BigNumber(10000), 18),
     INITIAL_ERC1155_FUNGIBLE_BALANCE: Web3Wrapper.toBaseUnitAmount(new BigNumber(10000), 18),

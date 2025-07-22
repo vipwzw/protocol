@@ -16,7 +16,7 @@ pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/LibMath.sol";
+import "@0x/contracts-utils/src/LibMath.sol";
 import "../../external/ILiquidityProviderSandbox.sol";
 import "../../fixins/FixinCommon.sol";
 import "../../fixins/FixinEIP712.sol";
@@ -594,10 +594,10 @@ contract MultiplexFeature is
             return
                 LibMath.min256(
                     (totalSellAmount * LibMath.min256(rawAmount & LOWER_255_BITS, 1e18)) / 1e18,
-                    totalSellAmount-(soldAmount)
+                    totalSellAmount - (soldAmount)
                 );
         } else {
-            return LibMath.min256(rawAmount, totalSellAmount-(soldAmount));
+            return LibMath.min256(rawAmount, totalSellAmount - (soldAmount));
         }
     }
 }

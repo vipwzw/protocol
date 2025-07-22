@@ -1,9 +1,6 @@
 export { artifacts } from './artifacts';
 export * from './wrappers';
 
-import * as ReferenceFunctionsToExport from './reference_functions';
-export import ReferenceFunctions = ReferenceFunctionsToExport;
-
 export {
     AuthorizableRevertErrors,
     LibAddressArrayRevertErrors,

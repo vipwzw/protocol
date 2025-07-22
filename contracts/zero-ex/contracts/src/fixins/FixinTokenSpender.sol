@@ -15,7 +15,7 @@
 pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/LibMath.sol";
+import "@0x/contracts-utils/src/LibMath.sol";
 
 /// @dev Helpers for moving tokens around.
 abstract contract FixinTokenSpender {

@@ -14,7 +14,7 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/src/errors/LibRichErrors.sol";
 import "@0x/contracts-erc20/src/IEtherToken.sol";
 import "../errors/LibTransformERC20RichErrors.sol";
 import "./Transformer.sol";

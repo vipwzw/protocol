@@ -1,36 +1,43 @@
-import { devConstants, env, EnvVars, Web3Config, web3Factory } from '@0x/dev-utils';
-import { Web3ProviderEngine } from '@0x/subproviders';
 import { Web3Wrapper } from '@0x/web3-wrapper';
 import * as _ from 'lodash';
 
 import { constants } from './constants';
 
 export const txDefaults = {
-    from: devConstants.TESTRPC_FIRST_ADDRESS,
-    gas: devConstants.GAS_LIMIT,
+    from: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', // Hardhat default first account
+    gas: 10000000,
     gasPrice: constants.DEFAULT_GAS_PRICE,
 };
 
-export const providerConfigs: Web3Config = {
-    total_accounts: constants.NUM_TEST_ACCOUNTS,
-    shouldUseInProcessGanache: true,
-    shouldAllowUnlimitedContractSize: true,
-    hardfork: 'istanbul',
-    gasLimit: 100e6,
-    unlocked_accounts: [
-        '0x6cc5f688a315f3dc28a7781717a9a798a59fda7b',
-        '0x55dc8f21d20d4c6ed3c82916a438a413ca68e335',
-        '0x8ed95d1746bf1e4dab58d8ed4724f1ef95b20db0', // ERC20BridgeProxy
-        '0xf977814e90da44bfa03b6295a0616a897441acec', // Binance: USDC, TUSD
-    ],
-};
+// Create a provider that will be injected by Hardhat
+let provider: any;
+let web3Wrapper: Web3Wrapper;
 
-export const provider: Web3ProviderEngine = web3Factory.getRpcProvider(providerConfigs);
-provider.stop();
-const isCoverageEnabled = env.parseBoolean(EnvVars.SolidityCoverage);
-const enabledSubproviderCount = _.filter([isCoverageEnabled], _.identity.bind(_)).length;
-if (enabledSubproviderCount > 1) {
-    throw new Error(`Only one of profiler or revert trace subproviders can be enabled at a time`);
+// Check if we're running under Hardhat
+if (typeof (global as any).network !== 'undefined') {
+    // We're in Hardhat environment
+    provider = (global as any).network.provider;
+    web3Wrapper = new Web3Wrapper(provider);
+} else {
+    // Create a mock provider for non-test environments
+    provider = createMockProvider();
+    web3Wrapper = new Web3Wrapper(provider);
 }
 
-export const web3Wrapper = new Web3Wrapper(provider);
+export { provider, web3Wrapper };
+
+// Create a mock provider for non-test environments
+function createMockProvider(): any {
+    return {
+        addProvider: _.noop,
+        on: _.noop,
+        send: (_method: string, _params: any[]): Promise<any> => {
+            return Promise.resolve(null);
+        },
+        sendAsync: (payload: any, callback: (error: any, result: any) => void): void => {
+            callback(null, { jsonrpc: '2.0', id: payload.id, result: null });
+        },
+        start: _.noop,
+        stop: _.noop,
+    };
+}

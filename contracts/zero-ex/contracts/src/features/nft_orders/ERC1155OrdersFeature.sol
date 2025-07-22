@@ -15,7 +15,7 @@
 pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/src/errors/LibRichErrors.sol";
 import "../../fixins/FixinERC1155Spender.sol";
 import "../../migrations/LibMigrate.sol";
 import "../../storage/LibERC1155OrdersStorage.sol";
@@ -189,7 +189,7 @@ contract ERC1155OrdersFeature is IFeature, IERC1155OrdersFeature, FixinERC1155Sp
                     signatures[i],
                     BuyParams(
                         erc1155FillAmounts[i],
-                        address(this).balance-(ethBalanceBefore), // Remaining ETH available
+                        address(this).balance - (ethBalanceBefore), // Remaining ETH available
                         callbackData[i]
                     )
                 );
@@ -208,7 +208,7 @@ contract ERC1155OrdersFeature is IFeature, IERC1155OrdersFeature, FixinERC1155Sp
                         signatures[i],
                         BuyParams(
                             erc1155FillAmounts[i],
-                            address(this).balance-(ethBalanceBefore), // Remaining ETH available
+                            address(this).balance - (ethBalanceBefore), // Remaining ETH available
                             callbackData[i]
                         )
                     )

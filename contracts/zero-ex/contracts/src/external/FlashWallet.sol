@@ -14,8 +14,8 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
-import "@0x/contracts-utils/contracts/src/errors/LibOwnableRichErrors.sol";
+import "@0x/contracts-utils/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/src/errors/LibOwnableRichErrors.sol";
 import "../errors/LibWalletRichErrors.sol";
 import "./IFlashWallet.sol";
 

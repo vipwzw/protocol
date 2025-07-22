@@ -1,5 +1,5 @@
 require("@nomiclabs/hardhat-waffle");
-require("@nomiclabs/hardhat-ethers");
+
 const path = require("path");
 
 module.exports = {
@@ -19,6 +19,10 @@ module.exports = {
       accounts: {
         mnemonic: "concert load couple harbor equip island argue ramp clarify fence smart topic",
       },
+      allowUnlimitedContractSize: true,
+      hardfork: "cancun",
+      gasPrice: 0,
+      initialBaseFeePerGas: 0,
     },
     localhost: {
       url: "http://localhost:8545",

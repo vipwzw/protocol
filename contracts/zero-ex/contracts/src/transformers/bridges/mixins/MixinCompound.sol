@@ -91,6 +91,6 @@ contract MixinCompound {
             }
         }
 
-        return buyToken.balanceOf(address(this))-(beforeBalance);
+        return buyToken.balanceOf(address(this)) - (beforeBalance);
     }
 }

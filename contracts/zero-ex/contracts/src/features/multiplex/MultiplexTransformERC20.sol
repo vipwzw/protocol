@@ -18,7 +18,6 @@ import "../interfaces/IMultiplexFeature.sol";
 import "../interfaces/ITransformERC20Feature.sol";
 
 abstract contract MultiplexTransformERC20 {
-
     function _batchSellTransformERC20(
         IMultiplexFeature.BatchSellState memory state,
         IMultiplexFeature.BatchSellParams memory params,

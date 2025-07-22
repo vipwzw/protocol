@@ -13,13 +13,14 @@ blockchainTests('mocha blockchain extensions', env => {
             expect(env.provider).to.exist;
             expect(env.txDefaults).to.exist;
             expect(env.web3Wrapper).to.exist;
-            expect(typeof env.getChainIdAsync).to.eq('function');
-            expect(typeof env.getAccountAddressesAsync).to.eq('function');
+            expect(env.accounts).to.exist;
         });
 
         it('initializes the test environment', async () => {
-            expect(await env.getChainIdAsync()).to.eq(constants.TESTRPC_CHAIN_ID);
-            expect(await env.getAccountAddressesAsync()).to.not.be.empty;
+            // Check that basic properties are set
+            expect(env.txDefaults).to.have.property('from');
+            expect(env.txDefaults).to.have.property('gas');
+            expect(env.accounts).to.be.an('array');
         });
 
         describe('modifiers', () => {

@@ -10,6 +10,7 @@
         "test": "test"
     },
     "scripts": {
+        "build": "forge build",
         "test": "forge test",
         "test:ci": "forge test",
         "docs:md": "ts-doc-gen --sourceDir='$PROJECT_FILES' --output=$MD_FILE_DIR --fileExtension=mdx --tsconfig=./typedoc-tsconfig.json",

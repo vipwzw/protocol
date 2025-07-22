@@ -39,7 +39,11 @@ describe('testWithReferenceFuncAsync', () => {
 
     it('passes when both fail and error messages are the same', async () => {
         const errMessage = 'woopsie';
-        return testWithReferenceFuncAsync(alwaysFailFunc(new Error(errMessage)), alwaysFailFunc(new Error(errMessage)), [1, 2]);
+        return testWithReferenceFuncAsync(
+            alwaysFailFunc(new Error(errMessage)),
+            alwaysFailFunc(new Error(errMessage)),
+            [1, 2],
+        );
     });
 
     it('fails when both fail and error messages are not identical', async () => {

@@ -5,14 +5,20 @@ import { expect } from './chai_setup';
 /**
  * Filter logs by event name/type.
  */
-export function filterLogs<TEventArgs extends DecodedLogArgs>(logs: LogEntry[], event: string): Array<LogWithDecodedArgs<TEventArgs>> {
+export function filterLogs<TEventArgs extends DecodedLogArgs>(
+    logs: LogEntry[],
+    event: string,
+): Array<LogWithDecodedArgs<TEventArgs>> {
     return (logs as Array<LogWithDecodedArgs<any>>).filter(log => log.event === event);
 }
 
 /**
  * Filter logs by event name/type and convert to arguments.
  */
-export function filterLogsToArguments<TEventArgs extends DecodedLogArgs>(logs: LogEntry[], event: string): TEventArgs[] {
+export function filterLogsToArguments<TEventArgs extends DecodedLogArgs>(
+    logs: LogEntry[],
+    event: string,
+): TEventArgs[] {
     return filterLogs<TEventArgs>(logs, event).map(log => log.args);
 }
 

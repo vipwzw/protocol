@@ -14,7 +14,7 @@
 
 pragma solidity 0.8.30;
 
-import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/src/errors/LibRichErrors.sol";
 import "../migrations/LibBootstrap.sol";
 import "../storage/LibProxyStorage.sol";
 import "./interfaces/IBootstrapFeature.sol";

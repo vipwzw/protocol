@@ -15,8 +15,8 @@
 pragma solidity 0.8.30;
 
 import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/LibMath.sol";
-import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/src/LibMath.sol";
+import "@0x/contracts-utils/src/errors/LibRichErrors.sol";
 import "../../errors/LibNFTOrdersRichErrors.sol";
 import "../../fixins/FixinCommon.sol";
 import "../../fixins/FixinEIP712.sol";
@@ -169,7 +169,7 @@ abstract contract NFTOrders is FixinCommon, FixinEIP712, FixinTokenSpender {
             );
             // Update `ethAvailable` with amount acquired during
             // the callback
-            ethAvailable = ethAvailable+(address(this).balance-(ethBalanceBeforeCallback));
+            ethAvailable = ethAvailable + (address(this).balance - (ethBalanceBeforeCallback));
             // Check for the magic success bytes
             require(callbackResult == TAKER_CALLBACK_MAGIC_BYTES, "NFTOrders::_buyNFT/CALLBACK_FAILED");
         }

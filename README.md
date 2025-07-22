@@ -1,6 +1,4 @@
-<img src="https://github.com/0xProject/branding/blob/master/0x%20Logo/PNG/0x-Logo-Black.png" width="150px" >
-
----
+# 0x 协议改写版本
 
 [0x][website-url] 是一个开放的协议，促进基于以太坊资产的无需信任、低摩擦交换。如需了解更多工作原理，请查看 [0x 协议规范](https://protocol.0x.org/)。
 
@@ -147,6 +145,8 @@ treasury
 ### TypeScript/Javascript 包
 
 #### 0x 专用包
+
+以下是本 monorepo 中维护的 TypeScript/JavaScript 包。查看 [/packages/README.md](/packages/README.md) 获取详细的包功能说明和使用指南。
 
 | 包名                                                     | 版本                                                                                                                    | 描述                                       |
 | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
