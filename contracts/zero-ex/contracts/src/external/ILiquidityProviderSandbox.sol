@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.30;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-erc20/src/IERC20Token.sol";
 import "../vendor/ILiquidityProvider.sol";

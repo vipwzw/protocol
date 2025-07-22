@@ -16,7 +16,7 @@
   limitations under the License.
 
 */
-pragma solidity 0.8.30;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/governance/Governor.sol";
 import "@openzeppelin/governance/extensions/GovernorSettings.sol";

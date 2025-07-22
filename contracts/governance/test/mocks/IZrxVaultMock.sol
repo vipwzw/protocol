@@ -16,7 +16,7 @@
 
 */
 
-pragma solidity 0.8.30;
+pragma solidity ^0.8.0;
 
 interface IZrxVaultMock {
     /// @dev Emmitted whenever a StakingProxy is set in a vault.

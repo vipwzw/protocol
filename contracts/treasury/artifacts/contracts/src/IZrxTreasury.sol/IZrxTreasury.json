@@ -1,401 +1,401 @@
 {
-    "_format": "hh-sol-artifact-1",
-    "contractName": "IZrxTreasury",
-    "sourceName": "contracts/src/IZrxTreasury.sol",
-    "abi": [
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IZrxTreasury",
+  "sourceName": "contracts/src/IZrxTreasury.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
         {
-            "anonymous": false,
-            "inputs": [
-                {
-                    "indexed": false,
-                    "internalType": "address",
-                    "name": "proposer",
-                    "type": "address"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "bytes32[]",
-                    "name": "operatedPoolIds",
-                    "type": "bytes32[]"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "proposalId",
-                    "type": "uint256"
-                },
-                {
-                    "components": [
-                        {
-                            "internalType": "address",
-                            "name": "target",
-                            "type": "address"
-                        },
-                        {
-                            "internalType": "bytes",
-                            "name": "data",
-                            "type": "bytes"
-                        },
-                        {
-                            "internalType": "uint256",
-                            "name": "value",
-                            "type": "uint256"
-                        }
-                    ],
-                    "indexed": false,
-                    "internalType": "struct IZrxTreasury.ProposedAction[]",
-                    "name": "actions",
-                    "type": "tuple[]"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "executionEpoch",
-                    "type": "uint256"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "string",
-                    "name": "description",
-                    "type": "string"
-                }
-            ],
-            "name": "ProposalCreated",
-            "type": "event"
+          "indexed": false,
+          "internalType": "address",
+          "name": "proposer",
+          "type": "address"
         },
         {
-            "anonymous": false,
-            "inputs": [
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "proposalId",
-                    "type": "uint256"
-                }
-            ],
-            "name": "ProposalExecuted",
-            "type": "event"
+          "indexed": false,
+          "internalType": "bytes32[]",
+          "name": "operatedPoolIds",
+          "type": "bytes32[]"
         },
         {
-            "anonymous": false,
-            "inputs": [
-                {
-                    "indexed": false,
-                    "internalType": "address",
-                    "name": "voter",
-                    "type": "address"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "bytes32[]",
-                    "name": "operatedPoolIds",
-                    "type": "bytes32[]"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "proposalId",
-                    "type": "uint256"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "bool",
-                    "name": "support",
-                    "type": "bool"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "votingPower",
-                    "type": "uint256"
-                }
-            ],
-            "name": "VoteCast",
-            "type": "event"
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
         },
         {
-            "inputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "proposalId",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "bool",
-                    "name": "support",
-                    "type": "bool"
-                },
-                {
-                    "internalType": "bytes32[]",
-                    "name": "operatedPoolIds",
-                    "type": "bytes32[]"
-                }
-            ],
-            "name": "castVote",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
+          "components": [
+            {
+              "internalType": "address",
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            }
+          ],
+          "indexed": false,
+          "internalType": "struct IZrxTreasury.ProposedAction[]",
+          "name": "actions",
+          "type": "tuple[]"
         },
         {
-            "inputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "proposalId",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "bool",
-                    "name": "support",
-                    "type": "bool"
-                },
-                {
-                    "internalType": "bytes32[]",
-                    "name": "operatedPoolIds",
-                    "type": "bytes32[]"
-                },
-                {
-                    "internalType": "uint8",
-                    "name": "v",
-                    "type": "uint8"
-                },
-                {
-                    "internalType": "bytes32",
-                    "name": "r",
-                    "type": "bytes32"
-                },
-                {
-                    "internalType": "bytes32",
-                    "name": "s",
-                    "type": "bytes32"
-                }
-            ],
-            "name": "castVoteBySignature",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "executionEpoch",
+          "type": "uint256"
         },
         {
-            "inputs": [],
-            "name": "defaultPoolId",
-            "outputs": [
-                {
-                    "internalType": "bytes32",
-                    "name": "",
-                    "type": "bytes32"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "defaultPoolOperator",
-            "outputs": [
-                {
-                    "internalType": "contract DefaultPoolOperator",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "proposalId",
-                    "type": "uint256"
-                },
-                {
-                    "components": [
-                        {
-                            "internalType": "address",
-                            "name": "target",
-                            "type": "address"
-                        },
-                        {
-                            "internalType": "bytes",
-                            "name": "data",
-                            "type": "bytes"
-                        },
-                        {
-                            "internalType": "uint256",
-                            "name": "value",
-                            "type": "uint256"
-                        }
-                    ],
-                    "internalType": "struct IZrxTreasury.ProposedAction[]",
-                    "name": "actions",
-                    "type": "tuple[]"
-                }
-            ],
-            "name": "execute",
-            "outputs": [],
-            "stateMutability": "payable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "account",
-                    "type": "address"
-                },
-                {
-                    "internalType": "bytes32[]",
-                    "name": "operatedPoolIds",
-                    "type": "bytes32[]"
-                }
-            ],
-            "name": "getVotingPower",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "votingPower",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "proposalCount",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "count",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "proposalThreshold",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "components": [
-                        {
-                            "internalType": "address",
-                            "name": "target",
-                            "type": "address"
-                        },
-                        {
-                            "internalType": "bytes",
-                            "name": "data",
-                            "type": "bytes"
-                        },
-                        {
-                            "internalType": "uint256",
-                            "name": "value",
-                            "type": "uint256"
-                        }
-                    ],
-                    "internalType": "struct IZrxTreasury.ProposedAction[]",
-                    "name": "actions",
-                    "type": "tuple[]"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "executionEpoch",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "string",
-                    "name": "description",
-                    "type": "string"
-                },
-                {
-                    "internalType": "bytes32[]",
-                    "name": "operatedPoolIds",
-                    "type": "bytes32[]"
-                }
-            ],
-            "name": "propose",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "proposalId",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "quorumThreshold",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "stakingProxy",
-            "outputs": [
-                {
-                    "internalType": "contract IStaking",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "newProposalThreshold",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "newQuorumThreshold",
-                    "type": "uint256"
-                }
-            ],
-            "name": "updateThresholds",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "votingPeriod",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
+          "indexed": false,
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
         }
-    ],
-    "bytecode": "0x",
-    "deployedBytecode": "0x",
-    "linkReferences": {},
-    "deployedLinkReferences": {}
+      ],
+      "name": "ProposalCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        }
+      ],
+      "name": "ProposalExecuted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "voter",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32[]",
+          "name": "operatedPoolIds",
+          "type": "bytes32[]"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "support",
+          "type": "bool"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "votingPower",
+          "type": "uint256"
+        }
+      ],
+      "name": "VoteCast",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "support",
+          "type": "bool"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "operatedPoolIds",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "castVote",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "support",
+          "type": "bool"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "operatedPoolIds",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "uint8",
+          "name": "v",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "r",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "s",
+          "type": "bytes32"
+        }
+      ],
+      "name": "castVoteBySignature",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "defaultPoolId",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "defaultPoolOperator",
+      "outputs": [
+        {
+          "internalType": "contract DefaultPoolOperator",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IZrxTreasury.ProposedAction[]",
+          "name": "actions",
+          "type": "tuple[]"
+        }
+      ],
+      "name": "execute",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "operatedPoolIds",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "getVotingPower",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "votingPower",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "proposalCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "count",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "proposalThreshold",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IZrxTreasury.ProposedAction[]",
+          "name": "actions",
+          "type": "tuple[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "executionEpoch",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "operatedPoolIds",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "propose",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "proposalId",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "quorumThreshold",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "stakingProxy",
+      "outputs": [
+        {
+          "internalType": "contract IStaking",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "newProposalThreshold",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "newQuorumThreshold",
+          "type": "uint256"
+        }
+      ],
+      "name": "updateThresholds",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "votingPeriod",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
 }

@@ -22,19 +22,53 @@ for (const pkgName of pkgNames) {
 
 const contractsPath = path.join(MONOREPO_ROOT, 'contracts');
 const allArtifactPaths = [];
-for (const dir of contractsDirs) {
-    const artifactsDir = path.join(contractsPath, dir, 'generated-artifacts');
-    if (!fs.existsSync(artifactsDir)) {
-        continue;
+
+function findArtifactsInDirectory(baseDir: string, targetNames: string[]): string[] {
+    const found: string[] = [];
+    
+    function searchRecursive(dir: string) {
+        if (!fs.existsSync(dir)) {
+            return;
+        }
+        
+        const items = fs.readdirSync(dir);
+        for (const item of items) {
+            const itemPath = path.join(dir, item);
+            const stat = fs.statSync(itemPath);
+            
+            if (stat.isDirectory()) {
+                searchRecursive(itemPath);
+            } else if (item.endsWith('.json') && !item.endsWith('.dbg.json')) {
+                const contractName = item.split('.')[0];
+                if (targetNames.includes(contractName)) {
+                    found.push(itemPath);
+                }
+            }
+        }
     }
-    const artifactPaths: string[] = fs
-        .readdirSync(artifactsDir)
-        .filter(artifact => {
-            const artifactWithoutExt = artifact.split('.')[0];
-            return artifactsToPublish.includes(artifactWithoutExt);
-        })
-        .map(artifact => path.join(artifactsDir, artifact));
-    allArtifactPaths.push(...artifactPaths);
+    
+    searchRecursive(baseDir);
+    return found;
+}
+
+for (const dir of contractsDirs) {
+    // Try generated-artifacts first (for Foundry)
+    const generatedArtifactsDir = path.join(contractsPath, dir, 'generated-artifacts');
+    if (fs.existsSync(generatedArtifactsDir)) {
+        const artifactPaths: string[] = fs
+            .readdirSync(generatedArtifactsDir)
+            .filter(artifact => {
+                const artifactWithoutExt = artifact.split('.')[0];
+                return artifactsToPublish.includes(artifactWithoutExt);
+            })
+            .map(artifact => path.join(generatedArtifactsDir, artifact));
+        allArtifactPaths.push(...artifactPaths);
+    } else {
+        // Try artifacts directory (for Hardhat)
+        const hardhatArtifactsDir = path.join(contractsPath, dir, 'artifacts');
+        const foundArtifacts = findArtifactsInDirectory(hardhatArtifactsDir, artifactsToPublish);
+        allArtifactPaths.push(...foundArtifacts);
+    }
 }
 
 if (allArtifactPaths.length < pkgNames.length) {

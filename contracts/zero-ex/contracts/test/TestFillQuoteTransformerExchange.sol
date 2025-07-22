@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.19;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-utils/contracts/src/LibBytes.sol";
 import "@0x/contracts-utils/contracts/src/LibMath.sol";
@@ -41,7 +41,7 @@ contract TestFillQuoteTransformerExchange {
         }
         uint256 protocolFee = PROTOCOL_FEE_MULTIPLIER * tx.gasprice;
         // Return excess protocol fee.
-        msg.sender.transfer(msg.value - protocolFee);
+        payable(msg.sender).transfer(msg.value - protocolFee);
         takerTokenFilledAmount = LibMath.min128(order.takerAmount - takerTokenPreFilledAmount, takerTokenFillAmount);
 
         // Take taker tokens.

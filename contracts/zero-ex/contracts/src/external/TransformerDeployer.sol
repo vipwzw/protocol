@@ -12,9 +12,9 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.30;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/src/Authorizable.sol";
+import "@0x/contracts-utils/contracts/src/Authorizable.sol";
 
 /// @dev A contract with a `die()` function.
 interface IKillable {

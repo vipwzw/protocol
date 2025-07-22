@@ -3,7 +3,7 @@ require("@nomiclabs/hardhat-ethers");
 
 module.exports = {
   solidity: {
-    version: "0.8.30",
+    version: "0.8.28",
     settings: {
       optimizer: {
         enabled: true,
@@ -25,7 +25,7 @@ module.exports = {
   },
   paths: {
     sources: "./src",
-    tests: "./lib/test",
+    tests: "./test",
     cache: "./cache/hardhat",
     artifacts: "./artifacts",
   },

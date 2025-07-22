@@ -20,7 +20,7 @@
         "test:profiler": "SOLIDITY_PROFILER=true run-s build run_mocha profiler:report:html",
         "test:trace": "SOLIDITY_REVERT_TRACE=true run-s build run_mocha",
         "run_mocha": "npx hardhat test",
-        "compile": "forge build",
+        "compile": "forge build && npx hardhat compile",
         "watch": "forge build --watch",
         "clean": "shx rm -rf lib out test/generated-wrappers generated-artifacts generated-wrappers",
         "generate_contract_wrappers": "abi-gen --debug --abis  ${npm_package_config_abis} --output test/generated-wrappers --backend ethers",
@@ -77,7 +77,8 @@
     },
     "dependencies": {
         "@0x/base-contract": "^7.0.0",
-        "@0x/contracts-erc20": "3.3.57",
+        "@0x/contracts-erc20": "*",
+        "@0x/contracts-utils": "*",
         "@0x/protocol-utils": "^11.24.1",
         "@0x/subproviders": "^8.0.1",
         "@0x/types": "^3.3.7",

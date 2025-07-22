@@ -12,9 +12,9 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.30;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/src/interfaces/IOwnable.sol";
+import "@0x/contracts-utils/contracts/src/interfaces/IOwnable.sol";
 
 /// @dev A contract that can execute arbitrary calls from its owner.
 interface IFlashWallet {

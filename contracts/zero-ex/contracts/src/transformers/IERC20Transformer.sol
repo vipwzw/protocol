@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.30;
+pragma solidity ^0.8.0;
 
 /// @dev A transformation callback used in `TransformERC20.transformERC20()`.
 interface IERC20Transformer {

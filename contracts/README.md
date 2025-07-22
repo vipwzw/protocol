@@ -88,7 +88,7 @@ contracts/
 ### 🔧 技术规范
 
 #### Solidity版本
-- 统一使用 Solidity 0.8.30
+- 统一使用 Solidity 0.8.28
 - EVM目标：cancun
 - 优化器：启用，运行次数200-1,000,000
 
@@ -98,7 +98,7 @@ contracts/
 
 ```toml
 [profile.default]
-solc_version = "0.8.30"
+solc_version = "0.8.28"
 optimizer = true
 optimizer_runs = 1000000
 evm_version = "cancun"

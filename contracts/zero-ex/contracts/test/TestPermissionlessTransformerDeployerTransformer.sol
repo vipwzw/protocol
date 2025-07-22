@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.19;
+pragma solidity ^0.8.0;
 
 import "../src/transformers/LibERC20Transformer.sol";
 
@@ -21,7 +21,7 @@ contract TestPermissionlessTransformerDeployerTransformer {
     address payable public immutable deployer;
 
     constructor() public payable {
-        deployer = msg.sender;
+        deployer = payable(msg.sender);
         require(msg.value != CONSTRUCTOR_FAIL_VALUE, "TestTransformerDeployerTransformer/CONSTRUCTOR_FAIL");
     }
 }

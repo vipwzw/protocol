@@ -8,6 +8,10 @@
 |------|------|------|----------|
 | `ci-quick-check.sh` | 快速检查核心问题 | ~30秒 | 日常开发、提交前快速验证 |
 | `ci-local-test.sh` | 完整CI测试套件 | ~5-15分钟 | 提交前最终验证、重要更改 |
+| `compile-all.sh` | 编译所有Foundry+Hardhat包 | ~2-5分钟 | 全量编译验证 |
+| `clean-all.sh` | 清理所有缓存和构建产物 | ~10秒 | 清理构建环境 |
+| `compile-all-foundry.sh` | 编译所有Foundry包 | ~1-3分钟 | Foundry项目编译 |
+| `compile-all-hardhat.sh` | 编译所有Hardhat包 | ~1-3分钟 | Hardhat项目编译 |
 | `lint-contracts.sh` | Solidity代码检查 | ~10秒 | 合约代码修改后 |
 | `lint-typescript.sh` | TypeScript代码检查 | ~20秒 | TS代码修改后 |
 | `lint-prettier.sh` | 代码格式检查 | ~5秒 | 提交前格式验证 |
@@ -41,6 +45,30 @@
 
 # 最快验证模式
 ./scripts/ci-local-test.sh --skip-forge --skip-coverage
+```
+
+### 编译和清理工作流
+
+```bash
+# 编译所有项目 (Foundry + Hardhat)
+./scripts/compile-all.sh
+# 或使用 npm/yarn 命令
+yarn compile:all
+
+# 单独编译 Foundry 项目
+./scripts/compile-all-foundry.sh
+yarn compile:foundry
+
+# 单独编译 Hardhat 项目  
+./scripts/compile-all-hardhat.sh
+yarn compile:hardhat
+
+# 清理所有缓存和构建产物
+./scripts/clean-all.sh
+yarn clean:all
+
+# 清理后重新编译
+yarn clean:all && yarn compile:all
 ```
 
 ## 📖 详细说明

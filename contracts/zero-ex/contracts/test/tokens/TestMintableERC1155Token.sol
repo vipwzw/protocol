@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity 0.8.30;
+pragma solidity ^0.8.0;
 
 interface IERC1155Receiver {
     /// @notice Handle the receipt of a single ERC1155 token type
@@ -105,7 +105,7 @@ contract TestMintableERC1155Token {
 
     function mint(address to, uint256 id, uint256 quantity) external {
         // Grant the items to the caller
-        balances[id][to] = quantity.safeAdd(balances[id][to]);
+        balances[id][to] = quantity + balances[id][to];
 
         // Emit the Transfer/Mint event.
         // the 0x0 source address implies a mint
@@ -149,8 +149,8 @@ contract TestMintableERC1155Token {
         require(from == msg.sender || operatorApproval[from][msg.sender] == true, "INSUFFICIENT_ALLOWANCE");
 
         // perform transfer
-        balances[id][from] = balances[id][from].safeSub(value);
-        balances[id][to] = balances[id][to].safeAdd(value);
+        balances[id][from] = balances[id][from] - value;
+        balances[id][to] = balances[id][to] + value;
 
         emit TransferSingle(msg.sender, from, to, id, value);
 
@@ -201,8 +201,8 @@ contract TestMintableERC1155Token {
             uint256 id = ids[i];
             uint256 value = values[i];
 
-            balances[id][from] = balances[id][from].safeSub(value);
-            balances[id][to] = balances[id][to].safeAdd(value);
+            balances[id][from] = balances[id][from] - value;
+            balances[id][to] = balances[id][to] + value;
         }
         emit TransferBatch(msg.sender, from, to, ids, values);
 

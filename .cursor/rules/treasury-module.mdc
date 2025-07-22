@@ -7,7 +7,7 @@ globs: "contracts/treasury/**"
 
 ## 模块概述
 
-Treasury 模块 ([contracts/treasury/](mdc:contracts/treasury/)) 是完全升级到 Solidity 0.8.19 的参考实现，包含：
+Treasury 模块 ([contracts/treasury/](mdc:contracts/treasury/)) 是完全升级到 Solidity 0.8.28 的参考实现，包含：
 
 ### 核心合约
 - **ZrxTreasury.sol** ([contracts/treasury/contracts/src/ZrxTreasury.sol](mdc:contracts/treasury/contracts/src/ZrxTreasury.sol)) - 主要国库合约
@@ -17,13 +17,13 @@ Treasury 模块 ([contracts/treasury/](mdc:contracts/treasury/)) 是完全升级
 
 ## 现代化特性
 
-### Solidity 0.8.19 升级
+### Solidity 0.8.28 升级
 1. **移除 SafeMath**: 使用内置溢出检查
    ```solidity
    // 旧版本 (0.6.x)
    votingPower = delegatedBalance.safeAdd(balanceDelegatedToDefaultPool).safeDiv(2);
    
-   // 新版本 (0.8.19)
+   // 新版本 (0.8.28)
    votingPower = (delegatedBalance + balanceDelegatedToDefaultPool) / 2;
    ```
 
@@ -68,7 +68,7 @@ remappings = [
     '@0x/contracts-erc20/=../erc20/',
     '@0x/contracts-zero-ex/=../zero-ex/',
 ]
-solc_version = "0.8.19"
+solc_version = "0.8.28"
 optimizer = true
 optimizer_runs = 1000000
 fs_permissions = [
@@ -84,7 +84,7 @@ evm_version = "shanghai"
 ### 依赖管理
 - 使用 v08 版本的 utils 库: `@0x/contracts-utils/contracts/src/v08/`
 - 避免使用 v06 版本的库
-- 确保所有导入都兼容 0.8.19
+- 确保所有导入都兼容 0.8.28
 
 ### 错误处理
 - 使用 `LibRichErrorsV08` 而不是 `LibRichErrorsV06`
@@ -94,7 +94,7 @@ evm_version = "shanghai"
 ### 测试
 - 测试文件应放在 `test/` 目录
 - 使用 Foundry 测试框架
-- 确保所有测试在 0.8.19 下通过
+- 确保所有测试在 0.8.28 下通过
 
 ## 作为参考模板
 

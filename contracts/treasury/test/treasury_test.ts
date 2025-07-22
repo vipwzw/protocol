@@ -24,7 +24,7 @@ import { Web3Wrapper } from '@0x/web3-wrapper';
 import { AbiEncoder } from '@0x/utils';
 
 import { artifacts } from './artifacts';
-import { deployFromFoundryArtifactAsync } from '../src/foundry-types';
+import { deployFromHardhatArtifactAsync } from '../src/hardhat-types';
 import { DefaultPoolOperatorContract, ZrxTreasuryContract, ZrxTreasuryEvents } from './wrappers';
 
 blockchainTests.resets('Treasury governance', env => {
@@ -84,7 +84,7 @@ blockchainTests.resets('Treasury governance', env => {
             stakingArtifacts.TestStaking,
             env.provider,
             env.txDefaults,
-            artifacts as any,
+            stakingArtifacts,
             weth.address,
             zrxVaultContract.address,
         );
@@ -92,7 +92,7 @@ blockchainTests.resets('Treasury governance', env => {
             stakingArtifacts.StakingProxy,
             env.provider,
             env.txDefaults,
-            artifacts as any,
+            stakingArtifacts,
             stakingLogic.address,
         );
         await stakingProxyContract.addAuthorizedAddress(admin).awaitTransactionSuccessAsync();
@@ -129,7 +129,7 @@ blockchainTests.resets('Treasury governance', env => {
             ): Promise<DummyERC20TokenContract> {
                 const web3Wrapper = new Web3Wrapper(provider);
                 const abi = artifacts.DummyERC20Token.abi;
-                const bytecode = artifacts.DummyERC20Token.bytecode.object;
+                const bytecode = artifacts.DummyERC20Token.bytecode;
                 const constructorABI = abi.find((item: any) => item.type === 'constructor');
                 const abiEncoder = AbiEncoder.create(constructorABI.inputs || []);
                 const encodedConstructorArgs = abiEncoder.encode([
@@ -192,6 +192,7 @@ blockchainTests.resets('Treasury governance', env => {
                         const txReceipt = await this._web3Wrapper.awaitTransactionSuccessAsync(txHash);
                         return txReceipt;
                     },
+                    getABIEncodedTransactionData: () => encodedData,
                 };
             }
 
@@ -208,6 +209,7 @@ blockchainTests.resets('Treasury governance', env => {
                         const txReceipt = await this._web3Wrapper.awaitTransactionSuccessAsync(txHash);
                         return txReceipt;
                     },
+                    getABIEncodedTransactionData: () => encodedData,
                 };
             }
 
@@ -256,7 +258,7 @@ blockchainTests.resets('Treasury governance', env => {
             .approve(erc20ProxyContract.address, constants.INITIAL_ERC20_ALLOWANCE)
             .awaitTransactionSuccessAsync({ from: delegator });
 
-        defaultPoolOperator = await deployFromFoundryArtifactAsync<DefaultPoolOperatorContract>(
+        defaultPoolOperator = await deployFromHardhatArtifactAsync<DefaultPoolOperatorContract>(
             DefaultPoolOperatorContract,
             artifacts.DefaultPoolOperator,
             env.provider,
@@ -271,7 +273,7 @@ blockchainTests.resets('Treasury governance', env => {
         nonDefaultPoolId = await createStakingPoolTx.callAsync({ from: poolOperator });
         await createStakingPoolTx.awaitTransactionSuccessAsync({ from: poolOperator });
 
-        treasury = await deployFromFoundryArtifactAsync<ZrxTreasuryContract>(
+        treasury = await deployFromHardhatArtifactAsync<ZrxTreasuryContract>(
             ZrxTreasuryContract,
             artifacts.ZrxTreasury,
             env.provider,
@@ -282,7 +284,7 @@ blockchainTests.resets('Treasury governance', env => {
         );
 
         await zrx.mint(poolOperator, TREASURY_BALANCE).awaitTransactionSuccessAsync();
-        await zrx.transfer(treasury.address, TREASURY_BALANCE).awaitTransactionSuccessAsync();
+        await zrx.transfer(treasury.address, TREASURY_BALANCE).awaitTransactionSuccessAsync({ from: poolOperator });
         actions = [
             {
                 target: zrx.address,

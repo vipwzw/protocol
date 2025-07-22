@@ -1,7 +1,7 @@
 # Solidity 版本升级和代码清理指南
 
 ## 升级状态
-✅ **目标版本**: Solidity 0.8.30 (从0.8.19升级)
+✅ **目标版本**: Solidity 0.8.28 (从0.8.19升级)
 ✅ **EVM版本**: cancun (从shanghai升级)  
 ✅ **编译器**: Foundry 1.2.3+ (统一使用)
 
@@ -24,7 +24,7 @@
 ### 📋 标准升级清单
 
 升级任何模块时必须检查：
-- [ ] 更新 pragma 版本到 0.8.30
+- [ ] 更新 pragma 版本到 0.8.28
 - [ ] 移除 SafeMath 库调用
 - [ ] 移除 `pragma experimental ABIEncoderV2`
 - [ ] 修复构造函数语法 (`public` → 移除)
@@ -62,14 +62,14 @@ contracts/module/
 src = 'contracts/src'      # 统一源码路径
 out = 'out'
 libs = ['lib']
-solc_version = "0.8.30"    # 统一版本
+solc_version = "0.8.28"    # 统一版本
 optimizer = true
 optimizer_runs = 1000000   # 高优化
 evm_version = "cancun"     # 最新EVM
 ```
 
 ### 内存引用 [[memory:3840863]]
-项目已决定将 Solidity 版本标准从 0.8.19 升级到 0.8.30。所有新合约和现有合约升级都应使用 pragma solidity 0.8.30。
+项目已决定将 Solidity 版本标准从 0.8.19 升级到 0.8.28。所有新合约和现有合约升级都应使用 pragma solidity 0.8.28。
 
 ## 代码现代化
 
@@ -79,7 +79,7 @@ evm_version = "cancun"     # 最新EVM
 using SafeMath for uint256;
 votingPower = delegatedBalance.safeAdd(balanceDelegatedToDefaultPool).safeDiv(2);
 
-// ✅ 新版本 (0.8.30)
+// ✅ 新版本 (0.8.28)
 votingPower = (delegatedBalance + balanceDelegatedToDefaultPool) / 2;
 ```
 

@@ -7,8 +7,8 @@ alwaysApply: true
 ## 主要模块
 
 ### 合约目录 ([contracts/](mdc:contracts/))
-- **treasury/** - 国库治理合约 (Solidity 0.8.19)
-- **governance/** - 治理机制合约 (Solidity 0.8.19) 
+- **treasury/** - 国库治理合约 (Solidity 0.8.28)
+- **governance/** - 治理机制合约 (Solidity 0.8.28) 
 - **erc20/** - ERC20 代币相关合约 (混合版本)
 - **zero-ex/** - 0x 协议核心合约 (待升级)
 - **utils/** - 工具库，包含 v06 和 v08 版本
@@ -22,7 +22,7 @@ alwaysApply: true
 ## 编译配置
 
 每个合约模块都有独立的 [foundry.toml](mdc:foundry.toml) 配置：
-- 统一使用 Solidity 0.8.19 (兼容 Apple Silicon)
+- 统一使用 Solidity 0.8.28 (兼容 Apple Silicon)
 - Shanghai EVM 版本
 - 1,000,000 optimizer runs
 

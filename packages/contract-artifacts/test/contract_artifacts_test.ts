@@ -46,7 +46,7 @@ describe('Contract Artifacts', () => {
         for (const [artifactName, artifact] of Object.entries(artifacts)) {
             for (const requiredProperty of REQUIRED_PROPERTIES) {
                 // HACK (xianny): Remove after `compiler` field is added in v3.
-                if (requiredProperty === 'compiler' && artifact.schemaVersion === '2.0.0') {
+                if (requiredProperty === 'compiler' && (artifact as any).schemaVersion === '2.0.0') {
                     continue;
                 }
                 if (requiredProperty === 'compilerOutput.evm.deployedBytecode.object') {

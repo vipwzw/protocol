@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity 0.8.30;
+pragma solidity ^0.8.0;
 
 library LibMathRichErrors {
     // bytes4(keccak256("DivisionByZeroError()"))

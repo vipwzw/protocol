@@ -12,10 +12,10 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.30;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/src/errors/LibRichErrors.sol";
-import "@0x/contracts-utils/src/errors/LibOwnableRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibOwnableRichErrors.sol";
 
 library LibMigrate {
     /// @dev Magic bytes returned by a migrator to indicate success.

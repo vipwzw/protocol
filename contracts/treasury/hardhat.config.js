@@ -1,10 +1,11 @@
 require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-ethers");
 
 const path = require("path");
 
 module.exports = {
   solidity: {
-    version: "0.8.30",
+    version: "0.8.28",
     settings: {
       optimizer: {
         enabled: true,
@@ -13,26 +14,28 @@ module.exports = {
       evmVersion: "cancun",
     },
   },
+  paths: {
+    sources: "./contracts/src",
+    tests: "./test",
+    cache: "./cache/hardhat",
+    artifacts: "./artifacts",
+    root: path.join(__dirname, "."),
+  },
+  // Hardhat 原生支持 import remapping - 避免符号链接！
+  importRemappings: {
+    "@0x/contracts-erc20/": "../erc20/",
+    "@0x/contracts-utils/": "../utils/contracts/",
+  },
   networks: {
     hardhat: {
       chainId: 1337,
       accounts: {
         mnemonic: "concert load couple harbor equip island argue ramp clarify fence smart topic",
       },
-      allowUnlimitedContractSize: true,
-      hardfork: "cancun",
-      gasPrice: 0,
-      initialBaseFeePerGas: 0,
     },
     localhost: {
       url: "http://localhost:8545",
     },
-  },
-  paths: {
-    sources: "./contracts/src",
-    tests: "./lib/test",
-    cache: "./cache/hardhat",
-    artifacts: "./artifacts",
   },
   mocha: {
     timeout: 100000,

@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity 0.8.30;
+pragma solidity ^0.8.0;
 
 import {LibNativeOrder} from "src/features/libs/LibNativeOrder.sol";
 import {IMultiplexFeature} from "src/features/interfaces/IMultiplexFeature.sol";

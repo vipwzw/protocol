@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity 0.8.30;
+pragma solidity ^0.8.0;
 
 interface IStructs {
     /// @dev Stats for a pool that earned rewards.

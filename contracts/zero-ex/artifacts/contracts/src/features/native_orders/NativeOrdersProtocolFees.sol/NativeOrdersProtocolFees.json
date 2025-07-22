@@ -1,0 +1,50 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "NativeOrdersProtocolFees",
+  "sourceName": "contracts/src/features/native_orders/NativeOrdersProtocolFees.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "PROTOCOL_FEE_MULTIPLIER",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getProtocolFeeMultiplier",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "multiplier",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32[]",
+          "name": "poolIds",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "transferProtocolFeesForPools",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -17,7 +17,7 @@
 
 */
 
-pragma solidity 0.8.30;
+pragma solidity ^0.8.0;
 
 interface IStaking {
     /// @dev Statuses that stake can exist in.

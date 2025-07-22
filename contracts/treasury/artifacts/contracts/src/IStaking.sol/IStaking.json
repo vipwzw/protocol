@@ -1,259 +1,259 @@
 {
-    "_format": "hh-sol-artifact-1",
-    "contractName": "IStaking",
-    "sourceName": "contracts/src/IStaking.sol",
-    "abi": [
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IStaking",
+  "sourceName": "contracts/src/IStaking.sol",
+  "abi": [
+    {
+      "inputs": [
         {
-            "inputs": [
-                {
-                    "internalType": "uint32",
-                    "name": "operatorShare",
-                    "type": "uint32"
-                },
-                {
-                    "internalType": "bool",
-                    "name": "addOperatorAsMaker",
-                    "type": "bool"
-                }
-            ],
-            "name": "createStakingPool",
-            "outputs": [
-                {
-                    "internalType": "bytes32",
-                    "name": "poolId",
-                    "type": "bytes32"
-                }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "function"
+          "internalType": "uint32",
+          "name": "operatorShare",
+          "type": "uint32"
         },
         {
-            "inputs": [],
-            "name": "currentEpoch",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "epoch",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "currentEpochStartTimeInSeconds",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "startTime",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "epochDurationInSeconds",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "duration",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "enum IStaking.StakeStatus",
-                    "name": "stakeStatus",
-                    "type": "uint8"
-                }
-            ],
-            "name": "getGlobalStakeByStatus",
-            "outputs": [
-                {
-                    "components": [
-                        {
-                            "internalType": "uint64",
-                            "name": "currentEpoch",
-                            "type": "uint64"
-                        },
-                        {
-                            "internalType": "uint96",
-                            "name": "currentEpochBalance",
-                            "type": "uint96"
-                        },
-                        {
-                            "internalType": "uint96",
-                            "name": "nextEpochBalance",
-                            "type": "uint96"
-                        }
-                    ],
-                    "internalType": "struct IStaking.StoredBalance",
-                    "name": "balance",
-                    "type": "tuple"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "staker",
-                    "type": "address"
-                },
-                {
-                    "internalType": "enum IStaking.StakeStatus",
-                    "name": "stakeStatus",
-                    "type": "uint8"
-                }
-            ],
-            "name": "getOwnerStakeByStatus",
-            "outputs": [
-                {
-                    "components": [
-                        {
-                            "internalType": "uint64",
-                            "name": "currentEpoch",
-                            "type": "uint64"
-                        },
-                        {
-                            "internalType": "uint96",
-                            "name": "currentEpochBalance",
-                            "type": "uint96"
-                        },
-                        {
-                            "internalType": "uint96",
-                            "name": "nextEpochBalance",
-                            "type": "uint96"
-                        }
-                    ],
-                    "internalType": "struct IStaking.StoredBalance",
-                    "name": "balance",
-                    "type": "tuple"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "staker",
-                    "type": "address"
-                },
-                {
-                    "internalType": "bytes32",
-                    "name": "poolId",
-                    "type": "bytes32"
-                }
-            ],
-            "name": "getStakeDelegatedToPoolByOwner",
-            "outputs": [
-                {
-                    "components": [
-                        {
-                            "internalType": "uint64",
-                            "name": "currentEpoch",
-                            "type": "uint64"
-                        },
-                        {
-                            "internalType": "uint96",
-                            "name": "currentEpochBalance",
-                            "type": "uint96"
-                        },
-                        {
-                            "internalType": "uint96",
-                            "name": "nextEpochBalance",
-                            "type": "uint96"
-                        }
-                    ],
-                    "internalType": "struct IStaking.StoredBalance",
-                    "name": "balance",
-                    "type": "tuple"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "bytes32",
-                    "name": "poolId",
-                    "type": "bytes32"
-                }
-            ],
-            "name": "getStakingPool",
-            "outputs": [
-                {
-                    "components": [
-                        {
-                            "internalType": "address",
-                            "name": "operator",
-                            "type": "address"
-                        },
-                        {
-                            "internalType": "uint32",
-                            "name": "operatorShare",
-                            "type": "uint32"
-                        }
-                    ],
-                    "internalType": "struct IStaking.Pool",
-                    "name": "",
-                    "type": "tuple"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "bytes32",
-                    "name": "poolId",
-                    "type": "bytes32"
-                }
-            ],
-            "name": "getTotalStakeDelegatedToPool",
-            "outputs": [
-                {
-                    "components": [
-                        {
-                            "internalType": "uint64",
-                            "name": "currentEpoch",
-                            "type": "uint64"
-                        },
-                        {
-                            "internalType": "uint96",
-                            "name": "currentEpochBalance",
-                            "type": "uint96"
-                        },
-                        {
-                            "internalType": "uint96",
-                            "name": "nextEpochBalance",
-                            "type": "uint96"
-                        }
-                    ],
-                    "internalType": "struct IStaking.StoredBalance",
-                    "name": "balance",
-                    "type": "tuple"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
+          "internalType": "bool",
+          "name": "addOperatorAsMaker",
+          "type": "bool"
         }
-    ],
-    "bytecode": "0x",
-    "deployedBytecode": "0x",
-    "linkReferences": {},
-    "deployedLinkReferences": {}
+      ],
+      "name": "createStakingPool",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "poolId",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "currentEpoch",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "epoch",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "currentEpochStartTimeInSeconds",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "startTime",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "epochDurationInSeconds",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "duration",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "enum IStaking.StakeStatus",
+          "name": "stakeStatus",
+          "type": "uint8"
+        }
+      ],
+      "name": "getGlobalStakeByStatus",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "currentEpoch",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint96",
+              "name": "currentEpochBalance",
+              "type": "uint96"
+            },
+            {
+              "internalType": "uint96",
+              "name": "nextEpochBalance",
+              "type": "uint96"
+            }
+          ],
+          "internalType": "struct IStaking.StoredBalance",
+          "name": "balance",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "staker",
+          "type": "address"
+        },
+        {
+          "internalType": "enum IStaking.StakeStatus",
+          "name": "stakeStatus",
+          "type": "uint8"
+        }
+      ],
+      "name": "getOwnerStakeByStatus",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "currentEpoch",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint96",
+              "name": "currentEpochBalance",
+              "type": "uint96"
+            },
+            {
+              "internalType": "uint96",
+              "name": "nextEpochBalance",
+              "type": "uint96"
+            }
+          ],
+          "internalType": "struct IStaking.StoredBalance",
+          "name": "balance",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "staker",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "poolId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getStakeDelegatedToPoolByOwner",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "currentEpoch",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint96",
+              "name": "currentEpochBalance",
+              "type": "uint96"
+            },
+            {
+              "internalType": "uint96",
+              "name": "nextEpochBalance",
+              "type": "uint96"
+            }
+          ],
+          "internalType": "struct IStaking.StoredBalance",
+          "name": "balance",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "poolId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getStakingPool",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "operator",
+              "type": "address"
+            },
+            {
+              "internalType": "uint32",
+              "name": "operatorShare",
+              "type": "uint32"
+            }
+          ],
+          "internalType": "struct IStaking.Pool",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "poolId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getTotalStakeDelegatedToPool",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "currentEpoch",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint96",
+              "name": "currentEpochBalance",
+              "type": "uint96"
+            },
+            {
+              "internalType": "uint96",
+              "name": "nextEpochBalance",
+              "type": "uint96"
+            }
+          ],
+          "internalType": "struct IStaking.StoredBalance",
+          "name": "balance",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
 }

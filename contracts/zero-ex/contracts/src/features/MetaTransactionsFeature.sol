@@ -12,11 +12,11 @@
   limitations under the License.
 */
 
-pragma solidity 0.8.30;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/src/errors/LibRichErrors.sol";
-import "@0x/contracts-utils/src/LibBytes.sol";
-import "@0x/contracts-utils/src/LibMath.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/LibBytes.sol";
+import "@0x/contracts-utils/contracts/src/LibMath.sol";
 import "../errors/LibMetaTransactionsRichErrors.sol";
 import "../fixins/FixinCommon.sol";
 import "../fixins/FixinReentrancyGuard.sol";
