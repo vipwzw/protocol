@@ -928,7 +928,7 @@ blockchainTests.resets('NativeOrdersFeature', env => {
             );
         });
 
-        // TODO: dekz Hardhat gasPrice opcode is returning 0, cannot influence it up to test this case
+        // TODO: dekz Ganache gasPrice opcode is returning 0, cannot influence it up to test this case
         it.skip('fails if no protocol fee attached', async () => {
             const order = getTestLimitOrder();
             await testUtils.prepareBalancesForOrdersAsync([order]);
