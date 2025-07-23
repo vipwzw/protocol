@@ -1,16 +1,16 @@
-import { Web3Wrapper } from '@0x/web3-wrapper';
+const { ethers } = require('hardhat');
 
 export class BlockchainLifecycle {
-    private _web3Wrapper: Web3Wrapper;
-    private _snapshotIds: number[] = [];
-
-    constructor(web3Wrapper: Web3Wrapper) {
-        this._web3Wrapper = web3Wrapper;
-    }
+    private _snapshotIds: string[] = [];
 
     public async startAsync(): Promise<void> {
-        const snapshotId = await this._web3Wrapper.takeSnapshotAsync();
-        this._snapshotIds.push(snapshotId);
+        try {
+            const snapshotId = await ethers.provider.send('evm_snapshot', []);
+            this._snapshotIds.push(snapshotId);
+        } catch (error) {
+            console.warn('Failed to take snapshot:', error);
+            throw error;
+        }
     }
 
     public async revertAsync(): Promise<void> {
@@ -18,9 +18,14 @@ export class BlockchainLifecycle {
         if (snapshotId === undefined) {
             throw new Error('No snapshot to revert to');
         }
-        const didRevert = await this._web3Wrapper.revertSnapshotAsync(snapshotId);
-        if (!didRevert) {
-            throw new Error(`Revert to snapshot ${snapshotId} failed`);
+        try {
+            const didRevert = await ethers.provider.send('evm_revert', [snapshotId]);
+            if (!didRevert) {
+                throw new Error(`Revert to snapshot ${snapshotId} failed`);
+            }
+        } catch (error) {
+            console.warn('Failed to revert snapshot:', error);
+            throw error;
         }
     }
 }

@@ -19,7 +19,7 @@ export { filterLogs, filterLogsToArguments, verifyEvents, verifyEventsFromLogs }
 export { signingUtils } from './signing_utils';
 export { orderUtils } from './order_utils';
 export { typeEncodingUtils } from './type_encoding_utils';
-export { profiler } from './profiler';
+
 export { randomAddress } from './address_utils';
 export { OrderFactory } from './order_factory';
 export { bytes32Values, testCombinatoriallyWithReferenceFunc, uint256Values } from './combinatorial_utils';

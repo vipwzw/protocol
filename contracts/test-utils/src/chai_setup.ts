@@ -1,18 +1,16 @@
 import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
-import * as dirtyChai from 'dirty-chai';
-import ChaiBigNumber = require('chai-bignumber');
 
-// Set up chai with all plugins
+const chaiAsPromised = require('chai-as-promised');
+const chaiBigNumber = require('chai-bignumber');
+const dirtyChai = require('dirty-chai');
+
 export const chaiSetup = {
     configure(): void {
         chai.config.includeStack = true;
-        // Order matters with chai-as-promised
-        chai.use(ChaiBigNumber());
         chai.use(dirtyChai);
+        chai.use(chaiBigNumber());
         chai.use(chaiAsPromised);
     },
 };
 
-chaiSetup.configure();
-export const expect = chai.expect;
+export const { expect } = chai;

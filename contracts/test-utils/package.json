@@ -12,8 +12,8 @@
     "scripts": {
         "build": "tsc -b",
         "build:ci": "yarn build",
-        "test": "npx mocha test/*.ts --require ts-node/register",
-        "run_mocha": "npx hardhat test",
+        "test": "npx hardhat test",
+        "run_mocha": "npx mocha test/*.ts --require ts-node/register",
         "clean": "shx rm -rf lib",
         "lint": "eslint src test",
         "fix": "eslint --fix src test",
@@ -33,6 +33,9 @@
         "@typescript-eslint/parser": "^5.38.0",
         "eslint": "^8.23.1",
         "eslint-config-prettier": "^8.5.0",
+        "hardhat": "^2.0.0",
+        "@nomicfoundation/hardhat-ethers": "^3.0.0",
+        "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
         "npm-run-all": "^4.1.2",
         "shx": "^0.2.2",
         "ts-node": "^10.9.0",
@@ -42,11 +45,11 @@
         "@0x/assert": "^3.0.36",
         "@0x/base-contract": "^7.0.0",
         "@0x/contract-addresses": "^8.12.0",
-        "@0x/dev-utils": "^5.0.2",
+
         "@0x/json-schemas": "^6.4.4",
         "@0x/order-utils": "^10.4.28",
-        "@0x/sol-profiler": "^4.1.36",
-        "@0x/sol-trace": "^3.0.46",
+
+
         "@0x/subproviders": "^8.0.1",
         "@0x/types": "^3.3.7",
         "@0x/typescript-typings": "^5.3.1",

@@ -1,15 +1,13 @@
-import { chaiSetup } from '@0x/dev-utils';
 import { ZeroExTransaction } from '@0x/types';
 import { BigNumber } from '@0x/utils';
-import * as chai from 'chai';
 import 'mocha';
 
 import { transactionHashUtils } from '../src';
 
 import { constants } from '../src/constants';
+import { chaiSetup, expect } from '../src/chai_setup';
 
 chaiSetup.configure();
-const expect = chai.expect;
 
 describe('0x transaction hashing', () => {
     describe('#getTransactionHashHex', () => {
