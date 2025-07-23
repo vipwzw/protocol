@@ -4,14 +4,27 @@ import "@nomiclabs/hardhat-waffle";
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.28",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 1000000,
+    compilers: [
+      {
+        version: "0.8.28",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1000000,
+          },
+          evmVersion: "cancun",
+        },
       },
-      evmVersion: "cancun",
-    },
+      {
+        version: "0.6.12",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1000000,
+          },
+        },
+      },
+    ],
   },
   networks: {
     hardhat: {
@@ -30,7 +43,7 @@ const config: HardhatUserConfig = {
     },
   },
   paths: {
-    sources: "./src",
+    sources: "./contracts",
     tests: "./test",
     cache: "./cache/hardhat",
     artifacts: "./artifacts",
