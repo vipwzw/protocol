@@ -12,7 +12,7 @@
     "scripts": {
         "build": "yarn tsc -b",
         "build:ci": "yarn build",
-        "test": "npx hardhat test",
+        "test": "npx mocha test/*.ts --require ts-node/register",
         "test:ci": "yarn test",
         "clean": "shx rm -rf lib",
         "publish:private": "yarn build && echo 'gitpkg publish disabled'"
@@ -30,9 +30,10 @@
         "@types/minimatch": "^3.0.5",
         "@types/mocha": "^5.2.7",
         "chai": "^4.0.1",
-                "ethereumjs-util": "^7.1.5",
+        "ethereumjs-util": "^7.1.5",
         "mocha": "^6.2.0",
         "shx": "^0.2.2",
+        "ts-node": "^10.9.0",
         "typescript": "^5.0.0"
     },
     "publishConfig": {
