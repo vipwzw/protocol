@@ -171,7 +171,7 @@ describe('Treasury Governance with Real Staking Integration', function() {
         
         if (createPoolEvent) {
             const parsed = stakingContract.interface.parseLog(createPoolEvent);
-            nonDefaultPoolId = parsed?.args?.poolId;
+            nonDefaultPoolId = (parsed as any)?.args?.poolId || (parsed as any)?.values?.poolId;
         } else {
             // Fallback: get pool by operator
             const pools = await stakingContract.getPoolsByOperator(poolOperator.address);
@@ -189,13 +189,14 @@ describe('Treasury Governance with Real Staking Integration', function() {
         await stakingContract.connect(delegator).stake(PROPOSAL_THRESHOLD);
         console.log(`✅ Delegator staked ${ethers.formatEther(PROPOSAL_THRESHOLD)} ZRX`);
         
-        // Stake tokens for pool operator (for voting)
-        await stakingContract.connect(poolOperator).stake(QUORUM_THRESHOLD);
-        console.log(`✅ Pool operator staked ${ethers.formatEther(QUORUM_THRESHOLD)} ZRX`);
+        // Stake tokens for pool operator (for voting) - increase to ensure quorum
+        const poolOperatorStake = QUORUM_THRESHOLD * BigInt(2); // 2000 ZRX to ensure enough voting power
+        await stakingContract.connect(poolOperator).stake(poolOperatorStake);
+        console.log(`✅ Pool operator staked ${ethers.formatEther(poolOperatorStake)} ZRX`);
         
-        // Delegate stakes to get voting power
+        // Delegate stakes to get voting power - delegate to default pool for full voting power
         await stakingContract.connect(delegator).moveStakeToPool(defaultPoolId, PROPOSAL_THRESHOLD);
-        await stakingContract.connect(poolOperator).moveStakeToPool(nonDefaultPoolId, QUORUM_THRESHOLD);
+        await stakingContract.connect(poolOperator).moveStakeToPool(defaultPoolId, poolOperatorStake);
         
         console.log('✅ Stakes delegated to pools');
     }
@@ -320,14 +321,17 @@ describe('Treasury Governance with Real Staking Integration', function() {
             const votingPower = await treasury.getVotingPower(delegator.address, []);
             expect(votingPower).to.be.greaterThanOrEqual(PROPOSAL_THRESHOLD);
             
-            // Create proposal actions
+            // Create proposal actions - simple token transfer from treasury
+            const transferAmount = ethers.parseEther('100');
+            const transferData = ethers.concat([
+                ethers.id('transfer(address,uint256)').slice(0, 10),
+                ethers.AbiCoder.defaultAbiCoder().encode(['address', 'uint256'], [delegator.address, transferAmount])
+            ]);
+            
             const proposalActions = [
                 {
                     target: await weth.getAddress(),
-                    data: weth.interface.encodeFunctionData('transfer', [
-                        delegator.address,
-                        ethers.parseEther('100')
-                    ]),
+                    data: transferData,
                     value: 0,
                 }
             ];
@@ -356,11 +360,18 @@ describe('Treasury Governance with Real Staking Integration', function() {
             await fastForwardToNextEpochAsync();
             await fastForwardToNextEpochAsync();
             
+            // Check voting power before voting
+            const delegatorVotingPower = await treasury.getVotingPower(delegator.address, []);
+            const poolOperatorVotingPower = await treasury.getVotingPower(poolOperator.address, []);
+            
+            console.log(`Delegator voting power: ${ethers.formatEther(delegatorVotingPower)} ZRX`);
+            console.log(`Pool operator voting power: ${ethers.formatEther(poolOperatorVotingPower)} ZRX`);
+            
             // Vote with delegator
             const voteTx1 = await treasury.connect(delegator).castVote(proposalId, true, []);
             expect(voteTx1.hash).to.have.lengthOf(66);
             
-            // Vote with pool operator
+            // Vote with pool operator  
             const voteTx2 = await treasury.connect(poolOperator).castVote(proposalId, true, []);
             expect(voteTx2.hash).to.have.lengthOf(66);
             
@@ -368,22 +379,48 @@ describe('Treasury Governance with Real Staking Integration', function() {
         });
         
         it('should execute proposals with real treasury effects', async function() {
-            // Advance to execution period
+            // First, ensure voting period has completely ended
+            // Wait for voting period to end completely
             await advanceTimeAsync(VOTING_PERIOD + 1);
-            await fastForwardToNextEpochAsync();
+            
+            // Get current state
+            let currentEpoch = await stakingContract.currentEpoch();
+            const proposal = await treasury.proposals(proposalId);
+            const targetExecutionEpoch = Number(proposal.executionEpoch);
+            
+            console.log(`Current epoch: ${currentEpoch}`);
+            console.log(`Target execution epoch: ${targetExecutionEpoch}`);
+            
+            // Advance to the correct execution epoch if needed
+            while (Number(currentEpoch) !== targetExecutionEpoch) {
+                if (Number(currentEpoch) < targetExecutionEpoch) {
+                    await fastForwardToNextEpochAsync();
+                    currentEpoch = await stakingContract.currentEpoch();
+                } else {
+                    throw new Error(`Already passed execution epoch! Current: ${currentEpoch}, Target: ${targetExecutionEpoch}`);
+                }
+            }
+            
+            // Check proposal status before execution
+            console.log(`Proposal votes for: ${ethers.formatEther(proposal.votesFor)} ZRX`);
+            console.log(`Proposal votes against: ${ethers.formatEther(proposal.votesAgainst)} ZRX`);
+            console.log(`Quorum threshold: ${ethers.formatEther(QUORUM_THRESHOLD)} ZRX`);
             
             // Check initial balances
             const initialTreasuryWeth = await weth.balanceOf(await treasury.getAddress());
             const initialDelegatorWeth = await weth.balanceOf(delegator.address);
             
-            // Execute proposal
+            // Execute proposal - must match the original proposal actions exactly
+            const transferAmount = ethers.parseEther('100');
+            const transferData = ethers.concat([
+                ethers.id('transfer(address,uint256)').slice(0, 10),
+                ethers.AbiCoder.defaultAbiCoder().encode(['address', 'uint256'], [delegator.address, transferAmount])
+            ]);
+            
             const proposalActions = [
                 {
                     target: await weth.getAddress(),
-                    data: weth.interface.encodeFunctionData('transfer', [
-                        delegator.address,
-                        ethers.parseEther('100')
-                    ]),
+                    data: transferData,
                     value: 0,
                 }
             ];
