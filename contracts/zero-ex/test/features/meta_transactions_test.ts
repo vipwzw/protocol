@@ -93,7 +93,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
         return new MetaTransaction({
             signer: _.sampleSize(signers)[0],
             sender,
-            // TODO: dekz Hardhat gasPrice opcode is returning 0, cannot influence it up to test this case
+            // TODO: dekz Ganache gasPrice opcode is returning 0, cannot influence it up to test this case
             minGasPrice: ZERO_AMOUNT,
             maxGasPrice: getRandomInteger('1e9', '100e9'),
             expirationTimeSeconds: new BigNumber(Math.floor(_.now() / 1000) + 360),
@@ -443,7 +443,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
             );
         });
 
-        // Hardhat gasPrice opcode is returning 0, cannot influence it up to test this case
+        // Ganache gasPrice opcode is returning 0, cannot influence it up to test this case
         it.skip('fails if gas price too low', async () => {
             const mtx = getRandomMetaTransaction();
             const mtxHash = mtx.getHash();
@@ -463,7 +463,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
             );
         });
 
-        // Hardhat gasPrice opcode is returning 0, cannot influence it up to test this case
+        // Ganache gasPrice opcode is returning 0, cannot influence it up to test this case
         it.skip('fails if gas price too high', async () => {
             const mtx = getRandomMetaTransaction();
             const mtxHash = mtx.getHash();
