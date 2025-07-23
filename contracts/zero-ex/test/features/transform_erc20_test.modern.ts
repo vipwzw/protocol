@@ -94,48 +94,25 @@ describe('Transform ERC20 Feature - Modern Tests', function() {
         console.log(`✅ ZRX: ${await zrx.getAddress()}`);
         
         // Deploy ZeroEx and TransformERC20 contracts
-        try {
-            const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
-            zeroEx = await ZeroExFactory.deploy(owner.address);
-            await zeroEx.waitForDeployment();
-            console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
-            
-            const TransformERC20Factory = await ethers.getContractFactory('TransformERC20Feature');
-            transformERC20Feature = await TransformERC20Factory.deploy();
-            await transformERC20Feature.waitForDeployment();
-            console.log(`✅ TransformERC20Feature: ${await transformERC20Feature.getAddress()}`);
-            
-            const FlashWalletFactory = await ethers.getContractFactory('FlashWallet');
-            flashWallet = await FlashWalletFactory.deploy();
-            await flashWallet.waitForDeployment();
-            console.log(`✅ FlashWallet: ${await flashWallet.getAddress()}`);
-            
-            const TransformerFactory = await ethers.getContractFactory('TestTransformer');
-            testTransformer = await TransformerFactory.deploy();
-            await testTransformer.waitForDeployment();
-            console.log(`✅ TestTransformer: ${await testTransformer.getAddress()}`);
-            
-        } catch (error) {
-            console.log('⚠️ Transform ERC20 contracts not available, using mocks');
-            
-            // Fallback to mock contracts
-            transformERC20Feature = await TokenFactory.deploy('TransformERC20 Mock', 'TF20', 18, 0);
-            await transformERC20Feature.waitForDeployment();
-            
-            flashWallet = await TokenFactory.deploy('FlashWallet Mock', 'FW', 18, 0);
-            await flashWallet.waitForDeployment();
-            
-            zeroEx = await TokenFactory.deploy('ZeroEx Mock', 'ZX', 18, 0);
-            await zeroEx.waitForDeployment();
-            
-            testTransformer = await TokenFactory.deploy('Transformer Mock', 'TXR', 18, 0);
-            await testTransformer.waitForDeployment();
-            
-            console.log(`✅ TransformERC20 Mock: ${await transformERC20Feature.getAddress()}`);
-            console.log(`✅ FlashWallet Mock: ${await flashWallet.getAddress()}`);
-            console.log(`✅ ZeroEx Mock: ${await zeroEx.getAddress()}`);
-            console.log(`✅ Transformer Mock: ${await testTransformer.getAddress()}`);
-        }
+        const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
+        zeroEx = await ZeroExFactory.deploy(owner.address);
+        await zeroEx.waitForDeployment();
+        console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
+        
+        const TransformERC20Factory = await ethers.getContractFactory('TransformERC20Feature');
+        transformERC20Feature = await TransformERC20Factory.deploy();
+        await transformERC20Feature.waitForDeployment();
+        console.log(`✅ TransformERC20Feature: ${await transformERC20Feature.getAddress()}`);
+        
+        const FlashWalletFactory = await ethers.getContractFactory('FlashWallet');
+        flashWallet = await FlashWalletFactory.deploy();
+        await flashWallet.waitForDeployment();
+        console.log(`✅ FlashWallet: ${await flashWallet.getAddress()}`);
+        
+        const TransformerFactory = await ethers.getContractFactory('TestTransformer');
+        testTransformer = await TransformerFactory.deploy();
+        await testTransformer.waitForDeployment();
+        console.log(`✅ TestTransformer: ${await testTransformer.getAddress()}`);
     }
     
     async function setupTokensAsync(): Promise<void> {

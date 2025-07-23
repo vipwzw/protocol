@@ -71,54 +71,29 @@ describe('ZeroEx Initial Migration - Modern Tests', function() {
     async function deployBootstrapContractsAsync(): Promise<void> {
         console.log('📦 Deploying bootstrap contracts...');
         
-        try {
-            // Deploy BootstrapFeature
-            const BootstrapFactory = await ethers.getContractFactory('BootstrapFeature');
-            bootstrapFeature = await BootstrapFactory.deploy();
-            await bootstrapFeature.waitForDeployment();
-            console.log(`✅ BootstrapFeature: ${await bootstrapFeature.getAddress()}`);
-            
-            // Deploy SimpleFunctionRegistryFeature
-            const RegistryFactory = await ethers.getContractFactory('SimpleFunctionRegistryFeature');
-            simpleFunctionRegistry = await RegistryFactory.deploy();
-            await simpleFunctionRegistry.waitForDeployment();
-            console.log(`✅ SimpleFunctionRegistryFeature: ${await simpleFunctionRegistry.getAddress()}`);
-            
-            // Deploy InitialMigration contract
-            const MigrationFactory = await ethers.getContractFactory('InitialMigration');
-            migrator = await MigrationFactory.deploy(admin.address);
-            await migrator.waitForDeployment();
-            console.log(`✅ InitialMigration: ${await migrator.getAddress()}`);
-            
-            // Deploy ZeroEx main contract
-            const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
-            zeroEx = await ZeroExFactory.deploy(await migrator.getAddress());
-            await zeroEx.waitForDeployment();
-            console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
-            
-        } catch (error) {
-            console.log('⚠️ Some contracts not available, using mocks');
-            
-            // Fallback to mock contracts for testing
-            const MockFactory = await ethers.getContractFactory('DummyERC20Token');
-            
-            bootstrapFeature = await MockFactory.deploy('Bootstrap Mock', 'BS', 18, 0);
-            await bootstrapFeature.waitForDeployment();
-            
-            simpleFunctionRegistry = await MockFactory.deploy('Registry Mock', 'REG', 18, 0);
-            await simpleFunctionRegistry.waitForDeployment();
-            
-            migrator = await MockFactory.deploy('Migrator Mock', 'MIG', 18, 0);
-            await migrator.waitForDeployment();
-            
-            zeroEx = await MockFactory.deploy('ZeroEx Mock', 'ZX', 18, 0);
-            await zeroEx.waitForDeployment();
-            
-            console.log(`✅ Bootstrap Mock: ${await bootstrapFeature.getAddress()}`);
-            console.log(`✅ Registry Mock: ${await simpleFunctionRegistry.getAddress()}`);
-            console.log(`✅ Migrator Mock: ${await migrator.getAddress()}`);
-            console.log(`✅ ZeroEx Mock: ${await zeroEx.getAddress()}`);
-        }
+        // Deploy BootstrapFeature
+        const BootstrapFactory = await ethers.getContractFactory('BootstrapFeature');
+        bootstrapFeature = await BootstrapFactory.deploy();
+        await bootstrapFeature.waitForDeployment();
+        console.log(`✅ BootstrapFeature: ${await bootstrapFeature.getAddress()}`);
+        
+        // Deploy SimpleFunctionRegistryFeature
+        const RegistryFactory = await ethers.getContractFactory('SimpleFunctionRegistryFeature');
+        simpleFunctionRegistry = await RegistryFactory.deploy();
+        await simpleFunctionRegistry.waitForDeployment();
+        console.log(`✅ SimpleFunctionRegistryFeature: ${await simpleFunctionRegistry.getAddress()}`);
+        
+        // Deploy InitialMigration contract
+        const MigrationFactory = await ethers.getContractFactory('InitialMigration');
+        migrator = await MigrationFactory.deploy(admin.address);
+        await migrator.waitForDeployment();
+        console.log(`✅ InitialMigration: ${await migrator.getAddress()}`);
+        
+        // Deploy ZeroEx main contract
+        const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
+        zeroEx = await ZeroExFactory.deploy(await migrator.getAddress());
+        await zeroEx.waitForDeployment();
+        console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
     }
     
     async function performInitialMigrationAsync(): Promise<void> {

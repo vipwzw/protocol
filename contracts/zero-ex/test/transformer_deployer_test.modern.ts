@@ -38,44 +38,23 @@ describe('Transformer Deployer - Modern Tests', function() {
     async function deployContractsAsync(): Promise<void> {
         console.log('📦 Deploying transformer deployer contracts...');
         
-        try {
-            // Deploy ZeroEx first
-            const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
-            zeroEx = await ZeroExFactory.deploy(admin.address);
-            await zeroEx.waitForDeployment();
-            console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
-            
-            // Deploy TransformerDeployer
-            const DeployerFactory = await ethers.getContractFactory('TransformerDeployer');
-            transformerDeployer = await DeployerFactory.deploy();
-            await transformerDeployer.waitForDeployment();
-            console.log(`✅ TransformerDeployer: ${await transformerDeployer.getAddress()}`);
-            
-            // Deploy a test transformer
-            const TransformerFactory = await ethers.getContractFactory('TestTransformer');
-            testTransformer = await TransformerFactory.deploy();
-            await testTransformer.waitForDeployment();
-            console.log(`✅ TestTransformer: ${await testTransformer.getAddress()}`);
-            
-        } catch (error) {
-            console.log('⚠️ Transformer contracts not available, using mocks');
-            
-            // Fallback to mock contracts
-            const MockFactory = await ethers.getContractFactory('DummyERC20Token');
-            
-            zeroEx = await MockFactory.deploy('ZeroEx Mock', 'ZX', 18, 0);
-            await zeroEx.waitForDeployment();
-            
-            transformerDeployer = await MockFactory.deploy('Deployer Mock', 'DEP', 18, 0);
-            await transformerDeployer.waitForDeployment();
-            
-            testTransformer = await MockFactory.deploy('Transformer Mock', 'TF', 18, 0);
-            await testTransformer.waitForDeployment();
-            
-            console.log(`✅ ZeroEx Mock: ${await zeroEx.getAddress()}`);
-            console.log(`✅ Deployer Mock: ${await transformerDeployer.getAddress()}`);
-            console.log(`✅ Transformer Mock: ${await testTransformer.getAddress()}`);
-        }
+        // Deploy ZeroEx first
+        const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
+        zeroEx = await ZeroExFactory.deploy(admin.address);
+        await zeroEx.waitForDeployment();
+        console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
+        
+        // Deploy TransformerDeployer
+        const DeployerFactory = await ethers.getContractFactory('TransformerDeployer');
+        transformerDeployer = await DeployerFactory.deploy();
+        await transformerDeployer.waitForDeployment();
+        console.log(`✅ TransformerDeployer: ${await transformerDeployer.getAddress()}`);
+        
+        // Deploy a test transformer
+        const TransformerFactory = await ethers.getContractFactory('TestTransformer');
+        testTransformer = await TransformerFactory.deploy();
+        await testTransformer.waitForDeployment();
+        console.log(`✅ TestTransformer: ${await testTransformer.getAddress()}`);
     }
     
     function createTransformerDeployment(overrides: any = {}): any {

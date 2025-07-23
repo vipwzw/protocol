@@ -92,30 +92,15 @@ describe('Native Orders Feature - Modern Tests', function() {
         console.log(`✅ Taker Token: ${await takerToken.getAddress()}`);
         
         // Deploy ZeroEx contracts
-        try {
-            const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
-            zeroEx = await ZeroExFactory.deploy(admin.address);
-            await zeroEx.waitForDeployment();
-            console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
-            
-            const NativeOrdersFactory = await ethers.getContractFactory('NativeOrdersFeature');
-            nativeOrdersFeature = await NativeOrdersFactory.deploy();
-            await nativeOrdersFeature.waitForDeployment();
-            console.log(`✅ NativeOrdersFeature: ${await nativeOrdersFeature.getAddress()}`);
-            
-        } catch (error) {
-            console.log('⚠️ Native orders contracts not available, using mocks');
-            
-            // Fallback to mock contracts
-            zeroEx = await TokenFactory.deploy('ZeroEx Mock', 'ZX', 18, 0);
-            await zeroEx.waitForDeployment();
-            
-            nativeOrdersFeature = await TokenFactory.deploy('NativeOrders Mock', 'NO', 18, 0);
-            await nativeOrdersFeature.waitForDeployment();
-            
-            console.log(`✅ ZeroEx Mock: ${await zeroEx.getAddress()}`);
-            console.log(`✅ NativeOrders Mock: ${await nativeOrdersFeature.getAddress()}`);
-        }
+        const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
+        zeroEx = await ZeroExFactory.deploy(admin.address);
+        await zeroEx.waitForDeployment();
+        console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
+        
+        const NativeOrdersFactory = await ethers.getContractFactory('NativeOrdersFeature');
+        nativeOrdersFeature = await NativeOrdersFactory.deploy();
+        await nativeOrdersFeature.waitForDeployment();
+        console.log(`✅ NativeOrdersFeature: ${await nativeOrdersFeature.getAddress()}`);
     }
     
     async function setupTokensAsync(): Promise<void> {

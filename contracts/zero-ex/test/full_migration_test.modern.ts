@@ -76,88 +76,48 @@ describe('ZeroEx Full Migration - Modern Tests', function() {
     async function deployMigrationContractsAsync(): Promise<void> {
         console.log('📦 Deploying migration contracts...');
         
-        try {
-            // Deploy BootstrapFeature first
-            const BootstrapFactory = await ethers.getContractFactory('BootstrapFeature');
-            bootstrapFeature = await BootstrapFactory.deploy();
-            await bootstrapFeature.waitForDeployment();
-            console.log(`✅ BootstrapFeature: ${await bootstrapFeature.getAddress()}`);
-            
-            // Deploy migration contract
-            const MigrationFactory = await ethers.getContractFactory('FullMigration');
-            migrator = await MigrationFactory.deploy(admin.address);
-            await migrator.waitForDeployment();
-            console.log(`✅ FullMigration: ${await migrator.getAddress()}`);
-            
-            // Deploy ZeroEx main contract with bootstrap
-            const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
-            zeroEx = await ZeroExFactory.deploy(await migrator.getAddress());
-            await zeroEx.waitForDeployment();
-            console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
-            
-        } catch (error) {
-            console.log('⚠️ Some contracts not available, using mocks');
-            
-            // Fallback to mock contracts for testing
-            const MockFactory = await ethers.getContractFactory('DummyERC20Token');
-            
-            zeroEx = await MockFactory.deploy('ZeroEx Mock', 'ZX', 18, 0);
-            await zeroEx.waitForDeployment();
-            
-            migrator = await MockFactory.deploy('Migrator Mock', 'MIG', 18, 0);
-            await migrator.waitForDeployment();
-            
-            bootstrapFeature = await MockFactory.deploy('Bootstrap Mock', 'BS', 18, 0);
-            await bootstrapFeature.waitForDeployment();
-            
-            console.log(`✅ ZeroEx Mock: ${await zeroEx.getAddress()}`);
-            console.log(`✅ Migrator Mock: ${await migrator.getAddress()}`);
-        }
+        // Deploy BootstrapFeature first
+        const BootstrapFactory = await ethers.getContractFactory('BootstrapFeature');
+        bootstrapFeature = await BootstrapFactory.deploy();
+        await bootstrapFeature.waitForDeployment();
+        console.log(`✅ BootstrapFeature: ${await bootstrapFeature.getAddress()}`);
+        
+        // Deploy migration contract
+        const MigrationFactory = await ethers.getContractFactory('FullMigration');
+        migrator = await MigrationFactory.deploy(admin.address);
+        await migrator.waitForDeployment();
+        console.log(`✅ FullMigration: ${await migrator.getAddress()}`);
+        
+        // Deploy ZeroEx main contract with bootstrap
+        const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
+        zeroEx = await ZeroExFactory.deploy(await migrator.getAddress());
+        await zeroEx.waitForDeployment();
+        console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
     }
     
     async function deployFeatureContractsAsync(): Promise<void> {
         console.log('🔧 Deploying feature contracts...');
         
-        try {
-            // Deploy core features
-            const OwnableFactory = await ethers.getContractFactory('OwnableFeature');
-            ownableFeature = await OwnableFactory.deploy();
-            await ownableFeature.waitForDeployment();
-            console.log(`✅ OwnableFeature: ${await ownableFeature.getAddress()}`);
-            
-            const MetaTxFactory = await ethers.getContractFactory('MetaTransactionsFeature');
-            metaTransactionsFeature = await MetaTxFactory.deploy();
-            await metaTransactionsFeature.waitForDeployment();
-            console.log(`✅ MetaTransactionsFeature: ${await metaTransactionsFeature.getAddress()}`);
-            
-            const NativeOrdersFactory = await ethers.getContractFactory('NativeOrdersFeature');
-            nativeOrdersFeature = await NativeOrdersFactory.deploy();
-            await nativeOrdersFeature.waitForDeployment();
-            console.log(`✅ NativeOrdersFeature: ${await nativeOrdersFeature.getAddress()}`);
-            
-            const TransformFactory = await ethers.getContractFactory('TransformERC20Feature');
-            transformERC20Feature = await TransformFactory.deploy();
-            await transformERC20Feature.waitForDeployment();
-            console.log(`✅ TransformERC20Feature: ${await transformERC20Feature.getAddress()}`);
-            
-        } catch (error) {
-            console.log('⚠️ Feature contracts not available, using mocks');
-            
-            // Fallback to mocks
-            const MockFactory = await ethers.getContractFactory('DummyERC20Token');
-            
-            ownableFeature = await MockFactory.deploy('Ownable Mock', 'OWN', 18, 0);
-            await ownableFeature.waitForDeployment();
-            
-            metaTransactionsFeature = await MockFactory.deploy('MetaTx Mock', 'MTX', 18, 0);
-            await metaTransactionsFeature.waitForDeployment();
-            
-            nativeOrdersFeature = await MockFactory.deploy('NativeOrders Mock', 'NO', 18, 0);
-            await nativeOrdersFeature.waitForDeployment();
-            
-            transformERC20Feature = await MockFactory.deploy('Transform Mock', 'TF', 18, 0);
-            await transformERC20Feature.waitForDeployment();
-        }
+        // Deploy core features
+        const OwnableFactory = await ethers.getContractFactory('OwnableFeature');
+        ownableFeature = await OwnableFactory.deploy();
+        await ownableFeature.waitForDeployment();
+        console.log(`✅ OwnableFeature: ${await ownableFeature.getAddress()}`);
+        
+        const MetaTxFactory = await ethers.getContractFactory('MetaTransactionsFeature');
+        metaTransactionsFeature = await MetaTxFactory.deploy();
+        await metaTransactionsFeature.waitForDeployment();
+        console.log(`✅ MetaTransactionsFeature: ${await metaTransactionsFeature.getAddress()}`);
+        
+        const NativeOrdersFactory = await ethers.getContractFactory('NativeOrdersFeature');
+        nativeOrdersFeature = await NativeOrdersFactory.deploy();
+        await nativeOrdersFeature.waitForDeployment();
+        console.log(`✅ NativeOrdersFeature: ${await nativeOrdersFeature.getAddress()}`);
+        
+        const TransformFactory = await ethers.getContractFactory('TransformERC20Feature');
+        transformERC20Feature = await TransformFactory.deploy();
+        await transformERC20Feature.waitForDeployment();
+        console.log(`✅ TransformERC20Feature: ${await transformERC20Feature.getAddress()}`);
     }
     
     async function performMigrationAsync(): Promise<void> {

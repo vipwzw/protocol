@@ -38,44 +38,23 @@ describe('Ownable Feature - Modern Tests', function() {
     async function deployContractsAsync(): Promise<void> {
         console.log('📦 Deploying ownable contracts...');
         
-        try {
-            // Deploy ZeroEx first
-            const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
-            zeroEx = await ZeroExFactory.deploy(owner.address);
-            await zeroEx.waitForDeployment();
-            console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
-            
-            // Deploy OwnableFeature
-            const OwnableFactory = await ethers.getContractFactory('OwnableFeature');
-            ownableFeature = await OwnableFactory.deploy();
-            await ownableFeature.waitForDeployment();
-            console.log(`✅ OwnableFeature: ${await ownableFeature.getAddress()}`);
-            
-            // Deploy test contract that uses ownership
-            const TestContractFactory = await ethers.getContractFactory('TestOwnableContract');
-            testContract = await TestContractFactory.deploy(owner.address);
-            await testContract.waitForDeployment();
-            console.log(`✅ TestOwnableContract: ${await testContract.getAddress()}`);
-            
-        } catch (error) {
-            console.log('⚠️ Ownable contracts not available, using mocks');
-            
-            // Fallback to mock contracts
-            const MockFactory = await ethers.getContractFactory('DummyERC20Token');
-            
-            zeroEx = await MockFactory.deploy('ZeroEx Mock', 'ZX', 18, 0);
-            await zeroEx.waitForDeployment();
-            
-            ownableFeature = await MockFactory.deploy('Ownable Mock', 'OWN', 18, 0);
-            await ownableFeature.waitForDeployment();
-            
-            testContract = await MockFactory.deploy('TestOwnable Mock', 'TOW', 18, 0);
-            await testContract.waitForDeployment();
-            
-            console.log(`✅ ZeroEx Mock: ${await zeroEx.getAddress()}`);
-            console.log(`✅ Ownable Mock: ${await ownableFeature.getAddress()}`);
-            console.log(`✅ TestOwnable Mock: ${await testContract.getAddress()}`);
-        }
+        // Deploy ZeroEx first
+        const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
+        zeroEx = await ZeroExFactory.deploy(owner.address);
+        await zeroEx.waitForDeployment();
+        console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
+        
+        // Deploy OwnableFeature
+        const OwnableFactory = await ethers.getContractFactory('OwnableFeature');
+        ownableFeature = await OwnableFactory.deploy();
+        await ownableFeature.waitForDeployment();
+        console.log(`✅ OwnableFeature: ${await ownableFeature.getAddress()}`);
+        
+        // Deploy test contract that uses ownership
+        const TestContractFactory = await ethers.getContractFactory('TestOwnableContract');
+        testContract = await TestContractFactory.deploy(owner.address);
+        await testContract.waitForDeployment();
+        console.log(`✅ TestOwnableContract: ${await testContract.getAddress()}`);
     }
     
     describe('🏗️ Contract Deployment', function() {

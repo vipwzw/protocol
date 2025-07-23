@@ -43,22 +43,11 @@ describe('LibSignature - Modern Tests', function() {
     async function deploySignatureContractsAsync(): Promise<void> {
         console.log('📦 Deploying signature contracts...');
         
-        try {
-            // Try to deploy actual LibSignature test contract
-            const LibSignatureFactory = await ethers.getContractFactory('TestLibSignature');
-            libSignature = await LibSignatureFactory.deploy();
-            await libSignature.waitForDeployment();
-            console.log(`✅ TestLibSignature: ${await libSignature.getAddress()}`);
-            
-        } catch (error) {
-            console.log('⚠️ LibSignature contract not available, using mock');
-            
-            // Fallback to a simple mock contract
-            const MockFactory = await ethers.getContractFactory('DummyERC20Token');
-            libSignature = await MockFactory.deploy('LibSignature Mock', 'SIG', 18, 0);
-            await libSignature.waitForDeployment();
-            console.log(`✅ LibSignature Mock: ${await libSignature.getAddress()}`);
-        }
+        // Deploy actual LibSignature test contract
+        const LibSignatureFactory = await ethers.getContractFactory('TestLibSignature');
+        libSignature = await LibSignatureFactory.deploy();
+        await libSignature.waitForDeployment();
+        console.log(`✅ TestLibSignature: ${await libSignature.getAddress()}`);
     }
     
     async function createMessageHash(message: string): Promise<string> {
