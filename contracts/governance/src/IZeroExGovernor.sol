@@ -19,8 +19,8 @@
 pragma solidity ^0.8.0;
 
 import "./SecurityCouncil.sol";
-import "@openzeppelin/governance/IGovernor.sol";
-import "@openzeppelin/governance/extensions/IGovernorTimelock.sol";
+import "@openzeppelin/contracts/governance/IGovernor.sol";
+import "@openzeppelin/contracts/governance/extensions/IGovernorTimelock.sol";
 
 abstract contract IZeroExGovernor is SecurityCouncil, IGovernor, IGovernorTimelock {
     function token() public virtual returns (address);

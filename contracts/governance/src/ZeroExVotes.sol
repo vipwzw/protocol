@@ -18,13 +18,13 @@
 */
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/utils/math/SafeCast.sol";
-import "@openzeppelin/utils/math/Math.sol";
-import "@openzeppelin/token/ERC20/ERC20.sol";
-import "@openzeppelin/governance/utils/IVotes.sol";
-import "@openzeppelin-contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin-contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/governance/utils/IVotes.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./IZeroExVotes.sol";
 
 contract ZeroExVotes is IZeroExVotes, Initializable, OwnableUpgradeable, UUPSUpgradeable {

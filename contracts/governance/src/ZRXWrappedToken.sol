@@ -18,11 +18,11 @@
 */
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/token/ERC20/ERC20.sol";
-import "@openzeppelin/token/ERC20/extensions/draft-ERC20Permit.sol";
-import "@openzeppelin/token/ERC20/extensions/ERC20Wrapper.sol";
-import "@openzeppelin/governance/utils/IVotes.sol";
-import "@openzeppelin/utils/math/SafeCast.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol";
+import "@openzeppelin/contracts/governance/utils/IVotes.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./IZeroExVotes.sol";
 import "./CallWithGas.sol";
 

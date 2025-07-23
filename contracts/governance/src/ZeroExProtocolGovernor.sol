@@ -20,11 +20,11 @@ pragma solidity ^0.8.0;
 
 import "./SecurityCouncil.sol";
 import "./ZeroExTimelock.sol";
-import "@openzeppelin/governance/Governor.sol";
-import "@openzeppelin/governance/extensions/GovernorSettings.sol";
-import "@openzeppelin/governance/extensions/GovernorCountingSimple.sol";
-import "@openzeppelin/governance/extensions/GovernorVotes.sol";
-import "@openzeppelin/governance/extensions/GovernorTimelockControl.sol";
+import "@openzeppelin/contracts/governance/Governor.sol";
+import "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
+import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
+import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
+import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 
 contract ZeroExProtocolGovernor is
     SecurityCouncil,
