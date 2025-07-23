@@ -53,9 +53,9 @@ describe('meta_transactions', () => {
             const actual = await mtx.clone({ signer: providerMaker }).getSignatureWithProviderAsync(provider);
             const expected = {
                 signatureType: SignatureType.EthSign,
-                r: '0xbb831776a2d6639d4e4d1641f158773ce202881bac74dddb2672d5ff5521ef5c',
-                s: '0x746a61ccfdfee3afae15f4a3bd67ded2ce555d89d482940a844eeffaede2ee8a',
-                v: 27,
+                r: '0xbf19b5ef62df8c8315727087e9d8562e3b88d32452ac8193e3ed9f5354a220ef',
+                s: '0x512387e81b2c03e4bc4cf72ee5293c86498c17fde3ae89f18dd0705076a7f472',
+                v: 28,
             };
             expect(actual).to.deep.eq(expected);
         });

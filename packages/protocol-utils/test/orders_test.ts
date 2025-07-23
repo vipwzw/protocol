@@ -55,9 +55,9 @@ describe('orders', () => {
             const actual = await order.clone({ maker: providerMaker }).getSignatureWithProviderAsync(provider);
             const expected = {
                 signatureType: SignatureType.EthSign,
-                r: '0xbd5bb603cc48c5f777f0d34c2012aa779942ac48c355d30d85acc108819e8a8f',
-                s: '0x576e17adc9482fb5eda95cd4543e5ed4978990d2caab4c6f92e09e2fa6157d7b',
-                v: 27,
+                r: '0x5d4fe9b4c8f94efc46ef9e7e3f996c238f9c930fd5c03014ec6db6d4d18a34e5',
+                s: '0x0949269d29524aec1ba5b19236c392a3d1866ca39bb8c7b6345e90a3fbf404fc',
+                v: 28,
             };
             expect(actual).to.deep.eq(expected);
         });
@@ -117,9 +117,9 @@ describe('orders', () => {
             const actual = await order.clone({ maker: providerMaker }).getSignatureWithProviderAsync(provider);
             const expected = {
                 signatureType: SignatureType.EthSign,
-                r: '0xed555259efe38e2d679f7bc18385e51ce158576ced6c11630f67ba37b3e59a29',
-                s: '0x769211cf3e86b254e3755e1dcf459f5b362ca1c42ec3cf08841d90cb44f2a8e4',
-                v: 27,
+                r: '0xba231f67168d6d1fd2b83e0a3a6b1663ec493b98a8dbe34689c8e8171972522f',
+                s: '0x47023a5f73b5f638e9a138de26b35e59847680bee78af0c8251de532e7c39d8b',
+                v: 28,
             };
             expect(actual).to.deep.eq(expected);
         });
