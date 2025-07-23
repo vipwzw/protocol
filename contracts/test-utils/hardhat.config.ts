@@ -1,7 +1,8 @@
-require("@nomiclabs/hardhat-waffle");
-require("@nomiclabs/hardhat-ethers");
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-waffle";
 
-module.exports = {
+const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.28",
     settings: {
@@ -17,6 +18,7 @@ module.exports = {
       chainId: 1337,
       accounts: {
         mnemonic: "concert load couple harbor equip island argue ramp clarify fence smart topic",
+        count: 20,
       },
     },
     localhost: {
@@ -24,12 +26,14 @@ module.exports = {
     },
   },
   paths: {
-    sources: "./contracts",
+    sources: "./src",
     tests: "./test",
-    cache: "./cache",
+    cache: "./cache/hardhat",
     artifacts: "./artifacts",
   },
   mocha: {
     timeout: 100000,
   },
-}; 
+};
+
+export default config; 
