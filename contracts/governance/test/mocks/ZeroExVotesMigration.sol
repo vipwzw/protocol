@@ -19,8 +19,8 @@
 pragma solidity ^0.8.0;
 
 import {ZeroExVotes} from "../../src/ZeroExVotes.sol";
-import {SafeCast} from "@openzeppelin/utils/math/SafeCast.sol";
-import {Math} from "@openzeppelin/utils/math/Math.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {CubeRoot} from "./CubeRoot.sol";
 
 contract ZeroExVotesMigration is ZeroExVotes {

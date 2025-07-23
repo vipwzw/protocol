@@ -23,8 +23,8 @@ import "../../src/IZeroExGovernor.sol";
 import "../../src/ZeroExTimelock.sol";
 import "../../src/ZeroExProtocolGovernor.sol";
 import "../../src/ZRXWrappedToken.sol";
-import "@openzeppelin/token/ERC20/ERC20.sol";
-import "@openzeppelin/mocks/CallReceiverMock.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/mocks/CallReceiverMock.sol";
 
 abstract contract ZeroExGovernorBaseTest is BaseTest {
     IERC20 public token;

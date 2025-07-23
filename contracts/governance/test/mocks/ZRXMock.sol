@@ -20,7 +20,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "@openzeppelin/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // TODO remove this contract and work with an instance of ZRX compiled with 0.4
 // when the following is resolved https://linear.app/0xproject/issue/PRO-44/zrx-artifact-is-incompatible-with-foundry

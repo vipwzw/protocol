@@ -21,8 +21,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import "@openzeppelin/token/ERC20/ERC20.sol";
-import "@openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./mocks/ZRXMock.sol";
 import "../src/ZRXWrappedToken.sol";
 import "../src/ZeroExVotes.sol";

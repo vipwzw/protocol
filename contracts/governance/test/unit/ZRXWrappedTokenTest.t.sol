@@ -20,7 +20,7 @@ pragma solidity ^0.8.0;
 
 import "../BaseTest.t.sol";
 import "../../src/ZRXWrappedToken.sol";
-import "@openzeppelin/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract ZRXWrappedTokenTest is BaseTest {
     IERC20 private token;
