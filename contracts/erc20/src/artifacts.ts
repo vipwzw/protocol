@@ -4,10 +4,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Helper function to load artifacts
+// Helper function to load artifacts from Foundry out directory
 function loadArtifact(name: string) {
     try {
-        const artifactPath = path.join(__dirname, '../artifacts/src', `${name}.sol`, `${name}.json`);
+        const artifactPath = path.join(__dirname, '../out', `${name}.sol`, `${name}.json`);
         return JSON.parse(fs.readFileSync(artifactPath, 'utf8'));
     } catch (error) {
         console.warn(`Could not load artifact for ${name}:`, error);
@@ -16,6 +16,7 @@ function loadArtifact(name: string) {
 }
 
 // Export main contract artifacts
+export const DummyERC20Token = loadArtifact('DummyERC20Token');
 export const ZRXToken = loadArtifact('ZRXToken');
 export const WETH9 = loadArtifact('WETH9');
 export const IERC20Token = loadArtifact('IERC20Token');

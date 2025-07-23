@@ -35,7 +35,7 @@ export { HARDHAT_PRIVATE_KEYS_STRINGS as TESTRPC_PRIVATE_KEYS_STRINGS };
 const MAX_UINT256 = new BigNumber(2).pow(256).minus(1);
 
 // Default gas price for tests
-export const DEFAULT_GAS_PRICE = 0;
+export const DEFAULT_GAS_PRICE = 2000000000; // 2 gwei for Hardhat network
 
 export const constants = {
     BASE_16: 16,
@@ -89,7 +89,7 @@ export const constants = {
     ONE_ETHER: new BigNumber(1e18),
     EIP712_DOMAIN_NAME: '0x Protocol',
     EIP712_DOMAIN_VERSION: '3.0.0',
-    DEFAULT_GAS_PRICE: 1,
+    DEFAULT_GAS_PRICE: 2000000000, // 2 gwei for Hardhat network
     NUM_TEST_ACCOUNTS: 20,
     PPM_DENOMINATOR: 1e6,
     PPM_100_PERCENT: 1e6,

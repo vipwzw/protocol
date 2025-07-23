@@ -1,5 +1,5 @@
 import { Web3Wrapper } from '@0x/web3-wrapper';
-const { ethers } = require('hardhat');
+const hardhat = require('hardhat');
 import * as _ from 'lodash';
 
 import { constants } from './constants';
@@ -10,8 +10,8 @@ export const txDefaults = {
     gasPrice: constants.DEFAULT_GAS_PRICE,
 };
 
-// Use Hardhat's provider directly
-const provider = ethers.provider;
+// Use Hardhat's raw JSON-RPC provider instead of ethers provider
+const provider = hardhat.network.provider;
 const web3Wrapper = new Web3Wrapper(provider as any);
 
 export { provider, web3Wrapper };

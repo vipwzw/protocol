@@ -94,9 +94,13 @@ export class StandardBlockchainTestsEnvironmentSingleton extends BlockchainTests
 
     // Create or retrieve the singleton instance of this class.
     public static create(): StandardBlockchainTestsEnvironmentSingleton {
-        if (StandardBlockchainTestsEnvironmentSingleton._instance === undefined) {
-            StandardBlockchainTestsEnvironmentSingleton._instance = new StandardBlockchainTestsEnvironmentSingleton();
-        }
+        console.log('🔧 DEBUG: StandardBlockchainTestsEnvironmentSingleton.create() called!');
+        console.log('🔧 DEBUG: Current instance exists?', StandardBlockchainTestsEnvironmentSingleton._instance !== undefined);
+        
+        // Force create new instance for debugging
+        StandardBlockchainTestsEnvironmentSingleton._instance = new StandardBlockchainTestsEnvironmentSingleton();
+        console.log('🔧 DEBUG: New instance created');
+        
         return StandardBlockchainTestsEnvironmentSingleton._instance;
     }
 
@@ -113,9 +117,22 @@ export class StandardBlockchainTestsEnvironmentSingleton extends BlockchainTests
     protected constructor() {
         super();
         this.blockchainLifecycle = new BlockchainLifecycle();
-        this.provider = provider;
+        
+        // Force use of hardhat.network.provider directly
+        const hardhat = require('hardhat');
+        const { Web3Wrapper } = require('@0x/web3-wrapper');
+        
+        const correctProvider = hardhat.network.provider;
+        const correctWeb3Wrapper = new Web3Wrapper(correctProvider);
+        
+        console.log('');
+        console.log('🔧 DEBUG: StandardBlockchainTestsEnvironmentSingleton constructor called!');
+        console.log('🔧 DEBUG: Using correct provider constructor:', correctProvider.constructor.name);
+        console.log('');
+        
+        this.provider = correctProvider;
         this.txDefaults = txDefaults;
-        this.web3Wrapper = web3Wrapper;
+        this.web3Wrapper = correctWeb3Wrapper;
         // Initialize with Hardhat default accounts
         this.accounts = [
             '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
