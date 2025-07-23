@@ -20,9 +20,7 @@
         "test:ganache:legacy": "npx mocha test-ganache/treasury_test.ts --require ts-node/register --timeout 60000",
         "test:hardhat": "npx hardhat compile && npx hardhat test test-hardhat/*.ts",
         "test:all": "run-s test:forge test:ganache test:hardhat",
-        "ganache:start": "npx ganache --port 7545 --chainId 1337 --deterministic --accounts 10 --hardfork london --gasLimit 12000000 --mnemonic 'test test test test test test test test test test test junk' --quiet &",
-        "ganache:stop": "pkill -f ganache || true",
-        "ganache:restart": "yarn ganache:stop && sleep 2 && yarn ganache:start",
+
         "rebuild_and_test": "run-s build test",
         "run_mocha": "npx hardhat test",
         "compile": "forge build && npx hardhat compile",

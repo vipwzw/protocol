@@ -1,24 +1,51 @@
 import { expect } from 'chai';
 import { Web3Wrapper } from '@0x/web3-wrapper';
 import { BigNumber } from '@0x/utils';
-
-import './setup'; // 导入 setup 文件，自动启动/停止 Ganache
-import { getWeb3Wrapper } from './setup';
+import Ganache from 'ganache';
 
 describe('Ganache Auto Start/Stop', () => {
     let web3Wrapper: Web3Wrapper;
     let accounts: string[];
+    let ganacheServer: any;
 
     before(async function() {
         this.timeout(30000);
         
-        console.log('📦 Testing auto-Ganache functionality...');
+        console.log('🚀 Starting in-process Ganache...');
         
-        // 获取自动启动的 Ganache 连接
-        web3Wrapper = getWeb3Wrapper();
+        // 启动进程内 Ganache
+        ganacheServer = Ganache.server({
+            wallet: {
+                mnemonic: 'test test test test test test test test test test test test junk',
+                totalAccounts: 10,
+                defaultBalance: 1000, // 1000 ETH
+            },
+            chain: {
+                chainId: 1337,
+            },
+            logging: {
+                quiet: true,
+            },
+        });
+        
+        await ganacheServer.listen(7545);
+        
+        // 连接到 Ganache
+        const provider = ganacheServer.provider;
+        web3Wrapper = new Web3Wrapper(provider);
         accounts = await web3Wrapper.getAvailableAddressesAsync();
         
-        console.log(`✅ Got ${accounts.length} accounts from auto-Ganache`);
+        console.log(`✅ In-process Ganache started with ${accounts.length} accounts`);
+    });
+
+    after(async function() {
+        this.timeout(10000);
+        
+        if (ganacheServer) {
+            console.log('⏹️ Stopping in-process Ganache...');
+            await ganacheServer.close();
+            console.log('✅ Ganache stopped');
+        }
     });
 
     describe('🚀 Auto Startup Verification', () => {
@@ -27,7 +54,7 @@ describe('Ganache Auto Start/Stop', () => {
             expect(web3Wrapper).to.not.be.undefined;
             expect(accounts.length).to.be.greaterThan(0);
             
-            console.log('✅ Ganache auto-startup verified');
+            console.log('✅ In-process Ganache auto-startup verified');
         });
 
         it('should provide expected network configuration', async function() {
@@ -121,13 +148,13 @@ describe('Ganache Auto Start/Stop', () => {
         });
     });
 
-    describe('📋 Auto-Ganache Summary', () => {
+    describe('📋 In-Process Ganache Summary', () => {
         it('should provide complete functionality report', async function() {
             const finalBlockNumber = await web3Wrapper.getBlockNumberAsync();
             const finalNetworkId = await web3Wrapper.getNetworkIdAsync();
             
-            console.log('🎉 Auto-Ganache Functionality Report:');
-            console.log('   ✅ Automatic startup: SUCCESS');
+            console.log('🎉 In-Process Ganache Functionality Report:');
+            console.log('   ✅ In-process startup: SUCCESS');
             console.log('   ✅ Network connectivity: SUCCESS');
             console.log('   ✅ Account provisioning: SUCCESS');
             console.log('   ✅ Block mining: SUCCESS');
@@ -139,8 +166,8 @@ describe('Ganache Auto Start/Stop', () => {
             console.log(`   Block Number: ${finalBlockNumber}`);
             console.log(`   Total Accounts: ${accounts.length}`);
             console.log('');
-            console.log('🔥 Auto-Ganache is fully operational!');
-            console.log('💡 Note: Ganache will auto-stop when tests complete');
+            console.log('🔥 In-process Ganache is fully operational!');
+            console.log('💡 Note: No external process, fully contained in test');
             
             expect(true).to.be.true;
         });
