@@ -1,11 +1,10 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+const { ethers } = require('hardhat');
 
 describe("🔧 Utils Package TypeScript Tests", function () {
-    let accounts: SignerWithAddress[];
-    let deployer: SignerWithAddress;
-    let user1: SignerWithAddress;
+    let accounts: any[];
+    let deployer: any;
+    let user1: any;
 
     beforeEach(async function () {
         accounts = await ethers.getSigners();
