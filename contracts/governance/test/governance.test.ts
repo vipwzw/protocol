@@ -1,13 +1,12 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+const { ethers } = require('hardhat');
 import { Contract } from "ethers";
 
 describe("🏛️ Governance Package TypeScript Tests", function () {
-    let accounts: SignerWithAddress[];
-    let deployer: SignerWithAddress;
-    let user1: SignerWithAddress;
-    let user2: SignerWithAddress;
+    let accounts: any[];
+    let deployer: any;
+    let user1: any;
+    let user2: any;
 
     beforeEach(async function () {
         accounts = await ethers.getSigners();
@@ -16,8 +15,8 @@ describe("🏛️ Governance Package TypeScript Tests", function () {
 
     it("✅ should have proper test account setup", async function () {
         expect(accounts.length).to.be.greaterThan(2);
-        expect(deployer.address).to.be.properAddress;
-        expect(user1.address).to.be.properAddress;
+        expect(ethers.isAddress(deployer.address)).to.be.true;
+        expect(ethers.isAddress(user1.address)).to.be.true;
         console.log(`✅ Deployer: ${deployer.address}`);
         console.log(`✅ User1: ${user1.address}`);
     });
@@ -35,7 +34,7 @@ describe("🏛️ Governance Package TypeScript Tests", function () {
             
             console.log(`✅ Voting delay: ${votingDelay} blocks`);
             console.log(`✅ Voting period: ${votingPeriod} blocks`);
-            console.log(`✅ Proposal threshold: ${ethers.utils.formatEther(proposalThreshold)} ZRX`);
+            console.log(`✅ Proposal threshold: ${ethers.formatEther(proposalThreshold)} ZRX`);
         });
 
         it("✅ should handle proposal creation types", async function () {
