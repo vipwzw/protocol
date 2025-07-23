@@ -58,6 +58,7 @@
         "npm-run-all": "^4.1.2",
         "shx": "^0.2.2",
         "source-map-support": "^0.5.6",
+        "ts-node": "^10.9.0",
         "typescript": "^5.0.0",
         "eslint": "^8.27.0",
         "@typescript-eslint/eslint-plugin": "^5.42.0",
