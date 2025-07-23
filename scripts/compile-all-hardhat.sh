@@ -12,9 +12,10 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# 包含 hardhat.config.js 的包列表
+# 包含 hardhat.config.ts 的包列表
 PACKAGES=(
     "contracts/erc20"
+    "contracts/governance"
     "contracts/utils"
     "contracts/treasury"
     "contracts/zero-ex"
@@ -38,8 +39,8 @@ for package in "${PACKAGES[@]}"; do
         continue
     fi
     
-    if [ ! -f "$package/hardhat.config.js" ]; then
-        echo -e "${RED}❌ 未找到 hardhat.config.js: $package${NC}"
+    if [ ! -f "$package/hardhat.config.ts" ]; then
+        echo -e "${RED}❌ 未找到 hardhat.config.ts: $package${NC}"
         continue
     fi
     

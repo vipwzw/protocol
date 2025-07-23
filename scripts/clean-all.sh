@@ -80,7 +80,7 @@ for package in "${ALL_PACKAGES[@]}"; do
     fi
     
     # 检查是否是 Hardhat 项目
-    if [ -f "hardhat.config.js" ]; then
+    if [ -f "hardhat.config.ts" ]; then
         has_hardhat=true
         echo -e "   ⚡ 清理 Hardhat 缓存..."
         

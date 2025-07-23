@@ -76,13 +76,11 @@ echo ""
 
 HARDHAT_PACKAGES=(
     "contracts/erc20"
+    "contracts/governance"
     "contracts/utils"
     "contracts/treasury"
     "contracts/zero-ex"
     "contracts/test-utils"
-    "packages/protocol-utils"
-    "packages/contract-addresses"
-    "packages/contract-artifacts"
 )
 
 hardhat_success=0
@@ -96,8 +94,8 @@ for package in "${HARDHAT_PACKAGES[@]}"; do
         continue
     fi
     
-    if [ ! -f "$package/hardhat.config.js" ]; then
-        echo -e "${YELLOW}⚠️  跳过 (无 hardhat.config.js): $package${NC}"
+    if [ ! -f "$package/hardhat.config.ts" ]; then
+        echo -e "${YELLOW}⚠️  跳过 (无 hardhat.config.ts): $package${NC}"
         continue
     fi
     
