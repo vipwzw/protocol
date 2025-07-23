@@ -1,9 +1,8 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+const { ethers } = require('hardhat');
 
 describe("🧪 ERC20 Package TypeScript Tests", function () {
-    let accounts: SignerWithAddress[];
+    let accounts: any[];
 
     beforeEach(async function () {
         accounts = await ethers.getSigners();

@@ -10,9 +10,10 @@
         "test": "test"
     },
     "scripts": {
-        "build": "forge build",
-        "test": "forge test",
-        "test:ci": "forge test",
+        "build": "forge build && npx hardhat compile",
+        "test": "npx hardhat test",
+        "test:foundry": "forge test",
+        "test:ci": "npx hardhat test",
         "docs:md": "ts-doc-gen --sourceDir='$PROJECT_FILES' --output=$MD_FILE_DIR --fileExtension=mdx --tsconfig=./typedoc-tsconfig.json",
         "docs:json": "typedoc --excludePrivate --excludeExternals --excludeProtected --ignoreCompilerErrors --target ES5 --tsconfig typedoc-tsconfig.json --json $JSON_FILE_PATH $PROJECT_FILES"
     },
@@ -28,6 +29,11 @@
     "devDependencies": {
         "@0x/contracts-utils": "*",
         "@0x/ts-doc-gen": "^0.0.28",
+        "@nomicfoundation/hardhat-ethers": "^3.0.0",
+        "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+        "hardhat": "^2.19.0",
+        "ethers": "^6.15.0",
+        "chai": "^4.0.1",
         "ts-node": "^10.9.0",
         "typedoc": "~0.16.11"
     },
