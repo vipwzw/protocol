@@ -14,7 +14,7 @@
         "rebuild_and_test": "run-s build test",
         "test:trace": "SOLIDITY_REVERT_TRACE=true run-s build run_mocha",
         "run_mocha": "npx hardhat test",
-        "compile": "forge build",
+        "compile": "npx hardhat compile && forge build",
         "watch": "forge build --watch",
         "clean": "shx rm -rf lib out test/generated-wrappers generated-artifacts generated-wrappers",
         "generate_contract_wrappers": "abi-gen --debug --abis './out/*.sol/*.json' --output test/generated-wrappers --backend ethers",
@@ -27,7 +27,7 @@
     },
     "config": {
         "publicInterfaceContracts": "IOwnable,LibBytes,LibBytesRichErrors,LibOwnableRichErrors,LibReentrancyGuardRichErrors,LibRichErrors,LibSafeMath,LibSafeMathRichErrors,Ownable,ReentrancyGuard",
-        "abis": "./out/*.sol/*.json"
+        "abis": "./artifacts/contracts/**/*.json"
     },
     "repository": {
         "type": "git",
