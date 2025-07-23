@@ -5,22 +5,22 @@
  */
 import { ContractArtifact } from 'ethereum-types';
 
-// 从 generated-wrappers 目录导入编译好的 artifacts
-// 这些是原始的 0x Protocol 格式 artifacts，兼容 Ganache 测试环境
-
-// 简化的 artifacts 导出 - 使用编译好的合约
-import * as ZrxTreasuryArtifact from '../artifacts/contracts/src/ZrxTreasury.sol/ZrxTreasury.json';
-import * as DefaultPoolOperatorArtifact from '../artifacts/contracts/src/DefaultPoolOperator.sol/DefaultPoolOperator.json';
+// 使用 Hardhat 编译的 artifacts
+import * as DefaultPoolOperator from '../artifacts/contracts/src/DefaultPoolOperator.sol/DefaultPoolOperator.json';
+import * as ISablier from '../artifacts/contracts/external/ISablier.sol/ISablier.json';
+import * as IStaking from '../artifacts/contracts/src/IStaking.sol/IStaking.json';
+import * as IZrxTreasury from '../artifacts/contracts/src/IZrxTreasury.sol/IZrxTreasury.json';
+import * as ZrxTreasury from '../artifacts/contracts/src/ZrxTreasury.sol/ZrxTreasury.json';
+import * as DummyERC20Token from '../artifacts/contracts/src/DummyERC20Token.sol/DummyERC20Token.json';
 
 export const artifacts = {
-    ZrxTreasury: ZrxTreasuryArtifact as any,
-    DefaultPoolOperator: DefaultPoolOperatorArtifact as any,
+    ISablier: ISablier as any,
+    DefaultPoolOperator: DefaultPoolOperator as any,
+    IStaking: IStaking as any,
+    IZrxTreasury: IZrxTreasury as any,
+    ZrxTreasury: ZrxTreasury as any,
+    DummyERC20Token: DummyERC20Token as any,
 };
 
-// 如果需要额外的 artifacts，可以在这里导入
-// import * as AdditionalContract from './generated-wrappers/additional_contract';
-
-// 兼容性导出 - 保持与原始测试的兼容
-export const artifacts_legacy = {
-    // 这里可以添加遗留的 artifact 导入
-};
+// 为兼容 @0x/contracts-erc20 格式提供单独的导出
+export { artifacts as erc20Artifacts };

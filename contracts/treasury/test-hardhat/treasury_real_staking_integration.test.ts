@@ -27,7 +27,7 @@ describe('Treasury Governance with Real Staking Integration', function() {
     const PROPOSAL_THRESHOLD = ethers.parseEther('100'); // 100 ZRX
     const QUORUM_THRESHOLD = ethers.parseEther('1000'); // 1000 ZRX
     const TREASURY_BALANCE = ethers.parseEther('1000000'); // 1M ZRX
-    const STAKE_AMOUNT = ethers.parseEther('600'); // 600 ZRX to stake (increased for quorum)
+    const STAKE_AMOUNT = ethers.parseEther('500'); // 500 ZRX to stake
     
     before(async function() {
         console.log('🚀 Setting up Real Staking Integration Test...');
@@ -169,9 +169,14 @@ describe('Treasury Governance with Real Staking Integration', function() {
             }
         });
         
-        // Use a simpler approach to get the pool ID
-        const pools = await stakingContract.getPoolsByOperator(poolOperator.address);
-        nonDefaultPoolId = pools[0];
+        if (createPoolEvent) {
+            const parsed = stakingContract.interface.parseLog(createPoolEvent);
+            nonDefaultPoolId = parsed?.args?.poolId;
+        } else {
+            // Fallback: get pool by operator
+            const pools = await stakingContract.getPoolsByOperator(poolOperator.address);
+            nonDefaultPoolId = pools[0];
+        }
         
         console.log('✅ Default Pool ID:', defaultPoolId);
         console.log('✅ Non-Default Pool ID:', nonDefaultPoolId);
@@ -184,14 +189,13 @@ describe('Treasury Governance with Real Staking Integration', function() {
         await stakingContract.connect(delegator).stake(PROPOSAL_THRESHOLD);
         console.log(`✅ Delegator staked ${ethers.formatEther(PROPOSAL_THRESHOLD)} ZRX`);
         
-        // Stake tokens for pool operator (for voting) - increased to ensure quorum
-        const poolOperatorStakeAmount = ethers.parseEther('2000'); // Increased to ensure enough voting power
-        await stakingContract.connect(poolOperator).stake(poolOperatorStakeAmount);
-        console.log(`✅ Pool operator staked ${ethers.formatEther(poolOperatorStakeAmount)} ZRX`);
+        // Stake tokens for pool operator (for voting)
+        await stakingContract.connect(poolOperator).stake(QUORUM_THRESHOLD);
+        console.log(`✅ Pool operator staked ${ethers.formatEther(QUORUM_THRESHOLD)} ZRX`);
         
         // Delegate stakes to get voting power
         await stakingContract.connect(delegator).moveStakeToPool(defaultPoolId, PROPOSAL_THRESHOLD);
-        await stakingContract.connect(poolOperator).moveStakeToPool(nonDefaultPoolId, poolOperatorStakeAmount);
+        await stakingContract.connect(poolOperator).moveStakeToPool(nonDefaultPoolId, QUORUM_THRESHOLD);
         
         console.log('✅ Stakes delegated to pools');
     }
@@ -307,7 +311,6 @@ describe('Treasury Governance with Real Staking Integration', function() {
     
     describe('🗳️ Real Governance Integration', function() {
         let proposalId: bigint;
-        let proposalActions: any[];
         
         it('should create proposals with real staking power validation', async function() {
             // Advance epoch to activate delegated stakes
@@ -317,27 +320,21 @@ describe('Treasury Governance with Real Staking Integration', function() {
             const votingPower = await treasury.getVotingPower(delegator.address, []);
             expect(votingPower).to.be.greaterThanOrEqual(PROPOSAL_THRESHOLD);
             
-            // Create proposal actions - store for later use in execution
-            // Create explicit interface for ERC20 transfer
-            const erc20Interface = new ethers.Interface([
-                'function transfer(address to, uint256 amount) returns (bool)'
-            ]);
-            const transferData = erc20Interface.encodeFunctionData('transfer', [
-                delegator.address,
-                ethers.parseEther('100')
-            ]);
-            
-            proposalActions = [
+            // Create proposal actions
+            const proposalActions = [
                 {
                     target: await weth.getAddress(),
-                    data: transferData,
+                    data: weth.interface.encodeFunctionData('transfer', [
+                        delegator.address,
+                        ethers.parseEther('100')
+                    ]),
                     value: 0,
                 }
             ];
             
-            // Create proposal  
+            // Create proposal
             const currentEpoch = await stakingContract.currentEpoch();
-            const executionEpoch = currentEpoch + BigInt(5); // Set execution epoch further in future
+            const executionEpoch = currentEpoch + BigInt(2);
             
             const tx = await treasury.connect(delegator).propose(
                 proposalActions,
@@ -373,34 +370,24 @@ describe('Treasury Governance with Real Staking Integration', function() {
         it('should execute proposals with real treasury effects', async function() {
             // Advance to execution period
             await advanceTimeAsync(VOTING_PERIOD + 1);
-            
-            // Advance to the correct execution epoch
-            let currentEpochBeforeAdvance = await stakingContract.currentEpoch();
-            const proposalData = await treasury.proposals(proposalId);
-            const epochsToAdvance = Number(proposalData.executionEpoch - currentEpochBeforeAdvance);
-            
-            for (let i = 0; i < epochsToAdvance; i++) {
-                await fastForwardToNextEpochAsync();
-            }
-            
-            // Debug: Check proposal status before execution
-            const proposal = await treasury.proposals(proposalId);
-            console.log('📊 Proposal Status:');
-            console.log(`   Votes For: ${ethers.formatEther(proposal.votesFor)} ZRX`);
-            console.log(`   Votes Against: ${ethers.formatEther(proposal.votesAgainst)} ZRX`);
-            console.log(`   Quorum Threshold: ${ethers.formatEther(QUORUM_THRESHOLD)} ZRX`);
-            console.log(`   Vote Epoch: ${proposal.voteEpoch}`);
-            console.log(`   Execution Epoch: ${proposal.executionEpoch}`);
-            console.log(`   Executed: ${proposal.executed}`);
-            
-            const currentEpoch = await stakingContract.currentEpoch();
-            console.log(`   Current Epoch: ${currentEpoch}`);
+            await fastForwardToNextEpochAsync();
             
             // Check initial balances
             const initialTreasuryWeth = await weth.balanceOf(await treasury.getAddress());
             const initialDelegatorWeth = await weth.balanceOf(delegator.address);
             
-            // Execute proposal using the same actions as when created
+            // Execute proposal
+            const proposalActions = [
+                {
+                    target: await weth.getAddress(),
+                    data: weth.interface.encodeFunctionData('transfer', [
+                        delegator.address,
+                        ethers.parseEther('100')
+                    ]),
+                    value: 0,
+                }
+            ];
+            
             const executeTx = await treasury.execute(proposalId, proposalActions);
             await executeTx.wait();
             
