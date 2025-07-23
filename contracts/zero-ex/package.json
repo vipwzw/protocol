@@ -14,7 +14,7 @@
         "build:ci": "yarn build",
         "build:ts": "tsc -b",
         "pre_build": "run-s compile contracts:gen generate_contract_wrappers contracts:copy",
-        "test": "npx mocha test/*.ts --require ts-node/register",
+        "test": "npx hardhat test",
         "test:integration": "forge test -vvv",
         "rebuild_and_test": "run-s build test",
         "test:profiler": "SOLIDITY_PROFILER=true run-s build run_mocha profiler:report:html",
@@ -60,6 +60,9 @@
         "@types/lodash": "4.14.104",
         "@types/mocha": "^5.2.7",
         "@types/node": "12.12.54",
+        "@nomicfoundation/hardhat-ethers": "^3.0.0",
+        "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+        "hardhat": "^2.19.0",
         "chai": "^4.0.1",
         "chai-as-promised": "^7.1.0",
         "chai-bignumber": "^3.0.0",
@@ -87,7 +90,7 @@
         "@0x/web3-wrapper": "^8.0.1",
         "ethereum-types": "^3.7.1",
         "ethereumjs-util": "^7.0.10",
-        "ethers": "~4.0.4"
+        "ethers": "^6.15.0"
     },
     "publishConfig": {
         "access": "public"
