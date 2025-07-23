@@ -30,6 +30,42 @@ export const FORBIDDEN_PROPERTIES: string[] = [
     'sourceTreeHashHex',
 ];
 
+// Convert Hardhat artifact format to expected format
+function convertHardhatArtifact(artifact: any): any {
+    // If it's already in the expected format, return as is
+    if (artifact.schemaVersion || artifact.compilerOutput) {
+        return artifact;
+    }
+
+    // If it's a Hardhat artifact, convert it
+    if (artifact._format && artifact._format.startsWith('hh-sol-artifact')) {
+        return {
+            schemaVersion: '3.0.0',
+            contractName: artifact.contractName,
+            compilerOutput: {
+                abi: artifact.abi,
+                evm: {
+                    bytecode: {
+                        object: artifact.bytecode || ''
+                    },
+                    deployedBytecode: {
+                        object: artifact.deployedBytecode || ''
+                    }
+                },
+                devdoc: {
+                    methods: {}
+                }
+            },
+            compiler: {
+                name: 'hardhat',
+                version: '0.8.28'
+            }
+        };
+    }
+
+    return artifact;
+}
+
 function removeForbiddenProperties(inputDir: string, outputDir: string): void {
     const filePaths = fs
         .readdirSync(inputDir)
@@ -38,10 +74,16 @@ function removeForbiddenProperties(inputDir: string, outputDir: string): void {
 
     for (const filePath of filePaths) {
         const artifact = JSON.parse(fs.readFileSync(filePath).toString()) as { [name: string]: any };
+        
+        // Convert Hardhat artifact to expected format
+        const convertedArtifact = convertHardhatArtifact(artifact);
+        
+        // Remove forbidden properties
         for (const property of FORBIDDEN_PROPERTIES) {
-            deleteNestedProperty(artifact, property);
+            deleteNestedProperty(convertedArtifact, property);
         }
-        fs.writeFileSync(filePath.replace(inputDir, outputDir), JSON.stringify(artifact));
+        
+        fs.writeFileSync(filePath.replace(inputDir, outputDir), JSON.stringify(convertedArtifact));
     }
 }
 

@@ -16,9 +16,9 @@
         "pre_build": "node scripts/copy-artifacts.js",
         "build": "yarn pre_build && yarn tsc -b",
         "build:ci": "yarn build",
-        "test": "npx hardhat test",
+        "test": "npx mocha test/*.ts --require ts-node/register",
         "test:ci": "yarn test",
-        "run_mocha": "npx hardhat test",
+        "run_mocha": "npx mocha test/*.ts --require ts-node/register",
         "clean": "shx rm -rf lib"
     },
     "repository": {
@@ -38,6 +38,7 @@
         "lodash": "^4.17.11",
         "mocha": "^6.2.0",
         "shx": "^0.2.2",
+        "ts-node": "^10.9.0",
         "typescript": "^5.0.0"
     },
     "publishConfig": {

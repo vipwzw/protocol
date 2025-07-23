@@ -12,7 +12,7 @@
     "scripts": {
         "build": "tsc -b",
         "build:ci": "yarn build",
-        "test": "npx hardhat test",
+        "test": "npx mocha test/*.ts --require ts-node/register",
         "run_mocha": "npx hardhat test",
         "clean": "shx rm -rf lib",
         "lint": "eslint src test",

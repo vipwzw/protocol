@@ -10,7 +10,7 @@
         "build": "yarn pre_build && tsc -b",
         "build:ci": "yarn build",
         "pre_build": "run-s compile contracts:gen generate_contract_wrappers contracts:copy",
-        "test": "npx hardhat test",
+        "test": "npx mocha test/*.ts --require ts-node/register",
         "rebuild_and_test": "run-s build test",
         "test:trace": "SOLIDITY_REVERT_TRACE=true run-s build run_mocha",
         "run_mocha": "npx hardhat test",
