@@ -5,19 +5,19 @@
  */
 import { ContractArtifact } from 'ethereum-types';
 
-// Foundry artifacts import
-import * as DummyERC20TokenFoundryArtifact from '../out/DummyERC20Token.sol/DummyERC20Token.json';
-import * as DefaultPoolOperatorFoundryArtifact from '../out/DefaultPoolOperator.sol/DefaultPoolOperator.json';
-import * as ZrxTreasuryFoundryArtifact from '../out/ZrxTreasury.sol/ZrxTreasury.json';
+// Hardhat artifacts import
+import * as DummyERC20TokenHardhatArtifact from '../artifacts/contracts/src/DummyERC20Token.sol/DummyERC20Token.json';
+import * as DefaultPoolOperatorHardhatArtifact from '../artifacts/contracts/src/DefaultPoolOperator.sol/DefaultPoolOperator.json';
+import * as ZrxTreasuryHardhatArtifact from '../artifacts/contracts/src/ZrxTreasury.sol/ZrxTreasury.json';
 
 // Export artifacts
 export const artifacts = {
-    DummyERC20Token: DummyERC20TokenFoundryArtifact as any,
-    DefaultPoolOperator: DefaultPoolOperatorFoundryArtifact as any,
-    ZrxTreasury: ZrxTreasuryFoundryArtifact as any,
+    DummyERC20Token: DummyERC20TokenHardhatArtifact as any,
+    DefaultPoolOperator: DefaultPoolOperatorHardhatArtifact as any,
+    ZrxTreasury: ZrxTreasuryHardhatArtifact as any,
 };
 
 // Also export for compatibility
 export const erc20Artifacts = {
-    DummyERC20Token: DummyERC20TokenFoundryArtifact as any,
+    DummyERC20Token: DummyERC20TokenHardhatArtifact as any,
 };
