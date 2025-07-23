@@ -6,7 +6,6 @@ libs = ['lib']
 remappings = [
     '@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/',
     '@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/',
-    '@openzeppelin/=lib/openzeppelin-contracts/contracts/',
     '@0x/contracts-utils/=../utils/',
 ]
 solc_version = "0.8.28"
