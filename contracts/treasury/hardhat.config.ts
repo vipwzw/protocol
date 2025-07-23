@@ -1,6 +1,6 @@
 import { HardhatUserConfig } from "hardhat/config";
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-waffle";
+import "@nomicfoundation/hardhat-ethers";
+import "@nomicfoundation/hardhat-chai-matchers";
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -29,10 +29,7 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       chainId: 1337,
-      accounts: {
-        mnemonic: "concert load couple harbor equip island argue ramp clarify fence smart topic",
-        count: 20,
-      },
+      // Use default Hardhat accounts (no custom mnemonic)
       mining: {
         auto: true,
         interval: 0,
