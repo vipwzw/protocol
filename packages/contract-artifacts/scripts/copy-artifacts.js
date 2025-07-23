@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const MONOREPO_ROOT = path.join(__dirname, '../../..');
 
@@ -114,6 +115,44 @@ if (allArtifactPaths.length > 0) {
         }
     }
     console.log(`\n🎉 完成! 成功复制 ${copied} 个 contract artifacts`);
+    
+    // 自动运行转换器
+    if (copied > 0) {
+        console.log(`\n🔄 运行 artifacts 转换器...`);
+        try {
+            // 首先确保 transform.js 存在，如果不存在就编译 TypeScript
+            const transformJsPath = path.join(__dirname, '../lib/src/transform.js');
+            if (!fs.existsSync(transformJsPath)) {
+                console.log(`📝 编译转换器...`);
+                execSync('tsc src/transform.ts --target es2017 --module commonjs --outDir lib/src/', {
+                    cwd: path.join(__dirname, '..'),
+                    stdio: 'pipe'
+                });
+            }
+            
+            // 运行转换器
+            execSync(`node lib/src/transform.js ./artifacts`, {
+                cwd: path.join(__dirname, '..'),
+                stdio: 'inherit'
+            });
+            
+            // 运行 prettier
+            try {
+                execSync(`prettier --write ./artifacts/*.json`, {
+                    cwd: path.join(__dirname, '..'),
+                    stdio: 'pipe'
+                });
+                console.log(`✨ Prettier 格式化完成`);
+            } catch (prettierErr) {
+                console.log(`⚠️  Prettier 格式化跳过 (可能没有安装)`);
+            }
+            
+            console.log(`✅ Artifacts 转换完成!`);
+        } catch (err) {
+            console.log(`⚠️  转换器运行失败: ${err.message}`);
+            console.log(`💡 提示: 将在后续构建步骤中重试转换`);
+        }
+    }
 } else {
     console.log(`⚠️  没有找到任何 artifacts 文件`);
     // 即使没有找到文件，也不要失败，因为可能是第一次构建
