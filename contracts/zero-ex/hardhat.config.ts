@@ -16,10 +16,6 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       chainId: 1337,
-      accounts: {
-        mnemonic: "concert load couple harbor equip island argue ramp clarify fence smart topic",
-        count: 20,
-      },
       mining: {
         auto: true,
         interval: 0,
