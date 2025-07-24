@@ -16,6 +16,10 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       chainId: 1337,
+      accounts: {
+        mnemonic: "concert load couple harbor equip island argue ramp clarify fence smart topic",
+        count: 20,
+      },
       mining: {
         auto: true,
         interval: 0,
@@ -26,13 +30,13 @@ const config: HardhatUserConfig = {
     },
   },
   paths: {
-    sources: "./contracts/src",
+    sources: "./contracts",  // 使用整个 contracts 目录
     tests: "./test",
     cache: "./cache/hardhat",
     artifacts: "./artifacts",
   },
   mocha: {
-    timeout: 100000,
+    timeout: 60000,
   },
 };
 

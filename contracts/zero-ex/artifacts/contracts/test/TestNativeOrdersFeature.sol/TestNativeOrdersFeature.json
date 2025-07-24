@@ -1,0 +1,2487 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "TestNativeOrdersFeature",
+  "sourceName": "contracts/test/TestNativeOrdersFeature.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "zeroExAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IEtherToken",
+          "name": "weth",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IStaking",
+          "name": "staking",
+          "type": "address"
+        },
+        {
+          "internalType": "contract FeeCollectorController",
+          "name": "_feeCollectorController",
+          "type": "address"
+        },
+        {
+          "internalType": "uint32",
+          "name": "protocolFeeMultiplier",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "orderHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "maker",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "taker",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "feeRecipient",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "makerToken",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "takerToken",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint128",
+          "name": "takerTokenFilledAmount",
+          "type": "uint128"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint128",
+          "name": "makerTokenFilledAmount",
+          "type": "uint128"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint128",
+          "name": "takerTokenFeeFilledAmount",
+          "type": "uint128"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "protocolFeePaid",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "pool",
+          "type": "bytes32"
+        }
+      ],
+      "name": "LimitOrderFilled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "orderHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "maker",
+          "type": "address"
+        }
+      ],
+      "name": "OrderCancelled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "maker",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "signer",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "allowed",
+          "type": "bool"
+        }
+      ],
+      "name": "OrderSignerRegistered",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "maker",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "makerToken",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "takerToken",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "minValidSalt",
+          "type": "uint256"
+        }
+      ],
+      "name": "PairCancelledLimitOrders",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "maker",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "makerToken",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "takerToken",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "minValidSalt",
+          "type": "uint256"
+        }
+      ],
+      "name": "PairCancelledRfqOrders",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "orderHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "maker",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "taker",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "makerToken",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "takerToken",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint128",
+          "name": "takerTokenFilledAmount",
+          "type": "uint128"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint128",
+          "name": "makerTokenFilledAmount",
+          "type": "uint128"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "pool",
+          "type": "bytes32"
+        }
+      ],
+      "name": "RfqOrderFilled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "origin",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address[]",
+          "name": "addrs",
+          "type": "address[]"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "allowed",
+          "type": "bool"
+        }
+      ],
+      "name": "RfqOrderOriginsAllowed",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "EIP712_DOMAIN_SEPARATOR",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "FEATURE_NAME",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "FEATURE_VERSION",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "PROTOCOL_FEE_MULTIPLIER",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFeeAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "feeRecipient",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.LimitOrder",
+          "name": "order",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "enum LibSignature.SignatureType",
+              "name": "signatureType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct LibSignature.Signature",
+          "name": "signature",
+          "type": "tuple"
+        },
+        {
+          "internalType": "uint128",
+          "name": "takerTokenFillAmount",
+          "type": "uint128"
+        },
+        {
+          "internalType": "address",
+          "name": "taker",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        }
+      ],
+      "name": "_fillLimitOrder",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "takerTokenFilledAmount",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint128",
+          "name": "makerTokenFilledAmount",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "txOrigin",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.RfqOrder",
+          "name": "order",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "enum LibSignature.SignatureType",
+              "name": "signatureType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct LibSignature.Signature",
+          "name": "signature",
+          "type": "tuple"
+        },
+        {
+          "internalType": "uint128",
+          "name": "takerTokenFillAmount",
+          "type": "uint128"
+        },
+        {
+          "internalType": "address",
+          "name": "taker",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "useSelfBalance",
+          "type": "bool"
+        },
+        {
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        }
+      ],
+      "name": "_fillRfqOrder",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "takerTokenFilledAmount",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint128",
+          "name": "makerTokenFilledAmount",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFeeAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "feeRecipient",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.LimitOrder[]",
+          "name": "orders",
+          "type": "tuple[]"
+        }
+      ],
+      "name": "batchCancelLimitOrders",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IERC20Token[]",
+          "name": "makerTokens",
+          "type": "address[]"
+        },
+        {
+          "internalType": "contract IERC20Token[]",
+          "name": "takerTokens",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "minValidSalts",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "batchCancelPairLimitOrders",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "maker",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20Token[]",
+          "name": "makerTokens",
+          "type": "address[]"
+        },
+        {
+          "internalType": "contract IERC20Token[]",
+          "name": "takerTokens",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "minValidSalts",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "batchCancelPairLimitOrdersWithSigner",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IERC20Token[]",
+          "name": "makerTokens",
+          "type": "address[]"
+        },
+        {
+          "internalType": "contract IERC20Token[]",
+          "name": "takerTokens",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "minValidSalts",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "batchCancelPairRfqOrders",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "maker",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20Token[]",
+          "name": "makerTokens",
+          "type": "address[]"
+        },
+        {
+          "internalType": "contract IERC20Token[]",
+          "name": "takerTokens",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "minValidSalts",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "batchCancelPairRfqOrdersWithSigner",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "txOrigin",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.RfqOrder[]",
+          "name": "orders",
+          "type": "tuple[]"
+        }
+      ],
+      "name": "batchCancelRfqOrders",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFeeAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "feeRecipient",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.LimitOrder[]",
+          "name": "orders",
+          "type": "tuple[]"
+        },
+        {
+          "components": [
+            {
+              "internalType": "enum LibSignature.SignatureType",
+              "name": "signatureType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct LibSignature.Signature[]",
+          "name": "signatures",
+          "type": "tuple[]"
+        }
+      ],
+      "name": "batchGetLimitOrderRelevantStates",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "orderHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "enum LibNativeOrder.OrderStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFilledAmount",
+              "type": "uint128"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.OrderInfo[]",
+          "name": "orderInfos",
+          "type": "tuple[]"
+        },
+        {
+          "internalType": "uint128[]",
+          "name": "actualFillableTakerTokenAmounts",
+          "type": "uint128[]"
+        },
+        {
+          "internalType": "bool[]",
+          "name": "isSignatureValids",
+          "type": "bool[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "txOrigin",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.RfqOrder[]",
+          "name": "orders",
+          "type": "tuple[]"
+        },
+        {
+          "components": [
+            {
+              "internalType": "enum LibSignature.SignatureType",
+              "name": "signatureType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct LibSignature.Signature[]",
+          "name": "signatures",
+          "type": "tuple[]"
+        }
+      ],
+      "name": "batchGetRfqOrderRelevantStates",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "orderHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "enum LibNativeOrder.OrderStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFilledAmount",
+              "type": "uint128"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.OrderInfo[]",
+          "name": "orderInfos",
+          "type": "tuple[]"
+        },
+        {
+          "internalType": "uint128[]",
+          "name": "actualFillableTakerTokenAmounts",
+          "type": "uint128[]"
+        },
+        {
+          "internalType": "bool[]",
+          "name": "isSignatureValids",
+          "type": "bool[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFeeAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "feeRecipient",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.LimitOrder",
+          "name": "order",
+          "type": "tuple"
+        }
+      ],
+      "name": "cancelLimitOrder",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IERC20Token",
+          "name": "makerToken",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20Token",
+          "name": "takerToken",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minValidSalt",
+          "type": "uint256"
+        }
+      ],
+      "name": "cancelPairLimitOrders",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "maker",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20Token",
+          "name": "makerToken",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20Token",
+          "name": "takerToken",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minValidSalt",
+          "type": "uint256"
+        }
+      ],
+      "name": "cancelPairLimitOrdersWithSigner",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IERC20Token",
+          "name": "makerToken",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20Token",
+          "name": "takerToken",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minValidSalt",
+          "type": "uint256"
+        }
+      ],
+      "name": "cancelPairRfqOrders",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "maker",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20Token",
+          "name": "makerToken",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20Token",
+          "name": "takerToken",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minValidSalt",
+          "type": "uint256"
+        }
+      ],
+      "name": "cancelPairRfqOrdersWithSigner",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "txOrigin",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.RfqOrder",
+          "name": "order",
+          "type": "tuple"
+        }
+      ],
+      "name": "cancelRfqOrder",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFeeAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "feeRecipient",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.LimitOrder",
+          "name": "order",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "enum LibSignature.SignatureType",
+              "name": "signatureType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct LibSignature.Signature",
+          "name": "signature",
+          "type": "tuple"
+        },
+        {
+          "internalType": "uint128",
+          "name": "takerTokenFillAmount",
+          "type": "uint128"
+        }
+      ],
+      "name": "fillLimitOrder",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "takerTokenFilledAmount",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint128",
+          "name": "makerTokenFilledAmount",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFeeAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "feeRecipient",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.LimitOrder",
+          "name": "order",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "enum LibSignature.SignatureType",
+              "name": "signatureType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct LibSignature.Signature",
+          "name": "signature",
+          "type": "tuple"
+        },
+        {
+          "internalType": "uint128",
+          "name": "takerTokenFillAmount",
+          "type": "uint128"
+        }
+      ],
+      "name": "fillOrKillLimitOrder",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "makerTokenFilledAmount",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "txOrigin",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.RfqOrder",
+          "name": "order",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "enum LibSignature.SignatureType",
+              "name": "signatureType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct LibSignature.Signature",
+          "name": "signature",
+          "type": "tuple"
+        },
+        {
+          "internalType": "uint128",
+          "name": "takerTokenFillAmount",
+          "type": "uint128"
+        }
+      ],
+      "name": "fillOrKillRfqOrder",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "makerTokenFilledAmount",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "txOrigin",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.RfqOrder",
+          "name": "order",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "enum LibSignature.SignatureType",
+              "name": "signatureType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct LibSignature.Signature",
+          "name": "signature",
+          "type": "tuple"
+        },
+        {
+          "internalType": "uint128",
+          "name": "takerTokenFillAmount",
+          "type": "uint128"
+        }
+      ],
+      "name": "fillRfqOrder",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "takerTokenFilledAmount",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint128",
+          "name": "makerTokenFilledAmount",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFeeAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "feeRecipient",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.LimitOrder",
+          "name": "order",
+          "type": "tuple"
+        }
+      ],
+      "name": "getLimitOrderHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "orderHash",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFeeAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "feeRecipient",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.LimitOrder",
+          "name": "order",
+          "type": "tuple"
+        }
+      ],
+      "name": "getLimitOrderInfo",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "orderHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "enum LibNativeOrder.OrderStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFilledAmount",
+              "type": "uint128"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.OrderInfo",
+          "name": "orderInfo",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFeeAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "feeRecipient",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.LimitOrder",
+          "name": "order",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "enum LibSignature.SignatureType",
+              "name": "signatureType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct LibSignature.Signature",
+          "name": "signature",
+          "type": "tuple"
+        }
+      ],
+      "name": "getLimitOrderRelevantState",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "orderHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "enum LibNativeOrder.OrderStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFilledAmount",
+              "type": "uint128"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.OrderInfo",
+          "name": "orderInfo",
+          "type": "tuple"
+        },
+        {
+          "internalType": "uint128",
+          "name": "actualFillableTakerTokenAmount",
+          "type": "uint128"
+        },
+        {
+          "internalType": "bool",
+          "name": "isSignatureValid",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getProtocolFeeMultiplier",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "multiplier",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "txOrigin",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.RfqOrder",
+          "name": "order",
+          "type": "tuple"
+        }
+      ],
+      "name": "getRfqOrderHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "orderHash",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "txOrigin",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.RfqOrder",
+          "name": "order",
+          "type": "tuple"
+        }
+      ],
+      "name": "getRfqOrderInfo",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "orderHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "enum LibNativeOrder.OrderStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFilledAmount",
+              "type": "uint128"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.OrderInfo",
+          "name": "orderInfo",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "txOrigin",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.RfqOrder",
+          "name": "order",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "enum LibSignature.SignatureType",
+              "name": "signatureType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct LibSignature.Signature",
+          "name": "signature",
+          "type": "tuple"
+        }
+      ],
+      "name": "getRfqOrderRelevantState",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "orderHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "enum LibNativeOrder.OrderStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFilledAmount",
+              "type": "uint128"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.OrderInfo",
+          "name": "orderInfo",
+          "type": "tuple"
+        },
+        {
+          "internalType": "uint128",
+          "name": "actualFillableTakerTokenAmount",
+          "type": "uint128"
+        },
+        {
+          "internalType": "bool",
+          "name": "isSignatureValid",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "maker",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "signer",
+          "type": "address"
+        }
+      ],
+      "name": "isValidOrderSigner",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "isValid",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "migrate",
+      "outputs": [
+        {
+          "internalType": "bytes4",
+          "name": "success",
+          "type": "bytes4"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "signer",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "allowed",
+          "type": "bool"
+        }
+      ],
+      "name": "registerAllowedOrderSigner",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "origins",
+          "type": "address[]"
+        },
+        {
+          "internalType": "bool",
+          "name": "allowed",
+          "type": "bool"
+        }
+      ],
+      "name": "registerAllowedRfqOrigins",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32[]",
+          "name": "poolIds",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "transferProtocolFeesForPools",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x610180604052680100000003000000006101605234801561001e575f5ffd5b50604051615db5380380615db583398101604081905261003d9161024d565b84848460405161004c9061022a565b604051809103905ff080158015610065573d5f5f3e3d5ffd5b5084848484848483838383838383838c80805f4690507f8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f7f9e5dae0addaf20578aeb5d70341d092b53b4e14480ac5726438fd436df7ba4277f06c015bd22b4c69690933c1058878ebdfef31f9aaae40bbe86d8a09fe1b2972c838560405160200161011b9594939291909485526020850193909352604084019190915260608301526001600160a01b0316608082015260a00190565b60408051601f1981840301815282825280516020918201206080526001600160a01b03891660c0819052633c9506a360e21b8452915191965063f2541a8c95506004808401955090935090918290030181865afa15801561017e573d5f5f3e3d5ffd5b505050506040513d601f19601f820116820180604052508101906101a291906102c6565b60e08181525050836001600160a01b0316610100816001600160a01b031681525050826001600160a01b0316610120816001600160a01b0316815250508063ffffffff1660a08163ffffffff16815250505050505050505050306001600160a01b0316610140816001600160a01b0316815250505050505050505050505050505050506102dd565b609680615d1f83390190565b6001600160a01b038116811461024a575f5ffd5b50565b5f5f5f5f5f60a08688031215610261575f5ffd5b855161026c81610236565b602087015190955061027d81610236565b604087015190945061028e81610236565b606087015190935061029f81610236565b608087015190925063ffffffff811681146102b8575f5ffd5b809150509295509295909350565b5f602082840312156102d6575f5ffd5b5051919050565b60805160a05160c05160e051610100516101205161014051610160516159cb6103545f395f61028a01525f61384001525f612c1801525f612b8d01525f6143ee01525f8181612ac4015261439c01525f81816103ef015281816105ea015261434201525f8181610705015261093e01526159cb5ff3fe608060405260043610610243575f3560e01c80639a4f809c11610131578063b4658bfb116100ac578063ea7faa611161007c578063f6e0f6a511610062578063f6e0f6a514610778578063fd5f995b14610797578063fe55a3ef146107b6575f5ffd5b8063ea7faa6114610746578063f6274f6614610765575f5ffd5b8063b4658bfb146106b6578063d0a55fb0146106d5578063dab400f3146106f4578063dd11d22514610727575f5ffd5b8063aa6b21cd11610101578063ad354eeb116100e7578063ad354eeb1461064a578063b09f1fb114610678578063b10a33f414610697575f5ffd5b8063aa6b21cd1461060c578063aa77476c1461062b575f5ffd5b80639a4f809c1461057c5780639baa45a81461059b5780639f0434f5146105ba578063a0edcef5146105d9575f5ffd5b8063487b5c20116101c157806386a0c8d7116101915780639240529c116101775780639240529c1461052b578063935c82a41461053e578063954808891461055d575f5ffd5b806386a0c8d7146104c75780638fd3ab80146104e6575f5ffd5b8063487b5c20146103e15780636ae4b4f7146104245780636b52a4a8146104795780637d49ec1a146104a8575f5ffd5b8063346693c5116102165780633cd2f026116101fc5780633cd2f02614610346578063414e4ccf14610365578063438cdfc5146103a1575f5ffd5b8063346693c5146102fb57806337f381d814610327575f5ffd5b8063016a6d6514610247578063031b905c146102795780630f0e8cf7146102ac5780631fb09795146102cd575b5f5ffd5b348015610252575f5ffd5b50610266610261366004614790565b6107d5565b6040519081526020015b60405180910390f35b348015610284575f5ffd5b506102667f000000000000000000000000000000000000000000000000000000000000000081565b3480156102b7575f5ffd5b506102cb6102c636600461489c565b610991565b005b3480156102d8575f5ffd5b506102ec6102e7366004614a01565b610aa4565b60405161027093929190614acf565b348015610306575f5ffd5b5061031a610315366004614790565b610bcc565b6040516102709190614b05565b348015610332575f5ffd5b506102ec610341366004614ba1565b610c95565b348015610351575f5ffd5b506102cb610360366004614bd6565b610da4565b610378610373366004614c47565b610ddc565b604080516fffffffffffffffffffffffffffffffff938416815292909116602083015201610270565b3480156103ac575f5ffd5b506103c06103bb366004614cb7565b610e66565b6040516fffffffffffffffffffffffffffffffff9091168152602001610270565b3480156103ec575f5ffd5b507f00000000000000000000000000000000000000000000000000000000000000005b60405163ffffffff9091168152602001610270565b34801561042f575f5ffd5b5061046c6040518060400160405280600b81526020017f4c696d69744f726465727300000000000000000000000000000000000000000081525081565b6040516102709190614d00565b348015610484575f5ffd5b50610498610493366004614d53565b610f5e565b6040519015158152602001610270565b3480156104b3575f5ffd5b506102cb6104c2366004614d8a565b610fa6565b3480156104d2575f5ffd5b506102cb6104e136600461489c565b611026565b3480156104f1575f5ffd5b506104fa61112e565b6040517fffffffff000000000000000000000000000000000000000000000000000000009091168152602001610270565b6103c0610539366004614da5565b61164b565b348015610549575f5ffd5b506102cb610558366004614de3565b611706565b348015610568575f5ffd5b5061031a610577366004614d8a565b61172d565b348015610587575f5ffd5b506102cb610596366004614e31565b6117ca565b3480156105a6575f5ffd5b506102cb6105b5366004614e6f565b6117d6565b3480156105c5575f5ffd5b506102cb6105d4366004614f0c565b61180b565b3480156105e4575f5ffd5b5061040f7f000000000000000000000000000000000000000000000000000000000000000081565b348015610617575f5ffd5b50610378610626366004614fc5565b6118f4565b348015610636575f5ffd5b50610378610645366004614cb7565b611987565b348015610655575f5ffd5b5061066961066436600461508f565b611a17565b60405161027093929190615167565b348015610683575f5ffd5b506102cb61069236600461520d565b611d0f565b3480156106a2575f5ffd5b506102cb6106b1366004614de3565b611e80565b3480156106c1575f5ffd5b506106696106d03660046152b0565b611ea7565b3480156106e0575f5ffd5b506102cb6106ef366004614e31565b612194565b3480156106ff575f5ffd5b506102667f000000000000000000000000000000000000000000000000000000000000000081565b348015610732575f5ffd5b50610266610741366004614d8a565b6121a0565b348015610751575f5ffd5b506102cb610760366004615314565b61231e565b610378610773366004614da5565b6123c5565b348015610783575f5ffd5b506102cb610792366004615340565b61245a565b3480156107a2575f5ffd5b506102cb6107b1366004614f0c565b61248f565b3480156107c1575f5ffd5b506102cb6107d0366004614790565b612571565b5f61098b610913835f6040517fe593d3fdfa8b60e5e17a1b2204662ecbe15c23f2084b9ad5bae40359540a7da98152825173ffffffffffffffffffffffffffffffffffffffff166020820152602083015173ffffffffffffffffffffffffffffffffffffffff16604082015260408301516fffffffffffffffffffffffffffffffff16606082015260608301516fffffffffffffffffffffffffffffffff166080820152608083015173ffffffffffffffffffffffffffffffffffffffff1660a082015260a083015173ffffffffffffffffffffffffffffffffffffffff1660c082015260c083015173ffffffffffffffffffffffffffffffffffffffff1660e082015260e083015161010082015261010083015167ffffffffffffffff166101208201526101208301516101408201526101608120915050919050565b6040517f190100000000000000000000000000000000000000000000000000000000000060208201527f00000000000000000000000000000000000000000000000000000000000000006022820152604281018290525f90606201604051602081830303815290604052805190602001209050919050565b92915050565b815183511480156109a3575080518351145b610a34576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152603860248201527f4e61746976654f7264657273466561747572652f4d49534d4154434845445f5060448201527f4149525f4f52444552535f41525241595f4c454e47544853000000000000000060648201526084015b60405180910390fd5b5f5b8351811015610a9e57610a9633858381518110610a5557610a556153d3565b6020026020010151858481518110610a6f57610a6f6153d3565b6020026020010151858581518110610a8957610a896153d3565b60200260200101516125ed565b600101610a36565b50505050565b604080516060810182525f808252602082018190529181018290529080610aca8561172d565b9250610b5a6040518060a001604052808760a0015173ffffffffffffffffffffffffffffffffffffffff168152602001875f015173ffffffffffffffffffffffffffffffffffffffff16815260200187604001516fffffffffffffffffffffffffffffffff16815260200187606001516fffffffffffffffffffffffffffffffff168152602001858152506126e1565b83519092505f90610b7990610b7436889003880188615400565b612813565b90508073ffffffffffffffffffffffffffffffffffffffff168660a0015173ffffffffffffffffffffffffffffffffffffffff161480610bc25750610bc28660a0015182610f5e565b9150509250925092565b604080516060810182525f8082526020820181905291810191909152610bf1826107d5565b81525f610bfc61298a565b608084015173ffffffffffffffffffffffffffffffffffffffff9081165f9081526002929092016020908152604080842087518416855282528084208288015190931684529190529020546060840151610100850151610120860151929350610c69928592919085612996565b60c083015173ffffffffffffffffffffffffffffffffffffffff16610c8f575f60208301525b50919050565b604080516060810182525f808252602082018190529181018290529080610cbb85610bcc565b9250610d4b6040518060a00160405280876080015173ffffffffffffffffffffffffffffffffffffffff168152602001875f015173ffffffffffffffffffffffffffffffffffffffff16815260200187604001516fffffffffffffffffffffffffffffffff16815260200187606001516fffffffffffffffffffffffffffffffff168152602001858152506126e1565b91505f610d5b845f015186612813565b90508073ffffffffffffffffffffffffffffffffffffffff16866080015173ffffffffffffffffffffffffffffffffffffffff161480610bc25750610bc2866080015182610f5e565b5f5b81811015610dd757610dcf838383818110610dc357610dc36153d3565b90506020020135612a93565b600101610da6565b505050565b5f5f5f610e4c6040518060a001604052808a8152602001898152602001886fffffffffffffffffffffffffffffffff1681526020018773ffffffffffffffffffffffffffffffffffffffff1681526020018673ffffffffffffffffffffffffffffffffffffffff16815250612cd6565b602081015160409091015190999098509650505050505050565b5f5f610edd6040518060c00160405280878152602001868152602001856fffffffffffffffffffffffffffffffff1681526020013373ffffffffffffffffffffffffffffffffffffffff1681526020015f151581526020013373ffffffffffffffffffffffffffffffffffffffff16815250613139565b9050826fffffffffffffffffffffffffffffffff1681602001516fffffffffffffffffffffffffffffffff161015610f5257610f52610f4d610f1e876107d5565b83602001516fffffffffffffffffffffffffffffffff16866fffffffffffffffffffffffffffffffff1661353d565b613604565b60400151949350505050565b5f610f6761298a565b73ffffffffffffffffffffffffffffffffffffffff9384165f908152600491909101602090815260408083209490951682529290925250205460ff1690565b5f610fb0826121a0565b90508160a0015173ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614158015610ffd5750610ffb8260a0015133610f5e565b155b1561101457611014610f4d82338560a0015161360c565b611022818360a00151613667565b5050565b81518351148015611038575080518351145b6110c4576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152603860248201527f4e61746976654f7264657273466561747572652f4d49534d4154434845445f5060448201527f4149525f4f52444552535f41525241595f4c454e4754485300000000000000006064820152608401610a2b565b5f5b8351811015610a9e57611126338583815181106110e5576110e56153d3565b60200260200101518584815181106110ff576110ff6153d3565b6020026020010151858581518110611119576111196153d3565b60200260200101516136f3565b6001016110c6565b5f6111587f3cd2f026000000000000000000000000000000000000000000000000000000006137db565b6111817ff6274f66000000000000000000000000000000000000000000000000000000006137db565b6111aa7faa77476c000000000000000000000000000000000000000000000000000000006137db565b6111d37f9240529c000000000000000000000000000000000000000000000000000000006137db565b6111fc7f438cdfc5000000000000000000000000000000000000000000000000000000006137db565b6112257f414e4ccf000000000000000000000000000000000000000000000000000000006137db565b61124e7faa6b21cd000000000000000000000000000000000000000000000000000000006137db565b6112777f7d49ec1a000000000000000000000000000000000000000000000000000000006137db565b6112a07ffe55a3ef000000000000000000000000000000000000000000000000000000006137db565b6112c97f9baa45a8000000000000000000000000000000000000000000000000000000006137db565b6112f27ff6e0f6a5000000000000000000000000000000000000000000000000000000006137db565b61131b7fd0a55fb0000000000000000000000000000000000000000000000000000000006137db565b6113447fb10a33f4000000000000000000000000000000000000000000000000000000006137db565b61136d7f86a0c8d7000000000000000000000000000000000000000000000000000000006137db565b6113967f9f0434f5000000000000000000000000000000000000000000000000000000006137db565b6113bf7f9a4f809c000000000000000000000000000000000000000000000000000000006137db565b6113e87f935c82a4000000000000000000000000000000000000000000000000000000006137db565b6114117f0f0e8cf7000000000000000000000000000000000000000000000000000000006137db565b61143a7ffd5f995b000000000000000000000000000000000000000000000000000000006137db565b6114637f95480889000000000000000000000000000000000000000000000000000000006137db565b61148c7f346693c5000000000000000000000000000000000000000000000000000000006137db565b6114b57fdd11d225000000000000000000000000000000000000000000000000000000006137db565b6114de7f016a6d65000000000000000000000000000000000000000000000000000000006137db565b6115077f487b5c20000000000000000000000000000000000000000000000000000000006137db565b6115307fb09f1fb1000000000000000000000000000000000000000000000000000000006137db565b6115597f1fb09795000000000000000000000000000000000000000000000000000000006137db565b6115827f37f381d8000000000000000000000000000000000000000000000000000000006137db565b6115ab7fb4658bfb000000000000000000000000000000000000000000000000000000006137db565b6115d47fad354eeb000000000000000000000000000000000000000000000000000000006137db565b6115fd7fea7faa61000000000000000000000000000000000000000000000000000000006137db565b6116267f6b52a4a8000000000000000000000000000000000000000000000000000000006137db565b507f2c64c5ef0000000000000000000000000000000000000000000000000000000090565b5f5f6116ba6040518060a00160405280878152602001868152602001856fffffffffffffffffffffffffffffffff1681526020013373ffffffffffffffffffffffffffffffffffffffff1681526020013373ffffffffffffffffffffffffffffffffffffffff16815250612cd6565b9050826fffffffffffffffffffffffffffffffff1681602001516fffffffffffffffffffffffffffffffff1610156116fb576116fb610f4d610f1e876121a0565b8051610f5290613899565b6117108433610f5e565b61172157611721610f4d8533613918565b610a9e848484846125ed565b604080516060810182525f8082526020820181905291810191909152611752826121a0565b81525f61175d61298a565b60a084015173ffffffffffffffffffffffffffffffffffffffff9081165f9081526001929092016020908152604080842087518416855282528084208288015190931684529190529020546060840151610140850151610160860151929350610c8f928592919085612996565b610dd7338484846125ed565b5f5b8151811015611022576118038282815181106117f6576117f66153d3565b6020026020010151610fa6565b6001016117d8565b8151835114801561181d575080518351145b6118a9576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152603860248201527f4e61746976654f7264657273466561747572652f4d49534d4154434845445f5060448201527f4149525f4f52444552535f41525241595f4c454e4754485300000000000000006064820152608401610a2b565b6118b38433610f5e565b6118c4576118c4610f4d8533613918565b5f5b83518110156118ed576118e5858583815181106110e5576110e56153d3565b6001016118c6565b5050505050565b5f5f5f61196c6040518060c001604052808b81526020018a8152602001896fffffffffffffffffffffffffffffffff1681526020018873ffffffffffffffffffffffffffffffffffffffff16815260200187151581526020018673ffffffffffffffffffffffffffffffffffffffff16815250613139565b6020810151604090910151909a909950975050505050505050565b5f5f5f6119ff6040518060c00160405280888152602001878152602001866fffffffffffffffffffffffffffffffff1681526020013373ffffffffffffffffffffffffffffffffffffffff1681526020015f151581526020013373ffffffffffffffffffffffffffffffffffffffff16815250613139565b60208101516040909101519097909650945050505050565b60608080858414611aaa576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602c60248201527f4e61746976654f7264657273466561747572652f4d49534d4154434845445f4160448201527f525241595f4c454e4754485300000000000000000000000000000000000000006064820152608401610a2b565b8567ffffffffffffffff811115611ac357611ac361459a565b604051908082528060200260200182016040528015611b2b57816020015b604080516060810182525f80825260208083018290529282015282527fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff909201910181611ae15790505b5092508567ffffffffffffffff811115611b4757611b4761459a565b604051908082528060200260200182016040528015611b70578160200160208202803683370190505b5091508567ffffffffffffffff811115611b8c57611b8c61459a565b604051908082528060200260200182016040528015611bb5578160200160208202803683370190505b5090505f5b86811015611d0457306337f381d8898984818110611bda57611bda6153d3565b90506101400201888885818110611bf357611bf36153d3565b9050608002016040518363ffffffff1660e01b8152600401611c16929190615459565b60a060405180830381865afa925050508015611c6d575060408051601f3d9081017fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0168201909252611c6a918101906155a7565b60015b15611cfc5782878581518110611c8557611c856153d3565b602002602001018190525081868581518110611ca357611ca36153d3565b60200260200101906fffffffffffffffffffffffffffffffff1690816fffffffffffffffffffffffffffffffff168152505080858581518110611ce857611ce86153d3565b911515602092830291909101909101525050505b600101611bba565b509450945094915050565b333214611d9e576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602760248201527f4e61746976654f7264657273466561747572652f4e4f5f434f4e54524143545f60448201527f4f524947494e53000000000000000000000000000000000000000000000000006064820152608401610a2b565b5f611da761298a565b90505f5b8351811015611e3f57335f90815260038301602052604081208551859290879085908110611ddb57611ddb6153d3565b60209081029190910181015173ffffffffffffffffffffffffffffffffffffffff1682528101919091526040015f2080547fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0016911515919091179055600101611dab565b507f02dfead5eb769b298e82dd9650b31c40559a3d42701dbf53c931bc2682847c31338484604051611e739392919061563a565b60405180910390a1505050565b611e8a8433610f5e565b611e9b57611e9b610f4d8533613918565b610a9e848484846136f3565b60608080858414611f3a576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602c60248201527f4e61746976654f7264657273466561747572652f4d49534d4154434845445f4160448201527f525241595f4c454e4754485300000000000000000000000000000000000000006064820152608401610a2b565b8567ffffffffffffffff811115611f5357611f5361459a565b604051908082528060200260200182016040528015611fbb57816020015b604080516060810182525f80825260208083018290529282015282527fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff909201910181611f715790505b5092508567ffffffffffffffff811115611fd757611fd761459a565b604051908082528060200260200182016040528015612000578160200160208202803683370190505b5091508567ffffffffffffffff81111561201c5761201c61459a565b604051908082528060200260200182016040528015612045578160200160208202803683370190505b5090505f5b86811015611d045730631fb0979589898481811061206a5761206a6153d3565b90506101800201888885818110612083576120836153d3565b9050608002016040518363ffffffff1660e01b81526004016120a69291906156be565b60a060405180830381865afa9250505080156120fd575060408051601f3d9081017fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe01682019092526120fa918101906155a7565b60015b1561218c5782878581518110612115576121156153d3565b602002602001018190525081868581518110612133576121336153d3565b60200260200101906fffffffffffffffffffffffffffffffff1690816fffffffffffffffffffffffffffffffff168152505080858581518110612178576121786153d3565b911515602092830291909101909101525050505b60010161204a565b610dd7338484846136f3565b5f61098b610913835f6040517fce918627cb55462ddbb85e73de69a8b322f2bc88f4507c52fcad6d4c33c29d498152825173ffffffffffffffffffffffffffffffffffffffff166020820152602083015173ffffffffffffffffffffffffffffffffffffffff16604082015260408301516fffffffffffffffffffffffffffffffff16606082015260608301516fffffffffffffffffffffffffffffffff16608082015260808301516fffffffffffffffffffffffffffffffff1660a082015260a083015173ffffffffffffffffffffffffffffffffffffffff1660c082015260c083015173ffffffffffffffffffffffffffffffffffffffff1660e082015260e083015173ffffffffffffffffffffffffffffffffffffffff1661010082015261010083015173ffffffffffffffffffffffffffffffffffffffff1661012082015261012083015161014082015261014083015167ffffffffffffffff166101608201526101608301516101808201526101a08120915050919050565b5f61232761298a565b335f818152600483016020908152604080832073ffffffffffffffffffffffffffffffffffffffff89168085529083529281902080547fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0016881515908117909155815194855291840192909252908201529091507f6ea9dbe8b2cc119348716a9220a0742ad62b7884ecb0ff4b32cd508121fd937990606001611e73565b5f5f5f6124356040518060a00160405280888152602001878152602001866fffffffffffffffffffffffffffffffff1681526020013373ffffffffffffffffffffffffffffffffffffffff1681526020013373ffffffffffffffffffffffffffffffffffffffff16815250612cd6565b9050612443815f0151613899565b602081015160409091015190969095509350505050565b5f5b81518110156110225761248782828151811061247a5761247a6153d3565b6020026020010151612571565b60010161245c565b815183511480156124a1575080518351145b61252d576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152603860248201527f4e61746976654f7264657273466561747572652f4d49534d4154434845445f5060448201527f4149525f4f52444552535f41525241595f4c454e4754485300000000000000006064820152608401610a2b565b6125378433610f5e565b61254857612548610f4d8533613918565b5f5b83518110156118ed5761256985858381518110610a5557610a556153d3565b60010161254a565b5f61257b826107d5565b9050816080015173ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141580156125c857506125c6826080015133610f5e565b155b156125df576125df610f4d8233856080015161360c565b611022818360800151613667565b5f6125f661298a565b73ffffffffffffffffffffffffffffffffffffffff8087165f908152600283016020908152604080832089851684528252808320938816835292905220549091508281111561264c5761264c610f4d84836139ed565b73ffffffffffffffffffffffffffffffffffffffff8681165f81815260028501602090815260408083208a8616808552908352818420958a1680855295835292819020889055805193845290830191909152810191909152606081018490527ffe7ffb1edfe79f4df716cb2dcad21cf2f31b104d816a7976ba1e6e4653c1efb1906080015b60405180910390a1505050505050565b5f81604001516fffffffffffffffffffffffffffffffff165f148061271a575060608201516fffffffffffffffffffffffffffffffff16155b1561272657505f919050565b6001826080015160200151600481111561274257612742614a5e565b1461274e57505f919050565b5f6127af836080015160400151846060015161276a919061586c565b6fffffffffffffffffffffffffffffffff1684606001516fffffffffffffffffffffffffffffffff1685604001516fffffffffffffffffffffffffffffffff16613a2b565b90506127cb816127c68560200151865f0151613a49565b613b71565b905061280c6128078285604001516fffffffffffffffffffffffffffffffff1686606001516fffffffffffffffffffffffffffffffff16613b86565b613ba7565b9392505050565b5f61281e8383613bd2565b60028251600481111561283357612833614a5e565b036128a45760208083015160408085015160608087015183515f815295860180855289905260ff9094169285019290925290830152608082015260019060a0016020604051602081039080840390855afa158015612893573d5f5f3e3d5ffd5b505050602060405103519050612961565b6003825160048111156128b9576128b9614a5e565b03612961575f7f19457468657265756d205369676e6564204d6573736167653a0a3332000000005f5283601c52603c5f2090506001818460200151856040015186606001516040515f8152602001604052604051612933949392919093845260ff9290921660208401526040830152606082015260800190565b6020604051602081039080840390855afa158015612953573d5f5f3e3d5ffd5b505050602060405103519150505b73ffffffffffffffffffffffffffffffffffffffff811661098b5761098b610f4d600585613cc3565b5f5f61098b6007613cf9565b5f61299f61298a565b86515f9081526020829052604090819020546fffffffffffffffffffffffffffffffff808216928a01839052929350918716116129fb576020870160025b908160048111156129f0576129f0614a5e565b8152505050506118ed565b7f8000000000000000000000000000000000000000000000000000000000000000811615612a2e576020870160036129dd565b504267ffffffffffffffff168467ffffffffffffffff1611612a6e576020860160045b90816004811115612a6457612a64614a5e565b81525050506118ed565b82821115612a8157602086016003612a51565b60016020870181905250505050505050565b6040517f319bed9a000000000000000000000000000000000000000000000000000000008152600481018290525f907f000000000000000000000000000000000000000000000000000000000000000073ffffffffffffffffffffffffffffffffffffffff169063319bed9a906024016020604051808303815f875af1158015612b1f573d5f5f3e3d5ffd5b505050506040513d601f19601f82011682018060405250810190612b439190615894565b6040517f70a0823100000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff80831660048301529192505f917f000000000000000000000000000000000000000000000000000000000000000016906370a0823190602401602060405180830381865afa158015612bd2573d5f5f3e3d5ffd5b505050506040513d601f19601f82011682018060405250810190612bf691906158af565b90506001811115610dd75773ffffffffffffffffffffffffffffffffffffffff7f00000000000000000000000000000000000000000000000000000000000000001663a3b4a3278380612c4a6001866158c6565b6040517fffffffff0000000000000000000000000000000000000000000000000000000060e086901b16815273ffffffffffffffffffffffffffffffffffffffff938416600482015292909116602483015260448201526064015f604051808303815f87803b158015612cbb575f5ffd5b505af1158015612ccd573d5f5f3e3d5ffd5b50505050505050565b604080516080810182525f8082526020820181905291810182905260608101919091525f612d06835f015161172d565b9050600181602001516004811115612d2057612d20614a5e565b14612d4a57612d4a610f4d825f015183602001516004811115612d4557612d45614a5e565b613d21565b825160c0015173ffffffffffffffffffffffffffffffffffffffff1615801590612dab5750826060015173ffffffffffffffffffffffffffffffffffffffff16835f015160c0015173ffffffffffffffffffffffffffffffffffffffff1614155b15612dcc57612dcc610f4d825f01518560600151865f015160c00151613d61565b825160e0015173ffffffffffffffffffffffffffffffffffffffff1615801590612e2d5750826080015173ffffffffffffffffffffffffffffffffffffffff16835f015160e0015173ffffffffffffffffffffffffffffffffffffffff1614155b15612e4e57612e4e610f4d825f01518560800151865f015160e00151613dbc565b5f612e60825f01518560200151612813565b9050835f015160a0015173ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614158015612eb25750835160a00151612eb09082610f5e565b155b15612ece578151845160a00151612ece91610f4d918490613e17565b5082516101200151612edf90613e72565b8252604080516101408101825282518152845160a09081015173ffffffffffffffffffffffffffffffffffffffff9081166020808501919091526060808901805184168688015251831681860152885151831660808601528851909101519091169183019190915285518301516fffffffffffffffffffffffffffffffff90811660c0840152865190910151811660e083015285830151811661010083015291830151909116610120820152612f9490613f8e565b6fffffffffffffffffffffffffffffffff9081166040850152908116602084015283516080015116156130495761301482602001516fffffffffffffffffffffffffffffffff16845f0151606001516fffffffffffffffffffffffffffffffff16855f0151608001516fffffffffffffffffffffffffffffffff16613a2b565b6fffffffffffffffffffffffffffffffff16606080840182905284516020810151918601516101009091015161304993614123565b8051835160a08101516060808701516101008401518451602080870151908a01516040808c0151968c01518c51610120909a015191517fab614d2b738543c0ea21f56347cf696a3a0c42a7cbec3212a5ca22a4dcff21249b61312b9b909a999390919a8b5273ffffffffffffffffffffffffffffffffffffffff998a1660208c015297891660408b015295881660608a015293871660808901529190951660a08701526fffffffffffffffffffffffffffffffff94851660c0870152841660e08601529092166101008401526101208301919091526101408201526101600190565b60405180910390a150919050565b604080516080810182525f8082526020820181905291810182905260608101919091525f613169835f0151610bcc565b905060018160200151600481111561318357613183614a5e565b146131a8576131a8610f4d825f015183602001516004811115612d4557612d45614a5e565b5f6131b161298a565b845160c0015190915073ffffffffffffffffffffffffffffffffffffffff1632148015906132165750835160c0015173ffffffffffffffffffffffffffffffffffffffff165f908152600382016020908152604080832032845290915290205460ff16155b15613232578151845160c0015161323291610f4d91329061426b565b50825160a0015173ffffffffffffffffffffffffffffffffffffffff16158015906132945750826060015173ffffffffffffffffffffffffffffffffffffffff16835f015160a0015173ffffffffffffffffffffffffffffffffffffffff1614155b156132b5576132b5610f4d825f01518560600151865f015160a00151613d61565b5f6132c7825f01518560200151612813565b9050835f01516080015173ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff161415801561331957508351608001516133179082610f5e565b155b1561333557815184516080015161333591610f4d918490613e17565b50604080516101408101825282518152845160809081015173ffffffffffffffffffffffffffffffffffffffff16602083015285015161347b92820190613380578560600151613382565b305b73ffffffffffffffffffffffffffffffffffffffff1681526020018560a0015173ffffffffffffffffffffffffffffffffffffffff168152602001855f01515f015173ffffffffffffffffffffffffffffffffffffffff168152602001855f01516020015173ffffffffffffffffffffffffffffffffffffffff168152602001855f0151604001516fffffffffffffffffffffffffffffffff168152602001855f0151606001516fffffffffffffffffffffffffffffffff16815260200185604001516fffffffffffffffffffffffffffffffff16815260200183604001516fffffffffffffffffffffffffffffffff16815250613f8e565b6fffffffffffffffffffffffffffffffff9081166040858101829052929091166020808601829052845187516080808201516060808c015184518588015160e0968701518c5198895273ffffffffffffffffffffffffffffffffffffffff958616998901999099529184169a87019a909a52988216908501529096169582019590955260a081019290925260c0820192909252918201527f829fa99d94dc4636925b38632e625736a614c154d55006b7ab6bea979c210c32906101000161312b565b6040516024810184905260448101839052606481018290526060907f21948612b5ef214ec0508df4901600e07a810a371be76b25d59ade73826e3d97906084015b604080517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe08184030181529190526020810180517bffffffffffffffffffffffffffffffffffffffffffffffffffffffff167fffffffff000000000000000000000000000000000000000000000000000000009093169290921790915290509392505050565b805160208201fd5b6040516024810184905273ffffffffffffffffffffffffffffffffffffffff8084166044830152821660648201526060907f88b2c08e4a5f57d416ad23dad18c20497ccfe684b1379b28fd564adaf582b80f9060840161357e565b5f61367061298a565b5f848152602082815260409182902080547f8000000000000000000000000000000000000000000000000000000000000000179055815186815273ffffffffffffffffffffffffffffffffffffffff8616918101919091529192507fa6eb7cdc219e1518ced964e9a34e61d68a94e4f1569db3e84256ba981ba527539101611e73565b5f6136fc61298a565b73ffffffffffffffffffffffffffffffffffffffff8087165f908152600183016020908152604080832089851684528252808320938816835292905220549091508281111561375257613752610f4d84836139ed565b73ffffffffffffffffffffffffffffffffffffffff8681165f81815260018501602090815260408083208a8616808552908352818420958a1680855295835292819020889055805193845290830191909152810191909152606081018490527fa91fe7ae62fce669df2c7f880f8c14d178531aae72515558e5c948e37c32a572906080016126d1565b6040517f6eb224cb0000000000000000000000000000000000000000000000000000000081527fffffffff000000000000000000000000000000000000000000000000000000008216600482015273ffffffffffffffffffffffffffffffffffffffff7f00000000000000000000000000000000000000000000000000000000000000001660248201523090636eb224cb906044015f604051808303815f87803b158015613887575f5ffd5b505af11580156118ed573d5f5f3e3d5ffd5b80341180156138a85750333014155b15613915575f6138b882346158c6565b6040519091505f90339083908381818185875af1925050503d805f81146138fa576040519150601f19603f3d011682016040523d82523d5f602084013e6138ff565b606091505b5050905080610dd757610dd7610f4d33846142c6565b50565b60405173ffffffffffffffffffffffffffffffffffffffff8084166024830152821660448201526060907f84356db366796dc6e2aeb1ad74b631fe4e5ec6a650464da6059e9f95c8810a10906064015b604080517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe08184030181529190526020810180517bffffffffffffffffffffffffffffffffffffffffffffffffffffffff167fffffffff0000000000000000000000000000000000000000000000000000000090931692909217909152905092915050565b60405160248101839052604481018290526060907fb12bc7e7d341f4431d6faf05f991ee3b779183e341b24243064e10c886cd187390606401613968565b5f82613a3783866158d9565b613a4191906158f0565b949350505050565b6040517fdd62ed3e00000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff82811660048301523060248301525f9161280c9185169063dd62ed3e90604401602060405180830381865afa158015613abf573d5f5f3e3d5ffd5b505050506040513d601f19601f82011682018060405250810190613ae391906158af565b6040517f70a0823100000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff85811660048301528616906370a0823190602401602060405180830381865afa158015613b4d573d5f5f3e3d5ffd5b505050506040513d601f19601f820116820180604052508101906127c691906158af565b5f818310613b7f578161280c565b5090919050565b5f82613b936001826158c6565b613b9d84876158d9565b613a379190615928565b5f6fffffffffffffffffffffffffffffffff821115613bce57613bce610f4d600384614319565b5090565b60408101517ffffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141111580613c3e5750613c2b60027ffffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd03641416158f0565b613c36906001615928565b606082015110155b15613c5157613c51610f4d600584613cc3565b5f81516004811115613c6557613c65614a5e565b03613c7857613c78610f4d600384613cc3565b600181516004811115613c8d57613c8d614a5e565b03613c9f57613c9f610f4d5f84613cc3565b600481516004811115613cb457613cb4614a5e565b0361102257611022610f4d6002845b60607ff18f11f3027e735c758137924b262d4d3aff0037dcd785aca3c699fa05d960bd838360405160240161396892919061593b565b5f608082600b811115613d0e57613d0e614a5e565b613d19906001615928565b901b92915050565b6040516024810183905260ff821660448201526060907f47ab394e41470191eaf9fa542e84ac483a12665fbd616eb8d1c022ced6c9400090606401613968565b6040516024810184905273ffffffffffffffffffffffffffffffffffffffff8084166044830152821660648201526060907f5d3300180a4547b3e27137be832d3ebf56f1ba5ebb30dd580999c61f77fa63969060840161357e565b6040516024810184905273ffffffffffffffffffffffffffffffffffffffff8084166044830152821660648201526060907f15e6a383bb02d79ee933b927fbecba78cdde16cba84b94a99661f44bcce3b7369060840161357e565b6040516024810184905273ffffffffffffffffffffffffffffffffffffffff8084166044830152821660648201526060907ff13e65d925201525f3d71a731833b19bb26e44cfbd97caf72a366b73866f71249060840161357e565b5f5f613e7c614336565b9050805f03613e8d57505f92915050565b5f613e978461436c565b90505f8173ffffffffffffffffffffffffffffffffffffffff16836040515f6040518083038185875af1925050503d805f8114613eef576040519150601f19603f3d011682016040523d82523d5f602084013e613ef4565b606091505b5050905080613f85576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602760248201527f466978696e50726f746f636f6c466565732f45544845525f5452414e5346455260448201527f5f46414c494544000000000000000000000000000000000000000000000000006064820152608401610a2b565b50909392505050565b5f5f613fb38361010001518461012001518560e00151613fae919061586c565b614434565b9150613ffe826fffffffffffffffffffffffffffffffff168460e001516fffffffffffffffffffffffffffffffff168560c001516fffffffffffffffffffffffffffffffff16613a2b565b90506fffffffffffffffffffffffffffffffff8216158061402f57506fffffffffffffffffffffffffffffffff8116155b1561403e57505f928392509050565b8183610120015161404f9190615959565b6fffffffffffffffffffffffffffffffff1661406961298a565b84515f908152602091909152604090819020919091558301513073ffffffffffffffffffffffffffffffffffffffff909116036140ca576140c58360a001518460200151846fffffffffffffffffffffffffffffffff16614466565b6140f4565b6140f48360a0015184604001518560200151856fffffffffffffffffffffffffffffffff16614123565b61411e836080015184602001518560600151846fffffffffffffffffffffffffffffffff16614123565b915091565b3073ffffffffffffffffffffffffffffffffffffffff8516036141c7576040517f08c379a0000000000000000000000000000000000000000000000000000000008152602060048201526024808201527f466978696e546f6b656e5370656e6465722f43414e4e4f545f494e564f4b455f60448201527f53454c46000000000000000000000000000000000000000000000000000000006064820152608401610a2b565b6040517f23b872dd00000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff8416600482015273ffffffffffffffffffffffffffffffffffffffff831660248201528160448201526020816064835f73ffffffffffffffffffffffffffffffffffffffff8a165af13d60018351146020821015168115178216915081612ccd57805f843e8083fd5b6040516024810184905273ffffffffffffffffffffffffffffffffffffffff8084166044830152821660648201526060907fc0972f3cc4234ca2091de7e7bc7081494bd29ac280167d66f0d44168973b16349060840161357e565b60405173ffffffffffffffffffffffffffffffffffffffff83166024820152604481018290526060907fbde95cc2119e0200d80642397198abfcf98e6e4dddd0de9c6320d86252ad40ab90606401613968565b606063c996af7b60e01b8383604051602401613968929190615981565b5f6143673a63ffffffff7f0000000000000000000000000000000000000000000000000000000000000000166158d9565b905090565b604080517fff000000000000000000000000000000000000000000000000000000000000006020808301919091527f000000000000000000000000000000000000000000000000000000000000000060601b7fffffffffffffffffffffffffffffffffffffffff000000000000000000000000166021830152603582018490527f000000000000000000000000000000000000000000000000000000000000000060558084019190915283518084039091018152607590920190925280519101205f9061098b565b5f816fffffffffffffffffffffffffffffffff16836fffffffffffffffffffffffffffffffff1610613b7f578161280c565b3073ffffffffffffffffffffffffffffffffffffffff84160361450a576040517f08c379a0000000000000000000000000000000000000000000000000000000008152602060048201526024808201527f466978696e546f6b656e5370656e6465722f43414e4e4f545f494e564f4b455f60448201527f53454c46000000000000000000000000000000000000000000000000000000006064820152608401610a2b565b6040517fa9059cbb00000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff831660048201528160248201526020816044835f73ffffffffffffffffffffffffffffffffffffffff89165af13d6001835114602082101516811517821691508161459257805f843e8083fd5b505050505050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52604160045260245ffd5b604051610140810167ffffffffffffffff811182821017156145eb576145eb61459a565b60405290565b604051610180810167ffffffffffffffff811182821017156145eb576145eb61459a565b604051601f82017fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe016810167ffffffffffffffff8111828210171561465c5761465c61459a565b604052919050565b73ffffffffffffffffffffffffffffffffffffffff81168114613915575f5ffd5b803561469081614664565b919050565b6fffffffffffffffffffffffffffffffff81168114613915575f5ffd5b803561469081614695565b803567ffffffffffffffff81168114614690575f5ffd5b5f61014082840312156146e5575f5ffd5b6146ed6145c7565b90506146f882614685565b815261470660208301614685565b6020820152614717604083016146b2565b6040820152614728606083016146b2565b606082015261473960808301614685565b608082015261474a60a08301614685565b60a082015261475b60c08301614685565b60c082015260e0828101359082015261477761010083016146bd565b6101008201526101209182013591810191909152919050565b5f61014082840312156147a1575f5ffd5b61280c83836146d4565b5f67ffffffffffffffff8211156147c4576147c461459a565b5060051b60200190565b5f82601f8301126147dd575f5ffd5b81356147f06147eb826147ab565b614615565b8082825260208201915060208360051b860101925085831115614811575f5ffd5b602085015b8381101561483757803561482981614664565b835260209283019201614816565b5095945050505050565b5f82601f830112614850575f5ffd5b813561485e6147eb826147ab565b8082825260208201915060208360051b86010192508583111561487f575f5ffd5b602085015b83811015614837578035835260209283019201614884565b5f5f5f606084860312156148ae575f5ffd5b833567ffffffffffffffff8111156148c4575f5ffd5b6148d0868287016147ce565b935050602084013567ffffffffffffffff8111156148ec575f5ffd5b6148f8868287016147ce565b925050604084013567ffffffffffffffff811115614914575f5ffd5b610bc286828701614841565b5f6101808284031215614931575f5ffd5b6149396145f1565b905061494482614685565b815261495260208301614685565b6020820152614963604083016146b2565b6040820152614974606083016146b2565b6060820152614985608083016146b2565b608082015261499660a08301614685565b60a08201526149a760c08301614685565b60c08201526149b860e08301614685565b60e08201526149ca6101008301614685565b61010082015261012082810135908201526149e861014083016146bd565b6101408201526101609182013591810191909152919050565b5f5f828403610200811215614a14575f5ffd5b614a1e8585614920565b925060807ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe8082011215614a4f575f5ffd5b50610180830190509250929050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52602160045260245ffd5b6005811061391557613915614a5e565b805182526020810151614aad81614a8b565b60208301526040908101516fffffffffffffffffffffffffffffffff16910152565b60a08101614add8286614a9b565b6fffffffffffffffffffffffffffffffff841660608301528215156080830152949350505050565b6060810161098b8284614a9b565b60058110613915575f5ffd5b803560ff81168114614690575f5ffd5b5f60808284031215614b3f575f5ffd5b6040516080810167ffffffffffffffff81118282101715614b6257614b6261459a565b6040529050808235614b7381614b13565b8152614b8160208401614b1f565b602082015260408381013590820152606092830135920191909152919050565b5f5f6101c08385031215614bb3575f5ffd5b614bbd84846146d4565b9150614bcd846101408501614b2f565b90509250929050565b5f5f60208385031215614be7575f5ffd5b823567ffffffffffffffff811115614bfd575f5ffd5b8301601f81018513614c0d575f5ffd5b803567ffffffffffffffff811115614c23575f5ffd5b8560208260051b8401011115614c37575f5ffd5b6020919091019590945092505050565b5f5f5f5f5f6102608688031215614c5c575f5ffd5b614c668787614920565b9450614c76876101808801614b2f565b9350610200860135614c8781614695565b9250610220860135614c9881614664565b9150610240860135614ca981614664565b809150509295509295909350565b5f5f5f6101e08486031215614cca575f5ffd5b614cd485856146d4565b9250614ce4856101408601614b2f565b91506101c0840135614cf581614695565b809150509250925092565b602081525f82518060208401528060208501604085015e5f6040828501015260407fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0601f83011684010191505092915050565b5f5f60408385031215614d64575f5ffd5b8235614d6f81614664565b91506020830135614d7f81614664565b809150509250929050565b5f6101808284031215614d9b575f5ffd5b61280c8383614920565b5f5f5f6102208486031215614db8575f5ffd5b614dc28585614920565b9250614dd2856101808601614b2f565b9150610200840135614cf581614695565b5f5f5f5f60808587031215614df6575f5ffd5b8435614e0181614664565b93506020850135614e1181614664565b92506040850135614e2181614664565b9396929550929360600135925050565b5f5f5f60608486031215614e43575f5ffd5b8335614e4e81614664565b92506020840135614e5e81614664565b929592945050506040919091013590565b5f60208284031215614e7f575f5ffd5b813567ffffffffffffffff811115614e95575f5ffd5b8201601f81018413614ea5575f5ffd5b8035614eb36147eb826147ab565b8082825260208201915060206101808402850101925086831115614ed5575f5ffd5b6020840193505b82841015614f0257614eee8785614920565b825260208201915061018084019350614edc565b9695505050505050565b5f5f5f5f60808587031215614f1f575f5ffd5b8435614f2a81614664565b9350602085013567ffffffffffffffff811115614f45575f5ffd5b614f51878288016147ce565b935050604085013567ffffffffffffffff811115614f6d575f5ffd5b614f79878288016147ce565b925050606085013567ffffffffffffffff811115614f95575f5ffd5b614fa187828801614841565b91505092959194509250565b8015158114613915575f5ffd5b803561469081614fad565b5f5f5f5f5f5f6102408789031215614fdb575f5ffd5b614fe588886146d4565b9550614ff5886101408901614b2f565b94506101c087013561500681614695565b93506101e087013561501781614664565b925061020087013561502881614fad565b915061022087013561503981614664565b809150509295509295509295565b5f5f83601f840112615057575f5ffd5b50813567ffffffffffffffff81111561506e575f5ffd5b6020830191508360208260071b8501011115615088575f5ffd5b9250929050565b5f5f5f5f604085870312156150a2575f5ffd5b843567ffffffffffffffff8111156150b8575f5ffd5b8501601f810187136150c8575f5ffd5b803567ffffffffffffffff8111156150de575f5ffd5b876020610140830284010111156150f3575f5ffd5b60209182019550935085013567ffffffffffffffff811115615113575f5ffd5b61511f87828801615047565b95989497509550505050565b5f8151808452602084019350602083015f5b8281101561515d578151151586526020958601959091019060010161513d565b5093949350505050565b606080825284519082018190525f9060208601906080840190835b818110156151ab57615195838551614a9b565b6020939093019260609290920191600101615182565b5050838103602080860191909152865180835291810192508601905f5b818110156151f85782516fffffffffffffffffffffffffffffffff168452602093840193909201916001016151c8565b5050508281036040840152614f02818561512b565b5f5f6040838503121561521e575f5ffd5b823567ffffffffffffffff811115615234575f5ffd5b8301601f81018513615244575f5ffd5b80356152526147eb826147ab565b8082825260208201915060208360051b850101925087831115615273575f5ffd5b6020840193505b8284101561529e57833561528d81614664565b82526020938401939091019061527a565b9450614bcd9250505060208401614fba565b5f5f5f5f604085870312156152c3575f5ffd5b843567ffffffffffffffff8111156152d9575f5ffd5b8501601f810187136152e9575f5ffd5b803567ffffffffffffffff8111156152ff575f5ffd5b876020610180830284010111156150f3575f5ffd5b5f5f60408385031215615325575f5ffd5b823561533081614664565b91506020830135614d7f81614fad565b5f60208284031215615350575f5ffd5b813567ffffffffffffffff811115615366575f5ffd5b8201601f81018413615376575f5ffd5b80356153846147eb826147ab565b80828252602082019150602061014084028501019250868311156153a6575f5ffd5b6020840193505b82841015614f02576153bf87856146d4565b8252602082019150610140840193506153ad565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52603260045260245ffd5b5f60808284031215615410575f5ffd5b61280c8383614b2f565b803561542581614b13565b61542e81614a8b565b825260ff61543e60208301614b1f565b16602083015260408181013590830152606090810135910152565b6101c081016154858261546b86614685565b73ffffffffffffffffffffffffffffffffffffffff169052565b61549160208501614685565b73ffffffffffffffffffffffffffffffffffffffff1660208301526154b8604085016146b2565b6fffffffffffffffffffffffffffffffff1660408301526154db606085016146b2565b6fffffffffffffffffffffffffffffffff1660608301526154fe60808501614685565b73ffffffffffffffffffffffffffffffffffffffff16608083015261552560a08501614685565b73ffffffffffffffffffffffffffffffffffffffff1660a083015261554c60c08501614685565b73ffffffffffffffffffffffffffffffffffffffff1660c083015260e0848101359083015261557e61010085016146bd565b67ffffffffffffffff16610100830152610120848101359083015261280c61014083018461541a565b5f5f5f83850360a08112156155ba575f5ffd5b60608112156155c7575f5ffd5b506040516060810167ffffffffffffffff811182821017156155eb576155eb61459a565b60405284518152602085015161560081614b13565b6020820152604085015161561381614695565b6040820152606085015190935061562981614695565b6080850151909250614cf581614fad565b5f6060820173ffffffffffffffffffffffffffffffffffffffff86168352606060208401528085518083526080850191506020870192505f5b818110156156a757835173ffffffffffffffffffffffffffffffffffffffff16835260209384019390920191600101615673565b505080925050508215156040830152949350505050565b61020081016156d08261546b86614685565b6156dc60208501614685565b73ffffffffffffffffffffffffffffffffffffffff166020830152615703604085016146b2565b6fffffffffffffffffffffffffffffffff166040830152615726606085016146b2565b6fffffffffffffffffffffffffffffffff166060830152615749608085016146b2565b6fffffffffffffffffffffffffffffffff16608083015261576c60a08501614685565b73ffffffffffffffffffffffffffffffffffffffff1660a083015261579360c08501614685565b73ffffffffffffffffffffffffffffffffffffffff1660c08301526157ba60e08501614685565b73ffffffffffffffffffffffffffffffffffffffff1660e08301526157e26101008501614685565b73ffffffffffffffffffffffffffffffffffffffff16610100830152610120848101359083015261581661014085016146bd565b67ffffffffffffffff16610140830152610160848101359083015261280c61018083018461541a565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52601160045260245ffd5b6fffffffffffffffffffffffffffffffff828116828216039081111561098b5761098b61583f565b5f602082840312156158a4575f5ffd5b815161280c81614664565b5f602082840312156158bf575f5ffd5b5051919050565b8181038181111561098b5761098b61583f565b808202811582820484141761098b5761098b61583f565b5f82615923577f4e487b71000000000000000000000000000000000000000000000000000000005f52601260045260245ffd5b500490565b8082018082111561098b5761098b61583f565b604081016006841061594f5761594f614a5e565b9281526020015290565b6fffffffffffffffffffffffffffffffff818116838216019081111561098b5761098b61583f565b604081016004841061594f5761594f614a5e56fea264697066735822122075170c53ae6fad13d2259f0fb21e4f611639d93d3bee30f8607c3cb1663f576c64736f6c634300081c003360806040525f80553480156011575f5ffd5b50607980601d5f395ff3fe6080604052348015600e575f5ffd5b50600436106026575f3560e01c8063f2541a8c14602a575b5f5ffd5b60315f5481565b60405190815260200160405180910390f3fea2646970667358221220441c9024ad201e12716eff30242abddc0d0c41398bc7ac1654d874d1ab0a63ed64736f6c634300081c0033",
+  "deployedBytecode": "0x608060405260043610610243575f3560e01c80639a4f809c11610131578063b4658bfb116100ac578063ea7faa611161007c578063f6e0f6a511610062578063f6e0f6a514610778578063fd5f995b14610797578063fe55a3ef146107b6575f5ffd5b8063ea7faa6114610746578063f6274f6614610765575f5ffd5b8063b4658bfb146106b6578063d0a55fb0146106d5578063dab400f3146106f4578063dd11d22514610727575f5ffd5b8063aa6b21cd11610101578063ad354eeb116100e7578063ad354eeb1461064a578063b09f1fb114610678578063b10a33f414610697575f5ffd5b8063aa6b21cd1461060c578063aa77476c1461062b575f5ffd5b80639a4f809c1461057c5780639baa45a81461059b5780639f0434f5146105ba578063a0edcef5146105d9575f5ffd5b8063487b5c20116101c157806386a0c8d7116101915780639240529c116101775780639240529c1461052b578063935c82a41461053e578063954808891461055d575f5ffd5b806386a0c8d7146104c75780638fd3ab80146104e6575f5ffd5b8063487b5c20146103e15780636ae4b4f7146104245780636b52a4a8146104795780637d49ec1a146104a8575f5ffd5b8063346693c5116102165780633cd2f026116101fc5780633cd2f02614610346578063414e4ccf14610365578063438cdfc5146103a1575f5ffd5b8063346693c5146102fb57806337f381d814610327575f5ffd5b8063016a6d6514610247578063031b905c146102795780630f0e8cf7146102ac5780631fb09795146102cd575b5f5ffd5b348015610252575f5ffd5b50610266610261366004614790565b6107d5565b6040519081526020015b60405180910390f35b348015610284575f5ffd5b506102667f000000000000000000000000000000000000000000000000000000000000000081565b3480156102b7575f5ffd5b506102cb6102c636600461489c565b610991565b005b3480156102d8575f5ffd5b506102ec6102e7366004614a01565b610aa4565b60405161027093929190614acf565b348015610306575f5ffd5b5061031a610315366004614790565b610bcc565b6040516102709190614b05565b348015610332575f5ffd5b506102ec610341366004614ba1565b610c95565b348015610351575f5ffd5b506102cb610360366004614bd6565b610da4565b610378610373366004614c47565b610ddc565b604080516fffffffffffffffffffffffffffffffff938416815292909116602083015201610270565b3480156103ac575f5ffd5b506103c06103bb366004614cb7565b610e66565b6040516fffffffffffffffffffffffffffffffff9091168152602001610270565b3480156103ec575f5ffd5b507f00000000000000000000000000000000000000000000000000000000000000005b60405163ffffffff9091168152602001610270565b34801561042f575f5ffd5b5061046c6040518060400160405280600b81526020017f4c696d69744f726465727300000000000000000000000000000000000000000081525081565b6040516102709190614d00565b348015610484575f5ffd5b50610498610493366004614d53565b610f5e565b6040519015158152602001610270565b3480156104b3575f5ffd5b506102cb6104c2366004614d8a565b610fa6565b3480156104d2575f5ffd5b506102cb6104e136600461489c565b611026565b3480156104f1575f5ffd5b506104fa61112e565b6040517fffffffff000000000000000000000000000000000000000000000000000000009091168152602001610270565b6103c0610539366004614da5565b61164b565b348015610549575f5ffd5b506102cb610558366004614de3565b611706565b348015610568575f5ffd5b5061031a610577366004614d8a565b61172d565b348015610587575f5ffd5b506102cb610596366004614e31565b6117ca565b3480156105a6575f5ffd5b506102cb6105b5366004614e6f565b6117d6565b3480156105c5575f5ffd5b506102cb6105d4366004614f0c565b61180b565b3480156105e4575f5ffd5b5061040f7f000000000000000000000000000000000000000000000000000000000000000081565b348015610617575f5ffd5b50610378610626366004614fc5565b6118f4565b348015610636575f5ffd5b50610378610645366004614cb7565b611987565b348015610655575f5ffd5b5061066961066436600461508f565b611a17565b60405161027093929190615167565b348015610683575f5ffd5b506102cb61069236600461520d565b611d0f565b3480156106a2575f5ffd5b506102cb6106b1366004614de3565b611e80565b3480156106c1575f5ffd5b506106696106d03660046152b0565b611ea7565b3480156106e0575f5ffd5b506102cb6106ef366004614e31565b612194565b3480156106ff575f5ffd5b506102667f000000000000000000000000000000000000000000000000000000000000000081565b348015610732575f5ffd5b50610266610741366004614d8a565b6121a0565b348015610751575f5ffd5b506102cb610760366004615314565b61231e565b610378610773366004614da5565b6123c5565b348015610783575f5ffd5b506102cb610792366004615340565b61245a565b3480156107a2575f5ffd5b506102cb6107b1366004614f0c565b61248f565b3480156107c1575f5ffd5b506102cb6107d0366004614790565b612571565b5f61098b610913835f6040517fe593d3fdfa8b60e5e17a1b2204662ecbe15c23f2084b9ad5bae40359540a7da98152825173ffffffffffffffffffffffffffffffffffffffff166020820152602083015173ffffffffffffffffffffffffffffffffffffffff16604082015260408301516fffffffffffffffffffffffffffffffff16606082015260608301516fffffffffffffffffffffffffffffffff166080820152608083015173ffffffffffffffffffffffffffffffffffffffff1660a082015260a083015173ffffffffffffffffffffffffffffffffffffffff1660c082015260c083015173ffffffffffffffffffffffffffffffffffffffff1660e082015260e083015161010082015261010083015167ffffffffffffffff166101208201526101208301516101408201526101608120915050919050565b6040517f190100000000000000000000000000000000000000000000000000000000000060208201527f00000000000000000000000000000000000000000000000000000000000000006022820152604281018290525f90606201604051602081830303815290604052805190602001209050919050565b92915050565b815183511480156109a3575080518351145b610a34576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152603860248201527f4e61746976654f7264657273466561747572652f4d49534d4154434845445f5060448201527f4149525f4f52444552535f41525241595f4c454e47544853000000000000000060648201526084015b60405180910390fd5b5f5b8351811015610a9e57610a9633858381518110610a5557610a556153d3565b6020026020010151858481518110610a6f57610a6f6153d3565b6020026020010151858581518110610a8957610a896153d3565b60200260200101516125ed565b600101610a36565b50505050565b604080516060810182525f808252602082018190529181018290529080610aca8561172d565b9250610b5a6040518060a001604052808760a0015173ffffffffffffffffffffffffffffffffffffffff168152602001875f015173ffffffffffffffffffffffffffffffffffffffff16815260200187604001516fffffffffffffffffffffffffffffffff16815260200187606001516fffffffffffffffffffffffffffffffff168152602001858152506126e1565b83519092505f90610b7990610b7436889003880188615400565b612813565b90508073ffffffffffffffffffffffffffffffffffffffff168660a0015173ffffffffffffffffffffffffffffffffffffffff161480610bc25750610bc28660a0015182610f5e565b9150509250925092565b604080516060810182525f8082526020820181905291810191909152610bf1826107d5565b81525f610bfc61298a565b608084015173ffffffffffffffffffffffffffffffffffffffff9081165f9081526002929092016020908152604080842087518416855282528084208288015190931684529190529020546060840151610100850151610120860151929350610c69928592919085612996565b60c083015173ffffffffffffffffffffffffffffffffffffffff16610c8f575f60208301525b50919050565b604080516060810182525f808252602082018190529181018290529080610cbb85610bcc565b9250610d4b6040518060a00160405280876080015173ffffffffffffffffffffffffffffffffffffffff168152602001875f015173ffffffffffffffffffffffffffffffffffffffff16815260200187604001516fffffffffffffffffffffffffffffffff16815260200187606001516fffffffffffffffffffffffffffffffff168152602001858152506126e1565b91505f610d5b845f015186612813565b90508073ffffffffffffffffffffffffffffffffffffffff16866080015173ffffffffffffffffffffffffffffffffffffffff161480610bc25750610bc2866080015182610f5e565b5f5b81811015610dd757610dcf838383818110610dc357610dc36153d3565b90506020020135612a93565b600101610da6565b505050565b5f5f5f610e4c6040518060a001604052808a8152602001898152602001886fffffffffffffffffffffffffffffffff1681526020018773ffffffffffffffffffffffffffffffffffffffff1681526020018673ffffffffffffffffffffffffffffffffffffffff16815250612cd6565b602081015160409091015190999098509650505050505050565b5f5f610edd6040518060c00160405280878152602001868152602001856fffffffffffffffffffffffffffffffff1681526020013373ffffffffffffffffffffffffffffffffffffffff1681526020015f151581526020013373ffffffffffffffffffffffffffffffffffffffff16815250613139565b9050826fffffffffffffffffffffffffffffffff1681602001516fffffffffffffffffffffffffffffffff161015610f5257610f52610f4d610f1e876107d5565b83602001516fffffffffffffffffffffffffffffffff16866fffffffffffffffffffffffffffffffff1661353d565b613604565b60400151949350505050565b5f610f6761298a565b73ffffffffffffffffffffffffffffffffffffffff9384165f908152600491909101602090815260408083209490951682529290925250205460ff1690565b5f610fb0826121a0565b90508160a0015173ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614158015610ffd5750610ffb8260a0015133610f5e565b155b1561101457611014610f4d82338560a0015161360c565b611022818360a00151613667565b5050565b81518351148015611038575080518351145b6110c4576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152603860248201527f4e61746976654f7264657273466561747572652f4d49534d4154434845445f5060448201527f4149525f4f52444552535f41525241595f4c454e4754485300000000000000006064820152608401610a2b565b5f5b8351811015610a9e57611126338583815181106110e5576110e56153d3565b60200260200101518584815181106110ff576110ff6153d3565b6020026020010151858581518110611119576111196153d3565b60200260200101516136f3565b6001016110c6565b5f6111587f3cd2f026000000000000000000000000000000000000000000000000000000006137db565b6111817ff6274f66000000000000000000000000000000000000000000000000000000006137db565b6111aa7faa77476c000000000000000000000000000000000000000000000000000000006137db565b6111d37f9240529c000000000000000000000000000000000000000000000000000000006137db565b6111fc7f438cdfc5000000000000000000000000000000000000000000000000000000006137db565b6112257f414e4ccf000000000000000000000000000000000000000000000000000000006137db565b61124e7faa6b21cd000000000000000000000000000000000000000000000000000000006137db565b6112777f7d49ec1a000000000000000000000000000000000000000000000000000000006137db565b6112a07ffe55a3ef000000000000000000000000000000000000000000000000000000006137db565b6112c97f9baa45a8000000000000000000000000000000000000000000000000000000006137db565b6112f27ff6e0f6a5000000000000000000000000000000000000000000000000000000006137db565b61131b7fd0a55fb0000000000000000000000000000000000000000000000000000000006137db565b6113447fb10a33f4000000000000000000000000000000000000000000000000000000006137db565b61136d7f86a0c8d7000000000000000000000000000000000000000000000000000000006137db565b6113967f9f0434f5000000000000000000000000000000000000000000000000000000006137db565b6113bf7f9a4f809c000000000000000000000000000000000000000000000000000000006137db565b6113e87f935c82a4000000000000000000000000000000000000000000000000000000006137db565b6114117f0f0e8cf7000000000000000000000000000000000000000000000000000000006137db565b61143a7ffd5f995b000000000000000000000000000000000000000000000000000000006137db565b6114637f95480889000000000000000000000000000000000000000000000000000000006137db565b61148c7f346693c5000000000000000000000000000000000000000000000000000000006137db565b6114b57fdd11d225000000000000000000000000000000000000000000000000000000006137db565b6114de7f016a6d65000000000000000000000000000000000000000000000000000000006137db565b6115077f487b5c20000000000000000000000000000000000000000000000000000000006137db565b6115307fb09f1fb1000000000000000000000000000000000000000000000000000000006137db565b6115597f1fb09795000000000000000000000000000000000000000000000000000000006137db565b6115827f37f381d8000000000000000000000000000000000000000000000000000000006137db565b6115ab7fb4658bfb000000000000000000000000000000000000000000000000000000006137db565b6115d47fad354eeb000000000000000000000000000000000000000000000000000000006137db565b6115fd7fea7faa61000000000000000000000000000000000000000000000000000000006137db565b6116267f6b52a4a8000000000000000000000000000000000000000000000000000000006137db565b507f2c64c5ef0000000000000000000000000000000000000000000000000000000090565b5f5f6116ba6040518060a00160405280878152602001868152602001856fffffffffffffffffffffffffffffffff1681526020013373ffffffffffffffffffffffffffffffffffffffff1681526020013373ffffffffffffffffffffffffffffffffffffffff16815250612cd6565b9050826fffffffffffffffffffffffffffffffff1681602001516fffffffffffffffffffffffffffffffff1610156116fb576116fb610f4d610f1e876121a0565b8051610f5290613899565b6117108433610f5e565b61172157611721610f4d8533613918565b610a9e848484846125ed565b604080516060810182525f8082526020820181905291810191909152611752826121a0565b81525f61175d61298a565b60a084015173ffffffffffffffffffffffffffffffffffffffff9081165f9081526001929092016020908152604080842087518416855282528084208288015190931684529190529020546060840151610140850151610160860151929350610c8f928592919085612996565b610dd7338484846125ed565b5f5b8151811015611022576118038282815181106117f6576117f66153d3565b6020026020010151610fa6565b6001016117d8565b8151835114801561181d575080518351145b6118a9576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152603860248201527f4e61746976654f7264657273466561747572652f4d49534d4154434845445f5060448201527f4149525f4f52444552535f41525241595f4c454e4754485300000000000000006064820152608401610a2b565b6118b38433610f5e565b6118c4576118c4610f4d8533613918565b5f5b83518110156118ed576118e5858583815181106110e5576110e56153d3565b6001016118c6565b5050505050565b5f5f5f61196c6040518060c001604052808b81526020018a8152602001896fffffffffffffffffffffffffffffffff1681526020018873ffffffffffffffffffffffffffffffffffffffff16815260200187151581526020018673ffffffffffffffffffffffffffffffffffffffff16815250613139565b6020810151604090910151909a909950975050505050505050565b5f5f5f6119ff6040518060c00160405280888152602001878152602001866fffffffffffffffffffffffffffffffff1681526020013373ffffffffffffffffffffffffffffffffffffffff1681526020015f151581526020013373ffffffffffffffffffffffffffffffffffffffff16815250613139565b60208101516040909101519097909650945050505050565b60608080858414611aaa576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602c60248201527f4e61746976654f7264657273466561747572652f4d49534d4154434845445f4160448201527f525241595f4c454e4754485300000000000000000000000000000000000000006064820152608401610a2b565b8567ffffffffffffffff811115611ac357611ac361459a565b604051908082528060200260200182016040528015611b2b57816020015b604080516060810182525f80825260208083018290529282015282527fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff909201910181611ae15790505b5092508567ffffffffffffffff811115611b4757611b4761459a565b604051908082528060200260200182016040528015611b70578160200160208202803683370190505b5091508567ffffffffffffffff811115611b8c57611b8c61459a565b604051908082528060200260200182016040528015611bb5578160200160208202803683370190505b5090505f5b86811015611d0457306337f381d8898984818110611bda57611bda6153d3565b90506101400201888885818110611bf357611bf36153d3565b9050608002016040518363ffffffff1660e01b8152600401611c16929190615459565b60a060405180830381865afa925050508015611c6d575060408051601f3d9081017fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0168201909252611c6a918101906155a7565b60015b15611cfc5782878581518110611c8557611c856153d3565b602002602001018190525081868581518110611ca357611ca36153d3565b60200260200101906fffffffffffffffffffffffffffffffff1690816fffffffffffffffffffffffffffffffff168152505080858581518110611ce857611ce86153d3565b911515602092830291909101909101525050505b600101611bba565b509450945094915050565b333214611d9e576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602760248201527f4e61746976654f7264657273466561747572652f4e4f5f434f4e54524143545f60448201527f4f524947494e53000000000000000000000000000000000000000000000000006064820152608401610a2b565b5f611da761298a565b90505f5b8351811015611e3f57335f90815260038301602052604081208551859290879085908110611ddb57611ddb6153d3565b60209081029190910181015173ffffffffffffffffffffffffffffffffffffffff1682528101919091526040015f2080547fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0016911515919091179055600101611dab565b507f02dfead5eb769b298e82dd9650b31c40559a3d42701dbf53c931bc2682847c31338484604051611e739392919061563a565b60405180910390a1505050565b611e8a8433610f5e565b611e9b57611e9b610f4d8533613918565b610a9e848484846136f3565b60608080858414611f3a576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602c60248201527f4e61746976654f7264657273466561747572652f4d49534d4154434845445f4160448201527f525241595f4c454e4754485300000000000000000000000000000000000000006064820152608401610a2b565b8567ffffffffffffffff811115611f5357611f5361459a565b604051908082528060200260200182016040528015611fbb57816020015b604080516060810182525f80825260208083018290529282015282527fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff909201910181611f715790505b5092508567ffffffffffffffff811115611fd757611fd761459a565b604051908082528060200260200182016040528015612000578160200160208202803683370190505b5091508567ffffffffffffffff81111561201c5761201c61459a565b604051908082528060200260200182016040528015612045578160200160208202803683370190505b5090505f5b86811015611d045730631fb0979589898481811061206a5761206a6153d3565b90506101800201888885818110612083576120836153d3565b9050608002016040518363ffffffff1660e01b81526004016120a69291906156be565b60a060405180830381865afa9250505080156120fd575060408051601f3d9081017fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe01682019092526120fa918101906155a7565b60015b1561218c5782878581518110612115576121156153d3565b602002602001018190525081868581518110612133576121336153d3565b60200260200101906fffffffffffffffffffffffffffffffff1690816fffffffffffffffffffffffffffffffff168152505080858581518110612178576121786153d3565b911515602092830291909101909101525050505b60010161204a565b610dd7338484846136f3565b5f61098b610913835f6040517fce918627cb55462ddbb85e73de69a8b322f2bc88f4507c52fcad6d4c33c29d498152825173ffffffffffffffffffffffffffffffffffffffff166020820152602083015173ffffffffffffffffffffffffffffffffffffffff16604082015260408301516fffffffffffffffffffffffffffffffff16606082015260608301516fffffffffffffffffffffffffffffffff16608082015260808301516fffffffffffffffffffffffffffffffff1660a082015260a083015173ffffffffffffffffffffffffffffffffffffffff1660c082015260c083015173ffffffffffffffffffffffffffffffffffffffff1660e082015260e083015173ffffffffffffffffffffffffffffffffffffffff1661010082015261010083015173ffffffffffffffffffffffffffffffffffffffff1661012082015261012083015161014082015261014083015167ffffffffffffffff166101608201526101608301516101808201526101a08120915050919050565b5f61232761298a565b335f818152600483016020908152604080832073ffffffffffffffffffffffffffffffffffffffff89168085529083529281902080547fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0016881515908117909155815194855291840192909252908201529091507f6ea9dbe8b2cc119348716a9220a0742ad62b7884ecb0ff4b32cd508121fd937990606001611e73565b5f5f5f6124356040518060a00160405280888152602001878152602001866fffffffffffffffffffffffffffffffff1681526020013373ffffffffffffffffffffffffffffffffffffffff1681526020013373ffffffffffffffffffffffffffffffffffffffff16815250612cd6565b9050612443815f0151613899565b602081015160409091015190969095509350505050565b5f5b81518110156110225761248782828151811061247a5761247a6153d3565b6020026020010151612571565b60010161245c565b815183511480156124a1575080518351145b61252d576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152603860248201527f4e61746976654f7264657273466561747572652f4d49534d4154434845445f5060448201527f4149525f4f52444552535f41525241595f4c454e4754485300000000000000006064820152608401610a2b565b6125378433610f5e565b61254857612548610f4d8533613918565b5f5b83518110156118ed5761256985858381518110610a5557610a556153d3565b60010161254a565b5f61257b826107d5565b9050816080015173ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141580156125c857506125c6826080015133610f5e565b155b156125df576125df610f4d8233856080015161360c565b611022818360800151613667565b5f6125f661298a565b73ffffffffffffffffffffffffffffffffffffffff8087165f908152600283016020908152604080832089851684528252808320938816835292905220549091508281111561264c5761264c610f4d84836139ed565b73ffffffffffffffffffffffffffffffffffffffff8681165f81815260028501602090815260408083208a8616808552908352818420958a1680855295835292819020889055805193845290830191909152810191909152606081018490527ffe7ffb1edfe79f4df716cb2dcad21cf2f31b104d816a7976ba1e6e4653c1efb1906080015b60405180910390a1505050505050565b5f81604001516fffffffffffffffffffffffffffffffff165f148061271a575060608201516fffffffffffffffffffffffffffffffff16155b1561272657505f919050565b6001826080015160200151600481111561274257612742614a5e565b1461274e57505f919050565b5f6127af836080015160400151846060015161276a919061586c565b6fffffffffffffffffffffffffffffffff1684606001516fffffffffffffffffffffffffffffffff1685604001516fffffffffffffffffffffffffffffffff16613a2b565b90506127cb816127c68560200151865f0151613a49565b613b71565b905061280c6128078285604001516fffffffffffffffffffffffffffffffff1686606001516fffffffffffffffffffffffffffffffff16613b86565b613ba7565b9392505050565b5f61281e8383613bd2565b60028251600481111561283357612833614a5e565b036128a45760208083015160408085015160608087015183515f815295860180855289905260ff9094169285019290925290830152608082015260019060a0016020604051602081039080840390855afa158015612893573d5f5f3e3d5ffd5b505050602060405103519050612961565b6003825160048111156128b9576128b9614a5e565b03612961575f7f19457468657265756d205369676e6564204d6573736167653a0a3332000000005f5283601c52603c5f2090506001818460200151856040015186606001516040515f8152602001604052604051612933949392919093845260ff9290921660208401526040830152606082015260800190565b6020604051602081039080840390855afa158015612953573d5f5f3e3d5ffd5b505050602060405103519150505b73ffffffffffffffffffffffffffffffffffffffff811661098b5761098b610f4d600585613cc3565b5f5f61098b6007613cf9565b5f61299f61298a565b86515f9081526020829052604090819020546fffffffffffffffffffffffffffffffff808216928a01839052929350918716116129fb576020870160025b908160048111156129f0576129f0614a5e565b8152505050506118ed565b7f8000000000000000000000000000000000000000000000000000000000000000811615612a2e576020870160036129dd565b504267ffffffffffffffff168467ffffffffffffffff1611612a6e576020860160045b90816004811115612a6457612a64614a5e565b81525050506118ed565b82821115612a8157602086016003612a51565b60016020870181905250505050505050565b6040517f319bed9a000000000000000000000000000000000000000000000000000000008152600481018290525f907f000000000000000000000000000000000000000000000000000000000000000073ffffffffffffffffffffffffffffffffffffffff169063319bed9a906024016020604051808303815f875af1158015612b1f573d5f5f3e3d5ffd5b505050506040513d601f19601f82011682018060405250810190612b439190615894565b6040517f70a0823100000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff80831660048301529192505f917f000000000000000000000000000000000000000000000000000000000000000016906370a0823190602401602060405180830381865afa158015612bd2573d5f5f3e3d5ffd5b505050506040513d601f19601f82011682018060405250810190612bf691906158af565b90506001811115610dd75773ffffffffffffffffffffffffffffffffffffffff7f00000000000000000000000000000000000000000000000000000000000000001663a3b4a3278380612c4a6001866158c6565b6040517fffffffff0000000000000000000000000000000000000000000000000000000060e086901b16815273ffffffffffffffffffffffffffffffffffffffff938416600482015292909116602483015260448201526064015f604051808303815f87803b158015612cbb575f5ffd5b505af1158015612ccd573d5f5f3e3d5ffd5b50505050505050565b604080516080810182525f8082526020820181905291810182905260608101919091525f612d06835f015161172d565b9050600181602001516004811115612d2057612d20614a5e565b14612d4a57612d4a610f4d825f015183602001516004811115612d4557612d45614a5e565b613d21565b825160c0015173ffffffffffffffffffffffffffffffffffffffff1615801590612dab5750826060015173ffffffffffffffffffffffffffffffffffffffff16835f015160c0015173ffffffffffffffffffffffffffffffffffffffff1614155b15612dcc57612dcc610f4d825f01518560600151865f015160c00151613d61565b825160e0015173ffffffffffffffffffffffffffffffffffffffff1615801590612e2d5750826080015173ffffffffffffffffffffffffffffffffffffffff16835f015160e0015173ffffffffffffffffffffffffffffffffffffffff1614155b15612e4e57612e4e610f4d825f01518560800151865f015160e00151613dbc565b5f612e60825f01518560200151612813565b9050835f015160a0015173ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614158015612eb25750835160a00151612eb09082610f5e565b155b15612ece578151845160a00151612ece91610f4d918490613e17565b5082516101200151612edf90613e72565b8252604080516101408101825282518152845160a09081015173ffffffffffffffffffffffffffffffffffffffff9081166020808501919091526060808901805184168688015251831681860152885151831660808601528851909101519091169183019190915285518301516fffffffffffffffffffffffffffffffff90811660c0840152865190910151811660e083015285830151811661010083015291830151909116610120820152612f9490613f8e565b6fffffffffffffffffffffffffffffffff9081166040850152908116602084015283516080015116156130495761301482602001516fffffffffffffffffffffffffffffffff16845f0151606001516fffffffffffffffffffffffffffffffff16855f0151608001516fffffffffffffffffffffffffffffffff16613a2b565b6fffffffffffffffffffffffffffffffff16606080840182905284516020810151918601516101009091015161304993614123565b8051835160a08101516060808701516101008401518451602080870151908a01516040808c0151968c01518c51610120909a015191517fab614d2b738543c0ea21f56347cf696a3a0c42a7cbec3212a5ca22a4dcff21249b61312b9b909a999390919a8b5273ffffffffffffffffffffffffffffffffffffffff998a1660208c015297891660408b015295881660608a015293871660808901529190951660a08701526fffffffffffffffffffffffffffffffff94851660c0870152841660e08601529092166101008401526101208301919091526101408201526101600190565b60405180910390a150919050565b604080516080810182525f8082526020820181905291810182905260608101919091525f613169835f0151610bcc565b905060018160200151600481111561318357613183614a5e565b146131a8576131a8610f4d825f015183602001516004811115612d4557612d45614a5e565b5f6131b161298a565b845160c0015190915073ffffffffffffffffffffffffffffffffffffffff1632148015906132165750835160c0015173ffffffffffffffffffffffffffffffffffffffff165f908152600382016020908152604080832032845290915290205460ff16155b15613232578151845160c0015161323291610f4d91329061426b565b50825160a0015173ffffffffffffffffffffffffffffffffffffffff16158015906132945750826060015173ffffffffffffffffffffffffffffffffffffffff16835f015160a0015173ffffffffffffffffffffffffffffffffffffffff1614155b156132b5576132b5610f4d825f01518560600151865f015160a00151613d61565b5f6132c7825f01518560200151612813565b9050835f01516080015173ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff161415801561331957508351608001516133179082610f5e565b155b1561333557815184516080015161333591610f4d918490613e17565b50604080516101408101825282518152845160809081015173ffffffffffffffffffffffffffffffffffffffff16602083015285015161347b92820190613380578560600151613382565b305b73ffffffffffffffffffffffffffffffffffffffff1681526020018560a0015173ffffffffffffffffffffffffffffffffffffffff168152602001855f01515f015173ffffffffffffffffffffffffffffffffffffffff168152602001855f01516020015173ffffffffffffffffffffffffffffffffffffffff168152602001855f0151604001516fffffffffffffffffffffffffffffffff168152602001855f0151606001516fffffffffffffffffffffffffffffffff16815260200185604001516fffffffffffffffffffffffffffffffff16815260200183604001516fffffffffffffffffffffffffffffffff16815250613f8e565b6fffffffffffffffffffffffffffffffff9081166040858101829052929091166020808601829052845187516080808201516060808c015184518588015160e0968701518c5198895273ffffffffffffffffffffffffffffffffffffffff958616998901999099529184169a87019a909a52988216908501529096169582019590955260a081019290925260c0820192909252918201527f829fa99d94dc4636925b38632e625736a614c154d55006b7ab6bea979c210c32906101000161312b565b6040516024810184905260448101839052606481018290526060907f21948612b5ef214ec0508df4901600e07a810a371be76b25d59ade73826e3d97906084015b604080517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe08184030181529190526020810180517bffffffffffffffffffffffffffffffffffffffffffffffffffffffff167fffffffff000000000000000000000000000000000000000000000000000000009093169290921790915290509392505050565b805160208201fd5b6040516024810184905273ffffffffffffffffffffffffffffffffffffffff8084166044830152821660648201526060907f88b2c08e4a5f57d416ad23dad18c20497ccfe684b1379b28fd564adaf582b80f9060840161357e565b5f61367061298a565b5f848152602082815260409182902080547f8000000000000000000000000000000000000000000000000000000000000000179055815186815273ffffffffffffffffffffffffffffffffffffffff8616918101919091529192507fa6eb7cdc219e1518ced964e9a34e61d68a94e4f1569db3e84256ba981ba527539101611e73565b5f6136fc61298a565b73ffffffffffffffffffffffffffffffffffffffff8087165f908152600183016020908152604080832089851684528252808320938816835292905220549091508281111561375257613752610f4d84836139ed565b73ffffffffffffffffffffffffffffffffffffffff8681165f81815260018501602090815260408083208a8616808552908352818420958a1680855295835292819020889055805193845290830191909152810191909152606081018490527fa91fe7ae62fce669df2c7f880f8c14d178531aae72515558e5c948e37c32a572906080016126d1565b6040517f6eb224cb0000000000000000000000000000000000000000000000000000000081527fffffffff000000000000000000000000000000000000000000000000000000008216600482015273ffffffffffffffffffffffffffffffffffffffff7f00000000000000000000000000000000000000000000000000000000000000001660248201523090636eb224cb906044015f604051808303815f87803b158015613887575f5ffd5b505af11580156118ed573d5f5f3e3d5ffd5b80341180156138a85750333014155b15613915575f6138b882346158c6565b6040519091505f90339083908381818185875af1925050503d805f81146138fa576040519150601f19603f3d011682016040523d82523d5f602084013e6138ff565b606091505b5050905080610dd757610dd7610f4d33846142c6565b50565b60405173ffffffffffffffffffffffffffffffffffffffff8084166024830152821660448201526060907f84356db366796dc6e2aeb1ad74b631fe4e5ec6a650464da6059e9f95c8810a10906064015b604080517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe08184030181529190526020810180517bffffffffffffffffffffffffffffffffffffffffffffffffffffffff167fffffffff0000000000000000000000000000000000000000000000000000000090931692909217909152905092915050565b60405160248101839052604481018290526060907fb12bc7e7d341f4431d6faf05f991ee3b779183e341b24243064e10c886cd187390606401613968565b5f82613a3783866158d9565b613a4191906158f0565b949350505050565b6040517fdd62ed3e00000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff82811660048301523060248301525f9161280c9185169063dd62ed3e90604401602060405180830381865afa158015613abf573d5f5f3e3d5ffd5b505050506040513d601f19601f82011682018060405250810190613ae391906158af565b6040517f70a0823100000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff85811660048301528616906370a0823190602401602060405180830381865afa158015613b4d573d5f5f3e3d5ffd5b505050506040513d601f19601f820116820180604052508101906127c691906158af565b5f818310613b7f578161280c565b5090919050565b5f82613b936001826158c6565b613b9d84876158d9565b613a379190615928565b5f6fffffffffffffffffffffffffffffffff821115613bce57613bce610f4d600384614319565b5090565b60408101517ffffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141111580613c3e5750613c2b60027ffffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd03641416158f0565b613c36906001615928565b606082015110155b15613c5157613c51610f4d600584613cc3565b5f81516004811115613c6557613c65614a5e565b03613c7857613c78610f4d600384613cc3565b600181516004811115613c8d57613c8d614a5e565b03613c9f57613c9f610f4d5f84613cc3565b600481516004811115613cb457613cb4614a5e565b0361102257611022610f4d6002845b60607ff18f11f3027e735c758137924b262d4d3aff0037dcd785aca3c699fa05d960bd838360405160240161396892919061593b565b5f608082600b811115613d0e57613d0e614a5e565b613d19906001615928565b901b92915050565b6040516024810183905260ff821660448201526060907f47ab394e41470191eaf9fa542e84ac483a12665fbd616eb8d1c022ced6c9400090606401613968565b6040516024810184905273ffffffffffffffffffffffffffffffffffffffff8084166044830152821660648201526060907f5d3300180a4547b3e27137be832d3ebf56f1ba5ebb30dd580999c61f77fa63969060840161357e565b6040516024810184905273ffffffffffffffffffffffffffffffffffffffff8084166044830152821660648201526060907f15e6a383bb02d79ee933b927fbecba78cdde16cba84b94a99661f44bcce3b7369060840161357e565b6040516024810184905273ffffffffffffffffffffffffffffffffffffffff8084166044830152821660648201526060907ff13e65d925201525f3d71a731833b19bb26e44cfbd97caf72a366b73866f71249060840161357e565b5f5f613e7c614336565b9050805f03613e8d57505f92915050565b5f613e978461436c565b90505f8173ffffffffffffffffffffffffffffffffffffffff16836040515f6040518083038185875af1925050503d805f8114613eef576040519150601f19603f3d011682016040523d82523d5f602084013e613ef4565b606091505b5050905080613f85576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602760248201527f466978696e50726f746f636f6c466565732f45544845525f5452414e5346455260448201527f5f46414c494544000000000000000000000000000000000000000000000000006064820152608401610a2b565b50909392505050565b5f5f613fb38361010001518461012001518560e00151613fae919061586c565b614434565b9150613ffe826fffffffffffffffffffffffffffffffff168460e001516fffffffffffffffffffffffffffffffff168560c001516fffffffffffffffffffffffffffffffff16613a2b565b90506fffffffffffffffffffffffffffffffff8216158061402f57506fffffffffffffffffffffffffffffffff8116155b1561403e57505f928392509050565b8183610120015161404f9190615959565b6fffffffffffffffffffffffffffffffff1661406961298a565b84515f908152602091909152604090819020919091558301513073ffffffffffffffffffffffffffffffffffffffff909116036140ca576140c58360a001518460200151846fffffffffffffffffffffffffffffffff16614466565b6140f4565b6140f48360a0015184604001518560200151856fffffffffffffffffffffffffffffffff16614123565b61411e836080015184602001518560600151846fffffffffffffffffffffffffffffffff16614123565b915091565b3073ffffffffffffffffffffffffffffffffffffffff8516036141c7576040517f08c379a0000000000000000000000000000000000000000000000000000000008152602060048201526024808201527f466978696e546f6b656e5370656e6465722f43414e4e4f545f494e564f4b455f60448201527f53454c46000000000000000000000000000000000000000000000000000000006064820152608401610a2b565b6040517f23b872dd00000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff8416600482015273ffffffffffffffffffffffffffffffffffffffff831660248201528160448201526020816064835f73ffffffffffffffffffffffffffffffffffffffff8a165af13d60018351146020821015168115178216915081612ccd57805f843e8083fd5b6040516024810184905273ffffffffffffffffffffffffffffffffffffffff8084166044830152821660648201526060907fc0972f3cc4234ca2091de7e7bc7081494bd29ac280167d66f0d44168973b16349060840161357e565b60405173ffffffffffffffffffffffffffffffffffffffff83166024820152604481018290526060907fbde95cc2119e0200d80642397198abfcf98e6e4dddd0de9c6320d86252ad40ab90606401613968565b606063c996af7b60e01b8383604051602401613968929190615981565b5f6143673a63ffffffff7f0000000000000000000000000000000000000000000000000000000000000000166158d9565b905090565b604080517fff000000000000000000000000000000000000000000000000000000000000006020808301919091527f000000000000000000000000000000000000000000000000000000000000000060601b7fffffffffffffffffffffffffffffffffffffffff000000000000000000000000166021830152603582018490527f000000000000000000000000000000000000000000000000000000000000000060558084019190915283518084039091018152607590920190925280519101205f9061098b565b5f816fffffffffffffffffffffffffffffffff16836fffffffffffffffffffffffffffffffff1610613b7f578161280c565b3073ffffffffffffffffffffffffffffffffffffffff84160361450a576040517f08c379a0000000000000000000000000000000000000000000000000000000008152602060048201526024808201527f466978696e546f6b656e5370656e6465722f43414e4e4f545f494e564f4b455f60448201527f53454c46000000000000000000000000000000000000000000000000000000006064820152608401610a2b565b6040517fa9059cbb00000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff831660048201528160248201526020816044835f73ffffffffffffffffffffffffffffffffffffffff89165af13d6001835114602082101516811517821691508161459257805f843e8083fd5b505050505050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52604160045260245ffd5b604051610140810167ffffffffffffffff811182821017156145eb576145eb61459a565b60405290565b604051610180810167ffffffffffffffff811182821017156145eb576145eb61459a565b604051601f82017fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe016810167ffffffffffffffff8111828210171561465c5761465c61459a565b604052919050565b73ffffffffffffffffffffffffffffffffffffffff81168114613915575f5ffd5b803561469081614664565b919050565b6fffffffffffffffffffffffffffffffff81168114613915575f5ffd5b803561469081614695565b803567ffffffffffffffff81168114614690575f5ffd5b5f61014082840312156146e5575f5ffd5b6146ed6145c7565b90506146f882614685565b815261470660208301614685565b6020820152614717604083016146b2565b6040820152614728606083016146b2565b606082015261473960808301614685565b608082015261474a60a08301614685565b60a082015261475b60c08301614685565b60c082015260e0828101359082015261477761010083016146bd565b6101008201526101209182013591810191909152919050565b5f61014082840312156147a1575f5ffd5b61280c83836146d4565b5f67ffffffffffffffff8211156147c4576147c461459a565b5060051b60200190565b5f82601f8301126147dd575f5ffd5b81356147f06147eb826147ab565b614615565b8082825260208201915060208360051b860101925085831115614811575f5ffd5b602085015b8381101561483757803561482981614664565b835260209283019201614816565b5095945050505050565b5f82601f830112614850575f5ffd5b813561485e6147eb826147ab565b8082825260208201915060208360051b86010192508583111561487f575f5ffd5b602085015b83811015614837578035835260209283019201614884565b5f5f5f606084860312156148ae575f5ffd5b833567ffffffffffffffff8111156148c4575f5ffd5b6148d0868287016147ce565b935050602084013567ffffffffffffffff8111156148ec575f5ffd5b6148f8868287016147ce565b925050604084013567ffffffffffffffff811115614914575f5ffd5b610bc286828701614841565b5f6101808284031215614931575f5ffd5b6149396145f1565b905061494482614685565b815261495260208301614685565b6020820152614963604083016146b2565b6040820152614974606083016146b2565b6060820152614985608083016146b2565b608082015261499660a08301614685565b60a08201526149a760c08301614685565b60c08201526149b860e08301614685565b60e08201526149ca6101008301614685565b61010082015261012082810135908201526149e861014083016146bd565b6101408201526101609182013591810191909152919050565b5f5f828403610200811215614a14575f5ffd5b614a1e8585614920565b925060807ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe8082011215614a4f575f5ffd5b50610180830190509250929050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52602160045260245ffd5b6005811061391557613915614a5e565b805182526020810151614aad81614a8b565b60208301526040908101516fffffffffffffffffffffffffffffffff16910152565b60a08101614add8286614a9b565b6fffffffffffffffffffffffffffffffff841660608301528215156080830152949350505050565b6060810161098b8284614a9b565b60058110613915575f5ffd5b803560ff81168114614690575f5ffd5b5f60808284031215614b3f575f5ffd5b6040516080810167ffffffffffffffff81118282101715614b6257614b6261459a565b6040529050808235614b7381614b13565b8152614b8160208401614b1f565b602082015260408381013590820152606092830135920191909152919050565b5f5f6101c08385031215614bb3575f5ffd5b614bbd84846146d4565b9150614bcd846101408501614b2f565b90509250929050565b5f5f60208385031215614be7575f5ffd5b823567ffffffffffffffff811115614bfd575f5ffd5b8301601f81018513614c0d575f5ffd5b803567ffffffffffffffff811115614c23575f5ffd5b8560208260051b8401011115614c37575f5ffd5b6020919091019590945092505050565b5f5f5f5f5f6102608688031215614c5c575f5ffd5b614c668787614920565b9450614c76876101808801614b2f565b9350610200860135614c8781614695565b9250610220860135614c9881614664565b9150610240860135614ca981614664565b809150509295509295909350565b5f5f5f6101e08486031215614cca575f5ffd5b614cd485856146d4565b9250614ce4856101408601614b2f565b91506101c0840135614cf581614695565b809150509250925092565b602081525f82518060208401528060208501604085015e5f6040828501015260407fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0601f83011684010191505092915050565b5f5f60408385031215614d64575f5ffd5b8235614d6f81614664565b91506020830135614d7f81614664565b809150509250929050565b5f6101808284031215614d9b575f5ffd5b61280c8383614920565b5f5f5f6102208486031215614db8575f5ffd5b614dc28585614920565b9250614dd2856101808601614b2f565b9150610200840135614cf581614695565b5f5f5f5f60808587031215614df6575f5ffd5b8435614e0181614664565b93506020850135614e1181614664565b92506040850135614e2181614664565b9396929550929360600135925050565b5f5f5f60608486031215614e43575f5ffd5b8335614e4e81614664565b92506020840135614e5e81614664565b929592945050506040919091013590565b5f60208284031215614e7f575f5ffd5b813567ffffffffffffffff811115614e95575f5ffd5b8201601f81018413614ea5575f5ffd5b8035614eb36147eb826147ab565b8082825260208201915060206101808402850101925086831115614ed5575f5ffd5b6020840193505b82841015614f0257614eee8785614920565b825260208201915061018084019350614edc565b9695505050505050565b5f5f5f5f60808587031215614f1f575f5ffd5b8435614f2a81614664565b9350602085013567ffffffffffffffff811115614f45575f5ffd5b614f51878288016147ce565b935050604085013567ffffffffffffffff811115614f6d575f5ffd5b614f79878288016147ce565b925050606085013567ffffffffffffffff811115614f95575f5ffd5b614fa187828801614841565b91505092959194509250565b8015158114613915575f5ffd5b803561469081614fad565b5f5f5f5f5f5f6102408789031215614fdb575f5ffd5b614fe588886146d4565b9550614ff5886101408901614b2f565b94506101c087013561500681614695565b93506101e087013561501781614664565b925061020087013561502881614fad565b915061022087013561503981614664565b809150509295509295509295565b5f5f83601f840112615057575f5ffd5b50813567ffffffffffffffff81111561506e575f5ffd5b6020830191508360208260071b8501011115615088575f5ffd5b9250929050565b5f5f5f5f604085870312156150a2575f5ffd5b843567ffffffffffffffff8111156150b8575f5ffd5b8501601f810187136150c8575f5ffd5b803567ffffffffffffffff8111156150de575f5ffd5b876020610140830284010111156150f3575f5ffd5b60209182019550935085013567ffffffffffffffff811115615113575f5ffd5b61511f87828801615047565b95989497509550505050565b5f8151808452602084019350602083015f5b8281101561515d578151151586526020958601959091019060010161513d565b5093949350505050565b606080825284519082018190525f9060208601906080840190835b818110156151ab57615195838551614a9b565b6020939093019260609290920191600101615182565b5050838103602080860191909152865180835291810192508601905f5b818110156151f85782516fffffffffffffffffffffffffffffffff168452602093840193909201916001016151c8565b5050508281036040840152614f02818561512b565b5f5f6040838503121561521e575f5ffd5b823567ffffffffffffffff811115615234575f5ffd5b8301601f81018513615244575f5ffd5b80356152526147eb826147ab565b8082825260208201915060208360051b850101925087831115615273575f5ffd5b6020840193505b8284101561529e57833561528d81614664565b82526020938401939091019061527a565b9450614bcd9250505060208401614fba565b5f5f5f5f604085870312156152c3575f5ffd5b843567ffffffffffffffff8111156152d9575f5ffd5b8501601f810187136152e9575f5ffd5b803567ffffffffffffffff8111156152ff575f5ffd5b876020610180830284010111156150f3575f5ffd5b5f5f60408385031215615325575f5ffd5b823561533081614664565b91506020830135614d7f81614fad565b5f60208284031215615350575f5ffd5b813567ffffffffffffffff811115615366575f5ffd5b8201601f81018413615376575f5ffd5b80356153846147eb826147ab565b80828252602082019150602061014084028501019250868311156153a6575f5ffd5b6020840193505b82841015614f02576153bf87856146d4565b8252602082019150610140840193506153ad565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52603260045260245ffd5b5f60808284031215615410575f5ffd5b61280c8383614b2f565b803561542581614b13565b61542e81614a8b565b825260ff61543e60208301614b1f565b16602083015260408181013590830152606090810135910152565b6101c081016154858261546b86614685565b73ffffffffffffffffffffffffffffffffffffffff169052565b61549160208501614685565b73ffffffffffffffffffffffffffffffffffffffff1660208301526154b8604085016146b2565b6fffffffffffffffffffffffffffffffff1660408301526154db606085016146b2565b6fffffffffffffffffffffffffffffffff1660608301526154fe60808501614685565b73ffffffffffffffffffffffffffffffffffffffff16608083015261552560a08501614685565b73ffffffffffffffffffffffffffffffffffffffff1660a083015261554c60c08501614685565b73ffffffffffffffffffffffffffffffffffffffff1660c083015260e0848101359083015261557e61010085016146bd565b67ffffffffffffffff16610100830152610120848101359083015261280c61014083018461541a565b5f5f5f83850360a08112156155ba575f5ffd5b60608112156155c7575f5ffd5b506040516060810167ffffffffffffffff811182821017156155eb576155eb61459a565b60405284518152602085015161560081614b13565b6020820152604085015161561381614695565b6040820152606085015190935061562981614695565b6080850151909250614cf581614fad565b5f6060820173ffffffffffffffffffffffffffffffffffffffff86168352606060208401528085518083526080850191506020870192505f5b818110156156a757835173ffffffffffffffffffffffffffffffffffffffff16835260209384019390920191600101615673565b505080925050508215156040830152949350505050565b61020081016156d08261546b86614685565b6156dc60208501614685565b73ffffffffffffffffffffffffffffffffffffffff166020830152615703604085016146b2565b6fffffffffffffffffffffffffffffffff166040830152615726606085016146b2565b6fffffffffffffffffffffffffffffffff166060830152615749608085016146b2565b6fffffffffffffffffffffffffffffffff16608083015261576c60a08501614685565b73ffffffffffffffffffffffffffffffffffffffff1660a083015261579360c08501614685565b73ffffffffffffffffffffffffffffffffffffffff1660c08301526157ba60e08501614685565b73ffffffffffffffffffffffffffffffffffffffff1660e08301526157e26101008501614685565b73ffffffffffffffffffffffffffffffffffffffff16610100830152610120848101359083015261581661014085016146bd565b67ffffffffffffffff16610140830152610160848101359083015261280c61018083018461541a565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52601160045260245ffd5b6fffffffffffffffffffffffffffffffff828116828216039081111561098b5761098b61583f565b5f602082840312156158a4575f5ffd5b815161280c81614664565b5f602082840312156158bf575f5ffd5b5051919050565b8181038181111561098b5761098b61583f565b808202811582820484141761098b5761098b61583f565b5f82615923577f4e487b71000000000000000000000000000000000000000000000000000000005f52601260045260245ffd5b500490565b8082018082111561098b5761098b61583f565b604081016006841061594f5761594f614a5e565b9281526020015290565b6fffffffffffffffffffffffffffffffff818116838216019081111561098b5761098b61583f565b604081016004841061594f5761594f614a5e56fea264697066735822122075170c53ae6fad13d2259f0fb21e4f611639d93d3bee30f8607c3cb1663f576c64736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

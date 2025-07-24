@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MixinCurveV2",
+  "sourceName": "contracts/src/transformers/bridges/mixins/MixinCurveV2.sol",
+  "abi": [],
+  "bytecode": "0x6080604052348015600e575f5ffd5b50603e80601a5f395ff3fe60806040525f5ffdfea264697066735822122059201fb3331fdb544aee4014ac8f29ee7ce6520c19b077a3259ddf8c7956582c64736f6c634300081c0033",
+  "deployedBytecode": "0x60806040525f5ffdfea264697066735822122059201fb3331fdb544aee4014ac8f29ee7ce6520c19b077a3259ddf8c7956582c64736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

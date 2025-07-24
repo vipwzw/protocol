@@ -1,0 +1,24 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "TestFeeCollectorController",
+  "sourceName": "contracts/test/TestFeeCollectorController.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "FEE_COLLECTOR_INIT_CODE_HASH",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x60806040525f80553480156011575f5ffd5b50607980601d5f395ff3fe6080604052348015600e575f5ffd5b50600436106026575f3560e01c8063f2541a8c14602a575b5f5ffd5b60315f5481565b60405190815260200160405180910390f3fea2646970667358221220441c9024ad201e12716eff30242abddc0d0c41398bc7ac1654d874d1ab0a63ed64736f6c634300081c0033",
+  "deployedBytecode": "0x6080604052348015600e575f5ffd5b50600436106026575f3560e01c8063f2541a8c14602a575b5f5ffd5b60315f5481565b60405190815260200160405180910390f3fea2646970667358221220441c9024ad201e12716eff30242abddc0d0c41398bc7ac1654d874d1ab0a63ed64736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

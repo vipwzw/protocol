@@ -1,0 +1,163 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "TestLibNativeOrder",
+  "sourceName": "contracts/test/TestLibNativeOrder.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerTokenFeeAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "feeRecipient",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.LimitOrder",
+          "name": "order",
+          "type": "tuple"
+        }
+      ],
+      "name": "getLimitOrderStructHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "structHash",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IERC20Token",
+              "name": "makerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IERC20Token",
+              "name": "takerToken",
+              "type": "address"
+            },
+            {
+              "internalType": "uint128",
+              "name": "makerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "takerAmount",
+              "type": "uint128"
+            },
+            {
+              "internalType": "address",
+              "name": "maker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "taker",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "txOrigin",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "pool",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiry",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "salt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibNativeOrder.RfqOrder",
+          "name": "order",
+          "type": "tuple"
+        }
+      ],
+      "name": "getRfqOrderStructHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "structHash",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600e575f5ffd5b5061063f8061001c5f395ff3fe608060405234801561000f575f5ffd5b5060043610610034575f3560e01c80635482791514610038578063ad54a5981461005d575b5f5ffd5b61004b610046366004610348565b610070565b60405190815260200160405180910390f35b61004b61006b366004610362565b6101bf565b5f6101b96100833684900384018461046a565b5f6040517fe593d3fdfa8b60e5e17a1b2204662ecbe15c23f2084b9ad5bae40359540a7da98152825173ffffffffffffffffffffffffffffffffffffffff166020820152602083015173ffffffffffffffffffffffffffffffffffffffff16604082015260408301516fffffffffffffffffffffffffffffffff16606082015260608301516fffffffffffffffffffffffffffffffff166080820152608083015173ffffffffffffffffffffffffffffffffffffffff1660a082015260a083015173ffffffffffffffffffffffffffffffffffffffff1660c082015260c083015173ffffffffffffffffffffffffffffffffffffffff1660e082015260e083015161010082015261010083015167ffffffffffffffff166101208201526101208301516101408201526101608120915050919050565b92915050565b5f6101b96101d236849003840184610527565b5f6040517fce918627cb55462ddbb85e73de69a8b322f2bc88f4507c52fcad6d4c33c29d498152825173ffffffffffffffffffffffffffffffffffffffff166020820152602083015173ffffffffffffffffffffffffffffffffffffffff16604082015260408301516fffffffffffffffffffffffffffffffff16606082015260608301516fffffffffffffffffffffffffffffffff16608082015260808301516fffffffffffffffffffffffffffffffff1660a082015260a083015173ffffffffffffffffffffffffffffffffffffffff1660c082015260c083015173ffffffffffffffffffffffffffffffffffffffff1660e082015260e083015173ffffffffffffffffffffffffffffffffffffffff1661010082015261010083015173ffffffffffffffffffffffffffffffffffffffff1661012082015261012083015161014082015261014083015167ffffffffffffffff166101608201526101608301516101808201526101a08120915050919050565b5f61014082840312801561035a575f5ffd5b509092915050565b5f61018082840312801561035a575f5ffd5b604051610140810167ffffffffffffffff811182821017156103bd577f4e487b71000000000000000000000000000000000000000000000000000000005f52604160045260245ffd5b60405290565b604051610180810167ffffffffffffffff811182821017156103bd577f4e487b71000000000000000000000000000000000000000000000000000000005f52604160045260245ffd5b803573ffffffffffffffffffffffffffffffffffffffff8116811461042f575f5ffd5b919050565b80356fffffffffffffffffffffffffffffffff8116811461042f575f5ffd5b803567ffffffffffffffff8116811461042f575f5ffd5b5f61014082840312801561047c575f5ffd5b50610485610374565b61048e8361040c565b815261049c6020840161040c565b60208201526104ad60408401610434565b60408201526104be60608401610434565b60608201526104cf6080840161040c565b60808201526104e060a0840161040c565b60a08201526104f160c0840161040c565b60c082015260e0838101359082015261050d6101008401610453565b610100820152610120928301359281019290925250919050565b5f610180828403128015610539575f5ffd5b506105426103c3565b61054b8361040c565b81526105596020840161040c565b602082015261056a60408401610434565b604082015261057b60608401610434565b606082015261058c60808401610434565b608082015261059d60a0840161040c565b60a08201526105ae60c0840161040c565b60c08201526105bf60e0840161040c565b60e08201526105d1610100840161040c565b61010082015261012083810135908201526105ef6101408401610453565b61014082015261016092830135928101929092525091905056fea26469706673582212204d299bb787d0861e394cb84768bf6cffdd90f1ee3890f5d72f29969e0a5e02f264736f6c634300081c0033",
+  "deployedBytecode": "0x608060405234801561000f575f5ffd5b5060043610610034575f3560e01c80635482791514610038578063ad54a5981461005d575b5f5ffd5b61004b610046366004610348565b610070565b60405190815260200160405180910390f35b61004b61006b366004610362565b6101bf565b5f6101b96100833684900384018461046a565b5f6040517fe593d3fdfa8b60e5e17a1b2204662ecbe15c23f2084b9ad5bae40359540a7da98152825173ffffffffffffffffffffffffffffffffffffffff166020820152602083015173ffffffffffffffffffffffffffffffffffffffff16604082015260408301516fffffffffffffffffffffffffffffffff16606082015260608301516fffffffffffffffffffffffffffffffff166080820152608083015173ffffffffffffffffffffffffffffffffffffffff1660a082015260a083015173ffffffffffffffffffffffffffffffffffffffff1660c082015260c083015173ffffffffffffffffffffffffffffffffffffffff1660e082015260e083015161010082015261010083015167ffffffffffffffff166101208201526101208301516101408201526101608120915050919050565b92915050565b5f6101b96101d236849003840184610527565b5f6040517fce918627cb55462ddbb85e73de69a8b322f2bc88f4507c52fcad6d4c33c29d498152825173ffffffffffffffffffffffffffffffffffffffff166020820152602083015173ffffffffffffffffffffffffffffffffffffffff16604082015260408301516fffffffffffffffffffffffffffffffff16606082015260608301516fffffffffffffffffffffffffffffffff16608082015260808301516fffffffffffffffffffffffffffffffff1660a082015260a083015173ffffffffffffffffffffffffffffffffffffffff1660c082015260c083015173ffffffffffffffffffffffffffffffffffffffff1660e082015260e083015173ffffffffffffffffffffffffffffffffffffffff1661010082015261010083015173ffffffffffffffffffffffffffffffffffffffff1661012082015261012083015161014082015261014083015167ffffffffffffffff166101608201526101608301516101808201526101a08120915050919050565b5f61014082840312801561035a575f5ffd5b509092915050565b5f61018082840312801561035a575f5ffd5b604051610140810167ffffffffffffffff811182821017156103bd577f4e487b71000000000000000000000000000000000000000000000000000000005f52604160045260245ffd5b60405290565b604051610180810167ffffffffffffffff811182821017156103bd577f4e487b71000000000000000000000000000000000000000000000000000000005f52604160045260245ffd5b803573ffffffffffffffffffffffffffffffffffffffff8116811461042f575f5ffd5b919050565b80356fffffffffffffffffffffffffffffffff8116811461042f575f5ffd5b803567ffffffffffffffff8116811461042f575f5ffd5b5f61014082840312801561047c575f5ffd5b50610485610374565b61048e8361040c565b815261049c6020840161040c565b60208201526104ad60408401610434565b60408201526104be60608401610434565b60608201526104cf6080840161040c565b60808201526104e060a0840161040c565b60a08201526104f160c0840161040c565b60c082015260e0838101359082015261050d6101008401610453565b610100820152610120928301359281019290925250919050565b5f610180828403128015610539575f5ffd5b506105426103c3565b61054b8361040c565b81526105596020840161040c565b602082015261056a60408401610434565b604082015261057b60608401610434565b606082015261058c60808401610434565b608082015261059d60a0840161040c565b60a08201526105ae60c0840161040c565b60c08201526105bf60e0840161040c565b60e08201526105d1610100840161040c565b61010082015261012083810135908201526105ef6101408401610453565b61014082015261016092830135928101929092525091905056fea26469706673582212204d299bb787d0861e394cb84768bf6cffdd90f1ee3890f5d72f29969e0a5e02f264736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
