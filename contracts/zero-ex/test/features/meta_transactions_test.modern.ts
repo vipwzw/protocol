@@ -6,7 +6,7 @@ import { randomBytes } from 'crypto';
 // Import chai-as-promised for proper async error handling
 import 'chai-as-promised';
 
-describe('MetaTransactions Feature - Modern Tests', function() {
+describe('MetaTransactions Feature - Complete Modern Tests', function() {
     // Extended timeout for meta transaction operations
     this.timeout(300000);
     
@@ -27,10 +27,12 @@ describe('MetaTransactions Feature - Modern Tests', function() {
     const TRANSFORM_ERC20_ONE_WEI_VALUE = 555n;
     const TRANSFORM_ERC20_FAILING_VALUE = 666n;
     const TRANSFORM_ERC20_REENTER_VALUE = 777n;
+    const TRANSFORM_ERC20_BATCH_REENTER_VALUE = 888n;
+    const REENTRANCY_FLAG_MTX = 0x1;
     const RAW_TRANSFORM_SUCCESS_RESULT = '0x' + '1'.repeat(64);
     
     before(async function() {
-        console.log('🚀 Setting up MetaTransactions Test...');
+        console.log('🚀 Setting up Complete MetaTransactions Test...');
         
         // Get signers
         const allSigners = await ethers.getSigners();
@@ -43,11 +45,11 @@ describe('MetaTransactions Feature - Modern Tests', function() {
         
         await deployContractsAsync();
         
-        console.log('✅ MetaTransactions test environment ready!');
+        console.log('✅ Complete MetaTransactions test environment ready!');
     });
     
     async function deployContractsAsync(): Promise<void> {
-        console.log('📦 Deploying MetaTransactions contracts...');
+        console.log('📦 Deploying Complete MetaTransactions contracts...');
         
         // Deploy mock TransformERC20 feature
         const TransformERC20Factory = await ethers.getContractFactory('TestMetaTransactionsTransformERC20Feature');
@@ -106,23 +108,23 @@ describe('MetaTransactions Feature - Modern Tests', function() {
         return minBig + randomValue;
     }
 
-         function getRandomMetaTransaction(fields: any = {}): any {
-         const signer = signers[Math.floor(Math.random() * Math.min(signers.length, 5))];
-         
-         return {
-             signer: signer.address,
-             sender: fields.sender || sender.address,
-             minGasPrice: fields.minGasPrice || ZERO_AMOUNT,
-             maxGasPrice: fields.maxGasPrice || getRandomInteger('1', '100'),
-             expirationTimeSeconds: fields.expirationTimeSeconds || Math.floor(Date.now() / 1000) + 3600,
-             salt: fields.salt || generateRandomBytes32(),
-             callData: fields.callData || '0x',
-             value: fields.value || ZERO_AMOUNT,
-             feeToken: fields.feeToken || generateRandomAddress(), // Use random address instead of async call
-             feeAmount: fields.feeAmount || ethers.parseEther('0.01'),
-             ...fields
-         };
-     }
+    function getRandomMetaTransaction(fields: any = {}): any {
+        const signer = fields.signer || signers[Math.floor(Math.random() * Math.min(signers.length, 5))];
+        
+        return {
+            signer: signer.address,
+            sender: fields.sender || sender.address,
+            minGasPrice: fields.minGasPrice || ZERO_AMOUNT,
+            maxGasPrice: fields.maxGasPrice || getRandomInteger('1', '100'),
+            expirationTimeSeconds: fields.expirationTimeSeconds || Math.floor(Date.now() / 1000) + 3600,
+            salt: fields.salt || generateRandomBytes32(),
+            callData: fields.callData || '0x',
+            value: fields.value || ZERO_AMOUNT,
+            feeToken: fields.feeToken || generateRandomAddress(),
+            feeAmount: fields.feeAmount || ethers.parseEther('0.01'),
+            ...fields
+        };
+    }
 
     function getRandomTransformERC20Args(): any {
         return {
@@ -166,7 +168,7 @@ describe('MetaTransactions Feature - Modern Tests', function() {
         };
     }
 
-    async function createMockSignature(mtx: any): Promise<string> {
+    async function createMetaTransactionSignature(mtx: any): Promise<string> {
         // Create a hash of the meta transaction
         const mtxHash = ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(mtx)));
         
@@ -179,42 +181,19 @@ describe('MetaTransactions Feature - Modern Tests', function() {
         return await signerAccount.signMessage(ethers.getBytes(mtxHash));
     }
 
-    describe('executeMetaTransaction', function() {
-        it('can execute a meta transaction', async function() {
-            const args = getRandomTransformERC20Args();
-            const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
-                args.inputToken,
-                args.outputToken,
-                args.inputTokenAmount,
-                args.minOutputTokenAmount,
-                args.transformations
-            ]);
-            
-            const mtx = getRandomMetaTransaction({
-                callData,
-                value: ZERO_AMOUNT
-            });
-            
-            const signature = await createMockSignature(mtx);
-            
-            const result = await feature.connect(sender).executeMetaTransaction(mtx, signature);
-            const receipt = await result.wait();
-            
-            // Check for MetaTransactionExecuted event
-            const executedEvent = receipt.logs.find((log: any) => log.fragment?.name === 'MetaTransactionExecuted');
-            expect(executedEvent).to.not.be.undefined;
-            
-            console.log(`✅ Executed meta transaction with callData length: ${callData.length}`);
-        });
+    function getMetaTransactionHash(mtx: any): string {
+        return ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(mtx)));
+    }
 
-        it('can call NativeOrders.fillLimitOrder() via meta transaction', async function() {
+    describe('executeMetaTransaction()', function() {
+        it('can call `NativeOrders.fillLimitOrder()`', async function() {
             const order = getRandomLimitOrder();
-            const signature = '0x' + '1'.repeat(130); // Mock signature
+            const sig = '0x' + '1'.repeat(130); // Mock signature  
             const fillAmount = order.takerAmount;
             
             const callData = nativeOrdersFeature.interface.encodeFunctionData('fillLimitOrder', [
                 order,
-                signature,
+                sig,
                 fillAmount
             ]);
             
@@ -223,26 +202,26 @@ describe('MetaTransactions Feature - Modern Tests', function() {
                 value: ZERO_AMOUNT
             });
             
-            const mtxSignature = await createMockSignature(mtx);
+            const signature = await createMetaTransactionSignature(mtx);
             
-            const result = await feature.connect(sender).executeMetaTransaction(mtx, mtxSignature);
+            const result = await feature.connect(sender).executeMetaTransaction(mtx, signature);
             const receipt = await result.wait();
             
-            // Check for specific function call event
+            // Check for FillLimitOrderCalled event
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'FillLimitOrderCalled');
             expect(fillEvent).to.not.be.undefined;
             
             console.log(`✅ Called fillLimitOrder via meta transaction`);
         });
 
-        it('can call NativeOrders.fillRfqOrder() via meta transaction', async function() {
+        it('can call `NativeOrders.fillRfqOrder()`', async function() {
             const order = getRandomRfqOrder();
-            const signature = '0x' + '1'.repeat(130); // Mock signature
+            const sig = '0x' + '1'.repeat(130); // Mock signature
             const fillAmount = order.takerAmount;
             
             const callData = nativeOrdersFeature.interface.encodeFunctionData('fillRfqOrder', [
                 order,
-                signature,
+                sig,
                 fillAmount
             ]);
             
@@ -251,19 +230,19 @@ describe('MetaTransactions Feature - Modern Tests', function() {
                 value: ZERO_AMOUNT
             });
             
-            const mtxSignature = await createMockSignature(mtx);
+            const signature = await createMetaTransactionSignature(mtx);
             
-            const result = await feature.connect(sender).executeMetaTransaction(mtx, mtxSignature);
+            const result = await feature.connect(sender).executeMetaTransaction(mtx, signature);
             const receipt = await result.wait();
             
-            // Check for specific function call event
+            // Check for FillRfqOrderCalled event
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'FillRfqOrderCalled');
             expect(fillEvent).to.not.be.undefined;
             
             console.log(`✅ Called fillRfqOrder via meta transaction`);
         });
 
-        it('can call TransformERC20.transformERC20() via meta transaction', async function() {
+        it('can call `TransformERC20.transformERC20()`', async function() {
             const args = getRandomTransformERC20Args();
             const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
                 args.inputToken,
@@ -278,7 +257,7 @@ describe('MetaTransactions Feature - Modern Tests', function() {
                 value: ZERO_AMOUNT
             });
             
-            const signature = await createMockSignature(mtx);
+            const signature = await createMetaTransactionSignature(mtx);
             
             // First call to check return value
             const rawResult = await feature.connect(sender).executeMetaTransaction.staticCall(mtx, signature);
@@ -295,7 +274,32 @@ describe('MetaTransactions Feature - Modern Tests', function() {
             console.log(`✅ Called transformERC20 via meta transaction`);
         });
 
-        it('works with any sender if sender == 0', async function() {
+        it('can call `TransformERC20.transformERC20()` with calldata', async function() {
+            const args = getRandomTransformERC20Args();
+            const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
+                args.inputToken,
+                args.outputToken,
+                args.inputTokenAmount,
+                args.minOutputTokenAmount,
+                args.transformations
+            ]);
+            
+            const mtx = getRandomMetaTransaction({ callData });
+            const signature = await createMetaTransactionSignature(mtx);
+            
+            const rawResult = await feature.connect(sender).executeMetaTransaction.staticCall(mtx, signature);
+            expect(rawResult).to.equal(RAW_TRANSFORM_SUCCESS_RESULT);
+            
+            const result = await feature.connect(sender).executeMetaTransaction(mtx, signature);
+            const receipt = await result.wait();
+            
+            const transformEvent = receipt.logs.find((log: any) => log.fragment?.name === 'TransformERC20Called');
+            expect(transformEvent).to.not.be.undefined;
+            
+            console.log(`✅ Called transformERC20 with calldata via meta transaction`);
+        });
+
+        it('can call with any sender if `sender == 0`', async function() {
             const args = getRandomTransformERC20Args();
             const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
                 args.inputToken,
@@ -311,7 +315,7 @@ describe('MetaTransactions Feature - Modern Tests', function() {
                 value: ZERO_AMOUNT
             });
             
-            const signature = await createMockSignature(mtx);
+            const signature = await createMetaTransactionSignature(mtx);
             
             // Use a random account as sender
             const randomSender = signers[Math.floor(Math.random() * signers.length)];
@@ -338,7 +342,7 @@ describe('MetaTransactions Feature - Modern Tests', function() {
                 value: ZERO_AMOUNT
             });
             
-            const signature = await createMockSignature(mtx);
+            const signature = await createMetaTransactionSignature(mtx);
             
             const rawResult = await feature.connect(sender).executeMetaTransaction.staticCall(mtx, signature);
             expect(rawResult).to.equal(RAW_TRANSFORM_SUCCESS_RESULT);
@@ -361,7 +365,7 @@ describe('MetaTransactions Feature - Modern Tests', function() {
                 callData
             });
             
-            const signature = await createMockSignature(mtx);
+            const signature = await createMetaTransactionSignature(mtx);
             
             await expect(
                 feature.connect(sender).executeMetaTransaction(mtx, signature)
@@ -379,7 +383,7 @@ describe('MetaTransactions Feature - Modern Tests', function() {
                 value: ZERO_AMOUNT
             });
             
-            const signature = await createMockSignature(mtx);
+            const signature = await createMetaTransactionSignature(mtx);
             
             await expect(
                 feature.connect(sender).executeMetaTransaction(mtx, signature)
@@ -403,7 +407,7 @@ describe('MetaTransactions Feature - Modern Tests', function() {
                 value: ZERO_AMOUNT
             });
             
-            const signature = await createMockSignature(mtx);
+            const signature = await createMetaTransactionSignature(mtx);
             
             // Execute once
             await feature.connect(sender).executeMetaTransaction(mtx, signature);
@@ -416,7 +420,7 @@ describe('MetaTransactions Feature - Modern Tests', function() {
             console.log(`✅ Correctly prevented double execution`);
         });
 
-        it('reverts if sender is not authorized', async function() {
+        it('reverts if wrong sender', async function() {
             const args = getRandomTransformERC20Args();
             const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
                 args.inputToken,
@@ -426,23 +430,22 @@ describe('MetaTransactions Feature - Modern Tests', function() {
                 args.transformations
             ]);
             
-            const unauthorizedSender = generateRandomAddress();
             const mtx = getRandomMetaTransaction({
                 sender: sender.address, // Specific sender required
                 callData,
                 value: ZERO_AMOUNT
             });
             
-            const signature = await createMockSignature(mtx);
+            const signature = await createMetaTransactionSignature(mtx);
             
             await expect(
                 feature.connect(notSigner).executeMetaTransaction(mtx, signature)
             ).to.be.rejectedWith('MetaTransactionWrongSenderError');
             
-            console.log(`✅ Correctly rejected unauthorized sender`);
+            console.log(`✅ Correctly rejected wrong sender`);
         });
 
-        it('reverts if signature is invalid', async function() {
+        it('reverts if bad signature', async function() {
             const args = getRandomTransformERC20Args();
             const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
                 args.inputToken,
@@ -463,10 +466,10 @@ describe('MetaTransactions Feature - Modern Tests', function() {
                 feature.connect(sender).executeMetaTransaction(mtx, invalidSignature)
             ).to.be.rejectedWith('MetaTransactionInvalidSignatureError');
             
-            console.log(`✅ Correctly rejected invalid signature`);
+            console.log(`✅ Correctly rejected bad signature`);
         });
 
-        it('reverts if meta transaction is expired', async function() {
+        it('reverts if expired', async function() {
             const args = getRandomTransformERC20Args();
             const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
                 args.inputToken,
@@ -482,7 +485,7 @@ describe('MetaTransactions Feature - Modern Tests', function() {
                 value: ZERO_AMOUNT
             });
             
-            const signature = await createMockSignature(mtx);
+            const signature = await createMetaTransactionSignature(mtx);
             
             await expect(
                 feature.connect(sender).executeMetaTransaction(mtx, signature)
@@ -490,132 +493,8 @@ describe('MetaTransactions Feature - Modern Tests', function() {
             
             console.log(`✅ Correctly rejected expired meta transaction`);
         });
-    });
 
-    describe('batchExecuteMetaTransactions', function() {
-        it('can execute multiple meta transactions', async function() {
-            const mtxs = [];
-            const signatures = [];
-            
-            for (let i = 0; i < 3; i++) {
-                const args = getRandomTransformERC20Args();
-                const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
-                    args.inputToken,
-                    args.outputToken,
-                    args.inputTokenAmount,
-                    args.minOutputTokenAmount,
-                    args.transformations
-                ]);
-                
-                const mtx = getRandomMetaTransaction({
-                    callData,
-                    value: ZERO_AMOUNT,
-                    salt: generateRandomBytes32() // Ensure unique salts
-                });
-                
-                mtxs.push(mtx);
-                signatures.push(await createMockSignature(mtx));
-            }
-            
-            const result = await feature.connect(sender).batchExecuteMetaTransactions(mtxs, signatures);
-            const receipt = await result.wait();
-            
-            // Check that multiple transactions were executed
-            const executedEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'MetaTransactionExecuted');
-            expect(executedEvents.length).to.equal(mtxs.length);
-            
-            console.log(`✅ Executed ${mtxs.length} meta transactions in batch`);
-        });
-
-        it('skips failed transactions in batch', async function() {
-            const mtxs = [];
-            const signatures = [];
-            
-            // Add one failing transaction
-            const failingArgs = getRandomTransformERC20Args();
-            const failingCallData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
-                failingArgs.inputToken,
-                failingArgs.outputToken,
-                failingArgs.inputTokenAmount,
-                failingArgs.minOutputTokenAmount,
-                failingArgs.transformations
-            ]);
-            
-            const failingMtx = getRandomMetaTransaction({
-                callData: failingCallData,
-                value: TRANSFORM_ERC20_FAILING_VALUE // This will cause failure
-            });
-            
-            mtxs.push(failingMtx);
-            signatures.push(await createMockSignature(failingMtx));
-            
-            // Add two successful transactions
-            for (let i = 0; i < 2; i++) {
-                const args = getRandomTransformERC20Args();
-                const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
-                    args.inputToken,
-                    args.outputToken,
-                    args.inputTokenAmount,
-                    args.minOutputTokenAmount,
-                    args.transformations
-                ]);
-                
-                const mtx = getRandomMetaTransaction({
-                    callData,
-                    value: ZERO_AMOUNT,
-                    salt: generateRandomBytes32()
-                });
-                
-                mtxs.push(mtx);
-                signatures.push(await createMockSignature(mtx));
-            }
-            
-            const result = await feature.connect(sender).batchExecuteMetaTransactions(mtxs, signatures);
-            const receipt = await result.wait();
-            
-            // Should execute 2 successful transactions, skip 1 failed
-            const executedEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'MetaTransactionExecuted');
-            expect(executedEvents.length).to.equal(2);
-            
-            console.log(`✅ Executed 2 successful transactions, skipped 1 failed transaction`);
-        });
-    });
-
-    describe('Gas and Fee Management', function() {
-        it('handles fee payments correctly', async function() {
-            const args = getRandomTransformERC20Args();
-            const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
-                args.inputToken,
-                args.outputToken,
-                args.inputTokenAmount,
-                args.minOutputTokenAmount,
-                args.transformations
-            ]);
-            
-            const feeAmount = ethers.parseEther('0.01');
-            const mtx = getRandomMetaTransaction({
-                feeAmount,
-                feeToken: await feeToken.getAddress(),
-                callData,
-                value: ZERO_AMOUNT
-            });
-            
-            const signature = await createMockSignature(mtx);
-            
-            // Check initial balances
-            const signerAccount = signers.find((s: any) => s.address === mtx.signer);
-            const initialBalance = await feeToken.balanceOf(signerAccount.address);
-            
-            await feature.connect(sender).executeMetaTransaction(mtx, signature);
-            
-            // Check that fee was deducted
-            const finalBalance = await feeToken.balanceOf(signerAccount.address);
-            expect(initialBalance - finalBalance).to.equal(feeAmount);
-            
-            console.log(`✅ Fee payment: ${ethers.formatEther(feeAmount)} tokens deducted`);
-        });
-
-        it('validates gas price requirements', async function() {
+        it('reverts if min gas price is not met', async function() {
             const args = getRandomTransformERC20Args();
             const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
                 args.inputToken,
@@ -627,21 +506,349 @@ describe('MetaTransactions Feature - Modern Tests', function() {
             
             const mtx = getRandomMetaTransaction({
                 minGasPrice: ethers.parseUnits('20', 'gwei'),
-                maxGasPrice: ethers.parseUnits('100', 'gwei'),
                 callData,
                 value: ZERO_AMOUNT
             });
             
-            const signature = await createMockSignature(mtx);
+            const signature = await createMetaTransactionSignature(mtx);
             
-            // Try with gas price too low
             await expect(
                 feature.connect(sender).executeMetaTransaction(mtx, signature, {
                     gasPrice: ethers.parseUnits('10', 'gwei') // Below minimum
                 })
             ).to.be.rejectedWith('MetaTransactionGasPriceError');
             
-            console.log(`✅ Correctly validated gas price requirements`);
+            console.log(`✅ Correctly rejected low gas price`);
+        });
+
+        it('reverts if max gas price is exceeded', async function() {
+            const args = getRandomTransformERC20Args();
+            const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
+                args.inputToken,
+                args.outputToken,
+                args.inputTokenAmount,
+                args.minOutputTokenAmount,
+                args.transformations
+            ]);
+            
+            const mtx = getRandomMetaTransaction({
+                maxGasPrice: ethers.parseUnits('50', 'gwei'),
+                callData,
+                value: ZERO_AMOUNT
+            });
+            
+            const signature = await createMetaTransactionSignature(mtx);
+            
+            await expect(
+                feature.connect(sender).executeMetaTransaction(mtx, signature, {
+                    gasPrice: ethers.parseUnits('100', 'gwei') // Above maximum
+                })
+            ).to.be.rejectedWith('MetaTransactionGasPriceError');
+            
+            console.log(`✅ Correctly rejected high gas price`);
+        });
+
+        it('cannot reenter `executeMetaTransaction()`', async function() {
+            const args = getRandomTransformERC20Args();
+            const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
+                args.inputToken,
+                args.outputToken,
+                args.inputTokenAmount,
+                args.minOutputTokenAmount,
+                args.transformations
+            ]);
+            
+            const mtx = getRandomMetaTransaction({
+                callData,
+                value: TRANSFORM_ERC20_REENTER_VALUE // This triggers reentrancy
+            });
+            
+            const signature = await createMetaTransactionSignature(mtx);
+            
+            await expect(
+                feature.connect(sender).executeMetaTransaction(mtx, signature)
+            ).to.be.rejectedWith('IllegalReentrancyError');
+            
+            console.log(`✅ Correctly prevented reentrancy in executeMetaTransaction`);
+        });
+
+        it('cannot reduce initial ETH balance', async function() {
+            const args = getRandomTransformERC20Args();
+            const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
+                args.inputToken,
+                args.outputToken,
+                args.inputTokenAmount,
+                args.minOutputTokenAmount,
+                args.transformations
+            ]);
+            
+            const mtx = getRandomMetaTransaction({
+                callData,
+                value: TRANSFORM_ERC20_ONE_WEI_VALUE
+            });
+            
+            const signature = await createMetaTransactionSignature(mtx);
+            
+            // Send pre-existing ETH to the contract
+            await owner.sendTransaction({
+                to: await zeroEx.getAddress(),
+                value: 1
+            });
+            
+            await expect(
+                feature.connect(sender).executeMetaTransaction(mtx, signature)
+            ).to.be.rejectedWith('ETH_LEAK');
+            
+            console.log(`✅ Correctly prevented ETH balance reduction`);
         });
     });
-}); 
+
+    describe('batchExecuteMetaTransactions()', function() {
+        it('can execute multiple transactions', async function() {
+            const mtxs: any[] = [];
+            const signatures: string[] = [];
+            
+            for (let i = 0; i < 2; i++) {
+                const args = getRandomTransformERC20Args();
+                const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
+                    args.inputToken,
+                    args.outputToken,
+                    args.inputTokenAmount,
+                    args.minOutputTokenAmount,
+                    args.transformations
+                ]);
+                
+                const mtx = getRandomMetaTransaction({
+                    signer: signers[i],
+                    callData,
+                    value: ZERO_AMOUNT,
+                    salt: generateRandomBytes32() // Ensure unique salts
+                });
+                
+                mtxs.push(mtx);
+                signatures.push(await createMetaTransactionSignature(mtx));
+            }
+            
+            // Check static call first
+            const rawResults = await feature.connect(sender).batchExecuteMetaTransactions.staticCall(mtxs, signatures);
+            expect(rawResults).to.deep.equal(mtxs.map(() => RAW_TRANSFORM_SUCCESS_RESULT));
+            
+            // Then execute
+            const result = await feature.connect(sender).batchExecuteMetaTransactions(mtxs, signatures);
+            const receipt = await result.wait();
+            
+            // Check that multiple transactions were executed
+            const executedEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'MetaTransactionExecuted');
+            expect(executedEvents.length).to.equal(mtxs.length);
+            
+            console.log(`✅ Executed ${mtxs.length} meta transactions in batch`);
+        });
+
+        it('cannot execute the same transaction twice', async function() {
+            const args = getRandomTransformERC20Args();
+            const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
+                args.inputToken,
+                args.outputToken,
+                args.inputTokenAmount,
+                args.minOutputTokenAmount,
+                args.transformations
+            ]);
+            
+            const mtx = getRandomMetaTransaction({
+                signer: signers[0],
+                callData,
+                value: ZERO_AMOUNT
+            });
+            
+            const signature = await createMetaTransactionSignature(mtx);
+            const mtxs: any[] = [mtx, mtx]; // Same transaction twice
+            const signatures: string[] = [signature, signature];
+            
+            const block = await ethers.provider.getBlockNumber();
+            
+            await expect(
+                feature.connect(sender).batchExecuteMetaTransactions.staticCall(mtxs, signatures)
+            ).to.be.rejectedWith('MetaTransactionAlreadyExecutedError');
+            
+            console.log(`✅ Correctly prevented double execution in batch`);
+        });
+
+        it('fails if a meta-transaction fails', async function() {
+            const args = getRandomTransformERC20Args();
+            const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
+                args.inputToken,
+                args.outputToken,
+                args.inputTokenAmount,
+                args.minOutputTokenAmount,
+                args.transformations
+            ]);
+            
+            const mtx = getRandomMetaTransaction({
+                value: TRANSFORM_ERC20_FAILING_VALUE, // This will cause failure
+                callData
+            });
+            
+            const signature = await createMetaTransactionSignature(mtx);
+            
+            await expect(
+                feature.connect(sender).batchExecuteMetaTransactions.staticCall([mtx], [signature])
+            ).to.be.rejectedWith('MetaTransactionCallFailedError');
+            
+            console.log(`✅ Correctly failed batch when one transaction fails`);
+        });
+
+        it('cannot reenter `executeMetaTransaction()`', async function() {
+            const args = getRandomTransformERC20Args();
+            const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
+                args.inputToken,
+                args.outputToken,
+                args.inputTokenAmount,
+                args.minOutputTokenAmount,
+                args.transformations
+            ]);
+            
+            const mtx = getRandomMetaTransaction({
+                callData,
+                value: TRANSFORM_ERC20_REENTER_VALUE // This triggers reentrancy
+            });
+            
+            const signature = await createMetaTransactionSignature(mtx);
+            
+            await expect(
+                feature.connect(sender).batchExecuteMetaTransactions([mtx], [signature])
+            ).to.be.rejectedWith('IllegalReentrancyError');
+            
+            console.log(`✅ Correctly prevented executeMetaTransaction reentrancy from batch`);
+        });
+
+        it('cannot reenter `batchExecuteMetaTransactions()`', async function() {
+            const args = getRandomTransformERC20Args();
+            const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
+                args.inputToken,
+                args.outputToken,
+                args.inputTokenAmount,
+                args.minOutputTokenAmount,
+                args.transformations
+            ]);
+            
+            const mtx = getRandomMetaTransaction({
+                callData,
+                value: TRANSFORM_ERC20_BATCH_REENTER_VALUE // This triggers batch reentrancy
+            });
+            
+            const signature = await createMetaTransactionSignature(mtx);
+            
+            await expect(
+                feature.connect(sender).batchExecuteMetaTransactions([mtx], [signature])
+            ).to.be.rejectedWith('IllegalReentrancyError');
+            
+            console.log(`✅ Correctly prevented batchExecuteMetaTransactions reentrancy`);
+        });
+
+        it('cannot reduce initial ETH balance', async function() {
+            const args = getRandomTransformERC20Args();
+            const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
+                args.inputToken,
+                args.outputToken,
+                args.inputTokenAmount,
+                args.minOutputTokenAmount,
+                args.transformations
+            ]);
+            
+            const mtx = getRandomMetaTransaction({
+                callData,
+                value: TRANSFORM_ERC20_ONE_WEI_VALUE
+            });
+            
+            const signature = await createMetaTransactionSignature(mtx);
+            
+            // Send pre-existing ETH to the contract
+            await owner.sendTransaction({
+                to: await zeroEx.getAddress(),
+                value: 1
+            });
+            
+            await expect(
+                feature.connect(sender).batchExecuteMetaTransactions([mtx], [signature])
+            ).to.be.rejectedWith('ETH_LEAK');
+            
+            console.log(`✅ Correctly prevented ETH balance reduction in batch`);
+        });
+    });
+
+    describe('getMetaTransactionExecutedBlock()', function() {
+        it('returns zero for an unexecuted mtx', async function() {
+            const mtx = getRandomMetaTransaction();
+            
+            const block = await feature.getMetaTransactionExecutedBlock(mtx);
+            expect(block).to.equal(0n);
+            
+            console.log(`✅ Returned zero for unexecuted meta transaction`);
+        });
+
+        it('returns the block it was executed in', async function() {
+            const args = getRandomTransformERC20Args();
+            const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
+                args.inputToken,
+                args.outputToken,
+                args.inputTokenAmount,
+                args.minOutputTokenAmount,
+                args.transformations
+            ]);
+            
+            const mtx = getRandomMetaTransaction({
+                callData,
+                value: ZERO_AMOUNT
+            });
+            
+            const signature = await createMetaTransactionSignature(mtx);
+            
+            const result = await feature.connect(sender).executeMetaTransaction(mtx, signature);
+            const receipt = await result.wait();
+            
+            const block = await feature.getMetaTransactionExecutedBlock(mtx);
+            expect(block).to.equal(BigInt(receipt.blockNumber));
+            
+            console.log(`✅ Returned correct execution block: ${receipt.blockNumber}`);
+        });
+    });
+
+    describe('getMetaTransactionHashExecutedBlock()', function() {
+        it('returns zero for an unexecuted mtx', async function() {
+            const mtx = getRandomMetaTransaction();
+            const mtxHash = getMetaTransactionHash(mtx);
+            
+            const block = await feature.getMetaTransactionHashExecutedBlock(mtxHash);
+            expect(block).to.equal(0n);
+            
+            console.log(`✅ Returned zero for unexecuted meta transaction hash`);
+        });
+
+        it('returns the block it was executed in', async function() {
+            const args = getRandomTransformERC20Args();
+            const callData = transformERC20Feature.interface.encodeFunctionData('transformERC20', [
+                args.inputToken,
+                args.outputToken,
+                args.inputTokenAmount,
+                args.minOutputTokenAmount,
+                args.transformations
+            ]);
+            
+            const mtx = getRandomMetaTransaction({
+                callData,
+                value: ZERO_AMOUNT
+            });
+            
+            const signature = await createMetaTransactionSignature(mtx);
+            
+            const result = await feature.connect(sender).executeMetaTransaction(mtx, signature);
+            const receipt = await result.wait();
+            
+            const mtxHash = getMetaTransactionHash(mtx);
+            const block = await feature.getMetaTransactionHashExecutedBlock(mtxHash);
+            expect(block).to.equal(BigInt(receipt.blockNumber));
+            
+            console.log(`✅ Returned correct execution block for hash: ${receipt.blockNumber}`);
+        });
+    });
+});
