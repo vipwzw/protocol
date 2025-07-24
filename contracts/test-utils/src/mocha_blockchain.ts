@@ -94,13 +94,9 @@ export class StandardBlockchainTestsEnvironmentSingleton extends BlockchainTests
 
     // Create or retrieve the singleton instance of this class.
     public static create(): StandardBlockchainTestsEnvironmentSingleton {
-        console.log('🔧 DEBUG: StandardBlockchainTestsEnvironmentSingleton.create() called!');
-        console.log('🔧 DEBUG: Current instance exists?', StandardBlockchainTestsEnvironmentSingleton._instance !== undefined);
-        
-        // Force create new instance for debugging
-        StandardBlockchainTestsEnvironmentSingleton._instance = new StandardBlockchainTestsEnvironmentSingleton();
-        console.log('🔧 DEBUG: New instance created');
-        
+        if (StandardBlockchainTestsEnvironmentSingleton._instance === undefined) {
+            StandardBlockchainTestsEnvironmentSingleton._instance = new StandardBlockchainTestsEnvironmentSingleton();
+        }
         return StandardBlockchainTestsEnvironmentSingleton._instance;
     }
 
@@ -124,11 +120,6 @@ export class StandardBlockchainTestsEnvironmentSingleton extends BlockchainTests
         
         const correctProvider = hardhat.network.provider;
         const correctWeb3Wrapper = new Web3Wrapper(correctProvider);
-        
-        console.log('');
-        console.log('🔧 DEBUG: StandardBlockchainTestsEnvironmentSingleton constructor called!');
-        console.log('🔧 DEBUG: Using correct provider constructor:', correctProvider.constructor.name);
-        console.log('');
         
         this.provider = correctProvider;
         this.txDefaults = txDefaults;
