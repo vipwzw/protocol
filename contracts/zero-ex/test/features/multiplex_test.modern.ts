@@ -2,9 +2,11 @@ import { expect } from 'chai';
 const { ethers } = require('hardhat');
 import { Contract } from 'ethers';
 import { randomBytes } from 'crypto';
+import * as chai from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 
-// Import chai-as-promised for proper async error handling
-import 'chai-as-promised';
+// Configure chai-as-promised for proper async error handling
+chai.use(chaiAsPromised);
 
 describe('MultiplexFeature - Complete Modern Tests', function() {
     // Extended timeout for complex multiplex operations
@@ -26,6 +28,7 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
     let zrx: any;
     let weth: any;
     let transformerNonce: number;
+    let transformFeature: any; // TransformERC20Feature interface pointing to ZeroEx
     
     const POOL_FEE = 1234;
     const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -84,18 +87,18 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
     });
     
     async function deployContractsAsync(): Promise<void> {
-        console.log('📦 Deploying MultiplexFeature contracts...');
+        console.log('📦 Deploying MultiplexFeature contracts using FullMigration pattern...');
         
-        // Deploy tokens
+        // Deploy tokens using TestMintableERC20Token (no constructor params)
         const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
         
-        dai = await TokenFactory.deploy('DAI', 'DAI', 18);
+        dai = await TokenFactory.deploy();
         await dai.waitForDeployment();
         
-        shib = await TokenFactory.deploy('SHIB', 'SHIB', 18);
+        shib = await TokenFactory.deploy();
         await shib.waitForDeployment();
         
-        zrx = await TokenFactory.deploy('ZRX', 'ZRX', 18);
+        zrx = await TokenFactory.deploy();
         await zrx.waitForDeployment();
         
         const WethFactory = await ethers.getContractFactory('TestWeth');
@@ -104,14 +107,96 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
         
         console.log(`✅ Tokens deployed`);
         
-        // Deploy mock ZeroEx with multiplex support
-        const ZeroExFactory = await ethers.getContractFactory('TestZeroExWithMultiplex');
-        zeroEx = await ZeroExFactory.deploy(await weth.getAddress());
-        await zeroEx.waitForDeployment();
-        console.log(`✅ ZeroEx deployed`);
+        // Use FullMigration pattern like BatchFillNativeOrders test
+        const FullMigrationFactory = await ethers.getContractFactory('FullMigration');
+        const migrator = await FullMigrationFactory.deploy(owner.address);
+        await migrator.waitForDeployment();
+        console.log(`✅ FullMigration: ${await migrator.getAddress()}`);
         
-        // Set flash wallet address
-        flashWalletAddress = await zeroEx.getFlashWalletAddress();
+        // Get correct bootstrapper from migrator
+        const bootstrapper = await migrator.getBootstrapper();
+        
+        // Deploy ZeroEx with correct bootstrapper (this avoids permission issues)
+        const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
+        zeroEx = await ZeroExFactory.deploy(bootstrapper);
+        await zeroEx.waitForDeployment();
+        const verifyingContract = await zeroEx.getAddress();
+        console.log(`✅ ZeroEx: ${verifyingContract}`);
+        
+        // Deploy all required features for full migration
+        const SimpleFunctionRegistryFactory = await ethers.getContractFactory('SimpleFunctionRegistryFeature');
+        const registry = await SimpleFunctionRegistryFactory.deploy();
+        await registry.waitForDeployment();
+        
+        const OwnableFactory = await ethers.getContractFactory('OwnableFeature');
+        const ownable = await OwnableFactory.deploy();
+        await ownable.waitForDeployment();
+        
+        const TransformERC20Factory = await ethers.getContractFactory('TransformERC20Feature');
+        const transformERC20 = await TransformERC20Factory.deploy();
+        await transformERC20.waitForDeployment();
+        
+        const MetaTransactionsFactory = await ethers.getContractFactory('MetaTransactionsFeature');
+        const metaTransactions = await MetaTransactionsFactory.deploy(verifyingContract);
+        await metaTransactions.waitForDeployment();
+        
+        // Deploy staking and fee collector for NativeOrdersFeature
+        const TestStakingFactory = await ethers.getContractFactory('TestStaking');
+        const staking = await TestStakingFactory.deploy(await weth.getAddress());
+        await staking.waitForDeployment();
+        
+        const FeeCollectorFactory = await ethers.getContractFactory('FeeCollectorController');
+        const feeCollector = await FeeCollectorFactory.deploy(await weth.getAddress(), await staking.getAddress());
+        await feeCollector.waitForDeployment();
+        
+        // Use TestNativeOrdersFeature
+        const TestNativeOrdersFactory = await ethers.getContractFactory('TestNativeOrdersFeature');
+        const nativeOrders = await TestNativeOrdersFactory.deploy(
+            verifyingContract,
+            await weth.getAddress(),
+            await staking.getAddress(),
+            await feeCollector.getAddress(),
+            70000 // protocolFeeMultiplier
+        );
+        await nativeOrders.waitForDeployment();
+        
+        const OtcOrdersFactory = await ethers.getContractFactory('OtcOrdersFeature');
+        const otcOrders = await OtcOrdersFactory.deploy(verifyingContract, await weth.getAddress());
+        await otcOrders.waitForDeployment();
+        
+        console.log(`✅ All features deployed`);
+        
+        // Use FullMigration's migrateZeroEx with all features (this handles bootstrap correctly)
+        const features = {
+            registry: await registry.getAddress(),
+            ownable: await ownable.getAddress(),
+            transformERC20: await transformERC20.getAddress(),
+            metaTransactions: await metaTransactions.getAddress(),
+            nativeOrders: await nativeOrders.getAddress(),
+            otcOrders: await otcOrders.getAddress()
+        };
+        
+        await migrator.migrateZeroEx(
+            owner.address,
+            verifyingContract,
+            features,
+            {
+                transformerDeployer: owner.address // Set valid transformer deployer
+            }
+        );
+        console.log(`✅ ZeroEx fully migrated with all features including TransformERC20`);
+        
+        // Create TransformERC20Feature interface pointing to ZeroEx (proxy pattern)
+        transformFeature = new ethers.Contract(
+            verifyingContract,
+            transformERC20.interface,
+            ethers.provider
+        );
+        console.log(`✅ TransformERC20Feature interface created`);
+        
+        // Now getTransformWallet should work through the feature interface!
+        flashWalletAddress = await transformFeature.getTransformWallet();
+        console.log(`✅ FlashWallet address obtained: ${flashWalletAddress}`);
         
         // Initialize transformer nonce
         transformerNonce = 0;

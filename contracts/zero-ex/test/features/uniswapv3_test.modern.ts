@@ -2,9 +2,11 @@ import { expect } from 'chai';
 const { ethers } = require('hardhat');
 import { Contract } from 'ethers';
 import { randomBytes } from 'crypto';
+import * as chai from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 
-// Import chai-as-promised for proper async error handling
-import 'chai-as-promised';
+// Configure chai-as-promised for proper async error handling
+chai.use(chaiAsPromised);
 
 describe('UniswapV3Feature - Modern Tests', function() {
     // Extended timeout for Uniswap operations

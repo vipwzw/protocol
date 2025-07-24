@@ -76,9 +76,9 @@ describe('ZeroEx Full Migration - Modern Tests', function() {
     async function deployMigrationContractsAsync(): Promise<void> {
         console.log('📦 Deploying migration contracts...');
         
-        // Deploy BootstrapFeature first
+        // Deploy BootstrapFeature first with admin as bootstrap caller
         const BootstrapFactory = await ethers.getContractFactory('BootstrapFeature');
-        bootstrapFeature = await BootstrapFactory.deploy();
+        bootstrapFeature = await BootstrapFactory.deploy(admin.address);
         await bootstrapFeature.waitForDeployment();
         console.log(`✅ BootstrapFeature: ${await bootstrapFeature.getAddress()}`);
         
@@ -105,12 +105,27 @@ describe('ZeroEx Full Migration - Modern Tests', function() {
         console.log(`✅ OwnableFeature: ${await ownableFeature.getAddress()}`);
         
         const MetaTxFactory = await ethers.getContractFactory('MetaTransactionsFeature');
-        metaTransactionsFeature = await MetaTxFactory.deploy();
+        metaTransactionsFeature = await MetaTxFactory.deploy(await zeroEx.getAddress());
         await metaTransactionsFeature.waitForDeployment();
         console.log(`✅ MetaTransactionsFeature: ${await metaTransactionsFeature.getAddress()}`);
         
+        // Deploy test staking and fee collector for NativeOrdersFeature
+        const TestStakingFactory = await ethers.getContractFactory('TestStaking');
+        const testStaking = await TestStakingFactory.deploy(await weth.getAddress());
+        await testStaking.waitForDeployment();
+        
+        const FeeCollectorFactory = await ethers.getContractFactory('FeeCollectorController');
+        const feeCollector = await FeeCollectorFactory.deploy(await weth.getAddress(), await testStaking.getAddress());
+        await feeCollector.waitForDeployment();
+        
         const NativeOrdersFactory = await ethers.getContractFactory('NativeOrdersFeature');
-        nativeOrdersFeature = await NativeOrdersFactory.deploy();
+        nativeOrdersFeature = await NativeOrdersFactory.deploy(
+            await zeroEx.getAddress(),
+            await weth.getAddress(), 
+            await testStaking.getAddress(),
+            await feeCollector.getAddress(),
+            70000 // protocolFeeMultiplier
+        );
         await nativeOrdersFeature.waitForDeployment();
         console.log(`✅ NativeOrdersFeature: ${await nativeOrdersFeature.getAddress()}`);
         

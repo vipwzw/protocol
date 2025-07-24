@@ -6,7 +6,7 @@ describe('Storage ID Uniqueness Test - Modern', function() {
     // Extended timeout for file operations
     this.timeout(30000);
     
-    const STORAGE_SOURCES_DIR = resolve(__dirname, '../../contracts/src/storage');
+    const STORAGE_SOURCES_DIR = resolve(__dirname, '../contracts/src/storage');
 
     async function findStorageIdFromSourceFileAsync(path: string): Promise<string | void> {
         const contents = await promisify(readFile)(path, { encoding: 'utf-8' });

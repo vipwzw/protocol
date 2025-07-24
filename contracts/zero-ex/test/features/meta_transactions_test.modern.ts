@@ -2,9 +2,18 @@ import { expect } from 'chai';
 const { ethers } = require('hardhat');
 import { Contract } from 'ethers';
 import { randomBytes } from 'crypto';
+import * as chai from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
+// 导入通用部署函数
+import { 
+    deployZeroExWithFullMigration, 
+    deployTestTokens, 
+    approveTokensForAccounts,
+    type ZeroExDeploymentResult 
+} from '../utils/deployment-helper';
 
-// Import chai-as-promised for proper async error handling
-import 'chai-as-promised';
+// Configure chai-as-promised for proper async error handling
+chai.use(chaiAsPromised);
 
 describe('MetaTransactions Feature - Complete Modern Tests', function() {
     // Extended timeout for meta transaction operations
@@ -15,8 +24,8 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
     let sender: any;
     let notSigner: any;
     let signers: any[];
-    let zeroEx: any;
-    let feature: any;
+    let deployment: ZeroExDeploymentResult;
+    let feature: any; // MetaTransactionsFeature 接口
     let feeToken: any;
     let transformERC20Feature: any;
     let nativeOrdersFeature: any;
@@ -63,24 +72,31 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
         await nativeOrdersFeature.waitForDeployment();
         console.log(`✅ NativeOrdersFeature: ${await nativeOrdersFeature.getAddress()}`);
         
-        // Deploy mock ZeroEx contract with meta transactions support
-        const ZeroExFactory = await ethers.getContractFactory('TestZeroExWithMetaTransactions');
-        zeroEx = await ZeroExFactory.deploy(
-            await transformERC20Feature.getAddress(),
-            await nativeOrdersFeature.getAddress()
-        );
+        // Deploy basic ZeroEx contract
+        const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
+        const zeroEx = await ZeroExFactory.deploy(owner.address);
         await zeroEx.waitForDeployment();
         console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
         
+        // Create deployment-like object for compatibility
+        deployment = {
+            zeroEx,
+            verifyingContract: await zeroEx.getAddress(),
+            features: {},
+            featureInterfaces: {},
+            migrator: null,
+            dependencies: {}
+        } as any;
+        
         // Deploy MetaTransactions feature
-        const MetaTransactionsFactory = await ethers.getContractFactory('TestMetaTransactionsFeature');
+        const MetaTransactionsFactory = await ethers.getContractFactory('MetaTransactionsFeature');
         feature = await MetaTransactionsFactory.deploy(await zeroEx.getAddress());
         await feature.waitForDeployment();
         console.log(`✅ MetaTransactionsFeature: ${await feature.getAddress()}`);
         
-        // Deploy fee token
+        // Deploy fee token using TestMintableERC20Token (no constructor params)
         const FeeTokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
-        feeToken = await FeeTokenFactory.deploy('FeeToken', 'FEE', 18);
+        feeToken = await FeeTokenFactory.deploy();
         await feeToken.waitForDeployment();
         console.log(`✅ FeeToken: ${await feeToken.getAddress()}`);
         
@@ -142,14 +158,14 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             taker: NULL_ADDRESS,
             makerToken: generateRandomAddress(),
             takerToken: generateRandomAddress(),
-            makerAmount: ethers.parseEther('100'),
-            takerAmount: ethers.parseEther('50'),
-            takerTokenFeeAmount: ZERO_AMOUNT,
+            makerAmount: ethers.parseEther('100').toString(),
+            takerAmount: ethers.parseEther('50').toString(),
+            takerTokenFeeAmount: ZERO_AMOUNT.toString(),
             sender: NULL_ADDRESS,
             feeRecipient: NULL_ADDRESS,
             pool: ethers.ZeroHash,
             expiry: Math.floor(Date.now() / 1000) + 3600,
-            salt: generateRandomBytes32()
+            salt: ethers.hexlify(randomBytes(32))
         };
     }
 
@@ -159,18 +175,26 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             taker: generateRandomAddress(),
             makerToken: generateRandomAddress(),
             takerToken: generateRandomAddress(),
-            makerAmount: ethers.parseEther('100'),
-            takerAmount: ethers.parseEther('50'),
+            makerAmount: ethers.parseEther('100').toString(),
+            takerAmount: ethers.parseEther('50').toString(),
             txOrigin: generateRandomAddress(),
             pool: ethers.ZeroHash,
             expiry: Math.floor(Date.now() / 1000) + 3600,
-            salt: generateRandomBytes32()
+            salt: ethers.hexlify(randomBytes(32))
         };
     }
 
     async function createMetaTransactionSignature(mtx: any): Promise<string> {
-        // Create a hash of the meta transaction
-        const mtxHash = ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(mtx)));
+        // Create a hash of the meta transaction (with safe BigInt serialization)
+        const mtxForHashing = {
+            ...mtx,
+            minGasPrice: mtx.minGasPrice?.toString ? mtx.minGasPrice.toString() : mtx.minGasPrice,
+            maxGasPrice: mtx.maxGasPrice?.toString ? mtx.maxGasPrice.toString() : mtx.maxGasPrice,
+            value: mtx.value?.toString ? mtx.value.toString() : mtx.value,
+            feeAmount: mtx.feeAmount?.toString ? mtx.feeAmount.toString() : mtx.feeAmount,
+            expirationTimeSeconds: mtx.expirationTimeSeconds?.toString ? mtx.expirationTimeSeconds.toString() : mtx.expirationTimeSeconds
+        };
+        const mtxHash = ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(mtxForHashing)));
         
         // Sign with the designated signer
         const signerAccount = signers.find((s: any) => s.address === mtx.signer);
@@ -182,7 +206,16 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
     }
 
     function getMetaTransactionHash(mtx: any): string {
-        return ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(mtx)));
+        // Convert bigint fields to strings for safe JSON serialization
+        const mtxForHashing = {
+            ...mtx,
+            minGasPrice: mtx.minGasPrice?.toString ? mtx.minGasPrice.toString() : mtx.minGasPrice,
+            maxGasPrice: mtx.maxGasPrice?.toString ? mtx.maxGasPrice.toString() : mtx.maxGasPrice,
+            value: mtx.value?.toString ? mtx.value.toString() : mtx.value,
+            feeAmount: mtx.feeAmount?.toString ? mtx.feeAmount.toString() : mtx.feeAmount,
+            expirationTimeSeconds: mtx.expirationTimeSeconds?.toString ? mtx.expirationTimeSeconds.toString() : mtx.expirationTimeSeconds
+        };
+        return ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(mtxForHashing)));
     }
 
     describe('executeMetaTransaction()', function() {
@@ -591,7 +624,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             
             // Send pre-existing ETH to the contract
             await owner.sendTransaction({
-                to: await zeroEx.getAddress(),
+                to: deployment.verifyingContract,
                 value: 1
             });
             
@@ -764,7 +797,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             
             // Send pre-existing ETH to the contract
             await owner.sendTransaction({
-                to: await zeroEx.getAddress(),
+                to: deployment.verifyingContract,
                 value: 1
             });
             

@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
         "module": "commonjs",
-        "target": "es6",
-        "lib": ["es2017", "dom", "esnext.asynciterable", "es2018.promise"],
+        "target": "es2020",
+        "lib": ["es2020", "dom", "esnext.asynciterable", "es2018.promise"],
         "experimentalDecorators": true,
         "downlevelIteration": true,
         "noImplicitReturns": true,

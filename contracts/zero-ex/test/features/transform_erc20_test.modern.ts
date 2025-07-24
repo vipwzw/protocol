@@ -1,6 +1,12 @@
 import { expect } from 'chai';
 const { ethers } = require('hardhat');
 import { Contract } from 'ethers';
+// 导入通用部署函数
+import { 
+    deployZeroExWithFullMigration, 
+    deployTestTokens, 
+    type ZeroExDeploymentResult 
+} from '../utils/deployment-helper';
 
 describe('Transform ERC20 Feature - Modern Tests', function() {
     // Extended timeout for complex transformation operations
@@ -14,7 +20,7 @@ describe('Transform ERC20 Feature - Modern Tests', function() {
     let callDataSigner: any;
     
     // Core contracts
-    let zeroEx: Contract;
+    let deployment: ZeroExDeploymentResult;
     let transformERC20Feature: Contract;
     let flashWallet: Contract;
     

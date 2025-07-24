@@ -11,9 +11,9 @@ function getRandomLimitOrder(fields: Partial<any> = {}): any {
     return new LimitOrder({
         makerToken: '0x' + randomBytes(20).toString('hex'),
         takerToken: '0x' + randomBytes(20).toString('hex'), 
-        makerAmount: ethers.parseEther('100'),
-        takerAmount: ethers.parseEther('1'),
-        takerTokenFeeAmount: ethers.parseEther('0.01'),
+        makerAmount: new BigNumber(ethers.parseEther('100').toString()),
+        takerAmount: new BigNumber(ethers.parseEther('1').toString()),
+        takerTokenFeeAmount: new BigNumber(ethers.parseEther('0.01').toString()),
         maker: '0x' + randomBytes(20).toString('hex'),
         taker: '0x' + randomBytes(20).toString('hex'),
         sender: '0x' + randomBytes(20).toString('hex'),
@@ -30,8 +30,8 @@ function getRandomRfqOrder(fields: Partial<any> = {}): any {
     return new RfqOrder({
         makerToken: '0x' + randomBytes(20).toString('hex'),
         takerToken: '0x' + randomBytes(20).toString('hex'),
-        makerAmount: ethers.parseEther('100'),
-        takerAmount: ethers.parseEther('1'),
+        makerAmount: new BigNumber(ethers.parseEther('100').toString()),
+        takerAmount: new BigNumber(ethers.parseEther('1').toString()),
         maker: '0x' + randomBytes(20).toString('hex'),
         txOrigin: '0x' + randomBytes(20).toString('hex'),
         pool: '0x' + randomBytes(32).toString('hex'),
@@ -72,10 +72,33 @@ describe('LibLimitOrder Tests - Modern', function() {
         console.log(`✅ TestLibNativeOrder: ${await testContract.getAddress()}`);
     }
 
+    // Helper function to convert BigNumber fields to ethers-compatible format
+    function convertOrderForContract(order: any): any {
+        const converted = { ...order };
+        // Convert BigNumber fields to strings for ethers v6 compatibility
+        if (converted.makerAmount && typeof converted.makerAmount.toString === 'function') {
+            converted.makerAmount = converted.makerAmount.toString();
+        }
+        if (converted.takerAmount && typeof converted.takerAmount.toString === 'function') {
+            converted.takerAmount = converted.takerAmount.toString();
+        }
+        if (converted.takerTokenFeeAmount && typeof converted.takerTokenFeeAmount.toString === 'function') {
+            converted.takerTokenFeeAmount = converted.takerTokenFeeAmount.toString();
+        }
+        if (converted.expiry && typeof converted.expiry.toString === 'function') {
+            converted.expiry = converted.expiry.toString();
+        }
+        if (converted.salt && typeof converted.salt.toString === 'function') {
+            converted.salt = converted.salt.toString();
+        }
+        return converted;
+    }
+
     describe('getLimitOrderStructHash()', function() {
         it('returns the correct hash', async function() {
             const order = getRandomLimitOrder();
-            const structHash = await testContract.getLimitOrderStructHash(order);
+            const convertedOrder = convertOrderForContract(order);
+            const structHash = await testContract.getLimitOrderStructHash(convertedOrder);
             expect(structHash).to.equal(order.getStructHash());
             
             console.log('✅ Limit order struct hash verified');
@@ -85,7 +108,8 @@ describe('LibLimitOrder Tests - Modern', function() {
     describe('getRfqOrderStructHash()', function() {
         it('returns the correct hash', async function() {
             const order = getRandomRfqOrder();
-            const structHash = await testContract.getRfqOrderStructHash(order);
+            const convertedOrder = convertOrderForContract(order);
+            const structHash = await testContract.getRfqOrderStructHash(convertedOrder);
             expect(structHash).to.equal(order.getStructHash());
             
             console.log('✅ RFQ order struct hash verified');

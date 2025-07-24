@@ -1,4 +1,4 @@
-import { BigNumber, hexUtils, NULL_ADDRESS } from '@0x/utils';
+import { hexUtils, NULL_ADDRESS } from '@0x/utils';
 import * as ethUtil from 'ethereumjs-util';
 
 import { ZERO } from './constants';
@@ -33,7 +33,7 @@ export class TreasuryVote {
     public static readonly DOMAIN_STRUCT_NAME = 'EIP712Domain';
     public static readonly DOMAIN_TYPE_HASH = getTypeHash(TreasuryVote.DOMAIN_STRUCT_NAME, EIP712_DOMAIN_PARAMETERS);
 
-    public proposalId: BigNumber;
+    public proposalId: bigint;
     public support: boolean;
     public operatedPoolIds: string[];
     public chainId: number;
@@ -66,7 +66,7 @@ export class TreasuryVote {
         return hexUtils.hash(
             hexUtils.concat(
                 hexUtils.leftPad(TreasuryVote.MESSAGE_TYPE_HASH),
-                hexUtils.leftPad(this.proposalId),
+                hexUtils.leftPad(this.proposalId.toString()),
                 hexUtils.leftPad(this.support ? 1 : 0),
                 hexUtils.hash(
                     ethUtil.toBuffer(hexUtils.concat(...this.operatedPoolIds.map(id => hexUtils.leftPad(id)))),

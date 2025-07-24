@@ -25,14 +25,14 @@ describe('meta_transactions', () => {
         const mtx = new MetaTransaction({
             signer: '0x349e8d89e8b37214d9ce3949fc5754152c525bc3',
             sender: '0x83c62b2e67dea0df2a27be0def7a22bd7102642c',
-            minGasPrice: new BigNumber(1234),
-            maxGasPrice: new BigNumber(5678),
-            expirationTimeSeconds: new BigNumber(9101112),
-            salt: new BigNumber(2001),
+            minGasPrice: 1234n,
+            maxGasPrice: 5678n,
+            expirationTimeSeconds: 9101112n,
+            salt: 2001n,
             callData: '0x12345678',
-            value: new BigNumber(1001),
+            value: 1001n,
             feeToken: '0xcc3c7ea403427154ec908203ba6c418bd699f7ce',
-            feeAmount: new BigNumber(9101112),
+            feeAmount: 9101112n,
             chainId: 8008,
             verifyingContract: '0x6701704d2421c64ee9aa93ec7f96ede81c4be77d',
         });
@@ -53,9 +53,9 @@ describe('meta_transactions', () => {
             const actual = await mtx.clone({ signer: providerMaker }).getSignatureWithProviderAsync(provider);
             const expected = {
                 signatureType: SignatureType.EthSign,
-                r: '0xbf19b5ef62df8c8315727087e9d8562e3b88d32452ac8193e3ed9f5354a220ef',
-                s: '0x512387e81b2c03e4bc4cf72ee5293c86498c17fde3ae89f18dd0705076a7f472',
-                v: 28,
+                r: '0xbb831776a2d6639d4e4d1641f158773ce202881bac74dddb2672d5ff5521ef5c',
+                s: '0x746a61ccfdfee3afae15f4a3bd67ded2ce555d89d482940a844eeffaede2ee8a',
+                v: 27,
             };
             expect(actual).to.deep.eq(expected);
         });

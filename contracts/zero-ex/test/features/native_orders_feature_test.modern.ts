@@ -2,9 +2,18 @@ import { expect } from 'chai';
 const { ethers } = require('hardhat');
 import { Contract } from 'ethers';
 import { randomBytes } from 'crypto';
+import * as chai from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
+// 导入通用部署函数
+import { 
+    deployZeroExWithFullMigration, 
+    deployTestTokens, 
+    approveTokensForAccounts,
+    type ZeroExDeploymentResult 
+} from '../utils/deployment-helper';
 
-// Import chai-as-promised for proper async error handling
-import 'chai-as-promised';
+// Configure chai-as-promised for proper async error handling
+chai.use(chaiAsPromised);
 
 describe('NativeOrdersFeature - Complete Modern Tests', function() {
     // Extended timeout for native orders operations
@@ -17,14 +26,14 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
     let notTaker: any;
     let contractWalletOwner: any;
     let contractWalletSigner: any;
-    let zeroEx: any;
-    let verifyingContract: string;
+    let deployment: ZeroExDeploymentResult;
     let makerToken: any;
     let takerToken: any;
     let wethToken: any;
     let testRfqOriginRegistration: any;
     let contractWallet: any;
     let testUtils: any;
+    let nativeOrdersFeature: any; // NativeOrdersFeature interface pointing to ZeroEx
     
     const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
     const MAX_UINT256 = ethers.MaxUint256;
@@ -68,32 +77,111 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
     });
     
     async function deployContractsAsync(): Promise<void> {
-        console.log('📦 Deploying Complete NativeOrdersFeature contracts...');
+        console.log('📦 Deploying Complete NativeOrdersFeature contracts using FullMigration pattern...');
         
-        // Deploy tokens
+        // Deploy tokens using TestMintableERC20Token (no constructor params)
         const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
         
-        makerToken = await TokenFactory.deploy('MakerToken', 'MAKER', 18);
+        makerToken = await TokenFactory.deploy();
         await makerToken.waitForDeployment();
         console.log(`✅ MakerToken: ${await makerToken.getAddress()}`);
         
-        takerToken = await TokenFactory.deploy('TakerToken', 'TAKER', 18);
+        takerToken = await TokenFactory.deploy();
         await takerToken.waitForDeployment();
         console.log(`✅ TakerToken: ${await takerToken.getAddress()}`);
         
-        wethToken = await TokenFactory.deploy('WETH', 'WETH', 18);
+        // Deploy WETH using TestWeth
+        const WethFactory = await ethers.getContractFactory('TestWeth');
+        wethToken = await WethFactory.deploy();
         await wethToken.waitForDeployment();
         console.log(`✅ WETH: ${await wethToken.getAddress()}`);
         
-        // Deploy mock ZeroEx contract with native orders support
-        const ZeroExFactory = await ethers.getContractFactory('TestZeroExWithNativeOrders');
-        zeroEx = await ZeroExFactory.deploy(
-            await wethToken.getAddress(),
-            PROTOCOL_FEE_MULTIPLIER
-        );
+        // Use FullMigration pattern like other successful tests
+        const FullMigrationFactory = await ethers.getContractFactory('FullMigration');
+        const migrator = await FullMigrationFactory.deploy(owner.address);
+        await migrator.waitForDeployment();
+        console.log(`✅ FullMigration: ${await migrator.getAddress()}`);
+        
+        // Get correct bootstrapper from migrator
+        const bootstrapper = await migrator.getBootstrapper();
+        
+        // Deploy ZeroEx with correct bootstrapper
+        const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
+        zeroEx = await ZeroExFactory.deploy(bootstrapper);
         await zeroEx.waitForDeployment();
         verifyingContract = await zeroEx.getAddress();
         console.log(`✅ ZeroEx: ${verifyingContract}`);
+        
+        // Deploy all required features for full migration
+        const SimpleFunctionRegistryFactory = await ethers.getContractFactory('SimpleFunctionRegistryFeature');
+        const registry = await SimpleFunctionRegistryFactory.deploy();
+        await registry.waitForDeployment();
+        
+        const OwnableFactory = await ethers.getContractFactory('OwnableFeature');
+        const ownable = await OwnableFactory.deploy();
+        await ownable.waitForDeployment();
+        
+        const TransformERC20Factory = await ethers.getContractFactory('TransformERC20Feature');
+        const transformERC20 = await TransformERC20Factory.deploy();
+        await transformERC20.waitForDeployment();
+        
+        const MetaTransactionsFactory = await ethers.getContractFactory('MetaTransactionsFeature');
+        const metaTransactions = await MetaTransactionsFactory.deploy(verifyingContract);
+        await metaTransactions.waitForDeployment();
+        
+        // Deploy staking and fee collector for NativeOrdersFeature
+        const TestStakingFactory = await ethers.getContractFactory('TestStaking');
+        const staking = await TestStakingFactory.deploy(await wethToken.getAddress());
+        await staking.waitForDeployment();
+        
+        const FeeCollectorFactory = await ethers.getContractFactory('FeeCollectorController');
+        const feeCollector = await FeeCollectorFactory.deploy(await wethToken.getAddress(), await staking.getAddress());
+        await feeCollector.waitForDeployment();
+        
+        // Use TestNativeOrdersFeature for testing
+        const TestNativeOrdersFactory = await ethers.getContractFactory('TestNativeOrdersFeature');
+        const nativeOrders = await TestNativeOrdersFactory.deploy(
+            verifyingContract,
+            await wethToken.getAddress(),
+            await staking.getAddress(),
+            await feeCollector.getAddress(),
+            70000 // protocolFeeMultiplier
+        );
+        await nativeOrders.waitForDeployment();
+        
+        const OtcOrdersFactory = await ethers.getContractFactory('OtcOrdersFeature');
+        const otcOrders = await OtcOrdersFactory.deploy(verifyingContract, await wethToken.getAddress());
+        await otcOrders.waitForDeployment();
+        
+        console.log(`✅ All features deployed`);
+        
+        // Use FullMigration's migrateZeroEx with all features
+        const features = {
+            registry: await registry.getAddress(),
+            ownable: await ownable.getAddress(),
+            transformERC20: await transformERC20.getAddress(),
+            metaTransactions: await metaTransactions.getAddress(),
+            nativeOrders: await nativeOrders.getAddress(),
+            otcOrders: await otcOrders.getAddress()
+        };
+        
+        await migrator.migrateZeroEx(
+            owner.address,
+            verifyingContract,
+            features,
+            {
+                transformerDeployer: owner.address
+            }
+        );
+        console.log(`✅ ZeroEx fully migrated with TestNativeOrdersFeature`);
+        
+        // Create NativeOrdersFeature interface pointing to ZeroEx (proxy pattern)
+        nativeOrdersFeature = new ethers.Contract(
+            verifyingContract,
+            nativeOrders.interface,
+            ethers.provider
+        );
+        console.log(`✅ NativeOrdersFeature interface created`);
         
         // Approve tokens for all accounts
         const accounts = [maker, notMaker];
@@ -176,13 +264,20 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             // Create order signature
             createOrderSignature: async function(order: any, signer?: any) {
                 const signerAccount = signer || maker;
-                const orderHash = this.getOrderHash(order);
+                const orderHash = await this.getOrderHash(order);
                 return await signerAccount.signMessage(ethers.getBytes(orderHash));
             },
             
-            // Get order hash
-            getOrderHash: function(order: any): string {
-                return ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(order)));
+            // Get order hash - 使用合约标准方法而不是JSON.stringify
+            getOrderHash: async function(order: any): Promise<string> {
+                // 根据订单类型选择正确的哈希方法
+                if (order.txOrigin !== undefined) {
+                    // RFQ 订单
+                    return await deployment.featureInterfaces.nativeOrdersFeature.getRfqOrderHash(order);
+                } else {
+                    // 限价订单
+                    return await deployment.featureInterfaces.nativeOrdersFeature.getLimitOrderHash(order);
+                }
             },
             
             // Compute limit order filled amounts
@@ -202,12 +297,12 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             },
             
             // Create limit order filled event args
-            createLimitOrderFilledEventArgs: function(order: any, fillAmount?: bigint) {
+            createLimitOrderFilledEventArgs: async function(order: any, fillAmount?: bigint) {
                 const filledAmount = fillAmount || order.takerAmount;
                 const { makerTokenFilledAmount, takerTokenFilledAmount } = this.computeLimitOrderFilledAmounts(order, filledAmount);
                 
                 return {
-                    orderHash: this.getOrderHash(order),
+                    orderHash: await this.getOrderHash(order),
                     maker: order.maker,
                     taker: order.taker !== NULL_ADDRESS ? order.taker : taker.address,
                     makerToken: order.makerToken,
@@ -218,12 +313,12 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             },
             
             // Create RFQ order filled event args
-            createRfqOrderFilledEventArgs: function(order: any, fillAmount?: bigint) {
+            createRfqOrderFilledEventArgs: async function(order: any, fillAmount?: bigint) {
                 const filledAmount = fillAmount || order.takerAmount;
                 const { makerTokenFilledAmount, takerTokenFilledAmount } = this.computeRfqOrderFilledAmounts(order, filledAmount);
                 
                 return {
-                    orderHash: this.getOrderHash(order),
+                    orderHash: await this.getOrderHash(order),
                     maker: order.maker,
                     taker: order.taker,
                     makerToken: order.makerToken,
@@ -303,7 +398,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
 
     describe('getProtocolFeeMultiplier()', function() {
         it('returns the expected protocol fee multiplier', async function() {
-            const result = await zeroEx.getProtocolFeeMultiplier();
+            const result = await nativeOrdersFeature.getProtocolFeeMultiplier();
             expect(result).to.equal(PROTOCOL_FEE_MULTIPLIER);
             
             console.log(`✅ Protocol fee multiplier: ${result}`);

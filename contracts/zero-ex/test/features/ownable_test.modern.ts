@@ -1,6 +1,12 @@
 import { expect } from 'chai';
 const { ethers } = require('hardhat');
 import { Contract } from 'ethers';
+// 导入通用部署函数
+import { 
+    deployZeroExWithFullMigration, 
+    deployTestTokens, 
+    type ZeroExDeploymentResult 
+} from '../utils/deployment-helper';
 
 describe('Ownable Feature - Modern Tests', function() {
     // Extended timeout for ownership operations
@@ -12,9 +18,10 @@ describe('Ownable Feature - Modern Tests', function() {
     let unauthorizedUser: any;
     
     // Core contracts
-    let zeroEx: Contract;
+    let deployment: ZeroExDeploymentResult;
     let ownableFeature: Contract;
     let testContract: Contract;
+    let wethToken: any;
     
     const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
     
@@ -36,25 +43,27 @@ describe('Ownable Feature - Modern Tests', function() {
     });
     
     async function deployContractsAsync(): Promise<void> {
-        console.log('📦 Deploying ownable contracts...');
+        console.log('📦 开始部署 Ownable 测试 (使用通用部署函数)...');
         
-        // Deploy ZeroEx first
-        const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
-        zeroEx = await ZeroExFactory.deploy(owner.address);
-        await zeroEx.waitForDeployment();
-        console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
+        // 1. 部署测试代币
+        const tokens = await deployTestTokens();
+        wethToken = tokens.wethToken;
         
-        // Deploy OwnableFeature
-        const OwnableFactory = await ethers.getContractFactory('OwnableFeature');
-        ownableFeature = await OwnableFactory.deploy();
-        await ownableFeature.waitForDeployment();
+        // 2. 使用通用函数部署完整的 ZeroEx 系统
+        deployment = await deployZeroExWithFullMigration(owner, wethToken, {
+            protocolFeeMultiplier: 70000,
+            logProgress: true
+        });
+        
+        // 3. 获取 OwnableFeature 引用
+        ownableFeature = deployment.features.ownable;
         console.log(`✅ OwnableFeature: ${await ownableFeature.getAddress()}`);
         
-        // Deploy test contract that uses ownership
-        const TestContractFactory = await ethers.getContractFactory('TestOwnableContract');
-        testContract = await TestContractFactory.deploy(owner.address);
+        // 4. 部署测试合约
+        const TestContractFactory = await ethers.getContractFactory('TestOrderSignerRegistryWithContractWallet');
+        testContract = await TestContractFactory.deploy(deployment.verifyingContract);
         await testContract.waitForDeployment();
-        console.log(`✅ TestOwnableContract: ${await testContract.getAddress()}`);
+        console.log(`✅ TestContract: ${await testContract.getAddress()}`);
     }
     
     describe('🏗️ Contract Deployment', function() {

@@ -25,16 +25,16 @@ describe('orders', () => {
         const order = new LimitOrder({
             makerToken: '0x349e8d89e8b37214d9ce3949fc5754152c525bc3',
             takerToken: '0x83c62b2e67dea0df2a27be0def7a22bd7102642c',
-            makerAmount: new BigNumber(1234),
-            takerAmount: new BigNumber(5678),
-            takerTokenFeeAmount: new BigNumber(9101112),
+            makerAmount: 1234n,
+            takerAmount: 5678n,
+            takerTokenFeeAmount: 9101112n,
             maker: '0x8d5e5b5b5d187bdce2e0143eb6b3cc44eef3c0cb',
             taker: '0x615312fb74c31303eab07dea520019bb23f4c6c2',
             sender: '0x70f2d6c7acd257a6700d745b76c602ceefeb8e20',
             feeRecipient: '0xcc3c7ea403427154ec908203ba6c418bd699f7ce',
             pool: '0x0bbff69b85a87da39511aefc3211cb9aff00e1a1779dc35b8f3635d8b5ea2680',
-            expiry: new BigNumber(1001),
-            salt: new BigNumber(2001),
+            expiry: 1001n,
+            salt: 2001n,
             chainId: 8008,
             verifyingContract: '0x6701704d2421c64ee9aa93ec7f96ede81c4be77d',
         });
@@ -55,9 +55,9 @@ describe('orders', () => {
             const actual = await order.clone({ maker: providerMaker }).getSignatureWithProviderAsync(provider);
             const expected = {
                 signatureType: SignatureType.EthSign,
-                r: '0x5d4fe9b4c8f94efc46ef9e7e3f996c238f9c930fd5c03014ec6db6d4d18a34e5',
-                s: '0x0949269d29524aec1ba5b19236c392a3d1866ca39bb8c7b6345e90a3fbf404fc',
-                v: 28,
+                r: '0xbd5bb603cc48c5f777f0d34c2012aa779942ac48c355d30d85acc108819e8a8f',
+                s: '0x576e17adc9482fb5eda95cd4543e5ed4978990d2caab4c6f92e09e2fa6157d7b',
+                v: 27,
             };
             expect(actual).to.deep.eq(expected);
         });
@@ -89,14 +89,14 @@ describe('orders', () => {
         const order = new RfqOrder({
             makerToken: '0x349e8d89e8b37214d9ce3949fc5754152c525bc3',
             takerToken: '0x83c62b2e67dea0df2a27be0def7a22bd7102642c',
-            makerAmount: new BigNumber(1234),
-            takerAmount: new BigNumber(5678),
+            makerAmount: 1234n,
+            takerAmount: 5678n,
             maker: '0x8d5e5b5b5d187bdce2e0143eb6b3cc44eef3c0cb',
             taker: '0x615312fb74c31303eab07dea520019bb23f4c6c2',
             txOrigin: '0x70f2d6c7acd257a6700d745b76c602ceefeb8e20',
             pool: '0x0bbff69b85a87da39511aefc3211cb9aff00e1a1779dc35b8f3635d8b5ea2680',
-            expiry: new BigNumber(1001),
-            salt: new BigNumber(2001),
+            expiry: 1001n,
+            salt: 2001n,
             chainId: 8008,
             verifyingContract: '0x6701704d2421c64ee9aa93ec7f96ede81c4be77d',
         });
@@ -117,9 +117,9 @@ describe('orders', () => {
             const actual = await order.clone({ maker: providerMaker }).getSignatureWithProviderAsync(provider);
             const expected = {
                 signatureType: SignatureType.EthSign,
-                r: '0xba231f67168d6d1fd2b83e0a3a6b1663ec493b98a8dbe34689c8e8171972522f',
-                s: '0x47023a5f73b5f638e9a138de26b35e59847680bee78af0c8251de532e7c39d8b',
-                v: 28,
+                r: '0xed555259efe38e2d679f7bc18385e51ce158576ced6c11630f67ba37b3e59a29',
+                s: '0x769211cf3e86b254e3755e1dcf459f5b362ca1c42ec3cf08841d90cb44f2a8e4',
+                v: 27,
             };
             expect(actual).to.deep.eq(expected);
         });

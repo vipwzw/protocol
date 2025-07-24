@@ -76,7 +76,7 @@ export enum OrderStatus {
 export interface OrderInfo {
     status: OrderStatus;
     orderHash: string;
-    takerTokenFilledAmount: BigNumber;
+    takerTokenFilledAmount: bigint;
 }
 
 export interface OtcOrderInfo {
@@ -87,8 +87,8 @@ export interface OtcOrderInfo {
 export abstract class OrderBase {
     public makerToken: string;
     public takerToken: string;
-    public makerAmount: BigNumber;
-    public takerAmount: BigNumber;
+    public makerAmount: bigint;
+    public takerAmount: bigint;
     public maker: string;
     public taker: string;
     public chainId: number;
@@ -159,12 +159,12 @@ export class LimitOrder extends OrderBase {
     ];
     public static readonly TYPE_HASH = getTypeHash(LimitOrder.STRUCT_NAME, LimitOrder.STRUCT_ABI);
 
-    public takerTokenFeeAmount: BigNumber;
+    public takerTokenFeeAmount: bigint;
     public sender: string;
     public feeRecipient: string;
     public pool: string;
-    public salt: BigNumber;
-    public expiry: BigNumber;
+    public salt: bigint;
+    public expiry: bigint;
 
     constructor(fields: Partial<LimitOrderFields> = {}) {
         const _fields = { ...LIMIT_ORDER_DEFAULT_VALUES, ...fields };
@@ -203,16 +203,16 @@ export class LimitOrder extends OrderBase {
                 hexUtils.leftPad(LimitOrder.TYPE_HASH),
                 hexUtils.leftPad(this.makerToken),
                 hexUtils.leftPad(this.takerToken),
-                hexUtils.leftPad(this.makerAmount),
-                hexUtils.leftPad(this.takerAmount),
-                hexUtils.leftPad(this.takerTokenFeeAmount),
+                hexUtils.leftPad(this.makerAmount.toString()),
+                hexUtils.leftPad(this.takerAmount.toString()),
+                hexUtils.leftPad(this.takerTokenFeeAmount.toString()),
                 hexUtils.leftPad(this.maker),
                 hexUtils.leftPad(this.taker),
                 hexUtils.leftPad(this.sender),
                 hexUtils.leftPad(this.feeRecipient),
                 hexUtils.leftPad(this.pool),
-                hexUtils.leftPad(this.expiry),
-                hexUtils.leftPad(this.salt),
+                hexUtils.leftPad(this.expiry.toString()),
+                hexUtils.leftPad(this.salt.toString()),
             ),
         );
     }
@@ -243,9 +243,9 @@ export class LimitOrder extends OrderBase {
     }
 
     public willExpire(secondsFromNow = 0): boolean {
-        const millisecondsInSecond = 1000;
-        const currentUnixTimestampSec = new BigNumber(Date.now() / millisecondsInSecond).integerValue();
-        return this.expiry.isLessThan(currentUnixTimestampSec.plus(secondsFromNow));
+        const millisecondsInSecond = 1000n;
+        const currentUnixTimestampSec = BigInt(Math.floor(Date.now() / Number(millisecondsInSecond)));
+        return this.expiry < (currentUnixTimestampSec + BigInt(secondsFromNow));
     }
 }
 
@@ -267,8 +267,8 @@ export class RfqOrder extends OrderBase {
 
     public txOrigin: string;
     public pool: string;
-    public salt: BigNumber;
-    public expiry: BigNumber;
+    public salt: bigint;
+    public expiry: bigint;
 
     constructor(fields: Partial<RfqOrderFields> = {}) {
         const _fields = { ...RFQ_ORDER_DEFAULT_VALUES, ...fields };
@@ -303,14 +303,14 @@ export class RfqOrder extends OrderBase {
                 hexUtils.leftPad(RfqOrder.TYPE_HASH),
                 hexUtils.leftPad(this.makerToken),
                 hexUtils.leftPad(this.takerToken),
-                hexUtils.leftPad(this.makerAmount),
-                hexUtils.leftPad(this.takerAmount),
+                hexUtils.leftPad(this.makerAmount.toString()),
+                hexUtils.leftPad(this.takerAmount.toString()),
                 hexUtils.leftPad(this.maker),
                 hexUtils.leftPad(this.taker),
                 hexUtils.leftPad(this.txOrigin),
                 hexUtils.leftPad(this.pool),
-                hexUtils.leftPad(this.expiry),
-                hexUtils.leftPad(this.salt),
+                hexUtils.leftPad(this.expiry.toString()),
+                hexUtils.leftPad(this.salt.toString()),
             ),
         );
     }
@@ -339,9 +339,9 @@ export class RfqOrder extends OrderBase {
     }
 
     public willExpire(secondsFromNow = 0): boolean {
-        const millisecondsInSecond = 1000;
-        const currentUnixTimestampSec = new BigNumber(Date.now() / millisecondsInSecond).integerValue();
-        return this.expiry.isLessThan(currentUnixTimestampSec.plus(secondsFromNow));
+        const millisecondsInSecond = 1000n;
+        const currentUnixTimestampSec = BigInt(Math.floor(Date.now() / Number(millisecondsInSecond)));
+        return this.expiry < (currentUnixTimestampSec + BigInt(secondsFromNow));
     }
 }
 
@@ -358,9 +358,9 @@ export class OtcOrder extends OrderBase {
         { type: 'uint256', name: 'expiryAndNonce' },
     ];
     public static readonly TYPE_HASH = getTypeHash(OtcOrder.STRUCT_NAME, OtcOrder.STRUCT_ABI);
-    public static readonly MAX_EXPIRY = new BigNumber(2).pow(64).minus(1);
-    public static readonly MAX_NONCE_BUCKET = new BigNumber(2).pow(64).minus(1);
-    public static readonly MAX_NONCE_VALUE = new BigNumber(2).pow(128).minus(1);
+    public static readonly MAX_EXPIRY = (2n ** 64n) - 1n;
+    public static readonly MAX_NONCE_BUCKET = (2n ** 64n) - 1n;
+    public static readonly MAX_NONCE_VALUE = (2n ** 128n) - 1n;
 
     public txOrigin: string;
     public expiryAndNonce: BigNumber;
@@ -406,14 +406,17 @@ export class OtcOrder extends OrderBase {
         const _fields = { ...OTC_ORDER_DEFAULT_VALUES, ...fields };
         super(_fields);
         this.txOrigin = _fields.txOrigin;
-        this.expiryAndNonce = _fields.expiryAndNonce;
-        const { expiry, nonceBucket, nonce } = OtcOrder.parseExpiryAndNonce(_fields.expiryAndNonce);
+        // Convert bigint to BigNumber for internal processing
+        this.expiryAndNonce = typeof _fields.expiryAndNonce === 'bigint' 
+            ? new BigNumber(_fields.expiryAndNonce.toString()) 
+            : _fields.expiryAndNonce;
+        const { expiry, nonceBucket, nonce } = OtcOrder.parseExpiryAndNonce(this.expiryAndNonce);
         this.expiry = expiry;
         this.nonceBucket = nonceBucket;
         this.nonce = nonce;
     }
 
-    public clone(fields: Partial<OtcOrder> = {}): OtcOrder {
+    public clone(fields: Partial<OtcOrderFields> = {}): OtcOrder {
         return new OtcOrder({
             makerToken: this.makerToken,
             takerToken: this.takerToken,
@@ -422,7 +425,7 @@ export class OtcOrder extends OrderBase {
             maker: this.maker,
             taker: this.taker,
             txOrigin: this.txOrigin,
-            expiryAndNonce: this.expiryAndNonce,
+            expiryAndNonce: BigInt(this.expiryAndNonce.toString()),
             chainId: this.chainId,
             verifyingContract: this.verifyingContract,
             ...fields,
@@ -435,8 +438,8 @@ export class OtcOrder extends OrderBase {
                 hexUtils.leftPad(OtcOrder.TYPE_HASH),
                 hexUtils.leftPad(this.makerToken),
                 hexUtils.leftPad(this.takerToken),
-                hexUtils.leftPad(this.makerAmount),
-                hexUtils.leftPad(this.takerAmount),
+                hexUtils.leftPad(this.makerAmount.toString()),
+                hexUtils.leftPad(this.takerAmount.toString()),
                 hexUtils.leftPad(this.maker),
                 hexUtils.leftPad(this.taker),
                 hexUtils.leftPad(this.txOrigin),

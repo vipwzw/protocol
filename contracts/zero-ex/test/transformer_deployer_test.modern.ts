@@ -44,17 +44,17 @@ describe('Transformer Deployer - Modern Tests', function() {
         await zeroEx.waitForDeployment();
         console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
         
-        // Deploy TransformerDeployer
+        // Deploy TransformerDeployer with admin as initial authority
         const DeployerFactory = await ethers.getContractFactory('TransformerDeployer');
-        transformerDeployer = await DeployerFactory.deploy();
+        transformerDeployer = await DeployerFactory.deploy([admin.address]);
         await transformerDeployer.waitForDeployment();
         console.log(`✅ TransformerDeployer: ${await transformerDeployer.getAddress()}`);
         
-        // Deploy a test transformer
-        const TransformerFactory = await ethers.getContractFactory('TestTransformer');
+        // Deploy a test transformer using TestMintTokenERC20Transformer
+        const TransformerFactory = await ethers.getContractFactory('TestMintTokenERC20Transformer');
         testTransformer = await TransformerFactory.deploy();
         await testTransformer.waitForDeployment();
-        console.log(`✅ TestTransformer: ${await testTransformer.getAddress()}`);
+        console.log(`✅ TestMintTokenERC20Transformer: ${await testTransformer.getAddress()}`);
     }
     
     function createTransformerDeployment(overrides: any = {}): any {
@@ -97,7 +97,12 @@ describe('Transformer Deployer - Modern Tests', function() {
             
             expect(deployment.transformerBytecode).to.be.a('string');
             expect(deployment.transformerBytecode).to.match(/^0x[0-9a-fA-F]+$/);
-            expect(deployment.salt).to.have.length(66); // 0x + 64 hex chars
+            // Check salt format - it could be Uint8Array (32 bytes) or hex string (66 chars)
+            if (typeof deployment.salt === 'string') {
+                expect(deployment.salt).to.have.length(66); // 0x + 64 hex chars
+            } else {
+                expect(deployment.salt).to.have.length(32); // 32 bytes Uint8Array
+            }
             expect(ethers.isAddress(deployment.deployer)).to.be.true;
             
             console.log(`✅ Deployment configuration:`);
@@ -114,7 +119,12 @@ describe('Transformer Deployer - Modern Tests', function() {
                 transformerInitCode: '0x1234'
             });
             
-            expect(customDeployment.salt).to.equal(ethers.hexlify(customSalt));
+            // Compare salt values (handle both Uint8Array and string formats)
+            if (typeof customDeployment.salt === 'string') {
+                expect(customDeployment.salt).to.equal(ethers.hexlify(customSalt));
+            } else {
+                expect(ethers.hexlify(customDeployment.salt)).to.equal(ethers.hexlify(customSalt));
+            }
             expect(customDeployment.deployer).to.equal(user1.address);
             expect(customDeployment.transformerInitCode).to.equal('0x1234');
             

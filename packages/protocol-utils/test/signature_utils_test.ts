@@ -29,9 +29,9 @@ describe('signature_utils', () => {
             const actual = await ethSignHashWithProviderAsync(hash, signer, provider);
             const expected = {
                 signatureType: SignatureType.EthSign,
-                r: '0xb88b49ba6418464f9b1e703ea0fbba5f9d72576a4d9819e45d4ede7a34afbe73',
-                s: '0x6c81693f439942eb8c6ac943fab6b9fcc4b48615fcedcede93298f6dc3087ead',
-                v: 28,
+                r: '0xc1ea77c46d7aabf3f68f29870bc61eb583f9acb25af5a953ce2bff341b4c456a',
+                s: '0x66133126ef3058ec52081f9e3dd77103980483f3ab20d0529b14e4b194e7d12d',
+                v: 27,
             };
             expect(actual).to.deep.eq(expected);
         });

@@ -2,9 +2,20 @@ import { expect } from 'chai';
 const { ethers } = require('hardhat');
 import { Contract } from 'ethers';
 import { randomBytes } from 'crypto';
+import * as chai from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
+import { OtcOrder } from '@0x/protocol-utils';
+import { BigNumber } from '@0x/utils';
+// 导入通用部署函数
+import { 
+    deployZeroExWithFullMigration, 
+    deployTestTokens, 
+    approveTokensForAccounts,
+    type ZeroExDeploymentResult 
+} from '../utils/deployment-helper';
 
-// Import chai-as-promised for proper async error handling
-import 'chai-as-promised';
+// Configure chai-as-promised for proper async error handling
+chai.use(chaiAsPromised);
 
 describe('OtcOrdersFeature - Modern Tests', function() {
     // Extended timeout for OTC order operations
@@ -19,13 +30,13 @@ describe('OtcOrdersFeature - Modern Tests', function() {
     let txOrigin: any;
     let notTxOrigin: any;
     let owner: any;
-    let zeroEx: any;
-    let verifyingContract: string;
+    let deployment: ZeroExDeploymentResult;
     let makerToken: any;
     let takerToken: any;
     let wethToken: any;
     let contractWallet: any;
     let testUtils: any;
+    let otcFeature: any; // OtcOrdersFeature interface pointing to ZeroEx
     
     const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
     const MAX_UINT256 = ethers.MaxUint256;
@@ -67,52 +78,42 @@ describe('OtcOrdersFeature - Modern Tests', function() {
     });
     
     async function deployContractsAsync(): Promise<void> {
-        console.log('📦 Deploying OtcOrders contracts...');
+        console.log('📦 开始部署 OtcOrders 测试 (使用通用部署函数)...');
         
-        // Deploy maker and taker tokens
-        const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
+        // 1. 部署测试代币
+        const tokens = await deployTestTokens();
+        makerToken = tokens.makerToken;
+        takerToken = tokens.takerToken;
+        wethToken = tokens.wethToken;
         
-        makerToken = await TokenFactory.deploy('MakerToken', 'MAKER', 18);
-        await makerToken.waitForDeployment();
-        console.log(`✅ MakerToken: ${await makerToken.getAddress()}`);
+        // 2. 使用通用函数部署完整的 ZeroEx 系统
+        deployment = await deployZeroExWithFullMigration(owner, wethToken, {
+            protocolFeeMultiplier: 70000,
+            logProgress: true
+        });
         
-        takerToken = await TokenFactory.deploy('TakerToken', 'TAKER', 18);
-        await takerToken.waitForDeployment();
-        console.log(`✅ TakerToken: ${await takerToken.getAddress()}`);
+        // 3. 从通用部署结果获取 OTC 功能接口
+        otcFeature = deployment.featureInterfaces.otcFeature;
+        console.log(`✅ OtcFeature interface ready`);
         
-        // Deploy WETH
-        const WethFactory = await ethers.getContractFactory('TestWeth');
-        wethToken = await WethFactory.deploy();
-        await wethToken.waitForDeployment();
-        console.log(`✅ WETH: ${await wethToken.getAddress()}`);
-        
-        // Deploy mock ZeroEx contract with OTC support
-        const ZeroExFactory = await ethers.getContractFactory('TestZeroExWithOtcOrders');
-        zeroEx = await ZeroExFactory.deploy(await wethToken.getAddress());
-        await zeroEx.waitForDeployment();
-        verifyingContract = await zeroEx.getAddress();
-        console.log(`✅ ZeroEx: ${verifyingContract}`);
-        
-        // Approve tokens for all accounts
+        // 4. 批量授权代币给所有测试账户
         const accounts = [maker, notMaker, taker, notTaker];
-        const tokens = [makerToken, takerToken, wethToken];
-        
-        for (const account of accounts) {
-            for (const token of tokens) {
-                await token.connect(account).approve(verifyingContract, MAX_UINT256);
-            }
-        }
-        console.log(`✅ Approved all tokens for all accounts`);
+        await approveTokensForAccounts(
+            [makerToken, takerToken, wethToken],
+            accounts,
+            deployment.verifyingContract
+        );
         
         // Deploy contract wallet for signer delegation
         const ContractWalletFactory = await ethers.getContractFactory('TestOrderSignerRegistryWithContractWallet');
-        contractWallet = await ContractWalletFactory.connect(contractWalletOwner).deploy(verifyingContract);
+        contractWallet = await ContractWalletFactory.connect(contractWalletOwner).deploy(deployment.verifyingContract);
         await contractWallet.waitForDeployment();
         console.log(`✅ ContractWallet: ${await contractWallet.getAddress()}`);
         
         // Approve tokens for contract wallet
-        for (const token of tokens) {
-            await contractWallet.approveERC20(await token.getAddress(), verifyingContract, MAX_UINT256);
+        const contractTokens = [makerToken, takerToken, wethToken];
+        for (const token of contractTokens) {
+            await contractWallet.approveERC20(await token.getAddress(), deployment.verifyingContract, MAX_UINT256);
         }
         console.log(`✅ Approved tokens for contract wallet`);
     }
@@ -141,9 +142,9 @@ describe('OtcOrdersFeature - Modern Tests', function() {
                 const fromAddr = txOriginAddr || taker;
                 
                 if (unwrapWeth) {
-                    return await zeroEx.connect(fromAddr).fillOtcOrderForEth(order, signature, amount);
+                    return await otcFeature.connect(fromAddr).fillOtcOrderForEth(order, signature, amount);
                 } else {
-                    return await zeroEx.connect(fromAddr).fillOtcOrder(order, signature, amount);
+                    return await otcFeature.connect(fromAddr).fillOtcOrder(order, signature, amount);
                 }
             },
             
@@ -153,7 +154,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
                 const signature = await this.createOrderSignature(order);
                 const amount = fillAmount || order.takerAmount;
                 
-                return await zeroEx.connect(taker).fillOtcOrderWithEth(order, signature, amount, { value: amount });
+                return await deployment.zeroEx.connect(taker).fillOtcOrderWithEth(order, signature, amount, { value: amount });
             },
             
             // Fill taker signed OTC order
@@ -164,9 +165,9 @@ describe('OtcOrdersFeature - Modern Tests', function() {
                 const fromAddr = txOriginAddr || txOrigin;
                 
                 if (unwrapWeth) {
-                    return await zeroEx.connect(fromAddr).fillTakerSignedOtcOrderForEth(order, makerSignature, takerSignature);
+                    return await otcFeature.connect(fromAddr).fillTakerSignedOtcOrderForEth(order, makerSignature, takerSignature);
                 } else {
-                    return await zeroEx.connect(fromAddr).fillTakerSignedOtcOrder(order, makerSignature, takerSignature);
+                    return await otcFeature.connect(fromAddr).fillTakerSignedOtcOrder(order, makerSignature, takerSignature);
                 }
             },
             
@@ -186,7 +187,15 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             
             // Get order hash
             getOrderHash: function(order: any): string {
-                return ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(order)));
+                // Convert bigint fields to strings for safe JSON serialization
+                const orderForHashing = {
+                    ...order,
+                    makerAmount: order.makerAmount.toString(),
+                    takerAmount: order.takerAmount.toString(),
+                    nonce: order.nonce?.toString ? order.nonce.toString() : order.nonce,
+                    expiry: order.expiry?.toString ? order.expiry.toString() : order.expiry
+                };
+                return ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(orderForHashing)));
             },
             
             // Create OTC order filled event args
@@ -231,20 +240,24 @@ describe('OtcOrdersFeature - Modern Tests', function() {
         return Math.floor(Date.now() / 1000) + deltaSeconds;
     }
 
-    function getTestOtcOrder(fields: any = {}): any {
-        return {
+    function getTestOtcOrder(fields: any = {}): OtcOrder {
+        const expiry = fields.expiry || new BigNumber(Math.floor(Date.now() / 1000 + 3600));
+        const nonceBucket = fields.nonceBucket || new BigNumber(Math.floor(Math.random() * 1000000));
+        const nonce = fields.nonce || new BigNumber(Math.floor(Math.random() * 1000000));
+        
+        return new OtcOrder({
             maker: fields.maker || maker.address,
             taker: fields.taker || NULL_ADDRESS,
             makerToken: fields.makerToken || (makerToken.target || makerToken.address),
             takerToken: fields.takerToken || (takerToken.target || takerToken.address),
-            makerAmount: fields.makerAmount || ethers.parseEther('100'),
-            takerAmount: fields.takerAmount || ethers.parseEther('50'),
+            makerAmount: fields.makerAmount || ethers.parseEther('100'), // 100 ether
+            takerAmount: fields.takerAmount || ethers.parseEther('50'), // 50 ether  
             txOrigin: fields.txOrigin || taker.address,
-            nonceBucket: fields.nonceBucket || generateRandomBytes32(),
-            nonce: fields.nonce || getRandomInteger('1', '1000'),
-            expiry: fields.expiry || createExpiry(3600),
+            expiryAndNonce: OtcOrder.encodeExpiryAndNonce(expiry, nonceBucket, nonce),
+            verifyingContract: deployment.verifyingContract,
+            chainId: 1337,
             ...fields
-        };
+        });
     }
 
     async function assertExpectedFinalBalancesFromOtcOrderFillAsync(order: any, fillAmount?: bigint): Promise<void> {
@@ -325,7 +338,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
 
         it('can fill an order from a different tx.origin if registered', async function() {
             const order = getTestOtcOrder();
-            await zeroEx.connect(taker).registerAllowedRfqOrigins([notTaker.address], true);
+            await deployment.zeroEx.connect(taker).registerAllowedRfqOrigins([notTaker.address], true);
             
             const result = await testUtils.fillOtcOrderAsync(order, order.takerAmount, notTaker);
             await result.wait();
@@ -335,8 +348,8 @@ describe('OtcOrdersFeature - Modern Tests', function() {
 
         it('cannot fill an order with registered then unregistered tx.origin', async function() {
             const order = getTestOtcOrder();
-            await zeroEx.connect(taker).registerAllowedRfqOrigins([notTaker.address], true);
-            await zeroEx.connect(taker).registerAllowedRfqOrigins([notTaker.address], false);
+            await deployment.zeroEx.connect(taker).registerAllowedRfqOrigins([notTaker.address], true);
+            await deployment.zeroEx.connect(taker).registerAllowedRfqOrigins([notTaker.address], false);
             
             await expect(
                 testUtils.fillOtcOrderAsync(order, order.takerAmount, notTaker)
@@ -383,7 +396,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             const signature = await testUtils.createOrderSignature(order);
             
             await expect(
-                zeroEx.connect(taker).fillOtcOrder(order, signature, order.takerAmount, { value: 1 })
+                deployment.zeroEx.connect(taker).fillOtcOrder(order, signature, order.takerAmount, { value: 1 })
             ).to.be.rejected; // Revert at language level because function is not payable
             
             console.log(`✅ Correctly rejected ETH attachment`);
@@ -827,7 +840,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             const takerSig1 = await testUtils.createTakerSignature(order1, taker);
             const takerSig2 = await testUtils.createTakerSignature(order2, notTaker);
             
-            const result = await zeroEx.connect(txOrigin).batchFillTakerSignedOtcOrders(
+            const result = await otcFeature.connect(txOrigin).batchFillTakerSignedOtcOrders(
                 [order1, order2],
                 [makerSig1, makerSig2],
                 [takerSig1, takerSig2],
@@ -861,7 +874,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             const takerSig1 = await testUtils.createTakerSignature(order1, taker);
             const takerSig2 = await testUtils.createTakerSignature(order2, notTaker);
             
-            const result = await zeroEx.connect(txOrigin).batchFillTakerSignedOtcOrders(
+            const result = await otcFeature.connect(txOrigin).batchFillTakerSignedOtcOrders(
                 [order1, order2],
                 [makerSig1, makerSig2],
                 [takerSig1, takerSig2],
@@ -892,7 +905,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             const takerSig1 = await testUtils.createTakerSignature(order1, taker);
             const takerSig2 = await testUtils.createTakerSignature(order2, taker); // Invalid signature for order2
             
-            const result = await zeroEx.connect(txOrigin).batchFillTakerSignedOtcOrders(
+            const result = await otcFeature.connect(txOrigin).batchFillTakerSignedOtcOrders(
                 [order1, order2],
                 [makerSig1, makerSig2],
                 [takerSig1, takerSig2],

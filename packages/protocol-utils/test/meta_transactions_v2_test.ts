@@ -10,11 +10,11 @@ describe('mtxs v2', () => {
         const mtx = new MetaTransactionV2({
             signer: '0x349e8d89e8b37214d9ce3949fc5754152c525bc3',
             sender: '0x83c62b2e67dea0df2a27be0def7a22bd7102642c',
-            expirationTimeSeconds: new BigNumber(9101112),
-            salt: new BigNumber(2001),
+            expirationTimeSeconds: 9101112n,
+            salt: 2001n,
             callData: '0x12345678',
             feeToken: '0xcc3c7ea403427154ec908203ba6c418bd699f7ce',
-            fees: [] as any,
+            fees: [],
             chainId: 8008,
             verifyingContract: '0x6701704d2421c64ee9aa93ec7f96ede81c4be77d',
         });
@@ -36,17 +36,17 @@ describe('mtxs v2', () => {
         const mtx = new MetaTransactionV2({
             signer: '0x349e8d89e8b37214d9ce3949fc5754152c525bc3',
             sender: '0x83c62b2e67dea0df2a27be0def7a22bd7102642c',
-            expirationTimeSeconds: new BigNumber(9101112),
-            salt: new BigNumber(2001),
+            expirationTimeSeconds: 9101112n,
+            salt: 2001n,
             callData: '0x12345678',
             feeToken: '0xcc3c7ea403427154ec908203ba6c418bd699f7ce',
             fees: [{
                 recipient: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-                amount: new BigNumber(1000000),
+                amount: 1000000n,
             }, {
                 recipient: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-                amount: new BigNumber(1000),
-            }] as any,
+                amount: 1000n,
+            }],
             chainId: 8008,
             verifyingContract: '0x6701704d2421c64ee9aa93ec7f96ede81c4be77d',
         });

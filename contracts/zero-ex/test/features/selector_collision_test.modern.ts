@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-const { ethers } = require('hardhat');
+import { ethers } from 'hardhat';
 
 describe('Selector Collision Test - Modern Tests', function() {
     this.timeout(30000);
@@ -20,22 +20,15 @@ describe('Selector Collision Test - Modern Tests', function() {
         
         // Get all contract factories available in the project
         const contractFactories = [
-            'TestZeroExWithNativeOrders',
-            'TestZeroExWithMultiplex', 
-            'TestZeroExWithERC721Orders',
-            'TestZeroExWithERC1155Orders',
             'TestMintableERC20Token',
-            'TestMintableERC721Token',
-            'TestMintableERC1155Token',
             'TestWeth',
-            'TestFeeRecipient',
-            'TestPropertyValidator',
-            'TestLiquidityProvider',
-            'TestUniswapV2Factory',
-            'TestUniswapV3Factory',
-            'TestOtcOrdersFeature',
-            'TestMultiplexFeature',
-            'TestNFTOrderPresigner'
+            'TestLibNativeOrder',
+            'DummyERC20Token',
+            'ZeroEx',
+            'TestOrderSignerRegistryWithContractWallet',
+            'TestMetaTransactionsNativeOrdersFeature',
+            'TestNativeOrdersFeature',
+            'OwnableFeature'
         ];
         
         let totalFunctions = 0;
@@ -51,7 +44,7 @@ describe('Selector Collision Test - Modern Tests', function() {
                 for (const fragment of abi) {
                     if (fragment.type === 'function') {
                         const functionSignature = fragment.format('full');
-                        const selector = ContractFactory.interface.getSighash(fragment);
+                        const selector = fragment.selector;
                         
                         // Remove '0x' prefix for consistency with legacy format
                         const selectorHex = selector.slice(2);

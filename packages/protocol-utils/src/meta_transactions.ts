@@ -1,7 +1,7 @@
 import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses';
 import { SupportedProvider } from 'ethereum-types';
 import { EIP712TypedData } from '@0x/types';
-import { BigNumber, hexUtils, NULL_ADDRESS } from '@0x/utils';
+import { hexUtils, NULL_ADDRESS } from '@0x/utils';
 
 import { ZERO } from './constants';
 import {
@@ -54,14 +54,14 @@ export class MetaTransaction {
 
     public signer: string;
     public sender: string;
-    public minGasPrice: BigNumber;
-    public maxGasPrice: BigNumber;
-    public expirationTimeSeconds: BigNumber;
-    public salt: BigNumber;
+    public minGasPrice: bigint;
+    public maxGasPrice: bigint;
+    public expirationTimeSeconds: bigint;
+    public salt: bigint;
     public callData: string;
-    public value: BigNumber;
+    public value: bigint;
     public feeToken: string;
-    public feeAmount: BigNumber;
+    public feeAmount: bigint;
     public chainId: number;
     public verifyingContract: string;
 
@@ -105,14 +105,14 @@ export class MetaTransaction {
                 hexUtils.leftPad(MetaTransaction.TYPE_HASH),
                 hexUtils.leftPad(this.signer),
                 hexUtils.leftPad(this.sender),
-                hexUtils.leftPad(this.minGasPrice),
-                hexUtils.leftPad(this.maxGasPrice),
-                hexUtils.leftPad(this.expirationTimeSeconds),
-                hexUtils.leftPad(this.salt),
+                hexUtils.leftPad(this.minGasPrice.toString()),
+                hexUtils.leftPad(this.maxGasPrice.toString()),
+                hexUtils.leftPad(this.expirationTimeSeconds.toString()),
+                hexUtils.leftPad(this.salt.toString()),
                 hexUtils.hash(this.callData),
-                hexUtils.leftPad(this.value),
+                hexUtils.leftPad(this.value.toString()),
                 hexUtils.leftPad(this.feeToken),
-                hexUtils.leftPad(this.feeAmount),
+                hexUtils.leftPad(this.feeAmount.toString()),
             ),
         );
     }

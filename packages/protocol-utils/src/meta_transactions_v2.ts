@@ -1,6 +1,6 @@
 import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses';
 import { EIP712TypedData } from '@0x/types';
-import { BigNumber, hexUtils, NULL_ADDRESS } from '@0x/utils';
+import { hexUtils, NULL_ADDRESS } from '@0x/utils';
 import { ZERO } from './constants';
 import {
     createExchangeProxyEIP712Domain,
@@ -11,7 +11,7 @@ import {
 
 export interface MetaTransactionV2Fee {
     recipient: string,
-    amount: BigNumber,
+    amount: bigint,
 }
 
 const MTX_DEFAULT_VALUES = {
@@ -54,8 +54,8 @@ export class MetaTransactionV2 {
 
     public signer: string;
     public sender: string;
-    public expirationTimeSeconds: BigNumber;
-    public salt: BigNumber;
+    public expirationTimeSeconds: bigint;
+    public salt: bigint;
     public callData: string;
     public feeToken: string;
     public fees: MetaTransactionV2Fee[];
@@ -95,7 +95,7 @@ export class MetaTransactionV2 {
             ...this.fees.map((fee) => hexUtils.hash(hexUtils.concat(
                 hexUtils.leftPad(MetaTransactionV2.FEE_TYPE_HASH),
                 hexUtils.leftPad(fee.recipient),
-                hexUtils.leftPad(fee.amount),
+                hexUtils.leftPad(fee.amount.toString()),
             )))
         ));
 
@@ -104,8 +104,8 @@ export class MetaTransactionV2 {
                 hexUtils.leftPad(MetaTransactionV2.MTX_TYPE_HASH),
                 hexUtils.leftPad(this.signer),
                 hexUtils.leftPad(this.sender),
-                hexUtils.leftPad(this.expirationTimeSeconds),
-                hexUtils.leftPad(this.salt),
+                hexUtils.leftPad(this.expirationTimeSeconds.toString()),
+                hexUtils.leftPad(this.salt.toString()),
                 hexUtils.hash(this.callData),
                 hexUtils.leftPad(this.feeToken),
                 hexUtils.leftPad(feesHash),

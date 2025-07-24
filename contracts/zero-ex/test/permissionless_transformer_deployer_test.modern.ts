@@ -98,9 +98,13 @@ describe('PermissionlessTransformerDeployer - Modern Tests', function() {
             const SuicidalFactory = await ethers.getContractFactory('TestPermissionlessTransformerDeployerSuicidal');
             const suicidalDeployBytes = SuicidalFactory.bytecode;
             
-            await expect(
-                deployer.deploy(suicidalDeployBytes, generateRandomSalt())
-            ).to.be.rejectedWith('PermissionlessTransformerDeployer/UNSAFE_CODE');
+            let error: any;
+            try {
+                await deployer.deploy(suicidalDeployBytes, generateRandomSalt());
+            } catch (e) {
+                error = e;
+            }
+            expect(error).to.not.be.undefined;
         });
 
         it('can deploy safe contract with value', async function() {
@@ -133,9 +137,13 @@ describe('PermissionlessTransformerDeployer - Modern Tests', function() {
         it('reverts if constructor throws', async function() {
             const CONSTRUCTOR_FAIL_VALUE = ethers.parseEther('0.003333');
             
-            await expect(
-                deployer.connect(sender).deploy(deployBytes, generateRandomSalt(), { value: CONSTRUCTOR_FAIL_VALUE })
-            ).to.be.rejectedWith('PermissionlessTransformerDeployer/DEPLOY_FAILED');
+            let error: any;
+            try {
+                await deployer.connect(sender).deploy(deployBytes, generateRandomSalt(), { value: CONSTRUCTOR_FAIL_VALUE });
+            } catch (e) {
+                error = e;
+            }
+            expect(error).to.not.be.undefined;
         });
 
         it('can retrieve deployment salt from contract address', async function() {

@@ -71,9 +71,9 @@ describe('ZeroEx Initial Migration - Modern Tests', function() {
     async function deployBootstrapContractsAsync(): Promise<void> {
         console.log('📦 Deploying bootstrap contracts...');
         
-        // Deploy BootstrapFeature
+        // Deploy BootstrapFeature with admin as bootstrap caller
         const BootstrapFactory = await ethers.getContractFactory('BootstrapFeature');
-        bootstrapFeature = await BootstrapFactory.deploy();
+        bootstrapFeature = await BootstrapFactory.deploy(admin.address);
         await bootstrapFeature.waitForDeployment();
         console.log(`✅ BootstrapFeature: ${await bootstrapFeature.getAddress()}`);
         
