@@ -1,8 +1,45 @@
 import { expect } from 'chai';
 const { ethers } = require('hardhat');
 import { Contract } from 'ethers';
+import { randomBytes } from 'crypto';
+import { LimitOrder, RfqOrder } from '@0x/protocol-utils';
+import { BigNumber } from '@0x/utils';
 
-import { getRandomLimitOrder, getRandomRfqOrder } from './utils/orders';
+// 内联的工具函数，替代 utils/orders 中的函数
+function getRandomLimitOrder(fields: Partial<any> = {}): any {
+    const now = Math.floor(Date.now() / 1000);
+    return new LimitOrder({
+        makerToken: '0x' + randomBytes(20).toString('hex'),
+        takerToken: '0x' + randomBytes(20).toString('hex'), 
+        makerAmount: ethers.parseEther('100'),
+        takerAmount: ethers.parseEther('1'),
+        takerTokenFeeAmount: ethers.parseEther('0.01'),
+        maker: '0x' + randomBytes(20).toString('hex'),
+        taker: '0x' + randomBytes(20).toString('hex'),
+        sender: '0x' + randomBytes(20).toString('hex'),
+        feeRecipient: '0x' + randomBytes(20).toString('hex'),
+        pool: '0x' + randomBytes(32).toString('hex'),
+        expiry: new BigNumber(now + 3600), // 1 hour from now
+        salt: new BigNumber('0x' + randomBytes(32).toString('hex')),
+        ...fields,
+    });
+}
+
+function getRandomRfqOrder(fields: Partial<any> = {}): any {
+    const now = Math.floor(Date.now() / 1000);
+    return new RfqOrder({
+        makerToken: '0x' + randomBytes(20).toString('hex'),
+        takerToken: '0x' + randomBytes(20).toString('hex'),
+        makerAmount: ethers.parseEther('100'),
+        takerAmount: ethers.parseEther('1'),
+        maker: '0x' + randomBytes(20).toString('hex'),
+        txOrigin: '0x' + randomBytes(20).toString('hex'),
+        pool: '0x' + randomBytes(32).toString('hex'),
+        expiry: new BigNumber(now + 3600), // 1 hour from now
+        salt: new BigNumber('0x' + randomBytes(32).toString('hex')),
+        ...fields,
+    });
+}
 
 describe('LibLimitOrder Tests - Modern', function() {
     // Extended timeout for blockchain operations
@@ -40,6 +77,8 @@ describe('LibLimitOrder Tests - Modern', function() {
             const order = getRandomLimitOrder();
             const structHash = await testContract.getLimitOrderStructHash(order);
             expect(structHash).to.equal(order.getStructHash());
+            
+            console.log('✅ Limit order struct hash verified');
         });
     });
 
@@ -48,6 +87,8 @@ describe('LibLimitOrder Tests - Modern', function() {
             const order = getRandomRfqOrder();
             const structHash = await testContract.getRfqOrderStructHash(order);
             expect(structHash).to.equal(order.getStructHash());
+            
+            console.log('✅ RFQ order struct hash verified');
         });
     });
 }); 
