@@ -48,9 +48,9 @@ describe("🏛️ Governance Package TypeScript Tests", function () {
 
             const proposal: ProposalData = {
                 targets: [ethers.ZeroAddress],
-                values: [0n],
+                values: [ethers.parseEther("0")],
                 calldatas: ["0x"],
-                description: "Test Proposal"
+                description: "Test Proposal #1"
             };
 
             expect(proposal.targets).to.be.an('array');
@@ -63,25 +63,25 @@ describe("🏛️ Governance Package TypeScript Tests", function () {
 
     describe("🏦 Treasury Governor", function () {
         it("✅ should support treasury operations with types", async function () {
-            // Treasury 操作类型定义
-            type TreasuryOperation = {
-                operationType: 'transfer' | 'stake' | 'unstake';
+            // Treasury 操作的 TypeScript 接口
+            interface TreasuryOperation {
+                operationType: 'transfer' | 'mint' | 'burn';
                 amount: bigint;
                 recipient?: string;
             };
 
             const operation: TreasuryOperation = {
                 operationType: 'transfer',
-                amount: ethers.utils.parseEther("1000"),
+                amount: ethers.parseEther("1000"),
                 recipient: user1.address
             };
 
             expect(operation.operationType).to.equal('transfer');
             expect(operation.amount).to.be.a('bigint');
-            expect(operation.recipient).to.be.properAddress;
+            expect(ethers.isAddress(operation.recipient!)).to.be.true;
             
             console.log(`✅ Treasury 操作类型: ${operation.operationType}`);
-            console.log(`✅ 金额: ${ethers.utils.formatEther(operation.amount)} ETH`);
+            console.log(`✅ 金额: ${ethers.formatEther(operation.amount)} ETH`);
         });
     });
 
@@ -95,13 +95,13 @@ describe("🏛️ Governance Package TypeScript Tests", function () {
             }
 
             const vote: VoteType = VoteType.For;
-            const voteWeight = ethers.parseUnits("500000", 18);
+            const voteWeight = ethers.parseEther("5000");
 
             expect(vote).to.equal(VoteType.For);
             expect(voteWeight).to.be.a('bigint');
             
             console.log(`✅ 投票类型: ${VoteType[vote]}`);
-            console.log(`✅ 投票权重: ${ethers.utils.formatEther(voteWeight)} ZRX`);
+            console.log(`✅ 投票权重: ${ethers.formatEther(voteWeight)} ZRX`);
         });
     });
 }); 
