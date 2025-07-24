@@ -244,7 +244,7 @@ describe('ERC20 Contracts - Modern Tests', function() {
             const totalSupply = await zrxToken.totalSupply();
             
             // ZRX should have a reasonable total supply
-            expect(totalSupply).to.be.greaterThan(ethers.parseEther('1000000')); // At least 1M
+            expect(totalSupply > ethers.parseEther('1000000')).to.be.true; // At least 1M
             
             console.log(`✅ ZRX Total Supply: ${ethers.formatEther(totalSupply)} ZRX`);
         });
@@ -256,7 +256,7 @@ describe('ERC20 Contracts - Modern Tests', function() {
             const wethSymbol = await weth.symbol();
             const wethDecimals = await weth.decimals();
             
-            expect(wethDecimals).to.equal(18);
+            expect(Number(wethDecimals)).to.equal(18);
             console.log(`✅ WETH Token: ${wethName} (${wethSymbol})`);
         });
         
@@ -348,7 +348,7 @@ describe('ERC20 Contracts - Modern Tests', function() {
             for (const address of addresses) {
                 const balance = await dummyToken.balanceOf(address);
                 console.log(`   ${address.slice(0, 10)}...: ${ethers.formatEther(balance)} TEST`);
-                expect(balance).to.be.greaterThanOrEqual(0);
+                expect(balance >= 0n).to.be.true;
             }
         });
     });
@@ -378,7 +378,7 @@ describe('ERC20 Contracts - Modern Tests', function() {
             console.log('💰 Token Total Supplies:');
             for (const [name, supply] of Object.entries(supplies)) {
                 console.log(`   ${name}: ${ethers.formatEther(supply)}`);
-                expect(supply).to.be.greaterThan(0);
+                expect(supply > 0n).to.be.true;
             }
             
             const totalValue = Object.values(supplies).reduce((sum, supply) => sum + supply, BigInt(0));

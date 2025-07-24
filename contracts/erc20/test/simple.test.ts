@@ -10,20 +10,20 @@ describe("🧪 ERC20 Package TypeScript Tests", function () {
 
     it("✅ should have access to test accounts", async function () {
         expect(accounts.length).to.be.greaterThan(0);
-        expect(accounts[0].address).to.be.properAddress;
+        expect(ethers.isAddress(accounts[0].address)).to.be.true;
         console.log(`✅ 找到 ${accounts.length} 个测试账户`);
         console.log(`📍 第一个账户: ${accounts[0].address}`);
     });
 
     it("✅ should have correct network configuration", async function () {
         const network = await ethers.provider.getNetwork();
-        expect(network.chainId).to.equal(1337);
+        expect(Number(network.chainId)).to.equal(1337);
         console.log(`✅ 网络 ID: ${network.chainId} (Hardhat 本地网络)`);
     });
 
     it("✅ should be able to check balances", async function () {
         const balance = await ethers.provider.getBalance(accounts[0].address);
-        expect(balance).to.be.gt(0);
+        expect(balance > 0n).to.be.true;
         console.log(`✅ 账户余额: ${ethers.formatEther(balance)} ETH`);
     });
 
