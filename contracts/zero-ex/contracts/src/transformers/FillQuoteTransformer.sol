@@ -161,7 +161,17 @@ contract FillQuoteTransformer is Transformer {
     /* solhint-disable function-max-lines */
     function transform(TransformContext calldata context) external override returns (bytes4 magicBytes) {
         TransformData memory data = abi.decode(context.data, (TransformData));
-        FillState memory state;
+        
+        // 🎯 修复：显式初始化所有 FillState 字段
+        FillState memory state = FillState({
+            ethRemaining: 0,
+            boughtAmount: 0,
+            soldAmount: 0,
+            protocolFee: 0,
+            takerTokenBalanceRemaining: 0,
+            currentIndices: [uint256(0), uint256(0), uint256(0), uint256(0)],
+            currentOrderType: OrderType.Bridge
+        });
 
         // Validate data fields.
         if (data.sellToken.isTokenETH() || data.buyToken.isTokenETH()) {
@@ -204,6 +214,7 @@ contract FillQuoteTransformer is Transformer {
 
         // Fill the orders.
         for (uint256 i = 0; i < data.fillSequence.length; ++i) {
+            
             // Check if we've hit our targets.
             if (data.side == Side.Sell) {
                 // Market sell check.
@@ -219,9 +230,12 @@ contract FillQuoteTransformer is Transformer {
 
             state.currentOrderType = OrderType(data.fillSequence[i]);
             uint256 orderIndex = state.currentIndices[uint256(state.currentOrderType)];
+            
+            
             // Fill the order.
             FillOrderResults memory results;
             if (state.currentOrderType == OrderType.Bridge) {
+                
                 results = _fillBridgeOrder(data.bridgeOrders[orderIndex], data, state);
             } else if (state.currentOrderType == OrderType.Limit) {
                 results = _fillLimitOrder(data.limitOrders[orderIndex], data, state);
@@ -238,6 +252,8 @@ contract FillQuoteTransformer is Transformer {
             state.boughtAmount = state.boughtAmount + results.makerTokenBoughtAmount;
             state.ethRemaining = state.ethRemaining - results.protocolFeePaid;
             state.takerTokenBalanceRemaining = state.takerTokenBalanceRemaining - results.takerTokenSoldAmount;
+            
+            
             state.currentIndices[uint256(state.currentOrderType)]++;
         }
 
@@ -281,6 +297,7 @@ contract FillQuoteTransformer is Transformer {
         TransformData memory data,
         FillState memory state
     ) private returns (FillOrderResults memory results) {
+        
         uint256 takerTokenFillAmount = _computeTakerTokenFillAmount(
             data,
             state,
@@ -289,6 +306,8 @@ contract FillQuoteTransformer is Transformer {
             0
         );
 
+        // Execute a `delegatecall` to the bridge adapter.
+        
         (bool success, bytes memory resultData) = address(bridgeAdapter).delegatecall(
             abi.encodeWithSelector(
                 IBridgeAdapter.trade.selector,
@@ -298,10 +317,21 @@ contract FillQuoteTransformer is Transformer {
                 takerTokenFillAmount
             )
         );
-        if (success) {
-            results.makerTokenBoughtAmount = abi.decode(resultData, (uint256));
-            results.takerTokenSoldAmount = takerTokenFillAmount;
+        
+        
+        if (!success) {
+            if (resultData.length > 0) {
+                // Re-revert with the actual error from delegatecall
+                assembly {
+                    let returndata_size := mload(resultData)
+                    revert(add(32, resultData), returndata_size)
+                }
+            } else {
+                revert("FillQuoteTransformer/BRIDGE_ORDER_FILL_FAILED_NO_DATA");
+            }
         }
+        results.makerTokenBoughtAmount = abi.decode(resultData, (uint256));
+        results.takerTokenSoldAmount = takerTokenFillAmount;
     }
 
     // Fill a single limit order.

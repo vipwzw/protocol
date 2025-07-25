@@ -20,18 +20,34 @@ import "./tokens/TestMintableERC20Token.sol";
 
 contract TestFillQuoteTransformerBridge {
     uint256 private constant REVERT_AMOUNT = 0xdeadbeef;
+    
+    event DebugBridgeCall(address takerToken, address makerToken, address recipient, uint256 boughtAmount);
 
     function sellTokenForToken(
-        address /* takerToken */,
+        address takerToken,
         address makerToken,
         address recipient,
         uint256 /* minBuyAmount */,
         bytes calldata auxiliaryData
     ) external returns (uint256 boughtAmount) {
         boughtAmount = abi.decode(auxiliaryData, (uint256));
+        
         if (REVERT_AMOUNT == boughtAmount) {
             revert("REVERT_AMOUNT");
         }
+        
+        // 🔍 调试：记录函数被调用
+        emit DebugBridgeCall(takerToken, makerToken, recipient, boughtAmount);
+        
+        // Get the current balance of taker token to determine how much was sent
+        uint256 takerTokenBalance = TestMintableERC20Token(takerToken).balanceOf(address(this));
+        
+        // 🎯 关键修复：消费收到的 taker tokens，模拟真实 bridge 行为
+        if (takerTokenBalance > 0) {
+            TestMintableERC20Token(takerToken).burn(address(this), takerTokenBalance);
+        }
+        
+        // Mint the maker tokens to the recipient
         TestMintableERC20Token(makerToken).mint(recipient, boughtAmount);
     }
 }
