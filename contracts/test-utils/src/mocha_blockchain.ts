@@ -429,8 +429,15 @@ function defineResetsBlockchainSuite<T>(
 ): T {
     return describeCall(description, function (this: ISuiteCallbackContext): void {
         const env = envFactory.create();
-        beforeEach(async () => env.blockchainLifecycle.startAsync());
-        afterEach(async () => env.blockchainLifecycle.revertAsync());
+        
+        // Use arrow functions to capture 'env' and access blockchainLifecycle dynamically
+        beforeEach(async () => {
+            await env.blockchainLifecycle.startAsync();
+        });
+        afterEach(async () => {
+            await env.blockchainLifecycle.revertAsync();
+        });
+        
         callback.call(this, env);
     });
 }

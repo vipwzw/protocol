@@ -1,4 +1,3 @@
-import { BigNumber } from '@0x/utils';
 import { Web3Wrapper } from '@0x/web3-wrapper';
 import * as ethUtil from 'ethereumjs-util';
 import * as _ from 'lodash';
@@ -32,7 +31,7 @@ const HARDHAT_PRIVATE_KEYS_STRINGS = [
 export const NUM_TEST_ACCOUNTS = HARDHAT_PRIVATE_KEYS_STRINGS.length;
 export { HARDHAT_PRIVATE_KEYS_STRINGS as TESTRPC_PRIVATE_KEYS_STRINGS };
 
-const MAX_UINT256 = new BigNumber(2).pow(256).minus(1);
+const MAX_UINT256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
 
 // Default gas price for tests
 export const DEFAULT_GAS_PRICE = 2000000000; // 2 gwei for Hardhat network
@@ -53,8 +52,8 @@ export const constants = {
     MAX_MATCH_ORDERS_GAS: 400000,
     DUMMY_TOKEN_NAME: '',
     DUMMY_TOKEN_SYMBOL: '',
-    DUMMY_TOKEN_DECIMALS: new BigNumber(18),
-    DUMMY_TOKEN_TOTAL_SUPPLY: new BigNumber(0),
+    DUMMY_TOKEN_DECIMALS: 18n,
+    DUMMY_TOKEN_TOTAL_SUPPLY: 0n,
     NULL_BYTES: '0x',
     NUM_DUMMY_ERC20_TO_DEPLOY: 4,
     NUM_DUMMY_ERC721_TO_DEPLOY: 2,
@@ -67,26 +66,26 @@ export const constants = {
     NULL_BYTES32: '0x0000000000000000000000000000000000000000000000000000000000000000',
     UNLIMITED_ALLOWANCE_IN_BASE_UNITS: MAX_UINT256,
     MAX_UINT256,
-    MAX_UINT32: new BigNumber(2).pow(32).minus(1),
+    MAX_UINT32: 4294967295n, // 2^32 - 1
     TESTRPC_PRIVATE_KEYS: _.map(HARDHAT_PRIVATE_KEYS_STRINGS, privateKeyString => ethUtil.toBuffer(privateKeyString)),
-    INITIAL_ERC20_BALANCE: Web3Wrapper.toBaseUnitAmount(new BigNumber(10000), 18),
-    INITIAL_ERC20_ALLOWANCE: Web3Wrapper.toBaseUnitAmount(new BigNumber(10000), 18),
-    INITIAL_ERC1155_FUNGIBLE_BALANCE: Web3Wrapper.toBaseUnitAmount(new BigNumber(10000), 18),
-    INITIAL_ERC1155_FUNGIBLE_ALLOWANCE: Web3Wrapper.toBaseUnitAmount(new BigNumber(10000), 18),
+    INITIAL_ERC20_BALANCE: 10000000000000000000000n, // 10000 * 10^18
+    INITIAL_ERC20_ALLOWANCE: 10000000000000000000000n, // 10000 * 10^18
+    INITIAL_ERC1155_FUNGIBLE_BALANCE: 10000000000000000000000n, // 10000 * 10^18
+    INITIAL_ERC1155_FUNGIBLE_ALLOWANCE: 10000000000000000000000n, // 10000 * 10^18
     STATIC_ORDER_PARAMS: {
-        makerAssetAmount: Web3Wrapper.toBaseUnitAmount(new BigNumber(100), 18),
-        takerAssetAmount: Web3Wrapper.toBaseUnitAmount(new BigNumber(200), 18),
-        makerFee: Web3Wrapper.toBaseUnitAmount(new BigNumber(1), 18),
-        takerFee: Web3Wrapper.toBaseUnitAmount(new BigNumber(1), 18),
+        makerAssetAmount: 100000000000000000000n, // 100 * 10^18
+        takerAssetAmount: 200000000000000000000n, // 200 * 10^18
+        makerFee: 1000000000000000000n, // 1 * 10^18
+        takerFee: 1000000000000000000n, // 1 * 10^18
     },
     WORD_LENGTH: 32,
     ADDRESS_LENGTH: 20,
-    ZERO_AMOUNT: new BigNumber(0),
-    PERCENTAGE_DENOMINATOR: new BigNumber(10).pow(18),
-    TIME_BUFFER: new BigNumber(1000),
+    ZERO_AMOUNT: 0n,
+    PERCENTAGE_DENOMINATOR: 1000000000000000000n, // 10^18
+    TIME_BUFFER: 1000n,
     KECCAK256_NULL: ethUtil.bufferToHex(ethUtil.keccak256(Buffer.alloc(0))),
-    MAX_UINT256_ROOT: new BigNumber('340282366920938463463374607431768211456'),
-    ONE_ETHER: new BigNumber(1e18),
+    MAX_UINT256_ROOT: 340282366920938463463374607431768211456n,
+    ONE_ETHER: 1000000000000000000n, // 1e18
     EIP712_DOMAIN_NAME: '0x Protocol',
     EIP712_DOMAIN_VERSION: '3.0.0',
     DEFAULT_GAS_PRICE: 2000000000, // 2 gwei for Hardhat network

@@ -1,39 +1,39 @@
 import { Order } from '@0x/types';
-import { BigNumber } from '@0x/utils';
+// Removed BigNumber import - using bigint instead
 import { AbiDefinition } from 'ethereum-types';
 
 export { OrderStatus } from '@0x/types';
 
 export interface ERC20BalancesByOwner {
     [ownerAddress: string]: {
-        [tokenAddress: string]: BigNumber;
+        [tokenAddress: string]: bigint;
     };
 }
 
 export interface EthBalancesByOwner {
-    [owner: string]: BigNumber;
+    [owner: string]: bigint;
 }
 
 export interface SubmissionContractEventArgs {
-    transactionId: BigNumber;
+    transactionId: bigint;
 }
 
 export interface BatchFillOrders {
     orders: Order[];
     signatures: string[];
-    takerAssetFillAmounts: BigNumber[];
+    takerAssetFillAmounts: bigint[];
 }
 
 export interface MarketSellOrders {
     orders: Order[];
     signatures: string[];
-    takerAssetFillAmount: BigNumber;
+    takerAssetFillAmount: bigint;
 }
 
 export interface MarketBuyOrders {
     orders: Order[];
     signatures: string[];
-    makerAssetFillAmount: BigNumber;
+    makerAssetFillAmount: bigint;
 }
 
 export interface BatchCancelOrders {
@@ -41,7 +41,7 @@ export interface BatchCancelOrders {
 }
 
 export interface CancelOrdersBefore {
-    salt: BigNumber;
+    salt: bigint;
 }
 
 export interface TransactionDataParams {
@@ -97,7 +97,7 @@ export enum ContractName {
 
 export interface CancelOrder {
     order: Order;
-    takerAssetCancelAmount: BigNumber;
+    takerAssetCancelAmount: bigint;
 }
 
 export interface BatchMatchOrder {
@@ -123,13 +123,13 @@ export interface FillEventArgs {
     orderHash: string;
     makerAddress: string;
     takerAddress: string;
-    makerAssetFilledAmount: BigNumber;
-    takerAssetFilledAmount: BigNumber;
-    makerFeePaid: BigNumber;
-    takerFeePaid: BigNumber;
+    makerAssetFilledAmount: bigint;
+    takerAssetFilledAmount: bigint;
+    makerFeePaid: bigint;
+    takerFeePaid: bigint;
 }
 
-export type Numberish = BigNumber | string | number;
+export type Numberish = bigint | string | number;
 
 export enum ExchangeFunctionName {
     BatchCancelOrders = 'batchCancelOrders',
