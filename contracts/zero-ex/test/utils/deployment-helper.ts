@@ -7,6 +7,7 @@ const { ethers } = require('hardhat');
 export interface ZeroExDeploymentResult {
     zeroEx: any;
     verifyingContract: string;
+    transformerDeployer: string;
     features: {
         registry: any;
         ownable: any;
@@ -82,6 +83,11 @@ export async function deployZeroExWithFullMigration(
     const ownable = await OwnableFactory.deploy();
     await ownable.waitForDeployment();
 
+    // 7. 部署 TestTransformERC20（与 test-main 完全一致）
+    const TestTransformERC20Factory = await ethers.getContractFactory('TestTransformERC20');
+    const testTransformERC20 = await TestTransformERC20Factory.deploy();
+    await testTransformERC20.waitForDeployment();
+    
     const TransformERC20Factory = await ethers.getContractFactory('TransformERC20Feature');
     const transformERC20 = await TransformERC20Factory.deploy();
     await transformERC20.waitForDeployment();
@@ -115,15 +121,29 @@ export async function deployZeroExWithFullMigration(
     const otcOrders = await OtcOrdersFactory.deploy(verifyingContract, await wethToken.getAddress());
     await otcOrders.waitForDeployment();
 
+    // 8. 部署 TransformerDeployer（如果没有提供的话）
+    let actualTransformerDeployer: string;
+    if (transformerDeployer) {
+        actualTransformerDeployer = transformerDeployer;
+    } else {
+        const TransformerDeployerFactory = await ethers.getContractFactory('TransformerDeployer');
+        const deployerContract = await TransformerDeployerFactory.deploy([owner.address]);
+        await deployerContract.waitForDeployment();
+        actualTransformerDeployer = await deployerContract.getAddress();
+        if (logProgress) {
+            console.log(`✅ TransformerDeployer: ${actualTransformerDeployer}`);
+        }
+    }
+
     if (logProgress) {
         console.log(`✅ 所有 features 部署完成`);
     }
 
-    // 8. 使用 FullMigration 注册所有 features
+    // 9. 使用 FullMigration 注册所有 features（使用 TestTransformERC20）
     const features = {
         registry: await registry.getAddress(),
         ownable: await ownable.getAddress(),
-        transformERC20: await transformERC20.getAddress(),
+        transformERC20: await testTransformERC20.getAddress(), // 🎯 使用 TestTransformERC20
         metaTransactions: await metaTransactions.getAddress(),
         nativeOrders: await nativeOrders.getAddress(),
         otcOrders: await otcOrders.getAddress()
@@ -134,17 +154,17 @@ export async function deployZeroExWithFullMigration(
         verifyingContract,
         features,
         {
-            transformerDeployer: transformerDeployer || owner.address
+            transformerDeployer: actualTransformerDeployer
         }
     );
     if (logProgress) {
         console.log(`✅ ZeroEx 完全迁移，所有 features 已注册`);
     }
 
-    // 9. 创建 feature 接口 (解决函数调用问题)
+    // 10. 创建 feature 接口 (基于 TestTransformERC20)
     const transformFeature = new ethers.Contract(
         verifyingContract,
-        transformERC20.interface,
+        testTransformERC20.interface,
         ethers.provider
     );
 
@@ -167,6 +187,7 @@ export async function deployZeroExWithFullMigration(
     return {
         zeroEx,
         verifyingContract,
+        transformerDeployer: actualTransformerDeployer,
         features: {
             registry,
             ownable,
@@ -220,6 +241,30 @@ export async function deployTestTokens(): Promise<{
         takerToken,
         wethToken
     };
+}
+
+/**
+ * 给测试账户分发代币
+ */
+export async function distributeTokensToAccounts(
+    tokens: any[], 
+    accounts: any[], 
+    amount: bigint = ethers.parseEther('10000'),
+    logProgress: boolean = true
+): Promise<void> {
+    if (logProgress) {
+        console.log('💰 分发代币给测试账户...');
+    }
+
+    for (const token of tokens) {
+        for (const account of accounts) {
+            await token.mint(account.address, amount);
+        }
+    }
+
+    if (logProgress) {
+        console.log('✅ 代币分发完成');
+    }
 }
 
 /**
