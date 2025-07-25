@@ -161,17 +161,7 @@ contract FillQuoteTransformer is Transformer {
     /* solhint-disable function-max-lines */
     function transform(TransformContext calldata context) external override returns (bytes4 magicBytes) {
         TransformData memory data = abi.decode(context.data, (TransformData));
-        
-        // 🎯 修复：显式初始化所有 FillState 字段
-        FillState memory state = FillState({
-            ethRemaining: 0,
-            boughtAmount: 0,
-            soldAmount: 0,
-            protocolFee: 0,
-            takerTokenBalanceRemaining: 0,
-            currentIndices: [uint256(0), uint256(0), uint256(0), uint256(0)],
-            currentOrderType: OrderType.Bridge
-        });
+        FillState memory state;
 
         // Validate data fields.
         if (data.sellToken.isTokenETH() || data.buyToken.isTokenETH()) {
