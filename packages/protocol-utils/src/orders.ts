@@ -363,20 +363,20 @@ export class OtcOrder extends OrderBase {
     public static readonly MAX_NONCE_VALUE = (2n ** 128n) - 1n;
 
     public txOrigin: string;
-    public expiryAndNonce: BigNumber;
-    public expiry: BigNumber;
-    public nonceBucket: BigNumber;
-    public nonce: BigNumber;
+    public expiryAndNonce: bigint;
+    public expiry: bigint;
+    public nonceBucket: bigint;
+    public nonce: bigint;
 
-    public static parseExpiryAndNonce(expiryAndNonce: BigNumber): {
-        expiry: BigNumber;
-        nonceBucket: BigNumber;
-        nonce: BigNumber;
+    public static parseExpiryAndNonce(expiryAndNonce: bigint): {
+        expiry: bigint;
+        nonceBucket: bigint;
+        nonce: bigint;
     } {
-        const expiryAndNonceHex = hexUtils.leftPad(expiryAndNonce);
-        const expiry = new BigNumber(hexUtils.slice(expiryAndNonceHex, 0, 8).substr(2), 16);
-        const nonceBucket = new BigNumber(hexUtils.slice(expiryAndNonceHex, 8, 16).substr(2), 16);
-        const nonce = new BigNumber(hexUtils.slice(expiryAndNonceHex, 16, 32).substr(2), 16);
+        const expiryAndNonceHex = hexUtils.leftPad(expiryAndNonce.toString());
+        const expiry = BigInt('0x' + hexUtils.slice(expiryAndNonceHex, 0, 8).substr(2));
+        const nonceBucket = BigInt('0x' + hexUtils.slice(expiryAndNonceHex, 8, 16).substr(2));
+        const nonce = BigInt('0x' + hexUtils.slice(expiryAndNonceHex, 16, 32).substr(2));
         return {
             expiry,
             nonceBucket,
@@ -384,21 +384,20 @@ export class OtcOrder extends OrderBase {
         };
     }
 
-    public static encodeExpiryAndNonce(expiry: BigNumber, nonceBucket: BigNumber, nonce: BigNumber): BigNumber {
-        if (expiry.isLessThan(0) || expiry.isGreaterThan(this.MAX_EXPIRY)) {
+    public static encodeExpiryAndNonce(expiry: bigint, nonceBucket: bigint, nonce: bigint): bigint {
+        if (expiry < 0n || expiry > this.MAX_EXPIRY) {
             throw new Error('Expiry out of range');
         }
-        if (nonceBucket.isLessThan(0) || nonceBucket.isGreaterThan(this.MAX_NONCE_BUCKET)) {
+        if (nonceBucket < 0n || nonceBucket > this.MAX_NONCE_BUCKET) {
             throw new Error('Nonce bucket out of range');
         }
-        if (nonce.isLessThan(0) || nonce.isGreaterThan(this.MAX_NONCE_VALUE)) {
+        if (nonce < 0n || nonce > this.MAX_NONCE_VALUE) {
             throw new Error('Nonce out of range');
         }
-        return new BigNumber(
-            hexUtils
-                .concat(hexUtils.leftPad(expiry, 8), hexUtils.leftPad(nonceBucket, 8), hexUtils.leftPad(nonce, 16))
+        return BigInt(
+            '0x' + hexUtils
+                .concat(hexUtils.leftPad(expiry.toString(), 8), hexUtils.leftPad(nonceBucket.toString(), 8), hexUtils.leftPad(nonce.toString(), 16))
                 .substr(2),
-            16,
         );
     }
 
@@ -406,10 +405,10 @@ export class OtcOrder extends OrderBase {
         const _fields = { ...OTC_ORDER_DEFAULT_VALUES, ...fields };
         super(_fields);
         this.txOrigin = _fields.txOrigin;
-        // Convert bigint to BigNumber for internal processing
+        // Convert BigNumber to bigint for internal processing
         this.expiryAndNonce = typeof _fields.expiryAndNonce === 'bigint' 
-            ? new BigNumber(_fields.expiryAndNonce.toString()) 
-            : _fields.expiryAndNonce;
+            ? _fields.expiryAndNonce 
+            : BigInt((_fields.expiryAndNonce as any).toString());
         const { expiry, nonceBucket, nonce } = OtcOrder.parseExpiryAndNonce(this.expiryAndNonce);
         this.expiry = expiry;
         this.nonceBucket = nonceBucket;
@@ -443,7 +442,7 @@ export class OtcOrder extends OrderBase {
                 hexUtils.leftPad(this.maker),
                 hexUtils.leftPad(this.taker),
                 hexUtils.leftPad(this.txOrigin),
-                hexUtils.leftPad(this.expiryAndNonce),
+                hexUtils.leftPad(this.expiryAndNonce.toString()),
             ),
         );
     }
@@ -471,9 +470,9 @@ export class OtcOrder extends OrderBase {
 
     public willExpire(secondsFromNow = 0): boolean {
         const millisecondsInSecond = 1000;
-        const currentUnixTimestampSec = new BigNumber(Date.now() / millisecondsInSecond).integerValue();
-        const expiryRightShift = new BigNumber(2).pow(192);
-        const expiry = this.expiryAndNonce.dividedToIntegerBy(expiryRightShift);
-        return expiry.isLessThan(currentUnixTimestampSec.plus(secondsFromNow));
+        const currentUnixTimestampSec = BigInt(Math.floor(Date.now() / millisecondsInSecond));
+        const expiryRightShift = 2n ** 192n;
+        const expiry = this.expiryAndNonce / expiryRightShift;
+        return expiry < currentUnixTimestampSec + BigInt(secondsFromNow);
     }
 }

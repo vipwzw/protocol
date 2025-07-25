@@ -1,10 +1,10 @@
-import { AbiEncoder, BigNumber } from '@0x/utils';
+import { AbiEncoder } from '@0x/utils';
 
 export interface CurveLiquidityProviderData {
     curveAddress: string;
     exchangeFunctionSelector: string;
-    fromCoinIdx: BigNumber;
-    toCoinIdx: BigNumber;
+    fromCoinIdx: bigint;
+    toCoinIdx: bigint;
 }
 
 export const curveLiquidityProviderDataEncoder = AbiEncoder.create([

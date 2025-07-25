@@ -1,4 +1,4 @@
-import { AbiEncoder, BigNumber, hexUtils, NULL_ADDRESS } from '@0x/utils';
+import { AbiEncoder, hexUtils, NULL_ADDRESS } from '@0x/utils';
 import * as ethjs from 'ethereumjs-util';
 
 import { LimitOrder, LimitOrderFields, OtcOrder, OtcOrderFields, RfqOrder, RfqOrderFields } from './orders';
@@ -110,7 +110,7 @@ export enum FillQuoteTransformerOrderType {
 }
 
 /**
- * `FillQuoteTransformer.TransformData`
+ * Transform data for `FillQuoteTransformer.transform()`.
  */
 export interface FillQuoteTransformerData {
     side: FillQuoteTransformerSide;
@@ -119,9 +119,9 @@ export interface FillQuoteTransformerData {
     bridgeOrders: FillQuoteTransformerBridgeOrder[];
     limitOrders: FillQuoteTransformerLimitOrderInfo[];
     rfqOrders: FillQuoteTransformerRfqOrderInfo[];
-    otcOrders: FillQuoteTransformerOtcOrderInfo[];
+    otcOrders: FillQuoteTransformerOtcOrderInfo[];  // 恢复到原始位置
     fillSequence: FillQuoteTransformerOrderType[];
-    fillAmount: BigNumber;
+    fillAmount: bigint;
     refundReceiver: string;
 }
 
@@ -178,8 +178,8 @@ export interface FillQuoteTransformerBridgeOrder {
     // protocol ID and the lower 16 bytes are a bytes16, left-aligned,
     // ASCII source name.
     source: string;
-    takerTokenAmount: BigNumber;
-    makerTokenAmount: BigNumber;
+    takerTokenAmount: bigint;
+    makerTokenAmount: bigint;
     bridgeData: string;
 }
 
@@ -190,7 +190,7 @@ export interface FillQuoteTransformerBridgeOrder {
 interface FillQuoteTransformerNativeOrderInfo<T> {
     order: T;
     signature: Signature;
-    maxTakerTokenFillAmount: BigNumber;
+    maxTakerTokenFillAmount: bigint;
 }
 
 /**
@@ -241,7 +241,7 @@ export const wethTransformerDataEncoder = AbiEncoder.create([
  */
 export interface WethTransformerData {
     token: string;
-    amount: BigNumber;
+    amount: bigint;
 }
 
 /**
@@ -277,7 +277,7 @@ export const payTakerTransformerDataEncoder = AbiEncoder.create([
  */
 export interface PayTakerTransformerData {
     tokens: string[];
-    amounts: BigNumber[];
+    amounts: bigint[];
 }
 
 /**
@@ -319,7 +319,7 @@ export const affiliateFeeTransformerDataEncoder = AbiEncoder.create({
 export interface AffiliateFeeTransformerData {
     fees: Array<{
         token: string;
-        amount: BigNumber;
+        amount: bigint;
         recipient: string;
     }>;
 }
@@ -382,7 +382,7 @@ export const positiveSlippageFeeTransformerDataEncoder = AbiEncoder.create({
  */
 export interface PositiveSlippageFeeTransformerData {
     token: string;
-    bestCaseAmount: BigNumber;
+    bestCaseAmount: bigint;
     recipient: string;
 }
 

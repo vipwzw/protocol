@@ -26,15 +26,19 @@ export interface FillQuoteTransformerTestEnvironment {
 }
 
 /**
- * 部署 FillQuoteTransformer 测试环境（与 test-main 完全一致）
+ * 部署完整的 FillQuoteTransformer 测试环境
  * 使用 TestFillQuoteTransformerHost 而不是真实的 ZeroEx 系统
  */
 export async function deployFillQuoteTransformerTestEnvironment(accounts: string[]): Promise<FillQuoteTransformerTestEnvironment> {
     console.log('🚀 开始 FillQuoteTransformer 测试环境部署（完全匹配 test-main）...');
     
+    // ⭐ 关键常量：与 test-main 完全一致
+    const GAS_PRICE = 1337;
+    
     // 1. 获取测试账户
     const [owner, maker, taker, feeRecipient, sender] = accounts;
     console.log(`👤 测试账户: ${accounts.length} 个`);
+    console.log(`🔧 使用 test-main 兼容设置: gasPrice=${GAS_PRICE}`);
 
     // 2. 部署测试专用的交换合约
     console.log('📦 部署测试交换环境...');
@@ -58,14 +62,18 @@ export async function deployFillQuoteTransformerTestEnvironment(accounts: string
     await transformer.waitForDeployment();
     console.log(`✅ FillQuoteTransformer: ${await transformer.getAddress()}`);
 
-    // 5. 部署 TestFillQuoteTransformerHost（关键的测试执行环境）
+    // 5. ⭐ 部署 TestFillQuoteTransformerHost（匹配 test-main 的 gas 环境）
+    console.log(`📦 部署 TestFillQuoteTransformerHost (使用网络默认 gasPrice: ${GAS_PRICE})...`);
     const TestFillQuoteTransformerHostFactory = await ethers.getContractFactory('TestFillQuoteTransformerHost');
+    // 注意：gasPrice 现在由 hardhat.config.ts 网络配置统一管理
     const host = await TestFillQuoteTransformerHostFactory.deploy();
     await host.waitForDeployment();
     console.log(`✅ TestFillQuoteTransformerHost: ${await host.getAddress()}`);
 
-    // 6. 部署 TestFillQuoteTransformerBridge
-    const TestFillQuoteTransformerBridgeFactory = await ethers.getContractFactory('TestFillQuoteTransformerBridge');
+    // 6. ⭐ 部署 TestFillQuoteTransformerBridge（使用 sender 账户，匹配 test-main）
+    console.log(`📦 部署 TestFillQuoteTransformerBridge (from: ${sender})...`);
+    const [, , , , senderSigner] = await ethers.getSigners();
+    const TestFillQuoteTransformerBridgeFactory = await ethers.getContractFactory('TestFillQuoteTransformerBridge', senderSigner);
     const bridge = await TestFillQuoteTransformerBridgeFactory.deploy();
     await bridge.waitForDeployment();
     console.log(`✅ TestFillQuoteTransformerBridge: ${await bridge.getAddress()}`);
@@ -88,7 +96,7 @@ export async function deployFillQuoteTransformerTestEnvironment(accounts: string
     const singleProtocolFee = await exchange.getProtocolFeeMultiplier();
     console.log(`✅ 协议费用乘数: ${singleProtocolFee}`);
 
-    console.log('🎉 FillQuoteTransformer 测试环境部署完成！');
+    console.log('🎉 FillQuoteTransformer 测试环境部署完成（test-main 兼容模式）！');
 
     return {
         exchange,

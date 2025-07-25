@@ -15,7 +15,8 @@ describe('Reference Functions', () => {
                 const { a, b } = DEFAULT_VALUES;
                 const expected = a.plus(b);
                 const actual = safeAdd(a, b);
-                expect(actual).to.bignumber.eq(expected);
+                // Convert both to strings for comparison to avoid BigNumber comparison issues
+                expect(actual.toString()).to.equal(expected.toString());
             });
 
             it('reverts on overflow', () => {
@@ -35,18 +36,18 @@ describe('Reference Functions', () => {
                 const { a, b } = DEFAULT_VALUES;
                 const expected = a.minus(b);
                 const actual = safeSub(a, b);
-                expect(actual).to.bignumber.eq(expected);
+                // Convert both to strings for comparison
+                expect(actual.toString()).to.equal(expected.toString());
             });
 
             it('reverts on underflow', () => {
-                const a = MAX_UINT256.dividedToIntegerBy(2);
-                const b = MAX_UINT256.dividedToIntegerBy(2).plus(2);
+                const { a, b } = DEFAULT_VALUES;
                 const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                     SafeMathRevertErrors.BinOpErrorCodes.SubtractionUnderflow,
-                    a,
                     b,
+                    a,
                 );
-                expect(() => safeSub(a, b)).to.throw(expectedError.message);
+                expect(() => safeSub(b, a)).to.throw(expectedError.message);
             });
         });
 
@@ -55,12 +56,13 @@ describe('Reference Functions', () => {
                 const { a, b } = DEFAULT_VALUES;
                 const expected = a.times(b);
                 const actual = safeMul(a, b);
-                expect(actual).to.bignumber.eq(expected);
+                // Convert both to strings for comparison
+                expect(actual.toString()).to.equal(expected.toString());
             });
 
             it('reverts on overflow', () => {
-                const a = MAX_UINT256.dividedToIntegerBy(2);
-                const b = MAX_UINT256.dividedToIntegerBy(2).plus(2);
+                const a = MAX_UINT256.sqrt().plus(1);
+                const b = a;
                 const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                     SafeMathRevertErrors.BinOpErrorCodes.MultiplicationOverflow,
                     a,
@@ -73,20 +75,20 @@ describe('Reference Functions', () => {
         describe('safeDiv', () => {
             it('multiplies two numbers', () => {
                 const { a, b } = DEFAULT_VALUES;
-                const expected = a.times(b);
-                const actual = safeMul(a, b);
-                expect(actual).to.bignumber.eq(expected);
+                const expected = a.dividedToIntegerBy(b);
+                const actual = safeDiv(a, b);
+                // Convert both to strings for comparison
+                expect(actual.toString()).to.equal(expected.toString());
             });
 
             it('reverts if denominator is zero', () => {
-                const a = MAX_UINT256.dividedToIntegerBy(2);
-                const b = ZERO_AMOUNT;
+                const { a } = DEFAULT_VALUES;
                 const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                     SafeMathRevertErrors.BinOpErrorCodes.DivisionByZero,
                     a,
-                    b,
+                    ZERO_AMOUNT,
                 );
-                expect(() => safeDiv(a, b)).to.throw(expectedError.message);
+                expect(() => safeDiv(a, ZERO_AMOUNT)).to.throw(expectedError.message);
             });
         });
     });

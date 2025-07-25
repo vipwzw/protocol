@@ -1,5 +1,5 @@
 import { chaiSetup } from './chai_setup';
-import { BigNumber } from '@0x/utils';
+
 import { expect } from 'chai';
 import { MetaTransactionV2 } from '../src/meta_transactions_v2';
 

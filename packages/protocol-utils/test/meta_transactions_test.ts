@@ -1,7 +1,7 @@
 import { chaiSetup } from './chai_setup';
 import { web3Factory, Web3Wrapper } from './web3_factory';
 import { Web3ProviderEngine } from '@0x/subproviders';
-import { BigNumber } from '@0x/utils';
+
 import { expect } from 'chai';
 import * as ethjs from 'ethereumjs-util';
 

@@ -3,24 +3,27 @@ import * as _ from 'lodash';
 
 const { ethers } = require('hardhat');
 
+// 导入 protocol-utils 中的官方编码函数和类型
+import {
+    encodeFillQuoteTransformerData,
+    FillQuoteTransformerData,
+    FillQuoteTransformerSide,
+    FillQuoteTransformerOrderType,
+    FillQuoteTransformerBridgeOrder,
+    FillQuoteTransformerLimitOrderInfo,
+    FillQuoteTransformerRfqOrderInfo,
+    FillQuoteTransformerOtcOrderInfo
+} from '@0x/protocol-utils';
+
 // 使用 test-main 完全一致的测试架构
 import {
     deployFillQuoteTransformerTestEnvironment,
     FillQuoteTransformerTestEnvironment
 } from '../utils/deployment-helper';
 
-// 📊 现代化类型定义和枚举（基于 test-main）
-enum Side {
-    Sell = 0,
-    Buy = 1
-}
+// 🎯 参考 test-main 的实现，用现代化 ethers 版本
 
-enum OrderType {
-    Bridge = 0,
-    Limit = 1,
-    Rfq = 2,
-    Otc = 3
-}
+// 📊 使用 protocol-utils 中的官方类型和枚举
 
 // 🔧 常量定义
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -73,26 +76,7 @@ interface Signature {
     signatureType: number;
 }
 
-interface FillQuoteTransformerData {
-    side: Side;
-    sellToken: string;
-    buyToken: string;
-    bridgeOrders: BridgeOrder[];
-    limitOrders: Array<{
-        order: LimitOrder;
-        signature: Signature;
-        maxTakerTokenFillAmount: bigint;
-    }>;
-    rfqOrders: Array<{
-        order: RfqOrder;
-        signature: Signature;
-        maxTakerTokenFillAmount: bigint;
-    }>;
-    otcOrders: any[];
-    fillSequence: OrderType[];
-    fillAmount: bigint;
-    refundReceiver: string;
-}
+// FillQuoteTransformerData 现在从 @0x/protocol-utils 导入
 
 interface QuoteFillResults {
     makerTokensBought: bigint;
@@ -131,7 +115,9 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
     let sender: string;
     
     // 测试常量
-    const TEST_BRIDGE_SOURCE = '0x0000000000000000000000000000000000000000000000000000000000000000';
+    // 🎯 关键修复：与 test-main 匹配的 TEST_BRIDGE_SOURCE 
+    // Left half is 0, corresponding to BridgeProtocol.Unknown
+    const TEST_BRIDGE_SOURCE = ethers.zeroPadValue(ethers.randomBytes(16), 32);
     const REVERT_AMOUNT = 0xdeadbeefn;
     
     // 零余额对象
@@ -148,22 +134,53 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
         
         // 获取测试账户
         const signers = await ethers.getSigners();
-        const accounts = signers.map(s => s.address);
+        const accounts = signers.slice(0, 20).map((s: any) => s.address);
         [owner, maker, taker, feeRecipient, sender] = accounts;
 
         // 部署完整的 FillQuoteTransformer 测试环境（与 test-main 一致）
         testEnv = await deployFillQuoteTransformerTestEnvironment(accounts);
         
-        console.log('🎉 FillQuoteTransformer 测试环境设置完成！');
+        // ✅ 预先获取代币地址，避免后续地址获取错误
+        takerTokenAddress = await testEnv.tokens.takerToken.getAddress();
+        makerTokenAddress = await testEnv.tokens.makerToken.getAddress();
+        bridgeAddress = await testEnv.bridge.getAddress();
+        
+        // 🎯 根据 TestFillQuoteTransformerHost.sol 的逻辑，不需要预先铸造代币
+        // host 合约会根据需要自动铸造：if (inputTokenAmount != 0) { inputToken.mint(address(this), inputTokenAmount); }
+        // 移除预先铸造逻辑，避免与 host 合约的自动铸造冲突
+        
+        console.log('✅ 代币地址获取完成');
+        console.log('- Host 合约会根据需要自动铸造代币（无需预先铸造）');
+        
+        // 🎯 与 test-main 一致：只添加必要的授权
+        // 经过测试发现：只有 Host → Exchange 授权是必需的（用于 Limit Orders 的 approveIfBelow）
+        console.log('🔑 添加最小必要授权（与 test-main 行为匹配）...');
+        
+        const hostAddress = await testEnv.host.getAddress();
+        const exchangeAddress = await testEnv.exchange.getAddress();
+        const maxAllowance = ethers.MaxUint256;
+        
+        // ⭐ 唯一必要的授权：Host → Exchange（用于 Limit Orders 的 approveIfBelow）
+        await testEnv.tokens.takerToken.approveAs(hostAddress, exchangeAddress, maxAllowance);
+        console.log('✅ Host → Exchange: 无限授权 (修复 Limit Orders 的 approveIfBelow 错误)');
+        
+        // 🎯 与 test-main 一致：无需任何授权设置
+        console.log('🎉 FillQuoteTransformer 测试环境设置完成（最小授权模式，接近 test-main）！');
+        console.log('📋 代币地址:');
+        console.log('- takerToken:', testEnv.tokens.takerToken.target);
+        console.log('- makerToken:', testEnv.tokens.makerToken.target);
+        console.log('- bridge:', testEnv.bridge.target);
     });
 
     // 🛠️ 辅助函数实现
     function getRandomInteger(min: string, max: string): bigint {
-        const minBig = ethers.parseEther(min.replace('e18', ''));
-        const maxBig = ethers.parseEther(max.replace('e18', ''));
-        const range = maxBig - minBig;
-        const scaledRange = range / BigInt(1000000);
-        const randomValue = BigInt(Math.floor(Math.random() * Number(scaledRange))) * BigInt(1000000);
+        const minBig: bigint = ethers.parseEther(min.replace('e18', ''));
+        const maxBig: bigint = ethers.parseEther(max.replace('e18', ''));
+        const range: bigint = maxBig - minBig;
+        // 修复除法操作：使用简化的随机数生成
+        const scaleFactor = 1000000;
+        const scaledRange = Number(range) / scaleFactor;
+        const randomValue = BigInt(Math.floor(Math.random() * scaledRange)) * BigInt(scaleFactor);
         return minBig + randomValue;
     }
 
@@ -179,7 +196,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
             sender: NULL_ADDRESS,
             feeRecipient: feeRecipient,
             pool: NULL_BYTES,
-            expiry: BigInt(Math.floor(Date.now() / 1000 + 3600)),
+            expiry: BigInt(Math.floor(Date.now() / 1000) + 3600),
             salt: BigInt(Math.floor(Math.random() * 1000000)),
             ...fields,
         };
@@ -195,7 +212,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
             taker: taker,
             txOrigin: taker,
             pool: NULL_BYTES,
-            expiry: BigInt(Math.floor(Date.now() / 1000 + 3600)),
+            expiry: BigInt(Math.floor(Date.now() / 1000) + 3600),
             salt: BigInt(Math.floor(Math.random() * 1000000)),
             ...fields,
         };
@@ -221,18 +238,24 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
     }
 
     function encodeBridgeData(boughtAmount: bigint): string {
-        return ethers.concat([
-            ethers.zeroPadValue(testEnv.bridge.target || testEnv.bridge.address, 32),
-            ethers.zeroPadValue(ethers.toBeHex(32), 32),
-            ethers.zeroPadValue(ethers.toBeHex(boughtAmount), 32)
-        ]);
+        // 🎯 正确的 ABI 编码（已验证工作）
+        const lpData = ethers.AbiCoder.defaultAbiCoder().encode(['uint256'], [boughtAmount]);
+        return ethers.AbiCoder.defaultAbiCoder().encode(
+            ['address', 'bytes'],
+            [bridgeAddress, lpData]
+        );
     }
+
+    // 在测试环境设置完成后预先获取地址
+    let takerTokenAddress: string;
+    let makerTokenAddress: string;
+    let bridgeAddress: string;
 
     function createTransformData(fields: Partial<FillQuoteTransformerData> = {}): FillQuoteTransformerData {
         return {
-            side: Side.Sell,
-            sellToken: testEnv.tokens.takerToken.target || testEnv.tokens.takerToken.address,
-            buyToken: testEnv.tokens.makerToken.target || testEnv.tokens.makerToken.address,
+            side: FillQuoteTransformerSide.Sell,
+            sellToken: takerTokenAddress, // ✅ 使用预获取的地址
+            buyToken: makerTokenAddress,  // ✅ 使用预获取的地址
             bridgeOrders: [],
             limitOrders: [],
             otcOrders: [],
@@ -296,10 +319,23 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
         };
     }
 
+    // 🎯 使用 protocol-utils 中已验证的编码函数（无需本地实现）
+
     async function executeTransformAsync(params: ExecuteTransformParams = {}): Promise<any> {
         const data = params.data || createTransformData();
+        
+        // 🎯 关键修复：使用与 test-main 完全一致的 takerTokenBalance 计算逻辑
+        // test-main: 不对 MAX_UINT256 进行特殊处理，直接使用传递的 takerTokenBalance
+        let takerTokenBalance = params.takerTokenBalance || data.fillAmount;
+        
+        // ❌ 移除错误的 MAX_UINT256 特殊处理逻辑
+        // if (data.fillAmount === MAX_UINT256) {
+        //     // 计算所有桥接订单的 takerTokenAmount 总和
+        //     takerTokenBalance = data.bridgeOrders.reduce((sum, order) => sum + order.takerTokenAmount, 0n);
+        // }
+        
         const _params = {
-            takerTokenBalance: data.fillAmount,
+            takerTokenBalance,
             ethBalance: 0n,
             sender: sender,
             taker: taker,
@@ -307,24 +343,66 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
             ...params,
         };
 
-        // 编码 transform data（简化版本）
-        const encodedData = ethers.AbiCoder.defaultAbiCoder().encode(
-            ['tuple(uint8 side, address sellToken, address buyToken, uint256 fillAmount)'],
-            [[_params.data.side, _params.data.sellToken, _params.data.buyToken, _params.data.fillAmount]]
-        );
+        // 🎯 使用正确的编码函数
+        const encodedData = encodeFillQuoteTransformerData(_params.data);
 
-        // 🎯 使用 test-main 的调用方式：host.executeTransform()
+        // 🔍 调试：检查传递给 executeTransform 的参数
+        console.log('🔍 executeTransform 调试信息:');
+        console.log('- transformer:', await testEnv.transformer.getAddress());
+        console.log('- inputToken:', await testEnv.tokens.takerToken.getAddress());
+        console.log('- inputTokenAmount (takerTokenBalance):', _params.takerTokenBalance.toString());
+        console.log('- sender:', _params.sender);
+        console.log('- recipient:', _params.taker);
+        console.log('- data 长度:', encodedData.length, '字符');
+        
+        // 🔍 调试：检查 host 合约调用前后的余额
+        const hostAddress = await testEnv.host.getAddress();
+        const transformerAddress = await testEnv.transformer.getAddress();
+        const balanceBefore = await testEnv.tokens.takerToken.balanceOf(hostAddress);
+        console.log('- Host takerToken balance BEFORE executeTransform:', balanceBefore.toString());
+        
+        // 🔍 调试：检查授权
+        const allowance = await testEnv.tokens.takerToken.allowance(hostAddress, transformerAddress);
+        console.log('- Host → FillQuoteTransformer allowance:', allowance.toString());
+        
+        // 🔍 调试：检查 bridgeData 编码（仅当有 bridge orders 时）
+        if (_params.data.bridgeOrders.length > 0) {
+            console.log('- Bridge address used in bridgeData:', bridgeAddress);
+            const bridgeOrder = _params.data.bridgeOrders[0];
+            console.log('- Bridge order takerTokenAmount:', bridgeOrder.takerTokenAmount.toString());
+            console.log('- Bridge order makerTokenAmount:', bridgeOrder.makerTokenAmount.toString());
+            console.log('- Bridge order bridgeData length:', bridgeOrder.bridgeData.length, '字符');
+            console.log('- Bridge order bridgeData:', bridgeOrder.bridgeData.slice(0, 100) + '...');
+        } else if (_params.data.limitOrders.length > 0) {
+            console.log('- Limit orders count:', _params.data.limitOrders.length);
+            console.log('- Fill sequence:', _params.data.fillSequence);
+        } else if (_params.data.rfqOrders.length > 0) {
+            console.log('- RFQ orders count:', _params.data.rfqOrders.length);
+        }
+
+        // 🎯 使用现代 ethers v6 的正确参数类型
         const tx = await testEnv.host.executeTransform(
-            testEnv.transformer.target || testEnv.transformer.address,
-            _params.data.sellToken,
-            _params.takerTokenBalance,
-            _params.sender,
-            _params.taker,
-            encodedData,
+            await testEnv.transformer.getAddress(), // ✅ string: transformer 地址
+            await testEnv.tokens.takerToken.getAddress(), // ✅ string: inputToken 地址  
+            _params.takerTokenBalance, // ✅ bigint: inputTokenAmount（ethers v6 使用 bigint）
+            _params.sender, // ✅ string: sender
+            _params.taker, // ✅ string: recipient
+            encodedData, // ✅ string: data
             { value: _params.ethBalance }
         );
 
-        return await tx.wait();
+        const receipt = await tx.wait();
+        
+        // 🔍 调试：检查 host 合约调用后的余额
+        const balanceAfter = await testEnv.tokens.takerToken.balanceOf(hostAddress);
+        const bridgeBalance = await testEnv.tokens.takerToken.balanceOf(bridgeAddress);
+        const hostMakerBalance = await testEnv.tokens.makerToken.balanceOf(hostAddress);
+        console.log('- Host takerToken balance AFTER executeTransform:', balanceAfter.toString());
+        console.log('- Bridge takerToken balance AFTER executeTransform:', bridgeBalance.toString());
+        console.log('- Host makerToken balance AFTER executeTransform:', hostMakerBalance.toString());
+        console.log('- Balance change:', (balanceAfter - balanceBefore).toString());
+
+        return receipt;
     }
 
     async function assertFinalBalancesAsync(qfr: QuoteFillResults): Promise<void> {
@@ -342,6 +420,8 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
         });
     });
 
+
+
     // 💰 Sell Quotes (16个测试用例)
     describe('💰 Sell Quotes', function () {
         it('1️⃣ can fully sell to a single bridge order with -1 fillAmount', async function () {
@@ -349,7 +429,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
             const data = createTransformData({
                 bridgeOrders,
                 fillAmount: bridgeOrders.reduce((sum, o) => sum + o.takerTokenAmount, 0n),
-                fillSequence: bridgeOrders.map(() => OrderType.Bridge),
+                fillSequence: bridgeOrders.map(() => FillQuoteTransformerOrderType.Bridge),
             });
             const qfr = getExpectedQuoteFillResults(data);
             
@@ -368,7 +448,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
             const data = createTransformData({
                 bridgeOrders,
                 fillAmount: encodeFractionalFillAmount(0.5),
-                fillSequence: bridgeOrders.map(() => OrderType.Bridge),
+                fillSequence: bridgeOrders.map(() => FillQuoteTransformerOrderType.Bridge),
             });
             
             await executeTransformAsync({
@@ -384,7 +464,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
             const data = createTransformData({
                 bridgeOrders,
                 fillAmount: bridgeOrders.reduce((sum, o) => sum + o.takerTokenAmount, 0n),
-                fillSequence: bridgeOrders.map(() => OrderType.Bridge),
+                fillSequence: bridgeOrders.map(() => FillQuoteTransformerOrderType.Bridge),
             });
             
             try {
@@ -404,7 +484,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
             const data = createTransformData({
                 bridgeOrders,
                 fillAmount: bridgeOrders.reduce((sum, o) => sum + o.takerTokenAmount, 0n),
-                fillSequence: bridgeOrders.map(() => OrderType.Bridge),
+                fillSequence: bridgeOrders.map(() => FillQuoteTransformerOrderType.Bridge),
             });
             const qfr = getExpectedQuoteFillResults(data);
             
@@ -426,7 +506,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
                     signature: createOrderSignature(),
                 })),
                 fillAmount: limitOrders.reduce((sum, o) => sum + o.takerAmount + o.takerTokenFeeAmount, 0n),
-                fillSequence: limitOrders.map(() => OrderType.Limit),
+                fillSequence: limitOrders.map(() => FillQuoteTransformerOrderType.Limit),
             });
             
             await executeTransformAsync({
@@ -459,7 +539,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
                     signature: createOrderSignature(),
                 })),
                 fillAmount: rfqOrders.reduce((sum, o) => sum + o.takerAmount, 0n),
-                fillSequence: rfqOrders.map(() => OrderType.Rfq),
+                fillSequence: rfqOrders.map(() => FillQuoteTransformerOrderType.Rfq),
             });
             
             await executeTransformAsync({
@@ -508,12 +588,12 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
         it('1️⃣8️⃣ can fully buy to a single bridge order', async function () {
             const bridgeOrders = [createBridgeOrder()];
             const data = createTransformData({
-                side: Side.Buy,
+                side: FillQuoteTransformerSide.Buy,
                 sellToken: testEnv.tokens.takerToken.target || testEnv.tokens.takerToken.address,
                 buyToken: testEnv.tokens.makerToken.target || testEnv.tokens.makerToken.address,
                 bridgeOrders,
                 fillAmount: bridgeOrders.reduce((sum, o) => sum + o.makerTokenAmount, 0n),
-                fillSequence: bridgeOrders.map(() => OrderType.Bridge),
+                fillSequence: bridgeOrders.map(() => FillQuoteTransformerOrderType.Bridge),
             });
             
             await executeTransformAsync({
