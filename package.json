@@ -95,7 +95,8 @@
         "wsrun": "^5.2.4"
     },
     "resolutions": {
-        "**/bignumber.js": "^9.0.2"
+        "**/bignumber.js": "^9.0.2",
+        "**/@0x/utils": "^7.0.0"
     },
     "dependencies": {
         "@nomiclabs/hardhat-ethers": "^2.2.3",

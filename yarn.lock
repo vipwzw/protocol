@@ -984,7 +984,7 @@
     tslint-react "^3.2.0"
     tsutils "3.0.0"
 
-"@0x/types@^3.3.0", "@0x/types@^3.3.3", "@0x/types@^3.3.6", "@0x/types@^3.3.7":
+"@0x/types@^3.3.3", "@0x/types@^3.3.6", "@0x/types@^3.3.7":
   version "3.3.7"
   resolved "https://registry.yarnpkg.com/@0x/types/-/types-3.3.7.tgz#2a8556b3398b6d6fac942c63de23ab22836624ee"
   integrity sha512-6lPXPnvKaIfAJ5hIgs81SytqNCPCLstQ/DA598iLpb90KKjjz8QsdrfII4JeKdrEREvLcWSH9SeH4sNPWyLhlA==
@@ -993,7 +993,7 @@
     bignumber.js "~9.0.2"
     ethereum-types "^3.7.1"
 
-"@0x/typescript-typings@^5.0.1", "@0x/typescript-typings@^5.1.5", "@0x/typescript-typings@^5.2.0", "@0x/typescript-typings@^5.3.1", "@0x/typescript-typings@^5.3.2":
+"@0x/typescript-typings@^5.0.1", "@0x/typescript-typings@^5.2.0", "@0x/typescript-typings@^5.3.1", "@0x/typescript-typings@^5.3.2":
   version "5.3.2"
   resolved "https://registry.yarnpkg.com/@0x/typescript-typings/-/typescript-typings-5.3.2.tgz#b2b2a46ebff7f9d885b1357feae615225cb0bb31"
   integrity sha512-VIo8PS/IRXrI1aEzM8TenUMViX4MFMKBnIAwqC4K/ewVDSnKyYZSk8fzw0XZph6tN07obchPf+1sHIWYe8EUow==
@@ -1005,46 +1005,7 @@
     ethereum-types "^3.7.1"
     popper.js "1.14.3"
 
-"@0x/utils@^5.1.1":
-  version "5.6.4"
-  resolved "https://registry.yarnpkg.com/@0x/utils/-/utils-5.6.4.tgz#0158ec3243bbee444d90afbd79981321d19ccdfd"
-  integrity sha512-VBstWULWGxRbTIMN0QdOthdmZ109LPzPTR3GwbI4svZBizkype/lhRlyCd/B3+qpbpyREAfC8Jn1lUUbk4cwpQ==
-  dependencies:
-    "@0x/types" "^3.3.0"
-    "@0x/typescript-typings" "^5.1.5"
-    "@types/node" "12.12.54"
-    abortcontroller-polyfill "^1.1.9"
-    bignumber.js "~9.0.0"
-    chalk "^2.3.0"
-    detect-node "2.0.3"
-    ethereum-types "^3.3.3"
-    ethereumjs-util "^5.1.1"
-    ethers "~4.0.4"
-    isomorphic-fetch "2.2.1"
-    js-sha3 "^0.7.0"
-    lodash "^4.17.11"
-
-"@0x/utils@^6.4.3", "@0x/utils@^6.5.3":
-  version "6.5.3"
-  resolved "https://registry.yarnpkg.com/@0x/utils/-/utils-6.5.3.tgz#b944ffb197a062e3996a4f2e6e43f7babe21e113"
-  integrity sha512-C8Af9MeNvWTtSg5eEOObSZ+7gjOGSHkhqDWv8iPfrMMt7yFkAjHxpXW+xufk6ZG2VTg+hel82GDyhKaGtoQZDA==
-  dependencies:
-    "@0x/types" "^3.3.6"
-    "@0x/typescript-typings" "^5.3.1"
-    "@types/mocha" "^5.2.7"
-    "@types/node" "12.12.54"
-    abortcontroller-polyfill "^1.1.9"
-    bignumber.js "~9.0.2"
-    chalk "^2.3.0"
-    detect-node "2.0.3"
-    ethereum-types "^3.7.0"
-    ethereumjs-util "^7.1.0"
-    ethers "~4.0.4"
-    isomorphic-fetch "2.2.1"
-    js-sha3 "^0.7.0"
-    lodash "^4.17.11"
-
-"@0x/utils@^7.0.0":
+"@0x/utils@^5.1.1", "@0x/utils@^6.4.3", "@0x/utils@^6.5.3", "@0x/utils@^7.0.0":
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/@0x/utils/-/utils-7.0.0.tgz#322168b21cf11741003c9cc490b13adafbe57393"
   integrity sha512-g+Bp0eHUGhnVGeVZqGn7UVtpzs/FuoXksiDaajfJrHFW0owwo5YwpwFIAVU7/ca0B6IKa74e71gskLwWGINEFg==
@@ -4811,7 +4772,7 @@ before-after-hook@^2.0.0:
   resolved "https://registry.yarnpkg.com/before-after-hook/-/before-after-hook-2.2.3.tgz#c51e809c81a4e354084422b9b26bad88249c517c"
   integrity sha512-NzUnlZexiaH/46WDhANlyR2bXRopNg4F/zuSA3OpZnllCUgRaOF2znDioDWrmbNVsuZk6l9pMquQB38cfBZwkQ==
 
-bignumber.js@7.2.1, bignumber.js@^9.0.0, bignumber.js@^9.0.2, bignumber.js@~9.0.0, bignumber.js@~9.0.2:
+bignumber.js@7.2.1, bignumber.js@^9.0.0, bignumber.js@^9.0.2, bignumber.js@~9.0.2:
   version "9.3.1"
   resolved "https://registry.yarnpkg.com/bignumber.js/-/bignumber.js-9.3.1.tgz#759c5aaddf2ffdc4f154f7b493e1c8770f88c4d7"
   integrity sha512-Ko0uX15oIUS7wJ3Rb30Fs6SkVbLmPBAKdlm7q9+ak9bbIeFf0MwuBsQV6z7+X768/cHsfg+WlysDWJcmthjsjQ==
@@ -6982,11 +6943,6 @@ es6-iterator@^2.0.3:
     es5-ext "^0.10.35"
     es6-symbol "^3.1.1"
 
-es6-object-assign@^1.0.3:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/es6-object-assign/-/es6-object-assign-1.1.0.tgz#c2c3582656247c39ea107cb1e6652b6f9f24523c"
-  integrity sha512-MEl9uirslVwqQU369iHNWZXsI8yaZYGg/D65aOgZkeyFJwHYSxilf7rQzXKI7DdDuBPrBXbfk3sl9hJhmd5AUw==
-
 es6-promise@^4.0.3:
   version "4.2.8"
   resolved "https://registry.yarnpkg.com/es6-promise/-/es6-promise-4.2.8.tgz#4eb21594c972bc40553d276e510539143db53e0a"
@@ -7408,7 +7364,7 @@ ethereum-cryptography@^2.2.1:
     "@scure/bip32" "1.4.0"
     "@scure/bip39" "1.3.0"
 
-ethereum-types@^3.3.3, ethereum-types@^3.5.0, ethereum-types@^3.7.0, ethereum-types@^3.7.1:
+ethereum-types@^3.5.0, ethereum-types@^3.7.0, ethereum-types@^3.7.1:
   version "3.7.1"
   resolved "https://registry.yarnpkg.com/ethereum-types/-/ethereum-types-3.7.1.tgz#8fa75e5d9f5da3c85535ea0d4bcd2614b1d650a8"
   integrity sha512-EBQwTGnGZQ9oHK7Za3DFEOxiElksRCoZECkk418vHiE2d59lLSejDZ1hzRVphtFjAu5YqONz4/XuAYdMBg+gWA==
@@ -7934,7 +7890,7 @@ fast-glob@^2.2.6:
     merge2 "^1.2.3"
     micromatch "^3.1.10"
 
-fast-glob@^3.2.9:
+fast-glob@^3.2.9, fast-glob@^3.3.2:
   version "3.3.3"
   resolved "https://registry.yarnpkg.com/fast-glob/-/fast-glob-3.3.3.tgz#d06d585ce8dba90a16b0505c543c3ccfb3aeb818"
   integrity sha512-7MptL8U0cqcFdzIzwOTHoilX9x5BrNqye7Z/LuC7kCMRio1EMSyqRK3BEAUD7sXRq4iT4AzTVuZdhgQ2TCvYLg==
@@ -9797,14 +9753,6 @@ isobject@^3.0.0, isobject@^3.0.1:
   resolved "https://registry.yarnpkg.com/isobject/-/isobject-3.0.1.tgz#4e431e92b11a9731636aa1f9c8d1ccbcfdab78df"
   integrity sha512-WhB9zCku7EGTj/HQQRz5aUQEUeoQZH2bWcltRErOpymJ4boYE6wL9Tbr23krRPSZ+C5zqNSrSw+Cc7sZZ4b7vg==
 
-isomorphic-fetch@2.2.1:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/isomorphic-fetch/-/isomorphic-fetch-2.2.1.tgz#611ae1acf14f5e81f729507472819fe9733558a9"
-  integrity sha512-9c4TNAKYXM5PRyVcwUZrF3W09nQ+sO7+jydgs4ZGW9dhsLG2VOlISJABombdQqQRXCwuYG3sYV/puGf5rp0qmA==
-  dependencies:
-    node-fetch "^1.0.1"
-    whatwg-fetch ">=0.10.0"
-
 isomorphic-fetch@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/isomorphic-fetch/-/isomorphic-fetch-3.0.0.tgz#0267b005049046d2421207215d45d6a262b8b8b4"
@@ -11196,7 +11144,7 @@ minimist-options@^3.0.1:
     arrify "^1.0.1"
     is-plain-obj "^1.1.0"
 
-minimist@^1.1.3, minimist@^1.2.0, minimist@^1.2.3, minimist@^1.2.5, minimist@^1.2.6, minimist@~1.2.8:
+minimist@^1.1.3, minimist@^1.2.0, minimist@^1.2.3, minimist@^1.2.5, minimist@^1.2.6, minimist@^1.2.8, minimist@~1.2.8:
   version "1.2.8"
   resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.8.tgz#c1a464e7693302e082a075cee0c057741ac4772c"
   integrity sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==
@@ -11620,20 +11568,20 @@ node-fetch-npm@^2.0.2:
     json-parse-better-errors "^1.0.0"
     safe-buffer "^5.1.1"
 
-node-fetch@^1.0.1, node-fetch@~1.7.1:
-  version "1.7.3"
-  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-1.7.3.tgz#980f6f72d85211a5347c6b2bc18c5b84c3eb47ef"
-  integrity sha512-NhZ4CsKx7cYm2vSrBAr2PvFOe6sWDf0UYLRqA6svUYg7+/TSfVAu49jYC4BvQ4Sms9SZgdqGBgroqfDhJdTyKQ==
-  dependencies:
-    encoding "^0.1.11"
-    is-stream "^1.0.1"
-
 node-fetch@^2.5.0, node-fetch@^2.6.0, node-fetch@^2.6.1, node-fetch@^2.6.7:
   version "2.7.0"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.7.0.tgz#d0f0fa6e3e2dc1d27efcd8ad99d550bda94d187d"
   integrity sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==
   dependencies:
     whatwg-url "^5.0.0"
+
+node-fetch@~1.7.1:
+  version "1.7.3"
+  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-1.7.3.tgz#980f6f72d85211a5347c6b2bc18c5b84c3eb47ef"
+  integrity sha512-NhZ4CsKx7cYm2vSrBAr2PvFOe6sWDf0UYLRqA6svUYg7+/TSfVAu49jYC4BvQ4Sms9SZgdqGBgroqfDhJdTyKQ==
+  dependencies:
+    encoding "^0.1.11"
+    is-stream "^1.0.1"
 
 node-gyp-build@4.3.0:
   version "4.3.0"
@@ -13764,15 +13712,6 @@ shell-quote@^1.6.1:
   resolved "https://registry.yarnpkg.com/shell-quote/-/shell-quote-1.8.3.tgz#55e40ef33cf5c689902353a3d8cd1a6725f08b4b"
   integrity sha512-ObmnIF4hXNg1BqhnHmgbDETF8dLPCggZWBjkQfhZpbszZnYur5DUljTcCHii5LC3J5E0yeO/1LIMyH+UvHQgyw==
 
-shelljs@^0.7.3:
-  version "0.7.8"
-  resolved "https://registry.yarnpkg.com/shelljs/-/shelljs-0.7.8.tgz#decbcf874b0d1e5fb72e14b164a9683048e9acb3"
-  integrity sha512-/YF5Uk8hcwi7ima04ppkbA4RaRMdPMBfwAvAf8sufYOxsJRtbdoBsT8vGvlb+799BrlGdYrd+oczIA2eN2JdWA==
-  dependencies:
-    glob "^7.0.0"
-    interpret "^1.0.0"
-    rechoir "^0.6.2"
-
 shelljs@^0.8.3:
   version "0.8.5"
   resolved "https://registry.yarnpkg.com/shelljs/-/shelljs-0.8.5.tgz#de055408d8361bed66c669d2f000538ced8ee20c"
@@ -13782,14 +13721,23 @@ shelljs@^0.8.3:
     interpret "^1.0.0"
     rechoir "^0.6.2"
 
-shx@^0.2.2:
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/shx/-/shx-0.2.2.tgz#0a304d020b0edf1306ad81570e80f0346df58a39"
-  integrity sha512-zg9pch6Ha/hQy0RgvwKfbF5ufJk6h+gNMwJK6EapuhCjr/tBbkGN4lRV9aU5SSgMxcFcKzhWMrqfuG8RvOPB+A==
+shelljs@^0.9.2:
+  version "0.9.2"
+  resolved "https://registry.yarnpkg.com/shelljs/-/shelljs-0.9.2.tgz#a8ac724434520cd7ae24d52071e37a18ac2bb183"
+  integrity sha512-S3I64fEiKgTZzKCC46zT/Ib9meqofLrQVbpSswtjFfAVDW+AZ54WTnAM/3/yENoxz/V1Cy6u3kiiEbQ4DNphvw==
   dependencies:
-    es6-object-assign "^1.0.3"
-    minimist "^1.2.0"
-    shelljs "^0.7.3"
+    execa "^1.0.0"
+    fast-glob "^3.3.2"
+    interpret "^1.0.0"
+    rechoir "^0.6.2"
+
+shx@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/shx/-/shx-0.4.0.tgz#c6ea6ace7e778da0ab32d2eab9def59d788e9336"
+  integrity sha512-Z0KixSIlGPpijKgcH6oCMCbltPImvaKy0sGH8AkLRXw1KyzpKtaCTizP2xen+hNDqVF4xxgvA0KXSb9o4Q6hnA==
+  dependencies:
+    minimist "^1.2.8"
+    shelljs "^0.9.2"
 
 side-channel-list@^1.0.0:
   version "1.0.0"
@@ -15841,15 +15789,15 @@ websocket@^1.0.31:
     utf-8-validate "^5.0.2"
     yaeti "^0.0.6"
 
-whatwg-fetch@>=0.10.0, whatwg-fetch@^3.4.1:
-  version "3.6.20"
-  resolved "https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-3.6.20.tgz#580ce6d791facec91d37c72890995a0b48d31c70"
-  integrity sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==
-
 whatwg-fetch@^2.0.4:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-2.0.4.tgz#dde6a5df315f9d39991aa17621853d720b85566f"
   integrity sha512-dcQ1GWpOD/eEQ97k66aiEVpNnapVj90/+R+SXTPYGHpYBBypfKJEQjLrvMZ7YXbKm21gXd4NcuxUTjiv1YtLng==
+
+whatwg-fetch@^3.4.1:
+  version "3.6.20"
+  resolved "https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-3.6.20.tgz#580ce6d791facec91d37c72890995a0b48d31c70"
+  integrity sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==
 
 whatwg-url@^5.0.0:
   version "5.0.0"
