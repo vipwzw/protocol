@@ -1,6 +1,108 @@
 const { ethers } = require('hardhat');
 
 /**
+ * 🎯 FillQuoteTransformer 测试环境部署（完全匹配 test-main 架构）
+ * 不使用真实的 ZeroEx 系统，而是使用专门的测试合约
+ */
+export interface FillQuoteTransformerTestEnvironment {
+    exchange: any;
+    bridgeAdapter: any;
+    transformer: any;
+    host: any;
+    bridge: any;
+    tokens: {
+        makerToken: any;
+        takerToken: any;
+        takerFeeToken: any;
+    };
+    accounts: {
+        owner: string;
+        maker: string;
+        taker: string;
+        feeRecipient: string;
+        sender: string;
+    };
+    singleProtocolFee: bigint;
+}
+
+/**
+ * 部署 FillQuoteTransformer 测试环境（与 test-main 完全一致）
+ * 使用 TestFillQuoteTransformerHost 而不是真实的 ZeroEx 系统
+ */
+export async function deployFillQuoteTransformerTestEnvironment(accounts: string[]): Promise<FillQuoteTransformerTestEnvironment> {
+    console.log('🚀 开始 FillQuoteTransformer 测试环境部署（完全匹配 test-main）...');
+    
+    // 1. 获取测试账户
+    const [owner, maker, taker, feeRecipient, sender] = accounts;
+    console.log(`👤 测试账户: ${accounts.length} 个`);
+
+    // 2. 部署测试专用的交换合约
+    console.log('📦 部署测试交换环境...');
+    const TestFillQuoteTransformerExchangeFactory = await ethers.getContractFactory('TestFillQuoteTransformerExchange');
+    const exchange = await TestFillQuoteTransformerExchangeFactory.deploy();
+    await exchange.waitForDeployment();
+    console.log(`✅ TestFillQuoteTransformerExchange: ${await exchange.getAddress()}`);
+
+    // 3. 部署 EthereumBridgeAdapter
+    const EthereumBridgeAdapterFactory = await ethers.getContractFactory('EthereumBridgeAdapter');
+    const bridgeAdapter = await EthereumBridgeAdapterFactory.deploy(ethers.ZeroAddress);
+    await bridgeAdapter.waitForDeployment();
+    console.log(`✅ EthereumBridgeAdapter: ${await bridgeAdapter.getAddress()}`);
+
+    // 4. 直接部署 FillQuoteTransformer（不通过 TransformerDeployer）
+    const FillQuoteTransformerFactory = await ethers.getContractFactory('FillQuoteTransformer');
+    const transformer = await FillQuoteTransformerFactory.deploy(
+        await bridgeAdapter.getAddress(),
+        await exchange.getAddress()
+    );
+    await transformer.waitForDeployment();
+    console.log(`✅ FillQuoteTransformer: ${await transformer.getAddress()}`);
+
+    // 5. 部署 TestFillQuoteTransformerHost（关键的测试执行环境）
+    const TestFillQuoteTransformerHostFactory = await ethers.getContractFactory('TestFillQuoteTransformerHost');
+    const host = await TestFillQuoteTransformerHostFactory.deploy();
+    await host.waitForDeployment();
+    console.log(`✅ TestFillQuoteTransformerHost: ${await host.getAddress()}`);
+
+    // 6. 部署 TestFillQuoteTransformerBridge
+    const TestFillQuoteTransformerBridgeFactory = await ethers.getContractFactory('TestFillQuoteTransformerBridge');
+    const bridge = await TestFillQuoteTransformerBridgeFactory.deploy();
+    await bridge.waitForDeployment();
+    console.log(`✅ TestFillQuoteTransformerBridge: ${await bridge.getAddress()}`);
+
+    // 7. 部署测试代币
+    console.log('📦 部署测试代币...');
+    const TestMintableERC20Factory = await ethers.getContractFactory('TestMintableERC20Token');
+    const makerToken = await TestMintableERC20Factory.deploy();
+    const takerToken = await TestMintableERC20Factory.deploy();
+    const takerFeeToken = await TestMintableERC20Factory.deploy();
+    
+    await Promise.all([
+        makerToken.waitForDeployment(),
+        takerToken.waitForDeployment(),
+        takerFeeToken.waitForDeployment()
+    ]);
+    console.log('✅ 测试代币部署完成');
+
+    // 8. 获取协议费用
+    const singleProtocolFee = await exchange.getProtocolFeeMultiplier();
+    console.log(`✅ 协议费用乘数: ${singleProtocolFee}`);
+
+    console.log('🎉 FillQuoteTransformer 测试环境部署完成！');
+
+    return {
+        exchange,
+        bridgeAdapter,
+        transformer,
+        host,
+        bridge,
+        tokens: { makerToken, takerToken, takerFeeToken },
+        accounts: { owner, maker, taker, feeRecipient, sender },
+        singleProtocolFee
+    };
+}
+
+/**
  * 通用的 ZeroEx FullMigration 部署函数
  * 解决合约注册和初始化问题的统一解决方案
  */
