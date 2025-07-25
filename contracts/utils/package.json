@@ -9,7 +9,7 @@
     "scripts": {
         "build": "yarn pre_build && tsc -b",
         "build:ci": "yarn build",
-        "pre_build": "run-s compile",
+        "pre_build": "run-s compile generate_contract_wrappers",
         "gen:wrappers": "yarn generate_contract_wrappers",
         "test": "npx hardhat test",
         "test:all": "npx hardhat test",
@@ -20,7 +20,7 @@
         "compile": "forge build && npx hardhat compile",
         "watch": "forge build --watch",
         "clean": "shx rm -rf lib generated_docs",
-        "generate_contract_wrappers": "abi-gen --debug --abis './out/*.sol/*.json' --output test/generated-wrappers --backend ethers",
+        "generate_contract_wrappers": "mkdir -p temp-abis && find ./out -path '*/build-info' -prune -o -name '*.json' -not -name 'Vm.json' -not -name 'VmSafe.json' -not -name 'DSTest.json' -not -name 'Test.json' -not -name 'console*.json' -not -name 'Std*.json' -not -path '*Test*.sol*' -not -path '*Mock*.sol*' -print -exec cp {} temp-abis/ \\; && abi-gen --debug --abis ./temp-abis/*.json --output test/generated-wrappers --backend ethers && rm -rf temp-abis && node ../zero-ex/scripts/fix-ethers-v6.js",
         "lint": "eslint src test",
         "fix": "eslint --fix src test",
         "profiler:report:html": "istanbul report html && open coverage/index.html",
