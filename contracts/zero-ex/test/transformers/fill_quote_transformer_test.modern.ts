@@ -164,7 +164,16 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
         await testEnv.tokens.takerToken.approveAs(hostAddress, exchangeAddress, maxAllowance);
         console.log('✅ Host → Exchange: 无限授权 (修复 Limit Orders 的 approveIfBelow 错误)');
         
-        // 🎯 与 test-main 一致：无需任何授权设置
+        // 🎯 尝试添加 Host → BridgeAdapter 授权（虽然理论上 delegatecall 不需要）
+        const bridgeAdapterAddress = await testEnv.bridgeAdapter.getAddress();
+        await testEnv.tokens.takerToken.approveAs(hostAddress, bridgeAdapterAddress, maxAllowance);
+        console.log('✅ Host → BridgeAdapter: 无限授权 (尝试修复 Bridge Orders)');
+        
+        // 🎯 添加 Host → Bridge Provider 授权（Bridge Orders 的实际执行者）
+        const bridgeProviderAddress = await testEnv.bridge.getAddress();
+        await testEnv.tokens.takerToken.approveAs(hostAddress, bridgeProviderAddress, maxAllowance);
+        console.log('✅ Host → Bridge Provider: 无限授权 (Bridge Orders 代币转移)');
+        
         console.log('🎉 FillQuoteTransformer 测试环境设置完成（最小授权模式，接近 test-main）！');
         console.log('📋 代币地址:');
         console.log('- takerToken:', testEnv.tokens.takerToken.target);
@@ -513,6 +522,13 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
 
         it('5️⃣ can fully sell to a single limit order', async function () {
             const limitOrders = [createLimitOrder()];
+            console.log('🔍 Limit Order 详情:');
+            console.log('- takerAmount:', limitOrders[0].takerAmount.toString());
+            console.log('- takerTokenFeeAmount:', limitOrders[0].takerTokenFeeAmount.toString());
+            console.log('- makerAmount:', limitOrders[0].makerAmount.toString());
+            console.log('- maker:', limitOrders[0].maker);
+            console.log('- feeRecipient:', limitOrders[0].feeRecipient);
+            
             const data = createTransformData({
                 limitOrders: limitOrders.map(o => ({
                     order: o,
@@ -523,12 +539,56 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
                 fillSequence: limitOrders.map(() => FillQuoteTransformerOrderType.Limit),
             });
             
+            console.log('🔍 Transform Data:');
+            console.log('- fillAmount:', data.fillAmount.toString());
+            console.log('- 计算结果:', (limitOrders[0].takerAmount + limitOrders[0].takerTokenFeeAmount).toString());
+            
+            // 🎯 关键修复：为 Limit Order 提供协议费用（ETH）
+            const protocolFeePerOrder = 1337n * 1337n; // PROTOCOL_FEE_MULTIPLIER * GAS_PRICE
+            const totalProtocolFee = protocolFeePerOrder * BigInt(limitOrders.length);
+            console.log('🔍 协议费用计算:');
+            console.log('- 单个订单协议费用:', protocolFeePerOrder.toString());
+            console.log('- 总协议费用:', totalProtocolFee.toString());
+            
             await executeTransformAsync({
                 takerTokenBalance: data.fillAmount,
+                ethBalance: totalProtocolFee,  // 🎯 提供协议费用
                 data,
             });
             
             console.log('✅ 测试5: fully sell limit order 通过');
+        });
+
+        // 🎯 调试：测试没有手续费的 Limit Order
+        it('5️⃣-debug: can fully sell to a single limit order with zero fees', async function () {
+            const limitOrders = [createLimitOrder({ takerTokenFeeAmount: 0n })];
+            console.log('🔍 Zero Fee Limit Order 详情:');
+            console.log('- takerAmount:', limitOrders[0].takerAmount.toString());
+            console.log('- takerTokenFeeAmount:', limitOrders[0].takerTokenFeeAmount.toString());
+            console.log('- maker:', limitOrders[0].maker);
+            console.log('- feeRecipient:', limitOrders[0].feeRecipient);
+            
+            const data = createTransformData({
+                limitOrders: limitOrders.map(o => ({
+                    order: o,
+                    maxTakerTokenFillAmount: MAX_UINT256,
+                    signature: createOrderSignature(),
+                })),
+                fillAmount: limitOrders.reduce((sum, o) => sum + o.takerAmount + o.takerTokenFeeAmount, 0n),
+                fillSequence: limitOrders.map(() => FillQuoteTransformerOrderType.Limit),
+            });
+            
+            // 提供协议费用
+            const protocolFeePerOrder = 1337n * 1337n;
+            const totalProtocolFee = protocolFeePerOrder * BigInt(limitOrders.length);
+            
+            await executeTransformAsync({
+                takerTokenBalance: data.fillAmount,
+                ethBalance: totalProtocolFee,
+                data,
+            });
+            
+            console.log('✅ 测试5-debug: zero fee limit order 通过');
         });
 
         // 简化后续测试用例 - 在实际迁移中需要完整实现
@@ -619,7 +679,43 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
         });
 
         it('1️⃣9️⃣ can fully buy to a single limit order', async function () {
-            console.log('✅ 测试19: fully buy limit order 通过');
+            const limitOrders = [createLimitOrder()];
+            console.log('🔍 Real Buy Limit Order 详情:');
+            console.log('- takerAmount:', limitOrders[0].takerAmount.toString());
+            console.log('- takerTokenFeeAmount:', limitOrders[0].takerTokenFeeAmount.toString());
+            console.log('- makerAmount:', limitOrders[0].makerAmount.toString());
+            
+            const data = createTransformData({
+                side: FillQuoteTransformerSide.Buy,  // 🎯 关键：设置为 Buy 侧
+                limitOrders: limitOrders.map(o => ({
+                    order: o,
+                    maxTakerTokenFillAmount: MAX_UINT256,
+                    signature: createOrderSignature(),
+                })),
+                fillAmount: limitOrders.reduce((sum, o) => sum + o.makerAmount, 0n), // Buy 侧用 makerAmount
+                fillSequence: limitOrders.map(() => FillQuoteTransformerOrderType.Limit),
+            });
+            
+            console.log('🔍 Buy Transform Data:');
+            console.log('- side: Buy');
+            console.log('- fillAmount (makerAmount):', data.fillAmount.toString());
+            
+            // 计算所需的 takerToken 数量（包含手续费）
+            const totalTakerTokens = limitOrders.reduce((sum, o) => sum + o.takerAmount + o.takerTokenFeeAmount, 0n);
+            const protocolFeePerOrder = 1337n * 1337n;
+            const totalProtocolFee = protocolFeePerOrder * BigInt(limitOrders.length);
+            
+            console.log('🔍 Buy 侧所需资源:');
+            console.log('- totalTakerTokens (含手续费):', totalTakerTokens.toString());
+            console.log('- totalProtocolFee:', totalProtocolFee.toString());
+            
+            await executeTransformAsync({
+                takerTokenBalance: totalTakerTokens,  // 🎯 提供足够的 takerToken
+                ethBalance: totalProtocolFee,         // 🎯 提供协议费用
+                data,
+            });
+            
+            console.log('✅ 测试19: real buy limit order 通过');
         });
 
         it('2️⃣0️⃣ can partial buy to a single limit order', async function () {
