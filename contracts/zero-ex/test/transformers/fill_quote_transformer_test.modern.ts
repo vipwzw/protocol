@@ -380,21 +380,35 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
             console.log('- RFQ orders count:', _params.data.rfqOrders.length);
         }
 
+        // 🎯 调试：检查铸造前后的余额
+        const transformerBalance = await testEnv.tokens.takerToken.balanceOf(
+            await testEnv.transformer.getAddress()
+        );
+        console.log('- Transformer takerToken balance BEFORE executeTransform:', transformerBalance.toString());
+        
         // 🎯 使用现代 ethers v6 的正确参数类型
         const tx = await testEnv.host.executeTransform(
-            await testEnv.transformer.getAddress(), // ✅ string: transformer 地址
-            await testEnv.tokens.takerToken.getAddress(), // ✅ string: inputToken 地址  
+            testEnv.transformer.target || testEnv.transformer.address,
+            testEnv.tokens.takerToken.target || testEnv.tokens.takerToken.address,
             _params.takerTokenBalance, // ✅ bigint: inputTokenAmount（ethers v6 使用 bigint）
             _params.sender, // ✅ string: sender
-            _params.taker, // ✅ string: recipient
-            encodedData, // ✅ string: data
-            { value: _params.ethBalance }
+            _params.taker || _params.sender, // ✅ string: recipient
+            encodedData, // ✅ bytes: transform 数据
+            { value: _params.ethBalance } // ✅ options: msg.value = ethBalance
         );
-
+        
+        // 等待交易完成
         const receipt = await tx.wait();
         
-        // 🔍 调试：检查 host 合约调用后的余额
+        // 🎯 调试：检查铸造后的余额
+        const transformerBalanceAfter = await testEnv.tokens.takerToken.balanceOf(
+            await testEnv.transformer.getAddress()
+        );
+        console.log('- Transformer takerToken balance AFTER executeTransform:', transformerBalanceAfter.toString());
+        
         const balanceAfter = await testEnv.tokens.takerToken.balanceOf(hostAddress);
+        console.log('- Host takerToken balance AFTER executeTransform:', balanceAfter.toString());
+        
         const bridgeBalance = await testEnv.tokens.takerToken.balanceOf(bridgeAddress);
         const hostMakerBalance = await testEnv.tokens.makerToken.balanceOf(hostAddress);
         console.log('- Host takerToken balance AFTER executeTransform:', balanceAfter.toString());

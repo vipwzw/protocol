@@ -28,9 +28,9 @@ contract TestFillQuoteTransformerHost is TestTransformerHost {
         bytes calldata data
     ) external payable {
         if (inputTokenAmount != 0) {
-            // 🎯 修复：直接铸造代币到 transformer 地址
-            // 因为在 delegatecall 链中，transformer 是执行 compatTransfer 的 "address(this)"
-            inputToken.mint(address(transformer), inputTokenAmount);
+            // 🎯 正确的修复：铸造代币到 Host 地址（address(this)）
+            // 因为在 delegatecall 中，transformer 代码中的 address(this) 指向 Host
+            inputToken.mint(address(this), inputTokenAmount);
         }
         // Have to make this call externally because transformers aren't payable.
         this.rawExecuteTransform(
