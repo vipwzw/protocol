@@ -1,0 +1,18 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "TestPermissionlessTransformerDeployerSuicidal",
+  "sourceName": "contracts/test/TestPermissionlessTransformerDeployerSuicidal.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "kill",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600e575f5ffd5b50606780601a5f395ff3fe6080604052348015600e575f5ffd5b50600436106026575f3560e01c806341c0e1b514602a575b5f5ffd5b602f33ff5b00fea2646970667358221220ace19cec3deebe72180eade197948bed8c994c64d4d896369e5b36b4a9cc786664736f6c634300081c0033",
+  "deployedBytecode": "0x6080604052348015600e575f5ffd5b50600436106026575f3560e01c806341c0e1b514602a575b5f5ffd5b602f33ff5b00fea2646970667358221220ace19cec3deebe72180eade197948bed8c994c64d4d896369e5b36b4a9cc786664736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

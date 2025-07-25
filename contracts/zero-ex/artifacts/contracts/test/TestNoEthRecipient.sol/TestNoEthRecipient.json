@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "TestNoEthRecipient",
+  "sourceName": "contracts/test/TestNoEthRecipient.sol",
+  "abi": [],
+  "bytecode": "0x6080604052348015600e575f5ffd5b50603e80601a5f395ff3fe60806040525f5ffdfea264697066735822122006afbcc6320ca6ad63d1e7fa30cbdc84bede0fd7ad7c3ad2999eb760f9026d4c64736f6c634300081c0033",
+  "deployedBytecode": "0x60806040525f5ffdfea264697066735822122006afbcc6320ca6ad63d1e7fa30cbdc84bede0fd7ad7c3ad2999eb760f9026d4c64736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

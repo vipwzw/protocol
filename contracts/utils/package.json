@@ -20,7 +20,7 @@
         "compile": "forge build && npx hardhat compile",
         "watch": "forge build --watch",
         "clean": "shx rm -rf lib generated_docs",
-        "generate_contract_wrappers": "mkdir -p temp-abis && find ./out -path '*/build-info' -prune -o -name '*.json' -not -name 'Vm.json' -not -name 'VmSafe.json' -not -name 'DSTest.json' -not -name 'Test.json' -not -name 'console*.json' -not -name 'Std*.json' -not -path '*Test*.sol*' -not -path '*Mock*.sol*' -print -exec cp {} temp-abis/ \\; && abi-gen --debug --abis ./temp-abis/*.json --output test/generated-wrappers --backend ethers && rm -rf temp-abis && node ../zero-ex/scripts/fix-ethers-v6.js",
+        "generate_contract_wrappers": "find test/generated-wrappers -name '*.ts' -delete 2>/dev/null || true && find test/generated-artifacts -name '*.json' 2>/dev/null | while read file; do echo \"生成: $(basename $file .json)\"; npx abi-gen --debug --abis \"$file\" --output test/generated-wrappers --backend ethers; done && node ../zero-ex/scripts/fix-ethers-v6.js",
         "lint": "eslint src test",
         "fix": "eslint --fix src test",
         "profiler:report:html": "istanbul report html && open coverage/index.html",
@@ -30,7 +30,7 @@
     },
     "config": {
         "publicInterfaceContracts": "IOwnable,LibBytes,LibBytesRichErrors,LibOwnableRichErrors,LibReentrancyGuardRichErrors,LibRichErrors,LibSafeMath,LibSafeMathRichErrors,Ownable,ReentrancyGuard",
-        "abis": "./artifacts/contracts/**/*.json"
+        "abis": "./test/generated-artifacts/IOwnable.json ./test/generated-artifacts/LibBytes.json ./test/generated-artifacts/LibBytesRichErrors.json ./test/generated-artifacts/LibOwnableRichErrors.json ./test/generated-artifacts/LibReentrancyGuardRichErrors.json ./test/generated-artifacts/LibRichErrors.json ./test/generated-artifacts/LibSafeMathRichErrors.json ./test/generated-artifacts/Ownable.json ./test/generated-artifacts/ReentrancyGuard.json"
     },
     "repository": {
         "type": "git",
