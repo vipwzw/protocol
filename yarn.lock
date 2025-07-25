@@ -1005,6 +1005,26 @@
     ethereum-types "^3.7.1"
     popper.js "1.14.3"
 
+"@0x/utils-npm@npm:@0x/utils@^7.0.0":
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/@0x/utils/-/utils-7.0.0.tgz#322168b21cf11741003c9cc490b13adafbe57393"
+  integrity sha512-g+Bp0eHUGhnVGeVZqGn7UVtpzs/FuoXksiDaajfJrHFW0owwo5YwpwFIAVU7/ca0B6IKa74e71gskLwWGINEFg==
+  dependencies:
+    "@0x/types" "^3.3.7"
+    "@0x/typescript-typings" "^5.3.2"
+    "@types/mocha" "^5.2.7"
+    "@types/node" "12.12.54"
+    abortcontroller-polyfill "^1.1.9"
+    bignumber.js "~9.0.2"
+    chalk "^2.3.0"
+    detect-node "2.0.3"
+    ethereum-types "^3.7.1"
+    ethereumjs-util "^7.1.5"
+    ethers "~4.0.4"
+    isomorphic-fetch "^3.0.0"
+    js-sha3 "^0.7.0"
+    lodash "^4.17.21"
+
 "@0x/utils@^5.1.1":
   version "5.6.4"
   resolved "https://registry.yarnpkg.com/@0x/utils/-/utils-5.6.4.tgz#0158ec3243bbee444d90afbd79981321d19ccdfd"
@@ -1043,26 +1063,6 @@
     isomorphic-fetch "2.2.1"
     js-sha3 "^0.7.0"
     lodash "^4.17.11"
-
-"@0x/utils@^7.0.0":
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/@0x/utils/-/utils-7.0.0.tgz#322168b21cf11741003c9cc490b13adafbe57393"
-  integrity sha512-g+Bp0eHUGhnVGeVZqGn7UVtpzs/FuoXksiDaajfJrHFW0owwo5YwpwFIAVU7/ca0B6IKa74e71gskLwWGINEFg==
-  dependencies:
-    "@0x/types" "^3.3.7"
-    "@0x/typescript-typings" "^5.3.2"
-    "@types/mocha" "^5.2.7"
-    "@types/node" "12.12.54"
-    abortcontroller-polyfill "^1.1.9"
-    bignumber.js "~9.0.2"
-    chalk "^2.3.0"
-    detect-node "2.0.3"
-    ethereum-types "^3.7.1"
-    ethereumjs-util "^7.1.5"
-    ethers "~4.0.4"
-    isomorphic-fetch "^3.0.0"
-    js-sha3 "^0.7.0"
-    lodash "^4.17.21"
 
 "@0x/web3-wrapper@^7.5.3", "@0x/web3-wrapper@^7.6.5":
   version "7.6.5"
@@ -3255,6 +3255,11 @@
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/@types/deep-eql/-/deep-eql-4.0.2.tgz#334311971d3a07121e7eb91b684a605e7eea9cbd"
   integrity sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==
+
+"@types/detect-node@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@types/detect-node/-/detect-node-2.0.0.tgz#696e024ddd105c72bbc6a2e3f97902a2886f2c3f"
+  integrity sha512-+BozjlbPTACYITf1PWf62HLtDV79HbmZosUN1mv1gGrnjDCRwBXkDKka1sf6YQJvspmfPXVcy+X6tFW62KteeQ==
 
 "@types/ethereum-protocol@*":
   version "1.0.5"
@@ -15115,6 +15120,11 @@ typescript@3.7.x:
   version "3.7.7"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.7.7.tgz#c931733e2ec10dda56b855b379cc488a72a81199"
   integrity sha512-MmQdgo/XenfZPvVLtKZOq9jQQvzaUAUpcKW8Z43x9B2fOm4S5g//tPtMweZUIP+SoBqrVPEIm+dJeQ9dfO0QdA==
+
+typescript@4.2.2:
+  version "4.2.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.2.2.tgz#1450f020618f872db0ea17317d16d8da8ddb8c4c"
+  integrity sha512-tbb+NVrLfnsJy3M59lsDgrzWIflR4d4TIUjz+heUnHZwdF7YsrMTKoRERiIvI2lvBG95dfpLxB21WZhys1bgaQ==
 
 typescript@^5.0.0:
   version "5.8.3"
