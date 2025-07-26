@@ -187,15 +187,11 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             
             // Get order hash
             getOrderHash: function(order: any): string {
-                // Convert bigint fields to strings for safe JSON serialization
-                const orderForHashing = {
-                    ...order,
-                    makerAmount: order.makerAmount.toString(),
-                    takerAmount: order.takerAmount.toString(),
-                    nonce: order.nonce?.toString ? order.nonce.toString() : order.nonce,
-                    expiry: order.expiry?.toString ? order.expiry.toString() : order.expiry
-                };
-                return ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(orderForHashing)));
+                // Fix BigInt serialization issue by converting to string
+                const orderHashData = JSON.stringify(order, (key, value) =>
+                    typeof value === 'bigint' ? value.toString() : value
+                );
+                return ethers.keccak256(ethers.toUtf8Bytes(orderHashData));
             },
             
             // Create OTC order filled event args
@@ -525,7 +521,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             await contractWallet.connect(contractWalletOwner).registerAllowedOrderSigner(contractWalletSigner.address, true);
             
             // Fill should succeed
-            const result = await zeroEx.connect(taker).fillOtcOrder(order, sig, order.takerAmount);
+            const result = await otcFeature.connect(taker).fillOtcOrder(order, sig, order.takerAmount);
             const receipt = await result.wait();
             
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OtcOrderFilled');
@@ -551,7 +547,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             
             // Fill should revert
             await expect(
-                zeroEx.connect(taker).fillOtcOrder(order, sig, order.takerAmount)
+                otcFeature.connect(taker).fillOtcOrder(order, sig, order.takerAmount)
             ).to.be.rejectedWith('OrderNotSignedByMakerError');
             
             console.log(`✅ Correctly rejected revoked signer`);
@@ -567,7 +563,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             
             // Fill should revert
             await expect(
-                zeroEx.connect(taker).fillOtcOrder(order, sig, order.takerAmount)
+                otcFeature.connect(taker).fillOtcOrder(order, sig, order.takerAmount)
             ).to.be.rejectedWith('OrderNotSignedByMakerError');
             
             console.log(`✅ Correctly rejected unapproved signer`);
@@ -723,7 +719,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
 
         it('can fill an order from a different tx.origin if registered', async function() {
             const order = getTestOtcOrder({ taker: taker.address, txOrigin: txOrigin.address });
-            await zeroEx.connect(txOrigin).registerAllowedRfqOrigins([notTxOrigin.address], true);
+            await deployment.zeroEx.connect(txOrigin).registerAllowedRfqOrigins([notTxOrigin.address], true);
             
             const result = await testUtils.fillTakerSignedOtcOrderAsync(order, notTxOrigin);
             await result.wait();
@@ -733,8 +729,8 @@ describe('OtcOrdersFeature - Modern Tests', function() {
 
         it('cannot fill an order with registered then unregistered tx.origin', async function() {
             const order = getTestOtcOrder({ taker: taker.address, txOrigin: txOrigin.address });
-            await zeroEx.connect(txOrigin).registerAllowedRfqOrigins([notTxOrigin.address], true);
-            await zeroEx.connect(txOrigin).registerAllowedRfqOrigins([notTxOrigin.address], false);
+            await deployment.zeroEx.connect(txOrigin).registerAllowedRfqOrigins([notTxOrigin.address], true);
+            await deployment.zeroEx.connect(txOrigin).registerAllowedRfqOrigins([notTxOrigin.address], false);
             
             await expect(
                 testUtils.fillTakerSignedOtcOrderAsync(order, notTxOrigin)

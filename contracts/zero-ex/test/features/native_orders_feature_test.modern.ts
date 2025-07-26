@@ -34,6 +34,8 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
     let contractWallet: any;
     let testUtils: any;
     let nativeOrdersFeature: any; // NativeOrdersFeature interface pointing to ZeroEx
+    let zeroEx: any; // Main ZeroEx contract
+    let verifyingContract: string; // ZeroEx contract address
     
     const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
     const MAX_UINT256 = ethers.MaxUint256;
@@ -408,7 +410,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
     describe('getLimitOrderHash()', function() {
         it('returns the expected hash', async function() {
             const order = getTestLimitOrder();
-            const hash = await zeroEx.getLimitOrderHash(order);
+            const hash = await nativeOrdersFeature.getLimitOrderHash(order);
             expect(hash).to.not.equal(ethers.ZeroHash);
             
             console.log(`✅ Generated limit order hash: ${hash.slice(0, 10)}...`);
@@ -417,8 +419,8 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         it('different orders have different hashes', async function() {
             const order1 = getTestLimitOrder();
             const order2 = getTestLimitOrder({ salt: generateRandomBytes32() });
-            const hash1 = await zeroEx.getLimitOrderHash(order1);
-            const hash2 = await zeroEx.getLimitOrderHash(order2);
+            const hash1 = await nativeOrdersFeature.getLimitOrderHash(order1);
+            const hash2 = await nativeOrdersFeature.getLimitOrderHash(order2);
             expect(hash1).to.not.equal(hash2);
             
             console.log(`✅ Different orders have different hashes`);
@@ -428,7 +430,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
     describe('getRfqOrderHash()', function() {
         it('returns the expected hash', async function() {
             const order = getTestRfqOrder();
-            const hash = await zeroEx.getRfqOrderHash(order);
+            const hash = await nativeOrdersFeature.getRfqOrderHash(order);
             expect(hash).to.not.equal(ethers.ZeroHash);
             
             console.log(`✅ Generated RFQ order hash: ${hash.slice(0, 10)}...`);
@@ -437,8 +439,8 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         it('different orders have different hashes', async function() {
             const order1 = getTestRfqOrder();
             const order2 = getTestRfqOrder({ salt: generateRandomBytes32() });
-            const hash1 = await zeroEx.getRfqOrderHash(order1);
-            const hash2 = await zeroEx.getRfqOrderHash(order2);
+            const hash1 = await nativeOrdersFeature.getRfqOrderHash(order1);
+            const hash2 = await nativeOrdersFeature.getRfqOrderHash(order2);
             expect(hash1).to.not.equal(hash2);
             
             console.log(`✅ Different RFQ orders have different hashes`);
@@ -448,10 +450,10 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
     describe('getLimitOrderInfo()', function() {
         it('valid order', async function() {
             const order = getTestLimitOrder();
-            const info = await zeroEx.getLimitOrderInfo(order);
+            const info = await nativeOrdersFeature.getLimitOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Fillable,
-                orderHash: await zeroEx.getLimitOrderHash(order),
+                orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: ZERO_AMOUNT,
             });
             

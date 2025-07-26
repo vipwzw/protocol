@@ -23,6 +23,7 @@ describe('Transform ERC20 Feature - Modern Tests', function() {
     let deployment: ZeroExDeploymentResult;
     let transformERC20Feature: Contract;
     let flashWallet: Contract;
+    let zeroEx: any; // Main ZeroEx contract
     
     // Test tokens
     let inputToken: Contract;
