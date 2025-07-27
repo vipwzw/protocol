@@ -60,7 +60,9 @@
         "bundlewatch": "bundlewatch",
         "lint:ts": "./scripts/lint-typescript.sh",
         "lint": "yarn lint:ts && yarn lint:contracts",
-        "verdaccio": "docker run --rm -i -p 4873:4873 0xorg/verdaccio"
+        "verdaccio": "docker run --rm -i -p 4873:4873 0xorg/verdaccio",
+        "setup-hooks": "cp .githooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit && echo '✅ Git hooks 安装成功!'",
+        "postinstall": "yarn setup-hooks || true"
     },
     "lint-staged": {
         "**/*.{ts,tsx,json}": [
