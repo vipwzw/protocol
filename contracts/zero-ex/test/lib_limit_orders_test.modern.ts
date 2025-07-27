@@ -1,9 +1,10 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
 import { LimitOrder, RfqOrder } from '@0x/protocol-utils';
-import { BigNumber } from '@0x/utils';
+// BigNumber removed - using native BigInt
 
 // 内联的工具函数，替代 utils/orders 中的函数
 function getRandomLimitOrder(fields: Partial<any> = {}): any {
@@ -55,7 +56,7 @@ describe('LibLimitOrder Tests - Modern', function() {
         const signers = await ethers.getSigners();
         [admin] = signers;
         
-        console.log('👤 Admin:', admin.address);
+        console.log('👤 Admin:', admin.target);
         
         await deployContractsAsync();
         

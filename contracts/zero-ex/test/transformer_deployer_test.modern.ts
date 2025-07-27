@@ -1,6 +1,7 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 
 describe('Transformer Deployer - Modern Tests', function() {
     // Extended timeout for deployment operations
@@ -25,10 +26,10 @@ describe('Transformer Deployer - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [admin, deployer, user1, user2] = signers;
         
-        console.log('👤 Admin:', admin.address);
-        console.log('👤 Deployer:', deployer.address);
-        console.log('👤 User1:', user1.address);
-        console.log('👤 User2:', user2.address);
+        console.log('👤 Admin:', admin.target);
+        console.log('👤 Deployer:', deployer.target);
+        console.log('👤 User1:', user1.target);
+        console.log('👤 User2:', user2.target);
         
         await deployContractsAsync();
         
@@ -40,13 +41,13 @@ describe('Transformer Deployer - Modern Tests', function() {
         
         // Deploy ZeroEx first
         const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
-        zeroEx = await ZeroExFactory.deploy(admin.address);
+        zeroEx = await ZeroExFactory.deploy(admin.target);
         await zeroEx.waitForDeployment();
         console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
         
         // Deploy TransformerDeployer with admin as initial authority
         const DeployerFactory = await ethers.getContractFactory('TransformerDeployer');
-        transformerDeployer = await DeployerFactory.deploy([admin.address]);
+        transformerDeployer = await DeployerFactory.deploy([admin.target]);
         await transformerDeployer.waitForDeployment();
         console.log(`✅ TransformerDeployer: ${await transformerDeployer.getAddress()}`);
         
@@ -62,7 +63,7 @@ describe('Transformer Deployer - Modern Tests', function() {
             transformerBytecode: '0x608060405234801561001057600080fd5b50600080fd5b6000600060406000806000600061008056',
             transformerInitCode: '0x',
             salt: ethers.randomBytes(32),
-            deployer: deployer.address,
+            deployer: deployer.target,
             expectedAddress: NULL_ADDRESS
         };
         
@@ -115,7 +116,7 @@ describe('Transformer Deployer - Modern Tests', function() {
             const customSalt = ethers.randomBytes(32);
             const customDeployment = createTransformerDeployment({
                 salt: customSalt,
-                deployer: user1.address,
+                deployer: user1.target,
                 transformerInitCode: '0x1234'
             });
             
@@ -125,7 +126,7 @@ describe('Transformer Deployer - Modern Tests', function() {
             } else {
                 expect(ethers.hexlify(customDeployment.salt)).to.equal(ethers.hexlify(customSalt));
             }
-            expect(customDeployment.deployer).to.equal(user1.address);
+            expect(customDeployment.deployer).to.equal(user1.target);
             expect(customDeployment.transformerInitCode).to.equal('0x1234');
             
             console.log(`✅ Custom deployment:`);
@@ -232,21 +233,21 @@ describe('Transformer Deployer - Modern Tests', function() {
             const deployment = createTransformerDeployment();
             
             // Test that deployment is associated with correct deployer
-            expect(deployment.deployer).to.equal(deployer.address);
-            expect(deployment.deployer).to.not.equal(user1.address);
-            expect(deployment.deployer).to.not.equal(user2.address);
+            expect(deployment.deployer).to.equal(deployer.target);
+            expect(deployment.deployer).to.not.equal(user1.target);
+            expect(deployment.deployer).to.not.equal(user2.target);
             
             console.log(`✅ Deployment deployer: ${deployment.deployer}`);
-            console.log(`✅ Authorized deployer: ${deployer.address}`);
+            console.log(`✅ Authorized deployer: ${deployer.target}`);
         });
         
         it('should handle unauthorized deployment attempts', async function() {
             const authorizedDeployment = createTransformerDeployment({
-                deployer: deployer.address
+                deployer: deployer.target
             });
             
             const unauthorizedDeployment = createTransformerDeployment({
-                deployer: user2.address
+                deployer: user2.target
             });
             
             // Both should be valid structures, but authorization would be checked at runtime
@@ -357,12 +358,12 @@ describe('Transformer Deployer - Modern Tests', function() {
             };
             
             console.log(`✅ Step 3 - Deployment (${Date.now() - deploymentTime}ms):`);
-            console.log(`   Deployed to: ${deploymentResult.address}`);
+            console.log(`   Deployed to: ${deploymentResult.target}`);
             console.log(`   Gas used: ${deploymentResult.gasUsed}`);
             console.log(`   Success: ${deploymentResult.success}`);
             
             expect(deploymentResult.success).to.be.true;
-            expect(deploymentResult.address).to.equal(predictedAddress);
+            expect(deploymentResult.target).to.equal(predictedAddress);
         });
         
         it('should handle deployment conflicts', async function() {
@@ -372,13 +373,13 @@ describe('Transformer Deployer - Modern Tests', function() {
             const deployment1 = createTransformerDeployment({
                 salt: salt,
                 transformerBytecode: bytecode,
-                deployer: deployer.address
+                deployer: deployer.target
             });
             
             const deployment2 = createTransformerDeployment({
                 salt: salt, // Same salt
                 transformerBytecode: bytecode, // Same bytecode
-                deployer: deployer.address // Same deployer
+                deployer: deployer.target // Same deployer
             });
             
             // Should produce the same address (conflict)
@@ -415,7 +416,7 @@ describe('Transformer Deployer - Modern Tests', function() {
             for (let i = 0; i < deploymentCount; i++) {
                 const deployment = createTransformerDeployment({
                     salt: ethers.randomBytes(32),
-                    deployer: [deployer, user1, user2][i % 3].address
+                    deployer: [deployer, user1, user2][i % 3].target
                 });
                 
                 const predictedAddress = ethers.getCreate2Address(
@@ -466,7 +467,7 @@ describe('Transformer Deployer - Modern Tests', function() {
                 const selectedDeployer = deployers[i % deployers.length];
                 const deployment = createTransformerDeployment({
                     salt: ethers.randomBytes(32),
-                    deployer: selectedDeployer.address
+                    deployer: selectedDeployer.target
                 });
                 
                 const address = ethers.getCreate2Address(
@@ -477,8 +478,8 @@ describe('Transformer Deployer - Modern Tests', function() {
                 
                 stats.totalDeployments++;
                 stats.deployerCounts.set(
-                    selectedDeployer.address,
-                    (stats.deployerCounts.get(selectedDeployer.address) || 0) + 1
+                    selectedDeployer.target,
+                    (stats.deployerCounts.get(selectedDeployer.target) || 0) + 1
                 );
                 stats.averageBytecodeLength += deployment.transformerBytecode.length;
                 stats.uniqueAddresses.add(address);

@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 import { ethers } from 'hardhat';
 
 describe('Selector Collision Test - Modern Tests', function() {

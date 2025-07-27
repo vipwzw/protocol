@@ -1,5 +1,5 @@
 import { HardhatUserConfig } from "hardhat/config";
-import "@typechain/hardhat";
+import "@nomicfoundation/hardhat-chai-matchers";import "@typechain/hardhat";
 import * as path from "path";
 
 const config: HardhatUserConfig = {

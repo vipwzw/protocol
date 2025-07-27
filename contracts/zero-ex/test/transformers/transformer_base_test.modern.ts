@@ -1,12 +1,9 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
 
-// Configure chai-as-promised for proper async error handling
-chai.use(chaiAsPromised);
 
 describe('Transformer (Base) - Modern Tests', function() {
     // Extended timeout for transformer operations
@@ -24,8 +21,8 @@ describe('Transformer (Base) - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [deployer, notDeployer] = signers;
         
-        console.log('👤 Deployer:', deployer.address);
-        console.log('👤 Not Deployer:', notDeployer.address);
+        console.log('👤 Deployer:', deployer.target);
+        console.log('👤 Not Deployer:', notDeployer.target);
         
         await deployContractsAsync();
         
@@ -58,7 +55,7 @@ describe('Transformer (Base) - Modern Tests', function() {
             
             await expect(
                 transformer.connect(notDeployer).die(recipient)
-            ).to.be.rejectedWith('OnlyCallableByDeployerError');
+            ).to.be.revertedWith('OnlyCallableByDeployerError');
         });
 
         it('cannot be called outside of its own context', async function() {
@@ -75,7 +72,7 @@ describe('Transformer (Base) - Modern Tests', function() {
                     await transformer.getAddress(),
                     callData
                 )
-            ).to.be.rejectedWith('InvalidExecutionContextError');
+            ).to.be.revertedWith('InvalidExecutionContextError');
         });
 
         it('destroys the transformer', async function() {

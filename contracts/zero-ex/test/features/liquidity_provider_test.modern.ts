@@ -1,9 +1,8 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 
-// Configure chai-as-promised
-import 'chai-as-promised';
 
 describe('LiquidityProvider Feature - Modern Tests', function() {
     // Extended timeout for liquidity provider operations
@@ -39,8 +38,8 @@ describe('LiquidityProvider Feature - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [owner, taker] = signers;
         
-        console.log('👤 Owner:', owner.address);
-        console.log('👤 Taker:', taker.address);
+        console.log('👤 Owner:', owner.target);
+        console.log('👤 Taker:', taker.target);
         
         await deployContractsAsync();
         
@@ -52,7 +51,7 @@ describe('LiquidityProvider Feature - Modern Tests', function() {
         
         // Deploy basic ZeroEx contract (simplified for testing)
         const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
-        zeroEx = await ZeroExFactory.connect(owner).deploy(owner.address);
+        zeroEx = await ZeroExFactory.connect(owner).deploy(owner.target);
         await zeroEx.waitForDeployment();
         console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
         
@@ -75,7 +74,7 @@ describe('LiquidityProvider Feature - Modern Tests', function() {
         console.log(`✅ DummyToken: ${await token.getAddress()}`);
         
         // Mint tokens for taker (TestMintableERC20Token uses mint, not setBalance)
-        await token.mint(taker.address, INITIAL_ERC20_BALANCE);
+        await token.mint(taker.target, INITIAL_ERC20_BALANCE);
         
         // Deploy WETH
         const WethFactory = await ethers.getContractFactory('TestWeth');
@@ -99,7 +98,7 @@ describe('LiquidityProvider Feature - Modern Tests', function() {
                     await liquidityProvider.getAddress(),
                     await token.getAddress(),
                     await weth.getAddress(),
-                    taker.address,
+                    taker.target,
                     ZERO_AMOUNT,
                     NULL_BYTES
                 );
@@ -117,7 +116,7 @@ describe('LiquidityProvider Feature - Modern Tests', function() {
                 await sandbox.connect(taker).executeSellEthForToken(
                     await liquidityProvider.getAddress(),
                     await token.getAddress(),
-                    taker.address,
+                    taker.target,
                     ZERO_AMOUNT,
                     NULL_BYTES
                 );
@@ -135,7 +134,7 @@ describe('LiquidityProvider Feature - Modern Tests', function() {
                 await sandbox.connect(taker).executeSellTokenForEth(
                     await liquidityProvider.getAddress(),
                     await token.getAddress(),
-                    taker.address,
+                    taker.target,
                     ZERO_AMOUNT,
                     NULL_BYTES
                 );
@@ -151,7 +150,7 @@ describe('LiquidityProvider Feature - Modern Tests', function() {
     describe('Token Swaps', function() {
         beforeEach(async function() {
             // Ensure fresh balances for each test
-            const takerTokenBalance = await token.balanceOf(taker.address);
+            const takerTokenBalance = await token.balanceOf(taker.target);
             console.log(`💰 Taker token balance: ${ethers.formatEther(takerTokenBalance.toString())} ${DUMMY_TOKEN_SYMBOL}`);
         });
 
@@ -178,9 +177,9 @@ describe('LiquidityProvider Feature - Modern Tests', function() {
             if (sellEvent) {
                 expect(sellEvent.args.inputToken).to.equal(await token.getAddress());
                 expect(sellEvent.args.outputToken).to.equal(await weth.getAddress());
-                expect(sellEvent.args.recipient).to.equal(taker.address);
+                expect(sellEvent.args.recipient).to.equal(taker.target);
                 expect(sellEvent.args.minBuyAmount).to.equal(minBuyAmount);
-                expect(sellEvent.args.inputTokenBalance).to.equal(sellAmount);
+                expect(Number(sellEvent.args.inputTokenBalance)).to.equal(Number(sellAmount));
             }
             
             console.log(`✅ ERC20-ERC20 swap: ${ethers.formatEther(sellAmount.toString())} ${DUMMY_TOKEN_SYMBOL} → WETH`);
@@ -232,9 +231,9 @@ describe('LiquidityProvider Feature - Modern Tests', function() {
             
             if (sellEvent) {
                 expect(sellEvent.args.outputToken).to.equal(await token.getAddress());
-                expect(sellEvent.args.recipient).to.equal(taker.address);
+                expect(sellEvent.args.recipient).to.equal(taker.target);
                 expect(sellEvent.args.minBuyAmount).to.equal(minBuyAmount);
-                expect(sellEvent.args.ethBalance).to.equal(sellAmount);
+                expect(Number(sellEvent.args.ethBalance)).to.equal(Number(sellAmount));
             }
             
             console.log(`✅ ETH-ERC20 swap: ${ethers.formatEther(sellAmount.toString())} ETH → ${DUMMY_TOKEN_SYMBOL}`);
@@ -262,9 +261,9 @@ describe('LiquidityProvider Feature - Modern Tests', function() {
             
             if (sellEvent) {
                 expect(sellEvent.args.inputToken).to.equal(await token.getAddress());
-                expect(sellEvent.args.recipient).to.equal(taker.address);
+                expect(sellEvent.args.recipient).to.equal(taker.target);
                 expect(sellEvent.args.minBuyAmount).to.equal(minBuyAmount);
-                expect(sellEvent.args.inputTokenBalance).to.equal(sellAmount);
+                expect(Number(sellEvent.args.inputTokenBalance)).to.equal(Number(sellAmount));
             }
             
             console.log(`✅ ERC20-ETH swap: ${ethers.formatEther(sellAmount.toString())} ${DUMMY_TOKEN_SYMBOL} → ETH`);
@@ -283,7 +282,7 @@ describe('LiquidityProvider Feature - Modern Tests', function() {
                     ZERO_AMOUNT,
                     NULL_BYTES
                 )
-            ).to.be.rejected; // Should fail due to insufficient balance
+            ).to.be.reverted; // Should fail due to insufficient balance
             
             console.log(`✅ Correctly handled insufficient balance for amount: ${ethers.formatEther(impossibleAmount.toString())}`);
         });
@@ -301,7 +300,7 @@ describe('LiquidityProvider Feature - Modern Tests', function() {
                     ZERO_AMOUNT,
                     NULL_BYTES
                 )
-            ).to.be.rejected; // Should fail due to invalid token
+            ).to.be.reverted; // Should fail due to invalid token
             
             console.log(`✅ Correctly validated token addresses`);
         });
@@ -347,7 +346,7 @@ describe('LiquidityProvider Feature - Modern Tests', function() {
                     poolBalance + 1n, // 要求超过池子能提供的数量
                     NULL_BYTES
                 )
-            ).to.be.rejected; // 应该因为流动性不足失败
+            ).to.be.reverted; // 应该因为流动性不足失败
             
             console.log(`✅ Correctly handled pool liquidity exhaustion`);
             console.log(`   Requested: ${ethers.formatEther(requestAmount)} tokens`);
@@ -374,7 +373,7 @@ describe('LiquidityProvider Feature - Modern Tests', function() {
                     minAcceptable, // 设置滑点保护
                     NULL_BYTES
                 )
-            ).to.be.rejected; // 应该因为滑点过大失败
+            ).to.be.reverted; // 应该因为滑点过大失败
             
             console.log(`✅ Correctly rejected transaction due to excessive slippage`);
             console.log(`   Expected: ${ethers.formatEther(expectedBuyAmount)}`);
@@ -415,7 +414,7 @@ describe('LiquidityProvider Feature - Modern Tests', function() {
                         ethers.parseEther('1'),
                         NULL_BYTES
                     )
-                ).to.be.rejected;
+                ).to.be.reverted;
                 
                 console.log(`✅ ${source} correctly failed due to insufficient liquidity`);
             }

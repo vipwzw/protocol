@@ -1,10 +1,9 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
 
-// Import chai-as-promised for proper async error handling
-import 'chai-as-promised';
 
 describe('FixinTokenSpender - Modern Tests', function() {
     // Extended timeout for token operations
@@ -29,7 +28,7 @@ describe('FixinTokenSpender - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [admin] = signers;
         
-        console.log('👤 Admin:', admin.address);
+        console.log('👤 Admin:', admin.target);
         
         await deployContractsAsync();
         
@@ -245,7 +244,7 @@ describe('FixinTokenSpender - Modern Tests', function() {
             
             // Should be minimum of balance and allowance
             const expectedBalance = balance < allowance ? balance : allowance;
-            expect(spendableBalance).to.equal(expectedBalance);
+            expect(Number(spendableBalance)).to.equal(Number(expectedBalance));
             
             console.log(`✅ Balance: ${ethers.formatEther(balance.toString())} ETH`);
             console.log(`✅ Allowance: ${ethers.formatEther(allowance.toString())} ETH`);

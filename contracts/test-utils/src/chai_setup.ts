@@ -1,6 +1,5 @@
 import * as chai from 'chai';
 
-const chaiAsPromised = require('chai-as-promised');
 const chaiBigNumber = require('chai-bignumber');
 const dirtyChai = require('dirty-chai');
 

@@ -1,6 +1,7 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 
 describe('ZeroEx Initial Migration - Modern Tests', function() {
     // Extended timeout for migration operations
@@ -30,10 +31,10 @@ describe('ZeroEx Initial Migration - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [admin, owner, user1, user2] = signers;
         
-        console.log('👤 Admin:', admin.address);
-        console.log('👤 Owner:', owner.address);
-        console.log('👤 User1:', user1.address);
-        console.log('👤 User2:', user2.address);
+        console.log('👤 Admin:', admin.target);
+        console.log('👤 Owner:', owner.target);
+        console.log('👤 User1:', user1.target);
+        console.log('👤 User2:', user2.target);
         
         await deployMockTokensAsync();
         await deployBootstrapContractsAsync();
@@ -73,7 +74,7 @@ describe('ZeroEx Initial Migration - Modern Tests', function() {
         
         // Deploy BootstrapFeature with admin as bootstrap caller
         const BootstrapFactory = await ethers.getContractFactory('BootstrapFeature');
-        bootstrapFeature = await BootstrapFactory.deploy(admin.address);
+        bootstrapFeature = await BootstrapFactory.deploy(admin.target);
         await bootstrapFeature.waitForDeployment();
         console.log(`✅ BootstrapFeature: ${await bootstrapFeature.getAddress()}`);
         
@@ -85,7 +86,7 @@ describe('ZeroEx Initial Migration - Modern Tests', function() {
         
         // Deploy InitialMigration contract
         const MigrationFactory = await ethers.getContractFactory('InitialMigration');
-        migrator = await MigrationFactory.deploy(admin.address);
+        migrator = await MigrationFactory.deploy(admin.target);
         await migrator.waitForDeployment();
         console.log(`✅ InitialMigration: ${await migrator.getAddress()}`);
         
@@ -102,20 +103,20 @@ describe('ZeroEx Initial Migration - Modern Tests', function() {
         // Setup initial balances
         const INITIAL_BALANCE = ethers.parseEther('1000000');
         
-        await zrx.mint(owner.address, INITIAL_BALANCE);
-        await zrx.mint(user1.address, INITIAL_BALANCE);
-        await zrx.mint(user2.address, INITIAL_BALANCE);
+        await zrx.mint(owner.target, INITIAL_BALANCE);
+        await zrx.mint(user1.target, INITIAL_BALANCE);
+        await zrx.mint(user2.target, INITIAL_BALANCE);
         
-        await weth.mint(owner.address, INITIAL_BALANCE);
-        await weth.mint(user1.address, INITIAL_BALANCE);
-        await weth.mint(user2.address, INITIAL_BALANCE);
+        await weth.mint(owner.target, INITIAL_BALANCE);
+        await weth.mint(user1.target, INITIAL_BALANCE);
+        await weth.mint(user2.target, INITIAL_BALANCE);
         
         // Simulate migration process
         try {
             // If real migration contract exists, call initializeZeroEx
             if (migrator.initializeZeroEx) {
                 await migrator.connect(admin).initializeZeroEx(
-                    owner.address,
+                    owner.target,
                     await zeroEx.getAddress(),
                     {
                         bootstrap: await bootstrapFeature.getAddress(),
@@ -205,7 +206,7 @@ describe('ZeroEx Initial Migration - Modern Tests', function() {
                 // If migrator has dieRecipient function (self-destruct after migration)
                 if (migrator.dieRecipient) {
                     const dieRecipient = await migrator.dieRecipient();
-                    expect(dieRecipient).to.equal(owner.address);
+                    expect(dieRecipient).to.equal(owner.target);
                     console.log(`✅ Migration completed, die recipient: ${dieRecipient}`);
                 } else {
                     console.log('✅ Migration completion verified (mock contract)');
@@ -229,7 +230,7 @@ describe('ZeroEx Initial Migration - Modern Tests', function() {
                 }
                 
                 if (contractOwner) {
-                    expect(contractOwner).to.equal(owner.address);
+                    expect(contractOwner).to.equal(owner.target);
                     console.log(`✅ Contract owner correctly set: ${contractOwner}`);
                 } else {
                     console.log('✅ Ownership setup verified (mock contracts)');
@@ -241,7 +242,7 @@ describe('ZeroEx Initial Migration - Modern Tests', function() {
         
         it('should enforce migration permissions', async function() {
             // Test that only authorized addresses can perform migration
-            const unauthorizedUser = user2.address;
+            const unauthorizedUser = user2.target;
             
             try {
                 // Attempt unauthorized migration operation
@@ -252,7 +253,7 @@ describe('ZeroEx Initial Migration - Modern Tests', function() {
                             await zeroEx.getAddress(),
                             {}
                         )
-                    ).to.be.rejected;
+                    ).to.be.reverted;
                     console.log('✅ Unauthorized migration properly rejected');
                 } else {
                     console.log('✅ Migration permissions validated (mock contract)');
@@ -267,16 +268,16 @@ describe('ZeroEx Initial Migration - Modern Tests', function() {
         it('should support ZRX token operations', async function() {
             const transferAmount = ethers.parseEther('1000');
             
-            const initialUser1Balance = await zrx.balanceOf(user1.address);
-            const initialUser2Balance = await zrx.balanceOf(user2.address);
+            const initialUser1Balance = await zrx.balanceOf(user1.target);
+            const initialUser2Balance = await zrx.balanceOf(user2.target);
             
-            await zrx.connect(user1).transfer(user2.address, transferAmount);
+            await zrx.connect(user1).transfer(user2.target, transferAmount);
             
-            const finalUser1Balance = await zrx.balanceOf(user1.address);
-            const finalUser2Balance = await zrx.balanceOf(user2.address);
+            const finalUser1Balance = await zrx.balanceOf(user1.target);
+            const finalUser2Balance = await zrx.balanceOf(user2.target);
             
-            expect(initialUser1Balance - finalUser1Balance).to.equal(transferAmount);
-            expect(finalUser2Balance - initialUser2Balance).to.equal(transferAmount);
+            expect(Number(initialUser1Balance - finalUser1Balance)).to.equal(Number(transferAmount));
+            expect(Number(finalUser2Balance - initialUser2Balance)).to.equal(Number(transferAmount));
             
             console.log(`✅ Transferred ${ethers.formatEther(transferAmount)} ZRX`);
         });
@@ -284,16 +285,16 @@ describe('ZeroEx Initial Migration - Modern Tests', function() {
         it('should support WETH token operations', async function() {
             const transferAmount = ethers.parseEther('500');
             
-            const initialUser1Balance = await weth.balanceOf(user1.address);
-            const initialUser2Balance = await weth.balanceOf(user2.address);
+            const initialUser1Balance = await weth.balanceOf(user1.target);
+            const initialUser2Balance = await weth.balanceOf(user2.target);
             
-            await weth.connect(user1).transfer(user2.address, transferAmount);
+            await weth.connect(user1).transfer(user2.target, transferAmount);
             
-            const finalUser1Balance = await weth.balanceOf(user1.address);
-            const finalUser2Balance = await weth.balanceOf(user2.address);
+            const finalUser1Balance = await weth.balanceOf(user1.target);
+            const finalUser2Balance = await weth.balanceOf(user2.target);
             
-            expect(initialUser1Balance - finalUser1Balance).to.equal(transferAmount);
-            expect(finalUser2Balance - initialUser2Balance).to.equal(transferAmount);
+            expect(Number(initialUser1Balance - finalUser1Balance)).to.equal(Number(transferAmount));
+            expect(Number(finalUser2Balance - initialUser2Balance)).to.equal(Number(transferAmount));
             
             console.log(`✅ Transferred ${ethers.formatEther(transferAmount)} WETH`);
         });
@@ -306,8 +307,8 @@ describe('ZeroEx Initial Migration - Modern Tests', function() {
             await zrx.connect(user1).approve(zeroExAddress, approvalAmount);
             await weth.connect(user1).approve(zeroExAddress, approvalAmount);
             
-            const zrxAllowance = await zrx.allowance(user1.address, zeroExAddress);
-            const wethAllowance = await weth.allowance(user1.address, zeroExAddress);
+            const zrxAllowance = await zrx.allowance(user1.target, zeroExAddress);
+            const wethAllowance = await weth.allowance(user1.target, zeroExAddress);
             
             expect(zrxAllowance).to.equal(approvalAmount);
             expect(wethAllowance).to.equal(approvalAmount);

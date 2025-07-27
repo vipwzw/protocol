@@ -1,6 +1,6 @@
 import { expect } from "chai";
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 
 describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
     let accounts: any[];
@@ -23,12 +23,12 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
 
     it("✅ should have proper test account setup", async function () {
         expect(accounts.length).to.be.greaterThan(2);
-        expect(deployer.address).to.match(/^0x[0-9a-fA-F]{40}$/);
-        expect(user1.address).to.match(/^0x[0-9a-fA-F]{40}$/);
-        expect(user2.address).to.match(/^0x[0-9a-fA-F]{40}$/);
-        console.log(`✅ Deployer: ${deployer.address}`);
-        console.log(`✅ User1: ${user1.address}`);
-        console.log(`✅ User2: ${user2.address}`);
+        expect(deployer.target).to.match(/^0x[0-9a-fA-F]{40}$/);
+        expect(user1.target).to.match(/^0x[0-9a-fA-F]{40}$/);
+        expect(user2.target).to.match(/^0x[0-9a-fA-F]{40}$/);
+        console.log(`✅ Deployer: ${deployer.target}`);
+        console.log(`✅ User1: ${user1.target}`);
+        console.log(`✅ User2: ${user2.target}`);
     });
 
     describe("🏛️ Core Protocol", function () {
@@ -89,7 +89,7 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
                 takerToken: ethers.ZeroAddress, // ETH
                 makerAmount: ethers.parseEther("1"),
                 takerAmount: ethers.parseEther("2000"),
-                maker: deployer.address,
+                maker: deployer.target,
                 taker: ethers.ZeroAddress, // anyone
                 orderType: OrderType.FILL,
                 salt: BigInt(Date.now()),

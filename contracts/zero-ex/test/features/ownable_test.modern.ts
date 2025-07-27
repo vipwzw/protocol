@@ -1,6 +1,7 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 // 导入通用部署函数
 import { 
     deployZeroExWithFullMigration, 
@@ -32,10 +33,10 @@ describe('Ownable Feature - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [admin, owner, newOwner, unauthorizedUser] = signers;
         
-        console.log('👤 Admin:', admin.address);
-        console.log('👤 Owner:', owner.address);
-        console.log('👤 New Owner:', newOwner.address);
-        console.log('👤 Unauthorized User:', unauthorizedUser.address);
+        console.log('👤 Admin:', admin.target);
+        console.log('👤 Owner:', owner.target);
+        console.log('👤 New Owner:', newOwner.target);
+        console.log('👤 Unauthorized User:', unauthorizedUser.target);
         
         await deployContractsAsync();
         
@@ -92,14 +93,14 @@ describe('Ownable Feature - Modern Tests', function() {
     describe('👑 Ownership Management', function() {
         it('should validate owner privileges', async function() {
             // Simulate ownership check
-            const isOwner = owner.address !== NULL_ADDRESS;
-            const isNotUnauthorized = unauthorizedUser.address !== owner.address;
+            const isOwner = owner.target !== NULL_ADDRESS;
+            const isNotUnauthorized = unauthorizedUser.target !== owner.target;
             
             expect(isOwner).to.be.true;
             expect(isNotUnauthorized).to.be.true;
             
             console.log(`✅ Owner privileges validated:`);
-            console.log(`   Owner: ${owner.address}`);
+            console.log(`   Owner: ${owner.target}`);
             console.log(`   Is valid owner: ${isOwner}`);
             console.log(`   Unauthorized user different: ${isNotUnauthorized}`);
         });
@@ -107,14 +108,14 @@ describe('Ownable Feature - Modern Tests', function() {
         it('should simulate ownership transfer process', async function() {
             // Simulate the ownership transfer process
             const transferData = {
-                currentOwner: owner.address,
-                newOwner: newOwner.address,
+                currentOwner: owner.target,
+                newOwner: newOwner.target,
                 timestamp: Date.now(),
                 status: 'pending'
             };
             
-            expect(transferData.currentOwner).to.equal(owner.address);
-            expect(transferData.newOwner).to.equal(newOwner.address);
+            expect(transferData.currentOwner).to.equal(owner.target);
+            expect(transferData.newOwner).to.equal(newOwner.target);
             expect(transferData.currentOwner).to.not.equal(transferData.newOwner);
             
             console.log(`✅ Ownership transfer simulation:`);
@@ -125,17 +126,17 @@ describe('Ownable Feature - Modern Tests', function() {
         });
         
         it('should handle ownership validation', async function() {
-            const accounts = [owner.address, newOwner.address, unauthorizedUser.address];
+            const accounts = [owner.target, newOwner.target, unauthorizedUser.target];
             const ownershipStatus = accounts.map(account => ({
                 address: account,
-                isOwner: account === owner.address,
-                isAuthorized: account === owner.address || account === newOwner.address
+                isOwner: account === owner.target,
+                isAuthorized: account === owner.target || account === newOwner.target
             }));
             
             console.log(`✅ Ownership validation:`);
             ownershipStatus.forEach((status, i) => {
-                console.log(`   Account ${i + 1}: ${status.address.slice(0, 10)}... - Owner: ${status.isOwner}, Authorized: ${status.isAuthorized}`);
-                expect(ethers.isAddress(status.address)).to.be.true;
+                console.log(`   Account ${i + 1}: ${status.target.slice(0, 10)}... - Owner: ${status.isOwner}, Authorized: ${status.isAuthorized}`);
+                expect(ethers.isAddress(status.target)).to.be.true;
             });
         });
     });
@@ -144,16 +145,16 @@ describe('Ownable Feature - Modern Tests', function() {
         it('should enforce owner-only restrictions', async function() {
             // Simulate access control checks
             const accessAttempts = [
-                { user: owner.address, action: 'changeOwner', allowed: true },
-                { user: owner.address, action: 'emergencyPause', allowed: true },
-                { user: unauthorizedUser.address, action: 'changeOwner', allowed: false },
-                { user: unauthorizedUser.address, action: 'emergencyPause', allowed: false }
+                { user: owner.target, action: 'changeOwner', allowed: true },
+                { user: owner.target, action: 'emergencyPause', allowed: true },
+                { user: unauthorizedUser.target, action: 'changeOwner', allowed: false },
+                { user: unauthorizedUser.target, action: 'emergencyPause', allowed: false }
             ];
             
             console.log(`🔒 Access control enforcement:`);
             accessAttempts.forEach((attempt, i) => {
                 console.log(`   Attempt ${i + 1}: ${attempt.user.slice(0, 10)}... -> ${attempt.action} = ${attempt.allowed ? '✅ Allowed' : '❌ Denied'}`);
-                expect(attempt.allowed).to.equal(attempt.user === owner.address);
+                expect(attempt.allowed).to.equal(attempt.user === owner.target);
             });
         });
         
@@ -176,9 +177,9 @@ describe('Ownable Feature - Modern Tests', function() {
         
         it('should simulate unauthorized access attempts', async function() {
             const unauthorizedAttempts = [
-                { user: unauthorizedUser.address, action: 'transferOwnership', expected: 'revert' },
+                { user: unauthorizedUser.target, action: 'transferOwnership', expected: 'revert' },
                 { user: NULL_ADDRESS, action: 'changeOwner', expected: 'invalid' },
-                { user: newOwner.address, action: 'adminFunction', expected: 'unauthorized' }
+                { user: newOwner.target, action: 'adminFunction', expected: 'unauthorized' }
             ];
             
             console.log(`🚫 Unauthorized access simulation:`);
@@ -194,8 +195,8 @@ describe('Ownable Feature - Modern Tests', function() {
             // Step 1: Initiate transfer
             const step1 = {
                 action: 'initiateTransfer',
-                from: owner.address,
-                to: newOwner.address,
+                from: owner.target,
+                to: newOwner.target,
                 status: 'pending',
                 timestamp: Date.now()
             };
@@ -203,14 +204,14 @@ describe('Ownable Feature - Modern Tests', function() {
             // Step 2: Accept transfer
             const step2 = {
                 action: 'acceptTransfer',
-                from: newOwner.address,
+                from: newOwner.target,
                 status: 'completed',
                 timestamp: Date.now() + 1000
             };
             
-            expect(step1.from).to.equal(owner.address);
-            expect(step1.to).to.equal(newOwner.address);
-            expect(step2.from).to.equal(newOwner.address);
+            expect(step1.from).to.equal(owner.target);
+            expect(step1.to).to.equal(newOwner.target);
+            expect(step2.from).to.equal(newOwner.target);
             
             console.log(`🔄 Two-step ownership transfer:`);
             console.log(`   Step 1: ${step1.action} - ${step1.from.slice(0, 10)}... -> ${step1.to.slice(0, 10)}... (${step1.status})`);
@@ -219,14 +220,14 @@ describe('Ownable Feature - Modern Tests', function() {
         
         it('should handle ownership renunciation', async function() {
             const renunciation = {
-                owner: owner.address,
+                owner: owner.target,
                 action: 'renounceOwnership',
                 newOwner: NULL_ADDRESS,
                 irreversible: true,
                 timestamp: Date.now()
             };
             
-            expect(renunciation.owner).to.equal(owner.address);
+            expect(renunciation.owner).to.equal(owner.target);
             expect(renunciation.newOwner).to.equal(NULL_ADDRESS);
             expect(renunciation.irreversible).to.be.true;
             
@@ -238,10 +239,10 @@ describe('Ownable Feature - Modern Tests', function() {
         
         it('should validate ownership transfer constraints', async function() {
             const transferAttempts = [
-                { from: owner.address, to: newOwner.address, valid: true, reason: 'Valid transfer' },
-                { from: owner.address, to: NULL_ADDRESS, valid: false, reason: 'Cannot transfer to null address' },
-                { from: owner.address, to: owner.address, valid: false, reason: 'Cannot transfer to self' },
-                { from: unauthorizedUser.address, to: newOwner.address, valid: false, reason: 'Unauthorized sender' }
+                { from: owner.target, to: newOwner.target, valid: true, reason: 'Valid transfer' },
+                { from: owner.target, to: NULL_ADDRESS, valid: false, reason: 'Cannot transfer to null address' },
+                { from: owner.target, to: owner.target, valid: false, reason: 'Cannot transfer to self' },
+                { from: unauthorizedUser.target, to: newOwner.target, valid: false, reason: 'Unauthorized sender' }
             ];
             
             console.log(`📋 Transfer constraints validation:`);
@@ -252,7 +253,7 @@ describe('Ownable Feature - Modern Tests', function() {
                     expect(attempt.valid).to.be.false;
                 } else if (attempt.from === attempt.to) {
                     expect(attempt.valid).to.be.false;
-                } else if (attempt.from !== owner.address) {
+                } else if (attempt.from !== owner.target) {
                     expect(attempt.valid).to.be.false;
                 } else {
                     expect(attempt.valid).to.be.true;
@@ -265,9 +266,9 @@ describe('Ownable Feature - Modern Tests', function() {
         it('should provide ownership metrics', async function() {
             const metrics = {
                 totalAccounts: 4,
-                ownerAccount: owner.address,
-                authorizedAccounts: [owner.address, newOwner.address],
-                unauthorizedAccounts: [unauthorizedUser.address, admin.address],
+                ownerAccount: owner.target,
+                authorizedAccounts: [owner.target, newOwner.target],
+                unauthorizedAccounts: [unauthorizedUser.target, admin.target],
                 contractsOwned: [
                     await zeroEx.getAddress(),
                     await ownableFeature.getAddress(),
@@ -289,9 +290,9 @@ describe('Ownable Feature - Modern Tests', function() {
         
         it('should track ownership history simulation', async function() {
             const ownershipHistory = [
-                { owner: admin.address, timestamp: Date.now() - 86400000, event: 'Contract Creation' },
-                { owner: owner.address, timestamp: Date.now() - 43200000, event: 'Ownership Transfer' },
-                { owner: owner.address, timestamp: Date.now(), event: 'Current State' }
+                { owner: admin.target, timestamp: Date.now() - 86400000, event: 'Contract Creation' },
+                { owner: owner.target, timestamp: Date.now() - 43200000, event: 'Ownership Transfer' },
+                { owner: owner.target, timestamp: Date.now(), event: 'Current State' }
             ];
             
             console.log(`📈 Ownership History:`);
@@ -307,7 +308,7 @@ describe('Ownable Feature - Modern Tests', function() {
     describe('⚡ Performance Tests', function() {
         it('should handle multiple ownership checks efficiently', async function() {
             const checkCount = 50;
-            const accounts = [owner.address, newOwner.address, unauthorizedUser.address, admin.address];
+            const accounts = [owner.target, newOwner.target, unauthorizedUser.target, admin.target];
             
             console.log(`🔥 Performing ${checkCount} ownership checks...`);
             
@@ -316,7 +317,7 @@ describe('Ownable Feature - Modern Tests', function() {
             const results = [];
             for (let i = 0; i < checkCount; i++) {
                 const account = accounts[i % accounts.length];
-                const isOwner = account === owner.address;
+                const isOwner = account === owner.target;
                 results.push({ account, isOwner });
             }
             
@@ -337,11 +338,11 @@ describe('Ownable Feature - Modern Tests', function() {
     describe('🛡️ Security Validation', function() {
         it('should validate security best practices', async function() {
             const securityChecks = {
-                hasOwner: owner.address !== NULL_ADDRESS,
-                ownerNotZero: owner.address !== NULL_ADDRESS,
-                ownerValidAddress: ethers.isAddress(owner.address),
-                newOwnerValidAddress: ethers.isAddress(newOwner.address),
-                ownersAreDifferent: owner.address !== newOwner.address
+                hasOwner: owner.target !== NULL_ADDRESS,
+                ownerNotZero: owner.target !== NULL_ADDRESS,
+                ownerValidAddress: ethers.isAddress(owner.target),
+                newOwnerValidAddress: ethers.isAddress(newOwner.target),
+                ownersAreDifferent: owner.target !== newOwner.target
             };
             
             console.log(`🛡️ Security validation:`);

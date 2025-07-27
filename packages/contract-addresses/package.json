@@ -29,7 +29,7 @@
     "devDependencies": {
         "@types/minimatch": "^3.0.5",
         "@types/mocha": "^5.2.7",
-        "chai": "^4.0.1",
+        "chai": "^4.5.0",
         "ethereumjs-util": "^7.1.5",
         "mocha": "^6.2.0",
         "shx": "^0.4.0",

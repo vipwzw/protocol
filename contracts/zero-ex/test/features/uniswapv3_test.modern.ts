@@ -1,12 +1,9 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
 
-// Configure chai-as-promised for proper async error handling
-chai.use(chaiAsPromised);
 
 describe('UniswapV3Feature - Modern Tests', function() {
     // Extended timeout for Uniswap operations
@@ -23,7 +20,7 @@ describe('UniswapV3Feature - Modern Tests', function() {
     const MAX_SUPPLY = ethers.parseEther('10');
     const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
     const ZERO_AMOUNT = 0n;
-    const MAX_UINT256 = ethers.MaxUint256;
+    const MAX_UINT256 = MaxUint256;
     
     let sellAmount: bigint;
     let buyAmount: bigint;
@@ -41,7 +38,7 @@ describe('UniswapV3Feature - Modern Tests', function() {
         buyAmount = getRandomPortion(MAX_SUPPLY);
         recipient = generateRandomAddress();
         
-        console.log('👤 Taker:', taker.address);
+        console.log('👤 Taker:', taker.target);
         console.log('📍 Recipient:', recipient);
         console.log(`💰 Sell amount: ${ethers.formatEther(sellAmount.toString())} ETH`);
         console.log(`💰 Buy amount: ${ethers.formatEther(buyAmount.toString())} ETH`);
@@ -155,7 +152,7 @@ describe('UniswapV3Feature - Modern Tests', function() {
                 elems.push(ethers.zeroPadValue(ethers.toBeHex(POOL_FEE), 3));
             }
             // Add token address (20 bytes)
-            elems.push(ethers.zeroPadValue(t.getAddress ? t.getAddress() : t.address, 20));
+            elems.push(ethers.zeroPadValue(t.getAddress ? t.getAddress() : t.target, 20));
         });
         return ethers.concat(elems);
     }
@@ -165,7 +162,7 @@ describe('UniswapV3Feature - Modern Tests', function() {
             const [sellToken, buyToken] = tokens;
             const pool = await createPoolAsync(sellToken, buyToken, ZERO_AMOUNT, buyAmount);
             
-            await mintToAsync(sellToken, taker.address, sellAmount);
+            await mintToAsync(sellToken, taker.target, sellAmount);
             
             await feature.connect(taker).sellTokenForTokenToUniswapV3(
                 await encodePath([sellToken, buyToken]),
@@ -175,13 +172,13 @@ describe('UniswapV3Feature - Modern Tests', function() {
             );
             
             // Test pools always ask for full sell amount and pay entire balance
-            const takerBalance = await sellToken.balanceOf(taker.address);
+            const takerBalance = await sellToken.balanceOf(taker.target);
             const recipientBalance = await buyToken.balanceOf(recipient);
             const poolBalance = await sellToken.balanceOf(await pool.getAddress());
             
-            expect(takerBalance).to.equal(0n);
-            expect(recipientBalance).to.equal(buyAmount);
-            expect(poolBalance).to.equal(sellAmount);
+            expect(Number(takerBalance)).to.equal(Number(0n));
+            expect(Number(recipientBalance)).to.equal(Number(buyAmount));
+            expect(Number(poolBalance)).to.equal(Number(sellAmount));
             
             console.log(`✅ 1-hop swap: ${ethers.formatEther(sellAmount.toString())} → ${ethers.formatEther(buyAmount.toString())}`);
         });
@@ -192,7 +189,7 @@ describe('UniswapV3Feature - Modern Tests', function() {
                 await createPoolAsync(tokens[1], tokens[2], ZERO_AMOUNT, buyAmount),
             ];
             
-            await mintToAsync(tokens[0], taker.address, sellAmount);
+            await mintToAsync(tokens[0], taker.target, sellAmount);
             
             await feature.connect(taker).sellTokenForTokenToUniswapV3(
                 await encodePath(tokens),
@@ -202,7 +199,7 @@ describe('UniswapV3Feature - Modern Tests', function() {
             );
             
             // Test pools always ask for full sell amount and pay entire balance
-            expect(await tokens[0].balanceOf(taker.address)).to.equal(0n);
+            expect(await tokens[0].balanceOf(taker.target)).to.equal(0n);
             expect(await tokens[2].balanceOf(recipient)).to.equal(buyAmount);
             expect(await tokens[0].balanceOf(await pools[0].getAddress())).to.equal(sellAmount);
             expect(await tokens[1].balanceOf(await pools[1].getAddress())).to.equal(buyAmount);
@@ -214,7 +211,7 @@ describe('UniswapV3Feature - Modern Tests', function() {
             const [sellToken, buyToken] = tokens;
             await createPoolAsync(sellToken, buyToken, ZERO_AMOUNT, buyAmount - 1n);
             
-            await mintToAsync(sellToken, taker.address, sellAmount);
+            await mintToAsync(sellToken, taker.target, sellAmount);
             
             await expect(
                 feature.connect(taker).sellTokenForTokenToUniswapV3(
@@ -223,7 +220,7 @@ describe('UniswapV3Feature - Modern Tests', function() {
                     buyAmount,
                     recipient
                 )
-            ).to.be.rejectedWith('UniswapV3Feature/UNDERBOUGHT');
+            ).to.be.revertedWith('UniswapV3Feature/UNDERBOUGHT');
             
             console.log(`✅ Correctly rejected underbuy scenario`);
         });
@@ -232,7 +229,7 @@ describe('UniswapV3Feature - Modern Tests', function() {
             await createPoolAsync(tokens[0], tokens[1], ZERO_AMOUNT, buyAmount);
             await createPoolAsync(tokens[1], tokens[2], ZERO_AMOUNT, buyAmount - 1n);
             
-            await mintToAsync(tokens[0], taker.address, sellAmount);
+            await mintToAsync(tokens[0], taker.target, sellAmount);
             
             await expect(
                 feature.connect(taker).sellTokenForTokenToUniswapV3(
@@ -241,7 +238,7 @@ describe('UniswapV3Feature - Modern Tests', function() {
                     buyAmount,
                     recipient
                 )
-            ).to.be.rejectedWith('UniswapV3Feature/UNDERBOUGHT');
+            ).to.be.revertedWith('UniswapV3Feature/UNDERBOUGHT');
             
             console.log(`✅ Correctly rejected 2-hop underbuy scenario`);
         });
@@ -250,7 +247,7 @@ describe('UniswapV3Feature - Modern Tests', function() {
             const [sellToken, buyToken] = tokens;
             await createPoolAsync(sellToken, buyToken, ZERO_AMOUNT, buyAmount);
             
-            await mintToAsync(sellToken, taker.address, sellAmount);
+            await mintToAsync(sellToken, taker.target, sellAmount);
             
             await feature.connect(taker).sellTokenForTokenToUniswapV3(
                 await encodePath([sellToken, buyToken]),
@@ -260,8 +257,8 @@ describe('UniswapV3Feature - Modern Tests', function() {
             );
             
             // Test pools always ask for full sell amount and pay entire balance
-            const takerBuyTokenBalance = await buyToken.balanceOf(taker.address);
-            expect(takerBuyTokenBalance).to.equal(buyAmount);
+            const takerBuyTokenBalance = await buyToken.balanceOf(taker.target);
+            expect(Number(takerBuyTokenBalance)).to.equal(Number(buyAmount));
             
             console.log(`✅ Null recipient correctly defaulted to sender`);
         });
@@ -283,8 +280,8 @@ describe('UniswapV3Feature - Modern Tests', function() {
             const recipientBalance = await buyToken.balanceOf(recipient);
             const poolWethBalance = await weth.balanceOf(await pool.getAddress());
             
-            expect(recipientBalance).to.equal(buyAmount);
-            expect(poolWethBalance).to.equal(sellAmount);
+            expect(Number(recipientBalance)).to.equal(Number(buyAmount));
+            expect(Number(poolWethBalance)).to.equal(Number(sellAmount));
             
             console.log(`✅ ETH→Token swap: ${ethers.formatEther(sellAmount.toString())} ETH → ${ethers.formatEther(buyAmount.toString())} tokens`);
         });
@@ -301,11 +298,11 @@ describe('UniswapV3Feature - Modern Tests', function() {
             );
             
             // Test pools always ask for full sell amount and pay entire balance
-            const takerBalance = await buyToken.balanceOf(taker.address);
+            const takerBalance = await buyToken.balanceOf(taker.target);
             const poolWethBalance = await weth.balanceOf(await pool.getAddress());
             
-            expect(takerBalance).to.equal(buyAmount);
-            expect(poolWethBalance).to.equal(sellAmount);
+            expect(Number(takerBalance)).to.equal(Number(buyAmount));
+            expect(Number(poolWethBalance)).to.equal(Number(sellAmount));
             
             console.log(`✅ ETH→Token with null recipient correctly defaulted to sender`);
         });
@@ -316,7 +313,7 @@ describe('UniswapV3Feature - Modern Tests', function() {
             const [sellToken] = tokens;
             const pool = await createPoolAsync(sellToken, weth, ZERO_AMOUNT, buyAmount);
             
-            await mintToAsync(sellToken, taker.address, sellAmount);
+            await mintToAsync(sellToken, taker.target, sellAmount);
             
             const initialEthBalance = await ethers.provider.getBalance(recipient);
             
@@ -328,13 +325,13 @@ describe('UniswapV3Feature - Modern Tests', function() {
             );
             
             // Test pools always ask for full sell amount and pay entire balance
-            const takerTokenBalance = await sellToken.balanceOf(taker.address);
+            const takerTokenBalance = await sellToken.balanceOf(taker.target);
             const finalEthBalance = await ethers.provider.getBalance(recipient);
             const poolTokenBalance = await sellToken.balanceOf(await pool.getAddress());
             
-            expect(takerTokenBalance).to.equal(0n);
-            expect(finalEthBalance - initialEthBalance).to.equal(buyAmount);
-            expect(poolTokenBalance).to.equal(sellAmount);
+            expect(Number(takerTokenBalance)).to.equal(Number(0n));
+            expect(Number(finalEthBalance - initialEthBalance)).to.equal(Number(buyAmount));
+            expect(Number(poolTokenBalance)).to.equal(Number(sellAmount));
             
             console.log(`✅ Token→ETH swap: ${ethers.formatEther(sellAmount.toString())} tokens → ${ethers.formatEther(buyAmount.toString())} ETH`);
         });
@@ -343,9 +340,9 @@ describe('UniswapV3Feature - Modern Tests', function() {
             const [sellToken] = tokens;
             const pool = await createPoolAsync(sellToken, weth, ZERO_AMOUNT, buyAmount);
             
-            await mintToAsync(sellToken, taker.address, sellAmount);
+            await mintToAsync(sellToken, taker.target, sellAmount);
             
-            const initialEthBalance = await ethers.provider.getBalance(taker.address);
+            const initialEthBalance = await ethers.provider.getBalance(taker.target);
             
             // Use zero gas price to make balance calculations easier
             await feature.connect(taker).sellTokenForEthToUniswapV3(
@@ -357,11 +354,11 @@ describe('UniswapV3Feature - Modern Tests', function() {
             );
             
             // Test pools always ask for full sell amount and pay entire balance
-            const finalEthBalance = await ethers.provider.getBalance(taker.address);
+            const finalEthBalance = await ethers.provider.getBalance(taker.target);
             const poolTokenBalance = await sellToken.balanceOf(await pool.getAddress());
             
-            expect(finalEthBalance - initialEthBalance).to.equal(buyAmount);
-            expect(poolTokenBalance).to.equal(sellAmount);
+            expect(Number(finalEthBalance - initialEthBalance)).to.equal(Number(buyAmount));
+            expect(Number(poolTokenBalance)).to.equal(Number(sellAmount));
             
             console.log(`✅ Token→ETH with null recipient correctly defaulted to sender`);
         });
@@ -370,7 +367,7 @@ describe('UniswapV3Feature - Modern Tests', function() {
             const [sellToken] = tokens;
             await createPoolAsync(sellToken, weth, ZERO_AMOUNT, buyAmount);
             
-            await mintToAsync(sellToken, taker.address, sellAmount);
+            await mintToAsync(sellToken, taker.target, sellAmount);
             
             await expect(
                 feature.connect(taker).sellTokenForEthToUniswapV3(
@@ -379,7 +376,7 @@ describe('UniswapV3Feature - Modern Tests', function() {
                     buyAmount,
                     await noEthRecipient.getAddress()
                 )
-            ).to.be.rejected; // Should revert when trying to send ETH to non-payable contract
+            ).to.be.reverted; // Should revert when trying to send ETH to non-payable contract
             
             console.log(`✅ Correctly failed when recipient cannot receive ETH`);
         });

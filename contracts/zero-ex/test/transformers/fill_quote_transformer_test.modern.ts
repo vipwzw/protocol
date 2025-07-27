@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 import * as _ from 'lodash';
 
 const { ethers } = require('hardhat');
@@ -134,7 +135,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
         
         // 获取测试账户
         const signers = await ethers.getSigners();
-        const accounts = signers.slice(0, 20).map((s: any) => s.address);
+        const accounts = signers.slice(0, 20).map((s: any) => s.target);
         [owner, maker, taker, feeRecipient, sender] = accounts;
 
         // 部署完整的 FillQuoteTransformer 测试环境（与 test-main 一致）
@@ -158,7 +159,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
         
         const hostAddress = await testEnv.host.getAddress();
         const exchangeAddress = await testEnv.exchange.getAddress();
-        const maxAllowance = ethers.MaxUint256;
+        const maxAllowance = MaxUint256;
         
         // ⭐ 唯一必要的授权：Host → Exchange（用于 Limit Orders 的 approveIfBelow）
         await testEnv.tokens.takerToken.approveAs(hostAddress, exchangeAddress, maxAllowance);
@@ -195,8 +196,8 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
 
     function createLimitOrder(fields: Partial<LimitOrder> = {}): LimitOrder {
         return {
-            makerToken: testEnv.tokens.makerToken.target || testEnv.tokens.makerToken.address,
-            takerToken: testEnv.tokens.takerToken.target || testEnv.tokens.takerToken.address,
+            makerToken: testEnv.tokens.makerToken.target || testEnv.tokens.makerToken.target,
+            takerToken: testEnv.tokens.takerToken.target || testEnv.tokens.takerToken.target,
             makerAmount: getRandomInteger('0.1', '1'),
             takerAmount: getRandomInteger('0.1', '1'),
             takerTokenFeeAmount: getRandomInteger('0.01', '0.1'),
@@ -213,8 +214,8 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
 
     function createRfqOrder(fields: Partial<RfqOrder> = {}): RfqOrder {
         return {
-            makerToken: testEnv.tokens.makerToken.target || testEnv.tokens.makerToken.address,
-            takerToken: testEnv.tokens.takerToken.target || testEnv.tokens.takerToken.address,
+            makerToken: testEnv.tokens.makerToken.target || testEnv.tokens.makerToken.target,
+            takerToken: testEnv.tokens.takerToken.target || testEnv.tokens.takerToken.target,
             makerAmount: getRandomInteger('0.1', '1'),
             takerAmount: getRandomInteger('0.1', '1'),
             maker: maker,
@@ -397,8 +398,8 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
         
         // 🎯 使用现代 ethers v6 的正确参数类型
         const tx = await testEnv.host.executeTransform(
-            testEnv.transformer.target || testEnv.transformer.address,
-            testEnv.tokens.takerToken.target || testEnv.tokens.takerToken.address,
+            testEnv.transformer.target || testEnv.transformer.target,
+            testEnv.tokens.takerToken.target || testEnv.tokens.takerToken.target,
             _params.takerTokenBalance, // ✅ bigint: inputTokenAmount（ethers v6 使用 bigint）
             _params.sender, // ✅ string: sender
             _params.taker || _params.sender, // ✅ string: recipient
@@ -663,8 +664,8 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
             const bridgeOrders = [createBridgeOrder()];
             const data = createTransformData({
                 side: FillQuoteTransformerSide.Buy,
-                sellToken: testEnv.tokens.takerToken.target || testEnv.tokens.takerToken.address,
-                buyToken: testEnv.tokens.makerToken.target || testEnv.tokens.makerToken.address,
+                sellToken: testEnv.tokens.takerToken.target || testEnv.tokens.takerToken.target,
+                buyToken: testEnv.tokens.makerToken.target || testEnv.tokens.makerToken.target,
                 bridgeOrders,
                 fillAmount: bridgeOrders.reduce((sum, o) => sum + o.makerTokenAmount, 0n),
                 fillSequence: bridgeOrders.map(() => FillQuoteTransformerOrderType.Bridge),

@@ -1,5 +1,6 @@
+
 import { expect } from 'chai';
-const { ethers } = require('hardhat');
+import { ethers } from 'hardhat';
 
 describe('Treasury Governance (Simplified)', function() {
     let admin: any;
@@ -97,7 +98,7 @@ describe('Treasury Governance (Simplified)', function() {
         it('should have correct token metadata', async function() {
             expect(await zrx.name()).to.equal('ZRX Token');
             expect(await zrx.symbol()).to.equal('ZRX');
-            expect(await zrx.decimals()).to.equal(18);
+            expect(Number(await zrx.decimals())).to.equal(18);
 
             expect(await weth.name()).to.equal('Wrapped Ether');
             expect(await weth.symbol()).to.equal('WETH');
@@ -105,10 +106,10 @@ describe('Treasury Governance (Simplified)', function() {
 
         it('should have correct initial balances', async function() {
             const delegatorBalance = await zrx.balanceOf(delegator.address);
-            expect(delegatorBalance).to.be.greaterThanOrEqual(PROPOSAL_THRESHOLD);
+            expect(delegatorBalance >= PROPOSAL_THRESHOLD).to.be.true;
 
             const operatorBalance = await zrx.balanceOf(poolOperator.address);
-            expect(operatorBalance).to.be.greaterThanOrEqual(QUORUM_THRESHOLD);
+            expect(operatorBalance >= QUORUM_THRESHOLD).to.be.true;
 
             const treasuryBalance = await zrx.balanceOf(await treasury.getAddress());
             expect(treasuryBalance).to.equal(TREASURY_BALANCE);
@@ -132,7 +133,7 @@ describe('Treasury Governance (Simplified)', function() {
             const initialDelegatorBalance = await zrx.balanceOf(delegator.address);
             
             // Ensure delegator has enough balance
-            expect(initialDelegatorBalance).to.be.greaterThanOrEqual(transferAmount);
+            expect(initialDelegatorBalance >= transferAmount).to.be.true;
             
             await zrx.connect(delegator).transfer(relayer.address, transferAmount);
             
@@ -146,9 +147,15 @@ describe('Treasury Governance (Simplified)', function() {
         it('should enforce transfer limits (insufficient balance)', async function() {
             const largeAmount = ethers.parseEther('999999999');
             
+            // Check relayer's current balance first
+            const relayerBalance = await zrx.balanceOf(relayer.address);
+            console.log(`📊 Relayer balance: ${ethers.formatEther(relayerBalance)} ZRX`);
+            console.log(`💸 Attempting transfer: ${ethers.formatEther(largeAmount)} ZRX`);
+            
+            // Test that the transfer fails due to insufficient balance
             await expect(
                 zrx.connect(relayer).transfer(delegator.address, largeAmount)
-            ).to.be.rejectedWith('Insufficient balance');
+            ).to.be.revertedWith('Insufficient balance');
         });
     });
 
@@ -219,7 +226,7 @@ describe('Treasury Governance (Simplified)', function() {
             console.log(`Initial Delegator WETH: ${ethers.formatEther(initialDelegatorWethBalance)}`);
             
             // Verify treasury has enough balance for the proposed transfer
-            expect(initialTreasuryWethBalance).to.be.greaterThanOrEqual(transferAmount);
+            expect(initialTreasuryWethBalance >= transferAmount).to.be.true;
             
             // Simulate proposal execution by doing the equivalent operations
             // 1. Mint tokens to delegator (simulating treasury transfer)
@@ -274,7 +281,7 @@ describe('Treasury Governance (Simplified)', function() {
                     relayer.address,
                     transferAmount
                 )
-            ).to.be.rejectedWith('Insufficient allowance');
+            ).to.be.revertedWith('Insufficient allowance');
             
             console.log('✅ Treasury protected from unauthorized access');
         });
@@ -295,7 +302,7 @@ describe('Treasury Governance (Simplified)', function() {
             console.log(`   Pool Operator: ${ethers.formatEther(operatorBalance)} ZRX`);
             console.log(`   Treasury: ${ethers.formatEther(treasuryBalance)} ZRX`);
             
-            expect(totalSupply).to.be.greaterThan(0);
+            expect(Number(totalSupply)).to.be.greaterThan(0);
             expect(treasuryBalance).to.equal(TREASURY_BALANCE);
         });
 
@@ -304,7 +311,7 @@ describe('Treasury Governance (Simplified)', function() {
             const activeVoters = 2; // delegator and poolOperator with sufficient balance
             const participationRate = (activeVoters / totalEligibleVoters) * 100;
             
-            expect(participationRate).to.equal(50);
+            expect(Number(participationRate)).to.equal(50);
             console.log(`📊 Governance Participation: ${participationRate}% (${activeVoters}/${totalEligibleVoters})`);
         });
 
@@ -319,8 +326,8 @@ describe('Treasury Governance (Simplified)', function() {
             console.log(`   WETH: ${ethers.formatEther(wethTreasuryBalance)}`);
             console.log(`   Total Value (ZRX equivalent): ${ethers.formatEther(totalTreasuryValueInZRX)}`);
             
-            expect(zrxTreasuryBalance).to.be.greaterThan(0);
-            expect(wethTreasuryBalance).to.be.greaterThan(0);
+            expect(Number(zrxTreasuryBalance)).to.be.greaterThan(0);
+            expect(Number(wethTreasuryBalance)).to.be.greaterThan(0);
         });
     });
 

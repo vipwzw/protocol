@@ -1,12 +1,9 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
 
-// Configure chai-as-promised for proper async error handling
-chai.use(chaiAsPromised);
 
 describe('MultiplexFeature - Complete Modern Tests', function() {
     // Extended timeout for complex multiplex operations
@@ -33,7 +30,7 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
     const POOL_FEE = 1234;
     const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
     const NULL_BYTES = '0x';
-    const MAX_UINT256 = ethers.MaxUint256;
+    const MAX_UINT256 = MaxUint256;
     const ZERO_AMOUNT = 0n;
     
     // Multiplex subcall enum
@@ -72,9 +69,9 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
         const signers = await ethers.getSigners();
         [owner, maker, taker] = signers;
         
-        console.log('👤 Owner:', owner.address);
-        console.log('👤 Maker:', maker.address);
-        console.log('👤 Taker:', taker.address);
+        console.log('👤 Owner:', owner.target);
+        console.log('👤 Maker:', maker.target);
+        console.log('👤 Taker:', taker.target);
         
         await deployContractsAsync();
         // OtcOrdersFeature is already included in FullMigration
@@ -109,7 +106,7 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
         
         // Use FullMigration pattern like BatchFillNativeOrders test
         const FullMigrationFactory = await ethers.getContractFactory('FullMigration');
-        const migrator = await FullMigrationFactory.deploy(owner.address);
+        const migrator = await FullMigrationFactory.deploy(owner.target);
         await migrator.waitForDeployment();
         console.log(`✅ FullMigration: ${await migrator.getAddress()}`);
         
@@ -177,11 +174,11 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
         };
         
         await migrator.migrateZeroEx(
-            owner.address,
+            owner.target,
             verifyingContract,
             features,
             {
-                transformerDeployer: owner.address // Set valid transformer deployer
+                transformerDeployer: owner.target // Set valid transformer deployer
             }
         );
         console.log(`✅ ZeroEx fully migrated with all features including TransformERC20`);
@@ -216,7 +213,7 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
                 const mintAmount = isWethContract(token) 
                     ? ethers.parseEther('100')  // 100 ETH for WETH to avoid balance issues
                     : ethers.parseEther('1000000'); // 1M for other tokens
-                await mintToAsync(token, account.address, mintAmount);
+                await mintToAsync(token, account.target, mintAmount);
                 // Approve ZeroEx
                 await token.connect(account).approve(zeroExAddress, MAX_UINT256);
             }
@@ -277,7 +274,7 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
         await ownableFeature.connect(owner).migrate(
             await featureImpl.getAddress(),
             featureImpl.interface.encodeFunctionData('migrate', []),
-            owner.address  // newOwner parameter
+            owner.target  // newOwner parameter
         );
         
         console.log(`✅ Uniswap V3 contracts migrated`);
@@ -305,7 +302,7 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
         await ownableFeature.connect(owner).migrate(
             await featureImpl.getAddress(),
             featureImpl.interface.encodeFunctionData('migrate', []),
-            owner.address  // newOwner parameter
+            owner.target  // newOwner parameter
         );
         
         // Create MultiplexFeature interface pointing to ZeroEx (proxy pattern)
@@ -419,17 +416,17 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
     // Generate subcalls
     function getTestRfqOrder(overrides: any = {}): any {
         return {
-            maker: maker.address,
-            taker: taker.address,
-            makerToken: zrx.target || zrx.address,
-            takerToken: dai.target || dai.address,
+            maker: maker.target,
+            taker: taker.target,
+            makerToken: zrx.target || zrx.target,
+            takerToken: dai.target || dai.target,
             makerAmount: toBaseUnitAmount(1),
             takerAmount: toBaseUnitAmount(1),
-            txOrigin: taker.address,
+            txOrigin: taker.target,
             pool: ethers.ZeroHash,
             expiry: Math.floor(Date.now() / 1000) + 3600,
             salt: generateRandomBytes32(),
-            verifyingContract: zeroEx.target || zeroEx.address,
+            verifyingContract: zeroEx.target || zeroEx.target,
             chainId: 1337,
             ...overrides
         };
@@ -439,8 +436,8 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
         rfqOrder: any,
         sellAmount: bigint = rfqOrder.takerAmount
     ): Promise<BatchSellSubcall> {
-        const makerToken = rfqOrder.makerToken === (weth.target || weth.address) ? weth :
-            (rfqOrder.makerToken === (zrx.target || zrx.address) ? zrx : dai);
+        const makerToken = rfqOrder.makerToken === (weth.target || weth.target) ? weth :
+            (rfqOrder.makerToken === (zrx.target || zrx.target) ? zrx : dai);
         
         await mintToAsync(makerToken, rfqOrder.maker, rfqOrder.makerAmount);
         
@@ -465,17 +462,17 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
 
     function getTestOtcOrder(fields: any = {}): any {
         return {
-            maker: maker.address,
-            taker: taker.address,
-            makerToken: zrx.target || zrx.address,
-            takerToken: dai.target || dai.address,
+            maker: maker.target,
+            taker: taker.target,
+            makerToken: zrx.target || zrx.target,
+            takerToken: dai.target || dai.target,
             makerAmount: toBaseUnitAmount(1),
             takerAmount: toBaseUnitAmount(1),
-            txOrigin: taker.address,
+            txOrigin: taker.target,
             nonceBucket: generateRandomBytes32(),
             nonce: BigInt(Math.floor(Math.random() * 1000000)),
             expiry: Math.floor(Date.now() / 1000) + 3600,
-            verifyingContract: zeroEx.target || zeroEx.address,
+            verifyingContract: zeroEx.target || zeroEx.target,
             chainId: 1337,
             ...fields
         };
@@ -485,8 +482,8 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
         otcOrder: any,
         sellAmount: bigint = otcOrder.takerAmount
     ): Promise<BatchSellSubcall> {
-        const makerToken = otcOrder.makerToken === (weth.target || weth.address) ? weth :
-            (otcOrder.makerToken === (zrx.target || zrx.address) ? zrx : dai);
+        const makerToken = otcOrder.makerToken === (weth.target || weth.target) ? weth :
+            (otcOrder.makerToken === (zrx.target || zrx.target) ? zrx : dai);
         
         await mintToAsync(makerToken, otcOrder.maker, otcOrder.makerAmount);
         
@@ -524,7 +521,7 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
     function getLiquidityProviderMultiHopSubcall(): MultiHopSellSubcall {
         const data = ethers.AbiCoder.defaultAbiCoder().encode(
             ['address', 'bytes'],
-            [liquidityProvider.target || liquidityProvider.address, ethers.ZeroHash]
+            [liquidityProvider.target || liquidityProvider.target, ethers.ZeroHash]
         );
         return {
             id: MultiplexSubcall.LiquidityProvider,
@@ -544,7 +541,7 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
     }
 
     function getUniswapV3MultiHopSubcall(tokens: any[]): MultiHopSellSubcall {
-        const tokenAddresses = tokens.map(t => t.target || t.address);
+        const tokenAddresses = tokens.map(t => t.target || t.target);
         const fees = tokens.slice(0, -1).map(() => POOL_FEE);
         
         const data = ethers.AbiCoder.defaultAbiCoder().encode(
@@ -568,7 +565,7 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
     function getLiquidityProviderBatchSubcall(sellAmount: bigint = toBaseUnitAmount(1)): BatchSellSubcall {
         const data = ethers.AbiCoder.defaultAbiCoder().encode(
             ['address', 'bytes'],
-            [liquidityProvider.target || liquidityProvider.address, '0x']
+            [liquidityProvider.target || liquidityProvider.target, '0x']
         );
         
         return {
@@ -600,17 +597,17 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
             it('reverts if minBuyAmount is not satisfied', async function() {
                 const order = getTestRfqOrder();
                 const rfqSubcall = await getRfqSubcallAsync(order);
-                await mintToAsync(dai, taker.address, rfqSubcall.sellAmount);
+                await mintToAsync(dai, taker.target, rfqSubcall.sellAmount);
 
                 await expect(
                     multiplex.connect(taker).multiplexBatchSellTokenForToken(
-                        dai.target || dai.address,
-                        zrx.target || zrx.address,
+                        dai.target || dai.target,
+                        zrx.target || zrx.target,
                         [rfqSubcall],
                         order.takerAmount,
                         order.makerAmount + 1n
                     )
-                ).to.be.rejected;
+                ).to.be.reverted;
                 
                 console.log(`✅ Correctly rejected insufficient buy amount`);
             });
@@ -624,13 +621,13 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
 
                 await expect(
                     multiplex.connect(taker).multiplexBatchSellTokenForToken(
-                        dai.target || dai.address,
-                        zrx.target || zrx.address,
+                        dai.target || dai.target,
+                        zrx.target || zrx.target,
                         [invalidSubcall],
                         invalidSubcall.sellAmount,
                         ZERO_AMOUNT
                     )
-                ).to.be.rejectedWith('INVALID_SUBCALL');
+                ).to.be.revertedWith('INVALID_SUBCALL');
                 
                 console.log(`✅ Correctly rejected invalid subcall`);
             });
@@ -638,17 +635,17 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
             it('reverts if the full sell amount is not sold', async function() {
                 const order = getTestRfqOrder();
                 const rfqSubcall = await getRfqSubcallAsync(order);
-                await mintToAsync(dai, taker.address, rfqSubcall.sellAmount);
+                await mintToAsync(dai, taker.target, rfqSubcall.sellAmount);
 
                 await expect(
                     multiplex.connect(taker).multiplexBatchSellTokenForToken(
-                        dai.target || dai.address,
-                        zrx.target || zrx.address,
+                        dai.target || dai.target,
+                        zrx.target || zrx.target,
                         [rfqSubcall],
                         order.takerAmount + 1n,
                         order.makerAmount
                     )
-                ).to.be.rejected;
+                ).to.be.reverted;
                 
                 console.log(`✅ Correctly rejected incorrect amount sold`);
             });
@@ -657,12 +654,12 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
                 // Simplified test - only use UniswapV2 to avoid RFQ complexity
                 await createUniswapV2PoolAsync(uniV2Factory, dai, zrx);
                 const sellAmount = toBaseUnitAmount(1);
-                await mintToAsync(dai, taker.address, sellAmount);
+                await mintToAsync(dai, taker.target, sellAmount);
 
                 const result = await multiplex.connect(taker).multiplexBatchSellTokenForToken(
-                    dai.target || dai.address,
-                    zrx.target || zrx.address,
-                    [getUniswapV2BatchSubcall([dai.target || dai.address, zrx.target || zrx.address], sellAmount)],
+                    dai.target || dai.target,
+                    zrx.target || zrx.target,
+                    [getUniswapV2BatchSubcall([dai.target || dai.target, zrx.target || zrx.target], sellAmount)],
                     sellAmount,
                     ZERO_AMOUNT
                 );
@@ -676,12 +673,12 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
                 // Simplified test - only use UniswapV2 to avoid OTC complexity
                 await createUniswapV2PoolAsync(uniV2Factory, dai, zrx);
                 const sellAmount = toBaseUnitAmount(1);
-                await mintToAsync(dai, taker.address, sellAmount);
+                await mintToAsync(dai, taker.target, sellAmount);
 
                 const result = await multiplex.connect(taker).multiplexBatchSellTokenForToken(
-                    dai.target || dai.address,
-                    zrx.target || zrx.address,
-                    [getUniswapV2BatchSubcall([dai.target || dai.address, zrx.target || zrx.address], sellAmount)],
+                    dai.target || dai.target,
+                    zrx.target || zrx.target,
+                    [getUniswapV2BatchSubcall([dai.target || dai.target, zrx.target || zrx.target], sellAmount)],
                     sellAmount,
                     ZERO_AMOUNT
                 );
@@ -695,12 +692,12 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
                 // Simplified test - direct UniswapV2 without expired RFQ complexity
                 await createUniswapV2PoolAsync(uniV2Factory, dai, zrx);
                 const sellAmount = toBaseUnitAmount(1);
-                await mintToAsync(dai, taker.address, sellAmount);
+                await mintToAsync(dai, taker.target, sellAmount);
 
                 const result = await multiplex.connect(taker).multiplexBatchSellTokenForToken(
-                    dai.target || dai.address,
-                    zrx.target || zrx.address,
-                    [getUniswapV2BatchSubcall([dai.target || dai.address, zrx.target || zrx.address], sellAmount)],
+                    dai.target || dai.target,
+                    zrx.target || zrx.target,
+                    [getUniswapV2BatchSubcall([dai.target || dai.target, zrx.target || zrx.target], sellAmount)],
                     sellAmount,
                     ZERO_AMOUNT
                 );
@@ -714,12 +711,12 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
                 const order = getTestOtcOrder({ expiry: 0 });
                 const otcSubcall = await getOtcSubcallAsync(order);
                 const uniswap = await createUniswapV2PoolAsync(uniV2Factory, dai, zrx);
-                await mintToAsync(dai, taker.address, otcSubcall.sellAmount);
+                await mintToAsync(dai, taker.target, otcSubcall.sellAmount);
 
                 const result = await multiplex.connect(taker).multiplexBatchSellTokenForToken(
-                    dai.target || dai.address,
-                    zrx.target || zrx.address,
-                    [otcSubcall, getUniswapV2BatchSubcall([dai.target || dai.address, zrx.target || zrx.address], order.takerAmount)],
+                    dai.target || dai.target,
+                    zrx.target || zrx.target,
+                    [otcSubcall, getUniswapV2BatchSubcall([dai.target || dai.target, zrx.target || zrx.target], order.takerAmount)],
                     order.takerAmount,
                     ZERO_AMOUNT
                 );
@@ -741,15 +738,15 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
                 const order = getTestRfqOrder({ expiry: 0 });
                 const rfqSubcall = await getRfqSubcallAsync(order);
                 const transformERC20Subcall = getTransformERC20Subcall(
-                    dai.target || dai.address,
-                    zrx.target || zrx.address,
+                    dai.target || dai.target,
+                    zrx.target || zrx.target,
                     order.takerAmount
                 );
-                await mintToAsync(dai, taker.address, order.takerAmount);
+                await mintToAsync(dai, taker.target, order.takerAmount);
 
                 const result = await multiplex.connect(taker).multiplexBatchSellTokenForToken(
-                    dai.target || dai.address,
-                    zrx.target || zrx.address,
+                    dai.target || dai.target,
+                    zrx.target || zrx.target,
                     [rfqSubcall, transformERC20Subcall],
                     order.takerAmount,
                     ZERO_AMOUNT
@@ -774,7 +771,7 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
                 const liquidityProviderSubcall = getLiquidityProviderBatchSubcall();
                 const uniV3Subcall = getUniswapV3BatchSubcall([dai, zrx]);
                 const sushiswapSubcall = getUniswapV2BatchSubcall(
-                    [dai.target || dai.address, zrx.target || zrx.address],
+                    [dai.target || dai.target, zrx.target || zrx.target],
                     undefined,
                     true
                 );
@@ -783,11 +780,11 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
                                  uniV3Subcall.sellAmount + 
                                  sushiswapSubcall.sellAmount - 1n;
                 
-                await mintToAsync(dai, taker.address, sellAmount);
+                await mintToAsync(dai, taker.target, sellAmount);
                 
                 const result = await multiplex.connect(taker).multiplexBatchSellTokenForToken(
-                    dai.target || dai.address,
-                    zrx.target || zrx.address,
+                    dai.target || dai.target,
+                    zrx.target || zrx.target,
                     [liquidityProviderSubcall, uniV3Subcall, sushiswapSubcall],
                     sellAmount,
                     ZERO_AMOUNT
@@ -806,13 +803,13 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
         describe('multiplexBatchSellEthForToken', function() {
             it('can sell ETH for tokens via RFQ', async function() {
                 const order = getTestRfqOrder({
-                    makerToken: dai.target || dai.address,
-                    takerToken: weth.target || weth.address
+                    makerToken: dai.target || dai.target,
+                    takerToken: weth.target || weth.target
                 });
                 const rfqSubcall = await getRfqSubcallAsync(order);
 
                 const result = await multiplex.connect(taker).multiplexBatchSellEthForToken(
-                    dai.target || dai.address,
+                    dai.target || dai.target,
                     [rfqSubcall],
                     ZERO_AMOUNT,
                     { value: order.takerAmount }
@@ -830,12 +827,12 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
             it('can sell ETH for tokens via UniswapV2', async function() {
                 await createUniswapV2PoolAsync(uniV2Factory, weth, dai);
                 const uniswapSubcall = getUniswapV2BatchSubcall(
-                    [weth.target || weth.address, dai.target || dai.address],
+                    [weth.target || weth.target, dai.target || dai.target],
                     ethers.parseEther('1')
                 );
 
                 const result = await multiplex.connect(taker).multiplexBatchSellEthForToken(
-                    dai.target || dai.address,
+                    dai.target || dai.target,
                     [uniswapSubcall],
                     ZERO_AMOUNT,
                     { value: ethers.parseEther('1') }
@@ -854,23 +851,23 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
         describe('multiplexBatchSellTokenForEth', function() {
             it('can sell tokens for ETH via RFQ', async function() {
                 const order = getTestRfqOrder({
-                    makerToken: weth.target || weth.address,
-                    takerToken: dai.target || dai.address
+                    makerToken: weth.target || weth.target,
+                    takerToken: dai.target || dai.target
                 });
                 const rfqSubcall = await getRfqSubcallAsync(order);
-                await mintToAsync(dai, taker.address, rfqSubcall.sellAmount);
+                await mintToAsync(dai, taker.target, rfqSubcall.sellAmount);
 
-                const balanceBefore = await ethers.provider.getBalance(taker.address);
+                const balanceBefore = await ethers.provider.getBalance(taker.target);
 
                 const result = await multiplex.connect(taker).multiplexBatchSellTokenForEth(
-                    dai.target || dai.address,
+                    dai.target || dai.target,
                     [rfqSubcall],
                     order.takerAmount,
                     ZERO_AMOUNT
                 );
                 
                 const receipt = await result.wait();
-                const balanceAfter = await ethers.provider.getBalance(taker.address);
+                const balanceAfter = await ethers.provider.getBalance(taker.target);
 
                 // Check for RfqOrderFilled event
                 const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'RfqOrderFilled');
@@ -885,22 +882,22 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
             it('can sell tokens for ETH via UniswapV2', async function() {
                 await createUniswapV2PoolAsync(uniV2Factory, dai, weth);
                 const uniswapSubcall = getUniswapV2BatchSubcall(
-                    [dai.target || dai.address, weth.target || weth.address],
+                    [dai.target || dai.target, weth.target || weth.target],
                     ethers.parseEther('1')
                 );
-                await mintToAsync(dai, taker.address, ethers.parseEther('1'));
+                await mintToAsync(dai, taker.target, ethers.parseEther('1'));
 
-                const balanceBefore = await ethers.provider.getBalance(taker.address);
+                const balanceBefore = await ethers.provider.getBalance(taker.target);
 
                 const result = await multiplex.connect(taker).multiplexBatchSellTokenForEth(
-                    dai.target || dai.address,
+                    dai.target || dai.target,
                     [uniswapSubcall],
                     ethers.parseEther('1'),
                     ZERO_AMOUNT
                 );
                 
                 const receipt = await result.wait();
-                const balanceAfter = await ethers.provider.getBalance(taker.address);
+                const balanceAfter = await ethers.provider.getBalance(taker.target);
 
                 // Check for transfer events
                 const transferEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'Transfer');
@@ -931,8 +928,8 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
                 // Setup LiquidityProvider for SHIB -> ZRX
                 const liquidityProviderSubcall = getLiquidityProviderMultiHopSubcall();
                 
-                await mintToAsync(dai, taker.address, sellAmount);
-                await mintToAsync(zrx, liquidityProvider.target || liquidityProvider.address, buyAmount);
+                await mintToAsync(dai, taker.target, sellAmount);
+                await mintToAsync(zrx, liquidityProvider.target || liquidityProvider.target, buyAmount);
 
                 const result = await multiplex.connect(taker).multiplexMultiHopSellTokenForToken(
                     [await dai.getAddress(), await shib.getAddress(), await zrx.getAddress()],  // 3 tokens for 2 hops
@@ -962,7 +959,7 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
                     await zrx.getAddress()
                 ]);
                 
-                await mintToAsync(dai, taker.address, sellAmount); // Mint full amount for safety
+                await mintToAsync(dai, taker.target, sellAmount); // Mint full amount for safety
 
                 const result = await multiplex.connect(taker).multiplexMultiHopSellTokenForToken(
                     [await dai.getAddress(), await zrx.getAddress()],  // 2 tokens for 1 hop
@@ -993,8 +990,8 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
                 // Setup LiquidityProvider for SHIB -> ZRX
                 const liquidityProviderSubcall = getLiquidityProviderMultiHopSubcall();
                 
-                await mintToAsync(dai, taker.address, sellAmount);
-                await mintToAsync(zrx, liquidityProvider.target || liquidityProvider.address, buyAmount);
+                await mintToAsync(dai, taker.target, sellAmount);
+                await mintToAsync(zrx, liquidityProvider.target || liquidityProvider.target, buyAmount);
 
                 const result = await multiplex.connect(taker).multiplexMultiHopSellTokenForToken(
                     [await dai.getAddress(), await shib.getAddress(), await zrx.getAddress()],  // 3 tokens for 2 different protocols
@@ -1026,7 +1023,7 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
                 
                 // Setup LiquidityProvider for DAI -> ZRX
                 const liquidityProviderSubcall = getLiquidityProviderMultiHopSubcall();
-                await mintToAsync(zrx, liquidityProvider.target || liquidityProvider.address, buyAmount);
+                await mintToAsync(zrx, liquidityProvider.target || liquidityProvider.target, buyAmount);
 
                 const result = await multiplex.connect(taker).multiplexMultiHopSellEthForToken(
                     [await weth.getAddress(), await dai.getAddress(), await zrx.getAddress()], // tokens array
@@ -1058,10 +1055,10 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
                 // Setup LiquidityProvider for DAI -> ZRX
                 const liquidityProviderSubcall = getLiquidityProviderMultiHopSubcall();
                 
-                await mintToAsync(dai, taker.address, sellAmount);
-                await mintToAsync(zrx, liquidityProvider.target || liquidityProvider.address, buyAmount);
+                await mintToAsync(dai, taker.target, sellAmount);
+                await mintToAsync(zrx, liquidityProvider.target || liquidityProvider.target, buyAmount);
                 
-                const balanceBefore = await ethers.provider.getBalance(taker.address);
+                const balanceBefore = await ethers.provider.getBalance(taker.target);
 
                 const result = await multiplex.connect(taker).multiplexMultiHopSellTokenForEth(
                     [await dai.getAddress(), await zrx.getAddress(), await weth.getAddress()], // tokens array
@@ -1071,7 +1068,7 @@ describe('MultiplexFeature - Complete Modern Tests', function() {
                 );
                 
                 const receipt = await result.wait();
-                const balanceAfter = await ethers.provider.getBalance(taker.address);
+                const balanceAfter = await ethers.provider.getBalance(taker.target);
                 
                 // Check for successful token to ETH conversion
                 expect(receipt.status).to.equal(1);

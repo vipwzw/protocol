@@ -1,6 +1,7 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 
 describe('ZeroEx Full Migration - Modern Tests', function() {
     // Extended timeout for complex migration operations
@@ -35,10 +36,10 @@ describe('ZeroEx Full Migration - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [admin, owner, user1, user2] = signers;
         
-        console.log('👤 Admin:', admin.address);
-        console.log('👤 Owner:', owner.address);
-        console.log('👤 User1:', user1.address);
-        console.log('👤 User2:', user2.address);
+        console.log('👤 Admin:', admin.target);
+        console.log('👤 Owner:', owner.target);
+        console.log('👤 User1:', user1.target);
+        console.log('👤 User2:', user2.target);
         
         await deployMockTokensAsync();
         await deployMigrationContractsAsync();
@@ -78,13 +79,13 @@ describe('ZeroEx Full Migration - Modern Tests', function() {
         
         // Deploy BootstrapFeature first with admin as bootstrap caller
         const BootstrapFactory = await ethers.getContractFactory('BootstrapFeature');
-        bootstrapFeature = await BootstrapFactory.deploy(admin.address);
+        bootstrapFeature = await BootstrapFactory.deploy(admin.target);
         await bootstrapFeature.waitForDeployment();
         console.log(`✅ BootstrapFeature: ${await bootstrapFeature.getAddress()}`);
         
         // Deploy migration contract
         const MigrationFactory = await ethers.getContractFactory('FullMigration');
-        migrator = await MigrationFactory.deploy(admin.address);
+        migrator = await MigrationFactory.deploy(admin.target);
         await migrator.waitForDeployment();
         console.log(`✅ FullMigration: ${await migrator.getAddress()}`);
         
@@ -143,13 +144,13 @@ describe('ZeroEx Full Migration - Modern Tests', function() {
         // Setup initial balances
         const INITIAL_BALANCE = ethers.parseEther('1000000');
         
-        await zrx.mint(owner.address, INITIAL_BALANCE);
-        await zrx.mint(user1.address, INITIAL_BALANCE);
-        await zrx.mint(user2.address, INITIAL_BALANCE);
+        await zrx.mint(owner.target, INITIAL_BALANCE);
+        await zrx.mint(user1.target, INITIAL_BALANCE);
+        await zrx.mint(user2.target, INITIAL_BALANCE);
         
-        await weth.mint(owner.address, INITIAL_BALANCE);
-        await weth.mint(user1.address, INITIAL_BALANCE);
-        await weth.mint(user2.address, INITIAL_BALANCE);
+        await weth.mint(owner.target, INITIAL_BALANCE);
+        await weth.mint(user1.target, INITIAL_BALANCE);
+        await weth.mint(user2.target, INITIAL_BALANCE);
         
         console.log('✅ Migration completed');
     }
@@ -237,7 +238,7 @@ describe('ZeroEx Full Migration - Modern Tests', function() {
         
         it('should enforce permission restrictions', async function() {
             // Test that unauthorized users cannot perform restricted operations
-            const unauthorizedUser = user2.address;
+            const unauthorizedUser = user2.target;
             
             // Try to perform operations as unauthorized user
             try {
@@ -253,16 +254,16 @@ describe('ZeroEx Full Migration - Modern Tests', function() {
         it('should support ERC20 token interactions', async function() {
             const transferAmount = ethers.parseEther('1000');
             
-            const initialUser1Balance = await zrx.balanceOf(user1.address);
-            const initialUser2Balance = await zrx.balanceOf(user2.address);
+            const initialUser1Balance = await zrx.balanceOf(user1.target);
+            const initialUser2Balance = await zrx.balanceOf(user2.target);
             
-            await zrx.connect(user1).transfer(user2.address, transferAmount);
+            await zrx.connect(user1).transfer(user2.target, transferAmount);
             
-            const finalUser1Balance = await zrx.balanceOf(user1.address);
-            const finalUser2Balance = await zrx.balanceOf(user2.address);
+            const finalUser1Balance = await zrx.balanceOf(user1.target);
+            const finalUser2Balance = await zrx.balanceOf(user2.target);
             
-            expect(initialUser1Balance - finalUser1Balance).to.equal(transferAmount);
-            expect(finalUser2Balance - initialUser2Balance).to.equal(transferAmount);
+            expect(Number(initialUser1Balance - finalUser1Balance)).to.equal(Number(transferAmount));
+            expect(Number(finalUser2Balance - initialUser2Balance)).to.equal(Number(transferAmount));
             
             console.log(`✅ Transferred ${ethers.formatEther(transferAmount)} ZRX`);
         });
@@ -270,16 +271,16 @@ describe('ZeroEx Full Migration - Modern Tests', function() {
         it('should handle WETH operations', async function() {
             const transferAmount = ethers.parseEther('500');
             
-            const initialUser1Balance = await weth.balanceOf(user1.address);
-            const initialUser2Balance = await weth.balanceOf(user2.address);
+            const initialUser1Balance = await weth.balanceOf(user1.target);
+            const initialUser2Balance = await weth.balanceOf(user2.target);
             
-            await weth.connect(user1).transfer(user2.address, transferAmount);
+            await weth.connect(user1).transfer(user2.target, transferAmount);
             
-            const finalUser1Balance = await weth.balanceOf(user1.address);
-            const finalUser2Balance = await weth.balanceOf(user2.address);
+            const finalUser1Balance = await weth.balanceOf(user1.target);
+            const finalUser2Balance = await weth.balanceOf(user2.target);
             
-            expect(initialUser1Balance - finalUser1Balance).to.equal(transferAmount);
-            expect(finalUser2Balance - initialUser2Balance).to.equal(transferAmount);
+            expect(Number(initialUser1Balance - finalUser1Balance)).to.equal(Number(transferAmount));
+            expect(Number(finalUser2Balance - initialUser2Balance)).to.equal(Number(transferAmount));
             
             console.log(`✅ Transferred ${ethers.formatEther(transferAmount)} WETH`);
         });

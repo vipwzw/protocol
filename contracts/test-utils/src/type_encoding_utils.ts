@@ -8,7 +8,7 @@ export const typeEncodingUtils = {
     encodeUint256(value: BigNumber): Buffer {
         const base = 10;
         const formattedValue = new BN(value.toString(base));
-        const encodedValue = ethUtil.toBuffer(formattedValue);
+        const encodedValue = ethUtil.toBuffer(formattedValue as any);
         const paddedValue = ethUtil.setLengthLeft(encodedValue, constants.WORD_LENGTH);
         return paddedValue;
     },

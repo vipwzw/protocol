@@ -1,11 +1,11 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
 import { LimitOrder } from '@0x/protocol-utils';
-import { BigNumber } from '@0x/utils';
+// BigNumber removed - using native BigInt
 // 导入通用部署函数
 import { 
     deployZeroExWithFullMigration, 
@@ -14,8 +14,6 @@ import {
     type ZeroExDeploymentResult 
 } from '../utils/deployment-helper';
 
-// Configure chai-as-promised for proper async error handling
-chai.use(chaiAsPromised);
 
 describe('BatchFillNativeOrders Feature - Modern Tests (Fixed)', function() {
     // Extended timeout for batch operations
@@ -34,7 +32,7 @@ describe('BatchFillNativeOrders Feature - Modern Tests (Fixed)', function() {
     // Constants
     const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
     const ZERO_AMOUNT = 0n;
-    const MAX_UINT256 = ethers.MaxUint256;
+    const MAX_UINT256 = MaxUint256;
     
     before(async function() {
         console.log('🚀 Setting up BatchFillNativeOrders Test (使用通用部署函数)...');
@@ -43,9 +41,9 @@ describe('BatchFillNativeOrders Feature - Modern Tests (Fixed)', function() {
         const signers = await ethers.getSigners();
         [owner, maker, taker] = signers;
         
-        console.log('👤 Owner:', owner.address);
-        console.log('👤 Maker:', maker.address);
-        console.log('👤 Taker:', taker.address);
+        console.log('👤 Owner:', owner.target);
+        console.log('👤 Maker:', maker.target);
+        console.log('👤 Taker:', taker.target);
         
         await deployContractsAsync();
         await setupTestUtilsAsync();
@@ -82,7 +80,7 @@ describe('BatchFillNativeOrders Feature - Modern Tests (Fixed)', function() {
         await zeroExAsOwnable.migrate(
             await batchFillContract.getAddress(),
             batchFillContract.interface.encodeFunctionData('migrate'),
-            owner.address
+            owner.target
         );
         console.log(`✅ BatchFillNativeOrdersFeature migrated to ZeroEx`);
         
@@ -112,10 +110,10 @@ describe('BatchFillNativeOrders Feature - Modern Tests (Fixed)', function() {
             // Create a test limit order using @0x/protocol-utils LimitOrder class
             createTestLimitOrder: function(fields: any = {}) {
                 return new LimitOrder({
-                    maker: maker.address,
+                    maker: maker.target,
                     taker: fields.taker || NULL_ADDRESS,
-                    makerToken: makerToken.target || makerToken.address,
-                    takerToken: takerToken.target || takerToken.address,
+                    makerToken: makerToken.target || makerToken.target,
+                    takerToken: takerToken.target || takerToken.target,
                     makerAmount: new BigNumber(fields.makerAmount?.toString() || ethers.parseEther('100').toString()),
                     takerAmount: new BigNumber(fields.takerAmount?.toString() || ethers.parseEther('50').toString()),
                     takerTokenFeeAmount: new BigNumber(fields.takerTokenFeeAmount?.toString() || ZERO_AMOUNT.toString()),
@@ -133,13 +131,13 @@ describe('BatchFillNativeOrders Feature - Modern Tests (Fixed)', function() {
             // Create a test RFQ order
             createTestRfqOrder: function(fields: any = {}) {
                 return {
-                    maker: maker.address,
-                    taker: fields.taker || taker.address,
-                    makerToken: makerToken.target || makerToken.address,
-                    takerToken: takerToken.target || takerToken.address,
+                    maker: maker.target,
+                    taker: fields.taker || taker.target,
+                    makerToken: makerToken.target || makerToken.target,
+                    takerToken: takerToken.target || takerToken.target,
                     makerAmount: fields.makerAmount || ethers.parseEther('100'),
                     takerAmount: fields.takerAmount || ethers.parseEther('50'),
-                    txOrigin: fields.txOrigin || taker.address,
+                    txOrigin: fields.txOrigin || taker.target,
                     pool: fields.pool || ethers.ZeroHash,
                     expiry: fields.expiry || Math.floor(Date.now() / 1000) + 3600,
                     salt: fields.salt || BigInt(Math.floor(Math.random() * 1000000000000)),
@@ -155,11 +153,11 @@ describe('BatchFillNativeOrders Feature - Modern Tests (Fixed)', function() {
                     const takerAmount = order.takerAmount.toString();
                     
                     // Mint maker tokens to maker
-                    await makerToken.mint(maker.address, makerAmount);
+                    await makerToken.mint(maker.target, makerAmount);
                     await makerToken.connect(maker).approve(deployment.verifyingContract, makerAmount);
                     
                     // Mint taker tokens to taker
-                    await takerToken.mint(taker.address, takerAmount);
+                    await takerToken.mint(taker.target, takerAmount);
                     await takerToken.connect(taker).approve(deployment.verifyingContract, takerAmount);
                 }
             },
@@ -237,7 +235,7 @@ describe('BatchFillNativeOrders Feature - Modern Tests (Fixed)', function() {
                 return {
                     orderHash: ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(order))),
                     maker: order.maker,
-                    taker: taker.address,
+                    taker: taker.target,
                     feeRecipient: order.feeRecipient,
                     takerTokenFilledAmount: fillAmount || order.takerAmount,
                     makerTokenFilledAmount: fillAmount ? (fillAmount * order.makerAmount) / order.takerAmount : order.makerAmount,
@@ -382,14 +380,6 @@ describe('BatchFillNativeOrders Feature - Modern Tests (Fixed)', function() {
         it('fills multiple orders with no protocol fee', async function() {
             // Skip this test for now - it requires more complex business logic setup
             this.skip();
-            
-            
-            
-            
-            
-            
-            
-            
         });
 
         it('fills multiple orders and pays protocol fees in ETH', async function() {
@@ -548,7 +538,7 @@ describe('BatchFillNativeOrders Feature - Modern Tests (Fixed)', function() {
             console.log(`📋 Total logs: ${receipt.logs.length}`);
             receipt.logs.forEach((log: any, index: number) => {
                 console.log(`  Log ${index}:`, {
-                    address: log.address,
+                    address: log.target,
                     topics: log.topics,
                     fragment: log.fragment?.name || 'unknown',
                     data: log.data
@@ -569,15 +559,15 @@ describe('BatchFillNativeOrders Feature - Modern Tests (Fixed)', function() {
                 console.log(`   Order:`, ethersOrders[0]);
                 console.log(`   Signature:`, signatures[0]);
                 console.log(`   FillAmount:`, ethersOrders[0].takerAmount);
-                console.log(`   Taker:`, taker.address);
-                console.log(`   Sender:`, taker.address);
+                console.log(`   Taker:`, taker.target);
+                console.log(`   Sender:`, taker.target);
                 
                 const directTx = await zeroExAsNative._fillLimitOrder(
                     ethersOrders[0],
                     signatures[0],
                     ethersOrders[0].takerAmount,
-                    taker.address,
-                    taker.address,
+                    taker.target,
+                    taker.target,
                     { value: testUtils.protocolFee }
                 );
                 const directReceipt = await directTx.wait();
@@ -1000,7 +990,7 @@ describe('BatchFillNativeOrders Feature - Modern Tests (Fixed)', function() {
                     orders.map(order => order.takerAmount),
                     true // revertIfIncomplete
                 )
-            ).to.be.rejectedWith('BatchFillIncompleteError');
+            ).to.be.revertedWith('BatchFillIncompleteError');
             
             console.log(`✅ Correctly reverted on unfillable RFQ order with revertIfIncomplete=true`);
         });
@@ -1023,9 +1013,9 @@ describe('BatchFillNativeOrders Feature - Modern Tests (Fixed)', function() {
                     [partiallyFilledOrder.takerAmount], // Try to fill full amount
                     true // revertIfIncomplete
                 )
-            ).to.be.rejectedWith('BatchFillIncompleteError');
+            ).to.be.revertedWith('BatchFillIncompleteError');
             
-            console.log(`✅ Correctly reverted on incomplete fill: ${ethers.formatEther(remainingAmount.toString())} / ${ethers.formatEther(partiallyFilledOrder.takerAmount.toString())}`);
+            console.log(`✅ Correctly reverted on incomplete fill: ${ethers.formatEther(remainingAmount)} / ${ethers.formatEther(partiallyFilledOrder.takerAmount)}`);
         });
     });
 }); 

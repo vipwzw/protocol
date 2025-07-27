@@ -34,7 +34,7 @@
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
         "hardhat": "^2.19.0",
         "ethers": "^6.15.0",
-        "chai": "^4.0.1",
+        "chai": "^4.5.0",
         "ts-node": "^10.9.0",
         "typedoc": "~0.16.11"
     },

@@ -1,12 +1,9 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
 
-// Configure chai-as-promised for proper async error handling
-chai.use(chaiAsPromised);
 
 describe('CurveLiquidityProvider Feature - Modern Tests', function() {
     // Extended timeout for liquidity provider operations
@@ -42,8 +39,8 @@ describe('CurveLiquidityProvider Feature - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [admin, taker] = signers;
         
-        console.log('👤 Admin:', admin.address);
-        console.log('👤 Taker:', taker.address);
+        console.log('👤 Admin:', admin.target);
+        console.log('👤 Taker:', taker.target);
         console.log('📍 Recipient:', RECIPIENT);
         
         await deployContractsAsync();
@@ -134,7 +131,7 @@ describe('CurveLiquidityProvider Feature - Modern Tests', function() {
         
         // Check balance
         const recipientBalance = await buyToken.balanceOf(RECIPIENT);
-        expect(recipientBalance).to.equal(BUY_AMOUNT);
+        expect(Number(recipientBalance)).to.equal(Number(BUY_AMOUNT));
         
         // Check event was emitted
         const curveCalled = receipt.logs.find((log: any) => log.fragment?.name === 'CurveCalled');
@@ -157,7 +154,7 @@ describe('CurveLiquidityProvider Feature - Modern Tests', function() {
         
         // Check ETH balance increased
         const finalBalance = await ethers.provider.getBalance(RECIPIENT);
-        expect(finalBalance - initialBalance).to.equal(BUY_AMOUNT);
+        expect(Number(finalBalance - initialBalance)).to.equal(Number(BUY_AMOUNT));
         
         // Check event was emitted
         const curveCalled = receipt.logs.find((log: any) => log.fragment?.name === 'CurveCalled');
@@ -178,7 +175,7 @@ describe('CurveLiquidityProvider Feature - Modern Tests', function() {
         
         // Check token balance
         const recipientBalance = await buyToken.balanceOf(RECIPIENT);
-        expect(recipientBalance).to.equal(BUY_AMOUNT);
+        expect(Number(recipientBalance)).to.equal(Number(BUY_AMOUNT));
         
         // Check event was emitted
         const curveCalled = receipt.logs.find((log: any) => log.fragment?.name === 'CurveCalled');
@@ -198,7 +195,7 @@ describe('CurveLiquidityProvider Feature - Modern Tests', function() {
         
         // Check token balance
         const recipientBalance = await buyToken.balanceOf(RECIPIENT);
-        expect(recipientBalance).to.equal(BUY_AMOUNT);
+        expect(Number(recipientBalance)).to.equal(Number(BUY_AMOUNT));
         
         // Check event was emitted
         const curveCalled = receipt.logs.find((log: any) => log.fragment?.name === 'CurveCalled');
@@ -220,7 +217,7 @@ describe('CurveLiquidityProvider Feature - Modern Tests', function() {
         
         // Check token balance
         const recipientBalance = await buyToken.balanceOf(RECIPIENT);
-        expect(recipientBalance).to.equal(BUY_AMOUNT);
+        expect(Number(recipientBalance)).to.equal(Number(BUY_AMOUNT));
         
         // Check event was emitted with correct selector
         const curveCalled = receipt.logs.find((log: any) => log.fragment?.name === 'CurveCalled');
@@ -238,7 +235,7 @@ describe('CurveLiquidityProvider Feature - Modern Tests', function() {
                 BUY_AMOUNT,
                 await encodeCurveData({ exchangeFunctionSelector: REVERTING_SELECTOR })
             )
-        ).to.be.rejectedWith('TestCurve/REVERT');
+        ).to.be.revertedWith('TestCurve/REVERT');
     });
 
     it('reverts if underbought', async function() {
@@ -252,7 +249,7 @@ describe('CurveLiquidityProvider Feature - Modern Tests', function() {
                 BUY_AMOUNT + 1n,
                 await encodeCurveData()
             )
-        ).to.be.rejectedWith('CurveLiquidityProvider/UNDERBOUGHT');
+        ).to.be.revertedWith('CurveLiquidityProvider/UNDERBOUGHT');
     });
 
     it('reverts if ERC20->ERC20 receives an ETH input token', async function() {
@@ -266,7 +263,7 @@ describe('CurveLiquidityProvider Feature - Modern Tests', function() {
                 BUY_AMOUNT,
                 await encodeCurveData()
             )
-        ).to.be.rejectedWith('CurveLiquidityProvider/INVALID_ARGS');
+        ).to.be.revertedWith('CurveLiquidityProvider/INVALID_ARGS');
     });
 
     it('reverts if ERC20->ERC20 receives an ETH output token', async function() {
@@ -280,7 +277,7 @@ describe('CurveLiquidityProvider Feature - Modern Tests', function() {
                 BUY_AMOUNT,
                 await encodeCurveData()
             )
-        ).to.be.rejectedWith('CurveLiquidityProvider/INVALID_ARGS');
+        ).to.be.revertedWith('CurveLiquidityProvider/INVALID_ARGS');
     });
 
     it('reverts if ERC20->ETH receives an ETH input token', async function() {
@@ -293,7 +290,7 @@ describe('CurveLiquidityProvider Feature - Modern Tests', function() {
                 BUY_AMOUNT,
                 await encodeCurveData()
             )
-        ).to.be.rejectedWith('CurveLiquidityProvider/INVALID_ARGS');
+        ).to.be.revertedWith('CurveLiquidityProvider/INVALID_ARGS');
     });
 
     it('reverts if ETH->ERC20 receives an ETH output token', async function() {
@@ -306,7 +303,7 @@ describe('CurveLiquidityProvider Feature - Modern Tests', function() {
                 BUY_AMOUNT,
                 await encodeCurveData()
             )
-        ).to.be.rejectedWith('CurveLiquidityProvider/INVALID_ARGS');
+        ).to.be.revertedWith('CurveLiquidityProvider/INVALID_ARGS');
     });
 
     it('emits a LiquidityProviderFill event', async function() {
@@ -331,7 +328,7 @@ describe('CurveLiquidityProvider Feature - Modern Tests', function() {
             expect(fillEvent.args.outputToken).to.equal(await buyToken.getAddress());
             expect(fillEvent.args.inputTokenAmount).to.equal(SELL_AMOUNT);
             expect(fillEvent.args.outputTokenAmount).to.equal(BUY_AMOUNT);
-            expect(fillEvent.args.sender).to.equal(taker.address);
+            expect(fillEvent.args.sender).to.equal(taker.target);
             expect(fillEvent.args.recipient).to.equal(RECIPIENT);
         }
     });

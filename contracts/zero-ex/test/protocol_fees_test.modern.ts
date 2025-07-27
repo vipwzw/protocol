@@ -1,6 +1,7 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 
 describe('ZeroEx Protocol Fees - Modern Tests', function() {
     // Extended timeout for complex fee operations
@@ -32,10 +33,10 @@ describe('ZeroEx Protocol Fees - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [admin, taker, unauthorized, feeRecipient] = signers;
         
-        console.log('👤 Admin:', admin.address);
-        console.log('👤 Taker:', taker.address);
-        console.log('👤 Unauthorized:', unauthorized.address);
-        console.log('👤 Fee Recipient:', feeRecipient.address);
+        console.log('👤 Admin:', admin.target);
+        console.log('👤 Taker:', taker.target);
+        console.log('👤 Unauthorized:', unauthorized.target);
+        console.log('👤 Fee Recipient:', feeRecipient.target);
         
         await deployTokensAsync();
         await deployProtocolFeesContractsAsync();
@@ -136,13 +137,13 @@ describe('ZeroEx Protocol Fees - Modern Tests', function() {
         // Setup initial balances
         const INITIAL_BALANCE = ethers.parseEther('1000000');
         
-        await weth.mint(taker.address, INITIAL_BALANCE);
-        await weth.mint(admin.address, INITIAL_BALANCE);
-        await weth.mint(feeRecipient.address, INITIAL_BALANCE);
+        await weth.mint(taker.target, INITIAL_BALANCE);
+        await weth.mint(admin.target, INITIAL_BALANCE);
+        await weth.mint(feeRecipient.target, INITIAL_BALANCE);
         
-        await zrx.mint(taker.address, INITIAL_BALANCE);
-        await zrx.mint(admin.address, INITIAL_BALANCE);
-        await zrx.mint(feeRecipient.address, INITIAL_BALANCE);
+        await zrx.mint(taker.target, INITIAL_BALANCE);
+        await zrx.mint(admin.target, INITIAL_BALANCE);
+        await zrx.mint(feeRecipient.target, INITIAL_BALANCE);
         
         // Setup approvals for fee collection
         const protocolFeesAddress = await protocolFees.getAddress();
@@ -213,17 +214,17 @@ describe('ZeroEx Protocol Fees - Modern Tests', function() {
             const transferAmount = ethers.parseEther('100');
             const protocolFeesAddress = await protocolFees.getAddress();
             
-            const initialTakerBalance = await weth.balanceOf(taker.address);
+            const initialTakerBalance = await weth.balanceOf(taker.target);
             const initialProtocolBalance = await weth.balanceOf(protocolFeesAddress);
             
             // Simulate fee collection by transferring to protocol contract
             await weth.connect(taker).transfer(protocolFeesAddress, transferAmount);
             
-            const finalTakerBalance = await weth.balanceOf(taker.address);
+            const finalTakerBalance = await weth.balanceOf(taker.target);
             const finalProtocolBalance = await weth.balanceOf(protocolFeesAddress);
             
-            expect(initialTakerBalance - finalTakerBalance).to.equal(transferAmount);
-            expect(finalProtocolBalance - initialProtocolBalance).to.equal(transferAmount);
+            expect(Number(initialTakerBalance - finalTakerBalance)).to.equal(Number(transferAmount));
+            expect(Number(finalProtocolBalance - initialProtocolBalance)).to.equal(Number(transferAmount));
             
             console.log(`✅ Collected ${ethers.formatEther(transferAmount)} WETH as protocol fee`);
         });
@@ -272,7 +273,7 @@ describe('ZeroEx Protocol Fees - Modern Tests', function() {
             await weth.connect(admin).transfer(feeCollectorAddress, collectionAmount);
             
             const finalBalance = await weth.balanceOf(feeCollectorAddress);
-            expect(finalBalance - initialBalance).to.equal(collectionAmount);
+            expect(Number(finalBalance - initialBalance)).to.equal(Number(collectionAmount));
             
             console.log(`✅ Fee collector received ${ethers.formatEther(collectionAmount)} WETH`);
         });
@@ -299,14 +300,14 @@ describe('ZeroEx Protocol Fees - Modern Tests', function() {
         it('should enforce proper access controls', async function() {
             try {
                 // Test that unauthorized users cannot perform admin operations
-                const unauthorizedAddress = unauthorized.address;
+                const unauthorizedAddress = unauthorized.target;
                 console.log(`Testing access control for: ${unauthorizedAddress}`);
                 
                 // If protocol fees has admin functions, test them
                 if (protocolFees.setProtocolFeeMultiplier) {
                     await expect(
                         protocolFees.connect(unauthorized).setProtocolFeeMultiplier(100000)
-                    ).to.be.rejected;
+                    ).to.be.reverted;
                     console.log('✅ Unauthorized fee multiplier change properly rejected');
                 } else {
                     console.log('✅ Access control validated (mock contract)');
@@ -342,7 +343,7 @@ describe('ZeroEx Protocol Fees - Modern Tests', function() {
             await weth.connect(taker).transfer(protocolFeesAddress, feeAmount);
             
             const finalBalance = await weth.balanceOf(protocolFeesAddress);
-            expect(finalBalance - initialBalance).to.equal(feeAmount);
+            expect(Number(finalBalance - initialBalance)).to.equal(Number(feeAmount));
             
             console.log(`✅ WETH fee collection: ${ethers.formatEther(feeAmount)}`);
         });
@@ -350,16 +351,16 @@ describe('ZeroEx Protocol Fees - Modern Tests', function() {
         it('should support ZRX token operations', async function() {
             const transferAmount = ethers.parseEther('1000');
             
-            const initialTakerBalance = await zrx.balanceOf(taker.address);
-            const initialAdminBalance = await zrx.balanceOf(admin.address);
+            const initialTakerBalance = await zrx.balanceOf(taker.target);
+            const initialAdminBalance = await zrx.balanceOf(admin.target);
             
-            await zrx.connect(taker).transfer(admin.address, transferAmount);
+            await zrx.connect(taker).transfer(admin.target, transferAmount);
             
-            const finalTakerBalance = await zrx.balanceOf(taker.address);
-            const finalAdminBalance = await zrx.balanceOf(admin.address);
+            const finalTakerBalance = await zrx.balanceOf(taker.target);
+            const finalAdminBalance = await zrx.balanceOf(admin.target);
             
-            expect(initialTakerBalance - finalTakerBalance).to.equal(transferAmount);
-            expect(finalAdminBalance - initialAdminBalance).to.equal(transferAmount);
+            expect(Number(initialTakerBalance - finalTakerBalance)).to.equal(Number(transferAmount));
+            expect(Number(finalAdminBalance - initialAdminBalance)).to.equal(Number(transferAmount));
             
             console.log(`✅ ZRX transfer: ${ethers.formatEther(transferAmount)}`);
         });

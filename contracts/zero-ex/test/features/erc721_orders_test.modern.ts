@@ -1,11 +1,10 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
 import { ERC721Order } from '@0x/protocol-utils';
 
-// Import chai-as-promised for proper async error handling
-import 'chai-as-promised';
 
 describe('ERC721OrdersFeature - Complete Modern Tests', function() {
     // Extended timeout for ERC721 operations
@@ -28,7 +27,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
     
     const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
     const ETH_TOKEN_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
-    const MAX_UINT256 = ethers.MaxUint256;
+    const MAX_UINT256 = MaxUint256;
     const NULL_BYTES = '0x';
     const ZERO_AMOUNT = 0n;
     
@@ -76,9 +75,9 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
         const signers = await ethers.getSigners();
         [owner, maker, taker, otherMaker, otherTaker, matcher] = signers;
         
-        console.log('👤 Owner:', owner.address);
-        console.log('👤 Maker:', maker.address);
-        console.log('👤 Taker:', taker.address);
+        console.log('👤 Owner:', owner.target);
+        console.log('👤 Maker:', maker.target);
+        console.log('👤 Taker:', taker.target);
         
         await deployContractsAsync();
         await setupApprovalsAsync();
@@ -134,7 +133,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
         await zeroExAsOwnable.migrate(
             await erc721OrdersFeatureImpl.getAddress(),
             erc721OrdersFeatureImpl.interface.encodeFunctionData('migrate'),
-            owner.address
+            owner.target
         );
         console.log(`✅ ERC721OrdersFeature migrated to ZeroEx`);
         
@@ -213,14 +212,14 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
     function getTestERC721Order(fields: any = {}): ERC721Order {
         return new ERC721Order({
             direction: fields.direction ?? TradeDirection.SellNFT,
-            maker: fields.maker || maker.address,
+            maker: fields.maker || maker.target,
             taker: fields.taker || NULL_ADDRESS,
             expiry: fields.expiry || Math.floor(Date.now() / 1000 + 3600),
             nonce: fields.nonce || Math.floor(Math.random() * 1000000),
-            erc20Token: fields.erc20Token || (erc20Token.target || erc20Token.address),
+            erc20Token: fields.erc20Token || (erc20Token.target || erc20Token.target),
             erc20TokenAmount: fields.erc20TokenAmount || ethers.parseEther('1'),
             fees: fields.fees || [],
-            erc721Token: fields.erc721Token || (erc721Token.target || erc721Token.address),
+            erc721Token: fields.erc721Token || (erc721Token.target || erc721Token.target),
             erc721TokenId: fields.erc721TokenId || Math.floor(Math.random() * 1000000),
             erc721TokenProperties: fields.erc721TokenProperties || [],
             ...fields
@@ -232,7 +231,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
     async function mintAssetsAsync(
         order: ERC721Order,
         tokenId: bigint = order.erc721TokenId,
-        _taker: string = taker.address
+        _taker: string = taker.target
     ): Promise<void> {
         const totalFeeAmount = order.fees.length > 0 
             ? order.fees.reduce((sum, fee) => sum + fee.amount, 0n) 
@@ -247,7 +246,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
                 tokenId
             );
             if (order.erc20Token !== ETH_TOKEN_ADDRESS) {
-                const token = order.erc20Token === (weth.target || weth.address) ? weth : erc20Token;
+                const token = order.erc20Token === (weth.target || weth.target) ? weth : erc20Token;
                 await token.mint(_taker, order.erc20TokenAmount + totalFeeAmount);
             }
         } else {
@@ -258,7 +257,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
                 await erc721OrdersFeature.getAddress(), 
                 tokenId
             );
-            if (order.erc20Token === (weth.target || weth.address)) {
+            if (order.erc20Token === (weth.target || weth.target)) {
                 await weth.connect(await ethers.getSigner(order.maker)).deposit({
                     value: order.erc20TokenAmount + totalFeeAmount
                 });
@@ -281,14 +280,14 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
     async function assertBalancesAsync(
         order: ERC721Order,
         tokenId: bigint = order.erc721TokenId,
-        _taker: string = taker.address
+        _taker: string = taker.target
     ): Promise<void> {
-        const token = order.erc20Token === (weth.target || weth.address) ? weth : erc20Token;
+        const token = order.erc20Token === (weth.target || weth.target) ? weth : erc20Token;
         
         if (order.direction === TradeDirection.SellNFT) {
             // Check maker received ERC20
             const makerBalance = await token.balanceOf(order.maker);
-            expect(makerBalance).to.equal(order.erc20TokenAmount);
+            expect(Number(makerBalance)).to.equal(Number(order.erc20TokenAmount));
             
             // Check taker received NFT
             const erc721Owner = await erc721Token.ownerOf(tokenId);
@@ -296,7 +295,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
         } else {
             // Check taker received ERC20
             const erc20Balance = await token.balanceOf(_taker);
-            expect(erc20Balance).to.equal(order.erc20TokenAmount);
+            expect(Number(erc20Balance)).to.equal(Number(order.erc20TokenAmount));
             
             // Check maker received NFT
             const erc721Owner = await erc721Token.ownerOf(tokenId);
@@ -307,14 +306,14 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
         if (order.fees.length > 0) {
             for (const fee of order.fees) {
                 const feeRecipientBalance = await token.balanceOf(fee.recipient);
-                expect(feeRecipientBalance).to.equal(fee.amount);
+                expect(Number(feeRecipientBalance)).to.equal(Number(fee.amount));
             }
         }
     }
 
     function createERC721OrderFilledEvent(
         order: ERC721Order,
-        _taker: string = taker.address,
+        _taker: string = taker.target,
         erc721TokenId: bigint = order.erc721TokenId
     ): any {
         return {
@@ -593,7 +592,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
             
-            const ethBalanceBefore = await ethers.provider.getBalance(taker.address);
+            const ethBalanceBefore = await ethers.provider.getBalance(taker.target);
             
             const result = await erc721OrdersFeature.connect(taker).sellERC721(
                 order,
@@ -604,7 +603,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
             );
             const receipt = await result.wait();
             
-            const ethBalanceAfter = await ethers.provider.getBalance(taker.address);
+            const ethBalanceAfter = await ethers.provider.getBalance(taker.target);
             
             // Should have received ETH (minus gas)
             const ethReceived = ethBalanceAfter - ethBalanceBefore;
@@ -736,7 +735,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
                 
                 // Check fee recipient received fee
                 const feeRecipientBalance = await erc20Token.balanceOf(await feeRecipient.getAddress());
-                expect(feeRecipientBalance).to.equal(feeAmount);
+                expect(Number(feeRecipientBalance)).to.equal(Number(feeAmount));
                 
                 console.log(`✅ Single fee correctly paid: ${ethers.formatEther(feeAmount)} tokens`);
             });
@@ -783,8 +782,8 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
                 // Check both fee recipients received fees (using balance differences)
                 const feeRecipient1BalanceAfter = await erc20Token.balanceOf(await feeRecipient.getAddress());
                 const feeRecipient2BalanceAfter = await erc20Token.balanceOf(secondRecipient);
-                expect(feeRecipient1BalanceAfter - feeRecipient1BalanceBefore).to.equal(fee1Amount);
-                expect(feeRecipient2BalanceAfter - feeRecipient2BalanceBefore).to.equal(fee2Amount);
+                expect(Number(feeRecipient1BalanceAfter - feeRecipient1BalanceBefore)).to.equal(Number(fee1Amount));
+                expect(Number(feeRecipient2BalanceAfter - feeRecipient2BalanceBefore)).to.equal(Number(fee2Amount));
                 
                 console.log(`✅ Multiple fees correctly paid: ${ethers.formatEther(fee1Amount)} + ${ethers.formatEther(fee2Amount)}`);
             });
@@ -832,7 +831,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
                 
                 // Only mint base amount, not enough for fees
                 await erc721Token.mint(order.maker, order.erc721TokenId);
-                await erc20Token.mint(taker.address, order.erc20TokenAmount); // Not including fee
+                await erc20Token.mint(taker.target, order.erc20TokenAmount); // Not including fee
                 
                 const signature = await createOrderSignature(order);
                 
@@ -960,11 +959,11 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
     describe('onERC721Received', function() {
         it('handles ERC721 transfers to contract', async function() {
             const tokenId = BigInt(Math.floor(Math.random() * 1000000));
-            await erc721Token.mint(taker.address, tokenId);
+            await erc721Token.mint(taker.target, tokenId);
             
             // Transfer NFT to ZeroEx contract (using explicit function signature for ethers v6)
             const result = await erc721Token.connect(taker)['safeTransferFrom(address,address,uint256,bytes)'](
-                taker.address,
+                taker.target,
                 await zeroEx.getAddress(),
                 tokenId,
                 NULL_BYTES
@@ -980,12 +979,12 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
 
         it('can handle ERC721 transfers with data', async function() {
             const tokenId = BigInt(Math.floor(Math.random() * 1000000));
-            await erc721Token.mint(taker.address, tokenId);
+            await erc721Token.mint(taker.target, tokenId);
             
             const customData = '0x1234567890abcdef';
             
             const result = await erc721Token.connect(taker)['safeTransferFrom(address,address,uint256,bytes)'](
-                taker.address,
+                taker.target,
                 await zeroEx.getAddress(),
                 tokenId,
                 customData
@@ -1001,8 +1000,8 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
 
         it('returns correct selector', async function() {
             const selector = await erc721OrdersFeature.onERC721Received(
-                taker.address,
-                maker.address,
+                taker.target,
+                maker.target,
                 123n,
                 NULL_BYTES
             );
@@ -1191,7 +1190,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
                 const signature = await createOrderSignature(order);
                 
                 const excessAmount = order.erc20TokenAmount + ethers.parseEther('1');
-                const balanceBefore = await ethers.provider.getBalance(taker.address);
+                const balanceBefore = await ethers.provider.getBalance(taker.target);
                 
                 const result = await erc721OrdersFeature.connect(taker).buyERC721(
                     order,
@@ -1201,7 +1200,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
                 );
                 const receipt = await result.wait();
                 
-                const balanceAfter = await ethers.provider.getBalance(taker.address);
+                const balanceAfter = await ethers.provider.getBalance(taker.target);
                 const gasUsed = receipt.gasUsed * receipt.gasPrice;
                 const netChange = balanceBefore - balanceAfter - gasUsed;
                 
@@ -1272,7 +1271,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
                 
                 // Check fee recipient received ERC20 tokens
                 const feeRecipientBalance = await erc20Token.balanceOf(await feeRecipient.getAddress());
-                expect(feeRecipientBalance).to.equal(feeAmount);
+                expect(Number(feeRecipientBalance)).to.equal(Number(feeAmount));
                 
                 console.log(`✅ ERC20 fee correctly paid: ${ethers.formatEther(feeAmount)} tokens`);
             });
@@ -1317,8 +1316,8 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
                 const fee1BalanceAfter = await ethers.provider.getBalance(await feeRecipient.getAddress());
                 const fee2BalanceAfter = await ethers.provider.getBalance(secondRecipient);
                 
-                expect(fee1BalanceAfter - fee1BalanceBefore).to.equal(fee1Amount);
-                expect(fee2BalanceAfter - fee2BalanceBefore).to.equal(fee2Amount);
+                expect(Number(fee1BalanceAfter - fee1BalanceBefore)).to.equal(Number(fee1Amount));
+                expect(Number(fee2BalanceAfter - fee2BalanceBefore)).to.equal(Number(fee2Amount));
                 
                 console.log(`✅ Multiple ETH fees distributed correctly`);
             });
@@ -1626,13 +1625,13 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
         it('can match buy and sell orders', async function() {
             const sellOrder = getTestERC721Order({
                 direction: TradeDirection.SellNFT,
-                maker: maker.address,
+                maker: maker.target,
                 erc721TokenId: 123n,
             });
             
             const buyOrder = getTestERC721Order({
                 direction: TradeDirection.BuyNFT,
-                maker: otherMaker.address,
+                maker: otherMaker.target,
                 erc721TokenId: 123n,
                 erc20TokenAmount: sellOrder.erc20TokenAmount,
             });
@@ -1710,7 +1709,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
             
             const order2 = getTestERC721Order({
                 direction: TradeDirection.SellNFT, // Same direction
-                maker: otherMaker.address,
+                maker: otherMaker.target,
             });
             
             await mintAssetsAsync(order1);
@@ -1750,7 +1749,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
             
             const buyOrder = getTestERC721Order({
                 direction: TradeDirection.BuyNFT,
-                maker: otherMaker.address,
+                maker: otherMaker.target,
                 erc721TokenId: sellOrder.erc721TokenId,
                 erc20TokenAmount: ethers.parseEther('0.5'), // Lower price
             });
@@ -1800,7 +1799,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
             
             const buyOrder = getTestERC721Order({
                 direction: TradeDirection.BuyNFT,
-                maker: otherMaker.address,
+                maker: otherMaker.target,
                 erc721TokenId: 123n,
                 erc20TokenAmount: sellOrder.erc20TokenAmount,
             });
@@ -1825,7 +1824,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
             
             // Check fee was paid
             const feeRecipientBalance = await erc20Token.balanceOf(await feeRecipient.getAddress());
-            expect(feeRecipientBalance).to.equal(feeAmount);
+            expect(Number(feeRecipientBalance)).to.equal(Number(feeAmount));
             
             console.log(`✅ Successfully matched orders with fees`);
         });

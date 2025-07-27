@@ -1,11 +1,10 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
 import { OtcOrder } from '@0x/protocol-utils';
-import { BigNumber } from '@0x/utils';
+// BigNumber removed - using native BigInt
 // 导入通用部署函数
 import { 
     deployZeroExWithFullMigration, 
@@ -14,8 +13,6 @@ import {
     type ZeroExDeploymentResult 
 } from '../utils/deployment-helper';
 
-// Configure chai-as-promised for proper async error handling
-chai.use(chaiAsPromised);
 
 describe('OtcOrdersFeature - Modern Tests', function() {
     // Extended timeout for OTC order operations
@@ -39,7 +36,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
     let otcFeature: any; // OtcOrdersFeature interface pointing to ZeroEx
     
     const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
-    const MAX_UINT256 = ethers.MaxUint256;
+    const MAX_UINT256 = MaxUint256;
     const ZERO = 0n;
     const ETH_TOKEN_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
     
@@ -66,10 +63,10 @@ describe('OtcOrdersFeature - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [owner, maker, taker, notMaker, notTaker, contractWalletOwner, contractWalletSigner, txOrigin, notTxOrigin] = signers;
         
-        console.log('👤 Owner:', owner.address);
-        console.log('👤 Maker:', maker.address);
-        console.log('👤 Taker:', taker.address);
-        console.log('👤 TxOrigin:', txOrigin.address);
+        console.log('👤 Owner:', owner.target);
+        console.log('👤 Maker:', maker.target);
+        console.log('👤 Taker:', taker.target);
+        console.log('👤 TxOrigin:', txOrigin.target);
         
         await deployContractsAsync();
         await setupTestUtilsAsync();
@@ -124,7 +121,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             // Prepare balances for orders
             prepareBalancesForOrdersAsync: async function(orders: any[], recipient?: any) {
                 for (const order of orders) {
-                    const recipientAddr = recipient ? recipient.address : taker.address;
+                    const recipientAddr = recipient ? recipient.target : taker.target;
                     
                     // Mint maker tokens to maker
                     await makerToken.mint(order.maker, order.makerAmount);
@@ -202,7 +199,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
                 return {
                     orderHash: this.getOrderHash(order),
                     maker: order.maker,
-                    taker: order.taker !== NULL_ADDRESS ? order.taker : taker.address,
+                    taker: order.taker !== NULL_ADDRESS ? order.taker : taker.target,
                     makerToken: order.makerToken,
                     takerToken: order.takerToken,
                     makerTokenFilledAmount,
@@ -242,13 +239,13 @@ describe('OtcOrdersFeature - Modern Tests', function() {
         const nonce = fields.nonce || new BigNumber(Math.floor(Math.random() * 1000000));
         
         return new OtcOrder({
-            maker: fields.maker || maker.address,
+            maker: fields.maker || maker.target,
             taker: fields.taker || NULL_ADDRESS,
-            makerToken: fields.makerToken || (makerToken.target || makerToken.address),
-            takerToken: fields.takerToken || (takerToken.target || takerToken.address),
+            makerToken: fields.makerToken || (makerToken.target || makerToken.target),
+            takerToken: fields.takerToken || (takerToken.target || takerToken.target),
             makerAmount: fields.makerAmount || ethers.parseEther('100'), // 100 ether
             takerAmount: fields.takerAmount || ethers.parseEther('50'), // 50 ether  
-            txOrigin: fields.txOrigin || taker.address,
+            txOrigin: fields.txOrigin || taker.target,
             expiryAndNonce: OtcOrder.encodeExpiryAndNonce(expiry, nonceBucket, nonce),
             verifyingContract: deployment.verifyingContract,
             chainId: 1337,
@@ -261,10 +258,10 @@ describe('OtcOrdersFeature - Modern Tests', function() {
         const { makerTokenFilledAmount, takerTokenFilledAmount } = testUtils.computeOtcOrderFilledAmounts(order, filledAmount);
         
         const makerBalance = await takerToken.balanceOf(order.maker);
-        const takerBalance = await makerToken.balanceOf(order.taker !== NULL_ADDRESS ? order.taker : taker.address);
+        const takerBalance = await makerToken.balanceOf(order.taker !== NULL_ADDRESS ? order.taker : taker.target);
         
-        expect(makerBalance, 'maker balance').to.equal(takerTokenFilledAmount);
-        expect(takerBalance, 'taker balance').to.equal(makerTokenFilledAmount);
+        expect(Number(makerBalance, 'maker balance')).to.equal(Number(takerTokenFilledAmount));
+        expect(Number(takerBalance, 'taker balance')).to.equal(Number(makerTokenFilledAmount));
     }
 
     describe('fillOtcOrder()', function() {
@@ -317,24 +314,24 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             
             await expect(
                 testUtils.fillOtcOrderAsync(order, order.takerAmount, notTaker)
-            ).to.be.rejectedWith('OrderNotFillableByOriginError');
+            ).to.be.revertedWith('OrderNotFillableByOriginError');
             
             console.log(`✅ Correctly rejected wrong tx.origin`);
         });
 
         it('cannot fill an order with wrong taker', async function() {
-            const order = getTestOtcOrder({ taker: notTaker.address });
+            const order = getTestOtcOrder({ taker: notTaker.target });
             
             await expect(
                 testUtils.fillOtcOrderAsync(order)
-            ).to.be.rejectedWith('OrderNotFillableByTakerError');
+            ).to.be.revertedWith('OrderNotFillableByTakerError');
             
             console.log(`✅ Correctly rejected wrong taker`);
         });
 
         it('can fill an order from a different tx.origin if registered', async function() {
             const order = getTestOtcOrder();
-            await deployment.zeroEx.connect(taker).registerAllowedRfqOrigins([notTaker.address], true);
+            await deployment.zeroEx.connect(taker).registerAllowedRfqOrigins([notTaker.target], true);
             
             const result = await testUtils.fillOtcOrderAsync(order, order.takerAmount, notTaker);
             await result.wait();
@@ -344,12 +341,12 @@ describe('OtcOrdersFeature - Modern Tests', function() {
 
         it('cannot fill an order with registered then unregistered tx.origin', async function() {
             const order = getTestOtcOrder();
-            await deployment.zeroEx.connect(taker).registerAllowedRfqOrigins([notTaker.address], true);
-            await deployment.zeroEx.connect(taker).registerAllowedRfqOrigins([notTaker.address], false);
+            await deployment.zeroEx.connect(taker).registerAllowedRfqOrigins([notTaker.target], true);
+            await deployment.zeroEx.connect(taker).registerAllowedRfqOrigins([notTaker.target], false);
             
             await expect(
                 testUtils.fillOtcOrderAsync(order, order.takerAmount, notTaker)
-            ).to.be.rejectedWith('OrderNotFillableByOriginError');
+            ).to.be.revertedWith('OrderNotFillableByOriginError');
             
             console.log(`✅ Correctly rejected unregistered tx.origin`);
         });
@@ -359,7 +356,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             
             await expect(
                 testUtils.fillOtcOrderAsync(order)
-            ).to.be.rejectedWith('OrderNotFillableByOriginError');
+            ).to.be.revertedWith('OrderNotFillableByOriginError');
             
             console.log(`✅ Correctly rejected zero tx.origin`);
         });
@@ -369,7 +366,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             
             await expect(
                 testUtils.fillOtcOrderAsync(order)
-            ).to.be.rejectedWith('OrderNotFillableError');
+            ).to.be.revertedWith('OrderNotFillableError');
             
             console.log(`✅ Correctly rejected expired order`);
         });
@@ -381,7 +378,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             
             await expect(
                 testUtils.fillOtcOrderAsync(badOrder)
-            ).to.be.rejectedWith('OrderNotSignedByMakerError');
+            ).to.be.revertedWith('OrderNotSignedByMakerError');
             
             console.log(`✅ Correctly rejected bad signature`);
         });
@@ -393,7 +390,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             
             await expect(
                 deployment.zeroEx.connect(taker).fillOtcOrder(order, signature, order.takerAmount, { value: 1 })
-            ).to.be.rejected; // Revert at language level because function is not payable
+            ).to.be.reverted; // Revert at language level because function is not payable
             
             console.log(`✅ Correctly rejected ETH attachment`);
         });
@@ -404,7 +401,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             
             await expect(
                 testUtils.fillOtcOrderAsync(order)
-            ).to.be.rejectedWith('OrderNotFillableError');
+            ).to.be.revertedWith('OrderNotFillableError');
             
             console.log(`✅ Correctly prevented double fill`);
         });
@@ -420,7 +417,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             
             await expect(
                 testUtils.fillOtcOrderAsync(order2)
-            ).to.be.rejectedWith('OrderNotFillableError');
+            ).to.be.revertedWith('OrderNotFillableError');
             
             console.log(`✅ Correctly rejected duplicate nonce`);
         });
@@ -436,7 +433,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             
             await expect(
                 testUtils.fillOtcOrderAsync(order2)
-            ).to.be.rejectedWith('OrderNotFillableError');
+            ).to.be.revertedWith('OrderNotFillableError');
             
             console.log(`✅ Correctly rejected lower nonce`);
         });
@@ -481,7 +478,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
         });
 
         it('can fill a WETH buy order and receive ETH', async function() {
-            const takerEthBalanceBefore = await ethers.provider.getBalance(taker.address);
+            const takerEthBalanceBefore = await ethers.provider.getBalance(taker.target);
             const order = getTestOtcOrder({ 
                 makerToken: await wethToken.getAddress(), 
                 makerAmount: ethers.parseEther('1') 
@@ -493,8 +490,8 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             const result = await testUtils.fillOtcOrderAsync(order, order.takerAmount, taker, true);
             await result.wait();
             
-            const takerEthBalanceAfter = await ethers.provider.getBalance(taker.address);
-            expect(takerEthBalanceAfter - takerEthBalanceBefore).to.equal(order.makerAmount);
+            const takerEthBalanceAfter = await ethers.provider.getBalance(taker.target);
+            expect(Number(takerEthBalanceAfter - takerEthBalanceBefore)).to.equal(Number(order.makerAmount));
             
             console.log(`✅ Filled WETH buy order and received ETH: ${ethers.formatEther(order.makerAmount.toString())}`);
         });
@@ -504,7 +501,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             
             await expect(
                 testUtils.fillOtcOrderAsync(order, order.takerAmount, taker, true)
-            ).to.be.rejectedWith('MAKER_TOKEN_NOT_WETH');
+            ).to.be.revertedWith('MAKER_TOKEN_NOT_WETH');
             
             console.log(`✅ Correctly rejected unwrapWeth with non-WETH token`);
         });
@@ -518,7 +515,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             // Provide contract wallet with balance
             await makerToken.mint(await contractWallet.getAddress(), order.makerAmount);
             // Allow signer
-            await contractWallet.connect(contractWalletOwner).registerAllowedOrderSigner(contractWalletSigner.address, true);
+            await contractWallet.connect(contractWalletOwner).registerAllowedOrderSigner(contractWalletSigner.target, true);
             
             // Fill should succeed
             const result = await otcFeature.connect(taker).fillOtcOrder(order, sig, order.takerAmount);
@@ -541,14 +538,14 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             await makerToken.mint(await contractWallet.getAddress(), order.makerAmount);
             
             // First allow signer
-            await contractWallet.connect(contractWalletOwner).registerAllowedOrderSigner(contractWalletSigner.address, true);
+            await contractWallet.connect(contractWalletOwner).registerAllowedOrderSigner(contractWalletSigner.target, true);
             // Then disallow signer
-            await contractWallet.connect(contractWalletOwner).registerAllowedOrderSigner(contractWalletSigner.address, false);
+            await contractWallet.connect(contractWalletOwner).registerAllowedOrderSigner(contractWalletSigner.target, false);
             
             // Fill should revert
             await expect(
                 otcFeature.connect(taker).fillOtcOrder(order, sig, order.takerAmount)
-            ).to.be.rejectedWith('OrderNotSignedByMakerError');
+            ).to.be.revertedWith('OrderNotSignedByMakerError');
             
             console.log(`✅ Correctly rejected revoked signer`);
         });
@@ -564,7 +561,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             // Fill should revert
             await expect(
                 otcFeature.connect(taker).fillOtcOrder(order, sig, order.takerAmount)
-            ).to.be.rejectedWith('OrderNotSignedByMakerError');
+            ).to.be.revertedWith('OrderNotSignedByMakerError');
             
             console.log(`✅ Correctly rejected unapproved signer`);
         });
@@ -586,7 +583,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
 
         it('Can fill an order with ETH (takerToken=ETH)', async function() {
             const order = getTestOtcOrder({ takerToken: ETH_TOKEN_ADDRESS });
-            const makerEthBalanceBefore = await ethers.provider.getBalance(maker.address);
+            const makerEthBalanceBefore = await ethers.provider.getBalance(maker.target);
             
             const result = await testUtils.fillOtcOrderWithEthAsync(order);
             const receipt = await result.wait();
@@ -594,11 +591,11 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OtcOrderFilled');
             expect(fillEvent).to.not.be.undefined;
             
-            const takerBalance = await makerToken.balanceOf(taker.address);
-            expect(takerBalance, 'taker balance').to.equal(order.makerAmount);
+            const takerBalance = await makerToken.balanceOf(taker.target);
+            expect(Number(takerBalance, 'taker balance')).to.equal(Number(order.makerAmount));
             
-            const makerEthBalanceAfter = await ethers.provider.getBalance(maker.address);
-            expect(makerEthBalanceAfter - makerEthBalanceBefore, 'maker balance').to.equal(order.takerAmount);
+            const makerEthBalanceAfter = await ethers.provider.getBalance(maker.target);
+            expect(Number(makerEthBalanceAfter - makerEthBalanceBefore, 'maker balance')).to.equal(Number(order.takerAmount));
             
             console.log(`✅ Filled order with ETH (taker token = ETH)`);
         });
@@ -621,7 +618,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
         it('Can partially fill an order with ETH (takerToken=ETH)', async function() {
             const order = getTestOtcOrder({ takerToken: ETH_TOKEN_ADDRESS });
             const fillAmount = order.takerAmount - 1n;
-            const makerEthBalanceBefore = await ethers.provider.getBalance(maker.address);
+            const makerEthBalanceBefore = await ethers.provider.getBalance(maker.target);
             
             const result = await testUtils.fillOtcOrderWithEthAsync(order, fillAmount);
             const receipt = await result.wait();
@@ -630,11 +627,11 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             expect(fillEvent).to.not.be.undefined;
             
             const { makerTokenFilledAmount, takerTokenFilledAmount } = testUtils.computeOtcOrderFilledAmounts(order, fillAmount);
-            const takerBalance = await makerToken.balanceOf(taker.address);
-            expect(takerBalance, 'taker balance').to.equal(makerTokenFilledAmount);
+            const takerBalance = await makerToken.balanceOf(taker.target);
+            expect(Number(takerBalance, 'taker balance')).to.equal(Number(makerTokenFilledAmount));
             
-            const makerEthBalanceAfter = await ethers.provider.getBalance(maker.address);
-            expect(makerEthBalanceAfter - makerEthBalanceBefore, 'maker balance').to.equal(takerTokenFilledAmount);
+            const makerEthBalanceAfter = await ethers.provider.getBalance(maker.target);
+            expect(Number(makerEthBalanceAfter - makerEthBalanceBefore, 'maker balance')).to.equal(Number(takerTokenFilledAmount));
             
             console.log(`✅ Partially filled order with ETH (ETH): ${ethers.formatEther(fillAmount.toString())}`);
         });
@@ -642,7 +639,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
         it('Can refund excess ETH is msg.value > order.takerAmount (takerToken=WETH)', async function() {
             const order = getTestOtcOrder({ takerToken: await wethToken.getAddress() });
             const fillAmount = order.takerAmount + 420n;
-            const takerEthBalanceBefore = await ethers.provider.getBalance(taker.address);
+            const takerEthBalanceBefore = await ethers.provider.getBalance(taker.target);
             
             const result = await testUtils.fillOtcOrderWithEthAsync(order, fillAmount);
             const receipt = await result.wait();
@@ -650,8 +647,8 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OtcOrderFilled');
             expect(fillEvent).to.not.be.undefined;
             
-            const takerEthBalanceAfter = await ethers.provider.getBalance(taker.address);
-            expect(takerEthBalanceBefore - takerEthBalanceAfter).to.equal(order.takerAmount);
+            const takerEthBalanceAfter = await ethers.provider.getBalance(taker.target);
+            expect(Number(takerEthBalanceBefore - takerEthBalanceAfter)).to.equal(Number(order.takerAmount));
             
             await assertExpectedFinalBalancesFromOtcOrderFillAsync(order);
             
@@ -661,8 +658,8 @@ describe('OtcOrdersFeature - Modern Tests', function() {
         it('Can refund excess ETH is msg.value > order.takerAmount (takerToken=ETH)', async function() {
             const order = getTestOtcOrder({ takerToken: ETH_TOKEN_ADDRESS });
             const fillAmount = order.takerAmount + 420n;
-            const takerEthBalanceBefore = await ethers.provider.getBalance(taker.address);
-            const makerEthBalanceBefore = await ethers.provider.getBalance(maker.address);
+            const takerEthBalanceBefore = await ethers.provider.getBalance(taker.target);
+            const makerEthBalanceBefore = await ethers.provider.getBalance(maker.target);
             
             const result = await testUtils.fillOtcOrderWithEthAsync(order, fillAmount);
             const receipt = await result.wait();
@@ -670,14 +667,14 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OtcOrderFilled');
             expect(fillEvent).to.not.be.undefined;
             
-            const takerEthBalanceAfter = await ethers.provider.getBalance(taker.address);
-            expect(takerEthBalanceBefore - takerEthBalanceAfter, 'taker eth balance').to.equal(order.takerAmount);
+            const takerEthBalanceAfter = await ethers.provider.getBalance(taker.target);
+            expect(Number(takerEthBalanceBefore - takerEthBalanceAfter, 'taker eth balance')).to.equal(Number(order.takerAmount));
             
-            const takerBalance = await makerToken.balanceOf(taker.address);
-            expect(takerBalance, 'taker balance').to.equal(order.makerAmount);
+            const takerBalance = await makerToken.balanceOf(taker.target);
+            expect(Number(takerBalance, 'taker balance')).to.equal(Number(order.makerAmount));
             
-            const makerEthBalanceAfter = await ethers.provider.getBalance(maker.address);
-            expect(makerEthBalanceAfter - makerEthBalanceBefore, 'maker balance').to.equal(order.takerAmount);
+            const makerEthBalanceAfter = await ethers.provider.getBalance(maker.target);
+            expect(Number(makerEthBalanceAfter - makerEthBalanceBefore, 'maker balance')).to.equal(Number(order.takerAmount));
             
             console.log(`✅ Refunded excess ETH (ETH): sent ${ethers.formatEther(fillAmount.toString())}, used ${ethers.formatEther(order.takerAmount.toString())}`);
         });
@@ -687,7 +684,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             
             await expect(
                 testUtils.fillOtcOrderWithEthAsync(order)
-            ).to.be.rejectedWith('INVALID_TAKER_TOKEN');
+            ).to.be.revertedWith('INVALID_TAKER_TOKEN');
             
             console.log(`✅ Correctly rejected invalid taker token for ETH fill`);
         });
@@ -695,7 +692,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
 
     describe('fillTakerSignedOtcOrder()', function() {
         it('can fully fill an order', async function() {
-            const order = getTestOtcOrder({ taker: taker.address, txOrigin: txOrigin.address });
+            const order = getTestOtcOrder({ taker: taker.target, txOrigin: txOrigin.target });
             const result = await testUtils.fillTakerSignedOtcOrderAsync(order);
             const receipt = await result.wait();
             
@@ -708,18 +705,18 @@ describe('OtcOrdersFeature - Modern Tests', function() {
         });
 
         it('cannot fill an order with wrong tx.origin', async function() {
-            const order = getTestOtcOrder({ taker: taker.address, txOrigin: txOrigin.address });
+            const order = getTestOtcOrder({ taker: taker.target, txOrigin: txOrigin.target });
             
             await expect(
                 testUtils.fillTakerSignedOtcOrderAsync(order, notTxOrigin)
-            ).to.be.rejectedWith('OrderNotFillableByOriginError');
+            ).to.be.revertedWith('OrderNotFillableByOriginError');
             
             console.log(`✅ Correctly rejected wrong tx.origin for taker signed order`);
         });
 
         it('can fill an order from a different tx.origin if registered', async function() {
-            const order = getTestOtcOrder({ taker: taker.address, txOrigin: txOrigin.address });
-            await deployment.zeroEx.connect(txOrigin).registerAllowedRfqOrigins([notTxOrigin.address], true);
+            const order = getTestOtcOrder({ taker: taker.target, txOrigin: txOrigin.target });
+            await deployment.zeroEx.connect(txOrigin).registerAllowedRfqOrigins([notTxOrigin.target], true);
             
             const result = await testUtils.fillTakerSignedOtcOrderAsync(order, notTxOrigin);
             await result.wait();
@@ -728,19 +725,19 @@ describe('OtcOrdersFeature - Modern Tests', function() {
         });
 
         it('cannot fill an order with registered then unregistered tx.origin', async function() {
-            const order = getTestOtcOrder({ taker: taker.address, txOrigin: txOrigin.address });
-            await deployment.zeroEx.connect(txOrigin).registerAllowedRfqOrigins([notTxOrigin.address], true);
-            await deployment.zeroEx.connect(txOrigin).registerAllowedRfqOrigins([notTxOrigin.address], false);
+            const order = getTestOtcOrder({ taker: taker.target, txOrigin: txOrigin.target });
+            await deployment.zeroEx.connect(txOrigin).registerAllowedRfqOrigins([notTxOrigin.target], true);
+            await deployment.zeroEx.connect(txOrigin).registerAllowedRfqOrigins([notTxOrigin.target], false);
             
             await expect(
                 testUtils.fillTakerSignedOtcOrderAsync(order, notTxOrigin)
-            ).to.be.rejectedWith('OrderNotFillableByOriginError');
+            ).to.be.revertedWith('OrderNotFillableByOriginError');
             
             console.log(`✅ Correctly rejected unregistered tx.origin for taker signed order`);
         });
 
         it('can fill two orders that use the same nonce bucket and increasing nonces', async function() {
-            const order1 = getTestOtcOrder({ taker: taker.address, txOrigin: txOrigin.address });
+            const order1 = getTestOtcOrder({ taker: taker.target, txOrigin: txOrigin.target });
             const result1 = await testUtils.fillTakerSignedOtcOrderAsync(order1);
             const receipt1 = await result1.wait();
             
@@ -748,8 +745,8 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             expect(fillEvent1).to.not.be.undefined;
             
             const order2 = getTestOtcOrder({
-                taker: taker.address,
-                txOrigin: txOrigin.address,
+                taker: taker.target,
+                txOrigin: txOrigin.target,
                 nonceBucket: order1.nonceBucket,
                 nonce: order1.nonce + 1n
             });
@@ -763,7 +760,7 @@ describe('OtcOrdersFeature - Modern Tests', function() {
         });
 
         it('can fill two orders that use the same nonce but different nonce buckets', async function() {
-            const order1 = getTestOtcOrder({ taker: taker.address, txOrigin: txOrigin.address });
+            const order1 = getTestOtcOrder({ taker: taker.target, txOrigin: txOrigin.target });
             const result1 = await testUtils.fillTakerSignedOtcOrderAsync(order1);
             const receipt1 = await result1.wait();
             
@@ -771,8 +768,8 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             expect(fillEvent1).to.not.be.undefined;
             
             const order2 = getTestOtcOrder({ 
-                taker: taker.address, 
-                txOrigin: txOrigin.address, 
+                taker: taker.target, 
+                txOrigin: txOrigin.target, 
                 nonce: order1.nonce 
             });
             const result2 = await testUtils.fillTakerSignedOtcOrderAsync(order2);
@@ -785,10 +782,10 @@ describe('OtcOrdersFeature - Modern Tests', function() {
         });
 
         it('can fill a WETH buy order and receive ETH', async function() {
-            const takerEthBalanceBefore = await ethers.provider.getBalance(taker.address);
+            const takerEthBalanceBefore = await ethers.provider.getBalance(taker.target);
             const order = getTestOtcOrder({
-                taker: taker.address,
-                txOrigin: txOrigin.address,
+                taker: taker.target,
+                txOrigin: txOrigin.target,
                 makerToken: await wethToken.getAddress(),
                 makerAmount: ethers.parseEther('1')
             });
@@ -801,18 +798,18 @@ describe('OtcOrdersFeature - Modern Tests', function() {
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OtcOrderFilled');
             expect(fillEvent).to.not.be.undefined;
             
-            const takerEthBalanceAfter = await ethers.provider.getBalance(taker.address);
-            expect(takerEthBalanceAfter - takerEthBalanceBefore).to.equal(order.makerAmount);
+            const takerEthBalanceAfter = await ethers.provider.getBalance(taker.target);
+            expect(Number(takerEthBalanceAfter - takerEthBalanceBefore)).to.equal(Number(order.makerAmount));
             
             console.log(`✅ Filled taker signed WETH order and received ETH: ${ethers.formatEther(order.makerAmount.toString())}`);
         });
 
         it('reverts if `unwrapWeth` is true but maker token is not WETH', async function() {
-            const order = getTestOtcOrder({ taker: taker.address, txOrigin: txOrigin.address });
+            const order = getTestOtcOrder({ taker: taker.target, txOrigin: txOrigin.target });
             
             await expect(
                 testUtils.fillTakerSignedOtcOrderAsync(order, txOrigin, taker, true)
-            ).to.be.rejectedWith('MAKER_TOKEN_NOT_WETH');
+            ).to.be.revertedWith('MAKER_TOKEN_NOT_WETH');
             
             console.log(`✅ Correctly rejected unwrapWeth with non-WETH for taker signed order`);
         });
@@ -820,10 +817,10 @@ describe('OtcOrdersFeature - Modern Tests', function() {
 
     describe('batchFillTakerSignedOtcOrders()', function() {
         it('Fills multiple orders', async function() {
-            const order1 = getTestOtcOrder({ taker: taker.address, txOrigin: txOrigin.address });
+            const order1 = getTestOtcOrder({ taker: taker.target, txOrigin: txOrigin.target });
             const order2 = getTestOtcOrder({
-                taker: notTaker.address,
-                txOrigin: txOrigin.address,
+                taker: notTaker.target,
+                txOrigin: txOrigin.target,
                 nonceBucket: order1.nonceBucket,
                 nonce: order1.nonce + 1n
             });
@@ -851,10 +848,10 @@ describe('OtcOrdersFeature - Modern Tests', function() {
         });
 
         it('Fills multiple orders and unwraps WETH', async function() {
-            const order1 = getTestOtcOrder({ taker: taker.address, txOrigin: txOrigin.address });
+            const order1 = getTestOtcOrder({ taker: taker.target, txOrigin: txOrigin.target });
             const order2 = getTestOtcOrder({
-                taker: notTaker.address,
-                txOrigin: txOrigin.address,
+                taker: notTaker.target,
+                txOrigin: txOrigin.target,
                 nonceBucket: order1.nonceBucket,
                 nonce: order1.nonce + 1n,
                 makerToken: await wethToken.getAddress(),
@@ -885,10 +882,10 @@ describe('OtcOrdersFeature - Modern Tests', function() {
         });
 
         it('Skips over unfillable orders', async function() {
-            const order1 = getTestOtcOrder({ taker: taker.address, txOrigin: txOrigin.address });
+            const order1 = getTestOtcOrder({ taker: taker.target, txOrigin: txOrigin.target });
             const order2 = getTestOtcOrder({
-                taker: notTaker.address,
-                txOrigin: txOrigin.address,
+                taker: notTaker.target,
+                txOrigin: txOrigin.target,
                 nonceBucket: order1.nonceBucket,
                 nonce: order1.nonce + 1n
             });

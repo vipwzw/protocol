@@ -1,6 +1,7 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 // 导入通用部署函数
 import { 
     deployZeroExWithFullMigration, 
@@ -44,12 +45,12 @@ describe('Transform ERC20 Feature - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [admin, owner, taker, sender, transformerDeployer, callDataSigner] = signers;
         
-        console.log('👤 Admin:', admin.address);
-        console.log('👤 Owner:', owner.address);
-        console.log('👤 Taker:', taker.address);
-        console.log('👤 Sender:', sender.address);
-        console.log('👤 Transformer Deployer:', transformerDeployer.address);
-        console.log('👤 CallData Signer:', callDataSigner.address);
+        console.log('👤 Admin:', admin.target);
+        console.log('👤 Owner:', owner.target);
+        console.log('👤 Taker:', taker.target);
+        console.log('👤 Sender:', sender.target);
+        console.log('👤 Transformer Deployer:', transformerDeployer.target);
+        console.log('👤 CallData Signer:', callDataSigner.target);
         
         await deployContractsAsync();
         await setupTokensAsync();
@@ -102,7 +103,7 @@ describe('Transform ERC20 Feature - Modern Tests', function() {
         
         // Deploy ZeroEx and TransformERC20 contracts
         const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
-        zeroEx = await ZeroExFactory.deploy(owner.address);
+        zeroEx = await ZeroExFactory.deploy(owner.target);
         await zeroEx.waitForDeployment();
         console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
         
@@ -134,7 +135,7 @@ describe('Transform ERC20 Feature - Modern Tests', function() {
         
         for (const token of tokens) {
             for (const account of accounts) {
-                await token.transfer(account.address, INITIAL_BALANCE);
+                await token.transfer(account.target, INITIAL_BALANCE);
                 await token.connect(account).approve(zeroExAddress, INITIAL_BALANCE);
             }
         }
@@ -193,8 +194,8 @@ describe('Transform ERC20 Feature - Modern Tests', function() {
         });
         
         it('should have proper initial balances', async function() {
-            const inputTokenBalance = await inputToken.balanceOf(taker.address);
-            const outputTokenBalance = await outputToken.balanceOf(taker.address);
+            const inputTokenBalance = await inputToken.balanceOf(taker.target);
+            const outputTokenBalance = await outputToken.balanceOf(taker.target);
             
             expect(inputTokenBalance > BigInt(0)).to.be.true;
             expect(outputTokenBalance > BigInt(0)).to.be.true;
@@ -369,7 +370,7 @@ describe('Transform ERC20 Feature - Modern Tests', function() {
             await inputToken.transfer(flashWalletAddress, flashAmount);
             const flashWalletBalance = await inputToken.balanceOf(flashWalletAddress);
             
-            expect(flashWalletBalance).to.equal(flashAmount);
+            expect(Number(flashWalletBalance)).to.equal(Number(flashAmount));
             
             console.log(`✅ Flash wallet operations:`);
             console.log(`   Flash amount: ${ethers.formatEther(flashAmount)} INPUT`);

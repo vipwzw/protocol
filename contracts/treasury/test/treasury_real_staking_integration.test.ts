@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
 import { Contract } from 'ethers';
 import { artifacts } from './artifacts';
@@ -241,8 +242,8 @@ describe('Treasury Governance with Real Staking Integration', function() {
             const epochDuration = await (stakingContract as any).epochDurationInSeconds();
             const zrxTokenAddress = await (stakingContract as any).zrxToken();
             
-            expect(currentEpoch).to.be.greaterThan(0);
-            expect(epochDuration).to.be.greaterThan(0);
+            expect(Number(currentEpoch)).to.be.greaterThan(0);
+            expect(Number(epochDuration)).to.be.greaterThan(0);
             expect(zrxTokenAddress).to.equal(await zrx.getAddress());
         });
         
@@ -252,7 +253,7 @@ describe('Treasury Governance with Real Staking Integration', function() {
             const quorumThreshold = await (treasury as any).quorumThreshold();
             const stakingProxy = await (treasury as any).stakingProxy();
             
-            expect(votingPeriod).to.equal(VOTING_PERIOD);
+            expect(Number(votingPeriod)).to.equal(VOTING_PERIOD);
             expect(proposalThreshold).to.equal(PROPOSAL_THRESHOLD);
             expect(quorumThreshold).to.equal(QUORUM_THRESHOLD);
             expect(stakingProxy).to.equal(await (stakingContract as any).getAddress());
@@ -293,7 +294,7 @@ describe('Treasury Governance with Real Staking Integration', function() {
             const poolInfo = await (stakingContract as any).getStakingPool(defaultPoolId);
             
             expect(poolInfo.operator).to.have.lengthOf(42);
-            expect(poolStakeBefore.nextEpochBalance).to.be.greaterThan(0);
+            expect(Number(poolStakeBefore.nextEpochBalance)).to.be.greaterThan(0);
             
             console.log('✅ Pool delegation tracking verified');
         });
@@ -304,7 +305,7 @@ describe('Treasury Governance with Real Staking Integration', function() {
             await fastForwardToNextEpochAsync();
             
             const epochAfter = await (stakingContract as any).currentEpoch();
-            expect(epochAfter).to.be.greaterThan(epochBefore);
+            expect(Number(epochAfter)).to.be.greaterThan(Number(epochBefore));
             
             console.log(`✅ Epoch advanced from ${epochBefore} to ${epochAfter}`);
         });
@@ -319,7 +320,7 @@ describe('Treasury Governance with Real Staking Integration', function() {
             
             // Get voting power
             const votingPower = await (treasury as any).getVotingPower(delegator.address, []);
-            expect(votingPower).to.be.greaterThanOrEqual(PROPOSAL_THRESHOLD);
+            expect(votingPower >= PROPOSAL_THRESHOLD).to.be.true;
             
             // Create proposal actions - simple token transfer from treasury
             const transferAmount = ethers.parseEther('100');
@@ -351,7 +352,7 @@ describe('Treasury Governance with Real Staking Integration', function() {
             const proposalCount = await (treasury as any).proposalCount();
             proposalId = proposalCount - BigInt(1);
             
-            expect(receipt.status).to.equal(1);
+            expect(Number(receipt.status)).to.equal(1);
             console.log(`✅ Created proposal ${proposalId} with real staking validation`);
         });
         
@@ -451,7 +452,7 @@ describe('Treasury Governance with Real Staking Integration', function() {
             console.log(`   Global Undelegated: ${ethers.formatEther(globalUndelegated.currentEpochBalance)} ZRX`);
             console.log(`   Global Delegated: ${ethers.formatEther(globalDelegated.currentEpochBalance)} ZRX`);
             
-            expect(globalDelegated.currentEpochBalance).to.be.greaterThan(0);
+            expect(Number(globalDelegated.currentEpochBalance)).to.be.greaterThan(0);
         });
         
         it('should track individual staker metrics', async function() {
@@ -462,8 +463,8 @@ describe('Treasury Governance with Real Staking Integration', function() {
             console.log(`   Delegator: ${ethers.formatEther(delegatorTotalStaked)} ZRX`);
             console.log(`   Pool Operator: ${ethers.formatEther(operatorTotalStaked)} ZRX`);
             
-            expect(delegatorTotalStaked).to.be.greaterThanOrEqual(PROPOSAL_THRESHOLD);
-            expect(operatorTotalStaked).to.be.greaterThanOrEqual(QUORUM_THRESHOLD);
+            expect(delegatorTotalStaked >= PROPOSAL_THRESHOLD).to.be.true;
+            expect(operatorTotalStaked >= QUORUM_THRESHOLD).to.be.true;
         });
         
         it('should provide pool-specific analytics', async function() {
@@ -474,7 +475,7 @@ describe('Treasury Governance with Real Staking Integration', function() {
             console.log(`   Default Pool: ${ethers.formatEther(defaultPoolStake.currentEpochBalance)} ZRX`);
             console.log(`   Non-Default Pool: ${ethers.formatEther(nonDefaultPoolStake.currentEpochBalance)} ZRX`);
             
-            expect(defaultPoolStake.currentEpochBalance).to.be.greaterThan(0);
+            expect(Number(defaultPoolStake.currentEpochBalance)).to.be.greaterThan(0);
         });
     });
     
@@ -508,7 +509,7 @@ describe('Treasury Governance with Real Staking Integration', function() {
             await ((stakingContract as any).connect(relayer) as any).moveStakeToPool(nonDefaultPoolId, switchAmount);
             
             const finalDelegation = await (stakingContract as any).getStakeDelegatedToPoolByOwner(relayer.address, nonDefaultPoolId);
-            expect(finalDelegation.nextEpochBalance).to.be.greaterThanOrEqual(switchAmount);
+            expect(finalDelegation.nextEpochBalance >= switchAmount).to.be.true;
             
             console.log(`✅ Successfully switched ${ethers.formatEther(switchAmount)} ZRX between pools`);
         });

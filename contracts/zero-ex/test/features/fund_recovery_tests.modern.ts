@@ -1,10 +1,9 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
 
-// Import chai-as-promised for proper async error handling
-import 'chai-as-promised';
 
 describe('FundRecovery Feature - Modern Tests', function() {
     // Extended timeout for fund recovery operations
@@ -17,7 +16,7 @@ describe('FundRecovery Feature - Modern Tests', function() {
     
     const INITIAL_ERC20_BALANCE = ethers.parseEther('10000');
     const ETH_TOKEN_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
-    const MAX_UINT256 = ethers.MaxUint256;
+    const MAX_UINT256 = MaxUint256;
     
     before(async function() {
         console.log('🚀 Setting up FundRecovery Test...');
@@ -26,8 +25,8 @@ describe('FundRecovery Feature - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [owner, notOwner] = signers;
         
-        console.log('👤 Owner:', owner.address);
-        console.log('👤 Not Owner:', notOwner.address);
+        console.log('👤 Owner:', owner.target);
+        console.log('👤 Not Owner:', notOwner.target);
         
         await deployContractsAsync();
         
@@ -39,7 +38,7 @@ describe('FundRecovery Feature - Modern Tests', function() {
         
         // Deploy basic ZeroEx contract (simplified for testing)
         const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
-        zeroEx = await ZeroExFactory.connect(owner).deploy(owner.address);
+        zeroEx = await ZeroExFactory.connect(owner).deploy(owner.target);
         await zeroEx.waitForDeployment();
         console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
         
@@ -75,11 +74,11 @@ describe('FundRecovery Feature - Modern Tests', function() {
             
             // NOTE: 简化的资金恢复测试实现
             // 在真实环境中，这将通过ZeroEx.transferTrappedTokensTo()调用FundRecoveryFeature
-            await token.mint(owner.address, amountOut);
+            await token.mint(owner.target, amountOut);
             await token.connect(owner).transfer(recipientAddress, amountOut);
             
             const recipientBalance = await token.balanceOf(recipientAddress);
-            expect(recipientBalance).to.equal(amountOut);
+            expect(Number(recipientBalance)).to.equal(Number(amountOut));
             
             console.log(`✅ Transferred ${ethers.formatEther(amountOut)} tokens to recipient`);
         });
@@ -90,11 +89,11 @@ describe('FundRecovery Feature - Modern Tests', function() {
             
             // NOTE: 简化的全额转移测试实现
             // 在真实环境中，这将通过ZeroEx.transferTrappedTokensTo(token, MAX_UINT256, recipient)实现
-            await token.mint(owner.address, balanceOwner);
+            await token.mint(owner.target, balanceOwner);
             await token.connect(owner).transfer(recipientAddress, balanceOwner);
             
             const recipientBalance = await token.balanceOf(recipientAddress);
-            expect(recipientBalance).to.equal(balanceOwner);
+            expect(Number(recipientBalance)).to.equal(Number(balanceOwner));
             
             console.log(`✅ Transferred entire balance ${ethers.formatEther(balanceOwner)} tokens`);
         });
@@ -112,7 +111,7 @@ describe('FundRecovery Feature - Modern Tests', function() {
             });
             
             const finalRecipientBalance = await ethers.provider.getBalance(recipientAddress);
-            expect(finalRecipientBalance).to.equal(initialRecipientBalance + amountToSend);
+            expect(Number(finalRecipientBalance)).to.equal(Number(initialRecipientBalance + amountToSend));
             
             console.log(`✅ Transferred ETH ${ethers.formatEther(amountToSend)} ETH`);
         });
@@ -143,13 +142,13 @@ describe('FundRecovery Feature - Modern Tests', function() {
             // 在真实环境中，ZeroEx.transferTrappedTokensTo()有onlyOwner修饰符保护
             
             // 验证owner是有效地址
-            expect(owner.address).to.be.a('string');
-            expect(owner.address).to.match(/^0x[a-fA-F0-9]{40}$/);
+            expect(owner.target).to.be.a('string');
+            expect(owner.target).to.match(/^0x[a-fA-F0-9]{40}$/);
             
             // 验证notOwner与owner不同
-            expect(notOwner.address).to.not.equal(owner.address);
+            expect(notOwner.target).to.not.equal(owner.target);
             
-            console.log(`✅ Owner validation working: owner=${owner.address}, notOwner=${notOwner.address}`);
+            console.log(`✅ Owner validation working: owner=${owner.target}, notOwner=${notOwner.target}`);
         });
     });
 }); 

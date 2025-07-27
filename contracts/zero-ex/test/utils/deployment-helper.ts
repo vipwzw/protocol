@@ -166,7 +166,7 @@ export async function deployZeroExWithFullMigration(
 
     // 1. 部署 FullMigration
     const FullMigrationFactory = await ethers.getContractFactory('FullMigration');
-    const migrator = await FullMigrationFactory.deploy(owner.address);
+    const migrator = await FullMigrationFactory.deploy(owner.target);
     await migrator.waitForDeployment();
     if (logProgress) {
         console.log(`✅ FullMigration: ${await migrator.getAddress()}`);
@@ -237,7 +237,7 @@ export async function deployZeroExWithFullMigration(
         actualTransformerDeployer = transformerDeployer;
     } else {
         const TransformerDeployerFactory = await ethers.getContractFactory('TransformerDeployer');
-        const deployerContract = await TransformerDeployerFactory.deploy([owner.address]);
+        const deployerContract = await TransformerDeployerFactory.deploy([owner.target]);
         await deployerContract.waitForDeployment();
         actualTransformerDeployer = await deployerContract.getAddress();
         if (logProgress) {
@@ -260,7 +260,7 @@ export async function deployZeroExWithFullMigration(
     };
 
     await migrator.migrateZeroEx(
-        owner.address,
+        owner.target,
         verifyingContract,
         features,
         {
@@ -368,7 +368,7 @@ export async function distributeTokensToAccounts(
 
     for (const token of tokens) {
         for (const account of accounts) {
-            await token.mint(account.address, amount);
+            await token.mint(account.target, amount);
         }
     }
 
@@ -392,7 +392,7 @@ export async function approveTokensForAccounts(
 
     for (const token of tokens) {
         for (const account of accounts) {
-            await token.connect(account).approve(spenderAddress, ethers.MaxUint256);
+            await token.connect(account).approve(spenderAddress, MaxUint256);
         }
     }
 

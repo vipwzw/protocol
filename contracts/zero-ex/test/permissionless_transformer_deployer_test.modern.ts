@@ -1,10 +1,9 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
 
-// Import chai-as-promised for proper async error handling
-import 'chai-as-promised';
 
 describe('PermissionlessTransformerDeployer - Modern Tests', function() {
     // Extended timeout for deployment operations
@@ -22,8 +21,8 @@ describe('PermissionlessTransformerDeployer - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [admin, sender] = signers;
         
-        console.log('👤 Admin:', admin.address);
-        console.log('👤 Sender:', sender.address);
+        console.log('👤 Admin:', admin.target);
+        console.log('👤 Sender:', sender.target);
         
         await deployContractsAsync();
         
@@ -74,7 +73,7 @@ describe('PermissionlessTransformerDeployer - Modern Tests', function() {
             if (deployedEvent) {
                 expect(deployedEvent.args.deployedAddress).to.equal(targetAddress);
                 expect(deployedEvent.args.salt).to.equal(salt);
-                expect(deployedEvent.args.sender).to.equal(sender.address);
+                expect(deployedEvent.args.sender).to.equal(sender.target);
             }
         });
 
@@ -127,7 +126,7 @@ describe('PermissionlessTransformerDeployer - Modern Tests', function() {
             
             // Check contract received ETH
             const contractBalance = await ethers.provider.getBalance(targetAddress);
-            expect(contractBalance).to.equal(value);
+            expect(Number(contractBalance)).to.equal(Number(value));
             
             // Check event was emitted
             const deployedEvent = receipt.logs.find((log: any) => log.fragment?.name === 'Deployed');

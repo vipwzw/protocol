@@ -1,10 +1,9 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
 
-// Import chai-as-promised for proper async error handling
-import 'chai-as-promised';
 
 describe('SimpleFunctionRegistry Feature - Modern Tests', function() {
     // Extended timeout for registry operations
@@ -28,8 +27,8 @@ describe('SimpleFunctionRegistry Feature - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [owner, notOwner] = signers;
         
-        console.log('👤 Owner:', owner.address);
-        console.log('👤 Not Owner:', notOwner.address);
+        console.log('👤 Owner:', owner.target);
+        console.log('👤 Not Owner:', notOwner.target);
         
         await deployContractsAsync();
         
@@ -41,7 +40,7 @@ describe('SimpleFunctionRegistry Feature - Modern Tests', function() {
         
         // Deploy basic ZeroEx contract (simplified for testing)
         const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
-        zeroEx = await ZeroExFactory.connect(owner).deploy(owner.address);
+        zeroEx = await ZeroExFactory.connect(owner).deploy(owner.target);
         await zeroEx.waitForDeployment();
         console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
         

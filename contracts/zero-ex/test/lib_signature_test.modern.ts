@@ -1,6 +1,7 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 
 describe('LibSignature - Modern Tests', function() {
     // Extended timeout for cryptographic operations
@@ -30,10 +31,10 @@ describe('LibSignature - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [admin, signer1, signer2, validator] = signers;
         
-        console.log('👤 Admin:', admin.address);
-        console.log('👤 Signer1:', signer1.address);
-        console.log('👤 Signer2:', signer2.address);
-        console.log('👤 Validator:', validator.address);
+        console.log('👤 Admin:', admin.target);
+        console.log('👤 Signer1:', signer1.target);
+        console.log('👤 Signer2:', signer2.target);
+        console.log('👤 Validator:', validator.target);
         
         await deploySignatureContractsAsync();
         
@@ -158,11 +159,11 @@ describe('LibSignature - Modern Tests', function() {
             // Recover the signer address
             const recoveredAddress = ethers.verifyMessage(ethers.getBytes(messageHash), signature);
             
-            expect(recoveredAddress.toLowerCase()).to.equal(signer1.address.toLowerCase());
+            expect(recoveredAddress.toLowerCase()).to.equal(signer1.target.toLowerCase());
             
-            console.log(`✅ Original signer: ${signer1.address}`);
+            console.log(`✅ Original signer: ${signer1.target}`);
             console.log(`✅ Recovered address: ${recoveredAddress}`);
-            console.log(`✅ Addresses match: ${recoveredAddress.toLowerCase() === signer1.address.toLowerCase()}`);
+            console.log(`✅ Addresses match: ${recoveredAddress.toLowerCase() === signer1.target.toLowerCase()}`);
         });
     });
     
@@ -186,8 +187,8 @@ describe('LibSignature - Modern Tests', function() {
             };
             
             const order = {
-                maker: signer1.address,
-                taker: signer2.address,
+                maker: signer1.target,
+                taker: signer2.target,
                 makerAmount: ethers.parseEther('100'),
                 takerAmount: ethers.parseEther('200'),
                 expiry: Math.floor(Date.now() / 1000) + 3600
@@ -208,7 +209,7 @@ describe('LibSignature - Modern Tests', function() {
                 name: 'ZeroEx',
                 version: '1.0.0',
                 chainId: 1337,
-                verifyingContract: admin.address
+                verifyingContract: admin.target
             };
             
             const transferTypes = {
@@ -220,8 +221,8 @@ describe('LibSignature - Modern Tests', function() {
             };
             
             const transfer = {
-                from: signer1.address,
-                to: signer2.address,
+                from: signer1.target,
+                to: signer2.target,
                 amount: ethers.parseEther('50')
             };
             
@@ -288,12 +289,12 @@ describe('LibSignature - Modern Tests', function() {
             
             // Verify the signature
             const recoveredAddress = ethers.verifyMessage(ethers.getBytes(messageHash), signature);
-            const isValid = recoveredAddress.toLowerCase() === signer1.address.toLowerCase();
+            const isValid = recoveredAddress.toLowerCase() === signer1.target.toLowerCase();
             
             expect(isValid).to.be.true;
             
             console.log(`✅ Signature validation: ${isValid}`);
-            console.log(`✅ Expected signer: ${signer1.address}`);
+            console.log(`✅ Expected signer: ${signer1.target}`);
             console.log(`✅ Recovered signer: ${recoveredAddress}`);
         });
         
@@ -313,7 +314,7 @@ describe('LibSignature - Modern Tests', function() {
                 try {
                     const invalidSig = invalidSignatures[i];
                     const recovered = ethers.verifyMessage(ethers.getBytes(messageHash), invalidSig);
-                    const isValidSigner = recovered.toLowerCase() === signer1.address.toLowerCase();
+                    const isValidSigner = recovered.toLowerCase() === signer1.target.toLowerCase();
                     
                     expect(isValidSigner).to.be.false;
                     console.log(`❌ Invalid signature ${i + 1} correctly rejected`);
@@ -405,7 +406,7 @@ describe('LibSignature - Modern Tests', function() {
             for (const { messageHash, signature } of signaturesData) {
                 try {
                     const recovered = ethers.verifyMessage(ethers.getBytes(messageHash), signature);
-                    if (recovered.toLowerCase() === signer1.address.toLowerCase()) {
+                    if (recovered.toLowerCase() === signer1.target.toLowerCase()) {
                         validCount++;
                     }
                 } catch (error) {
@@ -449,7 +450,7 @@ describe('LibSignature - Modern Tests', function() {
                 statistics.totalSignatures++;
                 
                 // Count by signer
-                const signerAddress = signer.address;
+                const signerAddress = signer.target;
                 statistics.signerCounts.set(
                     signerAddress,
                     (statistics.signerCounts.get(signerAddress) || 0) + 1

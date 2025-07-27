@@ -1,12 +1,8 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
-
-// Configure chai-as-promised for proper async error handling
-chai.use(chaiAsPromised);
 
 describe('WethTransformer - Modern Tests', function() {
     // Extended timeout for transformer operations
@@ -17,7 +13,7 @@ describe('WethTransformer - Modern Tests', function() {
     let host: any;
     
     const ETH_TOKEN_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
-    const MAX_UINT256 = ethers.MaxUint256;
+    const MAX_UINT256 = MaxUint256;
     const ZERO_AMOUNT = 0n;
     
     before(async function() {
@@ -97,7 +93,7 @@ describe('WethTransformer - Modern Tests', function() {
         
         await expect(
             host.executeTransform(amount, await transformer.getAddress(), data, { value: amount })
-        ).to.be.rejectedWith('InvalidTransformDataError');
+        ).to.be.revertedWith('InvalidTransformDataError');
         
         console.log(`✅ Correctly rejected invalid token: ${invalidToken}`);
     });
@@ -113,8 +109,8 @@ describe('WethTransformer - Modern Tests', function() {
         await host.executeTransform(amount, await transformer.getAddress(), data, { value: amount });
         
         const balances = await getHostBalancesAsync();
-        expect(balances.ethBalance).to.equal(amount);
-        expect(balances.wethBalance).to.equal(ZERO_AMOUNT);
+        expect(Number(balances.ethBalance)).to.equal(Number(amount));
+        expect(Number(balances.wethBalance)).to.equal(Number(ZERO_AMOUNT));
         
         console.log(`✅ Unwrapped ${ethers.formatEther(amount)} WETH to ETH`);
     });
@@ -130,8 +126,8 @@ describe('WethTransformer - Modern Tests', function() {
         await host.executeTransform(amount, await transformer.getAddress(), data, { value: amount });
         
         const balances = await getHostBalancesAsync();
-        expect(balances.ethBalance).to.equal(amount);
-        expect(balances.wethBalance).to.equal(ZERO_AMOUNT);
+        expect(Number(balances.ethBalance)).to.equal(Number(amount));
+        expect(Number(balances.wethBalance)).to.equal(Number(ZERO_AMOUNT));
         
         console.log(`✅ Unwrapped all WETH (${ethers.formatEther(amount)}) to ETH`);
     });
@@ -148,8 +144,8 @@ describe('WethTransformer - Modern Tests', function() {
         await host.executeTransform(amount, await transformer.getAddress(), data, { value: amount });
         
         const balances = await getHostBalancesAsync();
-        expect(balances.ethBalance).to.equal(unwrapAmount);
-        expect(balances.wethBalance).to.equal(amount - unwrapAmount);
+        expect(Number(balances.ethBalance)).to.equal(Number(unwrapAmount));
+        expect(Number(balances.wethBalance)).to.equal(Number(amount - unwrapAmount));
         
         console.log(`✅ Unwrapped ${ethers.formatEther(unwrapAmount)} WETH, ${ethers.formatEther(amount - unwrapAmount)} WETH remaining`);
     });
@@ -165,8 +161,8 @@ describe('WethTransformer - Modern Tests', function() {
         await host.executeTransform(ZERO_AMOUNT, await transformer.getAddress(), data, { value: amount });
         
         const balances = await getHostBalancesAsync();
-        expect(balances.ethBalance).to.equal(ZERO_AMOUNT);
-        expect(balances.wethBalance).to.equal(amount);
+        expect(Number(balances.ethBalance)).to.equal(Number(ZERO_AMOUNT));
+        expect(Number(balances.wethBalance)).to.equal(Number(amount));
         
         console.log(`✅ Wrapped ${ethers.formatEther(amount)} ETH to WETH`);
     });
@@ -182,8 +178,8 @@ describe('WethTransformer - Modern Tests', function() {
         await host.executeTransform(ZERO_AMOUNT, await transformer.getAddress(), data, { value: amount });
         
         const balances = await getHostBalancesAsync();
-        expect(balances.ethBalance).to.equal(ZERO_AMOUNT);
-        expect(balances.wethBalance).to.equal(amount);
+        expect(Number(balances.ethBalance)).to.equal(Number(ZERO_AMOUNT));
+        expect(Number(balances.wethBalance)).to.equal(Number(amount));
         
         console.log(`✅ Wrapped all ETH (${ethers.formatEther(amount)}) to WETH`);
     });
@@ -200,8 +196,8 @@ describe('WethTransformer - Modern Tests', function() {
         await host.executeTransform(ZERO_AMOUNT, await transformer.getAddress(), data, { value: amount });
         
         const balances = await getHostBalancesAsync();
-        expect(balances.ethBalance).to.equal(amount - wrapAmount);
-        expect(balances.wethBalance).to.equal(wrapAmount);
+        expect(Number(balances.ethBalance)).to.equal(Number(amount - wrapAmount));
+        expect(Number(balances.wethBalance)).to.equal(Number(wrapAmount));
         
         console.log(`✅ Wrapped ${ethers.formatEther(wrapAmount)} ETH, ${ethers.formatEther(amount - wrapAmount)} ETH remaining`);
     });

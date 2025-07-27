@@ -1,9 +1,8 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
 // 导入通用部署函数
 import { 
     deployZeroExWithFullMigration, 
@@ -12,8 +11,6 @@ import {
     type ZeroExDeploymentResult 
 } from '../utils/deployment-helper';
 
-// Configure chai-as-promised for proper async error handling
-chai.use(chaiAsPromised);
 
 describe('MetaTransactions Feature - Complete Modern Tests', function() {
     // Extended timeout for meta transaction operations
@@ -47,9 +44,9 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
         const allSigners = await ethers.getSigners();
         [owner, maker, sender, notSigner, ...signers] = allSigners;
         
-        console.log('👤 Owner:', owner.address);
-        console.log('👤 Maker:', maker.address);
-        console.log('👤 Sender:', sender.address);
+        console.log('👤 Owner:', owner.target);
+        console.log('👤 Maker:', maker.target);
+        console.log('👤 Sender:', sender.target);
         console.log('👥 Available signers:', signers.length);
         
         await deployContractsAsync();
@@ -74,7 +71,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
         
         // Deploy basic ZeroEx contract
         const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
-        const zeroEx = await ZeroExFactory.deploy(owner.address);
+        const zeroEx = await ZeroExFactory.deploy(owner.target);
         await zeroEx.waitForDeployment();
         console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
         
@@ -106,7 +103,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
         
         // Setup fee tokens for signers
         for (const signer of signers.slice(0, 5)) { // Limit to first 5 signers
-            await feeToken.mint(signer.address, MAX_FEE_AMOUNT);
+            await feeToken.mint(signer.target, MAX_FEE_AMOUNT);
             await feeToken.connect(signer).approve(await zeroEx.getAddress(), MAX_FEE_AMOUNT);
         }
         console.log(`✅ Setup fee tokens for ${Math.min(signers.length, 5)} signers`);
@@ -132,8 +129,8 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
         const signer = fields.signer || signers[Math.floor(Math.random() * Math.min(signers.length, 5))];
         
         return {
-            signer: signer.address,
-            sender: fields.sender || sender.address,
+            signer: signer.target,
+            sender: fields.sender || sender.target,
             minGasPrice: fields.minGasPrice || ZERO_AMOUNT,
             maxGasPrice: fields.maxGasPrice || getRandomInteger('1', '100'),
             expirationTimeSeconds: fields.expirationTimeSeconds || Math.floor(Date.now() / 1000) + 3600,
@@ -158,7 +155,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
 
     function getRandomLimitOrder(): any {
         return {
-            maker: maker.address,
+            maker: maker.target,
             taker: NULL_ADDRESS,
             makerToken: generateRandomAddress(),
             takerToken: generateRandomAddress(),
@@ -175,7 +172,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
 
     function getRandomRfqOrder(): any {
         return {
-            maker: maker.address,
+            maker: maker.target,
             taker: generateRandomAddress(),
             makerToken: generateRandomAddress(),
             takerToken: generateRandomAddress(),
@@ -201,7 +198,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
         const mtxHash = ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(mtxForHashing)));
         
         // Sign with the designated signer
-        const signerAccount = signers.find((s: any) => s.address === mtx.signer);
+        const signerAccount = signers.find((s: any) => s.target === mtx.signer);
         if (!signerAccount) {
             throw new Error(`Signer ${mtx.signer} not found`);
         }
@@ -360,7 +357,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             
             await expect(
                 feature.connect(sender).executeMetaTransaction(mtx, signature)
-            ).to.be.rejectedWith('MetaTransactionCallFailedError');
+            ).to.be.revertedWith('MetaTransactionCallFailedError');
             
             console.log(`✅ Correctly failed when translated call fails`);
         });
@@ -378,7 +375,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             
             await expect(
                 feature.connect(sender).executeMetaTransaction(mtx, signature)
-            ).to.be.rejectedWith('MetaTransactionUnsupportedFunctionError');
+            ).to.be.revertedWith('MetaTransactionUnsupportedFunctionError');
             
             console.log(`✅ Correctly failed with unsupported function`);
         });
@@ -406,7 +403,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             // Try to execute again
             await expect(
                 feature.connect(sender).executeMetaTransaction(mtx, signature)
-            ).to.be.rejectedWith('MetaTransactionAlreadyExecutedError');
+            ).to.be.revertedWith('MetaTransactionAlreadyExecutedError');
             
             console.log(`✅ Correctly prevented double execution`);
         });
@@ -422,7 +419,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             ]);
             
             const mtx = getRandomMetaTransaction({
-                sender: sender.address, // Specific sender required
+                sender: sender.target, // Specific sender required
                 callData,
                 value: ZERO_AMOUNT
             });
@@ -431,7 +428,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             
             await expect(
                 feature.connect(notSigner).executeMetaTransaction(mtx, signature)
-            ).to.be.rejectedWith('MetaTransactionWrongSenderError');
+            ).to.be.revertedWith('MetaTransactionWrongSenderError');
             
             console.log(`✅ Correctly rejected wrong sender`);
         });
@@ -455,7 +452,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             
             await expect(
                 feature.connect(sender).executeMetaTransaction(mtx, invalidSignature)
-            ).to.be.rejectedWith('MetaTransactionInvalidSignatureError');
+            ).to.be.revertedWith('MetaTransactionInvalidSignatureError');
             
             console.log(`✅ Correctly rejected bad signature`);
         });
@@ -480,7 +477,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             
             await expect(
                 feature.connect(sender).executeMetaTransaction(mtx, signature)
-            ).to.be.rejectedWith('MetaTransactionExpiredError');
+            ).to.be.revertedWith('MetaTransactionExpiredError');
             
             console.log(`✅ Correctly rejected expired meta transaction`);
         });
@@ -507,7 +504,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
                 feature.connect(sender).executeMetaTransaction(mtx, signature, {
                     gasPrice: ethers.parseUnits('10', 'gwei') // Below minimum
                 })
-            ).to.be.rejectedWith('MetaTransactionGasPriceError');
+            ).to.be.revertedWith('MetaTransactionGasPriceError');
             
             console.log(`✅ Correctly rejected low gas price`);
         });
@@ -534,7 +531,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
                 feature.connect(sender).executeMetaTransaction(mtx, signature, {
                     gasPrice: ethers.parseUnits('100', 'gwei') // Above maximum
                 })
-            ).to.be.rejectedWith('MetaTransactionGasPriceError');
+            ).to.be.revertedWith('MetaTransactionGasPriceError');
             
             console.log(`✅ Correctly rejected high gas price`);
         });
@@ -558,7 +555,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             
             await expect(
                 feature.connect(sender).executeMetaTransaction(mtx, signature)
-            ).to.be.rejectedWith('IllegalReentrancyError');
+            ).to.be.revertedWith('IllegalReentrancyError');
             
             console.log(`✅ Correctly prevented reentrancy in executeMetaTransaction`);
         });
@@ -588,7 +585,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             
             await expect(
                 feature.connect(sender).executeMetaTransaction(mtx, signature)
-            ).to.be.rejectedWith('ETH_LEAK');
+            ).to.be.revertedWith('ETH_LEAK');
             
             console.log(`✅ Correctly prevented ETH balance reduction`);
         });
@@ -659,7 +656,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             
             await expect(
                 feature.connect(sender).batchExecuteMetaTransactions.staticCall(mtxs, signatures)
-            ).to.be.rejectedWith('MetaTransactionAlreadyExecutedError');
+            ).to.be.revertedWith('MetaTransactionAlreadyExecutedError');
             
             console.log(`✅ Correctly prevented double execution in batch`);
         });
@@ -683,7 +680,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             
             await expect(
                 feature.connect(sender).batchExecuteMetaTransactions.staticCall([mtx], [signature])
-            ).to.be.rejectedWith('MetaTransactionCallFailedError');
+            ).to.be.revertedWith('MetaTransactionCallFailedError');
             
             console.log(`✅ Correctly failed batch when one transaction fails`);
         });
@@ -707,7 +704,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             
             await expect(
                 feature.connect(sender).batchExecuteMetaTransactions([mtx], [signature])
-            ).to.be.rejectedWith('IllegalReentrancyError');
+            ).to.be.revertedWith('IllegalReentrancyError');
             
             console.log(`✅ Correctly prevented executeMetaTransaction reentrancy from batch`);
         });
@@ -731,7 +728,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             
             await expect(
                 feature.connect(sender).batchExecuteMetaTransactions([mtx], [signature])
-            ).to.be.rejectedWith('IllegalReentrancyError');
+            ).to.be.revertedWith('IllegalReentrancyError');
             
             console.log(`✅ Correctly prevented batchExecuteMetaTransactions reentrancy`);
         });
@@ -761,7 +758,7 @@ describe('MetaTransactions Feature - Complete Modern Tests', function() {
             
             await expect(
                 feature.connect(sender).batchExecuteMetaTransactions([mtx], [signature])
-            ).to.be.rejectedWith('ETH_LEAK');
+            ).to.be.revertedWith('ETH_LEAK');
             
             console.log(`✅ Correctly prevented ETH balance reduction in batch`);
         });

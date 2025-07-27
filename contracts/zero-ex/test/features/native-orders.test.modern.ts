@@ -1,10 +1,9 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
 
-// Import chai-as-promised for proper async error handling
-import 'chai-as-promised';
 
 describe('Native Orders Feature - Modern Tests', function() {
     // Extended timeout for order operations
@@ -25,9 +24,9 @@ describe('Native Orders Feature - Modern Tests', function() {
         accounts = await ethers.getSigners();
         [deployer, maker, taker] = accounts;
         
-        console.log('👤 Deployer:', deployer.address);
-        console.log('👤 Maker:', maker.address);
-        console.log('👤 Taker:', taker.address);
+        console.log('👤 Deployer:', deployer.target);
+        console.log('👤 Maker:', maker.target);
+        console.log('👤 Taker:', taker.target);
         
         await deployContractsAsync();
         
@@ -92,11 +91,11 @@ describe('Native Orders Feature - Modern Tests', function() {
 
     function createValidLimitOrder(): LimitOrder {
         return {
-            makerToken: testToken.target || testToken.address,
-            takerToken: weth.target || weth.address,
+            makerToken: testToken.target || testToken.target,
+            takerToken: weth.target || weth.target,
             makerAmount: ethers.parseEther('100'),
             takerAmount: ethers.parseEther('1'),
-            maker: maker.address,
+            maker: maker.target,
             taker: ethers.ZeroAddress,
             pool: ethers.ZeroHash,
             expiry: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
@@ -106,13 +105,13 @@ describe('Native Orders Feature - Modern Tests', function() {
 
     function createValidRfqOrder(): RfqOrder {
         return {
-            makerToken: testToken.target || testToken.address,
-            takerToken: weth.target || weth.address,
+            makerToken: testToken.target || testToken.target,
+            takerToken: weth.target || weth.target,
             makerAmount: ethers.parseEther('1000'),
             takerAmount: ethers.parseEther('10'),
-            maker: maker.address,
-            taker: taker.address,
-            txOrigin: taker.address,
+            maker: maker.target,
+            taker: taker.target,
+            txOrigin: taker.target,
             pool: ethers.ZeroHash,
             expiry: Math.floor(Date.now() / 1000) + 1800, // 30 minutes
             salt: generateRandomBytes32()
@@ -127,7 +126,7 @@ describe('Native Orders Feature - Modern Tests', function() {
             expect(order.takerToken).to.match(/^0x[0-9a-fA-F]{40}$/);
             expect(order.makerAmount).to.be.greaterThan(0n);
             expect(order.takerAmount).to.be.greaterThan(0n);
-            expect(order.maker).to.equal(maker.address);
+            expect(order.maker).to.equal(maker.target);
             expect(order.taker).to.equal(ethers.ZeroAddress);
             expect(order.expiry).to.be.greaterThan(Math.floor(Date.now() / 1000));
             
@@ -141,9 +140,9 @@ describe('Native Orders Feature - Modern Tests', function() {
             expect(rfqOrder.takerToken).to.match(/^0x[0-9a-fA-F]{40}$/);
             expect(rfqOrder.makerAmount).to.be.greaterThan(0n);
             expect(rfqOrder.takerAmount).to.be.greaterThan(0n);
-            expect(rfqOrder.maker).to.equal(maker.address);
-            expect(rfqOrder.taker).to.equal(taker.address);
-            expect(rfqOrder.txOrigin).to.equal(taker.address);
+            expect(rfqOrder.maker).to.equal(maker.target);
+            expect(rfqOrder.taker).to.equal(taker.target);
+            expect(rfqOrder.txOrigin).to.equal(taker.target);
             expect(rfqOrder.expiry).to.be.greaterThan(Math.floor(Date.now() / 1000));
             
                          console.log(`✅ Created RFQ order: ${ethers.formatEther(rfqOrder.makerAmount.toString())} TEST for ${ethers.formatEther(rfqOrder.takerAmount.toString())} ETH`);
@@ -207,11 +206,11 @@ describe('Native Orders Feature - Modern Tests', function() {
      describe('Order Status Management', function() {
          beforeEach(async function() {
              // Setup token balances for testing
-             await testToken.transfer(maker.address, ethers.parseEther('10000'));
+             await testToken.transfer(maker.target, ethers.parseEther('10000'));
              await weth.connect(taker).deposit({ value: ethers.parseEther('100') });
              
-             const makerBalance = await testToken.balanceOf(maker.address);
-             const takerBalance = await weth.balanceOf(taker.address);
+             const makerBalance = await testToken.balanceOf(maker.target);
+             const takerBalance = await weth.balanceOf(taker.target);
              console.log(`💰 Setup balances: Maker has ${ethers.formatEther(makerBalance.toString())} TEST`);
              console.log(`💰 Setup balances: Taker has ${ethers.formatEther(takerBalance.toString())} WETH`);
          });

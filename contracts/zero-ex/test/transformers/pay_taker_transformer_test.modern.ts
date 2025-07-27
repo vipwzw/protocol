@@ -1,10 +1,9 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 const { ethers } = require('hardhat');
-import { Contract } from 'ethers';
+import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
 
-// Import chai-as-promised for proper async error handling
-import 'chai-as-promised';
 
 describe('PayTakerTransformer - Modern Tests', function() {
     // Extended timeout for transformer operations
@@ -16,7 +15,7 @@ describe('PayTakerTransformer - Modern Tests', function() {
     let host: any;
     
     const ETH_TOKEN_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
-    const MAX_UINT256 = ethers.MaxUint256;
+    const MAX_UINT256 = MaxUint256;
     const ZERO_AMOUNT = 0n;
     
     before(async function() {
@@ -26,7 +25,7 @@ describe('PayTakerTransformer - Modern Tests', function() {
         const signers = await ethers.getSigners();
         [caller] = signers;
         
-        console.log('👤 Caller:', caller.address);
+        console.log('👤 Caller:', caller.target);
         
         await deployContractsAsync();
         
@@ -132,10 +131,10 @@ describe('PayTakerTransformer - Modern Tests', function() {
         const hostBalances = await getBalancesAsync(await host.getAddress());
         const takerBalances = await getBalancesAsync(taker);
         
-        expect(hostBalances.ethBalance).to.equal(ZERO_BALANCES.ethBalance);
-        expect(hostBalances.tokenBalance).to.equal(ZERO_BALANCES.tokenBalance);
-        expect(takerBalances.tokenBalance).to.equal(amounts[0]);
-        expect(takerBalances.ethBalance).to.equal(amounts[1]);
+        expect(Number(hostBalances.ethBalance)).to.equal(Number(ZERO_BALANCES.ethBalance));
+        expect(Number(hostBalances.tokenBalance)).to.equal(Number(ZERO_BALANCES.tokenBalance));
+        expect(Number(takerBalances.tokenBalance)).to.equal(Number(amounts[0]));
+        expect(Number(takerBalances.ethBalance)).to.equal(Number(amounts[1]));
         
         console.log(`✅ Transferred ${ethers.formatEther(amounts[0])} tokens and ${ethers.formatEther(amounts[1])} ETH`);
     });
@@ -164,10 +163,10 @@ describe('PayTakerTransformer - Modern Tests', function() {
         const hostBalances = await getBalancesAsync(await host.getAddress());
         const takerBalances = await getBalancesAsync(taker);
         
-        expect(hostBalances.ethBalance).to.equal(ZERO_BALANCES.ethBalance);
-        expect(hostBalances.tokenBalance).to.equal(ZERO_BALANCES.tokenBalance);
-        expect(takerBalances.tokenBalance).to.equal(amounts[0]);
-        expect(takerBalances.ethBalance).to.equal(amounts[1]);
+        expect(Number(hostBalances.ethBalance)).to.equal(Number(ZERO_BALANCES.ethBalance));
+        expect(Number(hostBalances.tokenBalance)).to.equal(Number(ZERO_BALANCES.tokenBalance));
+        expect(Number(takerBalances.tokenBalance)).to.equal(Number(amounts[0]));
+        expect(Number(takerBalances.ethBalance)).to.equal(Number(amounts[1]));
         
         console.log(`✅ Transferred all tokens and ETH using MAX_UINT256`);
     });
@@ -196,10 +195,10 @@ describe('PayTakerTransformer - Modern Tests', function() {
         const hostBalances = await getBalancesAsync(await host.getAddress());
         const takerBalances = await getBalancesAsync(taker);
         
-        expect(hostBalances.ethBalance).to.equal(ZERO_BALANCES.ethBalance);
-        expect(hostBalances.tokenBalance).to.equal(ZERO_BALANCES.tokenBalance);
-        expect(takerBalances.tokenBalance).to.equal(amounts[0]);
-        expect(takerBalances.ethBalance).to.equal(amounts[1]);
+        expect(Number(hostBalances.ethBalance)).to.equal(Number(ZERO_BALANCES.ethBalance));
+        expect(Number(hostBalances.tokenBalance)).to.equal(Number(ZERO_BALANCES.tokenBalance));
+        expect(Number(takerBalances.tokenBalance)).to.equal(Number(amounts[0]));
+        expect(Number(takerBalances.ethBalance)).to.equal(Number(amounts[1]));
         
         console.log(`✅ Transferred all tokens and ETH using empty amounts array`);
     });
@@ -230,10 +229,10 @@ describe('PayTakerTransformer - Modern Tests', function() {
         const hostBalances = await getBalancesAsync(await host.getAddress());
         const takerBalances = await getBalancesAsync(taker);
         
-        expect(hostBalances.tokenBalance).to.equal(amounts[0] - transferAmounts[0]);
-        expect(hostBalances.ethBalance).to.equal(amounts[1] - transferAmounts[1]);
-        expect(takerBalances.tokenBalance).to.equal(transferAmounts[0]);
-        expect(takerBalances.ethBalance).to.equal(transferAmounts[1]);
+        expect(Number(hostBalances.tokenBalance)).to.equal(Number(amounts[0] - transferAmounts[0]));
+        expect(Number(hostBalances.ethBalance)).to.equal(Number(amounts[1] - transferAmounts[1]));
+        expect(Number(takerBalances.tokenBalance)).to.equal(Number(transferAmounts[0]));
+        expect(Number(takerBalances.ethBalance)).to.equal(Number(transferAmounts[1]));
         
         console.log(`✅ Transferred partial amounts: ${ethers.formatEther(transferAmounts[0])} tokens, ${ethers.formatEther(transferAmounts[1])} ETH`);
     });

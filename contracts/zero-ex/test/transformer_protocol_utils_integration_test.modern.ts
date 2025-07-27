@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import '@nomicfoundation/hardhat-chai-matchers';
 
 const { ethers } = require('hardhat');
 import {
@@ -92,7 +93,7 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
                 rfqOrders: [],
                 fillSequence: [],
                 fillAmount: 0n,
-                refundReceiver: taker.address,
+                refundReceiver: taker.target,
                 otcOrders: []
             };
 
@@ -105,8 +106,8 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
                     await fillQuoteTransformer.getAddress(),
                     await takerToken.getAddress(),
                     0, // sellAmount
-                    owner.address,
-                    owner.address,
+                    owner.target,
+                    owner.target,
                     encodedData
                 );
 
@@ -147,7 +148,7 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
                 rfqOrders: [],
                 fillSequence: [FillQuoteTransformerOrderType.Bridge],
                 fillAmount: ethers.parseEther('1'),
-                refundReceiver: taker.address,
+                refundReceiver: taker.target,
                 otcOrders: []
             };
 
@@ -160,8 +161,8 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
                     await fillQuoteTransformer.getAddress(),
                     await takerToken.getAddress(),
                     ethers.parseEther('1'),
-                    owner.address,
-                    owner.address,
+                    owner.target,
+                    owner.target,
                     encodedData
                 );
 
@@ -208,8 +209,8 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
                 limitOrders: [],
                 rfqOrders: [],
                 fillSequence: [FillQuoteTransformerOrderType.Bridge],
-                fillAmount: ethers.MaxUint256, // 使用 MAX_UINT256
-                refundReceiver: taker.address,
+                fillAmount: MaxUint256, // 使用 MAX_UINT256
+                refundReceiver: taker.target,
                 otcOrders: []
             };
 
@@ -221,8 +222,8 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
                     await fillQuoteTransformer.getAddress(),
                     await takerToken.getAddress(),
                     ethers.parseEther('1'), // sellAmount
-                    owner.address,
-                    owner.address,
+                    owner.target,
+                    owner.target,
                     encodedData
                 );
 
@@ -251,7 +252,7 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
                 rfqOrders: [],
                 fillSequence: [],
                 fillAmount: 1000000000000000000n, // 1 ether
-                refundReceiver: taker.address,
+                refundReceiver: taker.target,
                 otcOrders: []
             };
 

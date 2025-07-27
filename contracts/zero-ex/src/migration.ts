@@ -11,7 +11,7 @@ import type {
     FullFeatureArtifacts,
 } from './foundry-types';
 import {
-    // FeeCollectorControllerContract, // Not available in TypeChain output
+    // // FeeCollectorControllerContract // Not available in TypeChain, // Not available in TypeChain output
     FullMigration as FullMigrationContract,
     InitialMigration as InitialMigrationContract,
     IZeroEx as IZeroExContract,
@@ -23,6 +23,17 @@ import {
     TransformERC20Feature as TransformERC20FeatureContract,
     ZeroEx as ZeroExContract,
 } from './wrappers';
+
+// Import TypeChain factories directly
+import { SimpleFunctionRegistryFeature__factory } from '../test/typechain-types/factories/SimpleFunctionRegistryFeature__factory';
+import { OwnableFeature__factory } from '../test/typechain-types/factories/OwnableFeature__factory';
+import { InitialMigration__factory } from '../test/typechain-types/factories/migrations/InitialMigration__factory';
+import { ZeroEx__factory } from '../test/typechain-types/factories/ZeroEx__factory';
+import { TransformERC20Feature__factory } from '../test/typechain-types/factories/TransformERC20Feature__factory';
+import { MetaTransactionsFeature__factory } from '../test/typechain-types/factories/MetaTransactionsFeature__factory';
+import { NativeOrdersFeature__factory } from '../test/typechain-types/factories/NativeOrdersFeature__factory';
+import { OtcOrdersFeature__factory } from '../test/typechain-types/factories/OtcOrdersFeature__factory';
+import { FullMigration__factory } from '../test/typechain-types/factories/migrations/FullMigration__factory';
 
 /**
  * Addresses of minimum features for a deployment of the Exchange Proxy.
@@ -58,24 +69,24 @@ export async function deployBootstrapFeaturesAsync(
             features.registry ||
             (
                 await deployFromFoundryArtifactAsync<SimpleFunctionRegistryFeatureContract>(
-                    SimpleFunctionRegistryFeatureContract,
+                    SimpleFunctionRegistryFeature__factory,
                     _featureArtifacts.registry,
                     provider,
                     txDefaults,
                     artifacts,
                 )
-            ).address,
+            ).target as string,
         ownable:
             features.ownable ||
             (
                 await deployFromFoundryArtifactAsync<OwnableFeatureContract>(
-                    OwnableFeatureContract,
+                    OwnableFeature__factory,
                     _featureArtifacts.ownable,
                     provider,
                     txDefaults,
                     artifacts,
                 )
-            ).address,
+            ).target as string,
     };
 }
 
@@ -87,9 +98,9 @@ export async function initialMigrateAsync(
     provider: SupportedProvider,
     txDefaults: Partial<TxData>,
     features: Partial<BootstrapFeatures> = {},
-): Promise<IZeroExContract> {
+): Promise<ZeroExContract> {
     const migrator = await deployFromFoundryArtifactAsync<InitialMigrationContract>(
-        InitialMigrationContract,
+        InitialMigration__factory,
         artifacts.InitialMigration,
         provider,
         txDefaults,
@@ -97,16 +108,16 @@ export async function initialMigrateAsync(
         txDefaults.from as string,
     );
     const zeroEx = await deployFromFoundryArtifactAsync<ZeroExContract>(
-        ZeroExContract,
+        ZeroEx__factory,
         artifacts.ZeroEx,
         provider,
         txDefaults,
         artifacts,
-        migrator.address,
+        migrator.target as string,
     );
     await migrator
-        .initializeZeroEx(owner, zeroEx.address, await deployBootstrapFeaturesAsync(provider, txDefaults, features))
-        .callAsync();
+        .initializeZeroEx(owner, zeroEx.target as string, await deployBootstrapFeaturesAsync(provider, txDefaults, features))
+        ;
     return zeroEx;
 }
 
@@ -177,17 +188,18 @@ export async function deployAllFeaturesAsync(
         if (!_config.wethAddress || !_config.stakingAddress) {
             throw new Error('wethAddress and stakingAddress are required for FeeCollectorController deployment');
         }
-        _config.feeCollectorController = (
-            await deployFromFoundryArtifactAsync<FeeCollectorControllerContract>(
-                FeeCollectorControllerContract,
-                _featureArtifacts.feeCollectorController,
-                provider,
-                txDefaults,
-                artifacts,
-                _config.wethAddress,
-                _config.stakingAddress,
-            )
-        ).address;
+        // FeeCollectorController not available in TypeChain output
+        // _config.feeCollectorController = (
+        //     await deployFromFoundryArtifactAsync<FeeCollectorControllerContract>(
+        //         FeeCollectorControllerContract,
+        //         _featureArtifacts.feeCollectorController,
+        //         provider,
+        //         txDefaults,
+        //         artifacts,
+        //         _config.wethAddress,
+        //         _config.stakingAddress,
+        //     )
+        // ).address;
     }
     return {
         ...(await deployBootstrapFeaturesAsync(provider, txDefaults)),
@@ -195,30 +207,30 @@ export async function deployAllFeaturesAsync(
             features.transformERC20 ||
             (
                 await deployFromFoundryArtifactAsync<TransformERC20FeatureContract>(
-                    TransformERC20FeatureContract,
+                    TransformERC20Feature__factory,
                     _featureArtifacts.transformERC20,
                     provider,
                     txDefaults,
                     artifacts,
                 )
-            ).address,
+            ).target as string,
         metaTransactions:
             features.metaTransactions ||
             (
                 await deployFromFoundryArtifactAsync<MetaTransactionsFeatureContract>(
-                    MetaTransactionsFeatureContract,
+                    MetaTransactionsFeature__factory,
                     _featureArtifacts.metaTransactions,
                     provider,
                     txDefaults,
                     artifacts,
                     _config.zeroExAddress,
                 )
-            ).address,
+            ).target as string,
         nativeOrders:
             features.nativeOrders ||
             (
                 await deployFromFoundryArtifactAsync<NativeOrdersFeatureContract>(
-                    NativeOrdersFeatureContract,
+                    NativeOrdersFeature__factory,
                     _featureArtifacts.nativeOrders,
                     provider,
                     txDefaults,
@@ -229,12 +241,12 @@ export async function deployAllFeaturesAsync(
                     _config.feeCollectorController,
                     _config.protocolFeeMultiplier,
                 )
-            ).address,
+            ).target as string,
         otcOrders:
             features.otcOrders ||
             (
                 await deployFromFoundryArtifactAsync<OtcOrdersFeatureContract>(
-                    OtcOrdersFeatureContract,
+                    OtcOrdersFeature__factory,
                     _featureArtifacts.otcOrders,
                     provider,
                     txDefaults,
@@ -242,7 +254,7 @@ export async function deployAllFeaturesAsync(
                     _config.zeroExAddress,
                     _config.wethAddress,
                 )
-            ).address,
+            ).target as string,
     };
 }
 
@@ -256,9 +268,9 @@ export async function fullMigrateAsync(
     features: Partial<FullFeatures> = {},
     config: Partial<FullMigrationConfig> = {},
     featureArtifacts: Partial<FullFeatureArtifacts> = {},
-): Promise<IZeroExContract> {
+): Promise<ZeroExContract> {
     const migrator = await deployFromFoundryArtifactAsync<FullMigrationContract>(
-        FullMigrationContract,
+        FullMigration__factory,
         artifacts.FullMigration,
         provider,
         txDefaults,
@@ -266,19 +278,19 @@ export async function fullMigrateAsync(
         txDefaults.from as string,
     );
     const zeroEx = await deployFromFoundryArtifactAsync<ZeroExContract>(
-        ZeroExContract,
+        ZeroEx__factory,
         artifacts.ZeroEx,
         provider,
         txDefaults,
         artifacts,
-        await migrator.getBootstrapper().callAsync(),
+        await migrator.getBootstrapper(),
     );
-    const _config = { ...config, zeroExAddress: zeroEx.address };
+    const _config = { ...config, zeroExAddress: zeroEx.target as string };
     const allFeatures = await deployAllFeaturesAsync(provider, txDefaults, features, _config, featureArtifacts);
     await migrator
-        .migrateZeroEx(owner, zeroEx.address, allFeatures, {
+        .migrateZeroEx(owner, zeroEx.target as string, allFeatures, {
             transformerDeployer: config.transformerDeployer || '0x0000000000000000000000000000000000000000',
         })
-        .callAsync();
-    return zeroEx as any as IZeroExContract;
+        ;
+    return zeroEx;
 }

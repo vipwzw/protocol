@@ -66,8 +66,8 @@ export class NativeOrdersTestEnvironment {
             ),
         );
         const zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {}, { protocolFeeMultiplier });
-        await makerToken.approve(zeroEx.address, constants.MAX_UINT256).awaitTransactionSuccessAsync({ from: maker });
-        await takerToken.approve(zeroEx.address, constants.MAX_UINT256).awaitTransactionSuccessAsync({ from: taker });
+        await makerToken.approve(zeroEx.target, constants.MAX_UINT256).awaitTransactionSuccessAsync({ from: maker });
+        await takerToken.approve(zeroEx.target, constants.MAX_UINT256).awaitTransactionSuccessAsync({ from: taker });
         return new NativeOrdersTestEnvironment(
             maker,
             taker,
