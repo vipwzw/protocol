@@ -1,54 +1,103 @@
 {
-    "schemaVersion": "3.0.0",
-    "contractName": "ILiquidityProviderFeature",
-    "compilerOutput": {
-        "abi": [
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": false,
-                        "internalType": "contract IERC20Token",
-                        "name": "inputToken",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": false,
-                        "internalType": "contract IERC20Token",
-                        "name": "outputToken",
-                        "type": "address"
-                    },
-                    { "indexed": false, "internalType": "uint256", "name": "inputTokenAmount", "type": "uint256" },
-                    { "indexed": false, "internalType": "uint256", "name": "outputTokenAmount", "type": "uint256" },
-                    {
-                        "indexed": false,
-                        "internalType": "contract ILiquidityProvider",
-                        "name": "provider",
-                        "type": "address"
-                    },
-                    { "indexed": false, "internalType": "address", "name": "recipient", "type": "address" }
-                ],
-                "name": "LiquidityProviderSwap",
-                "type": "event"
-            },
-            {
-                "inputs": [
-                    { "internalType": "contract IERC20Token", "name": "inputToken", "type": "address" },
-                    { "internalType": "contract IERC20Token", "name": "outputToken", "type": "address" },
-                    { "internalType": "contract ILiquidityProvider", "name": "provider", "type": "address" },
-                    { "internalType": "address", "name": "recipient", "type": "address" },
-                    { "internalType": "uint256", "name": "sellAmount", "type": "uint256" },
-                    { "internalType": "uint256", "name": "minBuyAmount", "type": "uint256" },
-                    { "internalType": "bytes", "name": "auxiliaryData", "type": "bytes" }
-                ],
-                "name": "sellToLiquidityProvider",
-                "outputs": [{ "internalType": "uint256", "name": "boughtAmount", "type": "uint256" }],
-                "stateMutability": "payable",
-                "type": "function"
-            }
-        ],
-        "evm": { "bytecode": { "object": "0x" }, "deployedBytecode": { "object": "0x" } },
-        "devdoc": { "methods": {} }
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ILiquidityProviderFeature",
+  "sourceName": "contracts/src/features/interfaces/ILiquidityProviderFeature.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "contract IERC20Token",
+          "name": "inputToken",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "contract IERC20Token",
+          "name": "outputToken",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "inputTokenAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "outputTokenAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "contract ILiquidityProvider",
+          "name": "provider",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        }
+      ],
+      "name": "LiquidityProviderSwap",
+      "type": "event"
     },
-    "compiler": { "name": "hardhat", "version": "0.8.28" }
+    {
+      "inputs": [
+        {
+          "internalType": "contract IERC20Token",
+          "name": "inputToken",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20Token",
+          "name": "outputToken",
+          "type": "address"
+        },
+        {
+          "internalType": "contract ILiquidityProvider",
+          "name": "provider",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "sellAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minBuyAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "auxiliaryData",
+          "type": "bytes"
+        }
+      ],
+      "name": "sellToLiquidityProvider",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "boughtAmount",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
 }

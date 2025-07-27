@@ -4,22 +4,21 @@
     "engines": {
         "node": ">=6.12"
     },
-    "description": "0x smart contract compilation artifacts",
+    "description": "0x smart contract compilation artifacts in native Hardhat format for TypeChain",
     "main": "lib/src/index.js",
     "directories": {
         "test": "test"
     },
     "scripts": {
-        "artifacts_copy": "node lib/src/copy.js",
-        "artifacts_transform": "node lib/src/transform.js ./artifacts && prettier --write ./artifacts/*.json",
-        "artifacts_update": "yarn artifacts_copy && yarn artifacts_transform && yarn build",
+        "artifacts_copy": "node scripts/copy-artifacts.js",
+        "artifacts_update": "yarn artifacts_copy && yarn build",
         "pre_build": "node scripts/copy-artifacts.js",
         "build": "yarn pre_build && yarn tsc -b",
         "build:ci": "yarn build",
         "test": "npx mocha test/*.ts --require ts-node/register",
         "test:ci": "yarn test",
         "run_mocha": "npx mocha test/*.ts --require ts-node/register",
-        "clean": "shx rm -rf lib"
+        "clean": "shx rm -rf lib artifacts"
     },
     "repository": {
         "type": "git",

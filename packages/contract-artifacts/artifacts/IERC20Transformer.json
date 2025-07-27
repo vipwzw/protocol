@@ -1,29 +1,47 @@
 {
-    "schemaVersion": "3.0.0",
-    "contractName": "IERC20Transformer",
-    "compilerOutput": {
-        "abi": [
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IERC20Transformer",
+  "sourceName": "contracts/src/transformers/IERC20Transformer.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "components": [
             {
-                "inputs": [
-                    {
-                        "components": [
-                            { "internalType": "address payable", "name": "sender", "type": "address" },
-                            { "internalType": "address payable", "name": "recipient", "type": "address" },
-                            { "internalType": "bytes", "name": "data", "type": "bytes" }
-                        ],
-                        "internalType": "struct IERC20Transformer.TransformContext",
-                        "name": "context",
-                        "type": "tuple"
-                    }
-                ],
-                "name": "transform",
-                "outputs": [{ "internalType": "bytes4", "name": "success", "type": "bytes4" }],
-                "stateMutability": "nonpayable",
-                "type": "function"
+              "internalType": "address payable",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "address payable",
+              "name": "recipient",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
             }
-        ],
-        "evm": { "bytecode": { "object": "0x" }, "deployedBytecode": { "object": "0x" } },
-        "devdoc": { "methods": {} }
-    },
-    "compiler": { "name": "hardhat", "version": "0.8.28" }
+          ],
+          "internalType": "struct IERC20Transformer.TransformContext",
+          "name": "context",
+          "type": "tuple"
+        }
+      ],
+      "name": "transform",
+      "outputs": [
+        {
+          "internalType": "bytes4",
+          "name": "success",
+          "type": "bytes4"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
 }

@@ -26,7 +26,7 @@ describe('@0x/contract-artifacts', () => {
     });
 
     it('IERC20Token should have correct contract structure', () => {
-        const IERC20Token = (artifacts as any).IERC20Token;
+        const { IERC20Token } = artifacts;
         
         expect(IERC20Token.contractName).to.equal('IERC20Token');
         expect(IERC20Token.sourceName).to.include('IERC20Token.sol');
@@ -45,7 +45,7 @@ describe('@0x/contract-artifacts', () => {
     });
 
     it('IZeroEx should have correct contract structure', () => {
-        const IZeroEx = (artifacts as any).IZeroEx;
+        const { IZeroEx } = artifacts;
         
         expect(IZeroEx.contractName).to.equal('IZeroEx');
         expect(IZeroEx.sourceName).to.include('IZeroEx.sol');
@@ -54,7 +54,7 @@ describe('@0x/contract-artifacts', () => {
     });
 
     it('should not have legacy abi-gen format properties', () => {
-        const IERC20Token = (artifacts as any).IERC20Token;
+        const { IERC20Token } = artifacts;
         
         // These should NOT exist (old abi-gen format)
         expect(IERC20Token.schemaVersion).to.be.undefined;
@@ -68,7 +68,7 @@ describe('@0x/contract-artifacts', () => {
     });
 
     it('should have optimal properties for TypeChain', () => {
-        const IERC20Token = (artifacts as any).IERC20Token;
+        const { IERC20Token } = artifacts;
         
         // Essential properties for TypeChain
         expect(IERC20Token._format).to.equal('hh-sol-artifact-1');
@@ -79,10 +79,10 @@ describe('@0x/contract-artifacts', () => {
         expect(IERC20Token.linkReferences).to.be.an('object');
         expect(IERC20Token.deployedLinkReferences).to.be.an('object');
         
-        // Should not have unnecessary properties (optimized for bundle size)
+        // Should not have unnecessary properties
         expect(IERC20Token.metadata).to.be.undefined;
         expect(IERC20Token.userdoc).to.be.undefined;
         expect(IERC20Token.devdoc).to.be.undefined;
         expect(IERC20Token.storageLayout).to.be.undefined;
     });
-});
+}); 

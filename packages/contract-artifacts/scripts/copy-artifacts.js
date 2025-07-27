@@ -2,7 +2,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
 const MONOREPO_ROOT = path.join(__dirname, '../../..');
 
@@ -60,7 +59,7 @@ const artifactsToPublish = [
     'IStaking'
 ];
 
-console.log(`📦 开始复制 contract artifacts...`);
+console.log(`📦 直接复制 Hardhat artifacts (无转换)...`);
 console.log(`合约包: ${pkgNames.join(', ')}`);
 
 const contractsDirs = [];
@@ -106,96 +105,51 @@ function findArtifactsInDirectory(baseDir, targetNames) {
 for (const dir of contractsDirs) {
     console.log(`🔍 处理目录: ${dir}`);
     
-    // Try generated-artifacts first (for Foundry)
-    const generatedArtifactsDir = path.join(contractsPath, dir, 'generated-artifacts');
-    if (fs.existsSync(generatedArtifactsDir)) {
-        console.log(`  📁 找到 generated-artifacts: ${generatedArtifactsDir}`);
-        const artifactPaths = fs
-            .readdirSync(generatedArtifactsDir)
-            .filter(artifact => {
-                const artifactWithoutExt = artifact.split('.')[0];
-                return artifactsToPublish.includes(artifactWithoutExt);
-            })
-            .map(artifact => path.join(generatedArtifactsDir, artifact));
-        allArtifactPaths.push(...artifactPaths);
-        console.log(`  ✅ 从 generated-artifacts 找到 ${artifactPaths.length} 个文件`);
-    } else {
-        // Try artifacts directory (for Hardhat)
-        const hardhatArtifactsDir = path.join(contractsPath, dir, 'artifacts');
-        console.log(`  📁 查找 hardhat artifacts: ${hardhatArtifactsDir}`);
+    // 直接使用 Hardhat artifacts (TypeChain 标准格式)
+    const hardhatArtifactsDir = path.join(contractsPath, dir, 'artifacts');
+    if (fs.existsSync(hardhatArtifactsDir)) {
+        console.log(`  📁 Hardhat artifacts: ${hardhatArtifactsDir}`);
         const foundArtifacts = findArtifactsInDirectory(hardhatArtifactsDir, artifactsToPublish);
         allArtifactPaths.push(...foundArtifacts);
-        console.log(`  ✅ 从 hardhat artifacts 找到 ${foundArtifacts.length} 个文件`);
+        console.log(`  ✅ 找到 ${foundArtifacts.length} 个 artifacts`);
+    } else {
+        console.log(`  ⚠️  未找到 artifacts 目录: ${hardhatArtifactsDir}`);
     }
 }
 
-console.log(`\n📊 总计找到 ${allArtifactPaths.length} 个 artifacts:`);
-allArtifactPaths.slice(0, 10).forEach(p => console.log(`  - ${path.basename(p)}`));
-if (allArtifactPaths.length > 10) {
-    console.log(`  ... 还有 ${allArtifactPaths.length - 10} 个文件`);
+console.log(`📋 总共找到 ${allArtifactPaths.length} 个 artifacts`);
+
+if (allArtifactPaths.length === 0) {
+    console.log('❌ 未找到任何 artifacts！请确保已编译合约。');
+    console.log('💡 提示: 在各合约目录运行 `forge build` 或 `hardhat compile`');
+    process.exit(1);
 }
 
-// 确保 artifacts 目录存在
-const artifactsDir = path.join(__dirname, '../artifacts');
-if (!fs.existsSync(artifactsDir)) {
-    fs.mkdirSync(artifactsDir, { recursive: true });
-    console.log(`📁 创建 artifacts 目录: ${artifactsDir}`);
+// 确保输出目录存在
+const outputDir = path.join(__dirname, '../artifacts');
+if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
 }
 
-if (allArtifactPaths.length > 0) {
-    let copied = 0;
-    for (const _path of allArtifactPaths) {
-        const fileName = _path.split('/').slice(-1)[0];
-        const targetPath = path.join(artifactsDir, fileName);
-        try {
-            fs.copyFileSync(_path, targetPath);
-            console.log(`✅ 复制: ${fileName}`);
-            copied++;
-        } catch (err) {
-            console.log(`❌ 复制失败: ${fileName} - ${err.message}`);
-        }
-    }
-    console.log(`\n🎉 完成! 成功复制 ${copied} 个 contract artifacts`);
+// 直接复制 Hardhat artifacts (不做任何转换)
+let copiedCount = 0;
+console.log(`\n📄 开始复制 artifacts...`);
+
+for (const _path of allArtifactPaths) {
+    const fileName = _path.split('/').slice(-1)[0];
+    const targetPath = path.join(outputDir, fileName);
     
-    // 自动运行转换器
-    if (copied > 0) {
-        console.log(`\n🔄 运行 artifacts 转换器...`);
-        try {
-            // 首先确保 transform.js 存在，如果不存在就编译 TypeScript
-            const transformJsPath = path.join(__dirname, '../lib/src/transform.js');
-            if (!fs.existsSync(transformJsPath)) {
-                console.log(`📝 编译转换器...`);
-                execSync('tsc src/transform.ts --target es2017 --module commonjs --outDir lib/src/', {
-                    cwd: path.join(__dirname, '..'),
-                    stdio: 'pipe'
-                });
-            }
-            
-            // 运行转换器
-            execSync(`node lib/src/transform.js ./artifacts`, {
-                cwd: path.join(__dirname, '..'),
-                stdio: 'inherit'
-            });
-            
-            // 运行 prettier
-            try {
-                execSync(`prettier --write ./artifacts/*.json`, {
-                    cwd: path.join(__dirname, '..'),
-                    stdio: 'pipe'
-                });
-                console.log(`✨ Prettier 格式化完成`);
-            } catch (prettierErr) {
-                console.log(`⚠️  Prettier 格式化跳过 (可能没有安装)`);
-            }
-            
-            console.log(`✅ Artifacts 转换完成!`);
-        } catch (err) {
-            console.log(`⚠️  转换器运行失败: ${err.message}`);
-            console.log(`💡 提示: 将在后续构建步骤中重试转换`);
-        }
+    try {
+        // 直接复制，保持 Hardhat 原生格式
+        fs.copyFileSync(_path, targetPath);
+        console.log(`  ✅ ${fileName}`);
+        copiedCount++;
+    } catch (error) {
+        console.log(`  ❌ 复制失败: ${fileName} - ${error.message}`);
     }
-} else {
-    console.log(`⚠️  没有找到任何 artifacts 文件`);
-    // 即使没有找到文件，也不要失败，因为可能是第一次构建
-    console.log(`💡 提示: 请先运行 'yarn compile:hardhat' 或 'yarn compile:foundry' 生成 artifacts`);
-} 
+}
+
+console.log(`\n🎉 成功复制 ${copiedCount} 个 Hardhat artifacts！`);
+console.log(`📂 输出目录: ${outputDir}`);
+console.log(`💡 这些 artifacts 已经是 TypeChain 和 ethers v6 的标准格式！`);
+console.log(`🚀 无需转换，直接可用于 TypeChain 生成类型！`); 
