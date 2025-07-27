@@ -15,7 +15,7 @@
     "main": "lib/src/index.js",
     "types": "lib/src/index.d.ts",
     "scripts": {
-        "build": "tsc -b",
+        "build": "yarn typechain:generate && tsc -b",
         "rebuild": "yarn typechain:clean && yarn typechain:generate && yarn typechain:prettier && yarn build",
         "build:ci": "yarn build",
         "publish:private": "yarn rebuild && echo 'gitpkg publish disabled'",
@@ -30,7 +30,7 @@
         "docs:json": "typedoc --excludePrivate --excludeExternals --excludeProtected --ignoreCompilerErrors --target ES5 --tsconfig typedoc-tsconfig.json --json $JSON_FILE_PATH $PROJECT_FILES",
         "typechain:prettier": "if [ -d \"src/typechain-types\" ] && [ \"$(ls -A src/typechain-types)\" ]; then prettier --write src/typechain-types/* --config ../../.prettierrc; fi",
         "typechain:clean": "rm -rf src/typechain-types",
-        "typechain:generate": "hardhat typechain",
+        "typechain:generate": "npx typechain --target ethers-v6 --out-dir src/typechain-types '../contract-artifacts/artifacts/*.json'",
         "test": "hardhat test",
         "test:coverage": "nyc --reporter=text --reporter=html --reporter=lcov yarn test && echo '\nCoverage report generated in coverage/ directory'"
     },

@@ -2,156 +2,247 @@
 /* tslint:disable */
 /* eslint-disable */
 import type {
-    BaseContract,
-    BigNumberish,
-    BytesLike,
-    FunctionFragment,
-    Result,
-    Interface,
-    EventFragment,
-    AddressLike,
-    ContractRunner,
-    ContractMethod,
-    Listener,
-} from 'ethers';
+  BaseContract,
+  BigNumberish,
+  BytesLike,
+  FunctionFragment,
+  Result,
+  Interface,
+  EventFragment,
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-    TypedContractEvent,
-    TypedDeferredTopicFilter,
-    TypedEventLog,
-    TypedLogDescription,
-    TypedListener,
-    TypedContractMethod,
-} from './common';
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
+  TypedListener,
+  TypedContractMethod,
+} from "./common";
 
 export interface ERC20TokenInterface extends Interface {
-    getFunction(nameOrSignature: 'allowance' | 'approve' | 'balanceOf' | 'transfer' | 'transferFrom'): FunctionFragment;
+  getFunction(
+    nameOrSignature:
+      | "allowance"
+      | "approve"
+      | "balanceOf"
+      | "transfer"
+      | "transferFrom"
+  ): FunctionFragment;
 
-    getEvent(nameOrSignatureOrTopic: 'Approval' | 'Transfer'): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Approval" | "Transfer"): EventFragment;
 
-    encodeFunctionData(functionFragment: 'allowance', values: [AddressLike, AddressLike]): string;
-    encodeFunctionData(functionFragment: 'approve', values: [AddressLike, BigNumberish]): string;
-    encodeFunctionData(functionFragment: 'balanceOf', values: [AddressLike]): string;
-    encodeFunctionData(functionFragment: 'transfer', values: [AddressLike, BigNumberish]): string;
-    encodeFunctionData(functionFragment: 'transferFrom', values: [AddressLike, AddressLike, BigNumberish]): string;
+  encodeFunctionData(
+    functionFragment: "allowance",
+    values: [AddressLike, AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "approve",
+    values: [AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "balanceOf",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "transfer",
+    values: [AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "transferFrom",
+    values: [AddressLike, AddressLike, BigNumberish]
+  ): string;
 
-    decodeFunctionResult(functionFragment: 'allowance', data: BytesLike): Result;
-    decodeFunctionResult(functionFragment: 'approve', data: BytesLike): Result;
-    decodeFunctionResult(functionFragment: 'balanceOf', data: BytesLike): Result;
-    decodeFunctionResult(functionFragment: 'transfer', data: BytesLike): Result;
-    decodeFunctionResult(functionFragment: 'transferFrom', data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "allowance", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "transfer", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "transferFrom",
+    data: BytesLike
+  ): Result;
 }
 
 export namespace ApprovalEvent {
-    export type InputTuple = [_owner: AddressLike, _spender: AddressLike, _value: BigNumberish];
-    export type OutputTuple = [_owner: string, _spender: string, _value: bigint];
-    export interface OutputObject {
-        _owner: string;
-        _spender: string;
-        _value: bigint;
-    }
-    export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-    export type Filter = TypedDeferredTopicFilter<Event>;
-    export type Log = TypedEventLog<Event>;
-    export type LogDescription = TypedLogDescription<Event>;
+  export type InputTuple = [
+    _owner: AddressLike,
+    _spender: AddressLike,
+    _value: BigNumberish
+  ];
+  export type OutputTuple = [_owner: string, _spender: string, _value: bigint];
+  export interface OutputObject {
+    _owner: string;
+    _spender: string;
+    _value: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export namespace TransferEvent {
-    export type InputTuple = [_from: AddressLike, _to: AddressLike, _value: BigNumberish];
-    export type OutputTuple = [_from: string, _to: string, _value: bigint];
-    export interface OutputObject {
-        _from: string;
-        _to: string;
-        _value: bigint;
-    }
-    export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-    export type Filter = TypedDeferredTopicFilter<Event>;
-    export type Log = TypedEventLog<Event>;
-    export type LogDescription = TypedLogDescription<Event>;
+  export type InputTuple = [
+    _from: AddressLike,
+    _to: AddressLike,
+    _value: BigNumberish
+  ];
+  export type OutputTuple = [_from: string, _to: string, _value: bigint];
+  export interface OutputObject {
+    _from: string;
+    _to: string;
+    _value: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export interface ERC20Token extends BaseContract {
-    connect(runner?: ContractRunner | null): ERC20Token;
-    waitForDeployment(): Promise<this>;
+  connect(runner?: ContractRunner | null): ERC20Token;
+  waitForDeployment(): Promise<this>;
 
-    interface: ERC20TokenInterface;
+  interface: ERC20TokenInterface;
 
-    queryFilter<TCEvent extends TypedContractEvent>(
-        event: TCEvent,
-        fromBlockOrBlockhash?: string | number | undefined,
-        toBlock?: string | number | undefined,
-    ): Promise<Array<TypedEventLog<TCEvent>>>;
-    queryFilter<TCEvent extends TypedContractEvent>(
-        filter: TypedDeferredTopicFilter<TCEvent>,
-        fromBlockOrBlockhash?: string | number | undefined,
-        toBlock?: string | number | undefined,
-    ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-    on<TCEvent extends TypedContractEvent>(event: TCEvent, listener: TypedListener<TCEvent>): Promise<this>;
-    on<TCEvent extends TypedContractEvent>(
-        filter: TypedDeferredTopicFilter<TCEvent>,
-        listener: TypedListener<TCEvent>,
-    ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    once<TCEvent extends TypedContractEvent>(event: TCEvent, listener: TypedListener<TCEvent>): Promise<this>;
-    once<TCEvent extends TypedContractEvent>(
-        filter: TypedDeferredTopicFilter<TCEvent>,
-        listener: TypedListener<TCEvent>,
-    ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    listeners<TCEvent extends TypedContractEvent>(event: TCEvent): Promise<Array<TypedListener<TCEvent>>>;
-    listeners(eventName?: string): Promise<Array<Listener>>;
-    removeAllListeners<TCEvent extends TypedContractEvent>(event?: TCEvent): Promise<this>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    allowance: TypedContractMethod<[_owner: AddressLike, _spender: AddressLike], [bigint], 'view'>;
+  allowance: TypedContractMethod<
+    [_owner: AddressLike, _spender: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-    approve: TypedContractMethod<[_spender: AddressLike, _value: BigNumberish], [boolean], 'nonpayable'>;
+  approve: TypedContractMethod<
+    [_spender: AddressLike, _value: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-    balanceOf: TypedContractMethod<[_owner: AddressLike], [bigint], 'view'>;
+  balanceOf: TypedContractMethod<[_owner: AddressLike], [bigint], "view">;
 
-    transfer: TypedContractMethod<[_to: AddressLike, _value: BigNumberish], [boolean], 'nonpayable'>;
+  transfer: TypedContractMethod<
+    [_to: AddressLike, _value: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-    transferFrom: TypedContractMethod<
-        [_from: AddressLike, _to: AddressLike, _value: BigNumberish],
-        [boolean],
-        'nonpayable'
+  transferFrom: TypedContractMethod<
+    [_from: AddressLike, _to: AddressLike, _value: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
+
+  getFunction(
+    nameOrSignature: "allowance"
+  ): TypedContractMethod<
+    [_owner: AddressLike, _spender: AddressLike],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "approve"
+  ): TypedContractMethod<
+    [_spender: AddressLike, _value: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "balanceOf"
+  ): TypedContractMethod<[_owner: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "transfer"
+  ): TypedContractMethod<
+    [_to: AddressLike, _value: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "transferFrom"
+  ): TypedContractMethod<
+    [_from: AddressLike, _to: AddressLike, _value: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+
+  getEvent(
+    key: "Approval"
+  ): TypedContractEvent<
+    ApprovalEvent.InputTuple,
+    ApprovalEvent.OutputTuple,
+    ApprovalEvent.OutputObject
+  >;
+  getEvent(
+    key: "Transfer"
+  ): TypedContractEvent<
+    TransferEvent.InputTuple,
+    TransferEvent.OutputTuple,
+    TransferEvent.OutputObject
+  >;
+
+  filters: {
+    "Approval(address,address,uint256)": TypedContractEvent<
+      ApprovalEvent.InputTuple,
+      ApprovalEvent.OutputTuple,
+      ApprovalEvent.OutputObject
+    >;
+    Approval: TypedContractEvent<
+      ApprovalEvent.InputTuple,
+      ApprovalEvent.OutputTuple,
+      ApprovalEvent.OutputObject
     >;
 
-    getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T;
-
-    getFunction(
-        nameOrSignature: 'allowance',
-    ): TypedContractMethod<[_owner: AddressLike, _spender: AddressLike], [bigint], 'view'>;
-    getFunction(
-        nameOrSignature: 'approve',
-    ): TypedContractMethod<[_spender: AddressLike, _value: BigNumberish], [boolean], 'nonpayable'>;
-    getFunction(nameOrSignature: 'balanceOf'): TypedContractMethod<[_owner: AddressLike], [bigint], 'view'>;
-    getFunction(
-        nameOrSignature: 'transfer',
-    ): TypedContractMethod<[_to: AddressLike, _value: BigNumberish], [boolean], 'nonpayable'>;
-    getFunction(
-        nameOrSignature: 'transferFrom',
-    ): TypedContractMethod<[_from: AddressLike, _to: AddressLike, _value: BigNumberish], [boolean], 'nonpayable'>;
-
-    getEvent(
-        key: 'Approval',
-    ): TypedContractEvent<ApprovalEvent.InputTuple, ApprovalEvent.OutputTuple, ApprovalEvent.OutputObject>;
-    getEvent(
-        key: 'Transfer',
-    ): TypedContractEvent<TransferEvent.InputTuple, TransferEvent.OutputTuple, TransferEvent.OutputObject>;
-
-    filters: {
-        'Approval(address,address,uint256)': TypedContractEvent<
-            ApprovalEvent.InputTuple,
-            ApprovalEvent.OutputTuple,
-            ApprovalEvent.OutputObject
-        >;
-        Approval: TypedContractEvent<ApprovalEvent.InputTuple, ApprovalEvent.OutputTuple, ApprovalEvent.OutputObject>;
-
-        'Transfer(address,address,uint256)': TypedContractEvent<
-            TransferEvent.InputTuple,
-            TransferEvent.OutputTuple,
-            TransferEvent.OutputObject
-        >;
-        Transfer: TypedContractEvent<TransferEvent.InputTuple, TransferEvent.OutputTuple, TransferEvent.OutputObject>;
-    };
+    "Transfer(address,address,uint256)": TypedContractEvent<
+      TransferEvent.InputTuple,
+      TransferEvent.OutputTuple,
+      TransferEvent.OutputObject
+    >;
+    Transfer: TypedContractEvent<
+      TransferEvent.InputTuple,
+      TransferEvent.OutputTuple,
+      TransferEvent.OutputObject
+    >;
+  };
 }
