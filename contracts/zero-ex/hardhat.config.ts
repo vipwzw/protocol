@@ -1,42 +1,18 @@
 import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-ethers";
-import "@nomicfoundation/hardhat-chai-matchers";
+import "@typechain/hardhat";
 
 const config: HardhatUserConfig = {
-  solidity: {
-    version: "0.8.28",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
-      },
-      evmVersion: "cancun",
-    },
-  },
-  networks: {
-    hardhat: {
-      chainId: 1337,
-      accounts: {
-        mnemonic: "concert load couple harbor equip island argue ramp clarify fence smart topic",
-        count: 20,
-      },
-      mining: {
-        auto: true,
-        interval: 0,
-      },
-    },
-    localhost: {
-      url: "http://localhost:8545",
-    },
-  },
-  paths: {
-    sources: "./contracts",  // 使用整个 contracts 目录
-    tests: "./test",
-    cache: "./cache/hardhat",
-    artifacts: "./artifacts",
-  },
-  mocha: {
-    timeout: 60000,
+  solidity: "0.8.28",
+  typechain: {
+    outDir: "test/typechain-types",
+    target: "ethers-v6",
+    alwaysGenerateOverloads: false,
+    externalArtifacts: [
+      "artifacts/**/*.json",
+      "!artifacts/**/*.dbg.json",
+      "!artifacts/**/build-info/**"
+    ],
+    dontOverrideCompile: true
   },
 };
 

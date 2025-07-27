@@ -1,6 +1,5 @@
 import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-ethers";
-import "@nomicfoundation/hardhat-chai-matchers";
+import "@typechain/hardhat";
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -26,30 +25,16 @@ const config: HardhatUserConfig = {
       },
     ],
   },
-  networks: {
-    hardhat: {
-      chainId: 1337,
-      // Use default Hardhat accounts (matches test-utils configuration)
-      mining: {
-        auto: true,
-        interval: 0,
-      },
-      // Set gasPrice high enough for the current baseFeePerGas
-      gasPrice: 2000000000, // 2 gwei
-      initialBaseFeePerGas: 1000000000, // 1 gwei
-    },
-    localhost: {
-      url: "http://localhost:8545",
-    },
-  },
-  paths: {
-    sources: "./contracts",
-    tests: "./test",
-    cache: "./cache/hardhat",
-    artifacts: "./artifacts",
-  },
-  mocha: {
-    timeout: 100000,
+  typechain: {
+    outDir: "test/typechain-types",
+    target: "ethers-v6",
+    alwaysGenerateOverloads: false,
+    externalArtifacts: [
+      "artifacts/**/*.json",
+      "!artifacts/**/*.dbg.json",
+      "!artifacts/**/build-info/**"
+    ],
+    dontOverrideCompile: true
   },
 };
 
