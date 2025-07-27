@@ -400,7 +400,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
 
         it('different orders have different hashes', async function() {
             const order1 = getTestERC721Order();
-            const order2 = getTestERC721Order({ nonce: order1.nonce + 1n });
+            const order2 = getTestERC721Order({ nonce: Number(order1.nonce) + 1 });
             
             const hash1 = await erc721OrdersFeature.getERC721OrderHash(order1);
             const hash2 = await erc721OrdersFeature.getERC721OrderHash(order2);
@@ -618,7 +618,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
             
-            const wrongTokenId = order.erc721TokenId + 1n;
+            const wrongTokenId = Number(order.erc721TokenId) + 1;
             
             let error: any;
 
@@ -1070,7 +1070,7 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
             
-            const wrongTokenId = order.erc721TokenId + 1n;
+            const wrongTokenId = Number(order.erc721TokenId) + 1;
             
             let error: any;
 
@@ -1598,8 +1598,8 @@ describe('ERC721OrdersFeature - Complete Modern Tests', function() {
             
             for (const order of orders) {
                 await erc721OrdersFeature.connect(maker).preSignERC721Order(order);
-                const isPreSigned = await erc721OrdersFeature.isERC721OrderNoncePreSigned(maker.address, order.nonce);
-                expect(isPreSigned).to.be.true;
+                const orderStatus = await erc721OrdersFeature.getERC721OrderStatus(order);
+                expect(orderStatus).to.equal(1n); // 1n = PreSigned status
             }
             
             console.log(`✅ Successfully pre-signed ${orders.length} orders`);

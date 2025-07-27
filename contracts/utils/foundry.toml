@@ -2,6 +2,8 @@
 src = 'contracts/src'
 out = 'out'
 test = 'test'
+# Include test contracts for ABI generation
+extra_output_files = ["abi"]
 libs = ['lib', "../erc20/contracts/src/", "../governance/src/"]
 remappings = [
     '@0x/contracts-erc20/=../erc20/',

@@ -288,13 +288,56 @@ describe('BatchFillNativeOrders Feature - Modern Tests (Fixed)', function() {
         }
 
         it('successfully calls batchFillLimitOrders without technical errors', async function() {
+            console.log(`🧪 Testing technical error fixes...`);
+            
             const orders = [
-                testUtils.createTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT }),
-                testUtils.createTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT }),
-                testUtils.createTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })
+                testUtils.createTestLimitOrder({ 
+                    takerTokenFeeAmount: ZERO_AMOUNT,
+                    makerAmount: new BigNumber(ethers.parseEther('1').toString()),
+                    takerAmount: new BigNumber(ethers.parseEther('1').toString())
+                }),
+                testUtils.createTestLimitOrder({ 
+                    takerTokenFeeAmount: ZERO_AMOUNT,
+                    makerAmount: new BigNumber(ethers.parseEther('1').toString()),
+                    takerAmount: new BigNumber(ethers.parseEther('1').toString())
+                }),
+                testUtils.createTestLimitOrder({ 
+                    takerTokenFeeAmount: ZERO_AMOUNT,
+                    makerAmount: new BigNumber(ethers.parseEther('1').toString()),
+                    takerAmount: new BigNumber(ethers.parseEther('1').toString())
+                })
             ];
             
-            const signatures = orders.map(() => testUtils.createMockSignature());
+            // Convert to ethers-compatible format
+            const ethersOrders = orders.map(order => ({
+                makerToken: order.makerToken,
+                takerToken: order.takerToken,
+                makerAmount: order.makerAmount.toString(),
+                takerAmount: order.takerAmount.toString(),
+                takerTokenFeeAmount: order.takerTokenFeeAmount.toString(),
+                maker: order.maker,
+                taker: order.taker,
+                sender: order.sender,
+                feeRecipient: order.feeRecipient,
+                pool: order.pool,
+                expiry: order.expiry.toString(),
+                salt: order.salt.toString()
+            }));
+            
+            // Create real signatures using our fixed method
+            const signatures = [];
+            for (const ethersOrder of ethersOrders) {
+                const orderHash = await deployment.features.nativeOrders.getLimitOrderHash(ethersOrder);
+                const signatureString = await maker.signMessage(ethers.getBytes(orderHash));
+                const parsedSig = ethers.Signature.from(signatureString);
+                signatures.push({
+                    signatureType: 0, // EthSign
+                    v: parsedSig.v,
+                    r: parsedSig.r,
+                    s: parsedSig.s
+                });
+            }
+            
             await testUtils.prepareBalancesForOrdersAsync(orders);
             
             // The key test: This should NOT throw any technical errors
@@ -303,14 +346,15 @@ describe('BatchFillNativeOrders Feature - Modern Tests (Fixed)', function() {
             // - "incorrect number of arguments to constructor"  ✅ FIXED  
             // - "Cannot read properties of undefined (reading 'apply')"  ✅ FIXED
             // - "invalid tuple value"  ✅ FIXED
+            // - "invalid BigNumberish value"  ✅ FIXED
             // - "Transaction reverted without a reason string"  ✅ FIXED
             
             let txSuccess = false;
             try {
                 const tx = await batchFillFeature.connect(taker).batchFillLimitOrders(
-                    orders,
+                    ethersOrders,
                     signatures,
-                    orders.map(order => order.takerAmount),
+                    ethersOrders.map(order => order.takerAmount),
                     false // revertIfIncomplete
                 );
                 

@@ -20,7 +20,7 @@
         "compile": "forge build && npx hardhat compile",
         "watch": "forge build --watch",
         "clean": "shx rm -rf lib generated_docs",
-        "generate_contract_wrappers": "if [ -z \"$(ls -A test/generated-wrappers 2>/dev/null)\" ]; then find test/generated-artifacts -name '*.json' 2>/dev/null | while read file; do echo \"生成: $(basename $file .json)\"; npx abi-gen --debug --abis \"$file\" --output test/generated-wrappers --backend ethers; done && node ../zero-ex/scripts/fix-ethers-v6.js; else echo \"✅ 跳过生成：wrapper 文件已存在 ($(ls test/generated-wrappers/*.ts 2>/dev/null | wc -l | tr -d ' ') 个文件)\"; fi",
+        "generate_contract_wrappers": "if [ -z \"$(ls -A test/generated-wrappers 2>/dev/null)\" ]; then find ./artifacts -name '*.json' | grep -v dbg | grep -v build-info | while read file; do echo \"生成: $(basename $file .json)\"; npx abi-gen --debug --abis \"$file\" --output test/generated-wrappers --backend ethers; done && node ../zero-ex/scripts/fix-ethers-v6.js; else echo \"✅ 跳过生成：wrapper 文件已存在 ($(ls test/generated-wrappers/*.ts 2>/dev/null | wc -l | tr -d ' ') 个文件)\"; fi",
         "generate_contract_wrappers:force": "find test/generated-wrappers -name '*.ts' -delete 2>/dev/null || true && yarn generate_contract_wrappers",
         "lint": "eslint src test",
         "fix": "eslint --fix src test",

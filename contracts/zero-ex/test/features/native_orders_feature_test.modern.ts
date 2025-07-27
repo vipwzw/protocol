@@ -45,13 +45,13 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
     const PROTOCOL_FEE_MULTIPLIER = 1337000;
     const SINGLE_PROTOCOL_FEE = GAS_PRICE * BigInt(PROTOCOL_FEE_MULTIPLIER);
     
-    // Mock order status enum
+    // Mock order status enum (BigInt values to match contract returns)
     const OrderStatus = {
-        Invalid: 0,
-        Fillable: 1,
-        Filled: 2,
-        Cancelled: 3,
-        Expired: 4
+        Invalid: 0n,
+        Fillable: 1n,
+        Filled: 2n,
+        Cancelled: 3n,
+        Expired: 4n
     };
     
     // Mock signature type enum
@@ -206,6 +206,12 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         contractWallet = await ContractWalletFactory.connect(contractWalletOwner).deploy(verifyingContract);
         await contractWallet.waitForDeployment();
         console.log(`✅ Deployed test contracts`);
+        
+        // Set up deployment object for test utility functions
+        deployment = await deployZeroExWithFullMigration(owner, wethToken, {
+            transformerDeployer: owner.address
+        });
+        console.log(`✅ Deployment object set up for test utilities`);
     }
 
     async function setupTestUtilsAsync(): Promise<void> {
@@ -230,7 +236,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 await this.prepareBalancesForOrdersAsync([order]);
                 const signature = await this.createOrderSignature(order);
                 
-                return await zeroEx.connect(txOriginAddr).fillLimitOrder(order, signature, fillAmount);
+                return await nativeOrdersFeature.connect(txOriginAddr).fillLimitOrder(order, signature, fillAmount);
             },
             
             // Fill RFQ order
@@ -240,7 +246,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 const amount = fillAmount || order.takerAmount;
                 const fromAddr = txOriginAddr || taker;
                 
-                return await zeroEx.connect(fromAddr).fillRfqOrder(order, signature, amount);
+                return await nativeOrdersFeature.connect(fromAddr).fillRfqOrder(order, signature, amount);
             },
             
             // Fill or kill limit order
@@ -250,7 +256,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 const amount = fillAmount || order.takerAmount;
                 const fromAddr = txOriginAddr || taker;
                 
-                return await zeroEx.connect(fromAddr).fillOrKillLimitOrder(order, signature, amount);
+                return await nativeOrdersFeature.connect(fromAddr).fillOrKillLimitOrder(order, signature, amount);
             },
             
             // Fill or kill RFQ order
@@ -260,7 +266,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 const amount = fillAmount || order.takerAmount;
                 const fromAddr = txOriginAddr || taker;
                 
-                return await zeroEx.connect(fromAddr).fillOrKillRfqOrder(order, signature, amount);
+                return await nativeOrdersFeature.connect(fromAddr).fillOrKillRfqOrder(order, signature, amount);
             },
             
             // Create order signature
@@ -463,10 +469,10 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         it('expired order', async function() {
             const expiry = createExpiry(-60);
             const order = getTestLimitOrder({ expiry });
-            const info = await zeroEx.getLimitOrderInfo(order);
+            const info = await nativeOrdersFeature.getLimitOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Expired,
-                orderHash: await zeroEx.getLimitOrderHash(order),
+                orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: ZERO_AMOUNT,
             });
             
@@ -480,15 +486,15 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             const sig = await testUtils.createOrderSignature(order);
             
             // Fill the order first
-            await zeroEx.connect(taker).fillLimitOrder(order, sig, order.takerAmount);
+            await nativeOrdersFeature.connect(taker).fillLimitOrder(order, sig, order.takerAmount);
             
             // Advance time to expire the order
             await increaseTimeAsync(61);
             
-            const info = await zeroEx.getLimitOrderInfo(order);
+            const info = await nativeOrdersFeature.getLimitOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Filled, // Still reports filled
-                orderHash: await zeroEx.getLimitOrderHash(order),
+                orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: order.takerAmount,
             });
             
@@ -498,10 +504,10 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         it('filled order', async function() {
             const order = getTestLimitOrder();
             await testUtils.fillLimitOrderAsync(order);
-            const info = await zeroEx.getLimitOrderInfo(order);
+            const info = await nativeOrdersFeature.getLimitOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Filled,
-                orderHash: await zeroEx.getLimitOrderHash(order),
+                orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: order.takerAmount,
             });
             
@@ -512,10 +518,10 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             const order = getTestLimitOrder();
             const fillAmount = order.takerAmount - 1n;
             await testUtils.fillLimitOrderAsync(order, { fillAmount });
-            const info = await zeroEx.getLimitOrderInfo(order);
+            const info = await nativeOrdersFeature.getLimitOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Fillable,
-                orderHash: await zeroEx.getLimitOrderHash(order),
+                orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: fillAmount,
             });
             
@@ -525,11 +531,11 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         it('filled then cancelled order', async function() {
             const order = getTestLimitOrder();
             await testUtils.fillLimitOrderAsync(order);
-            await zeroEx.connect(maker).cancelLimitOrder(order);
-            const info = await zeroEx.getLimitOrderInfo(order);
+            await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
+            const info = await nativeOrdersFeature.getLimitOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Filled, // Still reports filled
-                orderHash: await zeroEx.getLimitOrderHash(order),
+                orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: order.takerAmount,
             });
             
@@ -540,11 +546,11 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             const order = getTestLimitOrder();
             const fillAmount = order.takerAmount - 1n;
             await testUtils.fillLimitOrderAsync(order, { fillAmount });
-            await zeroEx.connect(maker).cancelLimitOrder(order);
-            const info = await zeroEx.getLimitOrderInfo(order);
+            await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
+            const info = await nativeOrdersFeature.getLimitOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Cancelled,
-                orderHash: await zeroEx.getLimitOrderHash(order),
+                orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: fillAmount,
             });
             
@@ -556,10 +562,10 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 taker: generateRandomAddress(),
                 takerToken: NULL_ADDRESS // Invalid taker token
             });
-            const info = await zeroEx.getLimitOrderInfo(order);
+            const info = await nativeOrdersFeature.getLimitOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Invalid,
-                orderHash: await zeroEx.getLimitOrderHash(order),
+                orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: ZERO_AMOUNT,
             });
             
@@ -570,10 +576,10 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
     describe('getRfqOrderInfo()', function() {
         it('valid order', async function() {
             const order = getTestRfqOrder();
-            const info = await zeroEx.getRfqOrderInfo(order);
+            const info = await nativeOrdersFeature.getRfqOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Fillable,
-                orderHash: await zeroEx.getRfqOrderHash(order),
+                orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: ZERO_AMOUNT,
             });
             
@@ -583,10 +589,10 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         it('expired order', async function() {
             const expiry = createExpiry(-60);
             const order = getTestRfqOrder({ expiry });
-            const info = await zeroEx.getRfqOrderInfo(order);
+            const info = await nativeOrdersFeature.getRfqOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Expired,
-                orderHash: await zeroEx.getRfqOrderHash(order),
+                orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: ZERO_AMOUNT,
             });
             
@@ -600,15 +606,15 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             const sig = await testUtils.createOrderSignature(order);
             
             // Fill the order first
-            await zeroEx.connect(taker).fillRfqOrder(order, sig, order.takerAmount);
+            await nativeOrdersFeature.connect(taker).fillRfqOrder(order, sig, order.takerAmount);
             
             // Advance time to expire the order
             await increaseTimeAsync(61);
             
-            const info = await zeroEx.getRfqOrderInfo(order);
+            const info = await nativeOrdersFeature.getRfqOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Filled, // Still reports filled
-                orderHash: await zeroEx.getRfqOrderHash(order),
+                orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: order.takerAmount,
             });
             
@@ -618,10 +624,10 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         it('filled order', async function() {
             const order = getTestRfqOrder();
             await testUtils.fillRfqOrderAsync(order, order.takerAmount, taker);
-            const info = await zeroEx.getRfqOrderInfo(order);
+            const info = await nativeOrdersFeature.getRfqOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Filled,
-                orderHash: await zeroEx.getRfqOrderHash(order),
+                orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: order.takerAmount,
             });
             
@@ -632,10 +638,10 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             const order = getTestRfqOrder();
             const fillAmount = order.takerAmount - 1n;
             await testUtils.fillRfqOrderAsync(order, fillAmount);
-            const info = await zeroEx.getRfqOrderInfo(order);
+            const info = await nativeOrdersFeature.getRfqOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Fillable,
-                orderHash: await zeroEx.getRfqOrderHash(order),
+                orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: fillAmount,
             });
             
@@ -645,11 +651,11 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         it('filled then cancelled order', async function() {
             const order = getTestRfqOrder();
             await testUtils.fillRfqOrderAsync(order);
-            await zeroEx.connect(maker).cancelRfqOrder(order);
-            const info = await zeroEx.getRfqOrderInfo(order);
+            await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
+            const info = await nativeOrdersFeature.getRfqOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Filled, // Still reports filled
-                orderHash: await zeroEx.getRfqOrderHash(order),
+                orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: order.takerAmount,
             });
             
@@ -660,11 +666,11 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             const order = getTestRfqOrder();
             const fillAmount = order.takerAmount - 1n;
             await testUtils.fillRfqOrderAsync(order, fillAmount);
-            await zeroEx.connect(maker).cancelRfqOrder(order);
-            const info = await zeroEx.getRfqOrderInfo(order);
+            await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
+            const info = await nativeOrdersFeature.getRfqOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Cancelled,
-                orderHash: await zeroEx.getRfqOrderHash(order),
+                orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: fillAmount,
             });
             
@@ -673,10 +679,10 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
 
         it('invalid origin', async function() {
             const order = getTestRfqOrder({ txOrigin: NULL_ADDRESS });
-            const info = await zeroEx.getRfqOrderInfo(order);
+            const info = await nativeOrdersFeature.getRfqOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Invalid,
-                orderHash: await zeroEx.getRfqOrderHash(order),
+                orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: ZERO_AMOUNT,
             });
             
@@ -687,14 +693,14 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
     describe('cancelLimitOrder()', function() {
         it('can cancel an unfilled order', async function() {
             const order = getTestLimitOrder();
-            const result = await zeroEx.connect(maker).cancelLimitOrder(order);
+            const result = await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
             const receipt = await result.wait();
             
             // Check for OrderCancelled event
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
             
-            const { status } = await zeroEx.getLimitOrderInfo(order);
+            const { status } = await nativeOrdersFeature.getLimitOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
             
             console.log(`✅ Cancelled unfilled limit order`);
@@ -703,13 +709,13 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         it('can cancel a fully filled order', async function() {
             const order = getTestLimitOrder();
             await testUtils.fillLimitOrderAsync(order);
-            const result = await zeroEx.connect(maker).cancelLimitOrder(order);
+            const result = await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
             const receipt = await result.wait();
             
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
             
-            const { status } = await zeroEx.getLimitOrderInfo(order);
+            const { status } = await nativeOrdersFeature.getLimitOrderInfo(order);
             expect(status).to.equal(OrderStatus.Filled); // Still reports filled
             
             console.log(`✅ Cancelled fully filled limit order`);
@@ -718,13 +724,13 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         it('can cancel a partially filled order', async function() {
             const order = getTestLimitOrder();
             await testUtils.fillLimitOrderAsync(order, { fillAmount: order.takerAmount - 1n });
-            const result = await zeroEx.connect(maker).cancelLimitOrder(order);
+            const result = await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
             const receipt = await result.wait();
             
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
             
-            const { status } = await zeroEx.getLimitOrderInfo(order);
+            const { status } = await nativeOrdersFeature.getLimitOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
             
             console.log(`✅ Cancelled partially filled limit order`);
@@ -733,13 +739,13 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         it('can cancel an expired order', async function() {
             const expiry = createExpiry(-60);
             const order = getTestLimitOrder({ expiry });
-            const result = await zeroEx.connect(maker).cancelLimitOrder(order);
+            const result = await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
             const receipt = await result.wait();
             
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
             
-            const { status } = await zeroEx.getLimitOrderInfo(order);
+            const { status } = await nativeOrdersFeature.getLimitOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
             
             console.log(`✅ Cancelled expired limit order`);
@@ -747,14 +753,14 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
 
         it('can cancel a cancelled order', async function() {
             const order = getTestLimitOrder();
-            await zeroEx.connect(maker).cancelLimitOrder(order);
-            const result = await zeroEx.connect(maker).cancelLimitOrder(order);
+            await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
+            const result = await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
             const receipt = await result.wait();
             
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
             
-            const { status } = await zeroEx.getLimitOrderInfo(order);
+            const { status } = await nativeOrdersFeature.getLimitOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
             
             console.log(`✅ Cancelled already cancelled limit order`);
@@ -764,7 +770,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             const order = getTestLimitOrder();
             
             await expect(
-                zeroEx.connect(notMaker).cancelLimitOrder(order)
+                nativeOrdersFeature.connect(notMaker).cancelLimitOrder(order)
             ).to.be.rejectedWith('OnlyOrderMakerAllowed');
             
             console.log(`✅ Correctly rejected non-maker cancellation`);
@@ -774,13 +780,13 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
     describe('cancelRfqOrder()', function() {
         it('can cancel an unfilled order', async function() {
             const order = getTestRfqOrder();
-            const result = await zeroEx.connect(maker).cancelRfqOrder(order);
+            const result = await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
             const receipt = await result.wait();
             
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
             
-            const { status } = await zeroEx.getRfqOrderInfo(order);
+            const { status } = await nativeOrdersFeature.getRfqOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
             
             console.log(`✅ Cancelled unfilled RFQ order`);
@@ -789,13 +795,13 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         it('can cancel a fully filled order', async function() {
             const order = getTestRfqOrder();
             await testUtils.fillRfqOrderAsync(order);
-            const result = await zeroEx.connect(maker).cancelRfqOrder(order);
+            const result = await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
             const receipt = await result.wait();
             
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
             
-            const { status } = await zeroEx.getRfqOrderInfo(order);
+            const { status } = await nativeOrdersFeature.getRfqOrderInfo(order);
             expect(status).to.equal(OrderStatus.Filled); // Still reports filled
             
             console.log(`✅ Cancelled fully filled RFQ order`);
@@ -804,13 +810,13 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         it('can cancel a partially filled order', async function() {
             const order = getTestRfqOrder();
             await testUtils.fillRfqOrderAsync(order, order.takerAmount - 1n);
-            const result = await zeroEx.connect(maker).cancelRfqOrder(order);
+            const result = await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
             const receipt = await result.wait();
             
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
             
-            const { status } = await zeroEx.getRfqOrderInfo(order);
+            const { status } = await nativeOrdersFeature.getRfqOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
             
             console.log(`✅ Cancelled partially filled RFQ order`);
@@ -819,13 +825,13 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         it('can cancel an expired order', async function() {
             const expiry = createExpiry(-60);
             const order = getTestRfqOrder({ expiry });
-            const result = await zeroEx.connect(maker).cancelRfqOrder(order);
+            const result = await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
             const receipt = await result.wait();
             
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
             
-            const { status } = await zeroEx.getRfqOrderInfo(order);
+            const { status } = await nativeOrdersFeature.getRfqOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
             
             console.log(`✅ Cancelled expired RFQ order`);
@@ -833,14 +839,14 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
 
         it('can cancel a cancelled order', async function() {
             const order = getTestRfqOrder();
-            await zeroEx.connect(maker).cancelRfqOrder(order);
-            const result = await zeroEx.connect(maker).cancelRfqOrder(order);
+            await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
+            const result = await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
             const receipt = await result.wait();
             
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
             
-            const { status } = await zeroEx.getRfqOrderInfo(order);
+            const { status } = await nativeOrdersFeature.getRfqOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
             
             console.log(`✅ Cancelled already cancelled RFQ order`);
@@ -850,7 +856,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             const order = getTestRfqOrder();
             
             await expect(
-                zeroEx.connect(notMaker).cancelRfqOrder(order)
+                nativeOrdersFeature.connect(notMaker).cancelRfqOrder(order)
             ).to.be.rejectedWith('OnlyOrderMakerAllowed');
             
             console.log(`✅ Correctly rejected non-maker RFQ cancellation`);
@@ -860,13 +866,13 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
     describe('batchCancelLimitOrders()', function() {
         it('can cancel multiple orders', async function() {
             const orders = [getTestLimitOrder(), getTestLimitOrder(), getTestLimitOrder()];
-            const result = await zeroEx.connect(maker).batchCancelLimitOrders(orders);
+            const result = await nativeOrdersFeature.connect(maker).batchCancelLimitOrders(orders);
             const receipt = await result.wait();
             
             const cancelEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvents.length).to.equal(orders.length);
             
-            const infos = await Promise.all(orders.map(o => zeroEx.getLimitOrderInfo(o)));
+            const infos = await Promise.all(orders.map(o => nativeOrdersFeature.getLimitOrderInfo(o)));
             expect(infos.map(i => i.status)).to.deep.equal(infos.map(() => OrderStatus.Cancelled));
             
             console.log(`✅ Batch cancelled ${orders.length} limit orders`);
@@ -876,7 +882,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             const orders = [getTestLimitOrder(), getTestLimitOrder(), getTestLimitOrder()];
             
             await expect(
-                zeroEx.connect(notMaker).batchCancelLimitOrders(orders)
+                nativeOrdersFeature.connect(notMaker).batchCancelLimitOrders(orders)
             ).to.be.rejectedWith('OnlyOrderMakerAllowed');
             
             console.log(`✅ Correctly rejected non-maker batch cancellation`);
@@ -886,13 +892,13 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
     describe('batchCancelRfqOrders()', function() {
         it('can cancel multiple orders', async function() {
             const orders = [getTestRfqOrder(), getTestRfqOrder(), getTestRfqOrder()];
-            const result = await zeroEx.connect(maker).batchCancelRfqOrders(orders);
+            const result = await nativeOrdersFeature.connect(maker).batchCancelRfqOrders(orders);
             const receipt = await result.wait();
             
             const cancelEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvents.length).to.equal(orders.length);
             
-            const infos = await Promise.all(orders.map(o => zeroEx.getRfqOrderInfo(o)));
+            const infos = await Promise.all(orders.map(o => nativeOrdersFeature.getRfqOrderInfo(o)));
             expect(infos.map(i => i.status)).to.deep.equal(infos.map(() => OrderStatus.Cancelled));
             
             console.log(`✅ Batch cancelled ${orders.length} RFQ orders`);
@@ -902,7 +908,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             const orders = [getTestRfqOrder(), getTestRfqOrder(), getTestRfqOrder()];
             
             await expect(
-                zeroEx.connect(notMaker).batchCancelRfqOrders(orders)
+                nativeOrdersFeature.connect(notMaker).batchCancelRfqOrders(orders)
             ).to.be.rejectedWith('OnlyOrderMakerAllowed');
             
             console.log(`✅ Correctly rejected non-maker RFQ batch cancellation`);
@@ -919,7 +925,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             
             // Cancel the first two orders
             const minValidSalt = orders[2].salt;
-            const result = await zeroEx.connect(maker).cancelPairLimitOrders(
+            const result = await nativeOrdersFeature.connect(maker).cancelPairLimitOrders(
                 makerToken.target || makerToken.address,
                 takerToken.target || takerToken.address,
                 minValidSalt
@@ -930,9 +936,9 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             expect(cancelEvent).to.not.be.undefined;
             
             // Check that the first two orders are cancelled
-            const info0 = await zeroEx.getLimitOrderInfo(orders[0]);
-            const info1 = await zeroEx.getLimitOrderInfo(orders[1]);
-            const info2 = await zeroEx.getLimitOrderInfo(orders[2]);
+            const info0 = await nativeOrdersFeature.getLimitOrderInfo(orders[0]);
+            const info1 = await nativeOrdersFeature.getLimitOrderInfo(orders[1]);
+            const info2 = await nativeOrdersFeature.getLimitOrderInfo(orders[2]);
             
             expect(info0.status).to.equal(OrderStatus.Cancelled);
             expect(info1.status).to.equal(OrderStatus.Cancelled);
@@ -950,7 +956,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             
             // Cancel the first two orders
             const minValidSalt = orders[2].salt;
-            const result = await zeroEx.connect(maker).cancelPairRfqOrders(
+            const result = await nativeOrdersFeature.connect(maker).cancelPairRfqOrders(
                 makerToken.target || makerToken.address,
                 takerToken.target || takerToken.address,
                 minValidSalt
@@ -961,9 +967,9 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             expect(cancelEvent).to.not.be.undefined;
             
             // Check that the first two orders are cancelled
-            const info0 = await zeroEx.getRfqOrderInfo(orders[0]);
-            const info1 = await zeroEx.getRfqOrderInfo(orders[1]);
-            const info2 = await zeroEx.getRfqOrderInfo(orders[2]);
+            const info0 = await nativeOrdersFeature.getRfqOrderInfo(orders[0]);
+            const info1 = await nativeOrdersFeature.getRfqOrderInfo(orders[1]);
+            const info2 = await nativeOrdersFeature.getRfqOrderInfo(orders[2]);
             
             expect(info0.status).to.equal(OrderStatus.Cancelled);
             expect(info1.status).to.equal(OrderStatus.Cancelled);
@@ -988,7 +994,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 }
             ];
             
-            const result = await zeroEx.connect(maker).batchCancelPairLimitOrders(pairs);
+            const result = await nativeOrdersFeature.connect(maker).batchCancelPairLimitOrders(pairs);
             const receipt = await result.wait();
             
             const cancelEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'PairCancelledLimitOrders');
@@ -1011,7 +1017,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 }
             ];
             
-            const result = await zeroEx.connect(maker).batchCancelPairRfqOrders(pairs);
+            const result = await nativeOrdersFeature.connect(maker).batchCancelPairRfqOrders(pairs);
             const receipt = await result.wait();
             
             const cancelEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'PairCancelledRfqOrders');
@@ -1050,7 +1056,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             expect(fillEvent).to.not.be.undefined;
             
             // Check partial fill
-            const info = await zeroEx.getLimitOrderInfo(order);
+            const info = await nativeOrdersFeature.getLimitOrderInfo(order);
             expect(info.takerTokenFilledAmount).to.equal(fillAmount);
             
             console.log(`✅ Partially filled limit order: ${ethers.formatEther(fillAmount.toString())} / ${ethers.formatEther(order.takerAmount.toString())}`);
@@ -1108,7 +1114,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         it('can register allowed origins', async function() {
             const origins = [generateRandomAddress(), generateRandomAddress()];
             
-            const result = await zeroEx.connect(taker).registerAllowedRfqOrigins(origins, true);
+            const result = await nativeOrdersFeature.connect(taker).registerAllowedRfqOrigins(origins, true);
             const receipt = await result.wait();
             
             // Check for registration events
@@ -1128,10 +1134,10 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             const origins = [generateRandomAddress()];
             
             // Register first
-            await zeroEx.connect(taker).registerAllowedRfqOrigins(origins, true);
+            await nativeOrdersFeature.connect(taker).registerAllowedRfqOrigins(origins, true);
             
             // Then unregister
-            const result = await zeroEx.connect(taker).registerAllowedRfqOrigins(origins, false);
+            const result = await nativeOrdersFeature.connect(taker).registerAllowedRfqOrigins(origins, false);
             const receipt = await result.wait();
             
             const unregisterEvent = receipt.logs.filter((log: any) => log.fragment?.name === 'RfqOriginUnregistered');
@@ -1173,7 +1179,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             expect(fillEvent).to.not.be.undefined;
             
             // Check partial fill
-            const info = await zeroEx.getRfqOrderInfo(order);
+            const info = await nativeOrdersFeature.getRfqOrderInfo(order);
             expect(info.takerTokenFilledAmount).to.equal(fillAmount);
             
             console.log(`✅ Partially filled RFQ order: ${ethers.formatEther(fillAmount.toString())} / ${ethers.formatEther(order.takerAmount.toString())}`);
@@ -1328,7 +1334,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
 
         it('returns correct state for cancelled order', async function() {
             const order = getTestLimitOrder();
-            await zeroEx.connect(maker).cancelLimitOrder(order);
+            await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
             
             const state = await zeroEx.getLimitOrderRelevantState(order, taker.address);
             
@@ -1385,7 +1391,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
 
         it('returns correct state for cancelled RFQ order', async function() {
             const order = getTestRfqOrder();
-            await zeroEx.connect(maker).cancelRfqOrder(order);
+            await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
             
             const state = await zeroEx.getRfqOrderRelevantState(order, taker.address);
             
@@ -1470,7 +1476,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             const signerAddress = generateRandomAddress();
             const allowed = true;
             
-            const result = await zeroEx.connect(maker).registerAllowedSigner(signerAddress, allowed);
+            const result = await nativeOrdersFeature.connect(maker).registerAllowedSigner(signerAddress, allowed);
             const receipt = await result.wait();
             
             const registerEvent = receipt.logs.find((log: any) => log.fragment?.name === 'SignerRegistered');
@@ -1486,10 +1492,10 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             const signerAddress = generateRandomAddress();
             
             // Register first
-            await zeroEx.connect(maker).registerAllowedSigner(signerAddress, true);
+            await nativeOrdersFeature.connect(maker).registerAllowedSigner(signerAddress, true);
             
             // Then unregister
-            const result = await zeroEx.connect(maker).registerAllowedSigner(signerAddress, false);
+            const result = await nativeOrdersFeature.connect(maker).registerAllowedSigner(signerAddress, false);
             const receipt = await result.wait();
             
             const unregisterEvent = receipt.logs.find((log: any) => log.fragment?.name === 'SignerUnregistered');
@@ -1505,7 +1511,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             const signers = [generateRandomAddress(), generateRandomAddress()];
             
             for (const signerAddr of signers) {
-                await zeroEx.connect(maker).registerAllowedSigner(signerAddr, true);
+                await nativeOrdersFeature.connect(maker).registerAllowedSigner(signerAddr, true);
                 const isAllowed = await zeroEx.isAllowedSigner(maker.address, signerAddr);
                 expect(isAllowed).to.be.true;
             }

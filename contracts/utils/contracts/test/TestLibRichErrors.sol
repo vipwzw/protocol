@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /*
 
   Copyright 2019 ZeroEx Intl.
@@ -16,9 +17,9 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
-import "../src/LibRichErrors.sol";
+import "../src/errors/LibRichErrors.sol";
 
 contract TestLibRichErrors {
     function externalRRevert(bytes calldata errorData) external pure {
