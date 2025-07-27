@@ -2,6 +2,14 @@ import { expect } from 'chai';
 const { ethers } = require('hardhat');
 import { Contract } from 'ethers';
 import { artifacts } from './artifacts';
+import { 
+    DummyERC20Token,
+    DummyERC20Token__factory,
+    ZrxTreasury,
+    ZrxTreasury__factory,
+    DefaultPoolOperator,
+    DefaultPoolOperator__factory
+} from './typechain-types';
 
 describe('Treasury Governance with Real Staking Integration', function() {
     // Extended timeout for complex staking operations
@@ -12,12 +20,12 @@ describe('Treasury Governance with Real Staking Integration', function() {
     let delegator: any;
     let relayer: any;
     
-    // Real contracts
-    let zrx: Contract;
-    let weth: Contract;
-    let stakingContract: Contract;
-    let treasury: Contract;
-    let defaultPoolOperator: Contract;
+    // Real contracts with TypeChain types
+    let zrx: DummyERC20Token;
+    let weth: DummyERC20Token;
+    let stakingContract: Contract; // Keep as Contract since we don't have TypeChain for staking
+    let treasury: ZrxTreasury;
+    let defaultPoolOperator: DefaultPoolOperator;
     
     // Pool and governance parameters
     let defaultPoolId: string;
@@ -52,29 +60,35 @@ describe('Treasury Governance with Real Staking Integration', function() {
     async function deployContractsAsync(): Promise<void> {
         console.log('📦 Deploying real contracts...');
         
-        // Deploy ZRX token using Hardhat artifacts
-        const ZrxFactory = new ethers.ContractFactory(
-            artifacts.DummyERC20Token.abi,
-            artifacts.DummyERC20Token.bytecode,
+        // Deploy ZRX token using TypeChain factory
+        zrx = await DummyERC20Token__factory.connect(
+            (await new ethers.ContractFactory(
+                artifacts.DummyERC20Token.abi,
+                artifacts.DummyERC20Token.bytecode,
+                admin
+            ).deploy(
+                'ZRX Token',
+                'ZRX',
+                18,
+                ethers.parseEther('1000000000') // 1B ZRX
+            )).getAddress(),
             admin
         );
         
-        zrx = await ZrxFactory.deploy(
-            'ZRX Token',
-            'ZRX',
-            18,
-            ethers.parseEther('1000000000') // 1B ZRX
-        );
-        await zrx.waitForDeployment();
-        
         // Deploy WETH token
-        weth = await ZrxFactory.deploy(
-            'Wrapped Ether',
-            'WETH',
-            18,
-            ethers.parseEther('1000000000') // 1B WETH
+        weth = await DummyERC20Token__factory.connect(
+            (await new ethers.ContractFactory(
+                artifacts.DummyERC20Token.abi,
+                artifacts.DummyERC20Token.bytecode,
+                admin
+            ).deploy(
+                'Wrapped Ether',
+                'WETH',
+                18,
+                ethers.parseEther('1000000000') // 1B WETH
+            )).getAddress(),
+            admin
         );
-        await weth.waitForDeployment();
         
         // Deploy TreasuryStaking contract
         const StakingFactory = new ethers.ContractFactory(

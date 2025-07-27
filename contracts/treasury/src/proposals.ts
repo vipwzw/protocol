@@ -1,30 +1,29 @@
 import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses';
-import { Web3ProviderEngine } from '@0x/subproviders';
-import { BigNumber } from '@0x/utils';
+import { JsonRpcProvider } from 'ethers';
 
 import { ISablier__factory } from './wrappers';
 
 interface ProposedAction {
     target: string;
     data: string;
-    value: BigNumber;
+    value: bigint;
 }
 
 interface Proposal {
     actions: ProposedAction[];
     description: string;
-    executionEpoch?: BigNumber;
+    executionEpoch?: bigint;
 }
 
 // Simple ERC20 interface for proposals
 class ERC20TokenContract {
     public address: string;
 
-    constructor(address: string, provider: any) {
+    constructor(address: string, provider?: any) {
         this.address = address;
     }
 
-    public transfer(to: string, value: BigNumber) {
+    public transfer(to: string, value: bigint) {
         const selector = '0xa9059cbb';
         const encodedTo = to.toLowerCase().replace('0x', '').padStart(64, '0');
         const encodedValue = value.toString(16).padStart(64, '0');
@@ -33,7 +32,7 @@ class ERC20TokenContract {
         };
     }
 
-    public approve(spender: string, value: BigNumber) {
+    public approve(spender: string, value: bigint) {
         const selector = '0x095ea7b3';
         const encodedSpender = spender.toLowerCase().replace('0x', '').padStart(64, '0');
         const encodedValue = value.toString(16).padStart(64, '0');
@@ -45,15 +44,38 @@ class ERC20TokenContract {
 
 const { zrxToken } = getContractAddressesForChainOrThrow(1);
 
-// Create ERC20 contract instances
-const zrx = new ERC20TokenContract(zrxToken, new Web3ProviderEngine());
-const maticToken = new ERC20TokenContract('0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0', new Web3ProviderEngine());
-const sablier = ISablier__factory.connect('0xcd18eaa163733da39c232722cbc4e8940b1d8888', new Web3ProviderEngine());
+// Create a mock provider for contract connections (not used for actual calls)
+const provider = new JsonRpcProvider('https://eth-mainnet.alchemyapi.io/v2/demo');
 
-const ONE_YEAR_IN_SECONDS = new BigNumber('31536000');
-const PROPOSAL_2_ZRX_AMOUNT = new BigNumber('485392999999999970448000');
-const PROPOSAL_2_MATIC_AMOUNT = new BigNumber('378035999999999992944000');
-const PROPOSAL_2_STREAM_START_TIME = new BigNumber('1635188400');
+// Create ERC20 contract instances
+const zrx = new ERC20TokenContract(zrxToken);
+const maticToken = new ERC20TokenContract('0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0');
+
+// Connect sablier contract and store address separately
+const sablierAddress = '0xcd18eaa163733da39c232722cbc4e8940b1d8888';
+const sablier = ISablier__factory.connect(sablierAddress, provider);
+
+// Helper function to encode sablier createStream data
+function encodeSablierCreateStream(
+    recipient: string,
+    deposit: bigint,
+    tokenAddress: string,
+    startTime: bigint,
+    stopTime: bigint
+): string {
+    return sablier.interface.encodeFunctionData('createStream', [
+        recipient,
+        deposit,
+        tokenAddress,
+        startTime,
+        stopTime,
+    ]);
+}
+
+const ONE_YEAR_IN_SECONDS = 31536000n;
+const PROPOSAL_2_ZRX_AMOUNT = 485392999999999970448000n;
+const PROPOSAL_2_MATIC_AMOUNT = 378035999999999992944000n;
+const PROPOSAL_2_STREAM_START_TIME = 1635188400n;
 const PROPOSAL_2_RECIPIENT = '0x976378445d31d81b15576811450a7b9797206807';
 
 export const proposals: Proposal[] = [
@@ -62,9 +84,9 @@ export const proposals: Proposal[] = [
             {
                 target: zrxToken,
                 data: zrx
-                    .transfer('0xf9347f751a6a1467Abc722eC7d80bA2698dd9d6c', new BigNumber('400000e18'))
+                    .transfer('0xf9347f751a6a1467Abc722eC7d80bA2698dd9d6c', 400000n * 10n ** 18n)
                     .getABIEncodedTransactionData(),
-                value: new BigNumber(0),
+                value: 0n,
             },
         ],
         description:
@@ -75,16 +97,16 @@ export const proposals: Proposal[] = [
             {
                 target: zrxToken,
                 data: zrx
-                    .transfer('0xab66cc8fd10457ebc9d13b9760c835f0a4cbc487', new BigNumber('330813e18'))
+                    .transfer('0xab66cc8fd10457ebc9d13b9760c835f0a4cbc487', 330813n * 10n ** 18n)
                     .getABIEncodedTransactionData(),
-                value: new BigNumber(0),
+                value: 0n,
             },
             {
                 target: maticToken.address,
                 data: maticToken
-                    .transfer('0xab66cc8fd10457ebc9d13b9760c835f0a4cbc487', new BigNumber('420000e18'))
+                    .transfer('0xab66cc8fd10457ebc9d13b9760c835f0a4cbc487', 420000n * 10n ** 18n)
                     .getABIEncodedTransactionData(),
-                value: new BigNumber(0),
+                value: 0n,
             },
         ],
         description:
@@ -94,39 +116,35 @@ export const proposals: Proposal[] = [
         actions: [
             {
                 target: zrxToken,
-                data: zrx.approve(sablier.address, PROPOSAL_2_ZRX_AMOUNT).getABIEncodedTransactionData(),
-                value: new BigNumber(0),
+                data: zrx.approve(sablierAddress, PROPOSAL_2_ZRX_AMOUNT).getABIEncodedTransactionData(),
+                value: 0n,
             },
             {
                 target: maticToken.address,
-                data: maticToken.approve(sablier.address, PROPOSAL_2_MATIC_AMOUNT).getABIEncodedTransactionData(),
-                value: new BigNumber(0),
+                data: maticToken.approve(sablierAddress, PROPOSAL_2_MATIC_AMOUNT).getABIEncodedTransactionData(),
+                value: 0n,
             },
             {
-                target: sablier.address,
-                data: sablier
-                    .createStream(
-                        PROPOSAL_2_RECIPIENT,
-                        PROPOSAL_2_ZRX_AMOUNT,
-                        zrxToken,
-                        PROPOSAL_2_STREAM_START_TIME,
-                        PROPOSAL_2_STREAM_START_TIME.plus(ONE_YEAR_IN_SECONDS),
-                    )
-                    .getABIEncodedTransactionData(),
-                value: new BigNumber(0),
+                target: sablierAddress,
+                data: encodeSablierCreateStream(
+                    PROPOSAL_2_RECIPIENT,
+                    PROPOSAL_2_ZRX_AMOUNT,
+                    zrxToken,
+                    PROPOSAL_2_STREAM_START_TIME,
+                    PROPOSAL_2_STREAM_START_TIME + ONE_YEAR_IN_SECONDS,
+                ),
+                value: 0n,
             },
             {
-                target: sablier.address,
-                data: sablier
-                    .createStream(
-                        PROPOSAL_2_RECIPIENT,
-                        PROPOSAL_2_MATIC_AMOUNT,
-                        maticToken.address,
-                        PROPOSAL_2_STREAM_START_TIME,
-                        PROPOSAL_2_STREAM_START_TIME.plus(ONE_YEAR_IN_SECONDS),
-                    )
-                    .getABIEncodedTransactionData(),
-                value: new BigNumber(0),
+                target: sablierAddress,
+                data: encodeSablierCreateStream(
+                    PROPOSAL_2_RECIPIENT,
+                    PROPOSAL_2_MATIC_AMOUNT,
+                    maticToken.address,
+                    PROPOSAL_2_STREAM_START_TIME,
+                    PROPOSAL_2_STREAM_START_TIME + ONE_YEAR_IN_SECONDS,
+                ),
+                value: 0n,
             },
         ],
         description:

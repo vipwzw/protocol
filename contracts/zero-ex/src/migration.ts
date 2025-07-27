@@ -11,17 +11,17 @@ import type {
     FullFeatureArtifacts,
 } from './foundry-types';
 import {
-    FeeCollectorControllerContract,
-    FullMigrationContract,
-    InitialMigrationContract,
-    IZeroExContract,
-    MetaTransactionsFeatureContract,
-    NativeOrdersFeatureContract,
-    OtcOrdersFeatureContract,
-    OwnableFeatureContract,
-    SimpleFunctionRegistryFeatureContract,
-    TransformERC20FeatureContract,
-    ZeroExContract,
+    // FeeCollectorControllerContract, // Not available in TypeChain output
+    FullMigration as FullMigrationContract,
+    InitialMigration as InitialMigrationContract,
+    IZeroEx as IZeroExContract,
+    MetaTransactionsFeature as MetaTransactionsFeatureContract,
+    NativeOrdersFeature as NativeOrdersFeatureContract,
+    OtcOrdersFeature as OtcOrdersFeatureContract,
+    OwnableFeature as OwnableFeatureContract,
+    SimpleFunctionRegistryFeature as SimpleFunctionRegistryFeatureContract,
+    TransformERC20Feature as TransformERC20FeatureContract,
+    ZeroEx as ZeroExContract,
 } from './wrappers';
 
 /**
@@ -87,7 +87,7 @@ export async function initialMigrateAsync(
     provider: SupportedProvider,
     txDefaults: Partial<TxData>,
     features: Partial<BootstrapFeatures> = {},
-): Promise<ZeroExContract> {
+): Promise<IZeroExContract> {
     const migrator = await deployFromFoundryArtifactAsync<InitialMigrationContract>(
         InitialMigrationContract,
         artifacts.InitialMigration,
