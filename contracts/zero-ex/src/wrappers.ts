@@ -4,56 +4,56 @@
  * -----------------------------------------------------------------------------
  */
 // Core contracts
-export * from '../test/generated-wrappers/zero_ex';
-export * from '../test/generated-wrappers/zero_ex_optimized';
-export * from '../test/generated-wrappers/i_zero_ex';
+export { ZeroEx } from '../test/typechain-types/ZeroEx';
+export { ZeroExOptimized } from '../test/typechain-types/ZeroExOptimized';
+export { IZeroEx } from '../test/typechain-types/IZeroEx';
 
 // Migration contracts
-export * from '../test/generated-wrappers/full_migration';
-export * from '../test/generated-wrappers/initial_migration';
+export { FullMigration } from '../test/typechain-types/migrations/FullMigration';
+export { InitialMigration } from '../test/typechain-types/migrations/InitialMigration';
 
 // Features
-export * from '../test/generated-wrappers/batch_fill_native_orders_feature';
-export * from '../test/generated-wrappers/liquidity_provider_feature';
-export * from '../test/generated-wrappers/multiplex_feature';
-export * from '../test/generated-wrappers/native_orders_feature';
-export * from '../test/generated-wrappers/otc_orders_feature';
-export * from '../test/generated-wrappers/ownable_feature';
-export * from '../test/generated-wrappers/simple_function_registry_feature';
-export * from '../test/generated-wrappers/transform_erc20_feature';
-export * from '../test/generated-wrappers/meta_transactions_feature';
-export * from '../test/generated-wrappers/meta_transactions_feature_v2';
+export { BatchFillNativeOrdersFeature } from '../test/typechain-types/BatchFillNativeOrdersFeature';
+export { LiquidityProviderFeature } from '../test/typechain-types/LiquidityProviderFeature';
+export { MultiplexFeature } from '../test/typechain-types/multiplex/MultiplexFeature';
+export { NativeOrdersFeature } from '../test/typechain-types/NativeOrdersFeature';
+export { OtcOrdersFeature } from '../test/typechain-types/OtcOrdersFeature';
+export { OwnableFeature } from '../test/typechain-types/OwnableFeature';
+export { SimpleFunctionRegistryFeature } from '../test/typechain-types/SimpleFunctionRegistryFeature';
+export { TransformERC20Feature } from '../test/typechain-types/TransformERC20Feature';
+export { MetaTransactionsFeature } from '../test/typechain-types/MetaTransactionsFeature';
+// export { MetaTransactionsFeatureV2 } from '../test/typechain-types/MetaTransactionsFeatureV2';  // Need to generate this
 
 // Feature interfaces
-export * from '../test/generated-wrappers/i_batch_fill_native_orders_feature';
-export * from '../test/generated-wrappers/i_liquidity_provider_feature';
-export * from '../test/generated-wrappers/i_multiplex_feature';
-export * from '../test/generated-wrappers/i_native_orders_feature';
-export * from '../test/generated-wrappers/i_otc_orders_feature';
-export * from '../test/generated-wrappers/i_ownable_feature';
-export * from '../test/generated-wrappers/i_simple_function_registry_feature';
-export * from '../test/generated-wrappers/i_transform_erc20_feature';
-export * from '../test/generated-wrappers/i_meta_transactions_feature';
-export * from '../test/generated-wrappers/i_meta_transactions_feature_v2';
+export { IBatchFillNativeOrdersFeature } from '../test/typechain-types/IBatchFillNativeOrdersFeature';
+export { ILiquidityProviderFeature } from '../test/typechain-types/ILiquidityProviderFeature';
+export { IMultiplexFeature } from '../test/typechain-types/IMultiplexFeature';
+export { INativeOrdersFeature } from '../test/typechain-types/INativeOrdersFeature';
+export { IOtcOrdersFeature } from '../test/typechain-types/IOtcOrdersFeature';
+export { IOwnableFeature } from '../test/typechain-types/IOwnableFeature';
+export { ISimpleFunctionRegistryFeature } from '../test/typechain-types/ISimpleFunctionRegistryFeature';
+export { ITransformERC20Feature } from '../test/typechain-types/ITransformERC20Feature';
+export { IMetaTransactionsFeature } from '../test/typechain-types/IMetaTransactionsFeature';
+// export { IMetaTransactionsFeatureV2 } from '../test/typechain-types/IMetaTransactionsFeatureV2';  // Need to generate this
 
 // Transformers
-export * from '../test/generated-wrappers/affiliate_fee_transformer';
-export * from '../test/generated-wrappers/fill_quote_transformer';
-export * from '../test/generated-wrappers/pay_taker_transformer';
-export * from '../test/generated-wrappers/positive_slippage_fee_transformer';
-export * from '../test/generated-wrappers/weth_transformer';
-export * from '../test/generated-wrappers/log_metadata_transformer';
+export { AffiliateFeeTransformer } from '../test/typechain-types/AffiliateFeeTransformer';
+export { FillQuoteTransformer } from '../test/typechain-types/FillQuoteTransformer';
+export { PayTakerTransformer } from '../test/typechain-types/PayTakerTransformer';
+export { PositiveSlippageFeeTransformer } from '../test/typechain-types/PositiveSlippageFeeTransformer';
+export { WethTransformer } from '../test/typechain-types/WethTransformer';
+export { LogMetadataTransformer } from '../test/typechain-types/LogMetadataTransformer';
 
 // Bridge Adapters
-export * from '../test/generated-wrappers/avalanche_bridge_adapter';
-export * from '../test/generated-wrappers/b_s_c_bridge_adapter';
-export * from '../test/generated-wrappers/base_bridge_adapter';
-export * from '../test/generated-wrappers/celo_bridge_adapter';
-export * from '../test/generated-wrappers/ethereum_bridge_adapter';
-export * from '../test/generated-wrappers/fantom_bridge_adapter';
-export * from '../test/generated-wrappers/optimism_bridge_adapter';
-export * from '../test/generated-wrappers/polygon_bridge_adapter';
+export { AvalancheBridgeAdapter } from '../test/typechain-types/AvalancheBridgeAdapter';
+export { BSCBridgeAdapter } from '../test/typechain-types/BSCBridgeAdapter';
+export { BaseBridgeAdapter } from '../test/typechain-types/BaseBridgeAdapter';
+export { ArbitrumBridgeAdapter } from '../test/typechain-types/ArbitrumBridgeAdapter';
+export { EthereumBridgeAdapter } from '../test/typechain-types/EthereumBridgeAdapter';
+export { PolygonBridgeAdapter } from '../test/typechain-types/PolygonBridgeAdapter';
 
-// Fee Collectors
-export * from '../test/generated-wrappers/fee_collector';
-export * from '../test/generated-wrappers/fee_collector_controller';
+// Factory exports for contract deployment
+export * from '../test/typechain-types/factories';
+
+// Re-export common types
+export * from '../test/typechain-types/common';
