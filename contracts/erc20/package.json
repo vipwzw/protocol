@@ -10,7 +10,8 @@
         "test": "test"
     },
     "scripts": {
-        "build": "forge build && npx hardhat compile",
+        "build": "forge build && npx hardhat compile && tsc -b",
+        "build:ts": "tsc -b",
         "test": "npx hardhat test",
         "test:foundry": "forge test",
         "test:ci": "npx hardhat test",

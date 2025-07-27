@@ -2,7 +2,7 @@ import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses';
 import { Web3ProviderEngine } from '@0x/subproviders';
 import { BigNumber } from '@0x/utils';
 
-import { ISablierContract } from './wrappers';
+import { ISablier__factory } from './wrappers';
 
 interface ProposedAction {
     target: string;
@@ -48,7 +48,7 @@ const { zrxToken } = getContractAddressesForChainOrThrow(1);
 // Create ERC20 contract instances
 const zrx = new ERC20TokenContract(zrxToken, new Web3ProviderEngine());
 const maticToken = new ERC20TokenContract('0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0', new Web3ProviderEngine());
-const sablier = new ISablierContract('0xcd18eaa163733da39c232722cbc4e8940b1d8888', new Web3ProviderEngine());
+const sablier = ISablier__factory.connect('0xcd18eaa163733da39c232722cbc4e8940b1d8888', new Web3ProviderEngine());
 
 const ONE_YEAR_IN_SECONDS = new BigNumber('31536000');
 const PROPOSAL_2_ZRX_AMOUNT = new BigNumber('485392999999999970448000');

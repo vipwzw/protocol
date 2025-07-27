@@ -1,2 +1,2 @@
 export { artifacts } from './artifacts';
-export { DefaultPoolOperatorContract, ZrxTreasuryContract } from './wrappers';
+export { DefaultPoolOperator as DefaultPoolOperatorContract, ZrxTreasury as ZrxTreasuryContract } from './wrappers';
