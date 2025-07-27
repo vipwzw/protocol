@@ -107,6 +107,9 @@ foundry-cache/
 #foundry output artifacts
 out/
 
+# hardhat build-info (very large files)
+**/artifacts/build-info/
+
 # typechain wrappers
 contracts/zero-ex/typechain-wrappers/
 
