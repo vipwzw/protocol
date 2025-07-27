@@ -120,13 +120,13 @@ describe('Treasury Governance with Real Staking Integration', function() {
             await (stakingContract as any).getAddress(),
             treasuryParams
         );
-        await (treasury as any).waitForDeployment();
+        await treasury.waitForDeployment();
         
         console.log('✅ ZRX:', await zrx.getAddress());
         console.log('✅ WETH:', await weth.getAddress());
         console.log('✅ TreasuryStaking:', await (stakingContract as any).getAddress());
         console.log('✅ DefaultPoolOperator:', await defaultPoolOperator.getAddress());
-        console.log('✅ Treasury:', await (treasury as any).getAddress());
+        console.log('✅ Treasury:', await treasury.getAddress());
         console.log('✅ Default Pool ID:', defaultPoolId);
     }
     
@@ -140,8 +140,8 @@ describe('Treasury Governance with Real Staking Integration', function() {
         await zrx.mint(relayer.address, ethers.parseEther('10000'));
         
         // Mint tokens to treasury
-        await zrx.mint(await (treasury as any).getAddress(), TREASURY_BALANCE);
-        await weth.mint(await (treasury as any).getAddress(), ethers.parseEther('10000'));
+        await zrx.mint(await treasury.getAddress(), TREASURY_BALANCE);
+        await weth.mint(await treasury.getAddress(), ethers.parseEther('10000'));
         
         // Approve staking contract to spend ZRX
         await ((zrx as any).connect(admin) as any).approve(await (stakingContract as any).getAddress(), ethers.parseEther('10000'));
@@ -157,7 +157,7 @@ describe('Treasury Governance with Real Staking Integration', function() {
         
         // Create a non-default staking pool  
         const tx = await ((stakingContract as any).connect(poolOperator) as any).createStakingPool(100000, false); // 10% operator share
-        const receipt = await tx.wait(); if (!receipt) throw new Error("Transaction receipt is null");
+        const receipt = await tx.wait();
         
         // Get the pool ID from events
         const createPoolEvent = receipt.logs.find((log: any) => {
@@ -232,7 +232,7 @@ describe('Treasury Governance with Real Staking Integration', function() {
             expect(await zrx.getAddress()).to.have.lengthOf(42);
             expect(await weth.getAddress()).to.have.lengthOf(42);
             expect(await (stakingContract as any).getAddress()).to.have.lengthOf(42);
-            expect(await (treasury as any).getAddress()).to.have.lengthOf(42);
+            expect(await treasury.getAddress()).to.have.lengthOf(42);
             expect(await defaultPoolOperator.getAddress()).to.have.lengthOf(42);
         });
         
@@ -247,10 +247,10 @@ describe('Treasury Governance with Real Staking Integration', function() {
         });
         
         it('should have correct treasury configuration', async function() {
-            const votingPeriod = await (treasury as any).votingPeriod();
-            const proposalThreshold = await (treasury as any).proposalThreshold();
-            const quorumThreshold = await (treasury as any).quorumThreshold();
-            const stakingProxy = await (treasury as any).stakingProxy();
+            const votingPeriod = await treasury.votingPeriod();
+            const proposalThreshold = await treasury.proposalThreshold();
+            const quorumThreshold = await treasury.quorumThreshold();
+            const stakingProxy = await treasury.stakingProxy();
             
             expect(votingPeriod).to.equal(VOTING_PERIOD);
             expect(proposalThreshold).to.equal(PROPOSAL_THRESHOLD);
@@ -318,7 +318,7 @@ describe('Treasury Governance with Real Staking Integration', function() {
             await fastForwardToNextEpochAsync();
             
             // Get voting power
-            const votingPower = await (treasury as any).getVotingPower(delegator.address, []);
+            const votingPower = await treasury.getVotingPower(delegator.address, []);
             expect(votingPower).to.be.greaterThanOrEqual(PROPOSAL_THRESHOLD);
             
             // Create proposal actions - simple token transfer from treasury
@@ -340,15 +340,15 @@ describe('Treasury Governance with Real Staking Integration', function() {
             const currentEpoch = await (stakingContract as any).currentEpoch();
             const executionEpoch = currentEpoch + BigInt(2);
             
-            const tx = await (treasury as any).connect(delegator).propose(
+            const tx = await treasury.connect(delegator).propose(
                 proposalActions,
                 executionEpoch,
                 'Real Staking Integration Test Proposal',
                 []
             );
             
-            const receipt = await tx.wait(); if (!receipt) throw new Error("Transaction receipt is null");
-            const proposalCount = await (treasury as any).proposalCount();
+            const receipt = await tx.wait();
+            const proposalCount = await treasury.proposalCount();
             proposalId = proposalCount - BigInt(1);
             
             expect(receipt.status).to.equal(1);
@@ -361,18 +361,18 @@ describe('Treasury Governance with Real Staking Integration', function() {
             await fastForwardToNextEpochAsync();
             
             // Check voting power before voting
-            const delegatorVotingPower = await (treasury as any).getVotingPower(delegator.address, []);
-            const poolOperatorVotingPower = await (treasury as any).getVotingPower(poolOperator.address, []);
+            const delegatorVotingPower = await treasury.getVotingPower(delegator.address, []);
+            const poolOperatorVotingPower = await treasury.getVotingPower(poolOperator.address, []);
             
             console.log(`Delegator voting power: ${ethers.formatEther(delegatorVotingPower)} ZRX`);
             console.log(`Pool operator voting power: ${ethers.formatEther(poolOperatorVotingPower)} ZRX`);
             
             // Vote with delegator
-            const voteTx1 = await (treasury as any).connect(delegator).castVote(proposalId, true, []);
+            const voteTx1 = await treasury.connect(delegator).castVote(proposalId, true, []);
             expect(voteTx1.hash).to.have.lengthOf(66);
             
             // Vote with pool operator  
-            const voteTx2 = await (treasury as any).connect(poolOperator).castVote(proposalId, true, []);
+            const voteTx2 = await treasury.connect(poolOperator).castVote(proposalId, true, []);
             expect(voteTx2.hash).to.have.lengthOf(66);
             
             console.log('✅ Votes cast with real staking power');
@@ -385,7 +385,7 @@ describe('Treasury Governance with Real Staking Integration', function() {
             
             // Get current state
             let currentEpoch = await (stakingContract as any).currentEpoch();
-            const proposal = await (treasury as any).proposals(proposalId);
+            const proposal = await treasury.proposals(proposalId);
             const targetExecutionEpoch = Number(proposal.executionEpoch);
             
             console.log(`Current epoch: ${currentEpoch}`);
@@ -407,7 +407,7 @@ describe('Treasury Governance with Real Staking Integration', function() {
             console.log(`Quorum threshold: ${ethers.formatEther(QUORUM_THRESHOLD)} ZRX`);
             
             // Check initial balances
-            const initialTreasuryWeth = await weth.balanceOf(await (treasury as any).getAddress());
+            const initialTreasuryWeth = await weth.balanceOf(await treasury.getAddress());
             const initialDelegatorWeth = await weth.balanceOf(delegator.address);
             
             // Execute proposal - must match the original proposal actions exactly
@@ -425,11 +425,11 @@ describe('Treasury Governance with Real Staking Integration', function() {
                 }
             ];
             
-            const executeTx = await (treasury as any).execute(proposalId, proposalActions);
+            const executeTx = await treasury.execute(proposalId, proposalActions);
             await executeTx.wait();
             
             // Verify execution effects
-            const finalTreasuryWeth = await weth.balanceOf(await (treasury as any).getAddress());
+            const finalTreasuryWeth = await weth.balanceOf(await treasury.getAddress());
             const finalDelegatorWeth = await weth.balanceOf(delegator.address);
             
             const treasuryChange = initialTreasuryWeth - finalTreasuryWeth;

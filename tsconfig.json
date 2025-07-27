@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
         "module": "commonjs",
-        "target": "es2020",
-        "lib": ["es2020", "dom", "esnext.asynciterable", "es2018.promise"],
+        "target": "es2022",
+        "lib": ["es2022", "dom", "esnext.asynciterable", "es2018.promise"],
         "experimentalDecorators": true,
         "downlevelIteration": true,
         "noImplicitReturns": true,
@@ -12,6 +12,8 @@
         "typeRoots": ["node_modules/@0x/typescript-typings/types", "node_modules/@types", "types"],
         "strict": true,
         "useUnknownInCatchVariables": false,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
         // These settings are required for TypeScript project references
         "declaration": true,
         "declarationMap": true,

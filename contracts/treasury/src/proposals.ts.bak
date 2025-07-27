@@ -72,10 +72,10 @@ function encodeSablierCreateStream(
     ]);
 }
 
-const ONE_YEAR_IN_SECONDS = BigInt(31536000);
-const PROPOSAL_2_ZRX_AMOUNT = BigInt(485392999999999970448000);
-const PROPOSAL_2_MATIC_AMOUNT = BigInt(378035999999999992944000);
-const PROPOSAL_2_STREAM_START_TIME = BigInt(1635188400);
+const ONE_YEAR_IN_SECONDS = 31536000n;
+const PROPOSAL_2_ZRX_AMOUNT = 485392999999999970448000n;
+const PROPOSAL_2_MATIC_AMOUNT = 378035999999999992944000n;
+const PROPOSAL_2_STREAM_START_TIME = 1635188400n;
 const PROPOSAL_2_RECIPIENT = '0x976378445d31d81b15576811450a7b9797206807';
 
 export const proposals: Proposal[] = [
@@ -84,9 +84,9 @@ export const proposals: Proposal[] = [
             {
                 target: zrxToken,
                 data: zrx
-                    .transfer('0xf9347f751a6a1467Abc722eC7d80bA2698dd9d6c', BigInt(400000) * BigInt("1000000000000000000"))
+                    .transfer('0xf9347f751a6a1467Abc722eC7d80bA2698dd9d6c', 400000n * 10n ** 18n)
                     .getABIEncodedTransactionData(),
-                value: BigInt(0),
+                value: 0n,
             },
         ],
         description:
@@ -97,16 +97,16 @@ export const proposals: Proposal[] = [
             {
                 target: zrxToken,
                 data: zrx
-                    .transfer('0xab66cc8fd10457ebc9d13b9760c835f0a4cbc487', BigInt(330813) * BigInt("1000000000000000000"))
+                    .transfer('0xab66cc8fd10457ebc9d13b9760c835f0a4cbc487', 330813n * 10n ** 18n)
                     .getABIEncodedTransactionData(),
-                value: BigInt(0),
+                value: 0n,
             },
             {
                 target: maticToken.address,
                 data: maticToken
-                    .transfer('0xab66cc8fd10457ebc9d13b9760c835f0a4cbc487', BigInt(420000) * BigInt("1000000000000000000"))
+                    .transfer('0xab66cc8fd10457ebc9d13b9760c835f0a4cbc487', 420000n * 10n ** 18n)
                     .getABIEncodedTransactionData(),
-                value: BigInt(0),
+                value: 0n,
             },
         ],
         description:
@@ -117,12 +117,12 @@ export const proposals: Proposal[] = [
             {
                 target: zrxToken,
                 data: zrx.approve(sablierAddress, PROPOSAL_2_ZRX_AMOUNT).getABIEncodedTransactionData(),
-                value: BigInt(0),
+                value: 0n,
             },
             {
                 target: maticToken.address,
                 data: maticToken.approve(sablierAddress, PROPOSAL_2_MATIC_AMOUNT).getABIEncodedTransactionData(),
-                value: BigInt(0),
+                value: 0n,
             },
             {
                 target: sablierAddress,
@@ -133,7 +133,7 @@ export const proposals: Proposal[] = [
                     PROPOSAL_2_STREAM_START_TIME,
                     PROPOSAL_2_STREAM_START_TIME + ONE_YEAR_IN_SECONDS,
                 ),
-                value: BigInt(0),
+                value: 0n,
             },
             {
                 target: sablierAddress,
@@ -144,7 +144,7 @@ export const proposals: Proposal[] = [
                     PROPOSAL_2_STREAM_START_TIME,
                     PROPOSAL_2_STREAM_START_TIME + ONE_YEAR_IN_SECONDS,
                 ),
-                value: BigInt(0),
+                value: 0n,
             },
         ],
         description:
