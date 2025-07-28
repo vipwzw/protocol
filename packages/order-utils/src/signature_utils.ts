@@ -44,7 +44,7 @@ const providerUtils = {
     },
 };
 
-// Web3Wrapper 替代
+// Web3Wrapper 替代 - 使用 ethers v6 实现
 class Web3Wrapper {
     public isZeroExWeb3Wrapper = false;
     private provider: SupportedProvider;
@@ -53,16 +53,75 @@ class Web3Wrapper {
         this.provider = provider;
     }
     
+    /**
+     * 使用 ethers v6 实现 signTypedData 功能
+     * 替代原来的 @0x/web3-wrapper signTypedDataAsync
+     */
     async signTypedDataAsync(signerAddress: string, typedData: any): Promise<string> {
-        if (providerUtils.isSigner(this.provider)) {
-            // 使用 ethers.Signer 的 signTypedData 方法
-            return await this.provider.signTypedData(
-                typedData.domain,
-                typedData.types,
-                typedData.message || typedData.value
-            );
+        if (!providerUtils.isSigner(this.provider)) {
+            throw new Error('Provider does not support signing. Need a Signer instance.');
         }
-        throw new Error('Provider does not support signing');
+        
+        // 验证签名者地址是否匹配
+        const currentAddress = await this.provider.getAddress();
+        if (currentAddress.toLowerCase() !== signerAddress.toLowerCase()) {
+            throw new Error(`Signer address ${currentAddress} does not match expected ${signerAddress}`);
+        }
+        
+        // 使用 ethers v6 的 signTypedData 方法
+        // 参数格式: domain, types, value
+        return await this.provider.signTypedData(
+            typedData.domain,
+            typedData.types, 
+            typedData.message || typedData.value || typedData
+        );
+    }
+    
+    /**
+     * 使用 ethers v6 实现 signMessage 功能  
+     * 替代原来的 @0x/web3-wrapper signMessageAsync
+     */
+    async signMessageAsync(signerAddress: string, message: string): Promise<string> {
+        if (!providerUtils.isSigner(this.provider)) {
+            throw new Error('Provider does not support signing. Need a Signer instance.');
+        }
+        
+        // 验证签名者地址是否匹配
+        const currentAddress = await this.provider.getAddress();
+        if (currentAddress.toLowerCase() !== signerAddress.toLowerCase()) {
+            throw new Error(`Signer address ${currentAddress} does not match expected ${signerAddress}`);
+        }
+        
+        // 使用 ethers v6 的 signMessage 方法
+        // 这会自动添加以太坊消息前缀并签名
+        return await this.provider.signMessage(ethers.getBytes(message));
+    }
+    
+    /**
+     * 获取账户地址列表
+     * 用于验证签名者权限
+     */
+    async getAccountsAsync(): Promise<string[]> {
+        if (providerUtils.isSigner(this.provider)) {
+            const address = await this.provider.getAddress();
+            return [address];
+        }
+        
+        // 对于普通 Provider，尝试通过 eth_accounts 获取
+        try {
+            const accounts = await (this.provider as any).send('eth_accounts', []);
+            return accounts || [];
+        } catch {
+            return [];
+        }
+    }
+    
+    /**
+     * 获取网络信息
+     */
+    async getNetworkAsync(): Promise<{ chainId: number }> {
+        const network = await (this.provider as any).getNetwork();
+        return { chainId: Number(network.chainId) };
     }
 }
 
@@ -120,7 +179,7 @@ export const signatureUtils = {
         assert.isETHAddressHex('signerAddress', signerAddress);
         assert.doesConformToSchema('order', order, schemas.orderSchema, [schemas.hexSchema]);
         const web3Wrapper = new Web3Wrapper(provider);
-        await assert.isSenderAddressAsync('signerAddress', signerAddress, web3Wrapper);
+        await assert.isSenderAddressAsync('signerAddress', signerAddress, provider);
         const normalizedSignerAddress = signerAddress.toLowerCase();
         const typedData = eip712Utils.createOrderTypedData(order);
         try {
