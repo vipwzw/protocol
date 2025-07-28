@@ -46,8 +46,7 @@
         "url": "https://github.com/0xProject/protocol/issues"
     },
     "homepage": "https://github.com/0xProject/protocol/tree/main/packages/contract-wrappers",
-    "devDependencies": {
-        "@0x/ts-doc-gen": "^0.0.28",
+        "devDependencies": {
         "@istanbuljs/nyc-config-typescript": "^1.0.2",
         "@typechain/ethers-v6": "^0.5.1",
         "@typechain/hardhat": "^9.1.0",

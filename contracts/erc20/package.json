@@ -28,8 +28,7 @@
     },
     "homepage": "https://github.com/0xProject/protocol",
     "devDependencies": {
-        "@0x/contracts-utils": "*",
-        "@0x/ts-doc-gen": "^0.0.28",
+                "@0x/contracts-utils": "*",
         "@nomicfoundation/hardhat-ethers": "^3.0.0",
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
         "hardhat": "^2.19.0",

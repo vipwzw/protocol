@@ -50,7 +50,6 @@
         "@0x/contracts-test-utils": "^5.4.59",
         "@0x/order-utils": "^10.4.28",
         "@0x/types": "^3.3.7",
-        "@0x/typescript-typings": "^5.3.2",
         "@0x/utils": "^7.0.0",
         "@0x/web3-wrapper": "^7.5.3",
         "@types/lodash": "4.14.144",
