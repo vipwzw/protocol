@@ -114,7 +114,7 @@ function findOrdersThatCoverAssetFillAmount(orders, assetFillAmount, operation, 
     const slippageBufferAmount = _.get(opts, 'slippageBufferAmount', constants_1.constants.ZERO_AMOUNT);
     assert_1.assert.isValidBaseUnitAmount('opts.slippageBufferAmount', slippageBufferAmount);
     // calculate total amount of asset needed to be filled
-    const totalFillAmount = assetFillAmount.plus(slippageBufferAmount);
+    const totalFillAmount = assetFillAmount + slippageBufferAmount;
     // iterate through the orders input from left to right until we have enough makerAsset to fill totalFillAmount
     const result = _.reduce(orders, ({ resultOrders, remainingFillAmount, ordersRemainingFillableAssetAmounts }, order, index) => {
         if (remainingFillAmount.isLessThanOrEqualTo(constants_1.constants.ZERO_AMOUNT)) {

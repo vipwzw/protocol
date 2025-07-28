@@ -140,8 +140,8 @@ function findOrdersThatCoverAssetFillAmount<T extends Order>(
         opts,
         `remainingFillable${variablePrefix}AssetAmounts`,
         _.map(orders, order => (operation === MarketOperation.Buy ? order.makerAssetAmount : order.takerAssetAmount)),
-    ) as BigNumber[];
-    _.forEach(remainingFillableAssetAmounts, (amount, index) =>
+    ) as bigint[];
+    _.forEach(remainingFillableAssetAmounts, (amount: bigint, index: number) =>
         assert.isValidBaseUnitAmount(`remainingFillable${variablePrefix}AssetAmount[${index}]`, amount),
     );
     assert.assert(
@@ -149,10 +149,10 @@ function findOrdersThatCoverAssetFillAmount<T extends Order>(
         `Expected orders.length to equal opts.remainingFillable${variablePrefix}AssetAmounts.length`,
     );
     // try to get slippageBufferAmount from opts, if it's not there, default to 0
-    const slippageBufferAmount = _.get(opts, 'slippageBufferAmount', constants.ZERO_AMOUNT) as BigNumber;
+    const slippageBufferAmount = _.get(opts, 'slippageBufferAmount', constants.ZERO_AMOUNT) as bigint;
     assert.isValidBaseUnitAmount('opts.slippageBufferAmount', slippageBufferAmount);
     // calculate total amount of asset needed to be filled
-    const totalFillAmount = assetFillAmount.plus(slippageBufferAmount);
+    const totalFillAmount = assetFillAmount + slippageBufferAmount;
     // iterate through the orders input from left to right until we have enough makerAsset to fill totalFillAmount
     const result = _.reduce(
         orders,

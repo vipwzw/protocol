@@ -144,13 +144,13 @@ export const signatureUtils = {
         try {
             const signedOrder = await signatureUtils.ecSignTypedDataOrderAsync(supportedProvider, order, signerAddress);
             return signedOrder;
-        } catch (err) {
+        } catch (err: any) {
             // HACK: We are unable to handle specific errors thrown since provider is not an object
             //       under our control. It could be Metamask Web3, Ethers, or any general RPC provider.
             //       We check for a user denying the signature request in a way that supports Metamask and
             //       Coinbase Wallet. Unfortunately for signers with a different error message,
             //       they will receive two signature requests.
-            if (err.message.includes('User denied message signature')) {
+            if (err?.message?.includes('User denied message signature')) {
                 throw err;
             }
             const orderHash = orderHashUtils.getOrderHash(order);
@@ -227,13 +227,13 @@ export const signatureUtils = {
                 signerAddress,
             );
             return signedTransaction;
-        } catch (err) {
+        } catch (err: any) {
             // HACK: We are unable to handle specific errors thrown since provider is not an object
             //       under our control. It could be Metamask Web3, Ethers, or any general RPC provider.
             //       We check for a user denying the signature request in a way that supports Metamask and
             //       Coinbase Wallet. Unfortunately for signers with a different error message,
             //       they will receive two signature requests.
-            if (err.message.includes('User denied message signature')) {
+            if (err?.message?.includes('User denied message signature')) {
                 throw err;
             }
             const transactionHash = transactionHashUtils.getTransactionHash(transaction);
@@ -262,11 +262,11 @@ export const signatureUtils = {
         transaction: ZeroExTransaction,
         signerAddress: string,
     ): Promise<SignedZeroExTransaction> {
-        const provider = providerUtils.standardizeOrThrow(supportedProvider);
+        const provider = supportedProvider; // 直接使用 provider
         assert.isETHAddressHex('signerAddress', signerAddress);
         assert.doesConformToSchema('transaction', transaction, schemas.zeroExTransactionSchema, [schemas.hexSchema]);
         const web3Wrapper = new Web3Wrapper(provider);
-        await assert.isSenderAddressAsync('signerAddress', signerAddress, web3Wrapper);
+        await assert.isSenderAddressAsync('signerAddress', signerAddress, provider);
         const normalizedSignerAddress = signerAddress.toLowerCase();
         const typedData = eip712Utils.createZeroExTransactionTypedData(transaction);
         try {
@@ -318,13 +318,13 @@ export const signatureUtils = {
                 signerAddress,
             );
             return signedTransaction;
-        } catch (err) {
+        } catch (err: any) {
             // HACK: We are unable to handle specific errors thrown since provider is not an object
             //       under our control. It could be Metamask Web3, Ethers, or any general RPC provider.
             //       We check for a user denying the signature request in a way that supports Metamask and
             //       Coinbase Wallet. Unfortunately for signers with a different error message,
             //       they will receive two signature requests.
-            if (err.message.includes('User denied message signature')) {
+            if (err?.message?.includes('User denied message signature')) {
                 throw err;
             }
             const transactionHash = getExchangeProxyMetaTransactionHash(transaction);
@@ -355,13 +355,13 @@ export const signatureUtils = {
         transaction: ExchangeProxyMetaTransaction,
         signerAddress: string,
     ): Promise<SignedExchangeProxyMetaTransaction> {
-        const provider = providerUtils.standardizeOrThrow(supportedProvider);
+        const provider = supportedProvider; // 直接使用 provider
         assert.isETHAddressHex('signerAddress', signerAddress);
         assert.doesConformToSchema('transaction', transaction, schemas.exchangeProxyMetaTransactionSchema, [
             schemas.hexSchema,
         ]);
         const web3Wrapper = new Web3Wrapper(provider);
-        await assert.isSenderAddressAsync('signerAddress', signerAddress, web3Wrapper);
+        await assert.isSenderAddressAsync('signerAddress', signerAddress, provider);
         const normalizedSignerAddress = signerAddress.toLowerCase();
         const typedData = eip712Utils.createExchangeProxyMetaTransactionTypedData(transaction);
         try {
@@ -399,11 +399,11 @@ export const signatureUtils = {
         msgHash: string,
         signerAddress: string,
     ): Promise<string> {
-        const provider = providerUtils.standardizeOrThrow(supportedProvider);
+        const provider = supportedProvider; // 直接使用 provider
         assert.isHexString('msgHash', msgHash);
         assert.isETHAddressHex('signerAddress', signerAddress);
         const web3Wrapper = new Web3Wrapper(provider);
-        await assert.isSenderAddressAsync('signerAddress', signerAddress, web3Wrapper);
+        await assert.isSenderAddressAsync('signerAddress', signerAddress, provider);
         const normalizedSignerAddress = signerAddress.toLowerCase();
         const signature = await web3Wrapper.signMessageAsync(normalizedSignerAddress, msgHash);
         const prefixedMsgHashHex = signatureUtils.addSignedMessagePrefix(msgHash);
