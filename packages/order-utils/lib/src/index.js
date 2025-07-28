@@ -1,51 +1,94 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.ETH_TOKEN_ADDRESS = exports.NULL_ERC20_ASSET_DATA = exports.ZERO_AMOUNT = exports.NULL_BYTES = exports.NULL_ADDRESS = exports.getExchangeProxyMetaTransactionHash = exports.getExchangeMetaTransactionHash = exports.getOrderHash = exports.getTransformerAddress = exports.findTransformerNonce = exports.decodePositiveSlippageFeeTransformerData = exports.encodePositiveSlippageFeeTransformerData = exports.decodeAffiliateFeeTransformerData = exports.encodeAffiliateFeeTransformerData = exports.decodePayTakerTransformerData = exports.encodePayTakerTransformerData = exports.decodeWethTransformerData = exports.encodeWethTransformerData = exports.decodeFillQuoteTransformerData = exports.encodeFillQuoteTransformerData = exports.FillQuoteTransformerSide = exports.TypedDataError = exports.SignatureType = exports.eip712Utils = exports.assetDataUtils = exports.transactionHashUtils = exports.orderHashUtils = exports.orderCalculationUtils = exports.sortingUtils = exports.rateUtils = exports.marketUtils = exports.generatePseudoRandomSalt = exports.signatureUtils = void 0;
-var signature_utils_1 = require("./signature_utils");
-Object.defineProperty(exports, "signatureUtils", { enumerable: true, get: function () { return signature_utils_1.signatureUtils; } });
-var salt_1 = require("./salt");
-Object.defineProperty(exports, "generatePseudoRandomSalt", { enumerable: true, get: function () { return salt_1.generatePseudoRandomSalt; } });
-var market_utils_1 = require("./market_utils");
-Object.defineProperty(exports, "marketUtils", { enumerable: true, get: function () { return market_utils_1.marketUtils; } });
-var rate_utils_1 = require("./rate_utils");
-Object.defineProperty(exports, "rateUtils", { enumerable: true, get: function () { return rate_utils_1.rateUtils; } });
-var sorting_utils_1 = require("./sorting_utils");
-Object.defineProperty(exports, "sortingUtils", { enumerable: true, get: function () { return sorting_utils_1.sortingUtils; } });
-var order_calculation_utils_1 = require("./order_calculation_utils");
-Object.defineProperty(exports, "orderCalculationUtils", { enumerable: true, get: function () { return order_calculation_utils_1.orderCalculationUtils; } });
-var order_hash_utils_1 = require("./order_hash_utils");
-Object.defineProperty(exports, "orderHashUtils", { enumerable: true, get: function () { return order_hash_utils_1.orderHashUtils; } });
-var transaction_hash_utils_1 = require("./transaction_hash_utils");
-Object.defineProperty(exports, "transactionHashUtils", { enumerable: true, get: function () { return transaction_hash_utils_1.transactionHashUtils; } });
-var asset_data_utils_1 = require("./asset_data_utils");
-Object.defineProperty(exports, "assetDataUtils", { enumerable: true, get: function () { return asset_data_utils_1.assetDataUtils; } });
-var eip712_utils_1 = require("./eip712_utils");
-Object.defineProperty(exports, "eip712Utils", { enumerable: true, get: function () { return eip712_utils_1.eip712Utils; } });
-var types_1 = require("@0x/types");
-Object.defineProperty(exports, "SignatureType", { enumerable: true, get: function () { return types_1.SignatureType; } });
-var types_2 = require("./types");
-Object.defineProperty(exports, "TypedDataError", { enumerable: true, get: function () { return types_2.TypedDataError; } });
-var transformer_utils_1 = require("./transformer_utils");
-Object.defineProperty(exports, "FillQuoteTransformerSide", { enumerable: true, get: function () { return transformer_utils_1.FillQuoteTransformerSide; } });
-Object.defineProperty(exports, "encodeFillQuoteTransformerData", { enumerable: true, get: function () { return transformer_utils_1.encodeFillQuoteTransformerData; } });
-Object.defineProperty(exports, "decodeFillQuoteTransformerData", { enumerable: true, get: function () { return transformer_utils_1.decodeFillQuoteTransformerData; } });
-Object.defineProperty(exports, "encodeWethTransformerData", { enumerable: true, get: function () { return transformer_utils_1.encodeWethTransformerData; } });
-Object.defineProperty(exports, "decodeWethTransformerData", { enumerable: true, get: function () { return transformer_utils_1.decodeWethTransformerData; } });
-Object.defineProperty(exports, "encodePayTakerTransformerData", { enumerable: true, get: function () { return transformer_utils_1.encodePayTakerTransformerData; } });
-Object.defineProperty(exports, "decodePayTakerTransformerData", { enumerable: true, get: function () { return transformer_utils_1.decodePayTakerTransformerData; } });
-Object.defineProperty(exports, "encodeAffiliateFeeTransformerData", { enumerable: true, get: function () { return transformer_utils_1.encodeAffiliateFeeTransformerData; } });
-Object.defineProperty(exports, "decodeAffiliateFeeTransformerData", { enumerable: true, get: function () { return transformer_utils_1.decodeAffiliateFeeTransformerData; } });
-Object.defineProperty(exports, "encodePositiveSlippageFeeTransformerData", { enumerable: true, get: function () { return transformer_utils_1.encodePositiveSlippageFeeTransformerData; } });
-Object.defineProperty(exports, "decodePositiveSlippageFeeTransformerData", { enumerable: true, get: function () { return transformer_utils_1.decodePositiveSlippageFeeTransformerData; } });
-Object.defineProperty(exports, "findTransformerNonce", { enumerable: true, get: function () { return transformer_utils_1.findTransformerNonce; } });
-Object.defineProperty(exports, "getTransformerAddress", { enumerable: true, get: function () { return transformer_utils_1.getTransformerAddress; } });
-var hash_utils_1 = require("./hash_utils");
-Object.defineProperty(exports, "getOrderHash", { enumerable: true, get: function () { return hash_utils_1.getOrderHash; } });
-Object.defineProperty(exports, "getExchangeMetaTransactionHash", { enumerable: true, get: function () { return hash_utils_1.getExchangeMetaTransactionHash; } });
-Object.defineProperty(exports, "getExchangeProxyMetaTransactionHash", { enumerable: true, get: function () { return hash_utils_1.getExchangeProxyMetaTransactionHash; } });
-const constants_1 = require("./constants");
-exports.NULL_ADDRESS = constants_1.constants.NULL_ADDRESS;
-exports.NULL_BYTES = constants_1.constants.NULL_BYTES;
-exports.ZERO_AMOUNT = constants_1.constants.ZERO_AMOUNT;
-exports.NULL_ERC20_ASSET_DATA = constants_1.constants.NULL_ERC20_ASSET_DATA;
-exports.ETH_TOKEN_ADDRESS = constants_1.constants.ETH_TOKEN_ADDRESS;
+export { signatureUtils } from './signature_utils';
+export { generatePseudoRandomSalt } from './salt';
+export { marketUtils } from './market_utils';
+export { rateUtils } from './rate_utils';
+export { sortingUtils } from './sorting_utils';
+export { orderCalculationUtils } from './order_calculation_utils';
+export { orderHashUtils } from './order_hash_utils';
+export { transactionHashUtils } from './transaction_hash_utils';
+export { assetDataUtils } from './asset_data_utils';
+
+export { eip712Utils } from './eip712_utils';
+
+export {
+    SupportedProvider,
+    JSONRPCRequestPayload,
+    JSONRPCErrorCallback,
+    JSONRPCResponsePayload,
+    JSONRPCResponseError,
+    Web3JsProvider,
+    GanacheProvider,
+    EIP1193Provider,
+    ZeroExProvider,
+    EIP1193Event,
+    Web3JsV1Provider,
+    Web3JsV2Provider,
+    Web3JsV3Provider,
+} from 'ethereum-types';
+
+export {
+    SignedOrder,
+    Order,
+    ECSignature,
+    AssetData,
+    SingleAssetData,
+    ERC20AssetData,
+    ERC20BridgeAssetData,
+    ERC721AssetData,
+    ERC1155AssetData,
+    MultiAssetData,
+    StaticCallAssetData,
+    MultiAssetDataWithRecursiveDecoding,
+    SignatureType,
+    EIP712Parameter,
+    EIP712TypedData,
+    EIP712Types,
+    EIP712Object,
+    EIP712ObjectValue,
+    EIP712DomainWithDefaultSchema,
+    ZeroExTransaction,
+    SignedZeroExTransaction,
+    ValidatorSignature,
+    ExchangeProxyMetaTransaction,
+    SignedExchangeProxyMetaTransaction,
+} from '@0x/types';
+
+export {
+    TypedDataError,
+    FindFeeOrdersThatCoverFeesForTargetOrdersOpts,
+    FindOrdersThatCoverMakerAssetFillAmountOpts,
+    FindOrdersThatCoverTakerAssetFillAmountOpts,
+    FeeOrdersAndRemainingFeeAmount,
+    OrdersAndRemainingTakerFillAmount,
+    OrdersAndRemainingMakerFillAmount,
+} from './types';
+
+export {
+    FillQuoteTransformerSide,
+    FillQuoteTransformerData,
+    encodeFillQuoteTransformerData,
+    decodeFillQuoteTransformerData,
+    WethTransformerData,
+    encodeWethTransformerData,
+    decodeWethTransformerData,
+    PayTakerTransformerData,
+    encodePayTakerTransformerData,
+    decodePayTakerTransformerData,
+    AffiliateFeeTransformerData,
+    encodeAffiliateFeeTransformerData,
+    decodeAffiliateFeeTransformerData,
+    PositiveSlippageFeeTransformerData,
+    encodePositiveSlippageFeeTransformerData,
+    decodePositiveSlippageFeeTransformerData,
+    findTransformerNonce,
+    getTransformerAddress,
+} from './transformer_utils';
+
+export { getOrderHash, getExchangeMetaTransactionHash, getExchangeProxyMetaTransactionHash } from './hash_utils';
+
+import { constants } from './constants';
+export const NULL_ADDRESS = constants.NULL_ADDRESS;
+export const NULL_BYTES = constants.NULL_BYTES;
+export const ZERO_AMOUNT = constants.ZERO_AMOUNT;
+export const NULL_ERC20_ASSET_DATA = constants.NULL_ERC20_ASSET_DATA;
+export const ETH_TOKEN_ADDRESS = constants.ETH_TOKEN_ADDRESS;

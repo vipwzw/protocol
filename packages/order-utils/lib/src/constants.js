@@ -1,9 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.constants = void 0;
-const contract_addresses_1 = require("@0x/contract-addresses");
-const utils_1 = require("./utils");
-const ERC20_METHOD_ABI = {
+import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses';
+import { NULL_ADDRESS, NULL_BYTES } from './utils';
+import { MethodAbi } from 'ethereum-types';
+
+const ERC20_METHOD_ABI: MethodAbi = {
     constant: false,
     inputs: [
         {
@@ -17,7 +16,8 @@ const ERC20_METHOD_ABI = {
     stateMutability: 'nonpayable',
     type: 'function',
 };
-const ERC721_METHOD_ABI = {
+
+const ERC721_METHOD_ABI: MethodAbi = {
     constant: false,
     inputs: [
         {
@@ -35,7 +35,8 @@ const ERC721_METHOD_ABI = {
     stateMutability: 'nonpayable',
     type: 'function',
 };
-const MULTI_ASSET_METHOD_ABI = {
+
+const MULTI_ASSET_METHOD_ABI: MethodAbi = {
     constant: false,
     inputs: [
         {
@@ -53,7 +54,8 @@ const MULTI_ASSET_METHOD_ABI = {
     stateMutability: 'nonpayable',
     type: 'function',
 };
-const ERC1155_METHOD_ABI = {
+
+const ERC1155_METHOD_ABI: MethodAbi = {
     constant: false,
     inputs: [
         { name: 'tokenAddress', type: 'address' },
@@ -67,7 +69,8 @@ const ERC1155_METHOD_ABI = {
     stateMutability: 'nonpayable',
     type: 'function',
 };
-const STATIC_CALL_METHOD_ABI = {
+
+const STATIC_CALL_METHOD_ABI: MethodAbi = {
     constant: false,
     inputs: [
         { name: 'callTarget', type: 'address' },
@@ -80,10 +83,11 @@ const STATIC_CALL_METHOD_ABI = {
     stateMutability: 'nonpayable',
     type: 'function',
 };
-exports.constants = {
-    NULL_ADDRESS: utils_1.NULL_ADDRESS,
+
+export const constants = {
+    NULL_ADDRESS,
     FAKED_PROVIDER: { isEIP1193: true },
-    NULL_BYTES: utils_1.NULL_BYTES,
+    NULL_BYTES,
     NULL_ERC20_ASSET_DATA: '0xf47261b00000000000000000000000000000000000000000000000000000000000000000',
     // tslint:disable-next-line:custom-no-magic-numbers
     UNLIMITED_ALLOWANCE_IN_BASE_UNITS: (2n ** 256n) - 1n,
@@ -151,7 +155,7 @@ exports.constants = {
         name: 'ZeroEx',
         version: '1.0.0',
         chainId: 1,
-        verifyingContract: (0, contract_addresses_1.getContractAddressesForChainOrThrow)(1).exchangeProxy,
+        verifyingContract: getContractAddressesForChainOrThrow(1).exchangeProxy,
     },
     EXCHANGE_PROXY_MTX_SCEHMA: {
         name: 'MetaTransactionData',

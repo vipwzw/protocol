@@ -1,0 +1,10 @@
+{
+    "build": "yarn tsc -b",
+    "build:ci": "yarn build",
+    "test": "yarn hardhat test",
+    "test:hardhat": "hardhat test",
+    "test:coverage": "nyc hardhat test",
+    "clean": "shx rm -rf lib generated_docs",
+    "lint": "tslint --format stylish --project .",
+    "fix": "tslint --fix --format stylish --project ."
+}
