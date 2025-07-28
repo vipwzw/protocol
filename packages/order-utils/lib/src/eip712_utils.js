@@ -1,21 +1,45 @@
-import { assert } from './assert';
-import { schemas } from '@0x/json-schemas';
-import {
-    EIP712DomainWithDefaultSchema,
-    EIP712Object,
-    EIP712TypedData,
-    EIP712Types,
-    ExchangeProxyMetaTransaction,
-    Order,
-    SignedZeroExTransaction,
-    ZeroExTransaction,
-} from '@0x/types';
-import { hexUtils, signTypedDataUtils } from './utils';
-import * as _ from 'lodash';
-
-import { constants } from './constants';
-
-export const eip712Utils = {
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.eip712Utils = void 0;
+const assert_1 = require("./assert");
+const json_schemas_1 = require("@0x/json-schemas");
+const utils_1 = require("./utils");
+const _ = __importStar(require("lodash"));
+const constants_1 = require("./constants");
+exports.eip712Utils = {
     /**
      * Creates a EIP712TypedData object specific to the 0x protocol for use with signTypedData.
      * @param   primaryType The primary type found in message
@@ -24,29 +48,24 @@ export const eip712Utils = {
      * @param   domain Domain containing a name (optional), version (optional), and verifying contract address
      * @return  A typed data object
      */
-    createTypedData: (
-        primaryType: string,
-        types: EIP712Types,
-        message: EIP712Object,
-        domain: EIP712DomainWithDefaultSchema,
-    ): EIP712TypedData => {
-        assert.isETHAddressHex('verifyingContract', domain.verifyingContract);
-        assert.isString('primaryType', primaryType);
+    createTypedData: (primaryType, types, message, domain) => {
+        assert_1.assert.isETHAddressHex('verifyingContract', domain.verifyingContract);
+        assert_1.assert.isString('primaryType', primaryType);
         const typedData = {
             types: {
-                EIP712Domain: constants.DEFAULT_DOMAIN_SCHEMA.parameters,
+                EIP712Domain: constants_1.constants.DEFAULT_DOMAIN_SCHEMA.parameters,
                 ...types,
             },
             domain: {
-                name: domain.name === undefined ? constants.EXCHANGE_DOMAIN_NAME : domain.name,
-                version: domain.version === undefined ? constants.EXCHANGE_DOMAIN_VERSION : domain.version,
+                name: domain.name === undefined ? constants_1.constants.EXCHANGE_DOMAIN_NAME : domain.name,
+                version: domain.version === undefined ? constants_1.constants.EXCHANGE_DOMAIN_VERSION : domain.version,
                 chainId: domain.chainId,
                 verifyingContract: domain.verifyingContract,
             },
             message,
             primaryType,
         };
-        assert.doesConformToSchema('typedData', typedData, schemas.eip712TypedDataSchema);
+        assert_1.assert.doesConformToSchema('typedData', typedData, json_schemas_1.schemas.eip712TypedDataSchema);
         return typedData;
     },
     /**
@@ -54,8 +73,8 @@ export const eip712Utils = {
      * @param   Order the order
      * @return  A typed data object
      */
-    createOrderTypedData: (order: Order): EIP712TypedData => {
-        assert.doesConformToSchema('order', order, schemas.orderSchema, [schemas.hexSchema]);
+    createOrderTypedData: (order) => {
+        assert_1.assert.doesConformToSchema('order', order, json_schemas_1.schemas.orderSchema, [json_schemas_1.schemas.hexSchema]);
         const normalizedOrder = _.mapValues(order, value => {
             return !_.isString(value) ? value.toString() : value;
         });
@@ -65,12 +84,7 @@ export const eip712Utils = {
         };
         // Since we are passing in the EXCHANGE_ORDER_SCHEMA
         // order paramaters that are not in there get ignored at hashing time
-        const typedData = eip712Utils.createTypedData(
-            constants.EXCHANGE_ORDER_SCHEMA.name,
-            { Order: constants.EXCHANGE_ORDER_SCHEMA.parameters },
-            normalizedOrder,
-            partialDomain,
-        );
+        const typedData = exports.eip712Utils.createTypedData(constants_1.constants.EXCHANGE_ORDER_SCHEMA.name, { Order: constants_1.constants.EXCHANGE_ORDER_SCHEMA.parameters }, normalizedOrder, partialDomain);
         return typedData;
     },
     /**
@@ -79,19 +93,14 @@ export const eip712Utils = {
      * @param   zeroExTransaction the 0x transaction
      * @return  A typed data object
      */
-    createZeroExTransactionTypedData: (zeroExTransaction: ZeroExTransaction): EIP712TypedData => {
-        assert.isNumber('domain.chainId', zeroExTransaction.domain.chainId);
-        assert.isETHAddressHex('domain.verifyingContract', zeroExTransaction.domain.verifyingContract);
-        assert.doesConformToSchema('zeroExTransaction', zeroExTransaction, schemas.zeroExTransactionSchema);
+    createZeroExTransactionTypedData: (zeroExTransaction) => {
+        assert_1.assert.isNumber('domain.chainId', zeroExTransaction.domain.chainId);
+        assert_1.assert.isETHAddressHex('domain.verifyingContract', zeroExTransaction.domain.verifyingContract);
+        assert_1.assert.doesConformToSchema('zeroExTransaction', zeroExTransaction, json_schemas_1.schemas.zeroExTransactionSchema);
         const normalizedTransaction = _.mapValues(zeroExTransaction, value => {
             return !_.isString(value) ? value.toString() : value;
         });
-        const typedData = eip712Utils.createTypedData(
-            constants.EXCHANGE_ZEROEX_TRANSACTION_SCHEMA.name,
-            { ZeroExTransaction: constants.EXCHANGE_ZEROEX_TRANSACTION_SCHEMA.parameters },
-            normalizedTransaction,
-            zeroExTransaction.domain,
-        );
+        const typedData = exports.eip712Utils.createTypedData(constants_1.constants.EXCHANGE_ZEROEX_TRANSACTION_SCHEMA.name, { ZeroExTransaction: constants_1.constants.EXCHANGE_ZEROEX_TRANSACTION_SCHEMA.parameters }, normalizedTransaction, zeroExTransaction.domain);
         return typedData;
     },
     /**
@@ -101,52 +110,35 @@ export const eip712Utils = {
      * @param   txOrigin The desired `tx.origin` that should be able to submit an Ethereum txn involving this 0x transaction
      * @return  A typed data object
      */
-    createCoordinatorApprovalTypedData(
-        transaction: SignedZeroExTransaction,
-        verifyingContract: string,
-        txOrigin: string,
-    ): EIP712TypedData {
+    createCoordinatorApprovalTypedData(transaction, verifyingContract, txOrigin) {
         const domain = {
             ...transaction.domain,
-            name: constants.COORDINATOR_DOMAIN_NAME,
-            version: constants.COORDINATOR_DOMAIN_VERSION,
+            name: constants_1.constants.COORDINATOR_DOMAIN_NAME,
+            version: constants_1.constants.COORDINATOR_DOMAIN_VERSION,
             verifyingContract,
         };
         // TODO(dorothy-zbornak): Refactor these hash files so we can reuse
         // `transactionHashUtils` here without a circular dep.
-        const transactionHash = hexUtils.toHex(
-            signTypedDataUtils.generateTypedDataHash(eip712Utils.createZeroExTransactionTypedData(transaction)),
-        );
+        const transactionHash = utils_1.hexUtils.toHex(utils_1.signTypedDataUtils.generateTypedDataHash(exports.eip712Utils.createZeroExTransactionTypedData(transaction)));
         const approval = {
             txOrigin,
             transactionHash,
             transactionSignature: transaction.signature,
         };
-        const typedData = eip712Utils.createTypedData(
-            constants.COORDINATOR_APPROVAL_SCHEMA.name,
-            {
-                CoordinatorApproval: constants.COORDINATOR_APPROVAL_SCHEMA.parameters,
-            },
-            approval,
-            domain,
-        );
+        const typedData = exports.eip712Utils.createTypedData(constants_1.constants.COORDINATOR_APPROVAL_SCHEMA.name, {
+            CoordinatorApproval: constants_1.constants.COORDINATOR_APPROVAL_SCHEMA.parameters,
+        }, approval, domain);
         return typedData;
     },
-    createExchangeProxyMetaTransactionTypedData(mtx: ExchangeProxyMetaTransaction): EIP712TypedData {
-        return eip712Utils.createTypedData(
-            constants.EXCHANGE_PROXY_MTX_SCEHMA.name,
-            {
-                MetaTransactionData: constants.EXCHANGE_PROXY_MTX_SCEHMA.parameters,
-            },
-            _.mapValues(
-                _.omit(mtx, 'domain'),
-                // tslint:disable-next-line: custom-no-magic-numbers
-                v => (BigNumber.isBigNumber(v) ? v.toString(10) : v),
-            ) as EIP712Object, // tslint:disable-line:no-unnecessary-type-assertion
-            {
-                ...constants.MAINNET_EXCHANGE_PROXY_DOMAIN,
-                ...mtx.domain,
-            },
-        );
+    createExchangeProxyMetaTransactionTypedData(mtx) {
+        return exports.eip712Utils.createTypedData(constants_1.constants.EXCHANGE_PROXY_MTX_SCEHMA.name, {
+            MetaTransactionData: constants_1.constants.EXCHANGE_PROXY_MTX_SCEHMA.parameters,
+        }, _.mapValues(_.omit(mtx, 'domain'), 
+        // tslint:disable-next-line: custom-no-magic-numbers
+        v => (BigNumber.isBigNumber(v) ? v.toString(10) : v)), // tslint:disable-line:no-unnecessary-type-assertion
+        {
+            ...constants_1.constants.MAINNET_EXCHANGE_PROXY_DOMAIN,
+            ...mtx.domain,
+        });
     },
 };

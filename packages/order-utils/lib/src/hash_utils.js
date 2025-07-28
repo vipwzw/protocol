@@ -1,29 +1,28 @@
-import { ExchangeProxyMetaTransaction, Order, ZeroExTransaction } from '@0x/types';
-import { hexUtils, signTypedDataUtils } from "./utils";;
-
-import { eip712Utils } from './eip712_utils';
-import { orderHashUtils } from './order_hash_utils';
-import { transactionHashUtils } from './transaction_hash_utils';
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getOrderHash = getOrderHash;
+exports.getExchangeMetaTransactionHash = getExchangeMetaTransactionHash;
+exports.getExchangeProxyMetaTransactionHash = getExchangeProxyMetaTransactionHash;
+const utils_1 = require("./utils");
+;
+const eip712_utils_1 = require("./eip712_utils");
+const order_hash_utils_1 = require("./order_hash_utils");
+const transaction_hash_utils_1 = require("./transaction_hash_utils");
 /**
  * Compute the EIP712 hash of an order.
  */
-export function getOrderHash(order: Order): string {
-    return orderHashUtils.getOrderHash(order);
+function getOrderHash(order) {
+    return order_hash_utils_1.orderHashUtils.getOrderHash(order);
 }
-
 /**
  * Compute the EIP712 hash of an Exchange meta-transaction.
  */
-export function getExchangeMetaTransactionHash(tx: ZeroExTransaction): string {
-    return transactionHashUtils.getTransactionHash(tx);
+function getExchangeMetaTransactionHash(tx) {
+    return transaction_hash_utils_1.transactionHashUtils.getTransactionHash(tx);
 }
-
 /**
  * Compute the EIP712 hash of an Exchange Proxy meta-transaction.
  */
-export function getExchangeProxyMetaTransactionHash(mtx: ExchangeProxyMetaTransaction): string {
-    return hexUtils.toHex(
-        signTypedDataUtils.generateTypedDataHash(eip712Utils.createExchangeProxyMetaTransactionTypedData(mtx)),
-    );
+function getExchangeProxyMetaTransactionHash(mtx) {
+    return utils_1.hexUtils.toHex(utils_1.signTypedDataUtils.generateTypedDataHash(eip712_utils_1.eip712Utils.createExchangeProxyMetaTransactionTypedData(mtx)));
 }

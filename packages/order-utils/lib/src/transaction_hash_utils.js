@@ -1,12 +1,11 @@
-import { ZeroExTransaction } from '@0x/types';
-import { hexUtils, signTypedDataUtils } from "./utils";;
-
-import { eip712Utils } from './eip712_utils';
-
-export const transactionHashUtils = {
-    getTransactionHash: (tx: ZeroExTransaction): string => {
-        return hexUtils.toHex(
-            signTypedDataUtils.generateTypedDataHash(eip712Utils.createZeroExTransactionTypedData(tx)),
-        );
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.transactionHashUtils = void 0;
+const utils_1 = require("./utils");
+;
+const eip712_utils_1 = require("./eip712_utils");
+exports.transactionHashUtils = {
+    getTransactionHash: (tx) => {
+        return utils_1.hexUtils.toHex(utils_1.signTypedDataUtils.generateTypedDataHash(eip712_utils_1.eip712Utils.createZeroExTransactionTypedData(tx)));
     },
 };

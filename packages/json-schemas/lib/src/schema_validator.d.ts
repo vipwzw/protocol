@@ -15,6 +15,10 @@ export declare class SchemaValidator {
      */
     addSchema(schemaObjectOrArray: object | object[]): void;
     /**
+     * 转换包含 BigInt 的对象为可 JSON 序列化的对象
+     */
+    private _convertBigIntToString;
+    /**
      * Validate the JS object conforms to a specific JSON schema
      * @param instance JS object in question
      * @param schema Schema to check against

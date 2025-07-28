@@ -1,28 +1,71 @@
-import { Order } from '@0x/types';
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.positiveSlippageFeeTransformerDataEncoder = exports.affiliateFeeTransformerDataEncoder = exports.payTakerTransformerDataEncoder = exports.wethTransformerDataEncoder = exports.FillQuoteTransformerSide = exports.fillQuoteTransformerDataEncoder = void 0;
+exports.encodeFillQuoteTransformerData = encodeFillQuoteTransformerData;
+exports.decodeFillQuoteTransformerData = decodeFillQuoteTransformerData;
+exports.encodeWethTransformerData = encodeWethTransformerData;
+exports.decodeWethTransformerData = decodeWethTransformerData;
+exports.encodePayTakerTransformerData = encodePayTakerTransformerData;
+exports.decodePayTakerTransformerData = decodePayTakerTransformerData;
+exports.encodeAffiliateFeeTransformerData = encodeAffiliateFeeTransformerData;
+exports.decodeAffiliateFeeTransformerData = decodeAffiliateFeeTransformerData;
+exports.encodePositiveSlippageFeeTransformerData = encodePositiveSlippageFeeTransformerData;
+exports.decodePositiveSlippageFeeTransformerData = decodePositiveSlippageFeeTransformerData;
+exports.findTransformerNonce = findTransformerNonce;
+exports.getTransformerAddress = getTransformerAddress;
 // 临时注释掉 AbiEncoder 导入，这个文件需要重构
 // import { AbiEncoder } from '@0x/utils';
-
 // 临时的 AbiEncoder 模拟对象
 const AbiEncoder = {
     Method: class {
-        constructor(abi: any) {}
-        encode(values: any[]): string { return '0x'; }
-        getSignature(): string { return ''; }
+        constructor(abi) { }
+        encode(values) { return '0x'; }
+        getSignature() { return ''; }
     },
-    create(dataItem: any): any {
+    create(dataItem) {
         return {
-            encode: (values: any[]): string => '0x',
-            decode: (data: string): any => ({}),
-            getSignature: (): string => ''
+            encode: (values) => '0x',
+            decode: (data) => ({}),
+            getSignature: () => ''
         };
     }
 };
-import * as ethjs from 'ethereumjs-util';
-
-import { constants } from './constants';
-
-const { NULL_ADDRESS } = constants;
-
+const ethjs = __importStar(require("ethereumjs-util"));
+const constants_1 = require("./constants");
+const { NULL_ADDRESS } = constants_1.constants;
 const ORDER_ABI_COMPONENTS = [
     { name: 'makerAddress', type: 'address' },
     { name: 'takerAddress', type: 'address' },
@@ -39,11 +82,10 @@ const ORDER_ABI_COMPONENTS = [
     { name: 'makerFeeAssetData', type: 'bytes' },
     { name: 'takerFeeAssetData', type: 'bytes' },
 ];
-
 /**
  * ABI encoder for `FillQuoteTransformer.TransformData`
  */
-export const fillQuoteTransformerDataEncoder = AbiEncoder.create([
+exports.fillQuoteTransformerDataEncoder = AbiEncoder.create([
     {
         name: 'data',
         type: 'tuple',
@@ -64,48 +106,30 @@ export const fillQuoteTransformerDataEncoder = AbiEncoder.create([
         ],
     },
 ]);
-
 /**
  * Market operation for `FillQuoteTransformerData`.
  */
-export enum FillQuoteTransformerSide {
-    Sell,
-    Buy,
-}
-
-/**
- * `FillQuoteTransformer.TransformData`
- */
-export interface FillQuoteTransformerData {
-    side: FillQuoteTransformerSide;
-    sellToken: string;
-    buyToken: string;
-    orders: Array<Exclude<Order, ['signature', 'exchangeAddress', 'chainId']>>;
-    signatures: string[];
-    maxOrderFillAmounts: BigNumber[];
-    fillAmount: BigNumber;
-    refundReceiver: string;
-    rfqtTakerAddress: string;
-}
-
+var FillQuoteTransformerSide;
+(function (FillQuoteTransformerSide) {
+    FillQuoteTransformerSide[FillQuoteTransformerSide["Sell"] = 0] = "Sell";
+    FillQuoteTransformerSide[FillQuoteTransformerSide["Buy"] = 1] = "Buy";
+})(FillQuoteTransformerSide || (exports.FillQuoteTransformerSide = FillQuoteTransformerSide = {}));
 /**
  * ABI-encode a `FillQuoteTransformer.TransformData` type.
  */
-export function encodeFillQuoteTransformerData(data: FillQuoteTransformerData): string {
-    return fillQuoteTransformerDataEncoder.encode([data]);
+function encodeFillQuoteTransformerData(data) {
+    return exports.fillQuoteTransformerDataEncoder.encode([data]);
 }
-
 /**
  * ABI-decode a `FillQuoteTransformer.TransformData` type.
  */
-export function decodeFillQuoteTransformerData(encoded: string): FillQuoteTransformerData {
-    return fillQuoteTransformerDataEncoder.decode(encoded).data;
+function decodeFillQuoteTransformerData(encoded) {
+    return exports.fillQuoteTransformerDataEncoder.decode(encoded).data;
 }
-
 /**
  * ABI encoder for `WethTransformer.TransformData`
  */
-export const wethTransformerDataEncoder = AbiEncoder.create([
+exports.wethTransformerDataEncoder = AbiEncoder.create([
     {
         name: 'data',
         type: 'tuple',
@@ -115,33 +139,22 @@ export const wethTransformerDataEncoder = AbiEncoder.create([
         ],
     },
 ]);
-
-/**
- * `WethTransformer.TransformData`
- */
-export interface WethTransformerData {
-    token: string;
-    amount: BigNumber;
-}
-
 /**
  * ABI-encode a `WethTransformer.TransformData` type.
  */
-export function encodeWethTransformerData(data: WethTransformerData): string {
-    return wethTransformerDataEncoder.encode([data]);
+function encodeWethTransformerData(data) {
+    return exports.wethTransformerDataEncoder.encode([data]);
 }
-
 /**
  * ABI-decode a `WethTransformer.TransformData` type.
  */
-export function decodeWethTransformerData(encoded: string): WethTransformerData {
-    return wethTransformerDataEncoder.decode(encoded).data;
+function decodeWethTransformerData(encoded) {
+    return exports.wethTransformerDataEncoder.decode(encoded).data;
 }
-
 /**
  * ABI encoder for `PayTakerTransformer.TransformData`
  */
-export const payTakerTransformerDataEncoder = AbiEncoder.create([
+exports.payTakerTransformerDataEncoder = AbiEncoder.create([
     {
         name: 'data',
         type: 'tuple',
@@ -151,33 +164,22 @@ export const payTakerTransformerDataEncoder = AbiEncoder.create([
         ],
     },
 ]);
-
-/**
- * `PayTakerTransformer.TransformData`
- */
-export interface PayTakerTransformerData {
-    tokens: string[];
-    amounts: BigNumber[];
-}
-
 /**
  * ABI-encode a `PayTakerTransformer.TransformData` type.
  */
-export function encodePayTakerTransformerData(data: PayTakerTransformerData): string {
-    return payTakerTransformerDataEncoder.encode([data]);
+function encodePayTakerTransformerData(data) {
+    return exports.payTakerTransformerDataEncoder.encode([data]);
 }
-
 /**
  * ABI-decode a `PayTakerTransformer.TransformData` type.
  */
-export function decodePayTakerTransformerData(encoded: string): PayTakerTransformerData {
-    return payTakerTransformerDataEncoder.decode(encoded).data;
+function decodePayTakerTransformerData(encoded) {
+    return exports.payTakerTransformerDataEncoder.decode(encoded).data;
 }
-
 /**
  * ABI encoder for `affiliateFeetransformer.TransformData`
  */
-export const affiliateFeeTransformerDataEncoder = AbiEncoder.create({
+exports.affiliateFeeTransformerDataEncoder = AbiEncoder.create({
     name: 'data',
     type: 'tuple',
     components: [
@@ -192,36 +194,22 @@ export const affiliateFeeTransformerDataEncoder = AbiEncoder.create({
         },
     ],
 });
-
-/**
- * `AffiliateFeeTransformer.TransformData`
- */
-export interface AffiliateFeeTransformerData {
-    fees: Array<{
-        token: string;
-        amount: BigNumber;
-        recipient: string;
-    }>;
-}
-
 /**
  * ABI-encode a `AffiliateFeeTransformer.TransformData` type.
  */
-export function encodeAffiliateFeeTransformerData(data: AffiliateFeeTransformerData): string {
-    return affiliateFeeTransformerDataEncoder.encode(data);
+function encodeAffiliateFeeTransformerData(data) {
+    return exports.affiliateFeeTransformerDataEncoder.encode(data);
 }
-
 /**
  * ABI-decode a `AffiliateFeeTransformer.TransformData` type.
  */
-export function decodeAffiliateFeeTransformerData(encoded: string): AffiliateFeeTransformerData {
-    return affiliateFeeTransformerDataEncoder.decode(encoded);
+function decodeAffiliateFeeTransformerData(encoded) {
+    return exports.affiliateFeeTransformerDataEncoder.decode(encoded);
 }
-
 /**
  * ABI encoder for `PositiveSlippageFeeTransformer.TransformData`
  */
-export const positiveSlippageFeeTransformerDataEncoder = AbiEncoder.create({
+exports.positiveSlippageFeeTransformerDataEncoder = AbiEncoder.create({
     name: 'data',
     type: 'tuple',
     components: [
@@ -230,39 +218,23 @@ export const positiveSlippageFeeTransformerDataEncoder = AbiEncoder.create({
         { name: 'recipient', type: 'address' },
     ],
 });
-
-/**
- * `PositiveSlippageFeeTransformer.TransformData`
- */
-export interface PositiveSlippageFeeTransformerData {
-    token: string;
-    bestCaseAmount: BigNumber;
-    recipient: string;
-}
-
 /**
  * ABI-encode a `PositiveSlippageFeeTransformer.TransformData` type.
  */
-export function encodePositiveSlippageFeeTransformerData(data: PositiveSlippageFeeTransformerData): string {
-    return positiveSlippageFeeTransformerDataEncoder.encode(data);
+function encodePositiveSlippageFeeTransformerData(data) {
+    return exports.positiveSlippageFeeTransformerDataEncoder.encode(data);
 }
-
 /**
  * ABI-decode a `PositiveSlippageFeeTransformer.TransformData` type.
  */
-export function decodePositiveSlippageFeeTransformerData(encoded: string): PositiveSlippageFeeTransformerData {
-    return positiveSlippageFeeTransformerDataEncoder.decode(encoded);
+function decodePositiveSlippageFeeTransformerData(encoded) {
+    return exports.positiveSlippageFeeTransformerDataEncoder.decode(encoded);
 }
-
 /**
  * Find the nonce for a transformer given its deployer.
  * If `deployer` is the null address, zero will always be returned.
  */
-export function findTransformerNonce(
-    transformer: string,
-    deployer: string = NULL_ADDRESS,
-    maxGuesses: number = 1024,
-): number {
+function findTransformerNonce(transformer, deployer = NULL_ADDRESS, maxGuesses = 1024) {
     if (deployer === NULL_ADDRESS) {
         return 0;
     }
@@ -276,13 +248,11 @@ export function findTransformerNonce(
     }
     throw new Error(`${deployer} did not deploy ${transformer}!`);
 }
-
 /**
  * Compute the deployed address for a transformer given a deployer and nonce.
  */
-export function getTransformerAddress(deployer: string, nonce: number): string {
+function getTransformerAddress(deployer, nonce) {
     return ethjs.bufferToHex(
-        // tslint:disable-next-line: custom-no-magic-numbers
-        ethjs.rlphash([deployer, nonce] as any).slice(12),
-    );
+    // tslint:disable-next-line: custom-no-magic-numbers
+    ethjs.rlphash([deployer, nonce]).slice(12));
 }
