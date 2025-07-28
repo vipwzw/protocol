@@ -1,8 +1,7 @@
 import { Order } from '@0x/types';
-import { BigNumber } from '@0x/utils';
 import { FeeOrdersAndRemainingFeeAmount, FindFeeOrdersThatCoverFeesForTargetOrdersOpts, FindOrdersThatCoverMakerAssetFillAmountOpts, FindOrdersThatCoverTakerAssetFillAmountOpts, OrdersAndRemainingMakerFillAmount, OrdersAndRemainingTakerFillAmount } from './types';
 export declare const marketUtils: {
-    findOrdersThatCoverTakerAssetFillAmount<T extends Order>(orders: T[], takerAssetFillAmount: BigNumber, opts?: FindOrdersThatCoverTakerAssetFillAmountOpts): OrdersAndRemainingTakerFillAmount<T>;
+    findOrdersThatCoverTakerAssetFillAmount<T extends Order>(orders: T[], takerAssetFillAmount: bigint, opts?: FindOrdersThatCoverTakerAssetFillAmountOpts): OrdersAndRemainingTakerFillAmount<T>;
     /**
      * Takes an array of orders and returns a subset of those orders that has enough makerAssetAmount
      * in order to fill the input makerAssetFillAmount plus slippageBufferAmount. Iterates from first order to last order.
@@ -13,7 +12,7 @@ export declare const marketUtils: {
      * @param   opts                        Optional arguments this function accepts.
      * @return  Resulting orders and remaining fill amount that could not be covered by the input.
      */
-    findOrdersThatCoverMakerAssetFillAmount<T extends Order>(orders: T[], makerAssetFillAmount: BigNumber, opts?: FindOrdersThatCoverMakerAssetFillAmountOpts): OrdersAndRemainingMakerFillAmount<T>;
+    findOrdersThatCoverMakerAssetFillAmount<T extends Order>(orders: T[], makerAssetFillAmount: bigint, opts?: FindOrdersThatCoverMakerAssetFillAmountOpts): OrdersAndRemainingMakerFillAmount<T>;
     /**
      * Takes an array of orders and an array of feeOrders. Returns a subset of the feeOrders that has enough ZRX
      * in order to fill the takerFees required by orders plus a slippageBufferAmount.

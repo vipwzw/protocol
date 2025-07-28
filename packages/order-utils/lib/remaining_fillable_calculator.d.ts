@@ -1,4 +1,3 @@
-import { BigNumber } from '@0x/utils';
 export declare class RemainingFillableCalculator {
     private readonly _isPercentageFee;
     private readonly _transferrableAssetAmount;

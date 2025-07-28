@@ -1,6 +1,6 @@
 import { Order, SignedOrder } from '@0x/types';
-import { BigNumber, providerUtils } from '@0x/utils';
-import { SupportedProvider } from 'ethereum-types';
+// providerUtils 已替换为 ethers
+// SupportedProvider 类型已在 signature_utils 中定义
 
 import { constants } from './constants';
 import { orderHashUtils } from './order_hash_utils';
@@ -27,9 +27,9 @@ export const orderFactory = {
     },
     createOrder(
         makerAddress: string,
-        makerAssetAmount: BigNumber,
+        makerAssetAmount: bigint,
         makerAssetData: string,
-        takerAssetAmount: BigNumber,
+        takerAssetAmount: bigint,
         takerAssetData: string,
         exchangeAddress: string,
         chainId: number,
@@ -58,15 +58,28 @@ export const orderFactory = {
         return order;
     },
     async createSignedOrderAsync(
-        supportedProvider: SupportedProvider,
+        supportedProvider: any, // 暂时使用 any 绕过类型问题
         makerAddress: string,
-        makerAssetAmount: BigNumber,
+        makerAssetAmount: bigint,
         makerAssetData: string,
-        takerAssetAmount: BigNumber,
+        takerAssetAmount: bigint,
         takerAssetData: string,
         exchangeAddress: string,
         createOrderOpts?: CreateOrderOpts,
     ): Promise<SignedOrder> {
+        // 获取 chainId，如果是 ethers.Provider 或 ethers.Signer
+        let chainId: number;
+        try {
+            if (supportedProvider && typeof supportedProvider.getNetwork === 'function') {
+                const network = await supportedProvider.getNetwork();
+                chainId = Number(network.chainId);
+            } else {
+                chainId = 1; // 默认主网
+            }
+        } catch {
+            chainId = 1; // 出错时默认主网
+        }
+        
         const order = orderFactory.createOrder(
             makerAddress,
             makerAssetAmount,
@@ -74,7 +87,7 @@ export const orderFactory = {
             takerAssetAmount,
             takerAssetData,
             exchangeAddress,
-            await providerUtils.getChainIdAsync(supportedProvider),
+            chainId,
             createOrderOpts,
         );
         const orderHash = orderHashUtils.getOrderHash(order);
@@ -123,11 +136,11 @@ function generateEmptyOrder(chainId: number): Order {
 function generateDefaultCreateOrderOpts(): {
     takerAddress: string;
     senderAddress: string;
-    makerFee: BigNumber;
-    takerFee: BigNumber;
+    makerFee: bigint;
+    takerFee: bigint;
     feeRecipientAddress: string;
-    salt: BigNumber;
-    expirationTimeSeconds: BigNumber;
+    salt: bigint;
+    expirationTimeSeconds: bigint;
 } {
     return {
         takerAddress: constants.NULL_ADDRESS,

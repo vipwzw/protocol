@@ -1,11 +1,10 @@
 import { AssetData, ERC1155AssetData, ERC20AssetData, ERC20BridgeAssetData, ERC721AssetData, MultiAssetData, MultiAssetDataWithRecursiveDecoding, StaticCallAssetData } from '@0x/types';
-import { BigNumber } from '@0x/utils';
 export declare const assetDataUtils: {
     encodeERC20AssetData(tokenAddress: string): string;
     encodeERC20BridgeAssetData(tokenAddress: string, bridgeAddress: string, bridgeData: string): string;
-    encodeERC721AssetData(tokenAddress: string, tokenId: BigNumber): string;
-    encodeERC1155AssetData(tokenAddress: string, tokenIds: BigNumber[], tokenValues: BigNumber[], callbackData: string): string;
-    encodeMultiAssetData(values: BigNumber[], nestedAssetData: string[]): string;
+    encodeERC721AssetData(tokenAddress: string, tokenId: bigint): string;
+    encodeERC1155AssetData(tokenAddress: string, tokenIds: bigint[], tokenValues: bigint[], callbackData: string): string;
+    encodeMultiAssetData(values: bigint[], nestedAssetData: string[]): string;
     encodeStaticCallAssetData(staticCallTargetAddress: string, staticCallData: string, expectedReturnDataHash: string): string;
     /**
      * Decode any assetData into its corresponding assetData object

@@ -1,4 +1,4 @@
-import { BigNumber } from '@0x/utils';
+// bigint 已替换为 bigint
 
 export enum TypedDataError {
     InvalidSignature = 'INVALID_SIGNATURE',
@@ -8,75 +8,75 @@ export enum TypedDataError {
 export interface CreateOrderOpts {
     takerAddress?: string;
     senderAddress?: string;
-    makerFee?: BigNumber;
-    takerFee?: BigNumber;
+    makerFee?: bigint;
+    takerFee?: bigint;
     feeRecipientAddress?: string;
-    salt?: BigNumber;
-    expirationTimeSeconds?: BigNumber;
+    salt?: bigint;
+    expirationTimeSeconds?: bigint;
     makerFeeAssetData?: string;
     takerFeeAssetData?: string;
 }
 
 export interface ValidateOrderFillableOpts {
-    expectedFillTakerTokenAmount?: BigNumber;
+    expectedFillTakerTokenAmount?: bigint;
     validateRemainingOrderAmountIsFillable?: boolean;
     simulationTakerAddress?: string;
 }
 
 /**
- * remainingFillableMakerAssetAmount: An array of BigNumbers corresponding to the `orders` parameter.
+ * remainingFillableMakerAssetAmount: An array of bigints corresponding to the `orders` parameter.
  * You can use `OrderStateUtils` `@0x/order-utils` to perform blockchain lookups for these values.
  * Defaults to `makerAssetAmount` values from the orders param.
  * slippageBufferAmount: An additional amount of makerAsset to be covered by the result in case of trade collisions or partial fills.
  * Defaults to 0
  */
 export interface FindOrdersThatCoverMakerAssetFillAmountOpts {
-    remainingFillableMakerAssetAmounts?: BigNumber[];
-    slippageBufferAmount?: BigNumber;
+    remainingFillableMakerAssetAmounts?: bigint[];
+    slippageBufferAmount?: bigint;
 }
 
 /**
- * remainingFillableMakerAssetAmount: An array of BigNumbers corresponding to the `orders` parameter.
+ * remainingFillableMakerAssetAmount: An array of bigints corresponding to the `orders` parameter.
  * You can use `OrderStateUtils` `@0x/order-utils` to perform blockchain lookups for these values.
  * Defaults to `makerAssetAmount` values from the orders param.
  * slippageBufferAmount: An additional amount of makerAsset to be covered by the result in case of trade collisions or partial fills.
  * Defaults to 0
  */
 export interface FindOrdersThatCoverTakerAssetFillAmountOpts {
-    remainingFillableTakerAssetAmounts?: BigNumber[];
-    slippageBufferAmount?: BigNumber;
+    remainingFillableTakerAssetAmounts?: bigint[];
+    slippageBufferAmount?: bigint;
 }
 
 /**
- * remainingFillableMakerAssetAmount: An array of BigNumbers corresponding to the `orders` parameter.
+ * remainingFillableMakerAssetAmount: An array of bigints corresponding to the `orders` parameter.
  * You can use `OrderStateUtils` `@0x/order-utils` to perform blockchain lookups for these values.
  * Defaults to `makerAssetAmount` values from the orders param.
- * remainingFillableFeeAmounts: An array of BigNumbers corresponding to the feeOrders parameter.
+ * remainingFillableFeeAmounts: An array of bigints corresponding to the feeOrders parameter.
  * You can use OrderStateUtils @0x/order-utils to perform blockchain lookups for these values.
  * Defaults to `makerAssetAmount` values from the feeOrders param.
  * slippageBufferAmount: An additional amount of fee to be covered by the result in case of trade collisions or partial fills.
  * Defaults to 0
  */
 export interface FindFeeOrdersThatCoverFeesForTargetOrdersOpts {
-    remainingFillableMakerAssetAmounts?: BigNumber[];
-    remainingFillableFeeAmounts?: BigNumber[];
-    slippageBufferAmount?: BigNumber;
+    remainingFillableMakerAssetAmounts?: bigint[];
+    remainingFillableFeeAmounts?: bigint[];
+    slippageBufferAmount?: bigint;
 }
 
 export interface FeeOrdersAndRemainingFeeAmount<T> {
     resultFeeOrders: T[];
-    feeOrdersRemainingFillableMakerAssetAmounts: BigNumber[];
-    remainingFeeAmount: BigNumber;
+    feeOrdersRemainingFillableMakerAssetAmounts: bigint[];
+    remainingFeeAmount: bigint;
 }
 
 export interface OrdersAndRemainingMakerFillAmount<T> {
     resultOrders: T[];
-    ordersRemainingFillableMakerAssetAmounts: BigNumber[];
-    remainingFillAmount: BigNumber;
+    ordersRemainingFillableMakerAssetAmounts: bigint[];
+    remainingFillAmount: bigint;
 }
 
 export interface OrdersAndRemainingTakerFillAmount<T> {
     resultOrders: T[];
-    ordersRemainingFillableTakerAssetAmounts: BigNumber[];
-    remainingFillAmount: BigNumber;
+    ordersRemainingFillableTakerAssetAmounts: bigint[];
+    remainingFillAmount: bigint;
 }

@@ -1,4 +1,3 @@
-import { BigNumber } from '@0x/utils';
 export declare const utils: {
     getSignatureTypeIndexIfExists(signature: string): number;
     getCurrentUnixTimestampSec(): BigNumber;

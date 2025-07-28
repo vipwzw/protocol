@@ -1,4 +1,6 @@
 import { ECSignature, ExchangeProxyMetaTransaction, Order, SignatureType, SignedExchangeProxyMetaTransaction, SignedOrder, SignedZeroExTransaction, ValidatorSignature, ZeroExTransaction } from '@0x/types';
+import { ethers } from 'ethers';
+type SupportedProvider = ethers.Provider | ethers.Signer;
 export declare const signatureUtils: {
     /**
      * Signs an order and returns a SignedOrder. First `eth_signTypedData` is requested
@@ -109,3 +111,4 @@ export declare function parseSignatureHexAsVRS(signatureHex: string): ECSignatur
  * @return Whether the ECSignature is valid.
  */
 export declare function isValidECSignature(data: string, signature: ECSignature, signerAddress: string): boolean;
+export {};

@@ -34,34 +34,43 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.assetDataUtils = void 0;
-const contract_wrappers_1 = require("@0x/contract-wrappers");
+const ethers_1 = require("ethers");
 const types_1 = require("@0x/types");
 const utils_1 = require("@0x/utils");
 const _ = __importStar(require("lodash"));
-const fakeProvider = { isEIP1193: true };
-const assetDataEncoder = new contract_wrappers_1.IAssetDataContract(utils_1.NULL_ADDRESS, fakeProvider);
+// 使用 ethers v6 AbiCoder
+const abiCoder = ethers_1.ethers.AbiCoder.defaultAbiCoder();
+// Asset Proxy IDs
+const ERC20_ASSET_PROXY_ID = '0xf47261b0';
+const ERC721_ASSET_PROXY_ID = '0x02571792';
+const ERC1155_ASSET_PROXY_ID = '0xa7cb5fb7';
+const ERC20_BRIDGE_ASSET_PROXY_ID = '0xdc1600f3';
+const MULTI_ASSET_PROXY_ID = '0x94cfcdd7';
+const STATIC_CALL_PROXY_ID = '0xc339d10a';
 exports.assetDataUtils = {
     encodeERC20AssetData(tokenAddress) {
-        return assetDataEncoder.ERC20Token(tokenAddress).getABIEncodedTransactionData();
+        const encoded = abiCoder.encode(['address'], [tokenAddress]);
+        return ERC20_ASSET_PROXY_ID + encoded.slice(2);
     },
     encodeERC20BridgeAssetData(tokenAddress, bridgeAddress, bridgeData) {
-        return assetDataEncoder.ERC20Bridge(tokenAddress, bridgeAddress, bridgeData).getABIEncodedTransactionData();
+        const encoded = abiCoder.encode(['address', 'address', 'bytes'], [tokenAddress, bridgeAddress, bridgeData]);
+        return ERC20_BRIDGE_ASSET_PROXY_ID + encoded.slice(2);
     },
     encodeERC721AssetData(tokenAddress, tokenId) {
-        return assetDataEncoder.ERC721Token(tokenAddress, tokenId).getABIEncodedTransactionData();
+        const encoded = abiCoder.encode(['address', 'uint256'], [tokenAddress, tokenId]);
+        return ERC721_ASSET_PROXY_ID + encoded.slice(2);
     },
     encodeERC1155AssetData(tokenAddress, tokenIds, tokenValues, callbackData) {
-        return assetDataEncoder
-            .ERC1155Assets(tokenAddress, tokenIds, tokenValues, callbackData)
-            .getABIEncodedTransactionData();
+        const encoded = abiCoder.encode(['address', 'uint256[]', 'uint256[]', 'bytes'], [tokenAddress, tokenIds, tokenValues, callbackData]);
+        return ERC1155_ASSET_PROXY_ID + encoded.slice(2);
     },
     encodeMultiAssetData(values, nestedAssetData) {
-        return assetDataEncoder.MultiAsset(values, nestedAssetData).getABIEncodedTransactionData();
+        const encoded = abiCoder.encode(['uint256[]', 'bytes[]'], [values, nestedAssetData]);
+        return MULTI_ASSET_PROXY_ID + encoded.slice(2);
     },
     encodeStaticCallAssetData(staticCallTargetAddress, staticCallData, expectedReturnDataHash) {
-        return assetDataEncoder
-            .StaticCall(staticCallTargetAddress, staticCallData, expectedReturnDataHash)
-            .getABIEncodedTransactionData();
+        const encoded = abiCoder.encode(['address', 'bytes', 'bytes32'], [staticCallTargetAddress, staticCallData, expectedReturnDataHash]);
+        return STATIC_CALL_PROXY_ID + encoded.slice(2);
     },
     /**
      * Decode any assetData into its corresponding assetData object
@@ -69,17 +78,18 @@ exports.assetDataUtils = {
      * @return Either a ERC20, ERC20Bridge, ERC721, ERC1155, StaticCall, or MultiAsset assetData object
      */
     decodeAssetDataOrThrow(assetData) {
-        const assetProxyId = utils_1.hexUtils.slice(assetData, 0, 4); // tslint:disable-line:custom-no-magic-numbers
+        const assetProxyId = utils_1.hexUtils.slice(assetData, 0, 4);
+        const encodedData = '0x' + assetData.slice(10); // Remove proxy ID, keep encoded data
         switch (assetProxyId) {
             case types_1.AssetProxyId.ERC20: {
-                const tokenAddress = assetDataEncoder.getABIDecodedTransactionData('ERC20Token', assetData);
+                const [tokenAddress] = abiCoder.decode(['address'], encodedData);
                 return {
                     assetProxyId,
                     tokenAddress,
                 };
             }
             case types_1.AssetProxyId.ERC20Bridge: {
-                const [tokenAddress, bridgeAddress, bridgeData] = assetDataEncoder.getABIDecodedTransactionData('ERC20Bridge', assetData);
+                const [tokenAddress, bridgeAddress, bridgeData] = abiCoder.decode(['address', 'address', 'bytes'], encodedData);
                 return {
                     assetProxyId,
                     tokenAddress,
@@ -88,40 +98,41 @@ exports.assetDataUtils = {
                 };
             }
             case types_1.AssetProxyId.ERC721: {
-                const [tokenAddress, tokenId] = assetDataEncoder.getABIDecodedTransactionData('ERC721Token', assetData);
+                const [tokenAddress, tokenId] = abiCoder.decode(['address', 'uint256'], encodedData);
                 return {
                     assetProxyId,
                     tokenAddress,
-                    tokenId,
+                    tokenId: BigInt(tokenId),
                 };
             }
             case types_1.AssetProxyId.ERC1155: {
-                const [tokenAddress, tokenIds, tokenValues, callbackData,] = assetDataEncoder.getABIDecodedTransactionData('ERC1155Assets', assetData);
+                const [tokenAddress, tokenIds, tokenValues, callbackData] = abiCoder.decode(['address', 'uint256[]', 'uint256[]', 'bytes'], encodedData);
                 return {
                     assetProxyId,
                     tokenAddress,
-                    tokenIds,
-                    tokenValues,
+                    tokenIds: tokenIds.map((id) => BigInt(id)),
+                    tokenValues: tokenValues.map((value) => BigInt(value)),
                     callbackData,
                 };
             }
             case types_1.AssetProxyId.MultiAsset: {
-                const [amounts, nestedAssetData] = assetDataEncoder.getABIDecodedTransactionData('MultiAsset', assetData);
+                const [amounts, nestedAssetData] = abiCoder.decode(['uint256[]', 'bytes[]'], encodedData);
                 const multiAssetData = {
                     assetProxyId,
-                    amounts,
+                    amounts: amounts.map((amount) => BigInt(amount)),
                     nestedAssetData,
                 };
                 return multiAssetData;
             }
-            case types_1.AssetProxyId.StaticCall:
-                const [callTarget, staticCallData, callResultHash] = assetDataEncoder.getABIDecodedTransactionData('StaticCall', assetData);
+            case types_1.AssetProxyId.StaticCall: {
+                const [callTarget, staticCallData, callResultHash] = abiCoder.decode(['address', 'bytes', 'bytes32'], encodedData);
                 return {
                     assetProxyId,
                     callTarget,
                     staticCallData,
                     callResultHash,
                 };
+            }
             default:
                 throw new Error(`Unhandled asset proxy ID: ${assetProxyId}`);
         }
@@ -132,7 +143,7 @@ exports.assetDataUtils = {
      * @return An object containing the decoded amounts and nestedAssetData
      */
     decodeMultiAssetDataRecursively(assetData) {
-        const decodedAssetData = exports.assetDataUtils.decodeAssetDataOrThrow(assetData); // tslint:disable-line:no-unnecessary-type-assertion
+        const decodedAssetData = exports.assetDataUtils.decodeAssetDataOrThrow(assetData);
         if (decodedAssetData.assetProxyId !== types_1.AssetProxyId.MultiAsset) {
             throw new Error(`Not a MultiAssetData. Use 'decodeAssetDataOrThrow' instead`);
         }
@@ -141,7 +152,7 @@ exports.assetDataUtils = {
             const decodedNestedAssetDataElement = exports.assetDataUtils.decodeAssetDataOrThrow(nestedAssetDataElement);
             if (decodedNestedAssetDataElement.assetProxyId === types_1.AssetProxyId.MultiAsset) {
                 const recursivelyDecodedAssetData = exports.assetDataUtils.decodeMultiAssetDataRecursively(nestedAssetDataElement);
-                amounts.push(recursivelyDecodedAssetData.amounts.map(amountElement => amountElement.times(decodedAssetData.amounts[index])));
+                amounts.push(recursivelyDecodedAssetData.amounts.map(amountElement => amountElement * decodedAssetData.amounts[index]));
                 return recursivelyDecodedAssetData.nestedAssetData;
             }
             else {
@@ -154,7 +165,6 @@ exports.assetDataUtils = {
         return {
             assetProxyId: decodedAssetData.assetProxyId,
             amounts: flattenedAmounts,
-            // tslint:disable-next-line:no-unnecessary-type-assertion
             nestedAssetData: flattenedDecodedNestedAssetData,
         };
     },

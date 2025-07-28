@@ -1,6 +1,6 @@
 import { schemas } from '@0x/json-schemas';
 import { Order } from '@0x/types';
-import { BigNumber } from '@0x/utils';
+// BigNumber 已替换为 bigint
 import * as _ from 'lodash';
 
 import { assert } from './assert';
@@ -18,7 +18,7 @@ export const sortingUtils = {
      *                      Defaults to 0
      * @return  The input orders sorted by rate in ascending order
      */
-    sortOrdersByFeeAdjustedRate<T extends Order>(orders: T[], feeRate: BigNumber = constants.ZERO_AMOUNT): T[] {
+    sortOrdersByFeeAdjustedRate<T extends Order>(orders: T[], feeRate: bigint = constants.ZERO_AMOUNT): T[] {
         assert.doesConformToSchema('orders', orders, schemas.ordersSchema);
         assert.isBigNumber('feeRate', feeRate);
         const rateCalculator = (order: Order) => rateUtils.getFeeAdjustedRateOfOrder(order, feeRate);
@@ -40,7 +40,7 @@ export const sortingUtils = {
     },
 };
 
-type RateCalculator = (order: Order) => BigNumber;
+type RateCalculator = (order: Order) => bigint;
 
 // takes an array of orders, copies them, and sorts the copy based on the rate definition provided by rateCalculator
 function sortOrders<T extends Order>(orders: T[], rateCalculator: RateCalculator): T[] {
@@ -48,7 +48,9 @@ function sortOrders<T extends Order>(orders: T[], rateCalculator: RateCalculator
     copiedOrders.sort((firstOrder, secondOrder) => {
         const firstOrderRate = rateCalculator(firstOrder);
         const secondOrderRate = rateCalculator(secondOrder);
-        return firstOrderRate.comparedTo(secondOrderRate);
+        if (firstOrderRate < secondOrderRate) return -1;
+        if (firstOrderRate > secondOrderRate) return 1;
+        return 0;
     });
     return copiedOrders;
 }

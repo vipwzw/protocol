@@ -1,5 +1,4 @@
 import { Order } from '@0x/types';
-import { BigNumber } from '@0x/utils';
 export declare const sortingUtils: {
     /**
      * Takes an array of orders and sorts them by takerAsset/makerAsset rate in ascending order (best rate first).
@@ -11,7 +10,7 @@ export declare const sortingUtils: {
      *                      Defaults to 0
      * @return  The input orders sorted by rate in ascending order
      */
-    sortOrdersByFeeAdjustedRate<T extends Order>(orders: T[], feeRate?: BigNumber): T[];
+    sortOrdersByFeeAdjustedRate<T extends Order>(orders: T[], feeRate?: bigint): T[];
     /**
      * Takes an array of fee orders (makerAssetData corresponds to ZRX and takerAssetData corresponds to WETH)
      * and sorts them by rate in ascending order (best rate first). Adjusts the rate according to the takerFee.

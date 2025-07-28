@@ -47,6 +47,38 @@ const hash_utils_1 = require("./hash_utils");
 const order_hash_utils_1 = require("./order_hash_utils");
 const transaction_hash_utils_1 = require("./transaction_hash_utils");
 const types_2 = require("./types");
+// 创建 providerUtils 替代
+const providerUtils = {
+    isSigner(provider) {
+        return 'signMessage' in provider;
+    },
+    async getAccountsAsync(provider) {
+        if (this.isSigner(provider)) {
+            const address = await provider.getAddress();
+            return [address];
+        }
+        // 对于 Provider，返回空数组或通过 eth_accounts 获取
+        return [];
+    },
+    standardizeOrThrow(address) {
+        // 简单地返回地址，或进行基本的标准化
+        return address.toLowerCase();
+    },
+};
+// Web3Wrapper 替代
+class Web3Wrapper {
+    constructor(provider) {
+        this.isZeroExWeb3Wrapper = false;
+        this.provider = provider;
+    }
+    async signTypedDataAsync(signerAddress, typedData) {
+        if (providerUtils.isSigner(this.provider)) {
+            // 使用 ethers.Signer 的 signTypedData 方法
+            return await this.provider.signTypedData(typedData.domain, typedData.types, typedData.message || typedData.value);
+        }
+        throw new Error('Provider does not support signing');
+    }
+}
 exports.signatureUtils = {
     /**
      * Signs an order and returns a SignedOrder. First `eth_signTypedData` is requested
@@ -90,7 +122,7 @@ exports.signatureUtils = {
      * @return  A SignedOrder containing the order and Elliptic curve signature with Signature Type.
      */
     async ecSignTypedDataOrderAsync(supportedProvider, order, signerAddress) {
-        const provider = providerUtils.standardizeOrThrow(supportedProvider);
+        const provider = supportedProvider; // 直接使用 provider
         assert_1.assert.isETHAddressHex('signerAddress', signerAddress);
         assert_1.assert.doesConformToSchema('order', order, json_schemas_1.schemas.orderSchema, [json_schemas_1.schemas.hexSchema]);
         const web3Wrapper = new Web3Wrapper(provider);

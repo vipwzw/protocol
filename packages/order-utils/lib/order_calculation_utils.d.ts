@@ -1,5 +1,4 @@
 import { Order } from '@0x/types';
-import { BigNumber } from '@0x/utils';
 export declare const orderCalculationUtils: {
     /**
      * Determines if the order is expired given the current time
@@ -22,30 +21,30 @@ export declare const orderCalculationUtils: {
      * @param order The order
      * @param makerFillAmount the amount of taker asset
      */
-    getMakerFillAmount(order: Order, takerFillAmount: BigNumber): BigNumber;
+    getMakerFillAmount(order: Order, takerFillAmount: bigint): bigint;
     /**
      * Given an amount of maker asset, calculate the equivalent amount in taker asset
      * @param order The order
      * @param makerFillAmount the amount of maker asset
      */
-    getTakerFillAmount(order: Order, makerFillAmount: BigNumber): BigNumber;
+    getTakerFillAmount(order: Order, makerFillAmount: bigint): bigint;
     /**
      * Given an amount of taker asset, calculate the fee amount required for the taker
      * @param order The order
      * @param takerFillAmount the amount of taker asset
      */
-    getTakerFeeAmount(order: Order, takerFillAmount: BigNumber): BigNumber;
+    getTakerFeeAmount(order: Order, takerFillAmount: bigint): bigint;
     /**
      * Given an amount of maker asset, calculate the fee amount required for the maker
      * @param order The order
      * @param makerFillAmount the amount of maker asset
      */
-    getMakerFeeAmount(order: Order, makerFillAmount: BigNumber): BigNumber;
+    getMakerFeeAmount(order: Order, makerFillAmount: bigint): bigint;
     /**
      * Given a desired amount of ZRX from a fee order, calculate the amount of taker asset required to fill.
      * Also calculate how much ZRX needs to be purchased in order to fill the desired amount plus the taker fee amount
      * @param order The order
      * @param makerFillAmount the amount of maker asset
      */
-    getTakerFillAmountForFeeOrder(order: Order, makerFillAmount: BigNumber): [BigNumber, BigNumber];
+    getTakerFillAmountForFeeOrder(order: Order, makerFillAmount: bigint): [bigint, bigint];
 };

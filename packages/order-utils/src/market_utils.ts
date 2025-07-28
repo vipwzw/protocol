@@ -1,6 +1,6 @@
 import { schemas } from '@0x/json-schemas';
 import { MarketOperation, Order } from '@0x/types';
-import { BigNumber } from '@0x/utils';
+// BigNumber 已替换为 bigint
 import * as _ from 'lodash';
 
 import { assert } from './assert';
@@ -17,7 +17,7 @@ import {
 export const marketUtils = {
     findOrdersThatCoverTakerAssetFillAmount<T extends Order>(
         orders: T[],
-        takerAssetFillAmount: BigNumber,
+        takerAssetFillAmount: bigint,
         opts?: FindOrdersThatCoverTakerAssetFillAmountOpts,
     ): OrdersAndRemainingTakerFillAmount<T> {
         return findOrdersThatCoverAssetFillAmount<T>(
@@ -39,7 +39,7 @@ export const marketUtils = {
      */
     findOrdersThatCoverMakerAssetFillAmount<T extends Order>(
         orders: T[],
-        makerAssetFillAmount: BigNumber,
+        makerAssetFillAmount: bigint,
         opts?: FindOrdersThatCoverMakerAssetFillAmountOpts,
     ): OrdersAndRemainingMakerFillAmount<T> {
         return findOrdersThatCoverAssetFillAmount<T>(
@@ -73,8 +73,8 @@ export const marketUtils = {
             opts,
             'remainingFillableMakerAssetAmounts',
             _.map(orders, order => order.makerAssetAmount),
-        ) as BigNumber[];
-        _.forEach(remainingFillableMakerAssetAmounts, (amount, index) =>
+        ) as bigint[];
+        _.forEach(remainingFillableMakerAssetAmounts, (amount: bigint, index: number) =>
             assert.isValidBaseUnitAmount(`remainingFillableMakerAssetAmount[${index}]`, amount),
         );
         assert.assert(
@@ -86,8 +86,8 @@ export const marketUtils = {
             opts,
             'remainingFillableFeeAmounts',
             _.map(feeOrders, order => order.makerAssetAmount),
-        ) as BigNumber[];
-        _.forEach(remainingFillableFeeAmounts, (amount, index) =>
+        ) as bigint[];
+        _.forEach(remainingFillableFeeAmounts, (amount: bigint, index: number) =>
             assert.isValidBaseUnitAmount(`remainingFillableFeeAmounts[${index}]`, amount),
         );
         assert.assert(
@@ -95,17 +95,16 @@ export const marketUtils = {
             'Expected feeOrders.length to equal opts.remainingFillableFeeAmounts.length',
         );
         // try to get slippageBufferAmount from opts, if it's not there, default to 0
-        const slippageBufferAmount = _.get(opts, 'slippageBufferAmount', constants.ZERO_AMOUNT) as BigNumber;
+        const slippageBufferAmount = _.get(opts, 'slippageBufferAmount', constants.ZERO_AMOUNT) as bigint;
         assert.isValidBaseUnitAmount('opts.slippageBufferAmount', slippageBufferAmount);
         // calculate total amount of ZRX needed to fill orders
         const totalFeeAmount = _.reduce(
             orders,
             (accFees, order, index) => {
                 const makerAssetAmountAvailable = remainingFillableMakerAssetAmounts[index];
-                const feeToFillMakerAssetAmountAvailable = makerAssetAmountAvailable
-                    .multipliedBy(order.takerFee)
-                    .dividedToIntegerBy(order.makerAssetAmount);
-                return accFees.plus(feeToFillMakerAssetAmountAvailable);
+                const feeToFillMakerAssetAmountAvailable = 
+                    (makerAssetAmountAvailable * order.takerFee) / order.makerAssetAmount;
+                return accFees + feeToFillMakerAssetAmountAvailable;
             },
             constants.ZERO_AMOUNT,
         );
@@ -129,7 +128,7 @@ export const marketUtils = {
 
 function findOrdersThatCoverAssetFillAmount<T extends Order>(
     orders: T[],
-    assetFillAmount: BigNumber,
+    assetFillAmount: bigint,
     operation: MarketOperation,
     opts?: FindOrdersThatCoverTakerAssetFillAmountOpts | FindOrdersThatCoverMakerAssetFillAmountOpts,
 ): OrdersAndRemainingTakerFillAmount<T> | OrdersAndRemainingMakerFillAmount<T> {

@@ -10,5 +10,6 @@ const utils_1 = require("@0x/utils");
  */
 function generatePseudoRandomSalt() {
     const salt = (0, utils_1.generatePseudoRandom256BitNumber)();
-    return salt;
+    // 假设 generatePseudoRandom256BitNumber 现在返回 bigint
+    return typeof salt === 'bigint' ? salt : BigInt(salt.toString());
 }

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.orderCalculationUtils = void 0;
-const utils_1 = require("@0x/utils");
+// BigNumber 已替换为 bigint
 const constants_1 = require("./constants");
 exports.orderCalculationUtils = {
     /**
@@ -18,8 +18,8 @@ exports.orderCalculationUtils = {
      */
     willOrderExpire(order, secondsFromNow) {
         const millisecondsInSecond = 1000;
-        const currentUnixTimestampSec = new utils_1.BigNumber(Date.now() / millisecondsInSecond).integerValue();
-        return order.expirationTimeSeconds.isLessThan(currentUnixTimestampSec.plus(secondsFromNow));
+        const currentUnixTimestampSec = BigInt(Math.floor(Date.now() / millisecondsInSecond));
+        return order.expirationTimeSeconds < (currentUnixTimestampSec + BigInt(secondsFromNow));
     },
     /**
      * Determines if the order is open and fillable by any taker.
@@ -35,10 +35,7 @@ exports.orderCalculationUtils = {
      */
     getMakerFillAmount(order, takerFillAmount) {
         // Round down because exchange rate favors Maker
-        const makerFillAmount = takerFillAmount
-            .multipliedBy(order.makerAssetAmount)
-            .div(order.takerAssetAmount)
-            .integerValue(utils_1.BigNumber.ROUND_FLOOR);
+        const makerFillAmount = (takerFillAmount * order.makerAssetAmount) / order.takerAssetAmount;
         return makerFillAmount;
     },
     /**
@@ -48,10 +45,8 @@ exports.orderCalculationUtils = {
      */
     getTakerFillAmount(order, makerFillAmount) {
         // Round up because exchange rate favors Maker
-        const takerFillAmount = makerFillAmount
-            .multipliedBy(order.takerAssetAmount)
-            .div(order.makerAssetAmount)
-            .integerValue(utils_1.BigNumber.ROUND_CEIL);
+        const numerator = makerFillAmount * order.takerAssetAmount;
+        const takerFillAmount = (numerator + order.makerAssetAmount - 1n) / order.makerAssetAmount; // 向上取整
         return takerFillAmount;
     },
     /**
@@ -61,10 +56,7 @@ exports.orderCalculationUtils = {
      */
     getTakerFeeAmount(order, takerFillAmount) {
         // Round down because Taker fee rate favors Taker
-        const takerFeeAmount = takerFillAmount
-            .multipliedBy(order.takerFee)
-            .div(order.takerAssetAmount)
-            .integerValue(utils_1.BigNumber.ROUND_FLOOR);
+        const takerFeeAmount = (takerFillAmount * order.takerFee) / order.takerAssetAmount;
         return takerFeeAmount;
     },
     /**
@@ -74,10 +66,7 @@ exports.orderCalculationUtils = {
      */
     getMakerFeeAmount(order, makerFillAmount) {
         // Round down because Maker fee rate favors Maker
-        const makerFeeAmount = makerFillAmount
-            .multipliedBy(order.makerFee)
-            .div(order.makerAssetAmount)
-            .integerValue(utils_1.BigNumber.ROUND_FLOOR);
+        const makerFeeAmount = (makerFillAmount * order.makerFee) / order.makerAssetAmount;
         return makerFeeAmount;
     },
     /**
@@ -88,10 +77,10 @@ exports.orderCalculationUtils = {
      */
     getTakerFillAmountForFeeOrder(order, makerFillAmount) {
         // For each unit of TakerAsset we buy (MakerAsset - TakerFee)
-        const adjustedTakerFillAmount = makerFillAmount
-            .multipliedBy(order.takerAssetAmount)
-            .div(order.makerAssetAmount.minus(order.takerFee))
-            .integerValue(utils_1.BigNumber.ROUND_CEIL);
+        // 使用 bigint 进行计算，向上取整
+        const numerator = makerFillAmount * order.takerAssetAmount;
+        const denominator = order.makerAssetAmount - order.takerFee;
+        const adjustedTakerFillAmount = (numerator + denominator - 1n) / denominator; // 向上取整
         // The amount that we buy will be greater than makerFillAmount, since we buy some amount for fees.
         const adjustedMakerFillAmount = exports.orderCalculationUtils.getMakerFillAmount(order, adjustedTakerFillAmount);
         return [adjustedTakerFillAmount, adjustedMakerFillAmount];

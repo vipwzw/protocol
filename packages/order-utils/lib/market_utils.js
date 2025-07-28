@@ -36,7 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.marketUtils = void 0;
 const json_schemas_1 = require("@0x/json-schemas");
 const types_1 = require("@0x/types");
-const utils_1 = require("@0x/utils");
+// BigNumber 已替换为 bigint
 const _ = __importStar(require("lodash"));
 const assert_1 = require("./assert");
 const constants_1 = require("./constants");
@@ -86,10 +86,8 @@ exports.marketUtils = {
         // calculate total amount of ZRX needed to fill orders
         const totalFeeAmount = _.reduce(orders, (accFees, order, index) => {
             const makerAssetAmountAvailable = remainingFillableMakerAssetAmounts[index];
-            const feeToFillMakerAssetAmountAvailable = makerAssetAmountAvailable
-                .multipliedBy(order.takerFee)
-                .dividedToIntegerBy(order.makerAssetAmount);
-            return accFees.plus(feeToFillMakerAssetAmountAvailable);
+            const feeToFillMakerAssetAmountAvailable = (makerAssetAmountAvailable * order.takerFee) / order.makerAssetAmount;
+            return accFees + feeToFillMakerAssetAmountAvailable;
         }, constants_1.constants.ZERO_AMOUNT);
         const { resultOrders, remainingFillAmount, ordersRemainingFillableMakerAssetAmounts, } = exports.marketUtils.findOrdersThatCoverMakerAssetFillAmount(feeOrders, totalFeeAmount, {
             remainingFillableMakerAssetAmounts: remainingFillableFeeAmounts,
@@ -136,7 +134,7 @@ function findOrdersThatCoverAssetFillAmount(orders, assetFillAmount, operation, 
                 ordersRemainingFillableAssetAmounts: shouldIncludeOrder
                     ? _.concat(ordersRemainingFillableAssetAmounts, assetAmountAvailable)
                     : ordersRemainingFillableAssetAmounts,
-                remainingFillAmount: utils_1.BigNumber.max(constants_1.constants.ZERO_AMOUNT, remainingFillAmount.minus(assetAmountAvailable)),
+                remainingFillAmount: BigNumber.max(constants_1.constants.ZERO_AMOUNT, remainingFillAmount.minus(assetAmountAvailable)),
             };
         }
     }, {

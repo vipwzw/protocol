@@ -1,9 +1,9 @@
 import { Order } from '@0x/types';
-import { BigNumber } from '@0x/utils';
+import { AbiEncoder } from '@0x/utils';
 /**
  * ABI encoder for `FillQuoteTransformer.TransformData`
  */
-export declare const fillQuoteTransformerDataEncoder: any;
+export declare const fillQuoteTransformerDataEncoder: AbiEncoder.DataType;
 /**
  * Market operation for `FillQuoteTransformerData`.
  */
@@ -36,7 +36,7 @@ export declare function decodeFillQuoteTransformerData(encoded: string): FillQuo
 /**
  * ABI encoder for `WethTransformer.TransformData`
  */
-export declare const wethTransformerDataEncoder: any;
+export declare const wethTransformerDataEncoder: AbiEncoder.DataType;
 /**
  * `WethTransformer.TransformData`
  */
@@ -55,7 +55,7 @@ export declare function decodeWethTransformerData(encoded: string): WethTransfor
 /**
  * ABI encoder for `PayTakerTransformer.TransformData`
  */
-export declare const payTakerTransformerDataEncoder: any;
+export declare const payTakerTransformerDataEncoder: AbiEncoder.DataType;
 /**
  * `PayTakerTransformer.TransformData`
  */
@@ -74,7 +74,7 @@ export declare function decodePayTakerTransformerData(encoded: string): PayTaker
 /**
  * ABI encoder for `affiliateFeetransformer.TransformData`
  */
-export declare const affiliateFeeTransformerDataEncoder: any;
+export declare const affiliateFeeTransformerDataEncoder: AbiEncoder.DataType;
 /**
  * `AffiliateFeeTransformer.TransformData`
  */
@@ -96,7 +96,7 @@ export declare function decodeAffiliateFeeTransformerData(encoded: string): Affi
 /**
  * ABI encoder for `PositiveSlippageFeeTransformer.TransformData`
  */
-export declare const positiveSlippageFeeTransformerDataEncoder: any;
+export declare const positiveSlippageFeeTransformerDataEncoder: AbiEncoder.DataType;
 /**
  * `PositiveSlippageFeeTransformer.TransformData`
  */

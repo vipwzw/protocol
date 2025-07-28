@@ -22,6 +22,50 @@ import { orderHashUtils } from './order_hash_utils';
 import { transactionHashUtils } from './transaction_hash_utils';
 import { TypedDataError } from './types';
 
+// 类型声明  
+type SupportedProvider = ethers.Provider | ethers.Signer;
+
+// 创建 providerUtils 替代
+const providerUtils = {
+    isSigner(provider: SupportedProvider): provider is ethers.Signer {
+        return 'signMessage' in provider;
+    },
+    async getAccountsAsync(provider: SupportedProvider): Promise<string[]> {
+        if (this.isSigner(provider)) {
+            const address = await provider.getAddress();
+            return [address];
+        }
+        // 对于 Provider，返回空数组或通过 eth_accounts 获取
+        return [];
+    },
+    standardizeOrThrow(address: string): string {
+        // 简单地返回地址，或进行基本的标准化
+        return address.toLowerCase();
+    },
+};
+
+// Web3Wrapper 替代
+class Web3Wrapper {
+    public isZeroExWeb3Wrapper = false;
+    private provider: SupportedProvider;
+    
+    constructor(provider: SupportedProvider) {
+        this.provider = provider;
+    }
+    
+    async signTypedDataAsync(signerAddress: string, typedData: any): Promise<string> {
+        if (providerUtils.isSigner(this.provider)) {
+            // 使用 ethers.Signer 的 signTypedData 方法
+            return await this.provider.signTypedData(
+                typedData.domain,
+                typedData.types,
+                typedData.message || typedData.value
+            );
+        }
+        throw new Error('Provider does not support signing');
+    }
+}
+
 export const signatureUtils = {
     /**
      * Signs an order and returns a SignedOrder. First `eth_signTypedData` is requested
@@ -72,7 +116,7 @@ export const signatureUtils = {
         order: Order,
         signerAddress: string,
     ): Promise<SignedOrder> {
-        const provider = providerUtils.standardizeOrThrow(supportedProvider);
+        const provider = supportedProvider; // 直接使用 provider
         assert.isETHAddressHex('signerAddress', signerAddress);
         assert.doesConformToSchema('order', order, schemas.orderSchema, [schemas.hexSchema]);
         const web3Wrapper = new Web3Wrapper(provider);

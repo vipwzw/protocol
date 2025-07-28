@@ -1,4 +1,4 @@
-import { BigNumber, generatePseudoRandom256BitNumber } from '@0x/utils';
+import { generatePseudoRandom256BitNumber } from '@0x/utils';
 
 /**
  * Generates a pseudo-random 256-bit salt.
@@ -6,7 +6,8 @@ import { BigNumber, generatePseudoRandom256BitNumber } from '@0x/utils';
  * and will not collide with other outstanding orders that are identical in all other parameters.
  * @return  A pseudo-random 256-bit number that can be used as a salt.
  */
-export function generatePseudoRandomSalt(): BigNumber {
+export function generatePseudoRandomSalt(): bigint {
     const salt = generatePseudoRandom256BitNumber();
-    return salt;
+    // 假设 generatePseudoRandom256BitNumber 现在返回 bigint
+    return typeof salt === 'bigint' ? salt : BigInt(salt.toString());
 }

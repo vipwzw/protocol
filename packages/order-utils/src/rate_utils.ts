@@ -1,6 +1,6 @@
 import { schemas } from '@0x/json-schemas';
 import { Order } from '@0x/types';
-import { BigNumber } from '@0x/utils';
+// BigNumber 已替换为 bigint
 
 import { assert } from './assert';
 import { constants } from './constants';
@@ -15,16 +15,15 @@ export const rateUtils = {
      *                      Defaults to 0
      * @return  The rate (takerAsset/makerAsset) of the order adjusted for fees
      */
-    getFeeAdjustedRateOfOrder(order: Order, feeRate: BigNumber = constants.ZERO_AMOUNT): BigNumber {
+    getFeeAdjustedRateOfOrder(order: Order, feeRate: bigint = constants.ZERO_AMOUNT): bigint {
         assert.doesConformToSchema('order', order, schemas.orderSchema);
         assert.isBigNumber('feeRate', feeRate);
-        assert.assert(
-            feeRate.gte(constants.ZERO_AMOUNT),
-            `Expected feeRate: ${feeRate} to be greater than or equal to 0`,
-        );
-        const takerAssetAmountNeededToPayForFees = order.takerFee.multipliedBy(feeRate);
-        const totalTakerAssetAmount = takerAssetAmountNeededToPayForFees.plus(order.takerAssetAmount);
-        const rate = totalTakerAssetAmount.div(order.makerAssetAmount);
+        if (feeRate < constants.ZERO_AMOUNT) {
+            throw new Error(`Expected feeRate: ${feeRate} to be greater than or equal to 0`);
+        }
+        const takerAssetAmountNeededToPayForFees = order.takerFee * feeRate;
+        const totalTakerAssetAmount = takerAssetAmountNeededToPayForFees + order.takerAssetAmount;
+        const rate = totalTakerAssetAmount / order.makerAssetAmount;
         return rate;
     },
     /**
@@ -33,16 +32,17 @@ export const rateUtils = {
      * @param   feeOrder    An object that conforms to the order interface
      * @return  The rate (WETH/ZRX) of the fee order adjusted for fees
      */
-    getFeeAdjustedRateOfFeeOrder(feeOrder: Order): BigNumber {
+    getFeeAdjustedRateOfFeeOrder(feeOrder: Order): bigint {
         assert.doesConformToSchema('feeOrder', feeOrder, schemas.orderSchema);
-        const zrxAmountAfterFees = feeOrder.makerAssetAmount.minus(feeOrder.takerFee);
-        assert.assert(
-            zrxAmountAfterFees.isGreaterThan(constants.ZERO_AMOUNT),
-            `Expected takerFee: ${JSON.stringify(feeOrder.takerFee)} to be less than makerAssetAmount: ${JSON.stringify(
-                feeOrder.makerAssetAmount,
-            )}`,
-        );
-        const rate = feeOrder.takerAssetAmount.div(zrxAmountAfterFees);
+        const zrxAmountAfterFees = feeOrder.makerAssetAmount - feeOrder.takerFee;
+        if (zrxAmountAfterFees <= constants.ZERO_AMOUNT) {
+            throw new Error(
+                `Expected takerFee: ${JSON.stringify(feeOrder.takerFee)} to be less than makerAssetAmount: ${JSON.stringify(
+                    feeOrder.makerAssetAmount,
+                )}`
+            );
+        }
+        const rate = feeOrder.takerAssetAmount / zrxAmountAfterFees;
         return rate;
     },
 };

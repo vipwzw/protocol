@@ -59,6 +59,7 @@
         "@0x/utils": "file:../utils",
         "@0x/contract-addresses": "file:../contract-addresses",
         "@0x/contract-artifacts": "file:../contract-artifacts",
+        "@0x/contract-wrappers": "file:../contract-wrappers",
         "@0x/json-schemas": "file:../json-schemas",
         "ethereumjs-util": "^7.1.5",
         "ethers": "^6.15.0",

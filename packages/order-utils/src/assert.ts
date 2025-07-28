@@ -39,13 +39,14 @@ const baseAssert = {
             throw new Error(`Expected ${variableName} to be a boolean, got: ${typeof value}`);
         }
     },
-    doesConformToSchema(variableName: string, value: any, schema: object): void {
+    doesConformToSchema(variableName: string, value: any, schema: object, subSchemas?: any[]): void {
         const schemaValidator = new SchemaValidator();
         const isValid = schemaValidator.isValid(value, schema);
         if (!isValid) {
             const validationResult = schemaValidator.validate(value, schema);
             throw new Error(`Expected ${variableName} to conform to schema, but validation failed: ${JSON.stringify(validationResult.errors)}`);
         }
+        // 注意：subSchemas 参数在这里被接受但不处理，保持兼容性
     }
 };
 
@@ -85,6 +86,20 @@ export const assert = {
             throw new Error(
                 `Unexpected signatureType: ${signatureTypeIndexIfExists}. Valid signature types: ${signatureTypes}`,
             );
+        }
+    },
+    isValidBaseUnitAmount(variableName: string, value: bigint): void {
+        if (typeof value !== 'bigint') {
+            throw new Error(`Expected ${variableName} to be a bigint, got: ${typeof value}`);
+        }
+        if (value < 0n) {
+            throw new Error(`Expected ${variableName} to be a non-negative bigint, got: ${value}`);
+        }
+    },
+    isBigNumber(variableName: string, value: any): void {
+        // 在新的实现中，我们使用 bigint，所以检查是否为 bigint
+        if (typeof value !== 'bigint') {
+            throw new Error(`Expected ${variableName} to be a bigint, got: ${typeof value}`);
         }
     },
 };

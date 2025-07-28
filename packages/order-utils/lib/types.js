@@ -1,4 +1,5 @@
 "use strict";
+// bigint 已替换为 bigint
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TypedDataError = void 0;
 var TypedDataError;

@@ -3,6 +3,8 @@ import { ethers } from 'ethers';
 export declare const assert: {
     isSenderAddressAsync(variableName: string, senderAddressHex: string, providerOrSigner: ethers.Provider | ethers.Signer): Promise<void>;
     isOneOfExpectedSignatureTypes(signature: string, signatureTypes: SignatureType[]): void;
+    isValidBaseUnitAmount(variableName: string, value: bigint): void;
+    isBigNumber(variableName: string, value: any): void;
     assert: Chai.AssertStatic;
     isETHAddressHex(variableName: string, value: string): void;
     isHexString(variableName: string, value: string): void;
@@ -10,5 +12,5 @@ export declare const assert: {
     isString(variableName: string, value: any): void;
     isNumber(variableName: string, value: any): void;
     isBoolean(variableName: string, value: any): void;
-    doesConformToSchema(variableName: string, value: any, schema: object): void;
+    doesConformToSchema(variableName: string, value: any, schema: object, subSchemas?: any[]): void;
 };
