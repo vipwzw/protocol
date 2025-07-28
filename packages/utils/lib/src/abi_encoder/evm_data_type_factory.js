@@ -1,139 +1,132 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
     };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvmDataTypeFactory = exports.Method = exports.Array = exports.Tuple = exports.Pointer = exports.String = exports.DynamicBytes = exports.StaticBytes = exports.UInt = exports.Int = exports.Bool = exports.Address = void 0;
 exports.create = create;
 exports.createMethod = createMethod;
-var _ = require("lodash");
-var signature_parser_1 = require("./utils/signature_parser");
-var address_1 = require("./evm_data_types/address");
-var array_1 = require("./evm_data_types/array");
-var bool_1 = require("./evm_data_types/bool");
-var dynamic_bytes_1 = require("./evm_data_types/dynamic_bytes");
-var int_1 = require("./evm_data_types/int");
-var method_1 = require("./evm_data_types/method");
-var pointer_1 = require("./evm_data_types/pointer");
-var static_bytes_1 = require("./evm_data_types/static_bytes");
-var string_1 = require("./evm_data_types/string");
-var tuple_1 = require("./evm_data_types/tuple");
-var uint_1 = require("./evm_data_types/uint");
-var Address = /** @class */ (function (_super) {
-    __extends(Address, _super);
-    function Address(dataItem) {
-        return _super.call(this, dataItem, EvmDataTypeFactory.getInstance()) || this;
+const _ = __importStar(require("lodash"));
+const signature_parser_1 = require("./utils/signature_parser");
+const address_1 = require("./evm_data_types/address");
+const array_1 = require("./evm_data_types/array");
+const bool_1 = require("./evm_data_types/bool");
+const dynamic_bytes_1 = require("./evm_data_types/dynamic_bytes");
+const int_1 = require("./evm_data_types/int");
+const method_1 = require("./evm_data_types/method");
+const pointer_1 = require("./evm_data_types/pointer");
+const static_bytes_1 = require("./evm_data_types/static_bytes");
+const string_1 = require("./evm_data_types/string");
+const tuple_1 = require("./evm_data_types/tuple");
+const uint_1 = require("./evm_data_types/uint");
+class Address extends address_1.AddressDataType {
+    constructor(dataItem) {
+        super(dataItem, EvmDataTypeFactory.getInstance());
     }
-    return Address;
-}(address_1.AddressDataType));
+}
 exports.Address = Address;
-var Bool = /** @class */ (function (_super) {
-    __extends(Bool, _super);
-    function Bool(dataItem) {
-        return _super.call(this, dataItem, EvmDataTypeFactory.getInstance()) || this;
+class Bool extends bool_1.BoolDataType {
+    constructor(dataItem) {
+        super(dataItem, EvmDataTypeFactory.getInstance());
     }
-    return Bool;
-}(bool_1.BoolDataType));
+}
 exports.Bool = Bool;
-var Int = /** @class */ (function (_super) {
-    __extends(Int, _super);
-    function Int(dataItem) {
-        return _super.call(this, dataItem, EvmDataTypeFactory.getInstance()) || this;
+class Int extends int_1.IntDataType {
+    constructor(dataItem) {
+        super(dataItem, EvmDataTypeFactory.getInstance());
     }
-    return Int;
-}(int_1.IntDataType));
+}
 exports.Int = Int;
-var UInt = /** @class */ (function (_super) {
-    __extends(UInt, _super);
-    function UInt(dataItem) {
-        return _super.call(this, dataItem, EvmDataTypeFactory.getInstance()) || this;
+class UInt extends uint_1.UIntDataType {
+    constructor(dataItem) {
+        super(dataItem, EvmDataTypeFactory.getInstance());
     }
-    return UInt;
-}(uint_1.UIntDataType));
+}
 exports.UInt = UInt;
-var StaticBytes = /** @class */ (function (_super) {
-    __extends(StaticBytes, _super);
-    function StaticBytes(dataItem) {
-        return _super.call(this, dataItem, EvmDataTypeFactory.getInstance()) || this;
+class StaticBytes extends static_bytes_1.StaticBytesDataType {
+    constructor(dataItem) {
+        super(dataItem, EvmDataTypeFactory.getInstance());
     }
-    return StaticBytes;
-}(static_bytes_1.StaticBytesDataType));
+}
 exports.StaticBytes = StaticBytes;
-var DynamicBytes = /** @class */ (function (_super) {
-    __extends(DynamicBytes, _super);
-    function DynamicBytes(dataItem) {
-        return _super.call(this, dataItem, EvmDataTypeFactory.getInstance()) || this;
+class DynamicBytes extends dynamic_bytes_1.DynamicBytesDataType {
+    constructor(dataItem) {
+        super(dataItem, EvmDataTypeFactory.getInstance());
     }
-    return DynamicBytes;
-}(dynamic_bytes_1.DynamicBytesDataType));
+}
 exports.DynamicBytes = DynamicBytes;
-var String = /** @class */ (function (_super) {
-    __extends(String, _super);
-    function String(dataItem) {
-        return _super.call(this, dataItem, EvmDataTypeFactory.getInstance()) || this;
+class String extends string_1.StringDataType {
+    constructor(dataItem) {
+        super(dataItem, EvmDataTypeFactory.getInstance());
     }
-    return String;
-}(string_1.StringDataType));
+}
 exports.String = String;
-var Pointer = /** @class */ (function (_super) {
-    __extends(Pointer, _super);
-    function Pointer(destDataType, parentDataType) {
-        return _super.call(this, destDataType, parentDataType, EvmDataTypeFactory.getInstance()) || this;
+class Pointer extends pointer_1.PointerDataType {
+    constructor(destDataType, parentDataType) {
+        super(destDataType, parentDataType, EvmDataTypeFactory.getInstance());
     }
-    return Pointer;
-}(pointer_1.PointerDataType));
+}
 exports.Pointer = Pointer;
-var Tuple = /** @class */ (function (_super) {
-    __extends(Tuple, _super);
-    function Tuple(dataItem) {
-        return _super.call(this, dataItem, EvmDataTypeFactory.getInstance()) || this;
+class Tuple extends tuple_1.TupleDataType {
+    constructor(dataItem) {
+        super(dataItem, EvmDataTypeFactory.getInstance());
     }
-    return Tuple;
-}(tuple_1.TupleDataType));
+}
 exports.Tuple = Tuple;
-var Array = /** @class */ (function (_super) {
-    __extends(Array, _super);
-    function Array(dataItem) {
-        return _super.call(this, dataItem, EvmDataTypeFactory.getInstance()) || this;
+class Array extends array_1.ArrayDataType {
+    constructor(dataItem) {
+        super(dataItem, EvmDataTypeFactory.getInstance());
     }
-    return Array;
-}(array_1.ArrayDataType));
+}
 exports.Array = Array;
-var Method = /** @class */ (function (_super) {
-    __extends(Method, _super);
-    function Method(abi) {
-        return _super.call(this, abi, EvmDataTypeFactory.getInstance()) || this;
+class Method extends method_1.MethodDataType {
+    constructor(abi) {
+        super(abi, EvmDataTypeFactory.getInstance());
     }
-    return Method;
-}(method_1.MethodDataType));
+}
 exports.Method = Method;
 /* tslint:disable no-construct */
-var EvmDataTypeFactory = /** @class */ (function () {
-    /* tslint:enable prefer-function-over-method */
-    function EvmDataTypeFactory() {
-    }
-    EvmDataTypeFactory.getInstance = function () {
+class EvmDataTypeFactory {
+    static getInstance() {
         if (!EvmDataTypeFactory._instance) {
             EvmDataTypeFactory._instance = new EvmDataTypeFactory();
         }
         return EvmDataTypeFactory._instance;
-    };
+    }
     /* tslint:disable prefer-function-over-method */
-    EvmDataTypeFactory.prototype.create = function (dataItem, parentDataType) {
+    create(dataItem, parentDataType) {
         // Create data type
-        var dataType;
+        let dataType;
         if (Array.matchType(dataItem.type)) {
             dataType = new Array(dataItem);
         }
@@ -163,16 +156,17 @@ var EvmDataTypeFactory = /** @class */ (function () {
         }
         // @TODO: DataTypeement Fixed/UFixed types
         if (dataType === undefined) {
-            throw new Error("Unrecognized data type: '".concat(dataItem.type, "'"));
+            throw new Error(`Unrecognized data type: '${dataItem.type}'`);
         }
         else if (parentDataType !== undefined && !dataType.isStatic()) {
-            var pointerToDataType = new Pointer(dataType, parentDataType);
+            const pointerToDataType = new Pointer(dataType, parentDataType);
             return pointerToDataType;
         }
         return dataType;
-    };
-    return EvmDataTypeFactory;
-}());
+    }
+    /* tslint:enable prefer-function-over-method */
+    constructor() { }
+}
 exports.EvmDataTypeFactory = EvmDataTypeFactory;
 /**
  * Convenience function for creating a DataType from different inputs.
@@ -180,30 +174,30 @@ exports.EvmDataTypeFactory = EvmDataTypeFactory;
  * @return DataType corresponding to input.
  */
 function create(input, nestedDataItems) {
-    var dataItem = consolidateDataItemsIntoSingle(input);
+    let dataItem = consolidateDataItemsIntoSingle(input);
     if (nestedDataItems) {
-        var nestedTypes_1 = _.keyBy(nestedDataItems, 'internalType');
-        var replaceTypes_1 = function (_dataItem) {
-            var aliasedType = _dataItem.type;
+        const nestedTypes = _.keyBy(nestedDataItems, 'internalType');
+        const replaceTypes = (_dataItem) => {
+            const aliasedType = _dataItem.type;
             if (Array.matchType(aliasedType)) {
-                var _a = Array.decodeElementTypeAndLengthFromType(aliasedType), elementType = _a[0], arrayLength = _a[1];
-                if (elementType in nestedTypes_1) {
-                    _dataItem.type = "".concat(nestedTypes_1[elementType].type, "[").concat(arrayLength !== null && arrayLength !== void 0 ? arrayLength : '', "]");
-                    _dataItem.components = nestedTypes_1[elementType].components;
+                const [elementType, arrayLength] = Array.decodeElementTypeAndLengthFromType(aliasedType);
+                if (elementType in nestedTypes) {
+                    _dataItem.type = `${nestedTypes[elementType].type}[${arrayLength ?? ''}]`;
+                    _dataItem.components = nestedTypes[elementType].components;
                 }
             }
-            else if (aliasedType in nestedTypes_1) {
-                _dataItem.type = nestedTypes_1[aliasedType].type;
-                _dataItem.components = nestedTypes_1[aliasedType].components;
+            else if (aliasedType in nestedTypes) {
+                _dataItem.type = nestedTypes[aliasedType].type;
+                _dataItem.components = nestedTypes[aliasedType].components;
             }
             if (_dataItem.components) {
-                _dataItem.components.map(replaceTypes_1);
+                _dataItem.components.map(replaceTypes);
             }
         };
         dataItem = _.cloneDeep(dataItem);
-        replaceTypes_1(dataItem);
+        replaceTypes(dataItem);
     }
-    var dataType = EvmDataTypeFactory.getInstance().create(dataItem);
+    const dataType = EvmDataTypeFactory.getInstance().create(dataItem);
     return dataType;
 }
 /**
@@ -213,9 +207,9 @@ function create(input, nestedDataItems) {
  * @return A single data item corresponding to input.
  */
 function consolidateDataItemsIntoSingle(input) {
-    var dataItem;
+    let dataItem;
     if (_.isArray(input)) {
-        var dataItems = input;
+        const dataItems = input;
         dataItem = {
             name: '',
             type: 'tuple',
@@ -235,9 +229,9 @@ function consolidateDataItemsIntoSingle(input) {
  * @return Method corresponding to input.
  */
 function createMethod(methodName, input, output) {
-    var methodInput = input === undefined ? [] : consolidateDataItemsIntoArray(input);
-    var methodOutput = output === undefined ? [] : consolidateDataItemsIntoArray(output);
-    var methodAbi = {
+    const methodInput = input === undefined ? [] : consolidateDataItemsIntoArray(input);
+    const methodOutput = output === undefined ? [] : consolidateDataItemsIntoArray(output);
+    const methodAbi = {
         name: methodName,
         inputs: methodInput,
         outputs: methodOutput,
@@ -247,7 +241,7 @@ function createMethod(methodName, input, output) {
         payable: false,
         stateMutability: 'nonpayable',
     };
-    var dataType = new Method(methodAbi);
+    const dataType = new Method(methodAbi);
     return dataType;
 }
 /**
@@ -256,14 +250,14 @@ function createMethod(methodName, input, output) {
  * @return Array of data items corresponding to input.
  */
 function consolidateDataItemsIntoArray(input) {
-    var dataItems;
+    let dataItems;
     if (_.isArray(input) && _.isEmpty(input)) {
         dataItems = [];
     }
     else if (_.isArray(input) && _.isString(input[0])) {
         dataItems = [];
-        _.each(input, function (signature) {
-            var dataItem = (0, signature_parser_1.generateDataItemFromSignature)(signature);
+        _.each(input, (signature) => {
+            const dataItem = (0, signature_parser_1.generateDataItemFromSignature)(signature);
             dataItems.push(dataItem);
         });
     }
@@ -271,7 +265,7 @@ function consolidateDataItemsIntoArray(input) {
         dataItems = input;
     }
     else if (typeof input === 'string') {
-        var dataItem = (0, signature_parser_1.generateDataItemFromSignature)(input);
+        const dataItem = (0, signature_parser_1.generateDataItemFromSignature)(input);
         dataItems = [dataItem];
     }
     else {

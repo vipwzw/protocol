@@ -1,14 +1,47 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateDataItemFromSignature = generateDataItemFromSignature;
-var _ = require("lodash");
+const _ = __importStar(require("lodash"));
 function parseNode(node) {
-    var components = [];
-    _.each(node.children, function (child) {
-        var component = parseNode(child);
+    const components = [];
+    _.each(node.children, (child) => {
+        const component = parseNode(child);
         components.push(component);
     });
-    var dataItem = {
+    const dataItem = {
         name: node.name,
         type: node.value,
     };
@@ -28,19 +61,18 @@ function parseNode(node) {
 function generateDataItemFromSignature(signature) {
     // No data item corresponds to an empty signature
     if (_.isEmpty(signature)) {
-        throw new Error("Cannot parse data item from empty signature, ''");
+        throw new Error(`Cannot parse data item from empty signature, ''`);
     }
     // Create a parse tree for data item
-    var node = {
+    let node = {
         name: '',
         value: '',
         children: [],
     };
-    for (var _i = 0, signature_1 = signature; _i < signature_1.length; _i++) {
-        var char = signature_1[_i];
+    for (const char of signature) {
         switch (char) {
             case '(':
-                var child = {
+                const child = {
                     name: '',
                     value: '',
                     children: [],
@@ -54,7 +86,7 @@ function generateDataItemFromSignature(signature) {
                 node = node.parent;
                 break;
             case ',':
-                var sibling = {
+                const sibling = {
                     name: '',
                     value: '',
                     children: [],
@@ -73,6 +105,6 @@ function generateDataItemFromSignature(signature) {
         }
     }
     // Interpret data item from parse tree
-    var dataItem = parseNode(node);
+    const dataItem = parseNode(node);
     return dataItem;
 }

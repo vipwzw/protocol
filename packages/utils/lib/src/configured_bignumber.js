@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BigNumber = void 0;
-var bignumber_js_1 = require("bignumber.js");
+const bignumber_js_1 = require("bignumber.js");
 Object.defineProperty(exports, "BigNumber", { enumerable: true, get: function () { return bignumber_js_1.BigNumber; } });
 bignumber_js_1.BigNumber.config({
     // By default BigNumber's `toString` method converts to exponential notation if the value has
@@ -15,13 +15,13 @@ bignumber_js_1.BigNumber.config({
 });
 // Set a debug print function for NodeJS
 // Upstream issue: https://github.com/MikeMcl/bignumber.js/issues/188
-var isNode = require("detect-node");
+const isNode = require('detect-node');
 if (isNode) {
     // Dynamically load a NodeJS specific module.
     // TypeScript requires all imports to be global, so we need to use
     // `const` here and disable the tslint warning.
     // tslint:disable-next-line: no-var-requires
-    var util = require('util');
+    const util = require('util');
     // Set a custom util.inspect function
     // HACK: We add a function to the BigNumber class by assigning to the
     //       prototype. The function name is a symbol provided by Node.
@@ -36,11 +36,5 @@ if (isNode) {
 }
 // HACK: CLobber config and set to prevent imported packages from poisoning
 // global BigNumber config
-(function (orig) { return (bignumber_js_1.BigNumber.config = function () {
-    var _args = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        _args[_i] = arguments[_i];
-    }
-    return orig({});
-}); })(bignumber_js_1.BigNumber.config);
+(orig => (bignumber_js_1.BigNumber.config = (..._args) => orig({})))(bignumber_js_1.BigNumber.config);
 bignumber_js_1.BigNumber.set = bignumber_js_1.BigNumber.config;

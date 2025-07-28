@@ -1,22 +1,7 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PoolNotFinalizedError = exports.PreviousEpochNotFinalizedError = exports.ProxyDestinationCannotBeNilError = exports.InitializationError = exports.InvalidProtocolFeePaymentError = exports.InvalidParamValueError = exports.PoolExistenceError = exports.OperatorShareError = exports.OnlyCallableIfNotInCatastrophicFailureError = exports.OnlyCallableIfInCatastrophicFailureError = exports.OnlyCallableByStakingContractError = exports.BlockTimestampTooLowError = exports.MakerPoolAssignmentError = exports.OnlyCallableByPoolOperatorError = exports.InsufficientBalanceError = exports.ExchangeManagerError = exports.OnlyCallableByExchangeError = exports.ExchangeManagerErrorCodes = exports.InitializationErrorCodes = exports.InvalidParamValueErrorCodes = exports.OperatorShareErrorCodes = exports.MakerPoolAssignmentErrorCodes = void 0;
-var revert_error_1 = require("../../revert_error");
+const revert_error_1 = require("../../revert_error");
 // tslint:disable:max-classes-per-file
 var MakerPoolAssignmentErrorCodes;
 (function (MakerPoolAssignmentErrorCodes) {
@@ -48,164 +33,130 @@ var ExchangeManagerErrorCodes;
     ExchangeManagerErrorCodes[ExchangeManagerErrorCodes["ExchangeAlreadyRegistered"] = 0] = "ExchangeAlreadyRegistered";
     ExchangeManagerErrorCodes[ExchangeManagerErrorCodes["ExchangeNotRegistered"] = 1] = "ExchangeNotRegistered";
 })(ExchangeManagerErrorCodes || (exports.ExchangeManagerErrorCodes = ExchangeManagerErrorCodes = {}));
-var OnlyCallableByExchangeError = /** @class */ (function (_super) {
-    __extends(OnlyCallableByExchangeError, _super);
-    function OnlyCallableByExchangeError(senderAddress) {
-        return _super.call(this, 'OnlyCallableByExchangeError', 'OnlyCallableByExchangeError(address senderAddress)', { senderAddress: senderAddress }) || this;
+class OnlyCallableByExchangeError extends revert_error_1.RevertError {
+    constructor(senderAddress) {
+        super('OnlyCallableByExchangeError', 'OnlyCallableByExchangeError(address senderAddress)', { senderAddress });
     }
-    return OnlyCallableByExchangeError;
-}(revert_error_1.RevertError));
+}
 exports.OnlyCallableByExchangeError = OnlyCallableByExchangeError;
-var ExchangeManagerError = /** @class */ (function (_super) {
-    __extends(ExchangeManagerError, _super);
-    function ExchangeManagerError(errorCode, senderAddress) {
-        return _super.call(this, 'ExchangeManagerError', 'ExchangeManagerError(uint8 errorCode, address senderAddress)', {
-            errorCode: errorCode,
-            senderAddress: senderAddress,
-        }) || this;
+class ExchangeManagerError extends revert_error_1.RevertError {
+    constructor(errorCode, senderAddress) {
+        super('ExchangeManagerError', 'ExchangeManagerError(uint8 errorCode, address senderAddress)', {
+            errorCode,
+            senderAddress,
+        });
     }
-    return ExchangeManagerError;
-}(revert_error_1.RevertError));
+}
 exports.ExchangeManagerError = ExchangeManagerError;
-var InsufficientBalanceError = /** @class */ (function (_super) {
-    __extends(InsufficientBalanceError, _super);
-    function InsufficientBalanceError(amount, balance) {
-        return _super.call(this, 'InsufficientBalanceError', 'InsufficientBalanceError(uint256 amount, uint256 balance)', {
-            amount: amount,
-            balance: balance,
-        }) || this;
+class InsufficientBalanceError extends revert_error_1.RevertError {
+    constructor(amount, balance) {
+        super('InsufficientBalanceError', 'InsufficientBalanceError(uint256 amount, uint256 balance)', {
+            amount,
+            balance,
+        });
     }
-    return InsufficientBalanceError;
-}(revert_error_1.RevertError));
+}
 exports.InsufficientBalanceError = InsufficientBalanceError;
-var OnlyCallableByPoolOperatorError = /** @class */ (function (_super) {
-    __extends(OnlyCallableByPoolOperatorError, _super);
-    function OnlyCallableByPoolOperatorError(senderAddress, poolId) {
-        return _super.call(this, 'OnlyCallableByPoolOperatorError', 'OnlyCallableByPoolOperatorError(address senderAddress, bytes32 poolId)', { senderAddress: senderAddress, poolId: poolId }) || this;
+class OnlyCallableByPoolOperatorError extends revert_error_1.RevertError {
+    constructor(senderAddress, poolId) {
+        super('OnlyCallableByPoolOperatorError', 'OnlyCallableByPoolOperatorError(address senderAddress, bytes32 poolId)', { senderAddress, poolId });
     }
-    return OnlyCallableByPoolOperatorError;
-}(revert_error_1.RevertError));
+}
 exports.OnlyCallableByPoolOperatorError = OnlyCallableByPoolOperatorError;
-var MakerPoolAssignmentError = /** @class */ (function (_super) {
-    __extends(MakerPoolAssignmentError, _super);
-    function MakerPoolAssignmentError(error, makerAddress, poolId) {
-        return _super.call(this, 'MakerPoolAssignmentError', 'MakerPoolAssignmentError(uint8 error, address makerAddress, bytes32 poolId)', {
-            error: error,
-            makerAddress: makerAddress,
-            poolId: poolId,
-        }) || this;
+class MakerPoolAssignmentError extends revert_error_1.RevertError {
+    constructor(error, makerAddress, poolId) {
+        super('MakerPoolAssignmentError', 'MakerPoolAssignmentError(uint8 error, address makerAddress, bytes32 poolId)', {
+            error,
+            makerAddress,
+            poolId,
+        });
     }
-    return MakerPoolAssignmentError;
-}(revert_error_1.RevertError));
+}
 exports.MakerPoolAssignmentError = MakerPoolAssignmentError;
-var BlockTimestampTooLowError = /** @class */ (function (_super) {
-    __extends(BlockTimestampTooLowError, _super);
-    function BlockTimestampTooLowError(epochEndTime, currentBlockTimestamp) {
-        return _super.call(this, 'BlockTimestampTooLowError', 'BlockTimestampTooLowError(uint256 epochEndTime, uint256 currentBlockTimestamp)', { epochEndTime: epochEndTime, currentBlockTimestamp: currentBlockTimestamp }) || this;
+class BlockTimestampTooLowError extends revert_error_1.RevertError {
+    constructor(epochEndTime, currentBlockTimestamp) {
+        super('BlockTimestampTooLowError', 'BlockTimestampTooLowError(uint256 epochEndTime, uint256 currentBlockTimestamp)', { epochEndTime, currentBlockTimestamp });
     }
-    return BlockTimestampTooLowError;
-}(revert_error_1.RevertError));
+}
 exports.BlockTimestampTooLowError = BlockTimestampTooLowError;
-var OnlyCallableByStakingContractError = /** @class */ (function (_super) {
-    __extends(OnlyCallableByStakingContractError, _super);
-    function OnlyCallableByStakingContractError(senderAddress) {
-        return _super.call(this, 'OnlyCallableByStakingContractError', 'OnlyCallableByStakingContractError(address senderAddress)', {
-            senderAddress: senderAddress,
-        }) || this;
+class OnlyCallableByStakingContractError extends revert_error_1.RevertError {
+    constructor(senderAddress) {
+        super('OnlyCallableByStakingContractError', 'OnlyCallableByStakingContractError(address senderAddress)', {
+            senderAddress,
+        });
     }
-    return OnlyCallableByStakingContractError;
-}(revert_error_1.RevertError));
+}
 exports.OnlyCallableByStakingContractError = OnlyCallableByStakingContractError;
-var OnlyCallableIfInCatastrophicFailureError = /** @class */ (function (_super) {
-    __extends(OnlyCallableIfInCatastrophicFailureError, _super);
-    function OnlyCallableIfInCatastrophicFailureError() {
-        return _super.call(this, 'OnlyCallableIfInCatastrophicFailureError', 'OnlyCallableIfInCatastrophicFailureError()', {}) || this;
+class OnlyCallableIfInCatastrophicFailureError extends revert_error_1.RevertError {
+    constructor() {
+        super('OnlyCallableIfInCatastrophicFailureError', 'OnlyCallableIfInCatastrophicFailureError()', {});
     }
-    return OnlyCallableIfInCatastrophicFailureError;
-}(revert_error_1.RevertError));
+}
 exports.OnlyCallableIfInCatastrophicFailureError = OnlyCallableIfInCatastrophicFailureError;
-var OnlyCallableIfNotInCatastrophicFailureError = /** @class */ (function (_super) {
-    __extends(OnlyCallableIfNotInCatastrophicFailureError, _super);
-    function OnlyCallableIfNotInCatastrophicFailureError() {
-        return _super.call(this, 'OnlyCallableIfNotInCatastrophicFailureError', 'OnlyCallableIfNotInCatastrophicFailureError()', {}) || this;
+class OnlyCallableIfNotInCatastrophicFailureError extends revert_error_1.RevertError {
+    constructor() {
+        super('OnlyCallableIfNotInCatastrophicFailureError', 'OnlyCallableIfNotInCatastrophicFailureError()', {});
     }
-    return OnlyCallableIfNotInCatastrophicFailureError;
-}(revert_error_1.RevertError));
+}
 exports.OnlyCallableIfNotInCatastrophicFailureError = OnlyCallableIfNotInCatastrophicFailureError;
-var OperatorShareError = /** @class */ (function (_super) {
-    __extends(OperatorShareError, _super);
-    function OperatorShareError(error, poolId, operatorShare) {
-        return _super.call(this, 'OperatorShareError', 'OperatorShareError(uint8 error, bytes32 poolId, uint32 operatorShare)', {
-            error: error,
-            poolId: poolId,
-            operatorShare: operatorShare,
-        }) || this;
+class OperatorShareError extends revert_error_1.RevertError {
+    constructor(error, poolId, operatorShare) {
+        super('OperatorShareError', 'OperatorShareError(uint8 error, bytes32 poolId, uint32 operatorShare)', {
+            error,
+            poolId,
+            operatorShare,
+        });
     }
-    return OperatorShareError;
-}(revert_error_1.RevertError));
+}
 exports.OperatorShareError = OperatorShareError;
-var PoolExistenceError = /** @class */ (function (_super) {
-    __extends(PoolExistenceError, _super);
-    function PoolExistenceError(poolId, alreadyExists) {
-        return _super.call(this, 'PoolExistenceError', 'PoolExistenceError(bytes32 poolId, bool alreadyExists)', {
-            poolId: poolId,
-            alreadyExists: alreadyExists,
-        }) || this;
+class PoolExistenceError extends revert_error_1.RevertError {
+    constructor(poolId, alreadyExists) {
+        super('PoolExistenceError', 'PoolExistenceError(bytes32 poolId, bool alreadyExists)', {
+            poolId,
+            alreadyExists,
+        });
     }
-    return PoolExistenceError;
-}(revert_error_1.RevertError));
+}
 exports.PoolExistenceError = PoolExistenceError;
-var InvalidParamValueError = /** @class */ (function (_super) {
-    __extends(InvalidParamValueError, _super);
-    function InvalidParamValueError(error) {
-        return _super.call(this, 'InvalidParamValueError', 'InvalidParamValueError(uint8 error)', {
-            error: error,
-        }) || this;
+class InvalidParamValueError extends revert_error_1.RevertError {
+    constructor(error) {
+        super('InvalidParamValueError', 'InvalidParamValueError(uint8 error)', {
+            error,
+        });
     }
-    return InvalidParamValueError;
-}(revert_error_1.RevertError));
+}
 exports.InvalidParamValueError = InvalidParamValueError;
-var InvalidProtocolFeePaymentError = /** @class */ (function (_super) {
-    __extends(InvalidProtocolFeePaymentError, _super);
-    function InvalidProtocolFeePaymentError(expectedProtocolFeePaid, actualProtocolFeePaid) {
-        return _super.call(this, 'InvalidProtocolFeePaymentError', 'InvalidProtocolFeePaymentError(uint256 expectedProtocolFeePaid, uint256 actualProtocolFeePaid)', { expectedProtocolFeePaid: expectedProtocolFeePaid, actualProtocolFeePaid: actualProtocolFeePaid }) || this;
+class InvalidProtocolFeePaymentError extends revert_error_1.RevertError {
+    constructor(expectedProtocolFeePaid, actualProtocolFeePaid) {
+        super('InvalidProtocolFeePaymentError', 'InvalidProtocolFeePaymentError(uint256 expectedProtocolFeePaid, uint256 actualProtocolFeePaid)', { expectedProtocolFeePaid, actualProtocolFeePaid });
     }
-    return InvalidProtocolFeePaymentError;
-}(revert_error_1.RevertError));
+}
 exports.InvalidProtocolFeePaymentError = InvalidProtocolFeePaymentError;
-var InitializationError = /** @class */ (function (_super) {
-    __extends(InitializationError, _super);
-    function InitializationError(error) {
-        return _super.call(this, 'InitializationError', 'InitializationError(uint8 error)', { error: error }) || this;
+class InitializationError extends revert_error_1.RevertError {
+    constructor(error) {
+        super('InitializationError', 'InitializationError(uint8 error)', { error });
     }
-    return InitializationError;
-}(revert_error_1.RevertError));
+}
 exports.InitializationError = InitializationError;
-var ProxyDestinationCannotBeNilError = /** @class */ (function (_super) {
-    __extends(ProxyDestinationCannotBeNilError, _super);
-    function ProxyDestinationCannotBeNilError() {
-        return _super.call(this, 'ProxyDestinationCannotBeNilError', 'ProxyDestinationCannotBeNilError()', {}) || this;
+class ProxyDestinationCannotBeNilError extends revert_error_1.RevertError {
+    constructor() {
+        super('ProxyDestinationCannotBeNilError', 'ProxyDestinationCannotBeNilError()', {});
     }
-    return ProxyDestinationCannotBeNilError;
-}(revert_error_1.RevertError));
+}
 exports.ProxyDestinationCannotBeNilError = ProxyDestinationCannotBeNilError;
-var PreviousEpochNotFinalizedError = /** @class */ (function (_super) {
-    __extends(PreviousEpochNotFinalizedError, _super);
-    function PreviousEpochNotFinalizedError(closingEpoch, unfinalizedPoolsRemaining) {
-        return _super.call(this, 'PreviousEpochNotFinalizedError', 'PreviousEpochNotFinalizedError(uint256 closingEpoch, uint256 unfinalizedPoolsRemaining)', { closingEpoch: closingEpoch, unfinalizedPoolsRemaining: unfinalizedPoolsRemaining }) || this;
+class PreviousEpochNotFinalizedError extends revert_error_1.RevertError {
+    constructor(closingEpoch, unfinalizedPoolsRemaining) {
+        super('PreviousEpochNotFinalizedError', 'PreviousEpochNotFinalizedError(uint256 closingEpoch, uint256 unfinalizedPoolsRemaining)', { closingEpoch, unfinalizedPoolsRemaining });
     }
-    return PreviousEpochNotFinalizedError;
-}(revert_error_1.RevertError));
+}
 exports.PreviousEpochNotFinalizedError = PreviousEpochNotFinalizedError;
-var PoolNotFinalizedError = /** @class */ (function (_super) {
-    __extends(PoolNotFinalizedError, _super);
-    function PoolNotFinalizedError(poolId, epoch) {
-        return _super.call(this, 'PoolNotFinalizedError', 'PoolNotFinalizedError(bytes32 poolId, uint256 epoch)', { poolId: poolId, epoch: epoch }) || this;
+class PoolNotFinalizedError extends revert_error_1.RevertError {
+    constructor(poolId, epoch) {
+        super('PoolNotFinalizedError', 'PoolNotFinalizedError(bytes32 poolId, uint256 epoch)', { poolId, epoch });
     }
-    return PoolNotFinalizedError;
-}(revert_error_1.RevertError));
+}
 exports.PoolNotFinalizedError = PoolNotFinalizedError;
-var types = [
+const types = [
     BlockTimestampTooLowError,
     ExchangeManagerError,
     InitializationError,
@@ -225,7 +176,6 @@ var types = [
     PoolNotFinalizedError,
 ];
 // Register the types we've defined.
-for (var _i = 0, types_1 = types; _i < types_1.length; _i++) {
-    var type = types_1[_i];
+for (const type of types) {
     revert_error_1.RevertError.registerType(type);
 }

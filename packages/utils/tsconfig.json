@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "outDir": "lib",
-        "rootDir": "src",
+        "rootDir": ".",
         "target": "es2020",
         "lib": ["es2020", "dom"],
         "module": "commonjs",
@@ -12,6 +12,6 @@
         "resolveJsonModule": true,
         "allowSyntheticDefaultImports": true
     },
-    "include": ["src/**/*", "src/types.d.ts"],
-    "exclude": ["node_modules", "lib", "test"]
+    "include": ["src/**/*", "src/types.d.ts", "test/**/*"],
+    "exclude": ["node_modules", "lib"]
 }

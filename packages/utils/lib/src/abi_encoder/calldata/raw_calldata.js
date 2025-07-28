@@ -1,16 +1,48 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RawCalldata = void 0;
-var ethUtil = require("ethereumjs-util");
-var _ = require("lodash");
-var constants_1 = require("../utils/constants");
-var queue_1 = require("../utils/queue");
-var RawCalldata = /** @class */ (function () {
-    function RawCalldata(value, hasSelector) {
-        if (hasSelector === void 0) { hasSelector = true; }
+const ethUtil = __importStar(require("ethereumjs-util"));
+const _ = __importStar(require("lodash"));
+const constants_1 = require("../utils/constants");
+const queue_1 = require("../utils/queue");
+class RawCalldata {
+    constructor(value, hasSelector = true) {
         // Sanity check
         if (typeof value === 'string' && !_.startsWith(value, '0x')) {
-            throw new Error("Expected raw calldata to start with '0x'");
+            throw new Error(`Expected raw calldata to start with '0x'`);
         }
         // Construct initial values
         this._value = ethUtil.toBuffer(value);
@@ -20,61 +52,60 @@ var RawCalldata = /** @class */ (function () {
         this._offset = RawCalldata._INITIAL_OFFSET;
         // If there's a selector then slice it
         if (hasSelector) {
-            var selectorBuf = this._value.slice(constants_1.constants.HEX_SELECTOR_LENGTH_IN_BYTES);
+            const selectorBuf = this._value.slice(constants_1.constants.HEX_SELECTOR_LENGTH_IN_BYTES);
             this._value = this._value.slice(constants_1.constants.HEX_SELECTOR_LENGTH_IN_BYTES);
             this._selector = ethUtil.bufferToHex(selectorBuf);
         }
     }
-    RawCalldata.prototype.popBytes = function (lengthInBytes) {
-        var popBegin = this._offset;
-        var popEnd = popBegin + lengthInBytes;
+    popBytes(lengthInBytes) {
+        const popBegin = this._offset;
+        const popEnd = popBegin + lengthInBytes;
         if (popEnd > this._value.byteLength) {
-            throw new Error("Tried to decode beyond the end of calldata");
+            throw new Error(`Tried to decode beyond the end of calldata`);
         }
-        var value = this._value.slice(popBegin, popEnd);
+        const value = this._value.slice(popBegin, popEnd);
         this.setOffset(popEnd);
         return value;
-    };
-    RawCalldata.prototype.popWord = function () {
-        var wordInBytes = 32;
+    }
+    popWord() {
+        const wordInBytes = 32;
         return this.popBytes(wordInBytes);
-    };
-    RawCalldata.prototype.popWords = function (length) {
-        var wordInBytes = 32;
+    }
+    popWords(length) {
+        const wordInBytes = 32;
         return this.popBytes(length * wordInBytes);
-    };
-    RawCalldata.prototype.readBytes = function (from, to) {
-        var value = this._value.slice(from, to);
+    }
+    readBytes(from, to) {
+        const value = this._value.slice(from, to);
         return value;
-    };
-    RawCalldata.prototype.setOffset = function (offsetInBytes) {
+    }
+    setOffset(offsetInBytes) {
         this._offset = offsetInBytes;
-    };
-    RawCalldata.prototype.startScope = function () {
+    }
+    startScope() {
         this._scopes.pushFront(this._offset);
-    };
-    RawCalldata.prototype.endScope = function () {
+    }
+    endScope() {
         this._scopes.popFront();
-    };
-    RawCalldata.prototype.getOffset = function () {
+    }
+    getOffset() {
         return this._offset;
-    };
-    RawCalldata.prototype.toAbsoluteOffset = function (relativeOffset) {
-        var scopeOffset = this._scopes.peekFront();
+    }
+    toAbsoluteOffset(relativeOffset) {
+        const scopeOffset = this._scopes.peekFront();
         if (scopeOffset === undefined) {
-            throw new Error("Tried to access undefined scope.");
+            throw new Error(`Tried to access undefined scope.`);
         }
-        var absoluteOffset = relativeOffset + scopeOffset;
+        const absoluteOffset = relativeOffset + scopeOffset;
         return absoluteOffset;
-    };
-    RawCalldata.prototype.getSelector = function () {
+    }
+    getSelector() {
         return this._selector;
-    };
-    RawCalldata.prototype.getSizeInBytes = function () {
-        var sizeInBytes = this._value.byteLength;
+    }
+    getSizeInBytes() {
+        const sizeInBytes = this._value.byteLength;
         return sizeInBytes;
-    };
-    RawCalldata._INITIAL_OFFSET = 0;
-    return RawCalldata;
-}());
+    }
+}
 exports.RawCalldata = RawCalldata;
+RawCalldata._INITIAL_OFFSET = 0;

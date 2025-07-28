@@ -1,14 +1,47 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Calldata = void 0;
-var ethUtil = require("ethereumjs-util");
-var _ = require("lodash");
-var constants_1 = require("../utils/constants");
-var pointer_1 = require("./blocks/pointer");
-var set_1 = require("./blocks/set");
-var iterator_1 = require("./iterator");
-var Calldata = /** @class */ (function () {
-    function Calldata(rules) {
+const ethUtil = __importStar(require("ethereumjs-util"));
+const _ = __importStar(require("lodash"));
+const constants_1 = require("../utils/constants");
+const pointer_1 = require("./blocks/pointer");
+const set_1 = require("./blocks/set");
+const iterator_1 = require("./iterator");
+class Calldata {
+    constructor(rules) {
         this._rules = rules;
         this._selector = '';
         this._root = undefined;
@@ -16,29 +49,29 @@ var Calldata = /** @class */ (function () {
     /**
      * Sets the root calldata block. This block usually corresponds to a Method.
      */
-    Calldata.prototype.setRoot = function (block) {
+    setRoot(block) {
         this._root = block;
-    };
+    }
     /**
      * Sets the selector to be prepended onto the calldata.
      * If the root block was created by a Method then a selector will likely be set.
      */
-    Calldata.prototype.setSelector = function (selector) {
+    setSelector(selector) {
         if (!_.startsWith(selector, '0x')) {
-            throw new Error("Expected selector to be hex. Missing prefix '0x'");
+            throw new Error(`Expected selector to be hex. Missing prefix '0x'`);
         }
         else if (selector.length !== constants_1.constants.HEX_SELECTOR_LENGTH_IN_CHARS) {
-            throw new Error("Invalid selector '".concat(selector, "'"));
+            throw new Error(`Invalid selector '${selector}'`);
         }
         this._selector = selector;
-    };
+    }
     /**
      * Iterates through the calldata blocks, starting from the root block, to construct calldata as a hex string.
      * If the `optimize` flag is set then this calldata will be condensed, to save gas.
      * If the `annotate` flag is set then this will return human-readable calldata.
      * If the `annotate` flag is *not* set then this will return EVM-compatible calldata.
      */
-    Calldata.prototype.toString = function () {
+    toString() {
         // Sanity check: root block must be set
         if (this._root === undefined) {
             throw new Error('expected root');
@@ -48,19 +81,18 @@ var Calldata = /** @class */ (function () {
             this._optimize();
         }
         // Set offsets
-        var iterator = new iterator_1.CalldataIterator(this._root);
-        var offset = 0;
-        for (var _i = 0, iterator_2 = iterator; _i < iterator_2.length; _i++) {
-            var block = iterator_2[_i];
+        const iterator = new iterator_1.CalldataIterator(this._root);
+        let offset = 0;
+        for (const block of iterator) {
             block.setOffset(offset);
             offset += block.getSizeInBytes();
         }
         // Generate hex string
-        var hexString = this._rules.shouldAnnotate
+        const hexString = this._rules.shouldAnnotate
             ? this._toHumanReadableCallData()
             : this._toEvmCompatibeCallDataHex();
         return hexString;
-    };
+    }
     /**
      * There are three types of calldata blocks: Blob, Set and Pointer.
      * Scenarios arise where distinct pointers resolve to identical values.
@@ -100,23 +132,22 @@ var Calldata = /** @class */ (function () {
      *   At the end of traversing the tree, the candidate at the front of the queue will be the most optimal output.
      *
      */
-    Calldata.prototype._optimize = function () {
+    _optimize() {
         // Step 1/1 Create a reverse iterator (starts from the end of the calldata to the beginning)
         if (this._root === undefined) {
             throw new Error('expected root');
         }
-        var iterator = new iterator_1.ReverseCalldataIterator(this._root);
+        const iterator = new iterator_1.ReverseCalldataIterator(this._root);
         // Step 2/2 Iterate over each block, keeping track of which blocks have been seen and pruning redundant blocks.
-        var blocksByHash = {};
-        for (var _i = 0, iterator_3 = iterator; _i < iterator_3.length; _i++) {
-            var block = iterator_3[_i];
+        const blocksByHash = {};
+        for (const block of iterator) {
             // If a block is a pointer and its value has already been observed, then update
             // the pointer to resolve to the existing value.
             if (block instanceof pointer_1.PointerCalldataBlock) {
-                var dependencyBlockHashBuf = block.getDependency().computeHash();
-                var dependencyBlockHash = ethUtil.bufferToHex(dependencyBlockHashBuf);
+                const dependencyBlockHashBuf = block.getDependency().computeHash();
+                const dependencyBlockHash = ethUtil.bufferToHex(dependencyBlockHashBuf);
                 if (dependencyBlockHash in blocksByHash) {
-                    var blockWithSameHash = blocksByHash[dependencyBlockHash];
+                    const blockWithSameHash = blocksByHash[dependencyBlockHash];
                     if (blockWithSameHash !== block.getDependency()) {
                         block.setAlias(blockWithSameHash);
                     }
@@ -124,31 +155,30 @@ var Calldata = /** @class */ (function () {
                 continue;
             }
             // This block has not been seen. Record its hash.
-            var blockHashBuf = block.computeHash();
-            var blockHash = ethUtil.bufferToHex(blockHashBuf);
+            const blockHashBuf = block.computeHash();
+            const blockHash = ethUtil.bufferToHex(blockHashBuf);
             if (!(blockHash in blocksByHash)) {
                 blocksByHash[blockHash] = block;
             }
         }
-    };
-    Calldata.prototype._toEvmCompatibeCallDataHex = function () {
+    }
+    _toEvmCompatibeCallDataHex() {
         // Sanity check: must have a root block.
         if (this._root === undefined) {
             throw new Error('expected root');
         }
         // Construct an array of buffers (one buffer for each block).
-        var selectorBuffer = ethUtil.toBuffer(this._selector || '0x');
-        var valueBufs = [selectorBuffer];
-        var iterator = new iterator_1.CalldataIterator(this._root);
-        for (var _i = 0, iterator_4 = iterator; _i < iterator_4.length; _i++) {
-            var block = iterator_4[_i];
+        const selectorBuffer = ethUtil.toBuffer(this._selector || '0x');
+        const valueBufs = [selectorBuffer];
+        const iterator = new iterator_1.CalldataIterator(this._root);
+        for (const block of iterator) {
             valueBufs.push(block.toBuffer());
         }
         // Create hex from buffer array.
-        var combinedBuffers = Buffer.concat(valueBufs);
-        var hexValue = ethUtil.bufferToHex(combinedBuffers);
+        const combinedBuffers = Buffer.concat(valueBufs);
+        const hexValue = ethUtil.bufferToHex(combinedBuffers);
         return hexValue;
-    };
+    }
     /**
      * Returns human-readable calldata.
      *
@@ -171,72 +201,70 @@ var Calldata = /** @class */ (function () {
      *   0xe0      0000000000000000000000000000000000000000000000000000000000000005              array2[1]
      *   0x100     576f726c64000000000000000000000000000000000000000000000000000000
      */
-    Calldata.prototype._toHumanReadableCallData = function () {
+    _toHumanReadableCallData() {
         // Sanity check: must have a root block.
         if (this._root === undefined) {
             throw new Error('expected root');
         }
         // Constants for constructing annotated string
-        var offsetPadding = 10;
-        var valuePadding = 74;
-        var namePadding = 80;
-        var evmWordStartIndex = 0;
-        var emptySize = 0;
+        const offsetPadding = 10;
+        const valuePadding = 74;
+        const namePadding = 80;
+        const evmWordStartIndex = 0;
+        const emptySize = 0;
         // Construct annotated calldata
-        var hexValue = "".concat(this._selector);
-        var offset = 0;
-        var functionName = this._root.getName();
-        var iterator = new iterator_1.CalldataIterator(this._root);
-        for (var _i = 0, iterator_5 = iterator; _i < iterator_5.length; _i++) {
-            var block = iterator_5[_i];
+        let hexValue = `${this._selector}`;
+        let offset = 0;
+        const functionName = this._root.getName();
+        const iterator = new iterator_1.CalldataIterator(this._root);
+        for (const block of iterator) {
             // Process each block 1 word at a time
-            var size = block.getSizeInBytes();
-            var name_1 = block.getName();
-            var parentName = block.getParentName();
-            var prettyName = name_1.replace("".concat(parentName, "."), '').replace("".concat(functionName, "."), '');
+            const size = block.getSizeInBytes();
+            const name = block.getName();
+            const parentName = block.getParentName();
+            const prettyName = name.replace(`${parentName}.`, '').replace(`${functionName}.`, '');
             // Resulting line will be <offsetStr><valueStr><nameStr>
-            var offsetStr = '';
-            var valueStr = '';
-            var nameStr = '';
-            var lineStr = '';
+            let offsetStr = '';
+            let valueStr = '';
+            let nameStr = '';
+            let lineStr = '';
             if (size === emptySize) {
                 // This is a Set block with no header.
                 // For example, a tuple or an array with a defined length.
                 offsetStr = ' '.repeat(offsetPadding);
                 valueStr = ' '.repeat(valuePadding);
-                nameStr = "### ".concat(prettyName.padEnd(namePadding));
-                lineStr = "\n".concat(offsetStr).concat(valueStr).concat(nameStr);
+                nameStr = `### ${prettyName.padEnd(namePadding)}`;
+                lineStr = `\n${offsetStr}${valueStr}${nameStr}`;
             }
             else {
                 // This block has at least one word of value.
-                offsetStr = "0x".concat(offset.toString(constants_1.constants.HEX_BASE)).padEnd(offsetPadding);
+                offsetStr = `0x${offset.toString(constants_1.constants.HEX_BASE)}`.padEnd(offsetPadding);
                 valueStr = ethUtil
                     .stripHexPrefix(ethUtil.bufferToHex(block.toBuffer().slice(evmWordStartIndex, constants_1.constants.EVM_WORD_WIDTH_IN_BYTES)))
                     .padEnd(valuePadding);
                 if (block instanceof set_1.SetCalldataBlock) {
-                    nameStr = "### ".concat(prettyName.padEnd(namePadding));
-                    lineStr = "\n".concat(offsetStr).concat(valueStr).concat(nameStr);
+                    nameStr = `### ${prettyName.padEnd(namePadding)}`;
+                    lineStr = `\n${offsetStr}${valueStr}${nameStr}`;
                 }
                 else {
-                    nameStr = "    ".concat(prettyName.padEnd(namePadding));
-                    lineStr = "".concat(offsetStr).concat(valueStr).concat(nameStr);
+                    nameStr = `    ${prettyName.padEnd(namePadding)}`;
+                    lineStr = `${offsetStr}${valueStr}${nameStr}`;
                 }
             }
             // This block has a value that is more than 1 word.
-            for (var j = constants_1.constants.EVM_WORD_WIDTH_IN_BYTES; j < size; j += constants_1.constants.EVM_WORD_WIDTH_IN_BYTES) {
-                offsetStr = "0x".concat((offset + j).toString(constants_1.constants.HEX_BASE)).padEnd(offsetPadding);
+            for (let j = constants_1.constants.EVM_WORD_WIDTH_IN_BYTES; j < size; j += constants_1.constants.EVM_WORD_WIDTH_IN_BYTES) {
+                offsetStr = `0x${(offset + j).toString(constants_1.constants.HEX_BASE)}`.padEnd(offsetPadding);
                 valueStr = ethUtil
                     .stripHexPrefix(ethUtil.bufferToHex(block.toBuffer().slice(j, j + constants_1.constants.EVM_WORD_WIDTH_IN_BYTES)))
                     .padEnd(valuePadding);
                 nameStr = ' '.repeat(namePadding);
-                lineStr = "".concat(lineStr, "\n").concat(offsetStr).concat(valueStr).concat(nameStr);
+                lineStr = `${lineStr}\n${offsetStr}${valueStr}${nameStr}`;
             }
             // Append to hex value
-            hexValue = "".concat(hexValue, "\n").concat(lineStr);
+            hexValue = `${hexValue}\n${lineStr}`;
             offset += size;
         }
         return hexValue;
-    };
-    return Calldata;
-}());
+    }
+}
 exports.Calldata = Calldata;

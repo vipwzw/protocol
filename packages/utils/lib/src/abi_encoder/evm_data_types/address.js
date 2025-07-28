@@ -1,65 +1,80 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
     };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AddressDataType = void 0;
-var ethereum_types_1 = require("ethereum-types");
-var ethUtil = require("ethereumjs-util");
-var _ = require("lodash");
-var blob_1 = require("../abstract_data_types/types/blob");
-var constants_1 = require("../utils/constants");
-var AddressDataType = /** @class */ (function (_super) {
-    __extends(AddressDataType, _super);
-    function AddressDataType(dataItem, dataTypeFactory) {
-        var _this = _super.call(this, dataItem, dataTypeFactory, AddressDataType._SIZE_KNOWN_AT_COMPILE_TIME) || this;
-        if (!AddressDataType.matchType(dataItem.type)) {
-            throw new Error("Tried to instantiate Address with bad input: ".concat(dataItem));
-        }
-        return _this;
-    }
-    AddressDataType.matchType = function (type) {
+const ethereum_types_1 = require("ethereum-types");
+const ethUtil = __importStar(require("ethereumjs-util"));
+const _ = __importStar(require("lodash"));
+const blob_1 = require("../abstract_data_types/types/blob");
+const constants_1 = require("../utils/constants");
+class AddressDataType extends blob_1.AbstractBlobDataType {
+    static matchType(type) {
         return type === ethereum_types_1.SolidityTypes.Address;
-    };
+    }
+    constructor(dataItem, dataTypeFactory) {
+        super(dataItem, dataTypeFactory, AddressDataType._SIZE_KNOWN_AT_COMPILE_TIME);
+        if (!AddressDataType.matchType(dataItem.type)) {
+            throw new Error(`Tried to instantiate Address with bad input: ${dataItem}`);
+        }
+    }
     // Disable prefer-function-over-method for inherited abstract methods.
     /* tslint:disable prefer-function-over-method */
-    AddressDataType.prototype.encodeValue = function (value) {
+    encodeValue(value) {
         if (!ethUtil.isValidAddress(value)) {
-            throw new Error("Invalid address: '".concat(value, "'"));
+            throw new Error(`Invalid address: '${value}'`);
         }
-        var valueBuf = ethUtil.toBuffer(value);
-        var encodedValueBuf = ethUtil.setLengthLeft(valueBuf, constants_1.constants.EVM_WORD_WIDTH_IN_BYTES);
+        const valueBuf = ethUtil.toBuffer(value);
+        const encodedValueBuf = ethUtil.setLengthLeft(valueBuf, constants_1.constants.EVM_WORD_WIDTH_IN_BYTES);
         return encodedValueBuf;
-    };
-    AddressDataType.prototype.decodeValue = function (calldata) {
-        var valueBufPadded = calldata.popWord();
-        var valueBuf = valueBufPadded.slice(AddressDataType._DECODED_ADDRESS_OFFSET_IN_BYTES);
-        var value = ethUtil.bufferToHex(valueBuf);
-        var valueLowercase = _.toLower(value);
+    }
+    decodeValue(calldata) {
+        const valueBufPadded = calldata.popWord();
+        const valueBuf = valueBufPadded.slice(AddressDataType._DECODED_ADDRESS_OFFSET_IN_BYTES);
+        const value = ethUtil.bufferToHex(valueBuf);
+        const valueLowercase = _.toLower(value);
         return valueLowercase;
-    };
-    AddressDataType.prototype.getDefaultValue = function () {
+    }
+    getDefaultValue() {
         return AddressDataType._DEFAULT_VALUE;
-    };
-    AddressDataType.prototype.getSignatureType = function () {
+    }
+    getSignatureType() {
         return ethereum_types_1.SolidityTypes.Address;
-    };
-    AddressDataType._SIZE_KNOWN_AT_COMPILE_TIME = true;
-    AddressDataType._ADDRESS_SIZE_IN_BYTES = 20;
-    AddressDataType._DECODED_ADDRESS_OFFSET_IN_BYTES = constants_1.constants.EVM_WORD_WIDTH_IN_BYTES - AddressDataType._ADDRESS_SIZE_IN_BYTES;
-    AddressDataType._DEFAULT_VALUE = '0x0000000000000000000000000000000000000000';
-    return AddressDataType;
-}(blob_1.AbstractBlobDataType));
+    }
+}
 exports.AddressDataType = AddressDataType;
+AddressDataType._SIZE_KNOWN_AT_COMPILE_TIME = true;
+AddressDataType._ADDRESS_SIZE_IN_BYTES = 20;
+AddressDataType._DECODED_ADDRESS_OFFSET_IN_BYTES = constants_1.constants.EVM_WORD_WIDTH_IN_BYTES - AddressDataType._ADDRESS_SIZE_IN_BYTES;
+AddressDataType._DEFAULT_VALUE = '0x0000000000000000000000000000000000000000';

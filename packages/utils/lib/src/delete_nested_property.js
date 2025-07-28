@@ -6,13 +6,13 @@ exports.deleteNestedProperty = void 0;
  * @param propPath the full dot-separated path to the property to delete, e.g. 'animals.mammals.dog.name'
  * returns void
  */
-var deleteNestedProperty = function (obj, propPath) {
+const deleteNestedProperty = (obj, propPath) => {
     if (!obj || !propPath) {
         return;
     }
-    var propPathParts = propPath.split('.');
-    var _obj = obj;
-    for (var i = 0; i < propPathParts.length - 1; i++) {
+    const propPathParts = propPath.split('.');
+    let _obj = obj;
+    for (let i = 0; i < propPathParts.length - 1; i++) {
         _obj = _obj[propPathParts[i]];
         if (typeof _obj === 'undefined') {
             return;

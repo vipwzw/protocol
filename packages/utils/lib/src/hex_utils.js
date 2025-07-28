@@ -1,71 +1,96 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.hexUtils = void 0;
-var crypto = require("crypto");
-var ethUtil = require("ethereumjs-util");
-var configured_bignumber_1 = require("./configured_bignumber");
+const crypto = __importStar(require("crypto"));
+const ethUtil = __importStar(require("ethereumjs-util"));
+const configured_bignumber_1 = require("./configured_bignumber");
 // tslint:disable:custom-no-magic-numbers
-var WORD_LENGTH = 32;
-var WORD_CEIL = new configured_bignumber_1.BigNumber(2).pow(WORD_LENGTH * 8);
+const WORD_LENGTH = 32;
+const WORD_CEIL = new configured_bignumber_1.BigNumber(2).pow(WORD_LENGTH * 8);
 exports.hexUtils = {
-    concat: concat,
-    random: random,
-    leftPad: leftPad,
-    rightPad: rightPad,
-    invert: invert,
-    slice: slice,
-    hash: hash,
-    size: size,
-    toHex: toHex,
-    isHex: isHex,
+    concat,
+    random,
+    leftPad,
+    rightPad,
+    invert,
+    slice,
+    hash,
+    size,
+    toHex,
+    isHex,
 };
 /**
  * Concatenate all arguments as a hex string.
  */
-function concat() {
-    var args = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        args[_i] = arguments[_i];
-    }
-    return ethUtil.bufferToHex(Buffer.concat(args.map(function (h) { return ethUtil.toBuffer(h); })));
+function concat(...args) {
+    return ethUtil.bufferToHex(Buffer.concat(args.map(h => ethUtil.toBuffer(h))));
 }
 /**
  * Generate a random hex string.
  */
-function random(_size) {
-    if (_size === void 0) { _size = WORD_LENGTH; }
+function random(_size = WORD_LENGTH) {
     return ethUtil.bufferToHex(crypto.randomBytes(_size));
 }
 /**
  * Left-pad a hex number to a number of bytes.
  */
-function leftPad(n, _size) {
-    if (_size === void 0) { _size = WORD_LENGTH; }
+function leftPad(n, _size = WORD_LENGTH) {
     return ethUtil.bufferToHex(ethUtil.setLengthLeft(ethUtil.toBuffer(exports.hexUtils.toHex(n)), _size));
 }
 /**
  * Right-pad a hex number to a number of bytes.
  */
-function rightPad(n, _size) {
-    if (_size === void 0) { _size = WORD_LENGTH; }
+function rightPad(n, _size = WORD_LENGTH) {
     return ethUtil.bufferToHex(ethUtil.setLengthRight(ethUtil.toBuffer(exports.hexUtils.toHex(n)), _size));
 }
 /**
  * Inverts a hex word.
  */
-function invert(n, _size) {
-    if (_size === void 0) { _size = WORD_LENGTH; }
-    var buf = ethUtil.setLengthLeft(ethUtil.toBuffer(exports.hexUtils.toHex(n)), _size);
+function invert(n, _size = WORD_LENGTH) {
+    const buf = ethUtil.setLengthLeft(ethUtil.toBuffer(exports.hexUtils.toHex(n)), _size);
     // tslint:disable-next-line: no-bitwise
-    return ethUtil.bufferToHex(Buffer.from(buf.map(function (b) { return ~b; })));
+    return ethUtil.bufferToHex(Buffer.from(buf.map(b => ~b)));
 }
 /**
  * Slices a hex number.
  */
 function slice(n, start, end) {
-    var hex = exports.hexUtils.toHex(n).substr(2);
-    var sliceStart = start >= 0 ? start * 2 : Math.max(0, hex.length + start * 2);
-    var sliceEnd = hex.length;
+    const hex = exports.hexUtils.toHex(n).substr(2);
+    const sliceStart = start >= 0 ? start * 2 : Math.max(0, hex.length + start * 2);
+    let sliceEnd = hex.length;
     if (end !== undefined) {
         sliceEnd = end >= 0 ? end * 2 : Math.max(0, hex.length + end * 2);
     }
@@ -75,7 +100,7 @@ function slice(n, start, end) {
  * Get the keccak hash of some data.
  */
 function hash(n) {
-    var buf = Buffer.isBuffer(n) ? n : ethUtil.toBuffer(exports.hexUtils.toHex(n));
+    const buf = Buffer.isBuffer(n) ? n : ethUtil.toBuffer(exports.hexUtils.toHex(n));
     return ethUtil.bufferToHex(ethUtil.keccak256(buf));
 }
 /**
@@ -88,22 +113,21 @@ function size(hex) {
  * Convert a string, a number, a Buffer, or a BigNumber into a hex string.
  * Works with negative numbers, as well.
  */
-function toHex(n, _size) {
-    if (_size === void 0) { _size = WORD_LENGTH; }
+function toHex(n, _size = WORD_LENGTH) {
     if (Buffer.isBuffer(n)) {
-        return "0x".concat(n.toString('hex'));
+        return `0x${n.toString('hex')}`;
     }
     if (typeof n === 'string' && isHex(n)) {
         // Already a hex.
         return n;
     }
-    var _n = new configured_bignumber_1.BigNumber(n);
+    let _n = new configured_bignumber_1.BigNumber(n);
     if (_n.isNegative()) {
         // Perform two's-complement.
         // prettier-ignore
         _n = new configured_bignumber_1.BigNumber(invert(toHex(_n.abs()), _size).substr(2), 16).plus(1).mod(WORD_CEIL);
     }
-    return "0x".concat(_n.toString(16));
+    return `0x${_n.toString(16)}`;
 }
 /**
  * Check if a string is a hex string.

@@ -1,88 +1,103 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
     };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StaticBytesDataType = void 0;
-var ethereum_types_1 = require("ethereum-types");
-var ethUtil = require("ethereumjs-util");
-var _ = require("lodash");
-var blob_1 = require("../abstract_data_types/types/blob");
-var constants_1 = require("../utils/constants");
-var StaticBytesDataType = /** @class */ (function (_super) {
-    __extends(StaticBytesDataType, _super);
-    function StaticBytesDataType(dataItem, dataTypeFactory) {
-        var _this = _super.call(this, dataItem, dataTypeFactory, StaticBytesDataType._SIZE_KNOWN_AT_COMPILE_TIME) || this;
-        if (!StaticBytesDataType.matchType(dataItem.type)) {
-            throw new Error("Tried to instantiate Static Bytes with bad input: ".concat(dataItem));
-        }
-        _this._width = StaticBytesDataType._decodeWidthFromType(dataItem.type);
-        return _this;
-    }
-    StaticBytesDataType.matchType = function (type) {
+const ethereum_types_1 = require("ethereum-types");
+const ethUtil = __importStar(require("ethereumjs-util"));
+const _ = __importStar(require("lodash"));
+const blob_1 = require("../abstract_data_types/types/blob");
+const constants_1 = require("../utils/constants");
+class StaticBytesDataType extends blob_1.AbstractBlobDataType {
+    static matchType(type) {
         return StaticBytesDataType._MATCHER.test(type);
-    };
-    StaticBytesDataType._decodeWidthFromType = function (type) {
-        var matches = StaticBytesDataType._MATCHER.exec(type);
-        var width = matches !== null && matches.length === 3 && matches[2] !== undefined
+    }
+    static _decodeWidthFromType(type) {
+        const matches = StaticBytesDataType._MATCHER.exec(type);
+        const width = matches !== null && matches.length === 3 && matches[2] !== undefined
             ? parseInt(matches[2], constants_1.constants.DEC_BASE)
             : StaticBytesDataType._DEFAULT_WIDTH;
         return width;
-    };
-    StaticBytesDataType.prototype.getSignatureType = function () {
+    }
+    constructor(dataItem, dataTypeFactory) {
+        super(dataItem, dataTypeFactory, StaticBytesDataType._SIZE_KNOWN_AT_COMPILE_TIME);
+        if (!StaticBytesDataType.matchType(dataItem.type)) {
+            throw new Error(`Tried to instantiate Static Bytes with bad input: ${dataItem}`);
+        }
+        this._width = StaticBytesDataType._decodeWidthFromType(dataItem.type);
+    }
+    getSignatureType() {
         // Note that `byte` reduces to `bytes1`
-        return "".concat(ethereum_types_1.SolidityTypes.Bytes).concat(this._width);
-    };
-    StaticBytesDataType.prototype.encodeValue = function (value) {
+        return `${ethereum_types_1.SolidityTypes.Bytes}${this._width}`;
+    }
+    encodeValue(value) {
         // 1/2 Convert value into a buffer and do bounds checking
         this._sanityCheckValue(value);
-        var valueBuf = ethUtil.toBuffer(value);
+        const valueBuf = ethUtil.toBuffer(value);
         // 2/2 Store value as hex
-        var valuePadded = ethUtil.setLengthRight(valueBuf, constants_1.constants.EVM_WORD_WIDTH_IN_BYTES);
+        const valuePadded = ethUtil.setLengthRight(valueBuf, constants_1.constants.EVM_WORD_WIDTH_IN_BYTES);
         return valuePadded;
-    };
-    StaticBytesDataType.prototype.decodeValue = function (calldata) {
-        var valueBufPadded = calldata.popWord();
-        var valueBuf = valueBufPadded.slice(0, this._width);
-        var value = ethUtil.bufferToHex(valueBuf);
+    }
+    decodeValue(calldata) {
+        const valueBufPadded = calldata.popWord();
+        const valueBuf = valueBufPadded.slice(0, this._width);
+        const value = ethUtil.bufferToHex(valueBuf);
         this._sanityCheckValue(value);
         return value;
-    };
-    StaticBytesDataType.prototype.getDefaultValue = function () {
-        var valueBufPadded = constants_1.constants.EMPTY_EVM_WORD_BUFFER;
-        var valueBuf = valueBufPadded.slice(0, this._width);
-        var value = ethUtil.bufferToHex(valueBuf);
+    }
+    getDefaultValue() {
+        const valueBufPadded = constants_1.constants.EMPTY_EVM_WORD_BUFFER;
+        const valueBuf = valueBufPadded.slice(0, this._width);
+        const value = ethUtil.bufferToHex(valueBuf);
         return value;
-    };
-    StaticBytesDataType.prototype._sanityCheckValue = function (value) {
+    }
+    _sanityCheckValue(value) {
         if (typeof value === 'string') {
             if (!_.startsWith(value, '0x')) {
-                throw new Error("Tried to encode non-hex value. Value must include '0x' prefix.");
+                throw new Error(`Tried to encode non-hex value. Value must include '0x' prefix.`);
             }
             else if (value.length % 2 !== 0) {
-                throw new Error("Tried to assign ".concat(value, ", which is contains a half-byte. Use full bytes only."));
+                throw new Error(`Tried to assign ${value}, which is contains a half-byte. Use full bytes only.`);
             }
         }
-        var valueBuf = ethUtil.toBuffer(value);
+        const valueBuf = ethUtil.toBuffer(value);
         if (valueBuf.byteLength > this._width) {
-            throw new Error("Tried to assign ".concat(value, " (").concat(valueBuf.byteLength, " bytes), which exceeds max bytes that can be stored in a ").concat(this.getSignature()));
+            throw new Error(`Tried to assign ${value} (${valueBuf.byteLength} bytes), which exceeds max bytes that can be stored in a ${this.getSignature()}`);
         }
-    };
-    StaticBytesDataType._SIZE_KNOWN_AT_COMPILE_TIME = true;
-    StaticBytesDataType._MATCHER = RegExp('^(byte|bytes(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32))$');
-    StaticBytesDataType._DEFAULT_WIDTH = 1;
-    return StaticBytesDataType;
-}(blob_1.AbstractBlobDataType));
+    }
+}
 exports.StaticBytesDataType = StaticBytesDataType;
+StaticBytesDataType._SIZE_KNOWN_AT_COMPILE_TIME = true;
+StaticBytesDataType._MATCHER = RegExp('^(byte|bytes(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32))$');
+StaticBytesDataType._DEFAULT_WIDTH = 1;

@@ -1,24 +1,46 @@
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
     };
-    return __assign.apply(this, arguments);
-};
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var chai = require("chai");
+const chai = __importStar(require("chai"));
 require("mocha");
-var sign_typed_data_utils_1 = require("../src/sign_typed_data_utils");
-var expect = chai.expect;
-describe('signTypedDataUtils', function () {
-    describe('signTypedDataHash', function () {
-        var simpleSignTypedDataHashHex = '0xb460d69ca60383293877cd765c0f97bd832d66bca720f7e32222ce1118832493';
-        var simpleSignTypedData = {
+const sign_typed_data_utils_1 = require("../src/sign_typed_data_utils");
+const expect = chai.expect;
+describe('signTypedDataUtils', () => {
+    describe('signTypedDataHash', () => {
+        const simpleSignTypedDataHashHex = '0xb460d69ca60383293877cd765c0f97bd832d66bca720f7e32222ce1118832493';
+        const simpleSignTypedData = {
             types: {
                 EIP712Domain: [
                     {
@@ -46,8 +68,8 @@ describe('signTypedDataUtils', function () {
             },
             primaryType: 'Test',
         };
-        var orderSignTypedDataHashHex = '0x78772b297e1b0b31089589a6608930cceba855af9d3ccf7b92cf47fa881e21f7';
-        var orderSignTypedData = {
+        const orderSignTypedDataHashHex = '0x78772b297e1b0b31089589a6608930cceba855af9d3ccf7b92cf47fa881e21f7';
+        const orderSignTypedData = {
             types: {
                 EIP712Domain: [
                     {
@@ -140,18 +162,20 @@ describe('signTypedDataUtils', function () {
             },
             primaryType: 'Order',
         };
-        it('creates a hash of the test sign typed data', function () {
-            var hash = sign_typed_data_utils_1.signTypedDataUtils.generateTypedDataHash(simpleSignTypedData).toString('hex');
-            var hashHex = "0x".concat(hash);
+        it('creates a hash of the test sign typed data', () => {
+            const hash = sign_typed_data_utils_1.signTypedDataUtils.generateTypedDataHash(simpleSignTypedData).toString('hex');
+            const hashHex = `0x${hash}`;
             expect(hashHex).to.be.eq(simpleSignTypedDataHashHex);
         });
-        it('creates a hash of the order sign typed data', function () {
-            var hash = sign_typed_data_utils_1.signTypedDataUtils.generateTypedDataHash(orderSignTypedData).toString('hex');
-            var hashHex = "0x".concat(hash);
+        it('creates a hash of the order sign typed data', () => {
+            const hash = sign_typed_data_utils_1.signTypedDataUtils.generateTypedDataHash(orderSignTypedData).toString('hex');
+            const hashHex = `0x${hash}`;
             expect(hashHex).to.be.eq(orderSignTypedDataHashHex);
         });
-        it('creates a hash of an uninitialized order', function () {
-            var uninitializedOrder = __assign(__assign({}, orderSignTypedData), { message: {
+        it('creates a hash of an uninitialized order', () => {
+            const uninitializedOrder = {
+                ...orderSignTypedData,
+                message: {
                     makerAddress: '0x0000000000000000000000000000000000000000',
                     takerAddress: '0x0000000000000000000000000000000000000000',
                     makerAssetAmount: 0,
@@ -164,9 +188,10 @@ describe('signTypedDataUtils', function () {
                     salt: 0,
                     makerAssetData: '0x0000000000000000000000000000000000000000',
                     takerAssetData: '0x0000000000000000000000000000000000000000',
-                } });
-            var hash = sign_typed_data_utils_1.signTypedDataUtils.generateTypedDataHash(uninitializedOrder).toString('hex');
-            var hashHex = "0x".concat(hash);
+                },
+            };
+            const hash = sign_typed_data_utils_1.signTypedDataUtils.generateTypedDataHash(uninitializedOrder).toString('hex');
+            const hashHex = `0x${hash}`;
             expect(hashHex).to.be.eq('0x510449a190415c4770080d857a1c654b653a0c054c94a7a8e9f08f623f9e824f');
         });
     });

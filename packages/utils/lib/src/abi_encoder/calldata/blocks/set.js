@@ -1,59 +1,74 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
     };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SetCalldataBlock = void 0;
-var _ = require("lodash");
-var calldata_block_1 = require("../calldata_block");
-var SetCalldataBlock = /** @class */ (function (_super) {
-    __extends(SetCalldataBlock, _super);
-    function SetCalldataBlock(name, signature, parentName) {
-        var _this = _super.call(this, name, signature, parentName, 0, 0) || this;
-        _this._members = [];
-        _this._header = undefined;
-        return _this;
+const _ = __importStar(require("lodash"));
+const calldata_block_1 = require("../calldata_block");
+class SetCalldataBlock extends calldata_block_1.CalldataBlock {
+    constructor(name, signature, parentName) {
+        super(name, signature, parentName, 0, 0);
+        this._members = [];
+        this._header = undefined;
     }
-    SetCalldataBlock.prototype.getRawData = function () {
-        var rawDataComponents = [];
+    getRawData() {
+        const rawDataComponents = [];
         if (this._header !== undefined) {
             rawDataComponents.push(this._header);
         }
-        _.each(this._members, function (member) {
-            var memberBuffer = member.getRawData();
+        _.each(this._members, (member) => {
+            const memberBuffer = member.getRawData();
             rawDataComponents.push(memberBuffer);
         });
-        var rawData = Buffer.concat(rawDataComponents);
+        const rawData = Buffer.concat(rawDataComponents);
         return rawData;
-    };
-    SetCalldataBlock.prototype.setMembers = function (members) {
+    }
+    setMembers(members) {
         this._members = members;
-    };
-    SetCalldataBlock.prototype.setHeader = function (header) {
+    }
+    setHeader(header) {
         this._setHeaderSize(header.byteLength);
         this._header = header;
-    };
-    SetCalldataBlock.prototype.toBuffer = function () {
+    }
+    toBuffer() {
         if (this._header !== undefined) {
             return this._header;
         }
         return Buffer.from('');
-    };
-    SetCalldataBlock.prototype.getMembers = function () {
+    }
+    getMembers() {
         return this._members;
-    };
-    return SetCalldataBlock;
-}(calldata_block_1.CalldataBlock));
+    }
+}
 exports.SetCalldataBlock = SetCalldataBlock;

@@ -1,16 +1,49 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.signTypedDataUtils = void 0;
-var ethUtil = require("ethereumjs-util");
-var ethers = require("ethers");
-var configured_bignumber_1 = require("./configured_bignumber");
+const ethUtil = __importStar(require("ethereumjs-util"));
+const ethers_1 = require("ethers");
+const configured_bignumber_1 = require("./configured_bignumber");
 exports.signTypedDataUtils = {
     /**
      * Generates the EIP712 Typed Data hash for signing
      * @param   typedData An object that conforms to the EIP712TypedData interface
      * @return  A Buffer containing the hash of the typed data.
      */
-    generateTypedDataHash: function (typedData) {
+    generateTypedDataHash(typedData) {
         return ethUtil.keccak256(Buffer.concat([
             Buffer.from('1901', 'hex'),
             exports.signTypedDataUtils._structHash('EIP712Domain', typedData.domain, typedData.types),
@@ -23,7 +56,7 @@ exports.signTypedDataUtils = {
      * @param   typedData An object that conforms to the EIP712TypedData interface
      * @return  A Buffer containing the hash of the typed data.
      */
-    generateTypedDataHashWithoutDomain: function (typedData) {
+    generateTypedDataHashWithoutDomain(typedData) {
         return exports.signTypedDataUtils._structHash(typedData.primaryType, typedData.message, typedData.types);
     },
     /**
@@ -32,7 +65,7 @@ exports.signTypedDataUtils = {
      *                and verifying address.
      * @return A buffer that contains the hash of the domain.
      */
-    generateDomainHash: function (domain) {
+    generateDomainHash(domain) {
         return exports.signTypedDataUtils._structHash('EIP712Domain', domain, 
         // HACK(jalextowle): When we consolidate our testing packages into test-utils, we can use a constant
         // to eliminate code duplication. At the moment, there isn't a good way to do that because of cyclic-dependencies.
@@ -45,16 +78,13 @@ exports.signTypedDataUtils = {
             ],
         });
     },
-    _findDependencies: function (primaryType, types, found) {
-        if (found === void 0) { found = []; }
+    _findDependencies(primaryType, types, found = []) {
         if (found.includes(primaryType) || types[primaryType] === undefined) {
             return found;
         }
         found.push(primaryType);
-        for (var _i = 0, _a = types[primaryType]; _i < _a.length; _i++) {
-            var field = _a[_i];
-            for (var _b = 0, _c = exports.signTypedDataUtils._findDependencies(field.type, types, found); _b < _c.length; _b++) {
-                var dep = _c[_b];
+        for (const field of types[primaryType]) {
+            for (const dep of exports.signTypedDataUtils._findDependencies(field.type, types, found)) {
                 if (!found.includes(dep)) {
                     found.push(dep);
                 }
@@ -62,39 +92,34 @@ exports.signTypedDataUtils = {
         }
         return found;
     },
-    _encodeType: function (primaryType, types) {
-        var deps = exports.signTypedDataUtils._findDependencies(primaryType, types);
-        deps = deps.filter(function (d) { return d !== primaryType; });
+    _encodeType(primaryType, types) {
+        let deps = exports.signTypedDataUtils._findDependencies(primaryType, types);
+        deps = deps.filter(d => d !== primaryType);
         deps = [primaryType].concat(deps.sort());
-        var result = '';
-        for (var _i = 0, deps_1 = deps; _i < deps_1.length; _i++) {
-            var dep = deps_1[_i];
-            result += "".concat(dep, "(").concat(types[dep].map(function (_a) {
-                var name = _a.name, type = _a.type;
-                return "".concat(type, " ").concat(name);
-            }).join(','), ")");
+        let result = '';
+        for (const dep of deps) {
+            result += `${dep}(${types[dep].map(({ name, type }) => `${type} ${name}`).join(',')})`;
         }
         return result;
     },
-    _encodeData: function (primaryType, data, types) {
-        var encodedTypes = ['bytes32'];
-        var encodedValues = [exports.signTypedDataUtils._typeHash(primaryType, types)];
-        for (var _i = 0, _a = types[primaryType]; _i < _a.length; _i++) {
-            var field = _a[_i];
-            var value = data[field.name];
+    _encodeData(primaryType, data, types) {
+        const encodedTypes = ['bytes32'];
+        const encodedValues = [exports.signTypedDataUtils._typeHash(primaryType, types)];
+        for (const field of types[primaryType]) {
+            const value = data[field.name];
             if (field.type === 'string') {
-                var hashValue = ethUtil.keccak256(Buffer.from(value));
+                const hashValue = ethUtil.keccak256(Buffer.from(value));
                 encodedTypes.push('bytes32');
                 encodedValues.push(hashValue);
             }
             else if (field.type === 'bytes') {
-                var hashValue = ethUtil.keccak256(ethUtil.toBuffer(value));
+                const hashValue = ethUtil.keccak256(ethUtil.toBuffer(value));
                 encodedTypes.push('bytes32');
                 encodedValues.push(hashValue);
             }
             else if (types[field.type] !== undefined) {
                 encodedTypes.push('bytes32');
-                var hashValue = ethUtil.keccak256(
+                const hashValue = ethUtil.keccak256(
                 // tslint:disable-next-line:no-unnecessary-type-assertion
                 ethUtil.toBuffer(exports.signTypedDataUtils._encodeData(field.type, value, types)));
                 encodedValues.push(hashValue);
@@ -104,14 +129,16 @@ exports.signTypedDataUtils = {
             }
             else {
                 encodedTypes.push(field.type);
-                var normalizedValue = exports.signTypedDataUtils._normalizeValue(field.type, value);
+                const normalizedValue = exports.signTypedDataUtils._normalizeValue(field.type, value);
                 encodedValues.push(normalizedValue);
             }
         }
-        return ethers.utils.defaultAbiCoder.encode(encodedTypes, encodedValues);
+        // 使用 ethers v6 的 AbiCoder
+        const coder = ethers_1.ethers.AbiCoder.defaultAbiCoder();
+        return coder.encode(encodedTypes, encodedValues);
     },
-    _normalizeValue: function (type, value) {
-        var STRING_BASE = 10;
+    _normalizeValue(type, value) {
+        const STRING_BASE = 10;
         if (type === 'uint256') {
             if (configured_bignumber_1.BigNumber.isBigNumber(value)) {
                 return value.toString(STRING_BASE);
@@ -120,10 +147,10 @@ exports.signTypedDataUtils = {
         }
         return value;
     },
-    _typeHash: function (primaryType, types) {
+    _typeHash(primaryType, types) {
         return ethUtil.keccak256(Buffer.from(exports.signTypedDataUtils._encodeType(primaryType, types)));
     },
-    _structHash: function (primaryType, data, types) {
+    _structHash(primaryType, data, types) {
         return ethUtil.keccak256(ethUtil.toBuffer(exports.signTypedDataUtils._encodeData(primaryType, data, types)));
     },
 };

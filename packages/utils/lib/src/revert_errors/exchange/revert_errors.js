@@ -1,22 +1,7 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PayProtocolFeeError = exports.ExchangeInvalidContextError = exports.IncompleteFillError = exports.TransactionInvalidContextError = exports.TransactionGasPriceError = exports.TransactionExecutionError = exports.TransactionError = exports.NegativeSpreadError = exports.AssetProxyTransferError = exports.AssetProxyDispatchError = exports.AssetProxyExistsError = exports.OrderEpochError = exports.FillError = exports.OrderStatusError = exports.EIP1271SignatureError = exports.SignatureWalletError = exports.SignatureValidatorNotApprovedError = exports.SignatureError = exports.BatchMatchOrdersError = exports.IncompleteFillErrorCode = exports.TransactionErrorCode = exports.AssetProxyDispatchErrorCode = exports.SignatureErrorCode = exports.FillErrorCode = exports.ExchangeContextErrorCodes = exports.BatchMatchOrdersErrorCodes = void 0;
-var revert_error_1 = require("../../revert_error");
+const revert_error_1 = require("../../revert_error");
 // tslint:disable:max-classes-per-file
 var BatchMatchOrdersErrorCodes;
 (function (BatchMatchOrdersErrorCodes) {
@@ -64,209 +49,171 @@ var IncompleteFillErrorCode;
     IncompleteFillErrorCode[IncompleteFillErrorCode["IncompleteMarketSellOrders"] = 1] = "IncompleteMarketSellOrders";
     IncompleteFillErrorCode[IncompleteFillErrorCode["IncompleteFillOrder"] = 2] = "IncompleteFillOrder";
 })(IncompleteFillErrorCode || (exports.IncompleteFillErrorCode = IncompleteFillErrorCode = {}));
-var BatchMatchOrdersError = /** @class */ (function (_super) {
-    __extends(BatchMatchOrdersError, _super);
-    function BatchMatchOrdersError(error) {
-        return _super.call(this, 'BatchMatchOrdersError', 'BatchMatchOrdersError(uint8 error)', { error: error }) || this;
+class BatchMatchOrdersError extends revert_error_1.RevertError {
+    constructor(error) {
+        super('BatchMatchOrdersError', 'BatchMatchOrdersError(uint8 error)', { error });
     }
-    return BatchMatchOrdersError;
-}(revert_error_1.RevertError));
+}
 exports.BatchMatchOrdersError = BatchMatchOrdersError;
-var SignatureError = /** @class */ (function (_super) {
-    __extends(SignatureError, _super);
-    function SignatureError(error, hash, signer, signature) {
-        return _super.call(this, 'SignatureError', 'SignatureError(uint8 error, bytes32 hash, address signer, bytes signature)', {
-            error: error,
-            hash: hash,
-            signer: signer,
-            signature: signature,
-        }) || this;
+class SignatureError extends revert_error_1.RevertError {
+    constructor(error, hash, signer, signature) {
+        super('SignatureError', 'SignatureError(uint8 error, bytes32 hash, address signer, bytes signature)', {
+            error,
+            hash,
+            signer,
+            signature,
+        });
     }
-    return SignatureError;
-}(revert_error_1.RevertError));
+}
 exports.SignatureError = SignatureError;
-var SignatureValidatorNotApprovedError = /** @class */ (function (_super) {
-    __extends(SignatureValidatorNotApprovedError, _super);
-    function SignatureValidatorNotApprovedError(signer, validator) {
-        return _super.call(this, 'SignatureValidatorNotApprovedError', 'SignatureValidatorNotApprovedError(address signer, address validator)', {
-            signer: signer,
-            validator: validator,
-        }) || this;
+class SignatureValidatorNotApprovedError extends revert_error_1.RevertError {
+    constructor(signer, validator) {
+        super('SignatureValidatorNotApprovedError', 'SignatureValidatorNotApprovedError(address signer, address validator)', {
+            signer,
+            validator,
+        });
     }
-    return SignatureValidatorNotApprovedError;
-}(revert_error_1.RevertError));
+}
 exports.SignatureValidatorNotApprovedError = SignatureValidatorNotApprovedError;
-var SignatureWalletError = /** @class */ (function (_super) {
-    __extends(SignatureWalletError, _super);
-    function SignatureWalletError(hash, wallet, signature, errorData) {
-        return _super.call(this, 'SignatureWalletError', 'SignatureWalletError(bytes32 hash, address wallet, bytes signature, bytes errorData)', {
-            hash: hash,
-            wallet: wallet,
-            signature: signature,
-            errorData: errorData,
-        }) || this;
+class SignatureWalletError extends revert_error_1.RevertError {
+    constructor(hash, wallet, signature, errorData) {
+        super('SignatureWalletError', 'SignatureWalletError(bytes32 hash, address wallet, bytes signature, bytes errorData)', {
+            hash,
+            wallet,
+            signature,
+            errorData,
+        });
     }
-    return SignatureWalletError;
-}(revert_error_1.RevertError));
+}
 exports.SignatureWalletError = SignatureWalletError;
-var EIP1271SignatureError = /** @class */ (function (_super) {
-    __extends(EIP1271SignatureError, _super);
-    function EIP1271SignatureError(verifyingContract, data, signature, errorData) {
-        return _super.call(this, 'EIP1271SignatureError', 'EIP1271SignatureError(address verifyingContract, bytes data, bytes signature, bytes errorData)', {
-            verifyingContract: verifyingContract,
-            data: data,
-            signature: signature,
-            errorData: errorData,
-        }) || this;
+class EIP1271SignatureError extends revert_error_1.RevertError {
+    constructor(verifyingContract, data, signature, errorData) {
+        super('EIP1271SignatureError', 'EIP1271SignatureError(address verifyingContract, bytes data, bytes signature, bytes errorData)', {
+            verifyingContract,
+            data,
+            signature,
+            errorData,
+        });
     }
-    return EIP1271SignatureError;
-}(revert_error_1.RevertError));
+}
 exports.EIP1271SignatureError = EIP1271SignatureError;
-var OrderStatusError = /** @class */ (function (_super) {
-    __extends(OrderStatusError, _super);
-    function OrderStatusError(orderHash, status) {
-        return _super.call(this, 'OrderStatusError', 'OrderStatusError(bytes32 orderHash, uint8 status)', { orderHash: orderHash, status: status }) || this;
+class OrderStatusError extends revert_error_1.RevertError {
+    constructor(orderHash, status) {
+        super('OrderStatusError', 'OrderStatusError(bytes32 orderHash, uint8 status)', { orderHash, status });
     }
-    return OrderStatusError;
-}(revert_error_1.RevertError));
+}
 exports.OrderStatusError = OrderStatusError;
-var FillError = /** @class */ (function (_super) {
-    __extends(FillError, _super);
-    function FillError(error, orderHash) {
-        return _super.call(this, 'FillError', 'FillError(uint8 error, bytes32 orderHash)', { error: error, orderHash: orderHash }) || this;
+class FillError extends revert_error_1.RevertError {
+    constructor(error, orderHash) {
+        super('FillError', 'FillError(uint8 error, bytes32 orderHash)', { error, orderHash });
     }
-    return FillError;
-}(revert_error_1.RevertError));
+}
 exports.FillError = FillError;
-var OrderEpochError = /** @class */ (function (_super) {
-    __extends(OrderEpochError, _super);
-    function OrderEpochError(maker, sender, currentEpoch) {
-        return _super.call(this, 'OrderEpochError', 'OrderEpochError(address maker, address sender, uint256 currentEpoch)', {
-            maker: maker,
-            sender: sender,
-            currentEpoch: currentEpoch,
-        }) || this;
+class OrderEpochError extends revert_error_1.RevertError {
+    constructor(maker, sender, currentEpoch) {
+        super('OrderEpochError', 'OrderEpochError(address maker, address sender, uint256 currentEpoch)', {
+            maker,
+            sender,
+            currentEpoch,
+        });
     }
-    return OrderEpochError;
-}(revert_error_1.RevertError));
+}
 exports.OrderEpochError = OrderEpochError;
-var AssetProxyExistsError = /** @class */ (function (_super) {
-    __extends(AssetProxyExistsError, _super);
-    function AssetProxyExistsError(assetProxyId, assetProxy) {
-        return _super.call(this, 'AssetProxyExistsError', 'AssetProxyExistsError(bytes4 assetProxyId, address assetProxy)', {
-            assetProxyId: assetProxyId,
-            assetProxy: assetProxy,
-        }) || this;
+class AssetProxyExistsError extends revert_error_1.RevertError {
+    constructor(assetProxyId, assetProxy) {
+        super('AssetProxyExistsError', 'AssetProxyExistsError(bytes4 assetProxyId, address assetProxy)', {
+            assetProxyId,
+            assetProxy,
+        });
     }
-    return AssetProxyExistsError;
-}(revert_error_1.RevertError));
+}
 exports.AssetProxyExistsError = AssetProxyExistsError;
-var AssetProxyDispatchError = /** @class */ (function (_super) {
-    __extends(AssetProxyDispatchError, _super);
-    function AssetProxyDispatchError(error, orderHash, assetData) {
-        return _super.call(this, 'AssetProxyDispatchError', 'AssetProxyDispatchError(uint8 error, bytes32 orderHash, bytes assetData)', {
-            error: error,
-            orderHash: orderHash,
-            assetData: assetData,
-        }) || this;
+class AssetProxyDispatchError extends revert_error_1.RevertError {
+    constructor(error, orderHash, assetData) {
+        super('AssetProxyDispatchError', 'AssetProxyDispatchError(uint8 error, bytes32 orderHash, bytes assetData)', {
+            error,
+            orderHash,
+            assetData,
+        });
     }
-    return AssetProxyDispatchError;
-}(revert_error_1.RevertError));
+}
 exports.AssetProxyDispatchError = AssetProxyDispatchError;
-var AssetProxyTransferError = /** @class */ (function (_super) {
-    __extends(AssetProxyTransferError, _super);
-    function AssetProxyTransferError(orderHash, assetData, errorData) {
-        return _super.call(this, 'AssetProxyTransferError', 'AssetProxyTransferError(bytes32 orderHash, bytes assetData, bytes errorData)', {
-            orderHash: orderHash,
-            assetData: assetData,
-            errorData: errorData,
-        }) || this;
+class AssetProxyTransferError extends revert_error_1.RevertError {
+    constructor(orderHash, assetData, errorData) {
+        super('AssetProxyTransferError', 'AssetProxyTransferError(bytes32 orderHash, bytes assetData, bytes errorData)', {
+            orderHash,
+            assetData,
+            errorData,
+        });
     }
-    return AssetProxyTransferError;
-}(revert_error_1.RevertError));
+}
 exports.AssetProxyTransferError = AssetProxyTransferError;
-var NegativeSpreadError = /** @class */ (function (_super) {
-    __extends(NegativeSpreadError, _super);
-    function NegativeSpreadError(leftOrderHash, rightOrderHash) {
-        return _super.call(this, 'NegativeSpreadError', 'NegativeSpreadError(bytes32 leftOrderHash, bytes32 rightOrderHash)', {
-            leftOrderHash: leftOrderHash,
-            rightOrderHash: rightOrderHash,
-        }) || this;
+class NegativeSpreadError extends revert_error_1.RevertError {
+    constructor(leftOrderHash, rightOrderHash) {
+        super('NegativeSpreadError', 'NegativeSpreadError(bytes32 leftOrderHash, bytes32 rightOrderHash)', {
+            leftOrderHash,
+            rightOrderHash,
+        });
     }
-    return NegativeSpreadError;
-}(revert_error_1.RevertError));
+}
 exports.NegativeSpreadError = NegativeSpreadError;
-var TransactionError = /** @class */ (function (_super) {
-    __extends(TransactionError, _super);
-    function TransactionError(error, transactionHash) {
-        return _super.call(this, 'TransactionError', 'TransactionError(uint8 error, bytes32 transactionHash)', { error: error, transactionHash: transactionHash }) || this;
+class TransactionError extends revert_error_1.RevertError {
+    constructor(error, transactionHash) {
+        super('TransactionError', 'TransactionError(uint8 error, bytes32 transactionHash)', { error, transactionHash });
     }
-    return TransactionError;
-}(revert_error_1.RevertError));
+}
 exports.TransactionError = TransactionError;
-var TransactionExecutionError = /** @class */ (function (_super) {
-    __extends(TransactionExecutionError, _super);
-    function TransactionExecutionError(transactionHash, errorData) {
-        return _super.call(this, 'TransactionExecutionError', 'TransactionExecutionError(bytes32 transactionHash, bytes errorData)', {
-            transactionHash: transactionHash,
-            errorData: errorData,
-        }) || this;
+class TransactionExecutionError extends revert_error_1.RevertError {
+    constructor(transactionHash, errorData) {
+        super('TransactionExecutionError', 'TransactionExecutionError(bytes32 transactionHash, bytes errorData)', {
+            transactionHash,
+            errorData,
+        });
     }
-    return TransactionExecutionError;
-}(revert_error_1.RevertError));
+}
 exports.TransactionExecutionError = TransactionExecutionError;
-var TransactionGasPriceError = /** @class */ (function (_super) {
-    __extends(TransactionGasPriceError, _super);
-    function TransactionGasPriceError(transactionHash, actualGasPrice, requiredGasPrice) {
-        return _super.call(this, 'TransactionGasPriceError', 'TransactionGasPriceError(bytes32 transactionHash, uint256 actualGasPrice, uint256 requiredGasPrice)', {
-            transactionHash: transactionHash,
-            actualGasPrice: actualGasPrice,
-            requiredGasPrice: requiredGasPrice,
-        }) || this;
+class TransactionGasPriceError extends revert_error_1.RevertError {
+    constructor(transactionHash, actualGasPrice, requiredGasPrice) {
+        super('TransactionGasPriceError', 'TransactionGasPriceError(bytes32 transactionHash, uint256 actualGasPrice, uint256 requiredGasPrice)', {
+            transactionHash,
+            actualGasPrice,
+            requiredGasPrice,
+        });
     }
-    return TransactionGasPriceError;
-}(revert_error_1.RevertError));
+}
 exports.TransactionGasPriceError = TransactionGasPriceError;
-var TransactionInvalidContextError = /** @class */ (function (_super) {
-    __extends(TransactionInvalidContextError, _super);
-    function TransactionInvalidContextError(transactionHash, currentContextAddress) {
-        return _super.call(this, 'TransactionInvalidContextError', 'TransactionInvalidContextError(bytes32 transactionHash, address currentContextAddress)', {
-            transactionHash: transactionHash,
-            currentContextAddress: currentContextAddress,
-        }) || this;
+class TransactionInvalidContextError extends revert_error_1.RevertError {
+    constructor(transactionHash, currentContextAddress) {
+        super('TransactionInvalidContextError', 'TransactionInvalidContextError(bytes32 transactionHash, address currentContextAddress)', {
+            transactionHash,
+            currentContextAddress,
+        });
     }
-    return TransactionInvalidContextError;
-}(revert_error_1.RevertError));
+}
 exports.TransactionInvalidContextError = TransactionInvalidContextError;
-var IncompleteFillError = /** @class */ (function (_super) {
-    __extends(IncompleteFillError, _super);
-    function IncompleteFillError(error, expectedAssetFillAmount, actualAssetFillAmount) {
-        return _super.call(this, 'IncompleteFillError', 'IncompleteFillError(uint8 error, uint256 expectedAssetFillAmount, uint256 actualAssetFillAmount)', {
-            error: error,
-            expectedAssetFillAmount: expectedAssetFillAmount,
-            actualAssetFillAmount: actualAssetFillAmount,
-        }) || this;
+class IncompleteFillError extends revert_error_1.RevertError {
+    constructor(error, expectedAssetFillAmount, actualAssetFillAmount) {
+        super('IncompleteFillError', 'IncompleteFillError(uint8 error, uint256 expectedAssetFillAmount, uint256 actualAssetFillAmount)', {
+            error,
+            expectedAssetFillAmount,
+            actualAssetFillAmount,
+        });
     }
-    return IncompleteFillError;
-}(revert_error_1.RevertError));
+}
 exports.IncompleteFillError = IncompleteFillError;
-var ExchangeInvalidContextError = /** @class */ (function (_super) {
-    __extends(ExchangeInvalidContextError, _super);
-    function ExchangeInvalidContextError(error, orderHash, contextAddress) {
-        return _super.call(this, 'ExchangeInvalidContextError', 'ExchangeInvalidContextError(uint8 error, bytes32 orderHash, address contextAddress)', { error: error, orderHash: orderHash, contextAddress: contextAddress }) || this;
+class ExchangeInvalidContextError extends revert_error_1.RevertError {
+    constructor(error, orderHash, contextAddress) {
+        super('ExchangeInvalidContextError', 'ExchangeInvalidContextError(uint8 error, bytes32 orderHash, address contextAddress)', { error, orderHash, contextAddress });
     }
-    return ExchangeInvalidContextError;
-}(revert_error_1.RevertError));
+}
 exports.ExchangeInvalidContextError = ExchangeInvalidContextError;
-var PayProtocolFeeError = /** @class */ (function (_super) {
-    __extends(PayProtocolFeeError, _super);
-    function PayProtocolFeeError(orderHash, protocolFee, makerAddress, takerAddress, errorData) {
-        return _super.call(this, 'PayProtocolFeeError', 'PayProtocolFeeError(bytes32 orderHash, uint256 protocolFee, address makerAddress, address takerAddress, bytes errorData)', { orderHash: orderHash, protocolFee: protocolFee, makerAddress: makerAddress, takerAddress: takerAddress, errorData: errorData }) || this;
+class PayProtocolFeeError extends revert_error_1.RevertError {
+    constructor(orderHash, protocolFee, makerAddress, takerAddress, errorData) {
+        super('PayProtocolFeeError', 'PayProtocolFeeError(bytes32 orderHash, uint256 protocolFee, address makerAddress, address takerAddress, bytes errorData)', { orderHash, protocolFee, makerAddress, takerAddress, errorData });
     }
-    return PayProtocolFeeError;
-}(revert_error_1.RevertError));
+}
 exports.PayProtocolFeeError = PayProtocolFeeError;
-var types = [
+const types = [
     AssetProxyExistsError,
     AssetProxyDispatchError,
     AssetProxyTransferError,
@@ -288,7 +235,6 @@ var types = [
     TransactionInvalidContextError,
 ];
 // Register the types we've defined.
-for (var _i = 0, types_1 = types; _i < types_1.length; _i++) {
-    var type = types_1[_i];
+for (const type of types) {
     revert_error_1.RevertError.registerType(type);
 }

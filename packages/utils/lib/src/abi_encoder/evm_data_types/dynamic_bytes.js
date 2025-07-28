@@ -1,88 +1,103 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
     };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DynamicBytesDataType = void 0;
-var ethereum_types_1 = require("ethereum-types");
-var ethUtil = require("ethereumjs-util");
-var _ = require("lodash");
-var blob_1 = require("../abstract_data_types/types/blob");
-var constants_1 = require("../utils/constants");
-var DynamicBytesDataType = /** @class */ (function (_super) {
-    __extends(DynamicBytesDataType, _super);
-    function DynamicBytesDataType(dataItem, dataTypeFactory) {
-        var _this = _super.call(this, dataItem, dataTypeFactory, DynamicBytesDataType._SIZE_KNOWN_AT_COMPILE_TIME) || this;
-        if (!DynamicBytesDataType.matchType(dataItem.type)) {
-            throw new Error("Tried to instantiate Dynamic Bytes with bad input: ".concat(dataItem));
-        }
-        return _this;
-    }
-    DynamicBytesDataType.matchType = function (type) {
+const ethereum_types_1 = require("ethereum-types");
+const ethUtil = __importStar(require("ethereumjs-util"));
+const _ = __importStar(require("lodash"));
+const blob_1 = require("../abstract_data_types/types/blob");
+const constants_1 = require("../utils/constants");
+class DynamicBytesDataType extends blob_1.AbstractBlobDataType {
+    static matchType(type) {
         return type === ethereum_types_1.SolidityTypes.Bytes;
-    };
-    DynamicBytesDataType._sanityCheckValue = function (value) {
+    }
+    static _sanityCheckValue(value) {
         if (typeof value !== 'string') {
             return;
         }
         if (!_.startsWith(value, '0x')) {
-            throw new Error("Tried to encode non-hex value. Value must include '0x' prefix.");
+            throw new Error(`Tried to encode non-hex value. Value must include '0x' prefix.`);
         }
         else if (value.length % 2 !== 0) {
-            throw new Error("Tried to assign ".concat(value, ", which is contains a half-byte. Use full bytes only."));
+            throw new Error(`Tried to assign ${value}, which is contains a half-byte. Use full bytes only.`);
         }
-    };
+    }
+    constructor(dataItem, dataTypeFactory) {
+        super(dataItem, dataTypeFactory, DynamicBytesDataType._SIZE_KNOWN_AT_COMPILE_TIME);
+        if (!DynamicBytesDataType.matchType(dataItem.type)) {
+            throw new Error(`Tried to instantiate Dynamic Bytes with bad input: ${dataItem}`);
+        }
+    }
     // Disable prefer-function-over-method for inherited abstract methods.
     /* tslint:disable prefer-function-over-method */
-    DynamicBytesDataType.prototype.encodeValue = function (value) {
+    encodeValue(value) {
         // Encoded value is of the form: <length><value>, with each field padded to be word-aligned.
         // 1/3 Construct the length
         DynamicBytesDataType._sanityCheckValue(value);
-        var valueBuf = ethUtil.toBuffer(value);
-        var wordsToStoreValuePadded = Math.ceil(valueBuf.byteLength / constants_1.constants.EVM_WORD_WIDTH_IN_BYTES);
-        var bytesToStoreValuePadded = wordsToStoreValuePadded * constants_1.constants.EVM_WORD_WIDTH_IN_BYTES;
-        var lengthBuf = ethUtil.toBuffer(valueBuf.byteLength);
-        var lengthBufPadded = ethUtil.setLengthLeft(lengthBuf, constants_1.constants.EVM_WORD_WIDTH_IN_BYTES);
+        const valueBuf = ethUtil.toBuffer(value);
+        const wordsToStoreValuePadded = Math.ceil(valueBuf.byteLength / constants_1.constants.EVM_WORD_WIDTH_IN_BYTES);
+        const bytesToStoreValuePadded = wordsToStoreValuePadded * constants_1.constants.EVM_WORD_WIDTH_IN_BYTES;
+        const lengthBuf = ethUtil.toBuffer(valueBuf.byteLength);
+        const lengthBufPadded = ethUtil.setLengthLeft(lengthBuf, constants_1.constants.EVM_WORD_WIDTH_IN_BYTES);
         // 2/3 Construct the value
-        var valueBufPadded = ethUtil.setLengthRight(valueBuf, bytesToStoreValuePadded);
+        const valueBufPadded = ethUtil.setLengthRight(valueBuf, bytesToStoreValuePadded);
         // 3/3 Combine length and value
-        var encodedValue = Buffer.concat([lengthBufPadded, valueBufPadded]);
+        const encodedValue = Buffer.concat([lengthBufPadded, valueBufPadded]);
         return encodedValue;
-    };
-    DynamicBytesDataType.prototype.decodeValue = function (calldata) {
+    }
+    decodeValue(calldata) {
         // Encoded value is of the form: <length><value>, with each field padded to be word-aligned.
         // 1/2 Decode length
-        var lengthBuf = calldata.popWord();
-        var lengthHex = ethUtil.bufferToHex(lengthBuf);
-        var length = parseInt(lengthHex, constants_1.constants.HEX_BASE);
+        const lengthBuf = calldata.popWord();
+        const lengthHex = ethUtil.bufferToHex(lengthBuf);
+        const length = parseInt(lengthHex, constants_1.constants.HEX_BASE);
         // 2/2 Decode value
-        var wordsToStoreValuePadded = Math.ceil(length / constants_1.constants.EVM_WORD_WIDTH_IN_BYTES);
-        var valueBufPadded = calldata.popWords(wordsToStoreValuePadded);
-        var valueBuf = valueBufPadded.slice(0, length);
-        var value = ethUtil.bufferToHex(valueBuf);
+        const wordsToStoreValuePadded = Math.ceil(length / constants_1.constants.EVM_WORD_WIDTH_IN_BYTES);
+        const valueBufPadded = calldata.popWords(wordsToStoreValuePadded);
+        const valueBuf = valueBufPadded.slice(0, length);
+        const value = ethUtil.bufferToHex(valueBuf);
         DynamicBytesDataType._sanityCheckValue(value);
         return value;
-    };
-    DynamicBytesDataType.prototype.getDefaultValue = function () {
+    }
+    getDefaultValue() {
         return DynamicBytesDataType._DEFAULT_VALUE;
-    };
-    DynamicBytesDataType.prototype.getSignatureType = function () {
+    }
+    getSignatureType() {
         return ethereum_types_1.SolidityTypes.Bytes;
-    };
-    DynamicBytesDataType._SIZE_KNOWN_AT_COMPILE_TIME = false;
-    DynamicBytesDataType._DEFAULT_VALUE = '0x';
-    return DynamicBytesDataType;
-}(blob_1.AbstractBlobDataType));
+    }
+}
 exports.DynamicBytesDataType = DynamicBytesDataType;
+DynamicBytesDataType._SIZE_KNOWN_AT_COMPILE_TIME = false;
+DynamicBytesDataType._DEFAULT_VALUE = '0x';

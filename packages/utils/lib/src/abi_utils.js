@@ -1,25 +1,58 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.abiUtils = void 0;
-var ethereum_types_1 = require("ethereum-types");
-var _ = require("lodash");
-var configured_bignumber_1 = require("./configured_bignumber");
+const ethereum_types_1 = require("ethereum-types");
+const _ = __importStar(require("lodash"));
+const configured_bignumber_1 = require("./configured_bignumber");
 // Note(albrow): This function is unexported in ethers.js. Copying it here for
 // now.
 // Source: https://github.com/ethers-io/ethers.js/blob/884593ab76004a808bf8097e9753fb5f8dcc3067/contracts/interface.js#L30
 function parseEthersParams(params) {
-    var names = [];
-    var types = [];
-    params.forEach(function (param) {
+    const names = [];
+    const types = [];
+    params.forEach((param) => {
         if (param.components != null) {
-            var suffix = '';
-            var arrayBracket = param.type.indexOf('[');
+            let suffix = '';
+            const arrayBracket = param.type.indexOf('[');
             if (arrayBracket >= 0) {
                 suffix = param.type.substring(arrayBracket);
             }
-            var result = parseEthersParams(param.components);
+            const result = parseEthersParams(param.components);
             names.push({ name: param.name || null, names: result.names });
-            types.push("tuple(".concat(result.types.join(','), ")").concat(suffix));
+            types.push(`tuple(${result.types.join(',')})${suffix}`);
         }
         else {
             names.push(param.name || null);
@@ -27,8 +60,8 @@ function parseEthersParams(params) {
         }
     });
     return {
-        names: names,
-        types: types,
+        names,
+        types,
     };
 }
 // returns true if x is equal to y and false otherwise. Performs some minimal
@@ -51,8 +84,8 @@ function isAbiDataEqual(name, type, x, y) {
         if (x.length !== y.length) {
             return false;
         }
-        var newType = _.trimEnd(type, '[]');
-        for (var i = 0; i < x.length; i++) {
+        const newType = _.trimEnd(type, '[]');
+        for (let i = 0; i < x.length; i++) {
             if (!isAbiDataEqual(name, newType, x[i], y[i])) {
                 return false;
             }
@@ -68,11 +101,11 @@ function isAbiDataEqual(name, type, x, y) {
         }
         // For tuples, we iterate through the underlying values and check each
         // one individually.
-        var types = splitTupleTypes(type);
+        const types = splitTupleTypes(type);
         if (types.length !== name.names.length) {
-            throw new Error("Internal error: parameter types/names length mismatch (".concat(types.length, " != ").concat(name.names.length, ")"));
+            throw new Error(`Internal error: parameter types/names length mismatch (${types.length} != ${name.names.length})`);
         }
-        for (var i = 0; i < types.length; i++) {
+        for (let i = 0; i < types.length; i++) {
             // For tuples, name is an object with a names property that is an
             // array. As an example, for orders, name looks like:
             //
@@ -85,7 +118,7 @@ function isAbiDataEqual(name, type, x, y) {
             //      ]
             //  }
             //
-            var nestedName = _.isString(name.names[i])
+            const nestedName = _.isString(name.names[i])
                 ? name.names[i]
                 : name.names[i].name;
             if (!isAbiDataEqual(name.names[i], types[i], x[nestedName], y[nestedName])) {
@@ -115,16 +148,15 @@ function splitTupleTypes(type) {
         throw new Error('Internal error: array types are not supported');
     }
     else if (!_.startsWith(type, 'tuple(')) {
-        throw new Error("Internal error: expected tuple type but got non-tuple type: ".concat(type));
+        throw new Error(`Internal error: expected tuple type but got non-tuple type: ${type}`);
     }
     // Trim the outtermost tuple().
-    var trimmedType = type.substring('tuple('.length, type.length - 1);
-    var types = [];
-    var currToken = '';
-    var parenCount = 0;
+    const trimmedType = type.substring('tuple('.length, type.length - 1);
+    const types = [];
+    let currToken = '';
+    let parenCount = 0;
     // Tokenize the type string while keeping track of parentheses.
-    for (var _i = 0, trimmedType_1 = trimmedType; _i < trimmedType_1.length; _i++) {
-        var char = trimmedType_1[_i];
+    for (const char of trimmedType) {
         switch (char) {
             case '(':
                 parenCount += 1;
@@ -153,23 +185,23 @@ function splitTupleTypes(type) {
     return types;
 }
 exports.abiUtils = {
-    parseEthersParams: parseEthersParams,
-    isAbiDataEqual: isAbiDataEqual,
-    splitTupleTypes: splitTupleTypes,
-    parseFunctionParam: function (param) {
+    parseEthersParams,
+    isAbiDataEqual,
+    splitTupleTypes,
+    parseFunctionParam(param) {
         if (param.type === 'tuple') {
             // Parse out tuple types into {type_1, type_2, ..., type_N}
-            var tupleComponents = param.components;
-            var paramString = _.map(tupleComponents, function (component) { return exports.abiUtils.parseFunctionParam(component); });
-            var tupleParamString = "{".concat(paramString, "}");
+            const tupleComponents = param.components;
+            const paramString = _.map(tupleComponents, component => exports.abiUtils.parseFunctionParam(component));
+            const tupleParamString = `{${paramString}}`;
             return tupleParamString;
         }
         return param.type;
     },
-    getFunctionSignature: function (methodAbi) {
-        var functionName = methodAbi.name;
-        var parameterTypeList = _.map(methodAbi.inputs, function (param) { return exports.abiUtils.parseFunctionParam(param); });
-        var functionSignature = "".concat(functionName, "(").concat(parameterTypeList, ")");
+    getFunctionSignature(methodAbi) {
+        const functionName = methodAbi.name;
+        const parameterTypeList = _.map(methodAbi.inputs, (param) => exports.abiUtils.parseFunctionParam(param));
+        const functionSignature = `${functionName}(${parameterTypeList})`;
         return functionSignature;
     },
     /**
@@ -185,33 +217,33 @@ exports.abiUtils = {
      * ['f1(uint)', 'f2(uint,byte32)']
      * Regardless of the order in which these these overloaded functions are declared within the contract ABI.
      */
-    renameOverloadedMethods: function (inputContractAbi) {
-        var contractAbi = _.cloneDeep(inputContractAbi);
-        var methodAbis = contractAbi.filter(function (abi) { return abi.type === ethereum_types_1.AbiType.Function; });
+    renameOverloadedMethods(inputContractAbi) {
+        const contractAbi = _.cloneDeep(inputContractAbi);
+        const methodAbis = contractAbi.filter((abi) => abi.type === ethereum_types_1.AbiType.Function);
         // Sort method Abis into alphabetical order, by function signature
-        var methodAbisOrdered = _.sortBy(methodAbis, [
-            function (methodAbi) {
-                var functionSignature = exports.abiUtils.getFunctionSignature(methodAbi);
+        const methodAbisOrdered = _.sortBy(methodAbis, [
+            (methodAbi) => {
+                const functionSignature = exports.abiUtils.getFunctionSignature(methodAbi);
                 return functionSignature;
             },
         ]);
         // Group method Abis by name (overloaded methods will be grouped together, in alphabetical order)
-        var methodAbisByName = {};
-        _.each(methodAbisOrdered, function (methodAbi) {
+        const methodAbisByName = {};
+        _.each(methodAbisOrdered, methodAbi => {
             (methodAbisByName[methodAbi.name] || (methodAbisByName[methodAbi.name] = [])).push(methodAbi);
         });
         // Rename overloaded methods to overloadedMethodName1, overloadedMethodName2, ...
-        _.each(methodAbisByName, function (methodAbisWithSameName) {
-            _.each(methodAbisWithSameName, function (methodAbi, i) {
+        _.each(methodAbisByName, methodAbisWithSameName => {
+            _.each(methodAbisWithSameName, (methodAbi, i) => {
                 if (methodAbisWithSameName.length > 1) {
-                    var overloadedMethodId = i + 1;
-                    var sanitizedMethodName_1 = "".concat(methodAbi.name).concat(overloadedMethodId);
-                    var indexOfExistingAbiWithSanitizedMethodNameIfExists = _.findIndex(methodAbis, function (currentMethodAbi) { return currentMethodAbi.name === sanitizedMethodName_1; });
+                    const overloadedMethodId = i + 1;
+                    const sanitizedMethodName = `${methodAbi.name}${overloadedMethodId}`;
+                    const indexOfExistingAbiWithSanitizedMethodNameIfExists = _.findIndex(methodAbis, currentMethodAbi => currentMethodAbi.name === sanitizedMethodName);
                     if (indexOfExistingAbiWithSanitizedMethodNameIfExists >= 0) {
-                        var methodName = methodAbi.name;
-                        throw new Error("Failed to rename overloaded method '".concat(methodName, "' to '").concat(sanitizedMethodName_1, "'. A method with this name already exists."));
+                        const methodName = methodAbi.name;
+                        throw new Error(`Failed to rename overloaded method '${methodName}' to '${sanitizedMethodName}'. A method with this name already exists.`);
                     }
-                    methodAbi.name = sanitizedMethodName_1;
+                    methodAbi.name = sanitizedMethodName;
                 }
             });
         });

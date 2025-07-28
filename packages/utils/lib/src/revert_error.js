@@ -1,17 +1,35 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
     };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -21,19 +39,18 @@ exports.decodeBytesAsRevertError = decodeBytesAsRevertError;
 exports.decodeThrownErrorAsRevertError = decodeThrownErrorAsRevertError;
 exports.coerceThrownErrorAsRevertError = coerceThrownErrorAsRevertError;
 exports.getThrownErrorRevertErrorBytes = getThrownErrorRevertErrorBytes;
-var ethUtil = require("ethereumjs-util");
-var _ = require("lodash");
-var util_1 = require("util");
-var AbiEncoder = require("./abi_encoder");
-var configured_bignumber_1 = require("./configured_bignumber");
+const ethUtil = __importStar(require("ethereumjs-util"));
+const _ = __importStar(require("lodash"));
+const util_1 = require("util");
+const AbiEncoder = __importStar(require("./abi_encoder"));
+const configured_bignumber_1 = require("./configured_bignumber");
 /**
  * Register a RevertError type so that it can be decoded by
  * `decodeRevertError`.
  * @param revertClass A class that inherits from RevertError.
  * @param force Allow overwriting registered types.
  */
-function registerRevertErrorType(revertClass, force) {
-    if (force === void 0) { force = false; }
+function registerRevertErrorType(revertClass, force = false) {
     RevertError.registerType(revertClass, force);
 }
 /**
@@ -43,8 +60,7 @@ function registerRevertErrorType(revertClass, force) {
  * @param coerce Coerce unknown selectors into a `RawRevertError` type.
  * @return A RevertError object.
  */
-function decodeBytesAsRevertError(bytes, coerce) {
-    if (coerce === void 0) { coerce = false; }
+function decodeBytesAsRevertError(bytes, coerce = false) {
     return RevertError.decode(bytes, coerce);
 }
 /**
@@ -54,8 +70,7 @@ function decodeBytesAsRevertError(bytes, coerce) {
  * @param coerce Coerce unknown selectors into a `RawRevertError` type.
  * @return A RevertError object.
  */
-function decodeThrownErrorAsRevertError(error, coerce) {
-    if (coerce === void 0) { coerce = false; }
+function decodeThrownErrorAsRevertError(error, coerce = false) {
     if (error instanceof RevertError) {
         return error;
     }
@@ -90,8 +105,57 @@ function coerceThrownErrorAsRevertError(error) {
 /**
  * Base type for revert errors.
  */
-var RevertError = /** @class */ (function (_super) {
-    __extends(RevertError, _super);
+class RevertError extends Error {
+    /**
+     * Decode an ABI encoded revert error.
+     * Throws if the data cannot be decoded as a known RevertError type.
+     * @param bytes The ABI encoded revert error. Either a hex string or a Buffer.
+     * @param coerce Whether to coerce unknown selectors into a `RawRevertError` type.
+     * @return A RevertError object.
+     */
+    static decode(bytes, coerce = false) {
+        if (bytes instanceof RevertError) {
+            return bytes;
+        }
+        const _bytes = bytes instanceof Buffer ? ethUtil.bufferToHex(bytes) : ethUtil.addHexPrefix(bytes);
+        // tslint:disable-next-line: custom-no-magic-numbers
+        const selector = _bytes.slice(2, 10);
+        if (!(selector in RevertError._typeRegistry)) {
+            if (coerce) {
+                return new RawRevertError(bytes);
+            }
+            throw new Error(`Unknown selector: ${selector}`);
+        }
+        const { type, decoder } = RevertError._typeRegistry[selector];
+        const instance = new type();
+        try {
+            Object.assign(instance, { values: decoder(_bytes) });
+            instance.message = instance.toString();
+            return instance;
+        }
+        catch (err) {
+            throw new Error(`Bytes ${_bytes} cannot be decoded as a revert error of type ${instance.signature}: ${err instanceof Error ? err.message : String(err)}`);
+        }
+    }
+    /**
+     * Register a RevertError type so that it can be decoded by
+     * `RevertError.decode`.
+     * @param revertClass A class that inherits from RevertError.
+     * @param force Allow overwriting existing registrations.
+     */
+    static registerType(revertClass, force = false) {
+        const instance = new revertClass();
+        if (!force && instance.selector in RevertError._typeRegistry) {
+            throw new Error(`RevertError type with signature "${instance.signature}" is already registered`);
+        }
+        if (_.isNil(instance.abi)) {
+            throw new Error(`Attempting to register a RevertError class with no ABI`);
+        }
+        RevertError._typeRegistry[instance.selector] = {
+            type: revertClass,
+            decoder: createDecoder(instance.abi),
+        };
+    }
     /**
      * Create a RevertError instance with optional parameter values.
      * Parameters that are left undefined will not be tested in equality checks.
@@ -101,147 +165,69 @@ var RevertError = /** @class */ (function (_super) {
      *        instance will be treated as a `RawRevertError`, meaning it can only
      *        match other `RawRevertError` types with the same encoded payload.
      */
-    function RevertError(name, declaration, values, raw) {
-        var _newTarget = this.constructor;
-        var _this = _super.call(this, createErrorMessage(name, values)) || this;
-        _this.values = {};
+    constructor(name, declaration, values, raw) {
+        super(createErrorMessage(name, values));
+        this.values = {};
         if (declaration !== undefined) {
-            _this.abi = declarationToAbi(declaration);
+            this.abi = declarationToAbi(declaration);
             if (values !== undefined) {
-                _.assign(_this.values, _.cloneDeep(values));
+                _.assign(this.values, _.cloneDeep(values));
             }
         }
-        _this._raw = raw;
+        this._raw = raw;
         // Extending Error is tricky; we need to explicitly set the prototype.
-        Object.setPrototypeOf(_this, _newTarget.prototype);
-        return _this;
+        Object.setPrototypeOf(this, new.target.prototype);
     }
     /**
-     * Decode an ABI encoded revert error.
-     * Throws if the data cannot be decoded as a known RevertError type.
-     * @param bytes The ABI encoded revert error. Either a hex string or a Buffer.
-     * @param coerce Whether to coerce unknown selectors into a `RawRevertError` type.
-     * @return A RevertError object.
+     * Get the ABI name for this revert.
      */
-    RevertError.decode = function (bytes, coerce) {
-        if (coerce === void 0) { coerce = false; }
-        if (bytes instanceof RevertError) {
-            return bytes;
+    get name() {
+        if (!_.isNil(this.abi)) {
+            return this.abi.name;
         }
-        var _bytes = bytes instanceof Buffer ? ethUtil.bufferToHex(bytes) : ethUtil.addHexPrefix(bytes);
-        // tslint:disable-next-line: custom-no-magic-numbers
-        var selector = _bytes.slice(2, 10);
-        if (!(selector in RevertError._typeRegistry)) {
-            if (coerce) {
-                return new RawRevertError(bytes);
-            }
-            throw new Error("Unknown selector: ".concat(selector));
-        }
-        var _a = RevertError._typeRegistry[selector], type = _a.type, decoder = _a.decoder;
-        var instance = new type();
-        try {
-            Object.assign(instance, { values: decoder(_bytes) });
-            instance.message = instance.toString();
-            return instance;
-        }
-        catch (err) {
-            throw new Error("Bytes ".concat(_bytes, " cannot be decoded as a revert error of type ").concat(instance.signature, ": ").concat(err.message));
-        }
-    };
+        return `<${this.typeName}>`;
+    }
     /**
-     * Register a RevertError type so that it can be decoded by
-     * `RevertError.decode`.
-     * @param revertClass A class that inherits from RevertError.
-     * @param force Allow overwriting existing registrations.
+     * Get the class name of this type.
      */
-    RevertError.registerType = function (revertClass, force) {
-        if (force === void 0) { force = false; }
-        var instance = new revertClass();
-        if (!force && instance.selector in RevertError._typeRegistry) {
-            throw new Error("RevertError type with signature \"".concat(instance.signature, "\" is already registered"));
+    get typeName() {
+        // tslint:disable-next-line: no-string-literal
+        return this.constructor.name;
+    }
+    /**
+     * Get the hex selector for this revert (without leading '0x').
+     */
+    get selector() {
+        if (!_.isNil(this.abi)) {
+            return toSelector(this.abi);
         }
-        if (_.isNil(instance.abi)) {
-            throw new Error("Attempting to register a RevertError class with no ABI");
+        if (this._isRawType) {
+            // tslint:disable-next-line: custom-no-magic-numbers
+            return this._raw.slice(2, 10);
         }
-        RevertError._typeRegistry[instance.selector] = {
-            type: revertClass,
-            decoder: createDecoder(instance.abi),
-        };
-    };
-    Object.defineProperty(RevertError.prototype, "name", {
-        /**
-         * Get the ABI name for this revert.
-         */
-        get: function () {
-            if (!_.isNil(this.abi)) {
-                return this.abi.name;
-            }
-            return "<".concat(this.typeName, ">");
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(RevertError.prototype, "typeName", {
-        /**
-         * Get the class name of this type.
-         */
-        get: function () {
-            // tslint:disable-next-line: no-string-literal
-            return this.constructor.name;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(RevertError.prototype, "selector", {
-        /**
-         * Get the hex selector for this revert (without leading '0x').
-         */
-        get: function () {
-            if (!_.isNil(this.abi)) {
-                return toSelector(this.abi);
-            }
-            if (this._isRawType) {
-                // tslint:disable-next-line: custom-no-magic-numbers
-                return this._raw.slice(2, 10);
-            }
-            return '';
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(RevertError.prototype, "signature", {
-        /**
-         * Get the signature for this revert: e.g., 'Error(string)'.
-         */
-        get: function () {
-            if (!_.isNil(this.abi)) {
-                return toSignature(this.abi);
-            }
-            return '';
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(RevertError.prototype, "arguments", {
-        /**
-         * Get the ABI arguments for this revert.
-         */
-        get: function () {
-            if (!_.isNil(this.abi)) {
-                return this.abi.arguments || [];
-            }
-            return [];
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(RevertError.prototype, Symbol.toStringTag, {
-        get: function () {
-            return this.toString();
-        },
-        enumerable: false,
-        configurable: true
-    });
+        return '';
+    }
+    /**
+     * Get the signature for this revert: e.g., 'Error(string)'.
+     */
+    get signature() {
+        if (!_.isNil(this.abi)) {
+            return toSignature(this.abi);
+        }
+        return '';
+    }
+    /**
+     * Get the ABI arguments for this revert.
+     */
+    get arguments() {
+        if (!_.isNil(this.abi)) {
+            return this.abi.arguments || [];
+        }
+        return [];
+    }
+    get [Symbol.toStringTag]() {
+        return this.toString();
+    }
     /**
      * Compares this instance with another.
      * Fails if instances are not of the same type.
@@ -249,8 +235,8 @@ var RevertError = /** @class */ (function (_super) {
      * @param other Either another RevertError instance, hex-encoded bytes, or a Buffer of the ABI encoded revert.
      * @return True if both instances match.
      */
-    RevertError.prototype.equals = function (other) {
-        var _other = other;
+    equals(other) {
+        let _other = other;
         if (_other instanceof Buffer) {
             _other = ethUtil.bufferToHex(_other);
         }
@@ -273,40 +259,39 @@ var RevertError = /** @class */ (function (_super) {
             return false;
         }
         // Must share the same parameter values if defined in both instances.
-        for (var _i = 0, _a = Object.keys(this.values); _i < _a.length; _i++) {
-            var name_1 = _a[_i];
-            var a = this.values[name_1];
-            var b = _other.values[name_1];
+        for (const name of Object.keys(this.values)) {
+            const a = this.values[name];
+            const b = _other.values[name];
             if (a === b) {
                 continue;
             }
             if (!_.isNil(a) && !_.isNil(b)) {
-                var type = this._getArgumentByName(name_1).type;
+                const { type } = this._getArgumentByName(name);
                 if (!checkArgEquality(type, a, b)) {
                     return false;
                 }
             }
         }
         return true;
-    };
-    RevertError.prototype.encode = function () {
+    }
+    encode() {
         if (this._raw !== undefined) {
             return this._raw;
         }
         if (!this._hasAllArgumentValues) {
-            throw new Error("Instance of ".concat(this.typeName, " does not have all its parameter values set."));
+            throw new Error(`Instance of ${this.typeName} does not have all its parameter values set.`);
         }
-        var encoder = createEncoder(this.abi);
+        const encoder = createEncoder(this.abi);
         return encoder(this.values);
-    };
-    RevertError.prototype.toString = function () {
+    }
+    toString() {
         if (this._isRawType) {
-            return "".concat(this.constructor.name, "(").concat(this._raw, ")");
+            return `${this.constructor.name}(${this._raw})`;
         }
-        var values = _.omitBy(this.values, function (v) { return _.isNil(v); });
+        const values = _.omitBy(this.values, (v) => _.isNil(v));
         // tslint:disable-next-line: forin
-        for (var k in values) {
-            var argType = this._getArgumentByName(k).type;
+        for (const k in values) {
+            const { type: argType } = this._getArgumentByName(k);
             if (argType === 'bytes') {
                 // Try to decode nested revert errors.
                 try {
@@ -315,54 +300,40 @@ var RevertError = /** @class */ (function (_super) {
                 catch (err) { } // tslint:disable-line:no-empty
             }
         }
-        var inner = _.isEmpty(values) ? '' : (0, util_1.inspect)(values);
-        return "".concat(this.constructor.name, "(").concat(inner, ")");
-    };
-    RevertError.prototype._getArgumentByName = function (name) {
-        var arg = _.find(this.arguments, function (a) { return a.name === name; });
+        const inner = _.isEmpty(values) ? '' : (0, util_1.inspect)(values);
+        return `${this.constructor.name}(${inner})`;
+    }
+    _getArgumentByName(name) {
+        const arg = _.find(this.arguments, (a) => a.name === name);
         if (_.isNil(arg)) {
-            throw new Error("RevertError ".concat(this.signature, " has no argument named ").concat(name));
+            throw new Error(`RevertError ${this.signature} has no argument named ${name}`);
         }
         return arg;
-    };
-    Object.defineProperty(RevertError.prototype, "_isAnyType", {
-        get: function () {
-            return _.isNil(this.abi) && _.isNil(this._raw);
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(RevertError.prototype, "_isRawType", {
-        get: function () {
-            return !_.isNil(this._raw);
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(RevertError.prototype, "_hasAllArgumentValues", {
-        get: function () {
-            if (_.isNil(this.abi) || _.isNil(this.abi.arguments)) {
+    }
+    get _isAnyType() {
+        return _.isNil(this.abi) && _.isNil(this._raw);
+    }
+    get _isRawType() {
+        return !_.isNil(this._raw);
+    }
+    get _hasAllArgumentValues() {
+        if (_.isNil(this.abi) || _.isNil(this.abi.arguments)) {
+            return false;
+        }
+        for (const arg of this.abi.arguments) {
+            if (_.isNil(this.values[arg.name])) {
                 return false;
             }
-            for (var _i = 0, _a = this.abi.arguments; _i < _a.length; _i++) {
-                var arg = _a[_i];
-                if (_.isNil(this.values[arg.name])) {
-                    return false;
-                }
-            }
-            return true;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    // Map of types registered via `registerType`.
-    RevertError._typeRegistry = {};
-    return RevertError;
-}(Error));
+        }
+        return true;
+    }
+}
 exports.RevertError = RevertError;
-var PARITY_TRANSACTION_REVERT_ERROR_MESSAGE = /^VM execution error/;
-var GANACHE_TRANSACTION_REVERT_ERROR_MESSAGE = /^VM Exception while processing transaction: revert/;
-var GETH_TRANSACTION_REVERT_ERROR_MESSAGE = /always failing transaction$/;
+// Map of types registered via `registerType`.
+RevertError._typeRegistry = {};
+const PARITY_TRANSACTION_REVERT_ERROR_MESSAGE = /^VM execution error/;
+const GANACHE_TRANSACTION_REVERT_ERROR_MESSAGE = /^VM Exception while processing transaction: revert/;
+const GETH_TRANSACTION_REVERT_ERROR_MESSAGE = /always failing transaction$/;
 /**
  * Try to extract the ecnoded revert error bytes from a thrown `Error`.
  */
@@ -373,8 +344,8 @@ function getThrownErrorRevertErrorBytes(error) {
     }
     else if (isParityTransactionRevertError(error)) {
         // Parity returns { data: 'Reverted 0xa6bcde47...', ... }
-        var data = error.data;
-        var hexDataIndex = data.indexOf('0x');
+        const { data } = error;
+        const hexDataIndex = data.indexOf('0x');
         if (hexDataIndex !== -1) {
             return data.slice(hexDataIndex);
         }
@@ -386,7 +357,7 @@ function getThrownErrorRevertErrorBytes(error) {
             // so we do nothing.
         }
     }
-    throw new Error("Cannot decode thrown Error \"".concat(error.message, "\" as a RevertError"));
+    throw new Error(`Cannot decode thrown Error "${error.message}" as a RevertError`);
 }
 function isParityTransactionRevertError(error) {
     if (PARITY_TRANSACTION_REVERT_ERROR_MESSAGE.test(error.message) && 'code' in error && 'data' in error) {
@@ -406,35 +377,29 @@ function isGethTransactionRevertError(error) {
 /**
  * RevertError type for standard string reverts.
  */
-var StringRevertError = /** @class */ (function (_super) {
-    __extends(StringRevertError, _super);
-    function StringRevertError(message) {
-        return _super.call(this, 'StringRevertError', 'Error(string message)', { message: message }) || this;
+class StringRevertError extends RevertError {
+    constructor(message) {
+        super('StringRevertError', 'Error(string message)', { message });
     }
-    return StringRevertError;
-}(RevertError));
+}
 exports.StringRevertError = StringRevertError;
 /**
  * Special RevertError type that matches with any other RevertError instance.
  */
-var AnyRevertError = /** @class */ (function (_super) {
-    __extends(AnyRevertError, _super);
-    function AnyRevertError() {
-        return _super.call(this, 'AnyRevertError') || this;
+class AnyRevertError extends RevertError {
+    constructor() {
+        super('AnyRevertError');
     }
-    return AnyRevertError;
-}(RevertError));
+}
 exports.AnyRevertError = AnyRevertError;
 /**
  * Special RevertError type that is not decoded.
  */
-var RawRevertError = /** @class */ (function (_super) {
-    __extends(RawRevertError, _super);
-    function RawRevertError(encoded) {
-        return _super.call(this, 'RawRevertError', undefined, undefined, typeof encoded === 'string' ? encoded : ethUtil.bufferToHex(encoded)) || this;
+class RawRevertError extends RevertError {
+    constructor(encoded) {
+        super('RawRevertError', undefined, undefined, typeof encoded === 'string' ? encoded : ethUtil.bufferToHex(encoded));
     }
-    return RawRevertError;
-}(RevertError));
+}
 exports.RawRevertError = RawRevertError;
 /**
  * Create an error message for a RevertError.
@@ -443,11 +408,11 @@ exports.RawRevertError = RawRevertError;
  */
 function createErrorMessage(name, values) {
     if (values === undefined) {
-        return "".concat(name, "()");
+        return `${name}()`;
     }
-    var _values = _.omitBy(values, function (v) { return _.isNil(v); });
-    var inner = _.isEmpty(_values) ? '' : (0, util_1.inspect)(_values);
-    return "".concat(name, "(").concat(inner, ")");
+    const _values = _.omitBy(values, (v) => _.isNil(v));
+    const inner = _.isEmpty(_values) ? '' : (0, util_1.inspect)(_values);
+    return `${name}(${inner})`;
 }
 /**
  * Parse a solidity function declaration into a RevertErrorAbi object.
@@ -455,18 +420,18 @@ function createErrorMessage(name, values) {
  * @return A RevertErrorAbi object.
  */
 function declarationToAbi(declaration) {
-    var m = /^\s*([_a-z][a-z0-9_]*)\((.*)\)\s*$/i.exec(declaration);
+    let m = /^\s*([_a-z][a-z0-9_]*)\((.*)\)\s*$/i.exec(declaration);
     if (!m) {
-        throw new Error("Invalid Revert Error signature: \"".concat(declaration, "\""));
+        throw new Error(`Invalid Revert Error signature: "${declaration}"`);
     }
-    var _a = m.slice(1), name = _a[0], args = _a[1];
-    var argList = _.filter(args.split(','));
-    var argData = _.map(argList, function (a) {
+    const [name, args] = m.slice(1);
+    const argList = _.filter(args.split(','));
+    const argData = _.map(argList, (a) => {
         // Match a function parameter in the format 'TYPE ID', where 'TYPE' may be
         // an array type.
         m = /^\s*(([_a-z][a-z0-9_]*)(\[\d*\])*)\s+([_a-z][a-z0-9_]*)\s*$/i.exec(a);
         if (!m) {
-            throw new Error("Invalid Revert Error signature: \"".concat(declaration, "\""));
+            throw new Error(`Invalid Revert Error signature: "${declaration}"`);
         }
         // tslint:disable: custom-no-magic-numbers
         return {
@@ -475,9 +440,9 @@ function declarationToAbi(declaration) {
         };
         // tslint:enable: custom-no-magic-numbers
     });
-    var r = {
+    const r = {
         type: 'error',
-        name: name,
+        name,
         arguments: _.isEmpty(argData) ? [] : argData,
     };
     return r;
@@ -506,19 +471,18 @@ function checkArgEquality(type, lhs, rhs) {
         if (lhs.length !== rhs.length) {
             return false;
         }
-        var m = /^(.+)\[(\d*)\]$/.exec(type);
-        var baseType = m[1];
-        var isFixedLength = m[2].length !== 0;
+        const m = /^(.+)\[(\d*)\]$/.exec(type);
+        const baseType = m[1];
+        const isFixedLength = m[2].length !== 0;
         if (isFixedLength) {
-            var length_1 = parseInt(m[2], 10);
+            const length = parseInt(m[2], 10);
             // Fixed-size arrays have a fixed dimension.
-            if (lhs.length !== length_1) {
+            if (lhs.length !== length) {
                 return false;
             }
         }
         // Recurse into sub-elements.
-        for (var _i = 0, _a = _.zip(lhs, rhs); _i < _a.length; _i++) {
-            var _b = _a[_i], slhs = _b[0], srhs = _b[1];
+        for (const [slhs, srhs] of _.zip(lhs, rhs)) {
             if (!checkArgEquality(baseType, slhs, srhs)) {
                 return false;
             }
@@ -530,29 +494,29 @@ function checkArgEquality(type, lhs, rhs) {
     return new configured_bignumber_1.BigNumber(lhs || 0).eq(rhs);
 }
 function normalizeAddress(addr) {
-    var ADDRESS_SIZE = 20;
+    const ADDRESS_SIZE = 20;
     return ethUtil.bufferToHex(ethUtil.setLengthLeft(ethUtil.toBuffer(ethUtil.addHexPrefix(addr)), ADDRESS_SIZE));
 }
 function normalizeBytes(bytes) {
     return ethUtil.addHexPrefix(bytes).toLowerCase();
 }
 function createEncoder(abi) {
-    var encoder = AbiEncoder.createMethod(abi.name, abi.arguments || []);
-    return function (values) {
-        var valuesArray = _.map(abi.arguments, function (arg) { return values[arg.name]; });
+    const encoder = AbiEncoder.createMethod(abi.name, abi.arguments || []);
+    return (values) => {
+        const valuesArray = _.map(abi.arguments, (arg) => values[arg.name]);
         return encoder.encode(valuesArray);
     };
 }
 function createDecoder(abi) {
-    var encoder = AbiEncoder.createMethod(abi.name, abi.arguments || []);
-    return function (hex) {
+    const encoder = AbiEncoder.createMethod(abi.name, abi.arguments || []);
+    return (hex) => {
         return encoder.decode(hex);
     };
 }
 function toSignature(abi) {
-    var argTypes = _.map(abi.arguments, function (a) { return a.type; });
-    var args = argTypes.join(',');
-    return "".concat(abi.name, "(").concat(args, ")");
+    const argTypes = _.map(abi.arguments, (a) => a.type);
+    const args = argTypes.join(',');
+    return `${abi.name}(${args})`;
 }
 function toSelector(abi) {
     return (ethUtil
