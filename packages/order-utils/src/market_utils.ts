@@ -77,10 +77,9 @@ export const marketUtils = {
         _.forEach(remainingFillableMakerAssetAmounts, (amount: bigint, index: number) =>
             assert.isValidBaseUnitAmount(`remainingFillableMakerAssetAmount[${index}]`, amount),
         );
-        assert.assert(
-            orders.length === remainingFillableMakerAssetAmounts.length,
-            'Expected orders.length to equal opts.remainingFillableMakerAssetAmounts.length',
-        );
+        if (orders.length !== remainingFillableMakerAssetAmounts.length) {
+            throw new Error('Expected orders.length to equal opts.remainingFillableMakerAssetAmounts.length');
+        }
         // try to get remainingFillableFeeAmounts from opts, if it's not there, use makerAssetAmount values from feeOrders
         const remainingFillableFeeAmounts = _.get(
             opts,
@@ -90,10 +89,9 @@ export const marketUtils = {
         _.forEach(remainingFillableFeeAmounts, (amount: bigint, index: number) =>
             assert.isValidBaseUnitAmount(`remainingFillableFeeAmounts[${index}]`, amount),
         );
-        assert.assert(
-            feeOrders.length === remainingFillableFeeAmounts.length,
-            'Expected feeOrders.length to equal opts.remainingFillableFeeAmounts.length',
-        );
+        if (feeOrders.length !== remainingFillableFeeAmounts.length) {
+            throw new Error('Expected feeOrders.length to equal opts.remainingFillableFeeAmounts.length');
+        }
         // try to get slippageBufferAmount from opts, if it's not there, default to 0
         const slippageBufferAmount = _.get(opts, 'slippageBufferAmount', constants.ZERO_AMOUNT) as bigint;
         assert.isValidBaseUnitAmount('opts.slippageBufferAmount', slippageBufferAmount);
@@ -144,10 +142,9 @@ function findOrdersThatCoverAssetFillAmount<T extends Order>(
     _.forEach(remainingFillableAssetAmounts, (amount: bigint, index: number) =>
         assert.isValidBaseUnitAmount(`remainingFillable${variablePrefix}AssetAmount[${index}]`, amount),
     );
-    assert.assert(
-        orders.length === remainingFillableAssetAmounts.length,
-        `Expected orders.length to equal opts.remainingFillable${variablePrefix}AssetAmounts.length`,
-    );
+    if (orders.length !== remainingFillableAssetAmounts.length) {
+        throw new Error(`Expected orders.length to equal opts.remainingFillable${variablePrefix}AssetAmounts.length`);
+    }
     // try to get slippageBufferAmount from opts, if it's not there, default to 0
     const slippageBufferAmount = _.get(opts, 'slippageBufferAmount', constants.ZERO_AMOUNT) as bigint;
     assert.isValidBaseUnitAmount('opts.slippageBufferAmount', slippageBufferAmount);
@@ -156,8 +153,12 @@ function findOrdersThatCoverAssetFillAmount<T extends Order>(
     // iterate through the orders input from left to right until we have enough makerAsset to fill totalFillAmount
     const result = _.reduce(
         orders,
-        ({ resultOrders, remainingFillAmount, ordersRemainingFillableAssetAmounts }, order, index) => {
-            if (remainingFillAmount.isLessThanOrEqualTo(constants.ZERO_AMOUNT)) {
+        ({ resultOrders, remainingFillAmount, ordersRemainingFillableAssetAmounts }: {
+            resultOrders: T[];
+            remainingFillAmount: bigint;
+            ordersRemainingFillableAssetAmounts: bigint[];
+        }, order: T, index: number) => {
+            if (remainingFillAmount <= constants.ZERO_AMOUNT) {
                 return {
                     resultOrders,
                     remainingFillAmount: constants.ZERO_AMOUNT,
@@ -165,25 +166,23 @@ function findOrdersThatCoverAssetFillAmount<T extends Order>(
                 };
             } else {
                 const assetAmountAvailable = remainingFillableAssetAmounts[index];
-                const shouldIncludeOrder = assetAmountAvailable.gt(constants.ZERO_AMOUNT);
+                const shouldIncludeOrder = assetAmountAvailable > constants.ZERO_AMOUNT;
                 // if there is no assetAmountAvailable do not append order to resultOrders
                 // if we have exceeded the total amount we want to fill set remainingFillAmount to 0
+                const newRemainingAmount = remainingFillAmount - assetAmountAvailable;
                 return {
                     resultOrders: shouldIncludeOrder ? _.concat(resultOrders, order) : resultOrders,
                     ordersRemainingFillableAssetAmounts: shouldIncludeOrder
                         ? _.concat(ordersRemainingFillableAssetAmounts, assetAmountAvailable)
                         : ordersRemainingFillableAssetAmounts,
-                    remainingFillAmount: BigNumber.max(
-                        constants.ZERO_AMOUNT,
-                        remainingFillAmount.minus(assetAmountAvailable),
-                    ),
+                    remainingFillAmount: newRemainingAmount > constants.ZERO_AMOUNT ? newRemainingAmount : constants.ZERO_AMOUNT,
                 };
             }
         },
         {
             resultOrders: [] as T[],
             remainingFillAmount: totalFillAmount,
-            ordersRemainingFillableAssetAmounts: [] as BigNumber[],
+            ordersRemainingFillableAssetAmounts: [] as bigint[],
         },
     );
 
