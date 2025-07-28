@@ -1,6 +1,4 @@
-// @ts-ignore
-// @ts-ignore
-import { AbiEncoder // @ts-ignore
+import { AbiEncoder 
 } from '@0x/utils';
 import { ContractArtifact, DataItem, MethodAbi } from 'ethereum-types';
 

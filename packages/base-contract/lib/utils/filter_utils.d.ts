@@ -2,7 +2,7 @@ import { IndexedFilterValues } from '@0x/types';
 import { BlockRange, ContractAbi, EventAbi, FilterObject, LogEntry } from 'ethereum-types';
 export declare const filterUtils: {
     generateUUID(): string;
-    getFilter<ContractEvents extends string>(address: string, eventName: ContractEvents, indexFilterValues: IndexedFilterValues, abi: ContractAbi, blockRange?: BlockRange | undefined): FilterObject;
+    getFilter<ContractEvents extends string>(address: string, eventName: ContractEvents, indexFilterValues: IndexedFilterValues, abi: ContractAbi, blockRange?: BlockRange): FilterObject;
     getEventSignatureFromAbiByName(eventAbi: EventAbi): string;
     getTopicsForIndexedArgs(abi: EventAbi, indexFilterValues: IndexedFilterValues): Array<string | null>;
     matchesFilter(log: LogEntry, filter: FilterObject): boolean;

@@ -1,5 +1,4 @@
 import { addHexPrefix, isValidChecksumAddress, stripHexPrefix } from 'ethereumjs-util';
-// @ts-ignore
 import * as _ from 'lodash';
 
 import { hexUtils } from './hex_utils';

@@ -1,6 +1,6 @@
 import { BlockParam, CallData, LogEntryEvent, TransactionReceiptWithDecodedLogs, TxAccessListWithGas, TxData } from 'ethereum-types';
 import { PromiseWithTransactionHash } from './index';
-export declare type LogEvent = LogEntryEvent;
+export type LogEvent = LogEntryEvent;
 export interface ContractEvent<ContractEventArgs> {
     logIndex: number;
     transactionIndex: number;

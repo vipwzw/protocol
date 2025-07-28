@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { CalldataBlock } from '../calldata_block';
 export declare class SetCalldataBlock extends CalldataBlock {
     private _header;

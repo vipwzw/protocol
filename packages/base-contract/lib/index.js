@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -11,13 +15,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -70,56 +84,8 @@ class PromiseWithTransactionHash {
 }
 exports.PromiseWithTransactionHash = PromiseWithTransactionHash;
 class BaseContract {
-    /// @dev Constructs a contract wrapper.
-    /// @param contractName Name of contract.
-    /// @param abi of the contract.
-    /// @param address of the deployed contract.
-    /// @param supportedProvider for communicating with an ethereum node.
-    /// @param logDecodeDependencies the name and ABI of contracts whose event logs are
-    ///        decoded by this wrapper.
-    /// @param deployedBytecode the deployedBytecode of the contract, used for executing
-    ///        pure Solidity functions in memory. This is different from the bytecode.
-    constructor(contractName, abi, address, supportedProvider, callAndTxnDefaults, logDecodeDependencies, deployedBytecode, encoderOverrides) {
-        this.constructorArgs = [];
-        assert_utils_1.assert.isString('contractName', contractName);
-        assert_utils_1.assert.isETHAddressHex('address', address);
-        if (deployedBytecode !== undefined && deployedBytecode !== '') {
-            // `deployedBytecode` might contain references to
-            // unlinked libraries and, hence, would not be a hex string. We'll just
-            // leave `_deployedBytecodeIfExists` empty if this is the case.
-            // TODO(dorothy-zbornak): We should link the `deployedBytecode`
-            // beforehand in the generated wrappers.
-            try {
-                assert_utils_1.assert.isHexString('deployedBytecode', deployedBytecode);
-                this._deployedBytecodeIfExists = Buffer.from(deployedBytecode.substr(2), 'hex');
-            }
-            catch (err) {
-                // Do nothing.
-            }
-        }
-        const provider = utils_1.providerUtils.standardizeOrThrow(supportedProvider);
-        if (callAndTxnDefaults !== undefined) {
-            assert_utils_1.assert.doesConformToSchema('callAndTxnDefaults', callAndTxnDefaults, json_schemas_1.schemas.callDataSchema);
-        }
-        this.contractName = contractName;
-        this._web3Wrapper = new web3_wrapper_1.Web3Wrapper(provider, callAndTxnDefaults);
-        this._encoderOverrides = encoderOverrides || {};
-        this.abi = abi;
-        this.address = address;
-        const methodAbis = this.abi.filter((abiDefinition) => abiDefinition.type === ethereum_types_1.AbiType.Function);
-        this._abiEncoderByFunctionSignature = {};
-        methodAbis.forEach(methodAbi => {
-            const abiEncoder = new utils_1.AbiEncoder.Method(methodAbi);
-            const functionSignature = abiEncoder.getSignature();
-            this._abiEncoderByFunctionSignature[functionSignature] = abiEncoder;
-            this._web3Wrapper.abiDecoder.addABI(abi, contractName);
-        });
-        if (logDecodeDependencies) {
-            Object.entries(logDecodeDependencies).forEach(([dependencyName, dependencyAbi]) => this._web3Wrapper.abiDecoder.addABI(dependencyAbi, dependencyName));
-        }
-    }
     static _formatABIDataItemList(abis, values, formatter) {
-        return values.map((value, i) => utils_2.formatABIDataItem(abis[i], value, formatter));
+        return values.map((value, i) => (0, utils_2.formatABIDataItem)(abis[i], value, formatter));
     }
     static _lowercaseAddress(type, value) {
         return type === 'address' ? value.toLowerCase() : value;
@@ -148,7 +114,7 @@ class BaseContract {
         // Try to decode the call result as a revert error.
         let revert;
         try {
-            revert = utils_1.decodeBytesAsRevertError(rawCallResult);
+            revert = (0, utils_1.decodeBytesAsRevertError)(rawCallResult);
         }
         catch (err) {
             // Can't decode it as a revert error, so assume it didn't revert.
@@ -160,7 +126,7 @@ class BaseContract {
         // Try to decode a thrown error.
         let revertError;
         try {
-            revertError = utils_1.decodeThrownErrorAsRevertError(error);
+            revertError = (0, utils_1.decodeThrownErrorAsRevertError)(error);
         }
         catch (err) {
             // Can't decode it.
@@ -334,6 +300,54 @@ class BaseContract {
         }
         const abiEncodedArguments = abiEncoder.encode(functionArguments);
         return abiEncodedArguments;
+    }
+    /// @dev Constructs a contract wrapper.
+    /// @param contractName Name of contract.
+    /// @param abi of the contract.
+    /// @param address of the deployed contract.
+    /// @param supportedProvider for communicating with an ethereum node.
+    /// @param logDecodeDependencies the name and ABI of contracts whose event logs are
+    ///        decoded by this wrapper.
+    /// @param deployedBytecode the deployedBytecode of the contract, used for executing
+    ///        pure Solidity functions in memory. This is different from the bytecode.
+    constructor(contractName, abi, address, supportedProvider, callAndTxnDefaults, logDecodeDependencies, deployedBytecode, encoderOverrides) {
+        this.constructorArgs = [];
+        assert_utils_1.assert.isString('contractName', contractName);
+        assert_utils_1.assert.isETHAddressHex('address', address);
+        if (deployedBytecode !== undefined && deployedBytecode !== '') {
+            // `deployedBytecode` might contain references to
+            // unlinked libraries and, hence, would not be a hex string. We'll just
+            // leave `_deployedBytecodeIfExists` empty if this is the case.
+            // TODO(dorothy-zbornak): We should link the `deployedBytecode`
+            // beforehand in the generated wrappers.
+            try {
+                assert_utils_1.assert.isHexString('deployedBytecode', deployedBytecode);
+                this._deployedBytecodeIfExists = Buffer.from(deployedBytecode.substr(2), 'hex');
+            }
+            catch (err) {
+                // Do nothing.
+            }
+        }
+        const provider = utils_1.providerUtils.standardizeOrThrow(supportedProvider);
+        if (callAndTxnDefaults !== undefined) {
+            assert_utils_1.assert.doesConformToSchema('callAndTxnDefaults', callAndTxnDefaults, json_schemas_1.schemas.callDataSchema);
+        }
+        this.contractName = contractName;
+        this._web3Wrapper = new web3_wrapper_1.Web3Wrapper(provider, callAndTxnDefaults);
+        this._encoderOverrides = encoderOverrides || {};
+        this.abi = abi;
+        this.address = address;
+        const methodAbis = this.abi.filter((abiDefinition) => abiDefinition.type === ethereum_types_1.AbiType.Function);
+        this._abiEncoderByFunctionSignature = {};
+        methodAbis.forEach(methodAbi => {
+            const abiEncoder = new utils_1.AbiEncoder.Method(methodAbi);
+            const functionSignature = abiEncoder.getSignature();
+            this._abiEncoderByFunctionSignature[functionSignature] = abiEncoder;
+            this._web3Wrapper.abiDecoder.addABI(abi, contractName);
+        });
+        if (logDecodeDependencies) {
+            Object.entries(logDecodeDependencies).forEach(([dependencyName, dependencyAbi]) => this._web3Wrapper.abiDecoder.addABI(dependencyAbi, dependencyName));
+        }
     }
 }
 exports.BaseContract = BaseContract;

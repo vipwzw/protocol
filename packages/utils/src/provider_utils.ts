@@ -6,7 +6,6 @@ import {
     SupportedProvider,
     ZeroExProvider,
 } from 'ethereum-types';
-// @ts-ignore
 import * as _ from 'lodash';
 
 export const providerUtils = {

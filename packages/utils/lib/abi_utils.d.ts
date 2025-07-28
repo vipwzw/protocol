@@ -1,5 +1,5 @@
 import { ContractAbi, DataItem, MethodAbi } from 'ethereum-types';
-declare type ParamName = null | string | NestedParamName;
+type ParamName = null | string | NestedParamName;
 interface NestedParamName {
     name: string | null;
     names: ParamName[];

@@ -1,5 +1,3 @@
-/// <reference types="node" />
-/// <reference types="mocha" />
 export declare const intervalUtils: {
     setAsyncExcludingInterval(fn: () => Promise<void>, intervalMs: number, onError: (err: Error) => void): NodeJS.Timeout;
     clearAsyncExcludingInterval(intervalId: NodeJS.Timeout): void;

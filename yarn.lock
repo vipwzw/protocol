@@ -1035,69 +1035,57 @@
 "@0x/utils@^5.1.1":
   version "7.0.0"
   dependencies:
-    "@0x/types" "^3.3.7"
-    "@types/mocha" "^5.2.7"
-    "@types/node" "12.12.54"
+    "@0x/types" "file:packages/types"
     abortcontroller-polyfill "^1.1.9"
-    bignumber.js "~9.0.2"
-    chalk "^2.3.0"
-    detect-node "2.0.3"
+    chalk "^4.1.2"
+    detect-node "^2.1.0"
     ethereum-types "^3.7.1"
     ethereumjs-util "^7.1.5"
-    ethers "~4.0.4"
+    ethers "^6.15.0"
     isomorphic-fetch "^3.0.0"
-    js-sha3 "^0.7.0"
+    js-sha3 "^0.8.0"
     lodash "^4.17.21"
 
 "@0x/utils@^6.4.3":
   version "7.0.0"
   dependencies:
-    "@0x/types" "^3.3.7"
-    "@types/mocha" "^5.2.7"
-    "@types/node" "12.12.54"
+    "@0x/types" "file:packages/types"
     abortcontroller-polyfill "^1.1.9"
-    bignumber.js "~9.0.2"
-    chalk "^2.3.0"
-    detect-node "2.0.3"
+    chalk "^4.1.2"
+    detect-node "^2.1.0"
     ethereum-types "^3.7.1"
     ethereumjs-util "^7.1.5"
-    ethers "~4.0.4"
+    ethers "^6.15.0"
     isomorphic-fetch "^3.0.0"
-    js-sha3 "^0.7.0"
+    js-sha3 "^0.8.0"
     lodash "^4.17.21"
 
 "@0x/utils@^6.5.3":
   version "7.0.0"
   dependencies:
-    "@0x/types" "^3.3.7"
-    "@types/mocha" "^5.2.7"
-    "@types/node" "12.12.54"
+    "@0x/types" "file:packages/types"
     abortcontroller-polyfill "^1.1.9"
-    bignumber.js "~9.0.2"
-    chalk "^2.3.0"
-    detect-node "2.0.3"
+    chalk "^4.1.2"
+    detect-node "^2.1.0"
     ethereum-types "^3.7.1"
     ethereumjs-util "^7.1.5"
-    ethers "~4.0.4"
+    ethers "^6.15.0"
     isomorphic-fetch "^3.0.0"
-    js-sha3 "^0.7.0"
+    js-sha3 "^0.8.0"
     lodash "^4.17.21"
 
 "@0x/utils@file:packages/utils":
   version "7.0.0"
   dependencies:
-    "@0x/types" "^3.3.7"
-    "@types/mocha" "^5.2.7"
-    "@types/node" "12.12.54"
+    "@0x/types" "file:packages/types"
     abortcontroller-polyfill "^1.1.9"
-    bignumber.js "~9.0.2"
-    chalk "^2.3.0"
-    detect-node "2.0.3"
+    chalk "^4.1.2"
+    detect-node "^2.1.0"
     ethereum-types "^3.7.1"
     ethereumjs-util "^7.1.5"
-    ethers "~4.0.4"
+    ethers "^6.15.0"
     isomorphic-fetch "^3.0.0"
-    js-sha3 "^0.7.0"
+    js-sha3 "^0.8.0"
     lodash "^4.17.21"
 
 "@0x/web3-wrapper@^7.5.3", "@0x/web3-wrapper@^7.6.5":
@@ -4153,11 +4141,6 @@
   resolved "https://registry.yarnpkg.com/@types/deep-eql/-/deep-eql-4.0.2.tgz#334311971d3a07121e7eb91b684a605e7eea9cbd"
   integrity sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==
 
-"@types/detect-node@2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@types/detect-node/-/detect-node-2.0.0.tgz#696e024ddd105c72bbc6a2e3f97902a2886f2c3f"
-  integrity sha512-+BozjlbPTACYITf1PWf62HLtDV79HbmZosUN1mv1gGrnjDCRwBXkDKka1sf6YQJvspmfPXVcy+X6tFW62KteeQ==
-
 "@types/ethereum-protocol@*":
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/@types/ethereum-protocol/-/ethereum-protocol-1.0.5.tgz#6ad4c2c722d440d1f59e0d7e44a0fbb5fad2c41b"
@@ -4512,10 +4495,10 @@
   resolved "https://registry.yarnpkg.com/@types/toposort/-/toposort-2.0.7.tgz#dbf7efa6d81fe464283462a0fa93ce808b46d8bb"
   integrity sha512-sQNk65vbC36+UixCkcky+dCr7MlflHcVILg1FVGqlUntsLFv9xd9ToWIVko/gTuin+cVe16t+2YubEFkhnSuPQ==
 
-"@types/uuid@^3.4.3":
-  version "3.4.13"
-  resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-3.4.13.tgz#fe890e517fb840620be284ee213e81d702b1f76b"
-  integrity sha512-pAeZeUbLE4Z9Vi9wsWV2bYPTweEHeJJy0G4pEjOA/FSvy1Ad5U5Km8iDV6TKre1mjBiVNfAdVHKruP8bAh4Q5A==
+"@types/uuid@^8.3.4":
+  version "8.3.4"
+  resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-8.3.4.tgz#bd86a43617df0594787d38b735f55c805becf1bc"
+  integrity sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==
 
 "@types/web3-provider-engine@^14.0.0":
   version "14.0.4"
@@ -8039,10 +8022,10 @@ detect-libc@^1.0.3:
   resolved "https://registry.yarnpkg.com/detect-libc/-/detect-libc-1.0.3.tgz#fa137c4bd698edf55cd5cd02ac559f91a4c4ba9b"
   integrity sha512-pGjwhsmsp4kL2RTz08wcOlGN83otlqHeD/Z5T8GXZB+/YcpQ/dgo+lbU8ZsGxV0HIvqqxo9l7mqYwyYMD9bKDg==
 
-detect-node@2.0.3:
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/detect-node/-/detect-node-2.0.3.tgz#a2033c09cc8e158d37748fbde7507832bd6ce127"
-  integrity sha512-64uDTOK+fKEa6XoSbkkDoeAX8Ep1XhwxwZtL1aw1En5p5UOK/ekJoFqd5BB1o+uOvF1iHVv6qDUxdOQ/VgWEQg==
+detect-node@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/detect-node/-/detect-node-2.1.0.tgz#c9c70775a49c3d03bc2c06d9a73be550f978f8b1"
+  integrity sha512-T0NIuQpnTvFDATNuHN5roPwSBG83rFsuO+MXXH9/3N1eFbn4wcPjttvjMLEPWJ0RGUYgQE7cGgS3tNxbqCGM7g==
 
 dezalgo@^1.0.0:
   version "1.0.4"

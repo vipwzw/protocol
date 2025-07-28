@@ -10,7 +10,7 @@ var SignatureValidationErrorCodes;
     SignatureValidationErrorCodes[SignatureValidationErrorCodes["Unsupported"] = 2] = "Unsupported";
     SignatureValidationErrorCodes[SignatureValidationErrorCodes["Illegal"] = 3] = "Illegal";
     SignatureValidationErrorCodes[SignatureValidationErrorCodes["WrongSigner"] = 4] = "WrongSigner";
-})(SignatureValidationErrorCodes = exports.SignatureValidationErrorCodes || (exports.SignatureValidationErrorCodes = {}));
+})(SignatureValidationErrorCodes || (exports.SignatureValidationErrorCodes = SignatureValidationErrorCodes = {}));
 class SignatureValidationError extends revert_error_1.RevertError {
     constructor(code, hash, signerAddress, signature) {
         super('SignatureValidationError', 'SignatureValidationError(uint8 code, bytes32 hash, address signerAddress, bytes signature)', {

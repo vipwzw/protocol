@@ -9,14 +9,14 @@ var BinOpErrorCodes;
     BinOpErrorCodes[BinOpErrorCodes["MultiplicationOverflow"] = 1] = "MultiplicationOverflow";
     BinOpErrorCodes[BinOpErrorCodes["SubtractionUnderflow"] = 2] = "SubtractionUnderflow";
     BinOpErrorCodes[BinOpErrorCodes["DivisionByZero"] = 3] = "DivisionByZero";
-})(BinOpErrorCodes = exports.BinOpErrorCodes || (exports.BinOpErrorCodes = {}));
+})(BinOpErrorCodes || (exports.BinOpErrorCodes = BinOpErrorCodes = {}));
 var DowncastErrorCodes;
 (function (DowncastErrorCodes) {
     DowncastErrorCodes[DowncastErrorCodes["ValueTooLargeToDowncastToUint32"] = 0] = "ValueTooLargeToDowncastToUint32";
     DowncastErrorCodes[DowncastErrorCodes["ValueTooLargeToDowncastToUint64"] = 1] = "ValueTooLargeToDowncastToUint64";
     DowncastErrorCodes[DowncastErrorCodes["ValueTooLargeToDowncastToUint96"] = 2] = "ValueTooLargeToDowncastToUint96";
     DowncastErrorCodes[DowncastErrorCodes["ValueTooLargeToDowncastToUint128"] = 3] = "ValueTooLargeToDowncastToUint128";
-})(DowncastErrorCodes = exports.DowncastErrorCodes || (exports.DowncastErrorCodes = {}));
+})(DowncastErrorCodes || (exports.DowncastErrorCodes = DowncastErrorCodes = {}));
 class Uint256BinOpError extends revert_error_1.RevertError {
     constructor(error, a, b) {
         super('Uint256BinOpError', 'Uint256BinOpError(uint8 error, uint256 a, uint256 b)', {

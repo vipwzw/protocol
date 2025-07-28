@@ -7,14 +7,14 @@ var ValueErrorCodes;
 (function (ValueErrorCodes) {
     ValueErrorCodes[ValueErrorCodes["TooSmall"] = 0] = "TooSmall";
     ValueErrorCodes[ValueErrorCodes["TooLarge"] = 1] = "TooLarge";
-})(ValueErrorCodes = exports.ValueErrorCodes || (exports.ValueErrorCodes = {}));
+})(ValueErrorCodes || (exports.ValueErrorCodes = ValueErrorCodes = {}));
 var BinOpErrorCodes;
 (function (BinOpErrorCodes) {
     BinOpErrorCodes[BinOpErrorCodes["AdditionOverflow"] = 0] = "AdditionOverflow";
     BinOpErrorCodes[BinOpErrorCodes["MultiplicationOverflow"] = 1] = "MultiplicationOverflow";
     BinOpErrorCodes[BinOpErrorCodes["DivisionByZero"] = 2] = "DivisionByZero";
     BinOpErrorCodes[BinOpErrorCodes["DivisionOverflow"] = 3] = "DivisionOverflow";
-})(BinOpErrorCodes = exports.BinOpErrorCodes || (exports.BinOpErrorCodes = {}));
+})(BinOpErrorCodes || (exports.BinOpErrorCodes = BinOpErrorCodes = {}));
 class SignedValueError extends revert_error_1.RevertError {
     constructor(error, n) {
         super('SignedValueError', 'SignedValueError(uint8 error, int256 n)', {

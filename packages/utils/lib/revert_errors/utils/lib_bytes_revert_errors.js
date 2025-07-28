@@ -12,7 +12,7 @@ var InvalidByteOperationErrorCodes;
     InvalidByteOperationErrorCodes[InvalidByteOperationErrorCodes["LengthGreaterThanOrEqualsThirtyTwoRequired"] = 5] = "LengthGreaterThanOrEqualsThirtyTwoRequired";
     InvalidByteOperationErrorCodes[InvalidByteOperationErrorCodes["LengthGreaterThanOrEqualsNestedBytesLengthRequired"] = 6] = "LengthGreaterThanOrEqualsNestedBytesLengthRequired";
     InvalidByteOperationErrorCodes[InvalidByteOperationErrorCodes["DestinationLengthGreaterThanOrEqualSourceLengthRequired"] = 7] = "DestinationLengthGreaterThanOrEqualSourceLengthRequired";
-})(InvalidByteOperationErrorCodes = exports.InvalidByteOperationErrorCodes || (exports.InvalidByteOperationErrorCodes = {}));
+})(InvalidByteOperationErrorCodes || (exports.InvalidByteOperationErrorCodes = InvalidByteOperationErrorCodes = {}));
 class InvalidByteOperationError extends revert_error_1.RevertError {
     constructor(error, offset, required) {
         super('InvalidByteOperationError', 'InvalidByteOperationError(uint8 error, uint256 offset, uint256 required)', {

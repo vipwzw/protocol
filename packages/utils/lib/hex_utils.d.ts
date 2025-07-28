@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { Numberish } from './types';
 export declare const hexUtils: {
     concat: typeof concat;

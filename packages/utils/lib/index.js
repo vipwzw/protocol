@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -10,7 +14,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ZeroExRevertErrors = exports.toTokenUnitAmount = exports.fromTokenUnitAmount = exports.AnyRevertError = exports.StringRevertError = exports.RevertError = exports.registerRevertErrorType = exports.RawRevertError = exports.coerceThrownErrorAsRevertError = exports.decodeThrownErrorAsRevertError = exports.decodeBytesAsRevertError = exports.generatePseudoRandom256BitNumber = exports.hexUtils = exports.signTypedDataUtils = exports.fetchAsync = exports.errorUtils = exports.AbiEncoderConstants = exports.NULL_ADDRESS = exports.NULL_BYTES = exports.abiUtils = exports.logUtils = exports.AbiDecoder = exports.BigNumber = exports.providerUtils = exports.intervalUtils = exports.deleteNestedProperty = exports.classUtils = exports.addressUtils = exports.promisify = void 0;
+exports.ZeroExRevertErrors = exports.toTokenUnitAmount = exports.fromTokenUnitAmount = exports.AnyRevertError = exports.StringRevertError = exports.RevertError = exports.registerRevertErrorType = exports.RawRevertError = exports.coerceThrownErrorAsRevertError = exports.decodeThrownErrorAsRevertError = exports.decodeBytesAsRevertError = exports.generatePseudoRandom256BitNumber = exports.hexUtils = exports.signTypedDataUtils = exports.fetchAsync = exports.errorUtils = exports.AbiEncoderConstants = exports.NULL_ADDRESS = exports.NULL_BYTES = exports.abiUtils = exports.logUtils = exports.AbiDecoder = exports.providerUtils = exports.intervalUtils = exports.deleteNestedProperty = exports.classUtils = exports.addressUtils = exports.promisify = void 0;
 var promisify_1 = require("./promisify");
 Object.defineProperty(exports, "promisify", { enumerable: true, get: function () { return promisify_1.promisify; } });
 var address_utils_1 = require("./address_utils");

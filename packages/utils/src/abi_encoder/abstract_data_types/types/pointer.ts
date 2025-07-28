@@ -1,6 +1,5 @@
 import { DataItem } from 'ethereum-types';
 import * as ethUtil from 'ethereumjs-util';
-// @ts-ignore
 import * as _ from 'lodash';
 
 import { PointerCalldataBlock } from '../../calldata/blocks/pointer';

@@ -14,4 +14,4 @@ export interface DecodedCalldata {
     functionSignature: string;
     functionArguments: any;
 }
-export declare type Numberish = BigNumber | string | number;
+export type Numberish = BigNumber | string | number;

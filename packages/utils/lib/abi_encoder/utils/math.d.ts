@@ -1,4 +1,3 @@
-/// <reference types="node" />
 /**
  * Takes a numeric value and returns its ABI-encoded value
  * @param value_    The value to encode.

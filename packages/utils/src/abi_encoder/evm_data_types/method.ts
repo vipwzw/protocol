@@ -1,6 +1,5 @@
 import { DataItem, MethodAbi } from 'ethereum-types';
 import * as ethUtil from 'ethereumjs-util';
-// @ts-ignore
 import * as _ from 'lodash';
 
 import { DataType } from '../abstract_data_types/data_type';

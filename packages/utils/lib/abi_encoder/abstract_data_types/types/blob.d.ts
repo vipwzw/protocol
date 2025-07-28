@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { DataItem } from 'ethereum-types';
 import { BlobCalldataBlock } from '../../calldata/blocks/blob';
 import { CalldataBlock } from '../../calldata/calldata_block';

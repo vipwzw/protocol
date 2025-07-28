@@ -1,4 +1,3 @@
-/// <reference types="node" />
 export declare class RawCalldata {
     private static readonly _INITIAL_OFFSET;
     private readonly _value;

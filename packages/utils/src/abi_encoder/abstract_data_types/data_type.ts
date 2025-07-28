@@ -1,5 +1,4 @@
 import { DataItem } from 'ethereum-types';
-// @ts-ignore
 import * as _ from 'lodash';
 
 import { Calldata } from '../calldata/calldata';

@@ -1,4 +1,3 @@
-// @ts-ignore
 import * as _ from 'lodash';
 
 export const classUtils = {

@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { DataItem } from 'ethereum-types';
 import { RawCalldata } from '../calldata/raw_calldata';
 import { DataType } from './data_type';

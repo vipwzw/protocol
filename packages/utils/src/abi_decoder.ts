@@ -9,9 +9,7 @@ import {
     MethodAbi,
     RawLog,
 } from 'ethereum-types';
-// @ts-ignore
 import * as ethers from 'ethers';
-// @ts-ignore
 import * as _ from 'lodash';
 
 import { AbiEncoder } from '.';
@@ -153,8 +151,7 @@ export class AbiDecoder {
         if (abiArray === undefined) {
             return;
         }
-        // @ts-ignore
-        const ethersInterface = new ethers.Interface(abiArray);
+        const ethersInterface = new ethers.Interface(abiArray as any);
         _.map(abiArray, (abi: AbiDefinition) => {
             switch (abi.type) {
                 case AbiType.Event:
@@ -173,8 +170,7 @@ export class AbiDecoder {
             }
         });
     }
-    // @ts-ignore
-    private _addEventABI(eventAbi: EventAbi, ethersInterface: any): void {
+    private _addEventABI(eventAbi: EventAbi, ethersInterface: ethers.Interface): void {
         const eventFragment = ethersInterface.getEvent(eventAbi.name);
         if (!eventFragment) {
             throw new Error(`Event ${eventAbi.name} not found in interface`);

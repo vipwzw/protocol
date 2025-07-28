@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -11,17 +15,31 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RawRevertError = exports.AnyRevertError = exports.StringRevertError = exports.getThrownErrorRevertErrorBytes = exports.RevertError = exports.coerceThrownErrorAsRevertError = exports.decodeThrownErrorAsRevertError = exports.decodeBytesAsRevertError = exports.registerRevertErrorType = void 0;
+exports.RawRevertError = exports.AnyRevertError = exports.StringRevertError = exports.RevertError = void 0;
+exports.registerRevertErrorType = registerRevertErrorType;
+exports.decodeBytesAsRevertError = decodeBytesAsRevertError;
+exports.decodeThrownErrorAsRevertError = decodeThrownErrorAsRevertError;
+exports.coerceThrownErrorAsRevertError = coerceThrownErrorAsRevertError;
+exports.getThrownErrorRevertErrorBytes = getThrownErrorRevertErrorBytes;
 const ethUtil = __importStar(require("ethereumjs-util"));
-// @ts-ignore
 const _ = __importStar(require("lodash"));
 const util_1 = require("util");
 const AbiEncoder = __importStar(require("./abi_encoder"));
@@ -35,7 +53,6 @@ const configured_bignumber_1 = require("./configured_bignumber");
 function registerRevertErrorType(revertClass, force = false) {
     RevertError.registerType(revertClass, force);
 }
-exports.registerRevertErrorType = registerRevertErrorType;
 /**
  * Decode an ABI encoded revert error.
  * Throws if the data cannot be decoded as a known RevertError type.
@@ -46,7 +63,6 @@ exports.registerRevertErrorType = registerRevertErrorType;
 function decodeBytesAsRevertError(bytes, coerce = false) {
     return RevertError.decode(bytes, coerce);
 }
-exports.decodeBytesAsRevertError = decodeBytesAsRevertError;
 /**
  * Decode a thrown error.
  * Throws if the data cannot be decoded as a known RevertError type.
@@ -60,7 +76,6 @@ function decodeThrownErrorAsRevertError(error, coerce = false) {
     }
     return RevertError.decode(getThrownErrorRevertErrorBytes(error), coerce);
 }
-exports.decodeThrownErrorAsRevertError = decodeThrownErrorAsRevertError;
 /**
  * Coerce a thrown error into a `RevertError`. Always succeeds.
  * @param error Any thrown error.
@@ -87,33 +102,10 @@ function coerceThrownErrorAsRevertError(error) {
         return new StringRevertError(error.message);
     }
 }
-exports.coerceThrownErrorAsRevertError = coerceThrownErrorAsRevertError;
 /**
  * Base type for revert errors.
  */
 class RevertError extends Error {
-    /**
-     * Create a RevertError instance with optional parameter values.
-     * Parameters that are left undefined will not be tested in equality checks.
-     * @param declaration Function-style declaration of the revert (e.g., Error(string message))
-     * @param values Optional mapping of parameters to values.
-     * @param raw Optional encoded form of the revert error. If supplied, this
-     *        instance will be treated as a `RawRevertError`, meaning it can only
-     *        match other `RawRevertError` types with the same encoded payload.
-     */
-    constructor(name, declaration, values, raw) {
-        super(createErrorMessage(name, values));
-        this.values = {};
-        if (declaration !== undefined) {
-            this.abi = declarationToAbi(declaration);
-            if (values !== undefined) {
-                _.assign(this.values, _.cloneDeep(values));
-            }
-        }
-        this._raw = raw;
-        // Extending Error is tricky; we need to explicitly set the prototype.
-        Object.setPrototypeOf(this, new.target.prototype);
-    }
     /**
      * Decode an ABI encoded revert error.
      * Throws if the data cannot be decoded as a known RevertError type.
@@ -163,6 +155,28 @@ class RevertError extends Error {
             type: revertClass,
             decoder: createDecoder(instance.abi),
         };
+    }
+    /**
+     * Create a RevertError instance with optional parameter values.
+     * Parameters that are left undefined will not be tested in equality checks.
+     * @param declaration Function-style declaration of the revert (e.g., Error(string message))
+     * @param values Optional mapping of parameters to values.
+     * @param raw Optional encoded form of the revert error. If supplied, this
+     *        instance will be treated as a `RawRevertError`, meaning it can only
+     *        match other `RawRevertError` types with the same encoded payload.
+     */
+    constructor(name, declaration, values, raw) {
+        super(createErrorMessage(name, values));
+        this.values = {};
+        if (declaration !== undefined) {
+            this.abi = declarationToAbi(declaration);
+            if (values !== undefined) {
+                _.assign(this.values, _.cloneDeep(values));
+            }
+        }
+        this._raw = raw;
+        // Extending Error is tricky; we need to explicitly set the prototype.
+        Object.setPrototypeOf(this, new.target.prototype);
     }
     /**
      * Get the ABI name for this revert.
@@ -286,7 +300,7 @@ class RevertError extends Error {
                 catch (err) { } // tslint:disable-line:no-empty
             }
         }
-        const inner = _.isEmpty(values) ? '' : util_1.inspect(values);
+        const inner = _.isEmpty(values) ? '' : (0, util_1.inspect)(values);
         return `${this.constructor.name}(${inner})`;
     }
     _getArgumentByName(name) {
@@ -345,7 +359,6 @@ function getThrownErrorRevertErrorBytes(error) {
     }
     throw new Error(`Cannot decode thrown Error "${error.message}" as a RevertError`);
 }
-exports.getThrownErrorRevertErrorBytes = getThrownErrorRevertErrorBytes;
 function isParityTransactionRevertError(error) {
     if (PARITY_TRANSACTION_REVERT_ERROR_MESSAGE.test(error.message) && 'code' in error && 'data' in error) {
         return true;
@@ -398,7 +411,7 @@ function createErrorMessage(name, values) {
         return `${name}()`;
     }
     const _values = _.omitBy(values, (v) => _.isNil(v));
-    const inner = _.isEmpty(_values) ? '' : util_1.inspect(_values);
+    const inner = _.isEmpty(_values) ? '' : (0, util_1.inspect)(_values);
     return `${name}(${inner})`;
 }
 /**

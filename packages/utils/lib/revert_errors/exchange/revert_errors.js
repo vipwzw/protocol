@@ -9,20 +9,20 @@ var BatchMatchOrdersErrorCodes;
     BatchMatchOrdersErrorCodes[BatchMatchOrdersErrorCodes["ZeroRightOrders"] = 1] = "ZeroRightOrders";
     BatchMatchOrdersErrorCodes[BatchMatchOrdersErrorCodes["InvalidLengthLeftSignatures"] = 2] = "InvalidLengthLeftSignatures";
     BatchMatchOrdersErrorCodes[BatchMatchOrdersErrorCodes["InvalidLengthRightSignatures"] = 3] = "InvalidLengthRightSignatures";
-})(BatchMatchOrdersErrorCodes = exports.BatchMatchOrdersErrorCodes || (exports.BatchMatchOrdersErrorCodes = {}));
+})(BatchMatchOrdersErrorCodes || (exports.BatchMatchOrdersErrorCodes = BatchMatchOrdersErrorCodes = {}));
 var ExchangeContextErrorCodes;
 (function (ExchangeContextErrorCodes) {
     ExchangeContextErrorCodes[ExchangeContextErrorCodes["InvalidMaker"] = 0] = "InvalidMaker";
     ExchangeContextErrorCodes[ExchangeContextErrorCodes["InvalidTaker"] = 1] = "InvalidTaker";
     ExchangeContextErrorCodes[ExchangeContextErrorCodes["InvalidSender"] = 2] = "InvalidSender";
-})(ExchangeContextErrorCodes = exports.ExchangeContextErrorCodes || (exports.ExchangeContextErrorCodes = {}));
+})(ExchangeContextErrorCodes || (exports.ExchangeContextErrorCodes = ExchangeContextErrorCodes = {}));
 var FillErrorCode;
 (function (FillErrorCode) {
     FillErrorCode[FillErrorCode["InvalidTakerAmount"] = 0] = "InvalidTakerAmount";
     FillErrorCode[FillErrorCode["TakerOverpay"] = 1] = "TakerOverpay";
     FillErrorCode[FillErrorCode["Overfill"] = 2] = "Overfill";
     FillErrorCode[FillErrorCode["InvalidFillPrice"] = 3] = "InvalidFillPrice";
-})(FillErrorCode = exports.FillErrorCode || (exports.FillErrorCode = {}));
+})(FillErrorCode || (exports.FillErrorCode = FillErrorCode = {}));
 var SignatureErrorCode;
 (function (SignatureErrorCode) {
     SignatureErrorCode[SignatureErrorCode["BadOrderSignature"] = 0] = "BadOrderSignature";
@@ -32,23 +32,23 @@ var SignatureErrorCode;
     SignatureErrorCode[SignatureErrorCode["Illegal"] = 4] = "Illegal";
     SignatureErrorCode[SignatureErrorCode["InappropriateSignatureType"] = 5] = "InappropriateSignatureType";
     SignatureErrorCode[SignatureErrorCode["InvalidSigner"] = 6] = "InvalidSigner";
-})(SignatureErrorCode = exports.SignatureErrorCode || (exports.SignatureErrorCode = {}));
+})(SignatureErrorCode || (exports.SignatureErrorCode = SignatureErrorCode = {}));
 var AssetProxyDispatchErrorCode;
 (function (AssetProxyDispatchErrorCode) {
     AssetProxyDispatchErrorCode[AssetProxyDispatchErrorCode["InvalidAssetDataLength"] = 0] = "InvalidAssetDataLength";
     AssetProxyDispatchErrorCode[AssetProxyDispatchErrorCode["UnknownAssetProxy"] = 1] = "UnknownAssetProxy";
-})(AssetProxyDispatchErrorCode = exports.AssetProxyDispatchErrorCode || (exports.AssetProxyDispatchErrorCode = {}));
+})(AssetProxyDispatchErrorCode || (exports.AssetProxyDispatchErrorCode = AssetProxyDispatchErrorCode = {}));
 var TransactionErrorCode;
 (function (TransactionErrorCode) {
     TransactionErrorCode[TransactionErrorCode["AlreadyExecuted"] = 0] = "AlreadyExecuted";
     TransactionErrorCode[TransactionErrorCode["Expired"] = 1] = "Expired";
-})(TransactionErrorCode = exports.TransactionErrorCode || (exports.TransactionErrorCode = {}));
+})(TransactionErrorCode || (exports.TransactionErrorCode = TransactionErrorCode = {}));
 var IncompleteFillErrorCode;
 (function (IncompleteFillErrorCode) {
     IncompleteFillErrorCode[IncompleteFillErrorCode["IncompleteMarketBuyOrders"] = 0] = "IncompleteMarketBuyOrders";
     IncompleteFillErrorCode[IncompleteFillErrorCode["IncompleteMarketSellOrders"] = 1] = "IncompleteMarketSellOrders";
     IncompleteFillErrorCode[IncompleteFillErrorCode["IncompleteFillOrder"] = 2] = "IncompleteFillOrder";
-})(IncompleteFillErrorCode = exports.IncompleteFillErrorCode || (exports.IncompleteFillErrorCode = {}));
+})(IncompleteFillErrorCode || (exports.IncompleteFillErrorCode = IncompleteFillErrorCode = {}));
 class BatchMatchOrdersError extends revert_error_1.RevertError {
     constructor(error) {
         super('BatchMatchOrdersError', 'BatchMatchOrdersError(uint8 error)', { error });

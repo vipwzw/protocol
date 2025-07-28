@@ -1,6 +1,5 @@
 /* tslint:disable max-classes-per-file */
 import { DataItem, MethodAbi } from 'ethereum-types';
-// @ts-ignore
 import * as _ from 'lodash';
 
 import { generateDataItemFromSignature } from './utils/signature_parser';

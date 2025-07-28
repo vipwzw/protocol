@@ -1,5 +1,4 @@
-// @ts-ignore
-import { AbiDecoder, intervalUtils, logUtils // @ts-ignore
+import { AbiDecoder, intervalUtils, logUtils 
 } from '@0x/utils';
 import { marshaller, Web3Wrapper } from '@0x/web3-wrapper';
 import {
@@ -25,7 +24,7 @@ const DEFAULT_BLOCK_POLLING_INTERVAL = 1000;
 export class SubscriptionManager<ContractEventArgs extends DecodedLogArgs, ContractEvents extends string> {
     public abi: ContractAbi;
     private _blockAndLogStreamerIfExists: BlockAndLogStreamer<Block, Log> | undefined;
-    private _blockAndLogStreamIntervalIfExists?: NodeJS.Timer;
+    private _blockAndLogStreamIntervalIfExists?: NodeJS.Timeout;
     private readonly _web3Wrapper: Web3Wrapper;
     private readonly _filters: { [filterToken: string]: FilterObject };
     private readonly _filterCallbacks: {
@@ -183,7 +182,7 @@ export class SubscriptionManager<ContractEventArgs extends DecodedLogArgs, Contr
         }
         this._blockAndLogStreamerIfExists.unsubscribeFromOnLogsAdded(this._onLogAddedSubscriptionToken as string);
         this._blockAndLogStreamerIfExists.unsubscribeFromOnLogsRemoved(this._onLogRemovedSubscriptionToken as string);
-        intervalUtils.clearAsyncExcludingInterval(this._blockAndLogStreamIntervalIfExists as NodeJS.Timer);
+        intervalUtils.clearAsyncExcludingInterval(this._blockAndLogStreamIntervalIfExists as NodeJS.Timeout);
         delete this._blockAndLogStreamerIfExists;
     }
     private async _reconcileBlockAsync(): Promise<void> {

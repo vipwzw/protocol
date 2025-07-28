@@ -1,5 +1,4 @@
 import { OrderStatus } from '@0x/types';
-// @ts-ignore
 import * as _ from 'lodash';
 
 import { BigNumber } from '../../configured_bignumber';

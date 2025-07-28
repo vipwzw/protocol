@@ -1,8 +1,7 @@
-/// <reference types="node" />
 import { CalldataBlock } from '../calldata_block';
 export declare class PointerCalldataBlock extends CalldataBlock {
-    static readonly RAW_DATA_START: Buffer;
-    static readonly RAW_DATA_END: Buffer;
+    static readonly RAW_DATA_START: Buffer<ArrayBuffer>;
+    static readonly RAW_DATA_END: Buffer<ArrayBuffer>;
     private static readonly _DEPENDENT_PAYLOAD_SIZE_IN_BYTES;
     private static readonly _EMPTY_HEADER_SIZE;
     private readonly _parent;

@@ -1,7 +1,6 @@
 import { ObjectMap } from '@0x/types';
 import { DataItem } from 'ethereum-types';
 import * as ethUtil from 'ethereumjs-util';
-// @ts-ignore
 import * as _ from 'lodash';
 
 import { BigNumber } from '../../../configured_bignumber';

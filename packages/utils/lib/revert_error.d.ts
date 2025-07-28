@@ -1,8 +1,7 @@
-/// <reference types="node" />
 import { ObjectMap } from '@0x/types';
 import { DataItem, RevertErrorAbi } from 'ethereum-types';
-declare type ArgTypes = string | BigNumber | number | boolean | RevertError | BigNumber[] | string[] | number[] | boolean[] | Array<BigNumber | number | string>;
-declare type ValueMap = ObjectMap<ArgTypes | undefined>;
+type ArgTypes = string | BigNumber | number | boolean | RevertError | BigNumber[] | string[] | number[] | boolean[] | Array<BigNumber | number | string>;
+type ValueMap = ObjectMap<ArgTypes | undefined>;
 interface RevertErrorType {
     new (): RevertError;
 }

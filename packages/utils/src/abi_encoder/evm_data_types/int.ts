@@ -1,5 +1,4 @@
 import { DataItem, SolidityTypes } from 'ethereum-types';
-// @ts-ignore
 import * as _ from 'lodash';
 
 import { BigNumber } from '../../configured_bignumber';

@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-// @ts-ignore
 import * as _ from 'lodash';
 
 const DEFAULT_TERMINAL_WIDTH = 80;

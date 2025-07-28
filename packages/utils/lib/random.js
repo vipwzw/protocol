@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generatePseudoRandom256BitNumber = void 0;
+exports.generatePseudoRandom256BitNumber = generatePseudoRandom256BitNumber;
 const configured_bignumber_1 = require("./configured_bignumber");
 const MAX_DIGITS_IN_UNSIGNED_256_INT = 78;
 /**
@@ -15,4 +15,3 @@ function generatePseudoRandom256BitNumber() {
     const randomNumberScaledTo256Bits = randomNumber.times(factor).integerValue();
     return randomNumberScaledTo256Bits;
 }
-exports.generatePseudoRandom256BitNumber = generatePseudoRandom256BitNumber;

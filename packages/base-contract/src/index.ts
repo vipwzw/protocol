@@ -9,7 +9,6 @@ import {
     providerUtils,
     RevertError,
     StringRevertError,
-// @ts-ignore
 } from '@0x/utils';
 import { Web3Wrapper } from '@0x/web3-wrapper';
 import VM from '@ethereumjs/vm';

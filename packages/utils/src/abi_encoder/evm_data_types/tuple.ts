@@ -1,5 +1,4 @@
 import { DataItem, SolidityTypes } from 'ethereum-types';
-// @ts-ignore
 import * as _ from 'lodash';
 
 import { DataTypeFactory } from '../abstract_data_types/interfaces';

@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { CalldataBlock } from '../calldata_block';
 export declare class BlobCalldataBlock extends CalldataBlock {
     private readonly _blob;

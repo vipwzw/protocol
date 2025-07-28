@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SubscriptionManager = void 0;
-// @ts-ignore
 const utils_1 = require("@0x/utils");
 const web3_wrapper_1 = require("@0x/web3-wrapper");
 const ethereum_types_1 = require("ethereum-types");
@@ -10,6 +9,13 @@ const types_1 = require("./types");
 const filter_utils_1 = require("./utils/filter_utils");
 const DEFAULT_BLOCK_POLLING_INTERVAL = 1000;
 class SubscriptionManager {
+    static _onBlockAndLogStreamerError(isVerbose, err) {
+        // Since Blockstream errors are all recoverable, we simply log them if the verbose
+        // config is passed in.
+        if (isVerbose) {
+            utils_1.logUtils.warn(err);
+        }
+    }
     constructor(abi, web3Wrapper) {
         this.abi = abi;
         this._web3Wrapper = web3Wrapper;
@@ -18,13 +24,6 @@ class SubscriptionManager {
         this._blockAndLogStreamerIfExists = undefined;
         this._onLogAddedSubscriptionToken = undefined;
         this._onLogRemovedSubscriptionToken = undefined;
-    }
-    static _onBlockAndLogStreamerError(isVerbose, err) {
-        // Since Blockstream errors are all recoverable, we simply log them if the verbose
-        // config is passed in.
-        if (isVerbose) {
-            utils_1.logUtils.warn(err);
-        }
     }
     unsubscribeAll() {
         const filterTokens = Object.keys(this._filterCallbacks);

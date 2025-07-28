@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { DataItem } from 'ethereum-types';
 import { DataTypeFactory } from '../abstract_data_types/interfaces';
 import { AbstractBlobDataType } from '../abstract_data_types/types/blob';

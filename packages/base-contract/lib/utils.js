@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.linkLibrariesInBytecode = exports.methodAbiToFunctionSignature = exports.formatABIDataItem = void 0;
-// @ts-ignore
-// @ts-ignore
+exports.formatABIDataItem = formatABIDataItem;
+exports.methodAbiToFunctionSignature = methodAbiToFunctionSignature;
+exports.linkLibrariesInBytecode = linkLibrariesInBytecode;
 const utils_1 = require("@0x/utils");
 // tslint:disable-next-line:completed-docs
 function formatABIDataItem(abi, value, formatter) {
@@ -30,7 +30,6 @@ function formatABIDataItem(abi, value, formatter) {
         return formatter(abi.type, value);
     }
 }
-exports.formatABIDataItem = formatABIDataItem;
 /**
  * Takes a MethodAbi and returns a function signature for ABI encoding/decoding
  * @return a function signature as a string, e.g. 'functionName(uint256, bytes[])'
@@ -39,7 +38,6 @@ function methodAbiToFunctionSignature(methodAbi) {
     const method = utils_1.AbiEncoder.createMethod(methodAbi.name, methodAbi.inputs);
     return method.getSignature();
 }
-exports.methodAbiToFunctionSignature = methodAbiToFunctionSignature;
 /**
  * Replaces unliked library references in the bytecode of a contract artifact
  * with real addresses and returns the bytecode.
@@ -65,4 +63,3 @@ function linkLibrariesInBytecode(artifact, libraryAddresses) {
     }
     return `0x${bytecode}`;
 }
-exports.linkLibrariesInBytecode = linkLibrariesInBytecode;

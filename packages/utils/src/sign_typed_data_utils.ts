@@ -1,10 +1,6 @@
 import { EIP712Object, EIP712ObjectValue, EIP712TypedData, EIP712Types } from '@0x/types';
 import * as ethUtil from 'ethereumjs-util';
-// @ts-ignore
-// @ts-ignore
 import { ethers } from 'ethers';
-// @ts-ignore
-// @ts-ignore
 import * as _ from 'lodash';
 
 import { BigNumber } from './configured_bignumber';
@@ -107,9 +103,9 @@ export const signTypedDataUtils = {
                 encodedValues.push(normalizedValue);
             }
         }
-        // 使用 ethers v6 的默认编码器
-        // @ts-ignore
-        return ethers.utils.defaultAbiCoder.encode(encodedTypes, encodedValues);
+        // 使用 ethers v6 的 AbiCoder
+        const coder = ethers.AbiCoder.defaultAbiCoder();
+        return coder.encode(encodedTypes, encodedValues);
     },
     _normalizeValue(type: string, value: any): EIP712ObjectValue {
         const STRING_BASE = 10;

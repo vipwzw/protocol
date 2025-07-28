@@ -1,16 +1,5 @@
-declare module '@0x/utils' {
-    export const AbiDecoder: any;
-    export const AbiEncoder: any;
-    export const intervalUtils: any;
-    export const logUtils: any;
-    export const BigNumber: any;
-    export const NULL_ADDRESS: string;
-    export const NULL_BYTES: string;
-    export const hexUtils: any;
-    export const providerUtils: any;
-    export const signTypedDataUtils: any;
-    export function generatePseudoRandom256BitNumber(): any;
-}
+// 简化的模块声明
+declare module '@0x/utils';
 
 declare module '@0x/json-schemas' {
     export const schemas: any;
@@ -28,8 +17,39 @@ declare module '@0x/types' {
     export interface SignedOrder extends Order {
         signature: string;
     }
-    export interface DecodedLogArgs {
+    export interface EIP712Object {
         [key: string]: any;
     }
-    // 其他需要的类型...
-} 
+    export interface EIP712ObjectValue {
+        [key: string]: any;
+    }
+    export interface EIP712TypedData {
+        [key: string]: any;
+    }
+    export interface EIP712Types {
+        [key: string]: any;
+    }
+    export interface EIP712Domain {
+        [key: string]: any;
+    }
+    export interface ZeroExTransaction {
+        [key: string]: any;
+    }
+    export interface ContractAbi {
+        [key: string]: any;
+    }
+    export interface Provider {
+        [key: string]: any;
+    }
+    export interface EventAbi {
+        [key: string]: any;
+    }
+    export interface MethodAbi {
+        [key: string]: any;
+    }
+    export interface TxData {
+        [key: string]: any;
+    }
+}
+
+export {}; 

@@ -9,12 +9,12 @@ var MakerPoolAssignmentErrorCodes;
     MakerPoolAssignmentErrorCodes[MakerPoolAssignmentErrorCodes["MakerAddressNotRegistered"] = 1] = "MakerAddressNotRegistered";
     MakerPoolAssignmentErrorCodes[MakerPoolAssignmentErrorCodes["MakerAddressNotPendingAdd"] = 2] = "MakerAddressNotPendingAdd";
     MakerPoolAssignmentErrorCodes[MakerPoolAssignmentErrorCodes["PoolIsFull"] = 3] = "PoolIsFull";
-})(MakerPoolAssignmentErrorCodes = exports.MakerPoolAssignmentErrorCodes || (exports.MakerPoolAssignmentErrorCodes = {}));
+})(MakerPoolAssignmentErrorCodes || (exports.MakerPoolAssignmentErrorCodes = MakerPoolAssignmentErrorCodes = {}));
 var OperatorShareErrorCodes;
 (function (OperatorShareErrorCodes) {
     OperatorShareErrorCodes[OperatorShareErrorCodes["OperatorShareTooLarge"] = 0] = "OperatorShareTooLarge";
     OperatorShareErrorCodes[OperatorShareErrorCodes["CanOnlyDecreaseOperatorShare"] = 1] = "CanOnlyDecreaseOperatorShare";
-})(OperatorShareErrorCodes = exports.OperatorShareErrorCodes || (exports.OperatorShareErrorCodes = {}));
+})(OperatorShareErrorCodes || (exports.OperatorShareErrorCodes = OperatorShareErrorCodes = {}));
 var InvalidParamValueErrorCodes;
 (function (InvalidParamValueErrorCodes) {
     InvalidParamValueErrorCodes[InvalidParamValueErrorCodes["InvalidCobbDouglasAlpha"] = 0] = "InvalidCobbDouglasAlpha";
@@ -22,17 +22,17 @@ var InvalidParamValueErrorCodes;
     InvalidParamValueErrorCodes[InvalidParamValueErrorCodes["InvalidMaximumMakersInPool"] = 2] = "InvalidMaximumMakersInPool";
     InvalidParamValueErrorCodes[InvalidParamValueErrorCodes["InvalidMinimumPoolStake"] = 3] = "InvalidMinimumPoolStake";
     InvalidParamValueErrorCodes[InvalidParamValueErrorCodes["InvalidEpochDuration"] = 4] = "InvalidEpochDuration";
-})(InvalidParamValueErrorCodes = exports.InvalidParamValueErrorCodes || (exports.InvalidParamValueErrorCodes = {}));
+})(InvalidParamValueErrorCodes || (exports.InvalidParamValueErrorCodes = InvalidParamValueErrorCodes = {}));
 var InitializationErrorCodes;
 (function (InitializationErrorCodes) {
     InitializationErrorCodes[InitializationErrorCodes["MixinSchedulerAlreadyInitialized"] = 0] = "MixinSchedulerAlreadyInitialized";
     InitializationErrorCodes[InitializationErrorCodes["MixinParamsAlreadyInitialized"] = 1] = "MixinParamsAlreadyInitialized";
-})(InitializationErrorCodes = exports.InitializationErrorCodes || (exports.InitializationErrorCodes = {}));
+})(InitializationErrorCodes || (exports.InitializationErrorCodes = InitializationErrorCodes = {}));
 var ExchangeManagerErrorCodes;
 (function (ExchangeManagerErrorCodes) {
     ExchangeManagerErrorCodes[ExchangeManagerErrorCodes["ExchangeAlreadyRegistered"] = 0] = "ExchangeAlreadyRegistered";
     ExchangeManagerErrorCodes[ExchangeManagerErrorCodes["ExchangeNotRegistered"] = 1] = "ExchangeNotRegistered";
-})(ExchangeManagerErrorCodes = exports.ExchangeManagerErrorCodes || (exports.ExchangeManagerErrorCodes = {}));
+})(ExchangeManagerErrorCodes || (exports.ExchangeManagerErrorCodes = ExchangeManagerErrorCodes = {}));
 class OnlyCallableByExchangeError extends revert_error_1.RevertError {
     constructor(senderAddress) {
         super('OnlyCallableByExchangeError', 'OnlyCallableByExchangeError(address senderAddress)', { senderAddress });

@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -11,17 +15,26 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addressUtils = void 0;
 const ethereumjs_util_1 = require("ethereumjs-util");
-// @ts-ignore
 const _ = __importStar(require("lodash"));
 const hex_utils_1 = require("./hex_utils");
 const BASIC_ADDRESS_REGEX = /^(0x)?[0-9a-f]{40}$/i;
@@ -29,7 +42,7 @@ const SAME_CASE_ADDRESS_REGEX = /^(0x)?([0-9a-f]{40}|[0-9A-F]{40})$/;
 const ADDRESS_LENGTH = 40;
 exports.addressUtils = {
     isChecksumAddress(address) {
-        return ethereumjs_util_1.isValidChecksumAddress(address);
+        return (0, ethereumjs_util_1.isValidChecksumAddress)(address);
     },
     isAddress(address) {
         if (!BASIC_ADDRESS_REGEX.test(address)) {
@@ -47,7 +60,7 @@ exports.addressUtils = {
         }
     },
     padZeros(address) {
-        return ethereumjs_util_1.addHexPrefix(_.padStart(ethereumjs_util_1.stripHexPrefix(address), ADDRESS_LENGTH, '0'));
+        return (0, ethereumjs_util_1.addHexPrefix)(_.padStart((0, ethereumjs_util_1.stripHexPrefix)(address), ADDRESS_LENGTH, '0'));
     },
     generatePseudoRandomAddress() {
         // tslint:disable-next-line: custom-no-magic-numbers

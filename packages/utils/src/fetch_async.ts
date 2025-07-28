@@ -6,10 +6,8 @@ import 'abortcontroller-polyfill/dist/abortcontroller-polyfill-only';
 
 export const fetchAsync = async (
     endpoint: string,
-    // @ts-ignore
     options: RequestInit = {},
     timeoutMs: number = 20000,
-// @ts-ignore
 ): Promise<Response> => {
     if (options.signal || (options as any).timeout) {
         throw new Error(
@@ -18,7 +16,6 @@ export const fetchAsync = async (
     }
     let optionsWithAbortParam;
     if (!isNode) {
-        // @ts-ignore
         const controller = new AbortController();
         const signal = controller.signal;
         setTimeout(() => {
@@ -38,7 +35,6 @@ export const fetchAsync = async (
         } as any;
     }
 
-    // @ts-ignore
     const response = await fetch(endpoint, optionsWithAbortParam);
     return response;
 };

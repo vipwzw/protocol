@@ -1,4 +1,3 @@
-/// <reference types="node" />
 export declare abstract class CalldataBlock {
     private readonly _signature;
     private readonly _parentName;

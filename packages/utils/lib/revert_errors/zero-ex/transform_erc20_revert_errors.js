@@ -63,7 +63,7 @@ var InvalidTransformDataErrorCode;
 (function (InvalidTransformDataErrorCode) {
     InvalidTransformDataErrorCode[InvalidTransformDataErrorCode["InvalidTokens"] = 0] = "InvalidTokens";
     InvalidTransformDataErrorCode[InvalidTransformDataErrorCode["InvalidArrayLength"] = 1] = "InvalidArrayLength";
-})(InvalidTransformDataErrorCode = exports.InvalidTransformDataErrorCode || (exports.InvalidTransformDataErrorCode = {}));
+})(InvalidTransformDataErrorCode || (exports.InvalidTransformDataErrorCode = InvalidTransformDataErrorCode = {}));
 class InvalidTransformDataError extends revert_error_1.RevertError {
     constructor(errorCode, transformData) {
         super('InvalidTransformDataError', 'InvalidTransformDataError(uint8 errorCode, bytes transformData)', {

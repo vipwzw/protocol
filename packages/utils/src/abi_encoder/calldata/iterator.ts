@@ -1,5 +1,4 @@
 /* tslint:disable max-classes-per-file */
-// @ts-ignore
 import * as _ from 'lodash';
 
 import { Queue } from '../utils/queue';

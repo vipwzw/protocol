@@ -5,4 +5,4 @@ var SubscriptionErrors;
 (function (SubscriptionErrors) {
     SubscriptionErrors["SubscriptionNotFound"] = "SUBSCRIPTION_NOT_FOUND";
     SubscriptionErrors["SubscriptionAlreadyPresent"] = "SUBSCRIPTION_ALREADY_PRESENT";
-})(SubscriptionErrors = exports.SubscriptionErrors || (exports.SubscriptionErrors = {}));
+})(SubscriptionErrors || (exports.SubscriptionErrors = SubscriptionErrors = {}));
