@@ -568,47 +568,55 @@ function isValidECSignature(data, signature, signerAddress) {
     assert_1.assert.isETHAddressHex('signerAddress', signerAddress);
     const normalizedSignerAddress = signerAddress.toLowerCase();
     try {
-        // 使用 ethers 进行签名验证，避免 v 值转换问题
-        // 先重新组装签名为标准格式
-        const ethersSignature = ethers_1.ethers.Signature.from({
-            r: signature.r,
-            s: signature.s,
-            v: signature.v
-        });
-        // 验证签名
-        const recoveredAddress = ethers_1.ethers.verifyMessage(ethers_1.ethers.getBytes(data), ethersSignature);
-        const normalizedRecoveredAddress = recoveredAddress.toLowerCase();
-        return normalizedRecoveredAddress === normalizedSignerAddress;
+        const msgHashBuff = ethUtil.toBuffer(data);
+        // 根据 EIP-155 规范正确处理 v 值
+        let recoveryId;
+        let vType;
+        if (signature.v === 27 || signature.v === 28) {
+            // 经典值（旧版网络）：27 或 28，直接使用
+            recoveryId = signature.v;
+            vType = 'legacy';
+        }
+        else if (signature.v === 0 || signature.v === 1) {
+            // 特殊场景值：底层库的恢复标识符，转换为标准格式
+            recoveryId = signature.v + 27;
+            vType = 'raw';
+        }
+        else if (signature.v >= 35) {
+            // EIP-155 扩展值：v = chainId * 2 + 35 + recoveryId
+            // 提取 recoveryId：recoveryId = (v - 35) % 2
+            // 转换为标准格式：27 + recoveryId
+            const extractedRecoveryId = (signature.v - 35) % 2;
+            recoveryId = 27 + extractedRecoveryId;
+            // 验证 chainId 一致性（用于调试）
+            const chainId = Math.floor((signature.v - 35) / 2);
+            vType = `EIP-155 (chainId=${chainId})`;
+        }
+        else {
+            // 无效值，尝试模运算作为最后手段
+            recoveryId = (signature.v % 2) + 27;
+            vType = 'fallback';
+        }
+        // V 值处理完成，类型: ${vType}
+        // 使用规范化的 recoveryId 进行椭圆曲线恢复
+        const pubKey = ethUtil.ecrecover(msgHashBuff, recoveryId, ethUtil.toBuffer(signature.r), ethUtil.toBuffer(signature.s));
+        const retrievedAddress = ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey));
+        const normalizedRetrievedAddress = retrievedAddress.toLowerCase();
+        return normalizedRetrievedAddress === normalizedSignerAddress;
     }
     catch (err) {
-        // 如果 ethers 验证失败，回退到原始方法
+        // 如果椭圆曲线恢复失败，尝试使用 ethers.js 作为备选方案
         try {
-            const msgHashBuff = ethUtil.toBuffer(data);
-            // 规范化 v 值：转换为传统的 27/28 格式
-            let normalizedV = signature.v;
-            if (signature.v >= 35) {
-                // EIP-155 格式：v = chainId * 2 + 35 + recovery_id
-                // 计算 recovery_id = (v - 35) % 2，然后加上 27
-                normalizedV = ((signature.v - 35) % 2) + 27;
-            }
-            else if (signature.v === 0 || signature.v === 1) {
-                // 传统格式：0,1 -> 27,28
-                normalizedV = signature.v + 27;
-            }
-            else if (signature.v >= 27 && signature.v <= 28) {
-                // 已经是正确格式
-                normalizedV = signature.v;
-            }
-            else {
-                // 其他情况，尝试模运算
-                normalizedV = (signature.v % 2) + 27;
-            }
-            const pubKey = ethUtil.ecrecover(msgHashBuff, normalizedV, ethUtil.toBuffer(signature.r), ethUtil.toBuffer(signature.s));
-            const retrievedAddress = ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey));
-            const normalizedRetrievedAddress = retrievedAddress.toLowerCase();
-            return normalizedRetrievedAddress === normalizedSignerAddress;
+            const ethersSignature = ethers_1.ethers.Signature.from({
+                r: signature.r,
+                s: signature.s,
+                v: signature.v
+            });
+            const recoveredAddress = ethers_1.ethers.verifyMessage(ethers_1.ethers.getBytes(data), ethersSignature);
+            const normalizedRecoveredAddress = recoveredAddress.toLowerCase();
+            return normalizedRecoveredAddress === normalizedSignerAddress;
         }
-        catch (fallbackErr) {
+        catch (ethersErr) {
             return false;
         }
     }

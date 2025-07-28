@@ -128,6 +128,7 @@ export declare const schemas: {
             v: {
                 type: string;
                 minimum: number;
+                description: string;
             };
             r: {
                 $ref: string;

@@ -3,7 +3,8 @@
     "properties": {
         "v": {
             "type": "number",
-            "minimum": 27
+            "minimum": 0,
+            "description": "Recovery parameter: 0/1 (raw), 27/28 (legacy), or chainId*2+35+recoveryId (EIP-155)"
         },
         "r": { "$ref": "/ecSignatureParameterSchema" },
         "s": { "$ref": "/ecSignatureParameterSchema" }
