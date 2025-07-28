@@ -469,23 +469,37 @@ export const signatureUtils = {
         // return the signature params in different orders. In order to support all client implementations,
         // we parse the signature in both ways, and evaluate if either one is a valid signature.
         // r + s + v is the most prevalent format from eth_sign, so we attempt this first.
-        // tslint:disable-next-line:custom-no-magic-numbers
-        const validVParamValues = [27, 28];
+        
+        // 首先尝试 RSV 格式解析 (ethers.js 标准格式)
         const ecSignatureRSV = parseSignatureHexAsRSV(signature);
-        if (_.includes(validVParamValues, ecSignatureRSV.v)) {
-            const isValidRSVSignature = isValidECSignature(prefixedMsgHashHex, ecSignatureRSV, normalizedSignerAddress);
-            if (isValidRSVSignature) {
-                const convertedSignatureHex = signatureUtils.convertECSignatureToSignatureHex(ecSignatureRSV);
-                return convertedSignatureHex;
-            }
+        
+        // 尝试使用前缀消息验证
+        let isValidRSVSignature = isValidECSignature(prefixedMsgHashHex, ecSignatureRSV, normalizedSignerAddress);
+        
+        // 如果前缀验证失败，尝试不带前缀的原始消息
+        if (!isValidRSVSignature) {
+            isValidRSVSignature = isValidECSignature(msgHash, ecSignatureRSV, normalizedSignerAddress);
         }
+        
+        if (isValidRSVSignature) {
+            const convertedSignatureHex = signatureUtils.convertECSignatureToSignatureHex(ecSignatureRSV);
+            return convertedSignatureHex;
+        }
+        
+        // 然后尝试 VRS 格式解析 (旧格式)
         const ecSignatureVRS = parseSignatureHexAsVRS(signature);
-        if (_.includes(validVParamValues, ecSignatureVRS.v)) {
-            const isValidVRSSignature = isValidECSignature(prefixedMsgHashHex, ecSignatureVRS, normalizedSignerAddress);
-            if (isValidVRSSignature) {
-                const convertedSignatureHex = signatureUtils.convertECSignatureToSignatureHex(ecSignatureVRS);
-                return convertedSignatureHex;
-            }
+        
+        // 尝试使用前缀消息验证
+        let isValidVRSSignature = isValidECSignature(prefixedMsgHashHex, ecSignatureVRS, normalizedSignerAddress);
+        
+        // 如果前缀验证失败，尝试不带前缀的原始消息
+        if (!isValidVRSSignature) {
+            isValidVRSSignature = isValidECSignature(msgHash, ecSignatureVRS, normalizedSignerAddress);
+        }
+        
+        if (isValidVRSSignature) {
+            const convertedSignatureHex = signatureUtils.convertECSignatureToSignatureHex(ecSignatureVRS);
+            return convertedSignatureHex;
         }
         // Detect if Metamask to transition users to the MetamaskSubprovider
         if ((provider as any).isMetaMask) {
@@ -545,24 +559,24 @@ export const signatureUtils = {
 };
 
 /**
- * Parses a signature hex string, which is assumed to be in the VRS format.
+ * Parses a signature hex string, which is assumed to be in the RSV format (ethers.js standard).
  */
 export function parseSignatureHexAsVRS(signatureHex: string): ECSignature {
     const signatureBuffer = ethUtil.toBuffer(signatureHex);
-    let v = signatureBuffer[0];
-    // HACK: Sometimes v is returned as [0, 1] and sometimes as [27, 28]
-    // If it is returned as [0, 1], add 27 to both so it becomes [27, 28]
-    const lowestValidV = 27;
-    const isProperlyFormattedV = v >= lowestValidV;
-    if (!isProperlyFormattedV) {
-        v += lowestValidV;
+    
+    // Standard RSV format: 32 bytes R + 32 bytes S + 1 byte V
+    const r = signatureBuffer.slice(0, 32);
+    const s = signatureBuffer.slice(32, 64);
+    let v = signatureBuffer[64];
+    
+    // Handle different V value formats:
+    // - Legacy format: [0, 1] -> convert to [27, 28]
+    // - Standard format: [27, 28] -> use as is
+    // - EIP-155 format: [chainId*2+35, chainId*2+36] -> use as is
+    if (v < 27) {
+        v += 27;
     }
-    // signatureBuffer contains vrs
-    const vEndIndex = 1;
-    const rsIndex = 33;
-    const r = signatureBuffer.slice(vEndIndex, rsIndex);
-    const sEndIndex = 65;
-    const s = signatureBuffer.slice(rsIndex, sEndIndex);
+    
     const ecSignature: ECSignature = {
         v,
         r: ethUtil.bufferToHex(r),
@@ -595,19 +609,55 @@ export function isValidECSignature(data: string, signature: ECSignature, signerA
     assert.isETHAddressHex('signerAddress', signerAddress);
     const normalizedSignerAddress = signerAddress.toLowerCase();
 
-    const msgHashBuff = ethUtil.toBuffer(data);
     try {
-        const pubKey = ethUtil.ecrecover(
-            msgHashBuff,
-            signature.v,
-            ethUtil.toBuffer(signature.r),
-            ethUtil.toBuffer(signature.s),
-        );
-        const retrievedAddress = ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey));
-        const normalizedRetrievedAddress = retrievedAddress.toLowerCase();
-        return normalizedRetrievedAddress === normalizedSignerAddress;
+        // 使用 ethers 进行签名验证，避免 v 值转换问题
+        // 先重新组装签名为标准格式
+        const ethersSignature = ethers.Signature.from({
+            r: signature.r,
+            s: signature.s,
+            v: signature.v
+        });
+        
+        // 验证签名
+        const recoveredAddress = ethers.verifyMessage(ethers.getBytes(data), ethersSignature);
+        const normalizedRecoveredAddress = recoveredAddress.toLowerCase();
+        
+        return normalizedRecoveredAddress === normalizedSignerAddress;
     } catch (err) {
-        return false;
+        // 如果 ethers 验证失败，回退到原始方法
+        try {
+            const msgHashBuff = ethUtil.toBuffer(data);
+            // 规范化 v 值：转换为传统的 27/28 格式
+            let normalizedV = signature.v;
+            
+            if (signature.v >= 35) {
+                // EIP-155 格式：v = chainId * 2 + 35 + recovery_id
+                // 计算 recovery_id = (v - 35) % 2，然后加上 27
+                normalizedV = ((signature.v - 35) % 2) + 27;
+            } else if (signature.v === 0 || signature.v === 1) {
+                // 传统格式：0,1 -> 27,28
+                normalizedV = signature.v + 27;
+            } else if (signature.v >= 27 && signature.v <= 28) {
+                // 已经是正确格式
+                normalizedV = signature.v;
+            } else {
+                // 其他情况，尝试模运算
+                normalizedV = (signature.v % 2) + 27;
+            }
+            
+            const pubKey = ethUtil.ecrecover(
+                msgHashBuff,
+                normalizedV,
+                ethUtil.toBuffer(signature.r),
+                ethUtil.toBuffer(signature.s),
+            );
+            const retrievedAddress = ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey));
+            const normalizedRetrievedAddress = retrievedAddress.toLowerCase();
+            
+            return normalizedRetrievedAddress === normalizedSignerAddress;
+        } catch (fallbackErr) {
+            return false;
+        }
     }
 }
 

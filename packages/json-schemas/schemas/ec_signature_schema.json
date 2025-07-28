@@ -3,8 +3,7 @@
     "properties": {
         "v": {
             "type": "number",
-            "minimum": 27,
-            "maximum": 28
+            "minimum": 27
         },
         "r": { "$ref": "/ecSignatureParameterSchema" },
         "s": { "$ref": "/ecSignatureParameterSchema" }

@@ -99,7 +99,7 @@ export declare const signatureUtils: {
     parseValidatorSignature(signature: string): ValidatorSignature;
 };
 /**
- * Parses a signature hex string, which is assumed to be in the VRS format.
+ * Parses a signature hex string, which is assumed to be in the RSV format (ethers.js standard).
  */
 export declare function parseSignatureHexAsVRS(signatureHex: string): ECSignature;
 /**

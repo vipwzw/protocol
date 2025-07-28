@@ -33,8 +33,9 @@ describe('Assertion library', () => {
             }
         });
         it("doesn't throw if address is available", async () => {
-            // 使用我们知道在 mock 账户列表中的地址
-            const availableAddress = '0x0000000000000000000000000000000000000000';
+            // 使用 Hardhat 测试账户中的第一个地址
+            const accounts = await web3Wrapper.getAccountsAsync();
+            const availableAddress = accounts[0]; // 应该是 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
             const varName = 'address';
             // 应该不抛出错误
             const result = await assert.isSenderAddressAsync(varName, availableAddress, web3Wrapper as any);
