@@ -35,6 +35,8 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.signatureUtils = void 0;
 exports.parseSignatureHexAsVRS = parseSignatureHexAsVRS;
+exports.parseSignatureWithType = parseSignatureWithType;
+exports.isValidEIP712Signature = isValidEIP712Signature;
 exports.isValidECSignature = isValidECSignature;
 const json_schemas_1 = require("@0x/json-schemas");
 const types_1 = require("@0x/types");
@@ -553,6 +555,49 @@ function parseSignatureHexAsRSV(signatureHex) {
         s: ethUtil.bufferToHex(s),
     };
     return ecSignature;
+}
+/**
+ * 解析包含 SignatureType 的完整签名（132字符）
+ * 格式: VRS + SignatureType (1 byte)
+ */
+function parseSignatureWithType(signatureHex) {
+    // 验证签名长度（134字符 = 0x + 132字符）
+    if (signatureHex.length !== 134) {
+        throw new Error(`Invalid signature length: expected 134 characters, got ${signatureHex.length}`);
+    }
+    // 验证 0x 前缀
+    if (!signatureHex.startsWith('0x')) {
+        throw new Error(`Invalid signature format: expected 0x prefix`);
+    }
+    // 提取 SignatureType（最后一个字节）
+    const signatureTypeHex = signatureHex.slice(-2);
+    const signatureType = parseInt(signatureTypeHex, 16);
+    // 提取 VRS 部分（去掉 0x 前缀和最后一个字节）
+    const vrsHex = '0x' + signatureHex.slice(2, -2);
+    // 解析 VRS 签名
+    const signature = parseSignatureHexAsVRS(vrsHex);
+    return { signature, signatureType };
+}
+/**
+ * 验证 EIP-712 类型化数据签名的有效性
+ * @param typedDataHash EIP-712 类型化数据的哈希
+ * @param signatureWithType 包含 SignatureType 的完整签名（132字符）
+ * @param signerAddress 预期的签名者地址
+ * @return 签名是否有效
+ */
+function isValidEIP712Signature(typedDataHash, signatureWithType, signerAddress) {
+    try {
+        const { signature, signatureType } = parseSignatureWithType(signatureWithType);
+        // 验证签名类型是否为 EIP712
+        if (signatureType !== types_1.SignatureType.EIP712) {
+            return false;
+        }
+        // 使用 EIP-712 哈希验证签名
+        return isValidECSignature(typedDataHash, signature, signerAddress);
+    }
+    catch (err) {
+        return false;
+    }
 }
 /**
  * Checks if the supplied elliptic curve signature corresponds to signing `data` with

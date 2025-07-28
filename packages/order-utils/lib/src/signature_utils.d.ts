@@ -103,6 +103,22 @@ export declare const signatureUtils: {
  */
 export declare function parseSignatureHexAsVRS(signatureHex: string): ECSignature;
 /**
+ * 解析包含 SignatureType 的完整签名（132字符）
+ * 格式: VRS + SignatureType (1 byte)
+ */
+export declare function parseSignatureWithType(signatureHex: string): {
+    signature: ECSignature;
+    signatureType: number;
+};
+/**
+ * 验证 EIP-712 类型化数据签名的有效性
+ * @param typedDataHash EIP-712 类型化数据的哈希
+ * @param signatureWithType 包含 SignatureType 的完整签名（132字符）
+ * @param signerAddress 预期的签名者地址
+ * @return 签名是否有效
+ */
+export declare function isValidEIP712Signature(typedDataHash: string, signatureWithType: string, signerAddress: string): boolean;
+/**
  * Checks if the supplied elliptic curve signature corresponds to signing `data` with
  * the private key corresponding to `signerAddress`
  * @param   data          The hex encoded data signed by the supplied signature.
