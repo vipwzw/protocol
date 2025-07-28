@@ -42,9 +42,26 @@ exports.hexUtils = {
 // 签名工具，替代 @0x/utils 中的 signTypedDataUtils
 exports.signTypedDataUtils = {
     generateTypedDataHash(typedData) {
-        // 这里是简化实现，实际的 EIP712 哈希计算
-        // 在生产环境中应该使用完整的 EIP712 实现
-        return exports.hexUtils.random(32);
+        // 使用 ethers.js 的标准 EIP-712 哈希计算
+        const { ethers } = require('ethers');
+        try {
+            // 移除可能冲突的 EIP712Domain 类型定义
+            const cleanTypes = { ...typedData.types };
+            delete cleanTypes.EIP712Domain;
+            // 使用 ethers.TypedDataEncoder 计算标准 EIP-712 哈希
+            return ethers.TypedDataEncoder.hash(typedData.domain, cleanTypes, typedData.message);
+        }
+        catch (error) {
+            // 如果出错，尝试不同的格式
+            try {
+                // 尝试使用所有类型
+                return ethers.TypedDataEncoder.hash(typedData.domain, typedData.types, typedData.message);
+            }
+            catch (fallbackError) {
+                console.error('EIP-712 哈希计算失败:', fallbackError);
+                throw new Error(`Failed to generate EIP-712 hash: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`);
+            }
+        }
     }
 };
 // 伪随机数生成，替代 @0x/utils

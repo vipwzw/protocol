@@ -277,7 +277,7 @@ describe('Signature utils', () => {
     describe('#ecSignTypedDataOrderAsync', () => {
         it('should successfully sign typed data order using hardhat provider', async () => {
             const signedOrder = await signature_utils_1.signatureUtils.ecSignTypedDataOrderAsync(provider, order, makerAddress);
-            // 验证签名格式（132字符 = VRS + SignatureType）
+            // 验证签名格式（134字符 = 0x + 132字符）
             expect(signedOrder.signature).to.match(/^0x[0-9a-fA-F]{132}$/);
             // 验证签名类型和有效性
             const { signature: parsedSignature, signatureType } = (0, signature_utils_1.parseSignatureWithType)(signedOrder.signature);

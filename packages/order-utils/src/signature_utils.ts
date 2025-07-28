@@ -559,15 +559,16 @@ export const signatureUtils = {
 };
 
 /**
- * Parses a signature hex string, which is assumed to be in the RSV format (ethers.js standard).
+ * Parses a signature hex string, which is assumed to be in the VRS format.
+ * Format: 1 byte V + 32 bytes R + 32 bytes S
  */
 export function parseSignatureHexAsVRS(signatureHex: string): ECSignature {
     const signatureBuffer = ethUtil.toBuffer(signatureHex);
     
-    // Standard RSV format: 32 bytes R + 32 bytes S + 1 byte V
-    const r = signatureBuffer.slice(0, 32);
-    const s = signatureBuffer.slice(32, 64);
-    let v = signatureBuffer[64];
+    // VRS format: 1 byte V + 32 bytes R + 32 bytes S
+    let v = signatureBuffer[0];
+    const r = signatureBuffer.slice(1, 33);
+    const s = signatureBuffer.slice(33, 65);
     
     // Handle different V value formats:
     // - Legacy format: [0, 1] -> convert to [27, 28]
@@ -672,43 +673,47 @@ export function isValidECSignature(data: string, signature: ECSignature, signerA
         let vType: string;
         
         if (signature.v === 27 || signature.v === 28) {
-            // 经典值（旧版网络）：27 或 28，直接使用
-            recoveryId = signature.v;
+            // 经典值：27 或 28，转换为 0 或 1
+            // 注意：对于 chainId > 109，某些环境（如 Hardhat）可能仍使用传统格式
+            recoveryId = signature.v - 27;  // 27->0, 28->1
             vType = 'legacy';
         } else if (signature.v === 0 || signature.v === 1) {
-            // 特殊场景值：底层库的恢复标识符，转换为标准格式
-            recoveryId = signature.v + 27;
+            // 特殊场景值：底层库的恢复标识符，直接使用
+            recoveryId = signature.v;  // 0->0, 1->1
             vType = 'raw';
         } else if (signature.v >= 35) {
             // EIP-155 扩展值：v = chainId * 2 + 35 + recoveryId
             // 提取 recoveryId：recoveryId = (v - 35) % 2
-            // 转换为标准格式：27 + recoveryId
             const extractedRecoveryId = (signature.v - 35) % 2;
-            recoveryId = 27 + extractedRecoveryId;
+            recoveryId = extractedRecoveryId;  // 直接使用 0 或 1
             
             // 验证 chainId 一致性（用于调试）
             const chainId = Math.floor((signature.v - 35) / 2);
             vType = `EIP-155 (chainId=${chainId})`;
         } else {
             // 无效值，尝试模运算作为最后手段
-            recoveryId = (signature.v % 2) + 27;
+            recoveryId = signature.v % 2;  // 确保结果是 0 或 1
             vType = 'fallback';
         }
         
         // V 值处理完成，类型: ${vType}
         
-        // 使用规范化的 recoveryId 进行椭圆曲线恢复
-        const pubKey = ethUtil.ecrecover(
-            msgHashBuff,
-            recoveryId,
-            ethUtil.toBuffer(signature.r),
-            ethUtil.toBuffer(signature.s),
-        );
-        
-        const retrievedAddress = ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey));
-        const normalizedRetrievedAddress = retrievedAddress.toLowerCase();
-        
-        return normalizedRetrievedAddress === normalizedSignerAddress;
+        try {
+            // 使用规范化的 recoveryId 进行椭圆曲线恢复
+            const pubKey = ethUtil.ecrecover(
+                msgHashBuff,
+                recoveryId,
+                ethUtil.toBuffer(signature.r),
+                ethUtil.toBuffer(signature.s),
+            );
+            
+            const retrievedAddress = ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey));
+            const normalizedRetrievedAddress = retrievedAddress.toLowerCase();
+            
+            return normalizedRetrievedAddress === normalizedSignerAddress;
+        } catch (ecrecoverError) {
+            throw ecrecoverError;
+        }
     } catch (err) {
         // 如果椭圆曲线恢复失败，尝试使用 ethers.js 作为备选方案
         try {
