@@ -44,6 +44,7 @@
     "homepage": "https://github.com/0xProject/protocol/tree/main/packages/order-utils",
     "devDependencies": {
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+        "@nomicfoundation/hardhat-ethers": "^3.0.0",
         "@types/lodash": "^4.14.200",
         "@types/mocha": "^10.0.0",
         "@types/node": "^20.0.0",

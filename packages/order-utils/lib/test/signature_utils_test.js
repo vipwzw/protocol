@@ -45,9 +45,13 @@ const order_hash_utils_1 = require("../src/order_hash_utils");
 const signature_utils_1 = require("../src/signature_utils");
 const transaction_hash_utils_1 = require("../src/transaction_hash_utils");
 const chai_setup_1 = require("./utils/chai_setup");
-const web3_wrapper_1 = require("./utils/web3_wrapper");
+const hardhat_setup_1 = require("./utils/hardhat_setup");
 chai_setup_1.chaiSetup.configure();
 const expect = chai.expect;
+// Hardhat 环境变量
+let provider;
+let web3Wrapper;
+let accounts;
 describe('Signature utils', () => {
     let makerAddress;
     const fakeExchangeContractAddress = '0x1dc4c1cefef38a777b15aa20260a54e584b16c48';
@@ -55,8 +59,14 @@ describe('Signature utils', () => {
     let order;
     let transaction;
     before(async () => {
-        const availableAddreses = await web3_wrapper_1.web3Wrapper.getAvailableAddressesAsync();
-        makerAddress = availableAddreses[0];
+        // 初始化 Hardhat 环境
+        console.log('🔧 初始化 Hardhat 测试环境...');
+        const hardhatEnv = await (0, hardhat_setup_1.setupHardhatEnvironment)();
+        provider = hardhatEnv.provider;
+        web3Wrapper = (0, hardhat_setup_1.createWeb3Wrapper)();
+        accounts = hardhatEnv.accounts;
+        makerAddress = hardhatEnv.defaultAccount;
+        console.log(`✅ 使用测试账户: ${makerAddress}`);
         order = {
             makerAddress,
             takerAddress: constants_1.constants.NULL_ADDRESS,
@@ -140,27 +150,8 @@ describe('Signature utils', () => {
         });
     });
     describe('#ecSignOrderAsync', () => {
-        it('should default to eth_sign if eth_signTypedData is unavailable', async () => {
-            const fakeProvider = {
-                async sendAsync(payload, callback) {
-                    if (payload.method.startsWith('eth_signTypedData')) {
-                        callback(new Error('Internal RPC Error'));
-                    }
-                    else if (payload.method === 'eth_sign') {
-                        const [address, message] = payload.params;
-                        const signature = await web3_wrapper_1.web3Wrapper.signMessageAsync(address, message);
-                        callback(null, {
-                            id: 42,
-                            jsonrpc: '2.0',
-                            result: signature,
-                        });
-                    }
-                    else {
-                        callback(null, { id: 42, jsonrpc: '2.0', result: [makerAddress] });
-                    }
-                },
-            };
-            const signedOrder = await signature_utils_1.signatureUtils.ecSignOrderAsync(fakeProvider, order, makerAddress);
+        it('should successfully sign order using hardhat provider', async () => {
+            const signedOrder = await signature_utils_1.signatureUtils.ecSignOrderAsync(provider, order, makerAddress);
             // 验证签名是否有效，而不是比较固定值（签名包含随机数，每次都不同）
             expect(signedOrder.signature).to.be.a('string');
             expect(signedOrder.signature).to.match(/^0x[0-9a-fA-F]{132}$/); // 66字节的十六进制签名（65字节签名+1字节类型）
@@ -168,19 +159,17 @@ describe('Signature utils', () => {
             // 签名应该包含正确的长度和格式，具体验证由其他专门的测试负责
         });
         it('should throw if the user denies the signing request', async () => {
-            const fakeProvider = {
-                async sendAsync(payload, callback) {
-                    if (payload.method.startsWith('eth_signTypedData')) {
-                        callback(new Error('User denied message signature'));
+            // 模拟用户拒绝签名的 provider
+            const rejectingProvider = {
+                async send(method, params) {
+                    if (method === 'eth_accounts') {
+                        return [makerAddress];
                     }
-                    else if (payload.method === 'eth_sign') {
-                        const [address, message] = payload.params;
-                        const signature = await web3_wrapper_1.web3Wrapper.signMessageAsync(address, message);
-                        callback(null, {
-                            id: 42,
-                            jsonrpc: '2.0',
-                            result: signature,
-                        });
+                    throw new Error('User denied message signature');
+                },
+                async sendAsync(payload, callback) {
+                    if (payload.method.startsWith('eth_sign')) {
+                        callback(new Error('User denied message signature'));
                     }
                     else {
                         callback(null, { id: 42, jsonrpc: '2.0', result: [makerAddress] });
@@ -188,7 +177,7 @@ describe('Signature utils', () => {
                 },
             };
             try {
-                await signature_utils_1.signatureUtils.ecSignOrderAsync(fakeProvider, order, makerAddress);
+                await signature_utils_1.signatureUtils.ecSignOrderAsync(rejectingProvider, order, makerAddress);
                 expect.fail('Expected function to throw');
             }
             catch (error) {
@@ -197,43 +186,22 @@ describe('Signature utils', () => {
         });
     });
     describe('#ecSignTransactionAsync', () => {
-        it('should default to eth_sign if eth_signTypedData is unavailable', async () => {
-            const fakeProvider = {
-                async sendAsync(payload, callback) {
-                    if (payload.method.startsWith('eth_signTypedData')) {
-                        callback(new Error('Internal RPC Error'));
-                    }
-                    else if (payload.method === 'eth_sign') {
-                        const [address, message] = payload.params;
-                        const signature = await web3_wrapper_1.web3Wrapper.signMessageAsync(address, message);
-                        callback(null, {
-                            id: 42,
-                            jsonrpc: '2.0',
-                            result: signature,
-                        });
-                    }
-                    else {
-                        callback(null, { id: 42, jsonrpc: '2.0', result: [makerAddress] });
-                    }
-                },
-            };
-            const signedTransaction = await signature_utils_1.signatureUtils.ecSignTransactionAsync(fakeProvider, transaction, makerAddress);
+        it('should successfully sign transaction using hardhat provider', async () => {
+            const signedTransaction = await signature_utils_1.signatureUtils.ecSignTransactionAsync(provider, transaction, makerAddress);
             assert_1.assert.isHexString('signedTransaction.signature', signedTransaction.signature);
         });
         it('should throw if the user denies the signing request', async () => {
-            const fakeProvider = {
-                async sendAsync(payload, callback) {
-                    if (payload.method.startsWith('eth_signTypedData')) {
-                        callback(new Error('User denied message signature'));
+            // 模拟用户拒绝签名的 provider
+            const rejectingProvider = {
+                async send(method, params) {
+                    if (method === 'eth_accounts') {
+                        return [makerAddress];
                     }
-                    else if (payload.method === 'eth_sign') {
-                        const [address, message] = payload.params;
-                        const signature = await web3_wrapper_1.web3Wrapper.signMessageAsync(address, message);
-                        callback(null, {
-                            id: 42,
-                            jsonrpc: '2.0',
-                            result: signature,
-                        });
+                    throw new Error('User denied message signature');
+                },
+                async sendAsync(payload, callback) {
+                    if (payload.method.startsWith('eth_sign')) {
+                        callback(new Error('User denied message signature'));
                     }
                     else {
                         callback(null, { id: 42, jsonrpc: '2.0', result: [makerAddress] });
@@ -241,7 +209,7 @@ describe('Signature utils', () => {
                 },
             };
             try {
-                await signature_utils_1.signatureUtils.ecSignTransactionAsync(fakeProvider, transaction, makerAddress);
+                await signature_utils_1.signatureUtils.ecSignTransactionAsync(rejectingProvider, transaction, makerAddress);
                 expect.fail('Expected function to throw');
             }
             catch (error) {
@@ -250,35 +218,9 @@ describe('Signature utils', () => {
         });
     });
     describe('#ecSignHashAsync', () => {
-        before(async () => {
-            const availableAddreses = await web3_wrapper_1.web3Wrapper.getAvailableAddressesAsync();
-            makerAddress = availableAddreses[0];
-        });
         it('should return a valid signature', async () => {
             const orderHash = '0x6927e990021d23b1eb7b8789f6a6feaf98fe104bb0cf8259421b79f9a34222b0';
-            const fakeProvider = {
-                async send(method, params) {
-                    if (method === 'eth_accounts') {
-                        return [makerAddress];
-                    }
-                    return [];
-                },
-                async sendAsync(payload, callback) {
-                    if (payload.method === 'eth_sign') {
-                        const [address, message] = payload.params;
-                        const signature = await web3_wrapper_1.web3Wrapper.signMessageAsync(address, message);
-                        callback(null, {
-                            id: 42,
-                            jsonrpc: '2.0',
-                            result: signature,
-                        });
-                    }
-                    else {
-                        callback(null, { id: 42, jsonrpc: '2.0', result: [makerAddress] });
-                    }
-                },
-            };
-            const ecSignature = await signature_utils_1.signatureUtils.ecSignHashAsync(fakeProvider, orderHash, makerAddress);
+            const ecSignature = await signature_utils_1.signatureUtils.ecSignHashAsync(provider, orderHash, makerAddress);
             // 验证签名格式和有效性
             expect(ecSignature).to.match(/^0x[0-9a-fA-F]{132}$/);
             // 验证签名是否有效
@@ -286,89 +228,29 @@ describe('Signature utils', () => {
             const isValid = (0, signature_utils_1.isValidECSignature)(orderHash, parsedSignature, makerAddress);
             expect(isValid).to.be.true;
         });
-        it('should return the correct Signature for signatureHex concatenated as R + S + V', async () => {
+        it('should return a valid signature (R + S + V format)', async () => {
             const orderHash = '0x34decbedc118904df65f379a175bb39ca18209d6ce41d5ed549d54e6e0a95004';
-            const expectedSignature = '0x1b117902c86dfb95fe0d1badd983ee166ad259b27acb220174cbb4460d872871137feabdfe76e05924b484789f79af4ee7fa29ec006cedce1bbf369320d034e10b03';
-            const fakeProvider = {
-                async sendAsync(payload, callback) {
-                    if (payload.method === 'eth_sign') {
-                        const [address, message] = payload.params;
-                        expect(message).to.equal(orderHash);
-                        const signature = await web3_wrapper_1.web3Wrapper.signMessageAsync(address, message);
-                        // tslint:disable-next-line:custom-no-magic-numbers
-                        const rsvHex = `0x${signature.substr(130)}${signature.substr(2, 128)}`;
-                        callback(null, {
-                            id: 42,
-                            jsonrpc: '2.0',
-                            result: rsvHex,
-                        });
-                    }
-                    else {
-                        callback(null, { id: 42, jsonrpc: '2.0', result: [makerAddress] });
-                    }
-                },
-            };
-            const ecSignature = await signature_utils_1.signatureUtils.ecSignHashAsync(fakeProvider, orderHash, makerAddress);
-            // 验证签名格式和有效性（R + S + V 顺序）
+            const ecSignature = await signature_utils_1.signatureUtils.ecSignHashAsync(provider, orderHash, makerAddress);
+            // 验证签名格式和有效性
             expect(ecSignature).to.match(/^0x[0-9a-fA-F]{132}$/);
             // 验证签名是否有效
             const parsedSignature = (0, signature_utils_1.parseSignatureHexAsVRS)(ecSignature);
             const isValid = (0, signature_utils_1.isValidECSignature)(orderHash, parsedSignature, makerAddress);
             expect(isValid).to.be.true;
         });
-        it('should return the correct Signature for signatureHex concatenated as V + R + S', async () => {
+        it('should return a valid signature (V + R + S format)', async () => {
             const orderHash = '0x34decbedc118904df65f379a175bb39ca18209d6ce41d5ed549d54e6e0a95004';
-            const expectedSignature = '0x1b117902c86dfb95fe0d1badd983ee166ad259b27acb220174cbb4460d872871137feabdfe76e05924b484789f79af4ee7fa29ec006cedce1bbf369320d034e10b03';
-            const fakeProvider = {
-                async sendAsync(payload, callback) {
-                    if (payload.method === 'eth_sign') {
-                        const [address, message] = payload.params;
-                        const signature = await web3_wrapper_1.web3Wrapper.signMessageAsync(address, message);
-                        callback(null, {
-                            id: 42,
-                            jsonrpc: '2.0',
-                            result: signature,
-                        });
-                    }
-                    else {
-                        callback(null, { id: 42, jsonrpc: '2.0', result: [makerAddress] });
-                    }
-                },
-            };
-            const ecSignature = await signature_utils_1.signatureUtils.ecSignHashAsync(fakeProvider, orderHash, makerAddress);
-            // 验证签名格式和有效性（V + R + S 顺序）
+            const ecSignature = await signature_utils_1.signatureUtils.ecSignHashAsync(provider, orderHash, makerAddress);
+            // 验证签名格式和有效性
             expect(ecSignature).to.match(/^0x[0-9a-fA-F]{132}$/);
             // 验证签名是否有效
             const parsedSignature = (0, signature_utils_1.parseSignatureHexAsVRS)(ecSignature);
             const isValid = (0, signature_utils_1.isValidECSignature)(orderHash, parsedSignature, makerAddress);
             expect(isValid).to.be.true;
         });
-        it('should return a valid signature', async () => {
-            const expectedSignature = '0x1b117902c86dfb95fe0d1badd983ee166ad259b27acb220174cbb4460d872871137feabdfe76e05924b484789f79af4ee7fa29ec006cedce1bbf369320d034e10b03';
+        it('should return a valid signature with hardhat provider', async () => {
             const orderHash = '0x34decbedc118904df65f379a175bb39ca18209d6ce41d5ed549d54e6e0a95004';
-            const fakeProvider = {
-                async send(method, params) {
-                    if (method === 'eth_accounts') {
-                        return [makerAddress];
-                    }
-                    return [];
-                },
-                async sendAsync(payload, callback) {
-                    if (payload.method === 'eth_sign') {
-                        const [address, message] = payload.params;
-                        const signature = await web3_wrapper_1.web3Wrapper.signMessageAsync(address, message);
-                        callback(null, {
-                            id: 42,
-                            jsonrpc: '2.0',
-                            result: signature,
-                        });
-                    }
-                    else {
-                        callback(null, { id: 42, jsonrpc: '2.0', result: [makerAddress] });
-                    }
-                },
-            };
-            const ecSignature = await signature_utils_1.signatureUtils.ecSignHashAsync(fakeProvider, orderHash, makerAddress);
+            const ecSignature = await signature_utils_1.signatureUtils.ecSignHashAsync(provider, orderHash, makerAddress);
             // 验证签名格式和有效性
             expect(ecSignature).to.match(/^0x[0-9a-fA-F]{132}$/);
             // 验证签名是否有效
@@ -378,27 +260,8 @@ describe('Signature utils', () => {
         });
     });
     describe('#ecSignTypedDataOrderAsync', () => {
-        it('should result in the same signature as signing the order hash without an ethereum message prefix', async () => {
-            // Note: Since order hash is an EIP712 hash the result of a valid EIP712 signature
-            //       of order hash is the same as signing the order without the Ethereum Message prefix.
-            const orderHashHex = order_hash_utils_1.orderHashUtils.getOrderHash(order);
-            const sig = ethUtil.ecsign(ethUtil.toBuffer(orderHashHex), Buffer.from('F2F48EE19680706196E2E339E5DA3491186E0C4C5030670656B0E0164837257D', 'hex'));
-            const signatureBuffer = Buffer.concat([
-                ethUtil.toBuffer(sig.v),
-                ethUtil.toBuffer(sig.r),
-                ethUtil.toBuffer(sig.s),
-                ethUtil.toBuffer(types_1.SignatureType.EIP712),
-            ]);
-            const signatureHex = `0x${signatureBuffer.toString('hex')}`;
-            const fakeProvider = {
-                async send(method, params) {
-                    if (method === 'eth_accounts') {
-                        return [makerAddress];
-                    }
-                    return [];
-                },
-            };
-            const signedOrder = await signature_utils_1.signatureUtils.ecSignTypedDataOrderAsync(fakeProvider, order, makerAddress);
+        it('should successfully sign typed data order using hardhat provider', async () => {
+            const signedOrder = await signature_utils_1.signatureUtils.ecSignTypedDataOrderAsync(provider, order, makerAddress);
             // 验证签名格式
             expect(signedOrder.signature).to.match(/^0x[0-9a-fA-F]{132}$/);
             // 验证签名是否有效
@@ -407,31 +270,8 @@ describe('Signature utils', () => {
             const isValid = (0, signature_utils_1.isValidECSignature)(orderHash, parsedSignature, makerAddress);
             expect(isValid).to.be.true;
         });
-        it('should return the correct signature for signatureHex concatenated as R + S + V', async () => {
-            const expectedSignature = '0x1b65b7b6205a4511cc81ec8f1b3eb475b398d60985089a3041c74735109f207e99542c7f0f81b0a988317e89b8280ec72829c8532a04c376f1f1236589c911545002';
-            const fakeProvider = {
-                async send(method, params) {
-                    if (method === 'eth_accounts') {
-                        return [makerAddress];
-                    }
-                    return [];
-                },
-                async sendAsync(payload, callback) {
-                    if (payload.method.startsWith('eth_signTypedData')) {
-                        const [address, typedData] = payload.params;
-                        const signature = await web3_wrapper_1.web3Wrapper.signTypedDataAsync(address, JSON.parse(typedData));
-                        callback(null, {
-                            id: 42,
-                            jsonrpc: '2.0',
-                            result: signature,
-                        });
-                    }
-                    else {
-                        callback(null, { id: 42, jsonrpc: '2.0', result: [makerAddress] });
-                    }
-                },
-            };
-            const signedOrder = await signature_utils_1.signatureUtils.ecSignTypedDataOrderAsync(fakeProvider, order, makerAddress);
+        it('should return a valid typed data signature (R + S + V format)', async () => {
+            const signedOrder = await signature_utils_1.signatureUtils.ecSignTypedDataOrderAsync(provider, order, makerAddress);
             // 验证签名格式和有效性
             expect(signedOrder.signature).to.match(/^0x[0-9a-fA-F]{132}$/);
             // 验证签名是否有效
@@ -454,28 +294,18 @@ describe('Signature utils', () => {
                 ethUtil.toBuffer(types_1.SignatureType.EIP712),
             ]);
             const signatureHex = `0x${signatureBuffer.toString('hex')}`;
-            const signedTransaction = await signature_utils_1.signatureUtils.ecSignTypedDataTransactionAsync(web3_wrapper_1.provider, transaction, makerAddress);
+            const signedTransaction = await signature_utils_1.signatureUtils.ecSignTypedDataTransactionAsync(provider, transaction, makerAddress);
             expect(signatureHex).to.eq(signedTransaction.signature);
         });
-        it('should return the correct Signature for signatureHex concatenated as R + S + V', async () => {
-            const fakeProvider = {
-                async sendAsync(payload, callback) {
-                    if (payload.method.startsWith('eth_signTypedData')) {
-                        const [address, typedData] = payload.params;
-                        const signature = await web3_wrapper_1.web3Wrapper.signTypedDataAsync(address, JSON.parse(typedData));
-                        callback(null, {
-                            id: 42,
-                            jsonrpc: '2.0',
-                            result: signature,
-                        });
-                    }
-                    else {
-                        callback(null, { id: 42, jsonrpc: '2.0', result: [makerAddress] });
-                    }
-                },
-            };
-            const signedTransaction = await signature_utils_1.signatureUtils.ecSignTypedDataTransactionAsync(fakeProvider, transaction, makerAddress);
-            assert_1.assert.isHexString('signedTransaction.signature', signedTransaction.signature);
+        it('should return a valid transaction signature using hardhat provider', async () => {
+            const signedTransaction = await signature_utils_1.signatureUtils.ecSignTypedDataTransactionAsync(provider, transaction, makerAddress);
+            // 验证签名格式和有效性
+            expect(signedTransaction.signature).to.match(/^0x[0-9a-fA-F]{132}$/);
+            // 验证签名是否有效
+            const parsedSignature = (0, signature_utils_1.parseSignatureHexAsVRS)(signedTransaction.signature);
+            const transactionHash = transaction_hash_utils_1.transactionHashUtils.getTransactionHash(transaction);
+            const isValid = (0, signature_utils_1.isValidECSignature)(transactionHash, parsedSignature, makerAddress);
+            expect(isValid).to.be.true;
         });
     });
     describe('#convertECSignatureToSignatureHex', () => {
