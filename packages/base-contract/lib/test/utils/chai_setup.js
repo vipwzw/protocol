@@ -32,14 +32,7 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AJV = exports.Ajv = exports.schemas = exports.SchemaValidator = void 0;
-var schema_validator_1 = require("./schema_validator");
-Object.defineProperty(exports, "SchemaValidator", { enumerable: true, get: function () { return schema_validator_1.SchemaValidator; } });
-var schemas_1 = require("./schemas");
-Object.defineProperty(exports, "schemas", { enumerable: true, get: function () { return schemas_1.schemas; } });
-var ajv_1 = require("ajv");
-Object.defineProperty(exports, "Ajv", { enumerable: true, get: function () { return ajv_1.Ajv; } });
-const AJV = __importStar(require("ajv"));
-exports.AJV = AJV;
-module.exports.AJV = AJV;
+const chai = __importStar(require("chai"));
+// 配置 Chai，但不加载可能引起冲突的插件
+chai.config.includeStack = true;
+module.exports = chai;

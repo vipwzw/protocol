@@ -2,6 +2,16 @@ import { assert as chaiAssert } from 'chai';
 import { ethers } from 'ethers';
 import { SchemaValidator } from '@0x/json-schemas';
 
+// 懒加载的 SchemaValidator 实例，避免重复创建
+let _schemaValidator: SchemaValidator | undefined;
+
+function getSchemaValidator(): SchemaValidator {
+    if (_schemaValidator === undefined) {
+        _schemaValidator = new SchemaValidator();
+    }
+    return _schemaValidator;
+}
+
 // 基础断言工具，替代 @0x/assert
 export const assert = {
     ...chaiAssert,
@@ -21,7 +31,7 @@ export const assert = {
     },
     
     doesConformToSchema(variableName: string, value: any, schema: object): void {
-        const schemaValidator = new SchemaValidator();
+        const schemaValidator = getSchemaValidator();
         const isValid = schemaValidator.isValid(value, schema);
         if (!isValid) {
             const validationResult = schemaValidator.validate(value, schema);

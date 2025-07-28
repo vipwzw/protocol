@@ -3,6 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.assert = void 0;
 const chai_1 = require("chai");
 const json_schemas_1 = require("@0x/json-schemas");
+// 懒加载的 SchemaValidator 实例，避免重复创建
+let _schemaValidator;
+function getSchemaValidator() {
+    if (_schemaValidator === undefined) {
+        _schemaValidator = new json_schemas_1.SchemaValidator();
+    }
+    return _schemaValidator;
+}
 // 基础断言工具，替代 @0x/assert
 exports.assert = {
     ...chai_1.assert,
@@ -19,7 +27,7 @@ exports.assert = {
         }
     },
     doesConformToSchema(variableName, value, schema) {
-        const schemaValidator = new json_schemas_1.SchemaValidator();
+        const schemaValidator = getSchemaValidator();
         const isValid = schemaValidator.isValid(value, schema);
         if (!isValid) {
             const validationResult = schemaValidator.validate(value, schema);

@@ -1,38 +1,30 @@
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.formatABIDataItem = formatABIDataItem;
 exports.methodAbiToFunctionSignature = methodAbiToFunctionSignature;
 exports.linkLibrariesInBytecode = linkLibrariesInBytecode;
-var utils_1 = require("@0x/utils");
+const utils_1 = require("@0x/utils");
 // tslint:disable-next-line:completed-docs
 function formatABIDataItem(abi, value, formatter) {
-    var trailingArrayRegex = /\[\d*\]$/;
+    const trailingArrayRegex = /\[\d*\]$/;
     if (abi.type.match(trailingArrayRegex)) {
-        var arrayItemType_1 = abi.type.replace(trailingArrayRegex, '');
-        return value.map(function (val) {
-            var arrayItemAbi = __assign(__assign({}, abi), { type: arrayItemType_1 });
+        const arrayItemType = abi.type.replace(trailingArrayRegex, '');
+        return value.map((val) => {
+            const arrayItemAbi = {
+                ...abi,
+                type: arrayItemType,
+            };
             return formatABIDataItem(arrayItemAbi, val, formatter);
         });
     }
     else if (abi.type === 'tuple') {
-        var formattedTuple_1 = {};
+        const formattedTuple = {};
         if (abi.components) {
-            abi.components.forEach(function (componentABI) {
-                formattedTuple_1[componentABI.name] = formatABIDataItem(componentABI, value[componentABI.name], formatter);
+            abi.components.forEach(componentABI => {
+                formattedTuple[componentABI.name] = formatABIDataItem(componentABI, value[componentABI.name], formatter);
             });
         }
-        return formattedTuple_1;
+        return formattedTuple;
     }
     else {
         return formatter(abi.type, value);
@@ -43,7 +35,7 @@ function formatABIDataItem(abi, value, formatter) {
  * @return a function signature as a string, e.g. 'functionName(uint256, bytes[])'
  */
 function methodAbiToFunctionSignature(methodAbi) {
-    var method = utils_1.AbiEncoder.createMethod(methodAbi.name, methodAbi.inputs);
+    const method = utils_1.AbiEncoder.createMethod(methodAbi.name, methodAbi.inputs);
     return method.getSignature();
 }
 /**
@@ -51,18 +43,15 @@ function methodAbiToFunctionSignature(methodAbi) {
  * with real addresses and returns the bytecode.
  */
 function linkLibrariesInBytecode(artifact, libraryAddresses) {
-    var bytecodeArtifact = artifact.compilerOutput.evm.bytecode;
-    var bytecode = bytecodeArtifact.object.substr(2);
-    for (var _i = 0, _a = Object.values(bytecodeArtifact.linkReferences || {}); _i < _a.length; _i++) {
-        var link = _a[_i];
-        for (var _b = 0, _c = Object.entries(link); _b < _c.length; _b++) {
-            var _d = _c[_b], libraryName = _d[0], libraryRefs = _d[1];
-            var libraryAddress = libraryAddresses[libraryName];
+    const bytecodeArtifact = artifact.compilerOutput.evm.bytecode;
+    let bytecode = bytecodeArtifact.object.substr(2);
+    for (const link of Object.values(bytecodeArtifact.linkReferences || {})) {
+        for (const [libraryName, libraryRefs] of Object.entries(link)) {
+            const libraryAddress = libraryAddresses[libraryName];
             if (!libraryAddress) {
-                throw new Error("".concat(artifact.contractName, " has an unlinked reference library ").concat(libraryName, " but no addresses was provided'."));
+                throw new Error(`${artifact.contractName} has an unlinked reference library ${libraryName} but no addresses was provided'.`);
             }
-            for (var _e = 0, libraryRefs_1 = libraryRefs; _e < libraryRefs_1.length; _e++) {
-                var ref = libraryRefs_1[_e];
+            for (const ref of libraryRefs) {
                 bytecode = [
                     bytecode.substring(0, ref.start * 2),
                     libraryAddress.toLowerCase().substr(2),
@@ -72,5 +61,5 @@ function linkLibrariesInBytecode(artifact, libraryAddresses) {
             }
         }
     }
-    return "0x".concat(bytecode);
+    return `0x${bytecode}`;
 }
