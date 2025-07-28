@@ -38,7 +38,24 @@ const web3Wrapper = {
         }
         try {
             // 使用 ethers v6 的 signTypedData 方法
-            return await testSigner.signTypedData(typedData.domain, typedData.types, typedData.message || typedData.value || typedData);
+            // 需要正确解析 EIP712 结构
+            let domain, types, value;
+            if (typedData.domain && typedData.types && (typedData.message || typedData.value)) {
+                // 标准 EIP712 结构
+                domain = typedData.domain;
+                types = { ...typedData.types };
+                // 移除 EIP712Domain 类型，ethers 会自动处理
+                delete types.EIP712Domain;
+                value = typedData.message || typedData.value;
+            }
+            else {
+                // 兼容其他格式
+                domain = typedData.domain || {};
+                types = typedData.types || {};
+                delete types.EIP712Domain;
+                value = typedData;
+            }
+            return await testSigner.signTypedData(domain, types, value);
         }
         catch (error) {
             throw new Error(`Failed to sign typed data: ${error}`);
@@ -47,8 +64,8 @@ const web3Wrapper = {
     // 添加 send 方法以与 assert.ts 中的代码兼容
     async send(method, params) {
         if (method === 'eth_accounts') {
-            // 返回一个包含一些测试地址的数组
-            return ['0x0000000000000000000000000000000000000000'];
+            // 返回确定性的测试钱包地址
+            return [testWallet.address];
         }
         return provider.send(method, params);
     }

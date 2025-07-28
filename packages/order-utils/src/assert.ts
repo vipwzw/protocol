@@ -98,8 +98,10 @@ export const assert = {
                     return; // 早期返回，避免继续执行下面的账户检查
                 }
                 
-                // 检查地址是否在账户列表中
-                if (!accounts || !accounts.includes(senderAddressHex.toLowerCase())) {
+                // 检查地址是否在账户列表中（统一转为小写比较）
+                const normalizedSenderAddress = senderAddressHex.toLowerCase();
+                const normalizedAccounts = accounts.map(addr => addr.toLowerCase());
+                if (!accounts || !normalizedAccounts.includes(normalizedSenderAddress)) {
                     throw new Error(
                         `Specified ${variableName} ${senderAddressHex} isn't available through the supplied web3 provider`,
                     );
