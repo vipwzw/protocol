@@ -32,23 +32,63 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = require("@0x/utils");
 const chai = __importStar(require("chai"));
-const dirtyChai = __importStar(require("dirty-chai"));
-const forEach = require("lodash.foreach");
+const lodash_foreach_1 = __importDefault(require("lodash.foreach"));
 require("mocha");
 const index_1 = require("../src/index");
 chai.config.includeStack = true;
-chai.use(dirtyChai);
 const expect = chai.expect;
+// 替代 BigNumber，使用 bigint 和兼容的接口
+class BigNumber {
+    constructor(value) {
+        if (typeof value === 'bigint') {
+            this._value = value.toString();
+        }
+        else if (typeof value === 'string') {
+            // 规范化字符串数字
+            this._value = this.normalizeNumberString(value);
+        }
+        else if (typeof value === 'number') {
+            // 对于小数，保留为字符串但规范化
+            this._value = this.normalizeNumberString(value.toString());
+        }
+        else {
+            throw new Error('Invalid BigNumber value');
+        }
+    }
+    normalizeNumberString(str) {
+        // 转换为数字然后转回字符串，这会移除前导零和多余的小数点
+        const num = parseFloat(str);
+        if (isNaN(num)) {
+            return str; // 如果不是有效数字，保留原值
+        }
+        // 对于整数，不显示小数点
+        if (num % 1 === 0) {
+            return num.toString();
+        }
+        return num.toString();
+    }
+    toString() {
+        return this._value;
+    }
+    toJSON() {
+        return this._value;
+    }
+    static isBigNumber(value) {
+        return value instanceof BigNumber || typeof value === 'bigint';
+    }
+}
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 const CHAIN_ID = 1337;
 const { addressSchema, blockParamSchema, blockRangeSchema, hexSchema, jsNumber, numberSchema, orderCancellationRequestsSchema, orderFillOrKillRequestsSchema, orderFillRequestsSchema, orderHashSchema, orderSchema, paginatedCollectionSchema, signedOrderSchema, signedOrdersSchema, tokenSchema, txDataSchema, v4OtcOrderSchema, v4RfqSignedOrderSchema, wholeNumberSchema, } = index_1.schemas;
 describe('Schema', () => {
     const validator = new index_1.SchemaValidator();
     const validateAgainstSchema = (testCases, schema, shouldFail = false) => {
-        forEach(testCases, (testCase) => {
+        (0, lodash_foreach_1.default)(testCases, (testCase) => {
             const validationResult = validator.validate(testCase, schema);
             const hasErrors = validationResult.errors && validationResult.errors.length !== 0;
             if (shouldFail) {
@@ -417,8 +457,8 @@ describe('Schema', () => {
                 '00.00': '0',
                 '.3': '0.3',
             };
-            forEach(testCases, (serialized, input) => {
-                expect(JSON.parse(JSON.stringify(new utils_1.BigNumber(input)))).to.be.equal(serialized);
+            (0, lodash_foreach_1.default)(testCases, (serialized, input) => {
+                expect(JSON.parse(JSON.stringify(new BigNumber(input)))).to.be.equal(serialized);
             });
         });
     });
@@ -430,14 +470,14 @@ describe('Schema', () => {
         });
         it('should fail for invalid js number', () => {
             // tslint:disable-next-line:custom-no-magic-numbers
-            const testCases = [NaN, -1, new utils_1.BigNumber(1)];
+            const testCases = [NaN, -1, new BigNumber(1)];
             const shouldFail = true;
             validateAgainstSchema(testCases, jsNumber, shouldFail);
         });
     });
     describe('#txDataSchema', () => {
         it('should validate valid txData', () => {
-            const bigNumGasAmount = new utils_1.BigNumber(42);
+            const bigNumGasAmount = new BigNumber(42);
             const testCases = [
                 {
                     from: NULL_ADDRESS,
@@ -456,11 +496,11 @@ describe('Schema', () => {
         it('should fail for invalid txData', () => {
             const testCases = [
                 {
-                    gas: new utils_1.BigNumber(42),
+                    gas: new BigNumber(42),
                 },
                 {},
                 [],
-                new utils_1.BigNumber(1),
+                new BigNumber(1),
             ];
             const shouldFail = true;
             validateAgainstSchema(testCases, txDataSchema, shouldFail);

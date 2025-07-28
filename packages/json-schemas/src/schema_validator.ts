@@ -1,7 +1,33 @@
-import Ajv from 'ajv'; // default import for ajv v8
+const Ajv = require('ajv'); // require style for ajv v6
 import values = require('lodash.values');
 
 import { schemas } from './schemas';
+
+// 全局 AJV 实例，避免重复 schema 的问题
+let _globalValidator: any;
+
+function getOrCreateValidator(): any {
+    if (!_globalValidator) {
+        _globalValidator = new Ajv({ allErrors: true, loadSchema: false });
+        
+        // 只添加一次所有的 schemas
+        const allSchemas = values(schemas).filter(s => s !== undefined && s.id !== undefined);
+        
+        // 先添加所有基础 schema
+        for (const schema of allSchemas) {
+            try {
+                _globalValidator.addSchema(schema, schema.id);
+            } catch (err: any) {
+                // 忽略重复 schema 错误
+                if (err.message && !err.message.includes('already exists')) {
+                    throw err;
+                }
+            }
+        }
+    }
+    return _globalValidator;
+}
+
 /**
  * A validator wrapping (AJV) [https://github.com/ajv-validator/ajv]
  */
@@ -11,9 +37,19 @@ export class SchemaValidator {
      * Instantiates a SchemaValidator instance
      */
     constructor(newSchemas: object[] = []) {
-        this._validator = new Ajv({ allErrors: true });
-        this._validator.addSchema(values(schemas).filter(s => s !== undefined && s.id !== undefined));
-        this._validator.addSchema(newSchemas.filter(s => s !== undefined));
+        this._validator = getOrCreateValidator();
+        
+        // 只添加新的 schemas
+        for (const schema of newSchemas.filter(s => s !== undefined)) {
+            try {
+                this._validator.addSchema(schema, (schema as any).id);
+            } catch (err: any) {
+                // 忽略重复 schema 错误
+                if (err.message && !err.message.includes('already exists')) {
+                    throw err;
+                }
+            }
+        }
     }
     /**
      * Add a schema to the validator. All schemas and sub-schemas must be added to

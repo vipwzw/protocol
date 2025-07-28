@@ -12,7 +12,7 @@
         "build:ci": "yarn build",
         "lint": "tslint --format stylish --project . --exclude **/schemas/**/*",
         "fix": "tslint --fix --format stylish --project . --exclude **/schemas/**/*",
-        "test": "yarn run_mocha",
+        "test": "npx hardhat test",
         "rebuild_and_test": "run-s clean build test",
         "test:coverage": "nyc npm run test --all && yarn coverage:report:lcov",
         "coverage:report:lcov": "nyc report --reporter=text-lcov > coverage/lcov.info",
@@ -44,19 +44,23 @@
     "homepage": "https://github.com/0xProject/tools/tree/main/json-schemas",
     "dependencies": {
         "@types/node": "^20.0.0",
-        "ajv": "^8.15.0",
+        "ajv": "^6.12.6",
         "lodash.values": "^4.3.0"
     },
     "devDependencies": {
         "@types/lodash.foreach": "^4.5.3",
         "@types/lodash.values": "^4.3.3",
         "@types/mocha": "^10.0.0",
+        "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+        "@nomicfoundation/hardhat-ethers": "^3.0.0",
         "chai": "^4.5.0",
+        "hardhat": "^2.26.0",
         "lodash.foreach": "^4.5.0",
         "make-promises-safe": "^1.1.0",
         "mocha": "^10.2.0",
         "npm-run-all": "^4.1.2",
         "shx": "^0.3.4",
+        "ts-node": "^10.9.0",
         "typescript": "^5.0.0"
     },
     "publishConfig": {

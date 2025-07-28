@@ -204,7 +204,7 @@
   version "6.4.6"
   dependencies:
     "@types/node" "^20.0.0"
-    ajv "^8.15.0"
+    ajv "^6.12.6"
     lodash.values "^4.3.0"
 
 "@0x/sol-compiler@^4.7.3", "@0x/sol-compiler@^4.8.5":
@@ -3149,7 +3149,7 @@ ajv@^6.10.2, ajv@^6.12.3, ajv@^6.12.4, ajv@^6.12.6, ajv@^6.9.1:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-ajv@^8.0.0, ajv@^8.0.1, ajv@^8.15.0, ajv@^8.6.3:
+ajv@^8.0.0, ajv@^8.0.1, ajv@^8.6.3:
   version "8.17.1"
   resolved "https://registry.npmjs.org/ajv/-/ajv-8.17.1.tgz#37d9a5c776af6bc92d7f4f9510eba4c0a60d11a6"
   integrity sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g==

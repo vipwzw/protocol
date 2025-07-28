@@ -13,8 +13,8 @@
         "resolveJsonModule": true,
         "allowSyntheticDefaultImports": true
     },
-    "include": ["./src/**/*"],
-    "exclude": ["node_modules", "lib", "test"],
+    "include": ["./src/**/*", "./test/**/*"],
+    "exclude": ["node_modules", "lib"],
     "files": [
         "./schemas/address_schema.json",
         "./schemas/number_schema.json",

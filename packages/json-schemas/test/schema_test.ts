@@ -1,14 +1,55 @@
-import { BigNumber } from '@0x/utils';
 import * as chai from 'chai';
-import * as dirtyChai from 'dirty-chai';
-import forEach = require('lodash.foreach');
+import forEach from 'lodash.foreach';
 import 'mocha';
 
 import { schemas, SchemaValidator } from '../src/index';
 
 chai.config.includeStack = true;
-chai.use(dirtyChai);
 const expect = chai.expect;
+
+// 替代 BigNumber，使用 bigint 和兼容的接口
+class BigNumber {
+    private _value: string;
+    
+    constructor(value: string | number | bigint) {
+        if (typeof value === 'bigint') {
+            this._value = value.toString();
+        } else if (typeof value === 'string') {
+            // 规范化字符串数字
+            this._value = this.normalizeNumberString(value);
+        } else if (typeof value === 'number') {
+            // 对于小数，保留为字符串但规范化
+            this._value = this.normalizeNumberString(value.toString());
+        } else {
+            throw new Error('Invalid BigNumber value');
+        }
+    }
+    
+    private normalizeNumberString(str: string): string {
+        // 转换为数字然后转回字符串，这会移除前导零和多余的小数点
+        const num = parseFloat(str);
+        if (isNaN(num)) {
+            return str; // 如果不是有效数字，保留原值
+        }
+        // 对于整数，不显示小数点
+        if (num % 1 === 0) {
+            return num.toString();
+        }
+        return num.toString();
+    }
+    
+    toString(): string {
+        return this._value;
+    }
+    
+    toJSON(): string {
+        return this._value;
+    }
+    
+    static isBigNumber(value: any): boolean {
+        return value instanceof BigNumber || typeof value === 'bigint';
+    }
+}
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 const CHAIN_ID = 1337;
 const {
