@@ -14,8 +14,7 @@
         "prettier:ci": "./scripts/lint-prettier.sh",
         "install:all": "yarn install",
         "wsrun": "wsrun",
-        "lerna": "lerna",
-        "build": "lerna link && yarn build:step1 && yarn build:step2 && yarn build:step3 && yarn build:step4 && yarn build:step5",
+        "build": "yarn install && yarn build:step1 && yarn build:step2 && yarn build:step3 && yarn build:step4 && yarn build:step5",
         "build:step1": "yarn compile:contracts",
         "build:step2": "yarn update:artifacts",
         "build:step3": "yarn generate:typechain",
@@ -25,7 +24,7 @@
         "generate:typechain": "wsrun -p ${npm_package_config_contractsPackages} --fast-exit -r --stages --exclude-missing -c generate_contract_wrappers",
         "update:artifacts": "wsrun -p @0x/contract-artifacts --fast-exit --exclude-missing -c artifacts_update",
         "generate:wrappers": "wsrun -p @0x/contract-wrappers --fast-exit --exclude-missing -c rebuild",
-        "build:ci": "lerna link && wsrun --fast-exit -r --stages --exclude-missing -p $PKG -c build:ci",
+        "build:ci": "yarn install && wsrun --fast-exit -r --stages --exclude-missing -p $PKG -c build:ci",
         "build:contracts": "wsrun -p ${npm_package_config_contractsPackages} --fast-exit -r --stages --exclude-missing -c build:ts",
         "build:packages": "wsrun -p ${npm_package_config_nonContractPackages} --fast-exit -r --stages --exclude-missing -c build",
         "build:ts": "yarn build:packages && yarn build:contracts",
@@ -46,7 +45,7 @@
         "compile:foundry:clean": "./scripts/compile-all-foundry.sh && echo '清理 foundry 输出...' && find contracts -name 'out' -type d -exec rm -rf {} + 2>/dev/null || true",
         "compile:all": "./scripts/compile-all.sh",
         "lint:contracts": "./scripts/lint-contracts.sh",
-        "remove_node_modules": "lerna clean --yes; rm -rf node_modules",
+        "remove_node_modules": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
         "rebuild": "run-s clean build",
         "test": "wsrun --fast-exit --serial --exclude-missing -p $(echo $(echo ${npm_package_config_contractsPackages} ${npm_package_config_nonContractPackages} | tr ' ' '\n' | sort | uniq) ${npm_package_config_ignoreTestsForPackages} | tr ' ' '\n' | sort | uniq -u | tr '\n' ' ') -c test",
         "test:all": "wsrun --fast-exit --serial --exclude-missing -p $PKG -c test",
@@ -83,7 +82,6 @@
         "ignoreDependencyVersionsForPackage": "contract-wrappers"
     },
     "devDependencies": {
-        "@0x-lerna-fork/lerna": "3.16.10",
         "@0xproject/npm-cli-login": "^0.0.11",
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
         "@nomicfoundation/hardhat-ethers": "^3.0.0",
@@ -94,11 +92,14 @@
         "copyfiles": "^2.4.1",
         "coveralls": "^3.0.0",
         "husky": "^8.0.3",
-        "lerna": "^3.0.0-beta.25",
         "lint-staged": "^13.1.0",
+        "make-promises-safe": "^1.1.0",
+        "mocha": "^10.2.0",
         "npm-run-all": "^4.1.2",
         "prettier": "2.7.1",
         "prettier-plugin-solidity": "^1.0.0",
+        "shelljs": "^0.8.5",
+        "shx": "^0.3.4",
         "solhint": "^3.3.7",
         "solhint-plugin-prettier": "^0.0.5",
         "source-map-support": "^0.5.6",
@@ -108,18 +109,22 @@
     },
     "resolutions": {
         "**/bignumber.js": "^9.0.2",
-        "**/@0x/utils": "^7.0.0"
+        "**/@0x/utils": "^7.0.0",
+        "**/ethers": "^6.15.0",
+        "**/@nomiclabs/hardhat-ethers": "npm:@nomicfoundation/hardhat-ethers@^3.0.0",
+        "**/shelljs": "^0.8.5",
+        "**/shx": "^0.3.4",
+        "**/typescript": "^5.0.0"
     },
     "dependencies": {
-        "@nomiclabs/hardhat-ethers": "^2.2.3",
-        "@nomiclabs/hardhat-waffle": "^2.0.6",
+        "@nomicfoundation/hardhat-ethers": "^3.0.0",
         "@openzeppelin/contracts": "^4.8.1",
         "@types/chai": "^4.3.0",
         "@types/node": "^24.0.15",
         "chai": "^4.5.0",
-        "ethereum-waffle": "^4.0.10",
         "ethers": "^6.15.0",
-        "hardhat": "^2.26.0"
+        "hardhat": "^2.26.0",
+        "shx": "^0.3.4"
     },
     "version": "0.0.0"
 }
