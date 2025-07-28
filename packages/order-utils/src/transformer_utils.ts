@@ -1,5 +1,22 @@
 import { Order } from '@0x/types';
-import { AbiEncoder, BigNumber } from '@0x/utils';
+// 临时注释掉 AbiEncoder 导入，这个文件需要重构
+// import { AbiEncoder } from '@0x/utils';
+
+// 临时的 AbiEncoder 模拟对象
+const AbiEncoder = {
+    Method: class {
+        constructor(abi: any) {}
+        encode(values: any[]): string { return '0x'; }
+        getSignature(): string { return ''; }
+    },
+    create(dataItem: any): any {
+        return {
+            encode: (values: any[]): string => '0x',
+            decode: (data: string): any => ({}),
+            getSignature: (): string => ''
+        };
+    }
+};
 import * as ethjs from 'ethereumjs-util';
 
 import { constants } from './constants';

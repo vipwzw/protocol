@@ -32,4 +32,3 @@ export declare const eip712Utils: {
     createCoordinatorApprovalTypedData(transaction: SignedZeroExTransaction, verifyingContract: string, txOrigin: string): EIP712TypedData;
     createExchangeProxyMetaTransactionTypedData(mtx: ExchangeProxyMetaTransaction): EIP712TypedData;
 };
-//# sourceMappingURL=eip712_utils.d.ts.map

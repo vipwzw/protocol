@@ -1,5 +1,4 @@
 import { Order } from '@0x/types';
-import { BigNumber } from '@0x/utils';
 /**
  * ABI encoder for `FillQuoteTransformer.TransformData`
  */
@@ -122,4 +121,3 @@ export declare function findTransformerNonce(transformer: string, deployer?: str
  * Compute the deployed address for a transformer given a deployer and nonce.
  */
 export declare function getTransformerAddress(deployer: string, nonce: number): string;
-//# sourceMappingURL=transformer_utils.d.ts.map

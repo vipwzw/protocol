@@ -38,8 +38,9 @@ exports.parseSignatureHexAsVRS = parseSignatureHexAsVRS;
 exports.isValidECSignature = isValidECSignature;
 const json_schemas_1 = require("@0x/json-schemas");
 const types_1 = require("@0x/types");
-const utils_1 = require("@0x/utils");
-const web3_wrapper_1 = require("@0x/web3-wrapper");
+const utils_1 = require("./utils");
+;
+const ethers_1 = require("ethers");
 const ethUtil = __importStar(require("ethereumjs-util"));
 const _ = __importStar(require("lodash"));
 const assert_1 = require("./assert");
@@ -48,6 +49,152 @@ const hash_utils_1 = require("./hash_utils");
 const order_hash_utils_1 = require("./order_hash_utils");
 const transaction_hash_utils_1 = require("./transaction_hash_utils");
 const types_2 = require("./types");
+// 创建 providerUtils 替代
+const providerUtils = {
+    isSigner(provider) {
+        return 'signMessage' in provider;
+    },
+    async getAccountsAsync(provider) {
+        if (this.isSigner(provider)) {
+            const address = await provider.getAddress();
+            return [address];
+        }
+        // 对于 Provider，返回空数组或通过 eth_accounts 获取
+        return [];
+    },
+    standardizeOrThrow(address) {
+        // 简单地返回地址，或进行基本的标准化
+        return address.toLowerCase();
+    },
+};
+// Web3Wrapper 替代 - 使用 ethers v6 实现
+class Web3Wrapper {
+    constructor(provider) {
+        this.isZeroExWeb3Wrapper = false;
+        this.provider = provider;
+    }
+    /**
+     * 使用 ethers v6 实现 signTypedData 功能
+     * 替代原来的 @0x/web3-wrapper signTypedDataAsync
+     */
+    async signTypedDataAsync(signerAddress, typedData) {
+        if (providerUtils.isSigner(this.provider)) {
+            // 验证签名者地址是否匹配
+            const currentAddress = await this.provider.getAddress();
+            if (currentAddress.toLowerCase() !== signerAddress.toLowerCase()) {
+                throw new Error(`Signer address ${currentAddress} does not match expected ${signerAddress}`);
+            }
+            // 使用 ethers v6 的 signTypedData 方法
+            // 参数格式: domain, types, value
+            return await this.provider.signTypedData(typedData.domain, typedData.types, typedData.message || typedData.value || typedData);
+        }
+        else {
+            // 对于非 Signer 的 provider，尝试通过 RPC 调用 eth_signTypedData_v4
+            try {
+                // 优先尝试 send 方法，回退到 sendAsync
+                if (typeof this.provider.send === 'function') {
+                    return await this.provider.send('eth_signTypedData_v4', [signerAddress, JSON.stringify(typedData)]);
+                }
+                else if (typeof this.provider.sendAsync === 'function') {
+                    return new Promise((resolve, reject) => {
+                        this.provider.sendAsync({
+                            method: 'eth_signTypedData_v4',
+                            params: [signerAddress, JSON.stringify(typedData)],
+                            id: 42,
+                            jsonrpc: '2.0'
+                        }, (error, result) => {
+                            if (error) {
+                                reject(error);
+                            }
+                            else {
+                                resolve(result.result);
+                            }
+                        });
+                    });
+                }
+                else {
+                    throw new Error('Provider does not have send or sendAsync method');
+                }
+            }
+            catch (error) {
+                throw new Error(`Provider does not support typed data signing. ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
+        }
+    }
+    /**
+     * 使用 ethers v6 实现 signMessage 功能
+     * 替代原来的 @0x/web3-wrapper signMessageAsync
+     */
+    async signMessageAsync(signerAddress, message) {
+        if (providerUtils.isSigner(this.provider)) {
+            // 验证签名者地址是否匹配
+            const currentAddress = await this.provider.getAddress();
+            if (currentAddress.toLowerCase() !== signerAddress.toLowerCase()) {
+                throw new Error(`Signer address ${currentAddress} does not match expected ${signerAddress}`);
+            }
+            // 使用 ethers v6 的 signMessage 方法
+            // 这会自动添加以太坊消息前缀并签名
+            return await this.provider.signMessage(ethers_1.ethers.getBytes(message));
+        }
+        else {
+            // 对于非 Signer 的 provider，尝试通过 RPC 调用 eth_sign
+            try {
+                // 优先尝试 send 方法，回退到 sendAsync
+                if (typeof this.provider.send === 'function') {
+                    return await this.provider.send('eth_sign', [signerAddress, message]);
+                }
+                else if (typeof this.provider.sendAsync === 'function') {
+                    return new Promise((resolve, reject) => {
+                        this.provider.sendAsync({
+                            method: 'eth_sign',
+                            params: [signerAddress, message],
+                            id: 42,
+                            jsonrpc: '2.0'
+                        }, (error, result) => {
+                            if (error) {
+                                reject(error);
+                            }
+                            else {
+                                resolve(result.result);
+                            }
+                        });
+                    });
+                }
+                else {
+                    throw new Error('Provider does not have send or sendAsync method');
+                }
+            }
+            catch (error) {
+                throw new Error(`Provider does not support signing. ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
+        }
+    }
+    /**
+     * 获取账户地址列表
+     * 用于验证签名者权限
+     */
+    async getAccountsAsync() {
+        if (providerUtils.isSigner(this.provider)) {
+            const address = await this.provider.getAddress();
+            return [address];
+        }
+        // 对于普通 Provider，尝试通过 eth_accounts 获取
+        try {
+            const accounts = await this.provider.send('eth_accounts', []);
+            return accounts || [];
+        }
+        catch {
+            return [];
+        }
+    }
+    /**
+     * 获取网络信息
+     */
+    async getNetworkAsync() {
+        const network = await this.provider.getNetwork();
+        return { chainId: Number(network.chainId) };
+    }
+}
 exports.signatureUtils = {
     /**
      * Signs an order and returns a SignedOrder. First `eth_signTypedData` is requested
@@ -70,7 +217,7 @@ exports.signatureUtils = {
             //       We check for a user denying the signature request in a way that supports Metamask and
             //       Coinbase Wallet. Unfortunately for signers with a different error message,
             //       they will receive two signature requests.
-            if (err.message.includes('User denied message signature')) {
+            if (err?.message?.includes('User denied message signature')) {
                 throw err;
             }
             const orderHash = order_hash_utils_1.orderHashUtils.getOrderHash(order);
@@ -91,11 +238,11 @@ exports.signatureUtils = {
      * @return  A SignedOrder containing the order and Elliptic curve signature with Signature Type.
      */
     async ecSignTypedDataOrderAsync(supportedProvider, order, signerAddress) {
-        const provider = utils_1.providerUtils.standardizeOrThrow(supportedProvider);
+        const provider = supportedProvider; // 直接使用 provider
         assert_1.assert.isETHAddressHex('signerAddress', signerAddress);
         assert_1.assert.doesConformToSchema('order', order, json_schemas_1.schemas.orderSchema, [json_schemas_1.schemas.hexSchema]);
-        const web3Wrapper = new web3_wrapper_1.Web3Wrapper(provider);
-        await assert_1.assert.isSenderAddressAsync('signerAddress', signerAddress, web3Wrapper);
+        const web3Wrapper = new Web3Wrapper(provider);
+        await assert_1.assert.isSenderAddressAsync('signerAddress', signerAddress, provider);
         const normalizedSignerAddress = signerAddress.toLowerCase();
         const typedData = eip712_utils_1.eip712Utils.createOrderTypedData(order);
         try {
@@ -144,7 +291,7 @@ exports.signatureUtils = {
             //       We check for a user denying the signature request in a way that supports Metamask and
             //       Coinbase Wallet. Unfortunately for signers with a different error message,
             //       they will receive two signature requests.
-            if (err.message.includes('User denied message signature')) {
+            if (err?.message?.includes('User denied message signature')) {
                 throw err;
             }
             const transactionHash = transaction_hash_utils_1.transactionHashUtils.getTransactionHash(transaction);
@@ -165,11 +312,11 @@ exports.signatureUtils = {
      * @return  A SignedZeroExTransaction containing the ZeroExTransaction and Elliptic curve signature with Signature Type.
      */
     async ecSignTypedDataTransactionAsync(supportedProvider, transaction, signerAddress) {
-        const provider = utils_1.providerUtils.standardizeOrThrow(supportedProvider);
+        const provider = supportedProvider; // 直接使用 provider
         assert_1.assert.isETHAddressHex('signerAddress', signerAddress);
         assert_1.assert.doesConformToSchema('transaction', transaction, json_schemas_1.schemas.zeroExTransactionSchema, [json_schemas_1.schemas.hexSchema]);
-        const web3Wrapper = new web3_wrapper_1.Web3Wrapper(provider);
-        await assert_1.assert.isSenderAddressAsync('signerAddress', signerAddress, web3Wrapper);
+        const web3Wrapper = new Web3Wrapper(provider);
+        await assert_1.assert.isSenderAddressAsync('signerAddress', signerAddress, provider);
         const normalizedSignerAddress = signerAddress.toLowerCase();
         const typedData = eip712_utils_1.eip712Utils.createZeroExTransactionTypedData(transaction);
         try {
@@ -222,7 +369,7 @@ exports.signatureUtils = {
             //       We check for a user denying the signature request in a way that supports Metamask and
             //       Coinbase Wallet. Unfortunately for signers with a different error message,
             //       they will receive two signature requests.
-            if (err.message.includes('User denied message signature')) {
+            if (err?.message?.includes('User denied message signature')) {
                 throw err;
             }
             const transactionHash = (0, hash_utils_1.getExchangeProxyMetaTransactionHash)(transaction);
@@ -245,19 +392,19 @@ exports.signatureUtils = {
      *          ExchangeProxyMetaTransaction and elliptic curve signature with Signature Type.
      */
     async ecSignTypedDataExchangeProxyMetaTransactionAsync(supportedProvider, transaction, signerAddress) {
-        const provider = utils_1.providerUtils.standardizeOrThrow(supportedProvider);
+        const provider = supportedProvider; // 直接使用 provider
         assert_1.assert.isETHAddressHex('signerAddress', signerAddress);
         assert_1.assert.doesConformToSchema('transaction', transaction, json_schemas_1.schemas.exchangeProxyMetaTransactionSchema, [
             json_schemas_1.schemas.hexSchema,
         ]);
-        const web3Wrapper = new web3_wrapper_1.Web3Wrapper(provider);
-        await assert_1.assert.isSenderAddressAsync('signerAddress', signerAddress, web3Wrapper);
+        const web3Wrapper = new Web3Wrapper(provider);
+        await assert_1.assert.isSenderAddressAsync('signerAddress', signerAddress, provider);
         const normalizedSignerAddress = signerAddress.toLowerCase();
         const typedData = eip712_utils_1.eip712Utils.createExchangeProxyMetaTransactionTypedData(transaction);
         try {
             const signature = await web3Wrapper.signTypedDataAsync(normalizedSignerAddress, typedData);
             const ecSignatureRSV = parseSignatureHexAsRSV(signature);
-            const signatureHex = utils_1.hexUtils.concat(ecSignatureRSV.v, ecSignatureRSV.r, ecSignatureRSV.s, types_1.SignatureType.EIP712);
+            const signatureHex = utils_1.hexUtils.concat(ecSignatureRSV.v.toString(), ecSignatureRSV.r, ecSignatureRSV.s, types_1.SignatureType.EIP712.toString());
             return {
                 ...transaction,
                 signature: signatureHex,
@@ -282,11 +429,11 @@ exports.signatureUtils = {
      * @return  A hex encoded string containing the Elliptic curve signature generated by signing the msgHash and the Signature Type.
      */
     async ecSignHashAsync(supportedProvider, msgHash, signerAddress) {
-        const provider = utils_1.providerUtils.standardizeOrThrow(supportedProvider);
+        const provider = supportedProvider; // 直接使用 provider
         assert_1.assert.isHexString('msgHash', msgHash);
         assert_1.assert.isETHAddressHex('signerAddress', signerAddress);
-        const web3Wrapper = new web3_wrapper_1.Web3Wrapper(provider);
-        await assert_1.assert.isSenderAddressAsync('signerAddress', signerAddress, web3Wrapper);
+        const web3Wrapper = new Web3Wrapper(provider);
+        await assert_1.assert.isSenderAddressAsync('signerAddress', signerAddress, provider);
         const normalizedSignerAddress = signerAddress.toLowerCase();
         const signature = await web3Wrapper.signMessageAsync(normalizedSignerAddress, msgHash);
         const prefixedMsgHashHex = exports.signatureUtils.addSignedMessagePrefix(msgHash);
@@ -327,7 +474,7 @@ exports.signatureUtils = {
      * @return Hex encoded string of signature (v,r,s) with Signature Type
      */
     convertECSignatureToSignatureHex(ecSignature) {
-        const signatureHex = utils_1.hexUtils.concat(ecSignature.v, ecSignature.r, ecSignature.s);
+        const signatureHex = utils_1.hexUtils.concat(ecSignature.v.toString(), ecSignature.r, ecSignature.s);
         const signatureWithType = exports.signatureUtils.convertToSignatureWithType(signatureHex, types_1.SignatureType.EthSign);
         return signatureWithType;
     },
@@ -430,4 +577,3 @@ function isValidECSignature(data, signature, signerAddress) {
     }
 }
 // tslint:disable:max-file-line-count
-//# sourceMappingURL=signature_utils.js.map

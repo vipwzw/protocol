@@ -1,12 +1,12 @@
 import { MethodAbi } from 'ethereum-types';
 export declare const constants: {
-    NULL_ADDRESS: any;
+    NULL_ADDRESS: string;
     FAKED_PROVIDER: {
         isEIP1193: boolean;
     };
-    NULL_BYTES: any;
+    NULL_BYTES: string;
     NULL_ERC20_ASSET_DATA: string;
-    UNLIMITED_ALLOWANCE_IN_BASE_UNITS: any;
+    UNLIMITED_ALLOWANCE_IN_BASE_UNITS: bigint;
     TESTRPC_CHAIN_ID: number;
     ADDRESS_LENGTH: number;
     ERC20_ASSET_DATA_MIN_CHAR_LENGTH_WITH_PREFIX: number;
@@ -15,8 +15,8 @@ export declare const constants: {
     MULTI_ASSET_DATA_MIN_CHAR_LENGTH_WITH_PREFIX: number;
     STATIC_CALL_ASSET_DATA_MIN_CHAR_LENGTH_WITH_PREFIX: number;
     SELECTOR_CHAR_LENGTH_WITH_PREFIX: number;
-    INFINITE_TIMESTAMP_SEC: any;
-    ZERO_AMOUNT: any;
+    INFINITE_TIMESTAMP_SEC: bigint;
+    ZERO_AMOUNT: bigint;
     EXCHANGE_DOMAIN_NAME: string;
     EXCHANGE_DOMAIN_VERSION: string;
     DEFAULT_DOMAIN_SCHEMA: {
@@ -71,4 +71,3 @@ export declare const constants: {
     IS_VALID_VALIDATOR_SIGNATURE_MAGIC_VALUE: string;
     ETH_TOKEN_ADDRESS: string;
 };
-//# sourceMappingURL=constants.d.ts.map

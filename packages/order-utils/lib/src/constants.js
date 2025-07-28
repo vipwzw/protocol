@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.constants = void 0;
 const contract_addresses_1 = require("@0x/contract-addresses");
-const utils_1 = require("@0x/utils");
+const utils_1 = require("./utils");
 const ERC20_METHOD_ABI = {
     constant: false,
     inputs: [
@@ -86,7 +86,7 @@ exports.constants = {
     NULL_BYTES: utils_1.NULL_BYTES,
     NULL_ERC20_ASSET_DATA: '0xf47261b00000000000000000000000000000000000000000000000000000000000000000',
     // tslint:disable-next-line:custom-no-magic-numbers
-    UNLIMITED_ALLOWANCE_IN_BASE_UNITS: new utils_1.BigNumber(2).pow(256).minus(1),
+    UNLIMITED_ALLOWANCE_IN_BASE_UNITS: (2n ** 256n) - 1n,
     TESTRPC_CHAIN_ID: 1337,
     ADDRESS_LENGTH: 20,
     ERC20_ASSET_DATA_MIN_CHAR_LENGTH_WITH_PREFIX: 74, // 36 bytes
@@ -95,8 +95,8 @@ exports.constants = {
     MULTI_ASSET_DATA_MIN_CHAR_LENGTH_WITH_PREFIX: 138, // 68 bytes
     STATIC_CALL_ASSET_DATA_MIN_CHAR_LENGTH_WITH_PREFIX: 202, // 100 bytes
     SELECTOR_CHAR_LENGTH_WITH_PREFIX: 10, // 4 bytes
-    INFINITE_TIMESTAMP_SEC: new utils_1.BigNumber(2524604400), // Close to infinite
-    ZERO_AMOUNT: new utils_1.BigNumber(0),
+    INFINITE_TIMESTAMP_SEC: 2524604400n, // Close to infinite
+    ZERO_AMOUNT: 0n,
     EXCHANGE_DOMAIN_NAME: '0x Protocol',
     EXCHANGE_DOMAIN_VERSION: '3.0.0',
     DEFAULT_DOMAIN_SCHEMA: {
@@ -180,4 +180,3 @@ exports.constants = {
      */
     ETH_TOKEN_ADDRESS: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
 };
-//# sourceMappingURL=constants.js.map

@@ -34,9 +34,9 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.eip712Utils = void 0;
-const assert_1 = require("@0x/assert");
+const assert_1 = require("./assert");
 const json_schemas_1 = require("@0x/json-schemas");
-const utils_1 = require("@0x/utils");
+const utils_1 = require("./utils");
 const _ = __importStar(require("lodash"));
 const constants_1 = require("./constants");
 exports.eip712Utils = {
@@ -135,11 +135,10 @@ exports.eip712Utils = {
             MetaTransactionData: constants_1.constants.EXCHANGE_PROXY_MTX_SCEHMA.parameters,
         }, _.mapValues(_.omit(mtx, 'domain'), 
         // tslint:disable-next-line: custom-no-magic-numbers
-        v => (utils_1.BigNumber.isBigNumber(v) ? v.toString(10) : v)), // tslint:disable-line:no-unnecessary-type-assertion
+        v => (BigNumber.isBigNumber(v) ? v.toString(10) : v)), // tslint:disable-line:no-unnecessary-type-assertion
         {
             ...constants_1.constants.MAINNET_EXCHANGE_PROXY_DOMAIN,
             ...mtx.domain,
         });
     },
 };
-//# sourceMappingURL=eip712_utils.js.map

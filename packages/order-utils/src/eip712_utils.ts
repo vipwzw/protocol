@@ -10,7 +10,7 @@ import {
     SignedZeroExTransaction,
     ZeroExTransaction,
 } from '@0x/types';
-import { BigNumber, hexUtils, signTypedDataUtils } from '@0x/utils';
+import { hexUtils, signTypedDataUtils } from './utils';
 import * as _ from 'lodash';
 
 import { constants } from './constants';

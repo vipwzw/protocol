@@ -1,4 +1,4 @@
-import { generatePseudoRandom256BitNumber } from '@0x/utils';
+import { generatePseudoRandom256BitNumber } from './utils';
 
 /**
  * Generates a pseudo-random 256-bit salt.
@@ -8,6 +8,5 @@ import { generatePseudoRandom256BitNumber } from '@0x/utils';
  */
 export function generatePseudoRandomSalt(): bigint {
     const salt = generatePseudoRandom256BitNumber();
-    // 假设 generatePseudoRandom256BitNumber 现在返回 bigint
-    return typeof salt === 'bigint' ? salt : BigInt(salt.toString());
+    return salt;
 }

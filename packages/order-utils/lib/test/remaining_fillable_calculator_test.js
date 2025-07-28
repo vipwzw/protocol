@@ -33,14 +33,16 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = require("@0x/utils");
-const web3_wrapper_1 = require("@0x/web3-wrapper");
 const chai = __importStar(require("chai"));
 require("mocha");
 const remaining_fillable_calculator_1 = require("../src/remaining_fillable_calculator");
 const chai_setup_1 = require("./utils/chai_setup");
 chai_setup_1.chaiSetup.configure();
 const expect = chai.expect;
+// 替代 Web3Wrapper.toBaseUnitAmount 的函数
+function toBaseUnitAmount(amount, decimals) {
+    return amount * (10n ** BigInt(decimals));
+}
 describe('RemainingFillableCalculator', () => {
     let calculator;
     let signedOrder;
@@ -56,19 +58,19 @@ describe('RemainingFillableCalculator', () => {
     const makerFeeAssetData = '0x03';
     const takerFeeAssetData = '0x04';
     const decimals = 4;
-    const zero = new utils_1.BigNumber(0);
+    const zero = BigInt(0);
     const chainId = 1337;
     const zeroAddress = '0x0';
     const signature = '0x1B61a3ed31b43c8780e905a260a35faefcc527be7516aa11c0256729b5b351bc3340349190569279751135161d22529dc25add4f6069af05be04cacbda2ace225403';
     beforeEach(async () => {
         [makerAmount, takerAmount, makerFeeAmount] = [
-            web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(50), decimals),
-            web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(5), decimals),
-            web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(1), decimals),
+            toBaseUnitAmount(BigInt(50), decimals),
+            toBaseUnitAmount(BigInt(5), decimals),
+            toBaseUnitAmount(BigInt(1), decimals),
         ];
         [transferrableMakeAssetAmount, transferrableMakerFeeTokenAmount] = [
-            web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(50), decimals),
-            web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(5), decimals),
+            toBaseUnitAmount(BigInt(50), decimals),
+            toBaseUnitAmount(BigInt(5), decimals),
         ];
     });
     function buildSignedOrder() {
@@ -100,66 +102,69 @@ describe('RemainingFillableCalculator', () => {
             signedOrder = buildSignedOrder();
             remainingMakeAssetAmount = signedOrder.makerAssetAmount;
             calculator = new remaining_fillable_calculator_1.RemainingFillableCalculator(signedOrder.makerFee, signedOrder.makerAssetAmount, isPercentageFee, transferrableMakeAssetAmount, transferrableMakerFeeTokenAmount, remainingMakeAssetAmount);
-            expect(calculator.computeRemainingFillable()).to.be.bignumber.equal(remainingMakeAssetAmount);
+            expect(calculator.computeRemainingFillable()).to.equal(remainingMakeAssetAmount);
         });
         it('calculates the correct amount when partially filled and funds available', () => {
             signedOrder = buildSignedOrder();
-            remainingMakeAssetAmount = web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(1), decimals);
+            remainingMakeAssetAmount = toBaseUnitAmount(BigInt(1), decimals);
             calculator = new remaining_fillable_calculator_1.RemainingFillableCalculator(signedOrder.makerFee, signedOrder.makerAssetAmount, isPercentageFee, transferrableMakeAssetAmount, transferrableMakerFeeTokenAmount, remainingMakeAssetAmount);
-            expect(calculator.computeRemainingFillable()).to.be.bignumber.equal(remainingMakeAssetAmount);
+            expect(calculator.computeRemainingFillable()).to.equal(remainingMakeAssetAmount);
         });
         it('calculates the amount to be 0 when all fee funds are transferred', () => {
             signedOrder = buildSignedOrder();
             transferrableMakerFeeTokenAmount = zero;
             remainingMakeAssetAmount = signedOrder.makerAssetAmount;
             calculator = new remaining_fillable_calculator_1.RemainingFillableCalculator(signedOrder.makerFee, signedOrder.makerAssetAmount, isPercentageFee, transferrableMakeAssetAmount, transferrableMakerFeeTokenAmount, remainingMakeAssetAmount);
-            expect(calculator.computeRemainingFillable()).to.be.bignumber.equal(zero);
+            expect(calculator.computeRemainingFillable()).to.equal(zero);
         });
         it('calculates the correct amount when balance is less than remaining fillable', () => {
             signedOrder = buildSignedOrder();
-            const partiallyFilledAmount = web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(2), decimals);
-            remainingMakeAssetAmount = signedOrder.makerAssetAmount.minus(partiallyFilledAmount);
-            transferrableMakeAssetAmount = remainingMakeAssetAmount.minus(partiallyFilledAmount);
+            const partiallyFilledAmount = toBaseUnitAmount(BigInt(2), decimals);
+            remainingMakeAssetAmount = signedOrder.makerAssetAmount - (partiallyFilledAmount);
+            transferrableMakeAssetAmount = remainingMakeAssetAmount - (partiallyFilledAmount);
             calculator = new remaining_fillable_calculator_1.RemainingFillableCalculator(signedOrder.makerFee, signedOrder.makerAssetAmount, isPercentageFee, transferrableMakeAssetAmount, transferrableMakerFeeTokenAmount, remainingMakeAssetAmount);
-            expect(calculator.computeRemainingFillable()).to.be.bignumber.equal(transferrableMakeAssetAmount);
+            expect(calculator.computeRemainingFillable()).to.equal(transferrableMakeAssetAmount);
         });
         describe('Order to Fee Ratio is < 1', () => {
             beforeEach(async () => {
                 [makerAmount, takerAmount, makerFeeAmount] = [
-                    web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(3), decimals),
-                    web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(6), decimals),
-                    web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(6), decimals),
+                    toBaseUnitAmount(BigInt(3), decimals),
+                    toBaseUnitAmount(BigInt(6), decimals),
+                    toBaseUnitAmount(BigInt(6), decimals),
                 ];
             });
             it('calculates the correct amount when funds unavailable', () => {
                 signedOrder = buildSignedOrder();
                 remainingMakeAssetAmount = signedOrder.makerAssetAmount;
-                const transferredAmount = web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(2), decimals);
-                transferrableMakeAssetAmount = remainingMakeAssetAmount.minus(transferredAmount);
+                const transferredAmount = toBaseUnitAmount(BigInt(2), decimals);
+                transferrableMakeAssetAmount = remainingMakeAssetAmount - (transferredAmount);
                 calculator = new remaining_fillable_calculator_1.RemainingFillableCalculator(signedOrder.makerFee, signedOrder.makerAssetAmount, isPercentageFee, transferrableMakeAssetAmount, transferrableMakerFeeTokenAmount, remainingMakeAssetAmount);
-                expect(calculator.computeRemainingFillable()).to.be.bignumber.equal(transferrableMakeAssetAmount);
+                expect(calculator.computeRemainingFillable()).to.equal(transferrableMakeAssetAmount);
             });
         });
         describe('Ratio is not evenly divisible', () => {
             beforeEach(async () => {
                 [makerAmount, takerAmount, makerFeeAmount] = [
-                    web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(3), decimals),
-                    web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(7), decimals),
-                    web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(7), decimals),
+                    toBaseUnitAmount(BigInt(3), decimals),
+                    toBaseUnitAmount(BigInt(7), decimals),
+                    toBaseUnitAmount(BigInt(7), decimals),
                 ];
             });
             it('calculates the correct amount when funds unavailable', () => {
                 signedOrder = buildSignedOrder();
                 remainingMakeAssetAmount = signedOrder.makerAssetAmount;
-                const transferredAmount = web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(2), decimals);
-                transferrableMakeAssetAmount = remainingMakeAssetAmount.minus(transferredAmount);
+                const transferredAmount = toBaseUnitAmount(BigInt(2), decimals);
+                transferrableMakeAssetAmount = remainingMakeAssetAmount - (transferredAmount);
                 calculator = new remaining_fillable_calculator_1.RemainingFillableCalculator(signedOrder.makerFee, signedOrder.makerAssetAmount, isPercentageFee, transferrableMakeAssetAmount, transferrableMakerFeeTokenAmount, remainingMakeAssetAmount);
                 const calculatedFillableAmount = calculator.computeRemainingFillable();
-                expect(calculatedFillableAmount.isLessThanOrEqualTo(transferrableMakeAssetAmount)).to.be.true();
-                expect(calculatedFillableAmount).to.be.bignumber.greaterThan(new utils_1.BigNumber(0));
-                const orderToFeeRatio = signedOrder.makerAssetAmount.dividedBy(signedOrder.makerFee);
-                const calculatedFeeAmount = calculatedFillableAmount.dividedBy(orderToFeeRatio);
-                expect(calculatedFeeAmount).to.be.bignumber.lessThan(transferrableMakerFeeTokenAmount);
+                expect(calculatedFillableAmount <= transferrableMakeAssetAmount).to.be.true;
+                expect(calculatedFillableAmount > 0n).to.be.true;
+                const orderToFeeRatio = signedOrder.makerAssetAmount / (signedOrder.makerFee);
+                // 当 orderToFeeRatio 为 0 时（费用大于资产），使用交叉相乘计算费用
+                const calculatedFeeAmount = orderToFeeRatio === 0n
+                    ? (calculatedFillableAmount * signedOrder.makerFee) / signedOrder.makerAssetAmount
+                    : calculatedFillableAmount / orderToFeeRatio;
+                expect(calculatedFeeAmount < transferrableMakerFeeTokenAmount).to.be.true;
             });
         });
     });
@@ -169,17 +174,17 @@ describe('RemainingFillableCalculator', () => {
         });
         it('calculates the correct amount when unfilled and funds available', () => {
             signedOrder = buildSignedOrder();
-            transferrableMakeAssetAmount = makerAmount.plus(makerFeeAmount);
+            transferrableMakeAssetAmount = makerAmount + makerFeeAmount;
             transferrableMakerFeeTokenAmount = transferrableMakeAssetAmount;
             remainingMakeAssetAmount = signedOrder.makerAssetAmount;
             calculator = new remaining_fillable_calculator_1.RemainingFillableCalculator(signedOrder.makerFee, signedOrder.makerAssetAmount, isPercentageFee, transferrableMakeAssetAmount, transferrableMakerFeeTokenAmount, remainingMakeAssetAmount);
-            expect(calculator.computeRemainingFillable()).to.be.bignumber.equal(remainingMakeAssetAmount);
+            expect(calculator.computeRemainingFillable()).to.equal(remainingMakeAssetAmount);
         });
         it('calculates the correct amount when partially filled and funds available', () => {
             signedOrder = buildSignedOrder();
-            remainingMakeAssetAmount = web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(1), decimals);
+            remainingMakeAssetAmount = toBaseUnitAmount(BigInt(1), decimals);
             calculator = new remaining_fillable_calculator_1.RemainingFillableCalculator(signedOrder.makerFee, signedOrder.makerAssetAmount, isPercentageFee, transferrableMakeAssetAmount, transferrableMakerFeeTokenAmount, remainingMakeAssetAmount);
-            expect(calculator.computeRemainingFillable()).to.be.bignumber.equal(remainingMakeAssetAmount);
+            expect(calculator.computeRemainingFillable()).to.equal(remainingMakeAssetAmount);
         });
         it('calculates the amount to be 0 when all fee funds are transferred', () => {
             signedOrder = buildSignedOrder();
@@ -187,25 +192,24 @@ describe('RemainingFillableCalculator', () => {
             transferrableMakerFeeTokenAmount = zero;
             remainingMakeAssetAmount = signedOrder.makerAssetAmount;
             calculator = new remaining_fillable_calculator_1.RemainingFillableCalculator(signedOrder.makerFee, signedOrder.makerAssetAmount, isPercentageFee, transferrableMakeAssetAmount, transferrableMakerFeeTokenAmount, remainingMakeAssetAmount);
-            expect(calculator.computeRemainingFillable()).to.be.bignumber.equal(zero);
+            expect(calculator.computeRemainingFillable()).to.equal(zero);
         });
         it('calculates the correct amount when balance is less than remaining fillable', () => {
             signedOrder = buildSignedOrder();
-            const partiallyFilledAmount = web3_wrapper_1.Web3Wrapper.toBaseUnitAmount(new utils_1.BigNumber(2), decimals);
-            remainingMakeAssetAmount = signedOrder.makerAssetAmount.minus(partiallyFilledAmount);
-            transferrableMakeAssetAmount = remainingMakeAssetAmount.minus(partiallyFilledAmount);
+            const partiallyFilledAmount = toBaseUnitAmount(BigInt(2), decimals);
+            remainingMakeAssetAmount = signedOrder.makerAssetAmount - (partiallyFilledAmount);
+            transferrableMakeAssetAmount = remainingMakeAssetAmount - (partiallyFilledAmount);
             transferrableMakerFeeTokenAmount = transferrableMakeAssetAmount;
-            const orderToFeeRatio = signedOrder.makerAssetAmount.dividedToIntegerBy(signedOrder.makerFee);
-            const expectedFillableAmount = new utils_1.BigNumber(450980);
+            const orderToFeeRatio = signedOrder.makerAssetAmount / (signedOrder.makerFee);
+            const expectedFillableAmount = BigInt(450980);
             calculator = new remaining_fillable_calculator_1.RemainingFillableCalculator(signedOrder.makerFee, signedOrder.makerAssetAmount, isPercentageFee, transferrableMakeAssetAmount, transferrableMakerFeeTokenAmount, remainingMakeAssetAmount);
             const calculatedFillableAmount = calculator.computeRemainingFillable();
-            const numberOfFillsInRatio = calculatedFillableAmount.dividedToIntegerBy(orderToFeeRatio);
-            const calculatedFillableAmountPlusFees = calculatedFillableAmount.plus(numberOfFillsInRatio);
-            expect(calculatedFillableAmountPlusFees).to.be.bignumber.lessThan(transferrableMakeAssetAmount);
-            expect(calculatedFillableAmountPlusFees).to.be.bignumber.lessThan(remainingMakeAssetAmount);
-            expect(calculatedFillableAmount).to.be.bignumber.equal(expectedFillableAmount);
-            expect(numberOfFillsInRatio.decimalPlaces()).to.be.equal(0);
+            const numberOfFillsInRatio = calculatedFillableAmount / (orderToFeeRatio);
+            const calculatedFillableAmountPlusFees = calculatedFillableAmount + numberOfFillsInRatio;
+            expect(calculatedFillableAmountPlusFees < transferrableMakeAssetAmount).to.be.true;
+            expect(calculatedFillableAmountPlusFees < remainingMakeAssetAmount).to.be.true;
+            expect(calculatedFillableAmount).to.equal(expectedFillableAmount);
+            // bigint 本身就是整数，不需要检查小数位
         });
     });
 });
-//# sourceMappingURL=remaining_fillable_calculator_test.js.map

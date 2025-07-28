@@ -13,9 +13,8 @@ export { SignedOrder, Order, ECSignature, AssetData, SingleAssetData, ERC20Asset
 export { TypedDataError, FindFeeOrdersThatCoverFeesForTargetOrdersOpts, FindOrdersThatCoverMakerAssetFillAmountOpts, FindOrdersThatCoverTakerAssetFillAmountOpts, FeeOrdersAndRemainingFeeAmount, OrdersAndRemainingTakerFillAmount, OrdersAndRemainingMakerFillAmount, } from './types';
 export { FillQuoteTransformerSide, FillQuoteTransformerData, encodeFillQuoteTransformerData, decodeFillQuoteTransformerData, WethTransformerData, encodeWethTransformerData, decodeWethTransformerData, PayTakerTransformerData, encodePayTakerTransformerData, decodePayTakerTransformerData, AffiliateFeeTransformerData, encodeAffiliateFeeTransformerData, decodeAffiliateFeeTransformerData, PositiveSlippageFeeTransformerData, encodePositiveSlippageFeeTransformerData, decodePositiveSlippageFeeTransformerData, findTransformerNonce, getTransformerAddress, } from './transformer_utils';
 export { getOrderHash, getExchangeMetaTransactionHash, getExchangeProxyMetaTransactionHash } from './hash_utils';
-export declare const NULL_ADDRESS: any;
-export declare const NULL_BYTES: any;
-export declare const ZERO_AMOUNT: any;
+export declare const NULL_ADDRESS: string;
+export declare const NULL_BYTES: string;
+export declare const ZERO_AMOUNT: bigint;
 export declare const NULL_ERC20_ASSET_DATA: string;
 export declare const ETH_TOKEN_ADDRESS: string;
-//# sourceMappingURL=index.d.ts.map

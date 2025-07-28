@@ -1,4 +1,3 @@
-import { BigNumber } from '@0x/utils';
 import * as chai from 'chai';
 import 'mocha';
 
@@ -22,8 +21,8 @@ describe('EIP712 Utils', () => {
                 { testValue: '1' },
                 { chainId: CHAIN_ID, verifyingContract: constants.NULL_ADDRESS },
             );
-            expect(typedData.domain).to.not.be.undefined();
-            expect(typedData.types.EIP712Domain).to.not.be.undefined();
+            expect(typedData.domain).to.not.be.undefined;
+            expect(typedData.types.EIP712Domain).to.not.be.undefined;
             const domainObject = typedData.domain;
             expect(domainObject.name).to.eq(constants.EXCHANGE_DOMAIN_NAME);
             expect(domainObject.version).to.eq(constants.EXCHANGE_DOMAIN_VERSION);
@@ -45,8 +44,8 @@ describe('EIP712 Utils', () => {
                     verifyingContract: constants.NULL_ADDRESS,
                 },
             );
-            expect(typedData.domain).to.not.be.undefined();
-            expect(typedData.types.EIP712Domain).to.not.be.undefined();
+            expect(typedData.domain).to.not.be.undefined;
+            expect(typedData.types.EIP712Domain).to.not.be.undefined;
             const domainObject = typedData.domain;
             expect(domainObject.name).to.eq(domainName);
             expect(domainObject.version).to.eq(domainVersion);
@@ -57,9 +56,9 @@ describe('EIP712 Utils', () => {
     describe('createZeroExTransactionTypedData', () => {
         it('adds in the EIP712DomainSeparator', () => {
             const typedData = eip712Utils.createZeroExTransactionTypedData({
-                salt: new BigNumber(0),
-                expirationTimeSeconds: new BigNumber(0),
-                gasPrice: new BigNumber(0),
+                salt: BigInt(0),
+                expirationTimeSeconds: BigInt(0),
+                gasPrice: BigInt(0),
                 data: constants.NULL_BYTES,
                 signerAddress: constants.NULL_ADDRESS,
                 domain: {
@@ -68,7 +67,7 @@ describe('EIP712 Utils', () => {
                 },
             });
             expect(typedData.primaryType).to.eq(constants.EXCHANGE_ZEROEX_TRANSACTION_SCHEMA.name);
-            expect(typedData.types.EIP712Domain).to.not.be.undefined();
+            expect(typedData.types.EIP712Domain).to.not.be.undefined;
             const domainObject = typedData.domain;
             expect(domainObject.name).to.eq(constants.EXCHANGE_DOMAIN_NAME);
             expect(domainObject.version).to.eq(constants.EXCHANGE_DOMAIN_VERSION);

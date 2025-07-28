@@ -1,7 +1,6 @@
 import * as chai from 'chai';
 
 import { AssetProxyId, ERC1155AssetData, ERC20AssetData, ERC721AssetData, MultiAssetData } from '@0x/types';
-import { BigNumber } from '@0x/utils';
 
 import { assetDataUtils } from '../src/asset_data_utils';
 
@@ -16,21 +15,21 @@ const KNOWN_ERC20_ENCODING = {
 };
 const KNOWN_ERC721_ENCODING = {
     address: '0x1dc4c1cefef38a777b15aa20260a54e584b16c48',
-    tokenId: new BigNumber(1),
+    tokenId: BigInt(1),
     assetData:
         '0x025717920000000000000000000000001dc4c1cefef38a777b15aa20260a54e584b16c480000000000000000000000000000000000000000000000000000000000000001',
 };
 const KNOWN_ERC1155_ENCODING = {
     tokenAddress: '0x1dc4c1cefef38a777b15aa20260a54e584b16c48',
-    tokenIds: [new BigNumber(100), new BigNumber(1001), new BigNumber(10001)],
-    tokenValues: [new BigNumber(200), new BigNumber(2001), new BigNumber(20001)],
+    tokenIds: [BigInt(100), BigInt(1001), BigInt(10001)],
+    tokenValues: [BigInt(200), BigInt(2001), BigInt(20001)],
     callbackData:
         '0x025717920000000000000000000000001dc4c1cefef38a777b15aa20260a54e584b16c480000000000000000000000000000000000000000000000000000000000000001',
     assetData:
         '0xa7cb5fb70000000000000000000000001dc4c1cefef38a777b15aa20260a54e584b16c480000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001800000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000006400000000000000000000000000000000000000000000000000000000000003e90000000000000000000000000000000000000000000000000000000000002711000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000c800000000000000000000000000000000000000000000000000000000000007d10000000000000000000000000000000000000000000000000000000000004e210000000000000000000000000000000000000000000000000000000000000044025717920000000000000000000000001dc4c1cefef38a777b15aa20260a54e584b16c48000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000',
 };
 const KNOWN_MULTI_ASSET_ENCODING = {
-    amounts: [new BigNumber(70), new BigNumber(1), new BigNumber(18)],
+    amounts: [BigInt(70), BigInt(1), BigInt(18)],
     nestedAssetData: [
         KNOWN_ERC20_ENCODING.assetData,
         KNOWN_ERC721_ENCODING.assetData,
@@ -65,7 +64,7 @@ describe('assetDataUtils', () => {
         ) as ERC721AssetData; // tslint:disable-line:no-unnecessary-type-assertion
         expect(decodedAssetData.tokenAddress).to.equal(KNOWN_ERC721_ENCODING.address);
         expect(decodedAssetData.assetProxyId).to.equal(AssetProxyId.ERC721);
-        expect(decodedAssetData.tokenId).to.be.bignumber.equal(KNOWN_ERC721_ENCODING.tokenId);
+        expect(decodedAssetData.tokenId).to.equal(KNOWN_ERC721_ENCODING.tokenId);
     });
     it('should encode ERC1155', () => {
         const assetData = assetDataUtils.encodeERC1155AssetData(
@@ -114,7 +113,7 @@ describe('assetDataUtils', () => {
         const decodedErc721AssetData = decodedAssetData.nestedAssetData[1] as ERC721AssetData;
         expect(decodedErc721AssetData.tokenAddress).to.equal(KNOWN_ERC721_ENCODING.address);
         expect(decodedErc721AssetData.assetProxyId).to.equal(AssetProxyId.ERC721);
-        expect(decodedErc721AssetData.tokenId).to.be.bignumber.equal(KNOWN_ERC721_ENCODING.tokenId);
+        expect(decodedErc721AssetData.tokenId).to.equal(KNOWN_ERC721_ENCODING.tokenId);
         // tslint:disable-next-line:no-unnecessary-type-assertion
         const decodedErc1155AssetData = decodedAssetData.nestedAssetData[2] as ERC1155AssetData;
         expect(decodedErc1155AssetData.tokenAddress).to.be.equal(KNOWN_ERC1155_ENCODING.tokenAddress);
@@ -124,10 +123,10 @@ describe('assetDataUtils', () => {
     });
     it('should recursively decode nested assetData within multiAssetData', () => {
         // setup test parameters
-        const erc20Amount = new BigNumber(1);
-        const erc721Amount = new BigNumber(1);
-        const erc1155Amount = new BigNumber(15);
-        const nestedAssetsAmount = new BigNumber(2);
+        const erc20Amount = BigInt(1);
+        const erc721Amount = BigInt(1);
+        const erc1155Amount = BigInt(15);
+        const nestedAssetsAmount = BigInt(2);
         const amounts = [erc20Amount, erc721Amount, erc1155Amount, nestedAssetsAmount];
         const nestedAssetData = [
             KNOWN_ERC20_ENCODING.assetData,
@@ -144,9 +143,9 @@ describe('assetDataUtils', () => {
             erc20Amount,
             erc721Amount,
             erc1155Amount,
-            KNOWN_MULTI_ASSET_ENCODING.amounts[0].times(nestedAssetsAmount),
-            KNOWN_MULTI_ASSET_ENCODING.amounts[1].times(nestedAssetsAmount),
-            KNOWN_MULTI_ASSET_ENCODING.amounts[2].times(nestedAssetsAmount),
+            KNOWN_MULTI_ASSET_ENCODING.amounts[0] * nestedAssetsAmount,
+            KNOWN_MULTI_ASSET_ENCODING.amounts[1] * nestedAssetsAmount,
+            KNOWN_MULTI_ASSET_ENCODING.amounts[2] * nestedAssetsAmount,
         ];
         expect(decodedAssetData.amounts).to.deep.equal(expectedAmounts);
         const expectedNestedAssetDataLength = 6;

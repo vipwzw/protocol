@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sortingUtils = void 0;
 const json_schemas_1 = require("@0x/json-schemas");
+// BigNumber 已替换为 bigint
 const _ = __importStar(require("lodash"));
 const assert_1 = require("./assert");
 const constants_1 = require("./constants");
@@ -77,8 +78,11 @@ function sortOrders(orders, rateCalculator) {
     copiedOrders.sort((firstOrder, secondOrder) => {
         const firstOrderRate = rateCalculator(firstOrder);
         const secondOrderRate = rateCalculator(secondOrder);
-        return firstOrderRate.comparedTo(secondOrderRate);
+        if (firstOrderRate < secondOrderRate)
+            return -1;
+        if (firstOrderRate > secondOrderRate)
+            return 1;
+        return 0;
     });
     return copiedOrders;
 }
-//# sourceMappingURL=sorting_utils.js.map

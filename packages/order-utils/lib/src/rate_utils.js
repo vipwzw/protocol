@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.rateUtils = void 0;
 const json_schemas_1 = require("@0x/json-schemas");
+// BigNumber 已替换为 bigint
 const assert_1 = require("./assert");
 const constants_1 = require("./constants");
 exports.rateUtils = {
@@ -17,10 +18,12 @@ exports.rateUtils = {
     getFeeAdjustedRateOfOrder(order, feeRate = constants_1.constants.ZERO_AMOUNT) {
         assert_1.assert.doesConformToSchema('order', order, json_schemas_1.schemas.orderSchema);
         assert_1.assert.isBigNumber('feeRate', feeRate);
-        assert_1.assert.assert(feeRate.gte(constants_1.constants.ZERO_AMOUNT), `Expected feeRate: ${feeRate} to be greater than or equal to 0`);
-        const takerAssetAmountNeededToPayForFees = order.takerFee.multipliedBy(feeRate);
-        const totalTakerAssetAmount = takerAssetAmountNeededToPayForFees.plus(order.takerAssetAmount);
-        const rate = totalTakerAssetAmount.div(order.makerAssetAmount);
+        if (feeRate < constants_1.constants.ZERO_AMOUNT) {
+            throw new Error(`Expected feeRate: ${feeRate} to be greater than or equal to 0`);
+        }
+        const takerAssetAmountNeededToPayForFees = order.takerFee * feeRate;
+        const totalTakerAssetAmount = takerAssetAmountNeededToPayForFees + order.takerAssetAmount;
+        const rate = totalTakerAssetAmount / order.makerAssetAmount;
         return rate;
     },
     /**
@@ -31,10 +34,11 @@ exports.rateUtils = {
      */
     getFeeAdjustedRateOfFeeOrder(feeOrder) {
         assert_1.assert.doesConformToSchema('feeOrder', feeOrder, json_schemas_1.schemas.orderSchema);
-        const zrxAmountAfterFees = feeOrder.makerAssetAmount.minus(feeOrder.takerFee);
-        assert_1.assert.assert(zrxAmountAfterFees.isGreaterThan(constants_1.constants.ZERO_AMOUNT), `Expected takerFee: ${JSON.stringify(feeOrder.takerFee)} to be less than makerAssetAmount: ${JSON.stringify(feeOrder.makerAssetAmount)}`);
-        const rate = feeOrder.takerAssetAmount.div(zrxAmountAfterFees);
+        const zrxAmountAfterFees = feeOrder.makerAssetAmount - feeOrder.takerFee;
+        if (zrxAmountAfterFees <= constants_1.constants.ZERO_AMOUNT) {
+            throw new Error(`Expected takerFee: "${feeOrder.takerFee}" to be less than makerAssetAmount: "${feeOrder.makerAssetAmount}"`);
+        }
+        const rate = feeOrder.takerAssetAmount / zrxAmountAfterFees;
         return rate;
     },
 };
-//# sourceMappingURL=rate_utils.js.map

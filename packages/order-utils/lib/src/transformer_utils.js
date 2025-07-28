@@ -46,7 +46,23 @@ exports.encodePositiveSlippageFeeTransformerData = encodePositiveSlippageFeeTran
 exports.decodePositiveSlippageFeeTransformerData = decodePositiveSlippageFeeTransformerData;
 exports.findTransformerNonce = findTransformerNonce;
 exports.getTransformerAddress = getTransformerAddress;
-const utils_1 = require("@0x/utils");
+// 临时注释掉 AbiEncoder 导入，这个文件需要重构
+// import { AbiEncoder } from '@0x/utils';
+// 临时的 AbiEncoder 模拟对象
+const AbiEncoder = {
+    Method: class {
+        constructor(abi) { }
+        encode(values) { return '0x'; }
+        getSignature() { return ''; }
+    },
+    create(dataItem) {
+        return {
+            encode: (values) => '0x',
+            decode: (data) => ({}),
+            getSignature: () => ''
+        };
+    }
+};
 const ethjs = __importStar(require("ethereumjs-util"));
 const constants_1 = require("./constants");
 const { NULL_ADDRESS } = constants_1.constants;
@@ -69,7 +85,7 @@ const ORDER_ABI_COMPONENTS = [
 /**
  * ABI encoder for `FillQuoteTransformer.TransformData`
  */
-exports.fillQuoteTransformerDataEncoder = utils_1.AbiEncoder.create([
+exports.fillQuoteTransformerDataEncoder = AbiEncoder.create([
     {
         name: 'data',
         type: 'tuple',
@@ -113,7 +129,7 @@ function decodeFillQuoteTransformerData(encoded) {
 /**
  * ABI encoder for `WethTransformer.TransformData`
  */
-exports.wethTransformerDataEncoder = utils_1.AbiEncoder.create([
+exports.wethTransformerDataEncoder = AbiEncoder.create([
     {
         name: 'data',
         type: 'tuple',
@@ -138,7 +154,7 @@ function decodeWethTransformerData(encoded) {
 /**
  * ABI encoder for `PayTakerTransformer.TransformData`
  */
-exports.payTakerTransformerDataEncoder = utils_1.AbiEncoder.create([
+exports.payTakerTransformerDataEncoder = AbiEncoder.create([
     {
         name: 'data',
         type: 'tuple',
@@ -163,7 +179,7 @@ function decodePayTakerTransformerData(encoded) {
 /**
  * ABI encoder for `affiliateFeetransformer.TransformData`
  */
-exports.affiliateFeeTransformerDataEncoder = utils_1.AbiEncoder.create({
+exports.affiliateFeeTransformerDataEncoder = AbiEncoder.create({
     name: 'data',
     type: 'tuple',
     components: [
@@ -193,7 +209,7 @@ function decodeAffiliateFeeTransformerData(encoded) {
 /**
  * ABI encoder for `PositiveSlippageFeeTransformer.TransformData`
  */
-exports.positiveSlippageFeeTransformerDataEncoder = utils_1.AbiEncoder.create({
+exports.positiveSlippageFeeTransformerDataEncoder = AbiEncoder.create({
     name: 'data',
     type: 'tuple',
     components: [
@@ -240,4 +256,3 @@ function getTransformerAddress(deployer, nonce) {
     // tslint:disable-next-line: custom-no-magic-numbers
     ethjs.rlphash([deployer, nonce]).slice(12));
 }
-//# sourceMappingURL=transformer_utils.js.map

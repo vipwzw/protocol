@@ -11,7 +11,7 @@ import {
     SingleAssetData,
     StaticCallAssetData,
 } from '@0x/types';
-import { hexUtils, NULL_ADDRESS } from '@0x/utils';
+import { hexUtils, NULL_ADDRESS } from "./utils";;
 import * as _ from 'lodash';
 
 // 使用 ethers v6 AbiCoder
@@ -85,7 +85,7 @@ export const assetDataUtils = {
                 const [tokenAddress] = abiCoder.decode(['address'], encodedData);
                 return {
                     assetProxyId,
-                    tokenAddress,
+                    tokenAddress: tokenAddress.toLowerCase(),
                 };
             }
             case AssetProxyId.ERC20Bridge: {
@@ -95,8 +95,8 @@ export const assetDataUtils = {
                 );
                 return {
                     assetProxyId,
-                    tokenAddress,
-                    bridgeAddress,
+                    tokenAddress: tokenAddress.toLowerCase(),
+                    bridgeAddress: bridgeAddress.toLowerCase(),
                     bridgeData,
                 };
             }
@@ -104,7 +104,7 @@ export const assetDataUtils = {
                 const [tokenAddress, tokenId] = abiCoder.decode(['address', 'uint256'], encodedData);
                 return {
                     assetProxyId,
-                    tokenAddress,
+                    tokenAddress: tokenAddress.toLowerCase(),
                     tokenId: BigInt(tokenId),
                 };
             }
@@ -115,7 +115,7 @@ export const assetDataUtils = {
                 );
                 return {
                     assetProxyId,
-                    tokenAddress,
+                    tokenAddress: tokenAddress.toLowerCase(),
                     tokenIds: tokenIds.map((id: any) => BigInt(id)),
                     tokenValues: tokenValues.map((value: any) => BigInt(value)),
                     callbackData,
@@ -137,7 +137,7 @@ export const assetDataUtils = {
                 );
                 return {
                     assetProxyId,
-                    callTarget,
+                    callTarget: callTarget.toLowerCase(),
                     staticCallData,
                     callResultHash,
                 };

@@ -1,5 +1,5 @@
 import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses';
-import { NULL_ADDRESS, NULL_BYTES } from '@0x/utils';
+import { NULL_ADDRESS, NULL_BYTES } from './utils';
 import { MethodAbi } from 'ethereum-types';
 
 const ERC20_METHOD_ABI: MethodAbi = {

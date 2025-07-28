@@ -1,6 +1,10 @@
-import { Web3ProviderEngine } from '@0x/subproviders';
-import { Web3Wrapper } from '@0x/web3-wrapper';
-declare const provider: Web3ProviderEngine;
-declare const web3Wrapper: Web3Wrapper;
+import { ethers } from 'ethers';
+declare const provider: ethers.JsonRpcProvider;
+declare const web3Wrapper: {
+    getAccountsAsync(): Promise<string[]>;
+    getAvailableAddressesAsync(): Promise<string[]>;
+    signMessageAsync(address: string, message: string): Promise<string>;
+    signTypedDataAsync(address: string, typedData: any): Promise<string>;
+    send(method: string, params: any[]): Promise<any>;
+};
 export { provider, web3Wrapper };
-//# sourceMappingURL=web3_wrapper.d.ts.map

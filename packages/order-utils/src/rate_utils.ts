@@ -37,9 +37,7 @@ export const rateUtils = {
         const zrxAmountAfterFees = feeOrder.makerAssetAmount - feeOrder.takerFee;
         if (zrxAmountAfterFees <= constants.ZERO_AMOUNT) {
             throw new Error(
-                `Expected takerFee: ${JSON.stringify(feeOrder.takerFee)} to be less than makerAssetAmount: ${JSON.stringify(
-                    feeOrder.makerAssetAmount,
-                )}`
+                `Expected takerFee: "${feeOrder.takerFee}" to be less than makerAssetAmount: "${feeOrder.makerAssetAmount}"`
             );
         }
         const rate = feeOrder.takerAssetAmount / zrxAmountAfterFees;

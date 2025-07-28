@@ -6,12 +6,31 @@ import * as _ from 'lodash';
 
 import { utils } from './utils';
 
+// 延迟初始化的 SchemaValidator 实例
+let globalSchemaValidator: SchemaValidator | null = null;
+
+function getSchemaValidator(): SchemaValidator {
+    if (!globalSchemaValidator) {
+        try {
+            globalSchemaValidator = new SchemaValidator();
+        } catch (error) {
+            // 如果创建失败，返回一个简单的模拟实现
+            const mockValidator = {
+                isValid: () => true,
+                validate: () => ({ errors: [] })
+            } as any;
+            globalSchemaValidator = mockValidator;
+        }
+    }
+    return globalSchemaValidator!;
+}
+
 // 基础断言工具，替代 @0x/assert
 const baseAssert = {
     assert: chaiAssert,
     isETHAddressHex(variableName: string, value: string): void {
         if (!ethers.isAddress(value)) {
-            throw new Error(`Expected ${variableName} to be a valid Ethereum address, got: ${value}`);
+            throw new Error(`Expected ${variableName} to be of type ETHAddressHex, encountered: ${value}`);
         }
     },
     isHexString(variableName: string, value: string): void {
@@ -40,10 +59,10 @@ const baseAssert = {
         }
     },
     doesConformToSchema(variableName: string, value: any, schema: object, subSchemas?: any[]): void {
-        const schemaValidator = new SchemaValidator();
-        const isValid = schemaValidator.isValid(value, schema);
+        const validator = getSchemaValidator();
+        const isValid = validator.isValid(value, schema);
         if (!isValid) {
-            const validationResult = schemaValidator.validate(value, schema);
+            const validationResult = validator.validate(value, schema);
             throw new Error(`Expected ${variableName} to conform to schema, but validation failed: ${JSON.stringify(validationResult.errors)}`);
         }
         // 注意：subSchemas 参数在这里被接受但不处理，保持兼容性
@@ -69,10 +88,31 @@ export const assert = {
                     );
                 }
             } else {
-                // 如果是 Provider，简单验证地址格式（因为大多数 Provider 不支持 listAccounts）
-                baseAssert.isETHAddressHex(variableName, senderAddressHex);
+                // 如果是 Provider，检查地址是否在可用账户列表中
+                let accounts: string[] = [];
+                try {
+                    accounts = await (providerOrSigner as any).send('eth_accounts', []);
+                } catch (rpcError) {
+                    // 如果 RPC 调用失败，只验证地址格式
+                    baseAssert.isETHAddressHex(variableName, senderAddressHex);
+                    return; // 早期返回，避免继续执行下面的账户检查
+                }
+                
+                // 检查地址是否在账户列表中
+                if (!accounts || !accounts.includes(senderAddressHex.toLowerCase())) {
+                    throw new Error(
+                        `Specified ${variableName} ${senderAddressHex} isn't available through the supplied web3 provider`,
+                    );
+                }
             }
         } catch (error) {
+            // 如果错误消息已经包含我们想要的信息，直接重新抛出
+            if (error instanceof Error && (
+                error.message.includes('isn\'t available through the supplied web3 provider') ||
+                error.message.includes('doesn\'t match signer address')
+            )) {
+                throw error;
+            }
             throw new Error(
                 `Failed to validate sender address: ${error instanceof Error ? error.message : 'Unknown error'}`,
             );

@@ -8,4 +8,3 @@ exports.validateOrderFillableOptsSchema = {
     },
     type: 'object',
 };
-//# sourceMappingURL=validate_order_fillable_opts_schema.js.map

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generatePseudoRandomSalt = generatePseudoRandomSalt;
-const utils_1 = require("@0x/utils");
+const utils_1 = require("./utils");
 /**
  * Generates a pseudo-random 256-bit salt.
  * The salt can be included in a 0x order, ensuring that the order generates a unique orderHash
@@ -12,4 +12,3 @@ function generatePseudoRandomSalt() {
     const salt = (0, utils_1.generatePseudoRandom256BitNumber)();
     return salt;
 }
-//# sourceMappingURL=salt.js.map

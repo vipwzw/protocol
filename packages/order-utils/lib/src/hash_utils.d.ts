@@ -11,4 +11,3 @@ export declare function getExchangeMetaTransactionHash(tx: ZeroExTransaction): s
  * Compute the EIP712 hash of an Exchange Proxy meta-transaction.
  */
 export declare function getExchangeProxyMetaTransactionHash(mtx: ExchangeProxyMetaTransaction): string;
-//# sourceMappingURL=hash_utils.d.ts.map

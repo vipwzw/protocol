@@ -49,4 +49,3 @@ exports.NULL_BYTES = constants_1.constants.NULL_BYTES;
 exports.ZERO_AMOUNT = constants_1.constants.ZERO_AMOUNT;
 exports.NULL_ERC20_ASSET_DATA = constants_1.constants.NULL_ERC20_ASSET_DATA;
 exports.ETH_TOKEN_ADDRESS = constants_1.constants.ETH_TOKEN_ADDRESS;
-//# sourceMappingURL=index.js.map

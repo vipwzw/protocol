@@ -1,5 +1,5 @@
 import { ZeroExTransaction } from '@0x/types';
-import { hexUtils, signTypedDataUtils } from '@0x/utils';
+import { hexUtils, signTypedDataUtils } from "./utils";;
 
 import { eip712Utils } from './eip712_utils';
 

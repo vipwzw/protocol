@@ -10,7 +10,7 @@ import {
     ValidatorSignature,
     ZeroExTransaction,
 } from '@0x/types';
-import { hexUtils } from '@0x/utils';
+import { hexUtils } from "./utils";;
 import { ethers } from 'ethers';
 import * as ethUtil from 'ethereumjs-util';
 import * as _ from 'lodash';
@@ -58,23 +58,51 @@ class Web3Wrapper {
      * 替代原来的 @0x/web3-wrapper signTypedDataAsync
      */
     async signTypedDataAsync(signerAddress: string, typedData: any): Promise<string> {
-        if (!providerUtils.isSigner(this.provider)) {
-            throw new Error('Provider does not support signing. Need a Signer instance.');
+        if (providerUtils.isSigner(this.provider)) {
+            // 验证签名者地址是否匹配
+            const currentAddress = await this.provider.getAddress();
+            if (currentAddress.toLowerCase() !== signerAddress.toLowerCase()) {
+                throw new Error(`Signer address ${currentAddress} does not match expected ${signerAddress}`);
+            }
+            
+            // 使用 ethers v6 的 signTypedData 方法
+            // 参数格式: domain, types, value
+            return await this.provider.signTypedData(
+                typedData.domain,
+                typedData.types, 
+                typedData.message || typedData.value || typedData
+            );
+        } else {
+            // 对于非 Signer 的 provider，尝试通过 RPC 调用 eth_signTypedData_v4
+            try {
+                // 优先尝试 send 方法，回退到 sendAsync
+                if (typeof (this.provider as any).send === 'function') {
+                    return await (this.provider as any).send('eth_signTypedData_v4', [signerAddress, JSON.stringify(typedData)]);
+                } else if (typeof (this.provider as any).sendAsync === 'function') {
+                    return new Promise((resolve, reject) => {
+                        (this.provider as any).sendAsync(
+                            {
+                                method: 'eth_signTypedData_v4',
+                                params: [signerAddress, JSON.stringify(typedData)],
+                                id: 42,
+                                jsonrpc: '2.0'
+                            },
+                            (error: any, result: any) => {
+                                if (error) {
+                                    reject(error);
+                                } else {
+                                    resolve(result.result);
+                                }
+                            }
+                        );
+                    });
+                } else {
+                    throw new Error('Provider does not have send or sendAsync method');
+                }
+            } catch (error) {
+                throw new Error(`Provider does not support typed data signing. ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
         }
-        
-        // 验证签名者地址是否匹配
-        const currentAddress = await this.provider.getAddress();
-        if (currentAddress.toLowerCase() !== signerAddress.toLowerCase()) {
-            throw new Error(`Signer address ${currentAddress} does not match expected ${signerAddress}`);
-        }
-        
-        // 使用 ethers v6 的 signTypedData 方法
-        // 参数格式: domain, types, value
-        return await this.provider.signTypedData(
-            typedData.domain,
-            typedData.types, 
-            typedData.message || typedData.value || typedData
-        );
     }
     
     /**
@@ -82,19 +110,47 @@ class Web3Wrapper {
      * 替代原来的 @0x/web3-wrapper signMessageAsync
      */
     async signMessageAsync(signerAddress: string, message: string): Promise<string> {
-        if (!providerUtils.isSigner(this.provider)) {
-            throw new Error('Provider does not support signing. Need a Signer instance.');
+        if (providerUtils.isSigner(this.provider)) {
+            // 验证签名者地址是否匹配
+            const currentAddress = await this.provider.getAddress();
+            if (currentAddress.toLowerCase() !== signerAddress.toLowerCase()) {
+                throw new Error(`Signer address ${currentAddress} does not match expected ${signerAddress}`);
+            }
+            
+            // 使用 ethers v6 的 signMessage 方法
+            // 这会自动添加以太坊消息前缀并签名
+            return await this.provider.signMessage(ethers.getBytes(message));
+        } else {
+            // 对于非 Signer 的 provider，尝试通过 RPC 调用 eth_sign
+            try {
+                // 优先尝试 send 方法，回退到 sendAsync
+                if (typeof (this.provider as any).send === 'function') {
+                    return await (this.provider as any).send('eth_sign', [signerAddress, message]);
+                } else if (typeof (this.provider as any).sendAsync === 'function') {
+                    return new Promise((resolve, reject) => {
+                        (this.provider as any).sendAsync(
+                            {
+                                method: 'eth_sign',
+                                params: [signerAddress, message],
+                                id: 42,
+                                jsonrpc: '2.0'
+                            },
+                            (error: any, result: any) => {
+                                if (error) {
+                                    reject(error);
+                                } else {
+                                    resolve(result.result);
+                                }
+                            }
+                        );
+                    });
+                } else {
+                    throw new Error('Provider does not have send or sendAsync method');
+                }
+            } catch (error) {
+                throw new Error(`Provider does not support signing. ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
         }
-        
-        // 验证签名者地址是否匹配
-        const currentAddress = await this.provider.getAddress();
-        if (currentAddress.toLowerCase() !== signerAddress.toLowerCase()) {
-            throw new Error(`Signer address ${currentAddress} does not match expected ${signerAddress}`);
-        }
-        
-        // 使用 ethers v6 的 signMessage 方法
-        // 这会自动添加以太坊消息前缀并签名
-        return await this.provider.signMessage(ethers.getBytes(message));
     }
     
     /**
@@ -368,10 +424,10 @@ export const signatureUtils = {
             const signature = await web3Wrapper.signTypedDataAsync(normalizedSignerAddress, typedData);
             const ecSignatureRSV = parseSignatureHexAsRSV(signature);
             const signatureHex = hexUtils.concat(
-                ecSignatureRSV.v,
+                ecSignatureRSV.v.toString(),
                 ecSignatureRSV.r,
                 ecSignatureRSV.s,
-                SignatureType.EIP712,
+                SignatureType.EIP712.toString(),
             );
             return {
                 ...transaction,
@@ -444,7 +500,7 @@ export const signatureUtils = {
      * @return Hex encoded string of signature (v,r,s) with Signature Type
      */
     convertECSignatureToSignatureHex(ecSignature: ECSignature): string {
-        const signatureHex = hexUtils.concat(ecSignature.v, ecSignature.r, ecSignature.s);
+        const signatureHex = hexUtils.concat(ecSignature.v.toString(), ecSignature.r, ecSignature.s);
         const signatureWithType = signatureUtils.convertToSignatureWithType(signatureHex, SignatureType.EthSign);
         return signatureWithType;
     },

@@ -116,4 +116,3 @@ export declare const UntransferrableDummyERC20Token: {
     };
     networks: {};
 };
-//# sourceMappingURL=UntransferrableDummyERC20Token.d.ts.map

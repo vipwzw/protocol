@@ -400,4 +400,3 @@ exports.UntransferrableDummyERC20Token = {
     },
     networks: {},
 };
-//# sourceMappingURL=UntransferrableDummyERC20Token.js.map

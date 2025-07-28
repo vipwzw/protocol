@@ -1,5 +1,4 @@
 import { Order } from '@0x/types';
-import { BigNumber } from '@0x/utils';
 export declare const rateUtils: {
     /**
      * Takes an order and calculates the fee adjusted rate (takerAsset/makerAsset) by calculating how much takerAsset
@@ -10,13 +9,12 @@ export declare const rateUtils: {
      *                      Defaults to 0
      * @return  The rate (takerAsset/makerAsset) of the order adjusted for fees
      */
-    getFeeAdjustedRateOfOrder(order: Order, feeRate?: BigNumber): BigNumber;
+    getFeeAdjustedRateOfOrder(order: Order, feeRate?: bigint): bigint;
     /**
      * Takes a fee order (makerAssetData corresponds to ZRX and takerAssetData corresponds to WETH) and calculates
      * the fee adjusted rate (WETH/ZRX) by dividing the takerAssetAmount by the makerAmount minus the takerFee
      * @param   feeOrder    An object that conforms to the order interface
      * @return  The rate (WETH/ZRX) of the fee order adjusted for fees
      */
-    getFeeAdjustedRateOfFeeOrder(feeOrder: Order): BigNumber;
+    getFeeAdjustedRateOfFeeOrder(feeOrder: Order): bigint;
 };
-//# sourceMappingURL=rate_utils.d.ts.map
