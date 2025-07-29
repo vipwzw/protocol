@@ -6,12 +6,18 @@
         "lib": ["es2020", "dom"],
         "module": "commonjs",
         "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "strict": true,
         "resolveJsonModule": true,
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        "composite": true
     },
     "include": ["src/**/*", "src/types.d.ts", "test/**/*"],
-    "exclude": ["node_modules", "lib"]
+    "exclude": ["node_modules", "lib"],
+    "references": [
+        { "path": "../types" }
+    ]
 }

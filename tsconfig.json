@@ -26,8 +26,14 @@
     "references": [
         { "path": "./contracts/test-utils" },
         { "path": "./contracts/utils" },
+        { "path": "./packages/types" },
+        { "path": "./packages/utils" },
+        { "path": "./packages/base-contract" },
         { "path": "./packages/contract-addresses" },
         { "path": "./packages/contract-artifacts" },
-        { "path": "./packages/contract-wrappers" }
+        { "path": "./packages/contract-wrappers" },
+        { "path": "./packages/json-schemas" },
+        { "path": "./packages/order-utils" },
+        { "path": "./packages/protocol-utils" }
     ]
 }
