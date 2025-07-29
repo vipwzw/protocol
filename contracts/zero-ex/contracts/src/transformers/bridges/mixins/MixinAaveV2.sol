@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 
 // Minimal Aave V2 LendingPool interface
 interface ILendingPool {
@@ -57,7 +57,7 @@ contract MixinAaveV2 {
     ) internal returns (uint256) {
         (ILendingPool lendingPool, address aToken) = abi.decode(bridgeData, (ILendingPool, address));
 
-        sellToken.approveIfBelow(address(lendingPool), sellAmount);
+        sellToken.approve(address(lendingPool), sellAmount);
 
         if (address(buyToken) == aToken) {
             lendingPool.deposit(address(sellToken), sellAmount, address(this), 0);

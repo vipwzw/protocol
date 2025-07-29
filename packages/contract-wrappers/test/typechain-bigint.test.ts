@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { ethers } from 'ethers';
-import { IERC20Token__factory, WETH9__factory, IZeroEx__factory } from '../src/typechain-types/factories';
+import { DummyERC20Token__factory, WETH9__factory, IZeroEx__factory } from '../src/typechain-types/factories';
 import { TEST_ADDRESSES, TEST_VALUES, expectToBeBigInt, expectToEqualBigInt } from './setup';
 
 describe('TypeChain BigInt Support', () => {
@@ -10,9 +10,9 @@ describe('TypeChain BigInt Support', () => {
         provider = new ethers.JsonRpcProvider('http://localhost:8545');
     });
 
-    describe('IERC20Token Factory', () => {
+    describe('DummyERC20Token Factory', () => {
         it('should create contract instance with correct interface', () => {
-            const token = IERC20Token__factory.connect(TEST_ADDRESSES.WETH, provider);
+            const token = DummyERC20Token__factory.connect(TEST_ADDRESSES.WETH, provider);
             
             expect(token).to.exist;
             expect(token.target).to.equal(TEST_ADDRESSES.WETH);
@@ -20,7 +20,7 @@ describe('TypeChain BigInt Support', () => {
         });
 
         it('should have methods that return bigint types', () => {
-            const token = IERC20Token__factory.connect(TEST_ADDRESSES.WETH, provider);
+            const token = DummyERC20Token__factory.connect(TEST_ADDRESSES.WETH, provider);
             
             // Check method signatures exist
             expect(token.balanceOf).to.be.a('function');
@@ -30,7 +30,7 @@ describe('TypeChain BigInt Support', () => {
         });
 
         it('should encode function data correctly', () => {
-            const token = IERC20Token__factory.connect(TEST_ADDRESSES.WETH, provider);
+            const token = DummyERC20Token__factory.connect(TEST_ADDRESSES.WETH, provider);
             
             // Test encoding with BigNumberish (should accept bigint)
             const transferData = token.interface.encodeFunctionData('transfer', [
@@ -78,7 +78,7 @@ describe('TypeChain BigInt Support', () => {
 
     describe('Event Types with BigInt', () => {
         it('should have Transfer event with bigint value', () => {
-            const token = IERC20Token__factory.connect(TEST_ADDRESSES.WETH, provider);
+            const token = DummyERC20Token__factory.connect(TEST_ADDRESSES.WETH, provider);
             
             // Check event filter exists
             const transferFilter = token.filters.Transfer();
@@ -94,7 +94,7 @@ describe('TypeChain BigInt Support', () => {
         });
 
         it('should have Approval event with bigint value', () => {
-            const token = IERC20Token__factory.connect(TEST_ADDRESSES.WETH, provider);
+            const token = DummyERC20Token__factory.connect(TEST_ADDRESSES.WETH, provider);
             
             const approvalFilter = token.filters.Approval();
             expect(approvalFilter).to.exist;

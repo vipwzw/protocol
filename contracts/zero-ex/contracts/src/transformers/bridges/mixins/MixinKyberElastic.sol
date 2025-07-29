@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 
 interface IKyberElasticRouter {
     struct ExactInputParams {
@@ -40,7 +40,7 @@ contract MixinKyberElastic {
         (IKyberElasticRouter router, bytes memory path) = abi.decode(bridgeData, (IKyberElasticRouter, bytes));
 
         // Grant the Kyber router an allowance to sell the sell token.
-        sellToken.approveIfBelow(address(router), sellAmount);
+        sellToken.approve(address(router), sellAmount);
 
         boughtAmount = router.swapExactInput(
             IKyberElasticRouter.ExactInputParams({

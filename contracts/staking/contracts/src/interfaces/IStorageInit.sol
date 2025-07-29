@@ -16,12 +16,12 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.28;
 
 
 interface IStorageInit {
 
     /// @dev Initialize storage owned by this contract.
     function init()
-        external;
+        external virtual;
 }

@@ -10,15 +10,18 @@
         "test": "test"
     },
     "scripts": {
-        "build": "forge build && npx hardhat compile && tsc -b",
+        "build": "tsc -b",
+        "build:full": "forge build && npx hardhat compile && npx hardhat typechain && tsc -b",
         "build:ts": "tsc -b",
+        "compile": "npx hardhat compile",
+        "typechain": "npx hardhat typechain",
         "test": "npx hardhat test",
         "test:foundry": "forge test",
         "test:ci": "npx hardhat test",
+        "clean": "hardhat clean && rm -rf typechain-types",
         "docs:md": "ts-doc-gen --sourceDir='$PROJECT_FILES' --output=$MD_FILE_DIR --fileExtension=mdx --tsconfig=./typedoc-tsconfig.json",
         "docs:json": "typedoc --excludePrivate --excludeExternals --excludeProtected --ignoreCompilerErrors --target ES5 --tsconfig typedoc-tsconfig.json --json $JSON_FILE_PATH $PROJECT_FILES"
     },
-
     "repository": {
         "type": "git",
         "url": "https://github.com/0xProject/protocol.git"
@@ -29,19 +32,20 @@
     },
     "homepage": "https://github.com/0xProject/protocol/tree/main/contracts/protocol",
     "devDependencies": {
-        "@0x/contracts-utils": "*",
+        "@0x/contracts-utils": "file:../utils",
         "@nomicfoundation/hardhat-ethers": "^3.0.0",
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+        "@typechain/hardhat": "^9.1.0",
+        "@typechain/ethers-v6": "^0.5.1",
         "hardhat": "^2.19.0",
         "ethers": "^6.15.0",
         "chai": "^4.5.0",
         "ts-node": "^10.9.0",
+        "typechain": "^8.3.2",
         "typedoc": "~0.16.11"
     },
     "dependencies": {
-        "@0x/base-contract": "*",
-        "@0x/types": "*",
-        "@0x/utils": "*",
+        "@0x/contracts-erc1155": "file:../erc1155",
         "ethereum-types": "^3.5.0",
         "lodash": "^4.17.11"
     },

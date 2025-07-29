@@ -60,12 +60,10 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
-        "@0x/types": "file:../types",
-        "@0x/utils": "file:../utils",
-        "@0x/contract-addresses": "file:../contract-addresses",
-        "@0x/contract-artifacts": "file:../contract-artifacts",
-        "@0x/contract-wrappers": "file:../contract-wrappers",
-        "@0x/json-schemas": "file:../json-schemas",
+        "@0x/types": "file:../../packages/types",
+        "@0x/utils": "file:../../packages/utils",
+        "@0x/contract-addresses": "file:../../packages/contract-addresses",
+        "@0x/json-schemas": "file:../../packages/json-schemas",
         "ethereumjs-util": "^7.1.5",
         "ethers": "^6.15.0",
         "lodash": "^4.17.21"

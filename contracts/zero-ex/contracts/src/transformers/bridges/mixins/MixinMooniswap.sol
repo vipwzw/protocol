@@ -14,9 +14,9 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
 import "../IBridgeAdapter.sol";
 
 /// @dev Moooniswap pool interface.
@@ -57,7 +57,7 @@ contract MixinMooniswap {
             ethValue = sellAmount;
         } else {
             // Grant the pool an allowance.
-            sellToken.approveIfBelow(address(pool), sellAmount);
+            sellToken.approve(address(pool), sellAmount);
         }
 
         boughtAmount = pool.swap{value: ethValue}(

@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../src/bridges/Eth2DaiBridge.sol";

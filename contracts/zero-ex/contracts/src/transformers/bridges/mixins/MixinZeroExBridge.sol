@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../../../vendor/ILiquidityProvider.sol";
 
 contract MixinZeroExBridge {
@@ -29,7 +29,7 @@ contract MixinZeroExBridge {
     ) internal returns (uint256 boughtAmount) {
         (ILiquidityProvider provider, bytes memory lpData) = abi.decode(bridgeData, (ILiquidityProvider, bytes));
         // Trade the good old fashioned way
-        sellToken.compatTransfer(address(provider), sellAmount);
+        sellToken.transfer(address(provider), sellAmount);
         boughtAmount = provider.sellTokenForToken(
             sellToken,
             buyToken,

@@ -1,40 +1,31 @@
 export { artifacts } from './artifacts';
-export {
-    BalancerBridgeContract,
-    ChaiBridgeContract,
-    ERC1155ProxyContract,
-    ERC20BridgeProxyContract,
-    ERC20ProxyContract,
-    ERC721ProxyContract,
-    Eth2DaiBridgeContract,
-    DydxBridgeContract,
-    IAssetDataContract,
-    IAssetProxyContract,
-    IChaiContract,
-    IDydxContract,
-    KyberBridgeContract,
-    MultiAssetProxyContract,
-    StaticCallProxyContract,
-    TestDydxBridgeContract,
-    TestStaticCallTargetContract,
-    UniswapBridgeContract,
-    DexForwarderBridgeContract,
-} from './wrappers';
+// TODO: Uncomment once TypeChain compilation is successful
+// export * from './wrappers';
 
-export { ERC20Wrapper } from './erc20_wrapper';
-export { ERC721Wrapper } from './erc721_wrapper';
-export { ERC1155ProxyWrapper } from './erc1155_proxy_wrapper';
-export { ERC1155MintableContract, Erc1155Wrapper } from '@0x/contracts-erc1155';
-export { DummyERC20TokenContract } from '@0x/contracts-erc20';
-export { DummyERC721TokenContract } from '@0x/contracts-erc721';
-export { AssetProxyId } from '@0x/types';
-export {
-    ERC1155HoldingsByOwner,
-    ERC20BalancesByOwner,
-    ERC721TokenIdsByOwner,
-    ERC1155FungibleHoldingsByOwner,
-    ERC1155NonFungibleHoldingsByOwner,
-} from '@0x/contracts-test-utils';
+// Re-export utility functions that don't depend on contracts
+export * from './asset_data';
+export * from './dex_forwarder_bridge';
+export * from './dydx_bridge_encoder';
+
+// TODO: Re-enable these exports once TypeChain types are available
+// export * from './erc1155_proxy_wrapper';
+// export * from './erc20_wrapper';
+// export * from './erc721_wrapper';
+
+// TODO: Re-enable these external exports once dependencies are sorted
+// export { ERC1155MintableContract, Erc1155Wrapper } from '@0x/contracts-erc1155';
+// export { DummyERC20TokenContract } from '@0x/contracts-erc20';
+// export { DummyERC721TokenContract } from '@0x/contracts-erc721';
+// export { AssetProxyId } from '@0x/types';
+// export {
+//     ERC1155HoldingsByOwner,
+//     ERC20BalancesByOwner,
+//     ERC721TokenIdsByOwner,
+//     ERC1155FungibleHoldingsByOwner,
+//     ERC1155NonFungibleHoldingsByOwner,
+// } from '@0x/contracts-test-utils';
+
+// Core ethereum-types that should be available
 export {
     TransactionReceiptWithDecodedLogs,
     Provider,
@@ -72,22 +63,3 @@ export {
     TupleDataItem,
     StateMutability,
 } from 'ethereum-types';
-
-export {
-    decodeERC1155AssetData,
-    decodeERC20AssetData,
-    decodeERC20BridgeAssetData,
-    decodeERC721AssetData,
-    decodeMultiAssetData,
-    decodeStaticCallAssetData,
-    encodeERC1155AssetData,
-    encodeERC20AssetData,
-    encodeERC20BridgeAssetData,
-    encodeERC721AssetData,
-    encodeMultiAssetData,
-    encodeStaticCallAssetData,
-    getAssetDataProxyId,
-} from './asset_data';
-
-export * from './dydx_bridge_encoder';
-export * from './dex_forwarder_bridge';

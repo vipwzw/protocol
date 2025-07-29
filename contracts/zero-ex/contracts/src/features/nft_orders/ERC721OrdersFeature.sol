@@ -14,7 +14,7 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IEtherToken.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
 import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../../fixins/FixinERC721Spender.sol";
 import "../../migrations/LibMigrate.sol";

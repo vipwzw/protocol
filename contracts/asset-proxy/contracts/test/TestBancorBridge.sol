@@ -16,11 +16,10 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
+
 import "@0x/contracts-utils/contracts/src/LibAddressArray.sol";
 import "../src/bridges/BancorBridge.sol";
 import "../src/interfaces/IBancorNetwork.sol";
@@ -92,7 +91,7 @@ contract TestEventsRaiser {
 /// @dev A minimalist ERC20 token.
 contract TestToken {
 
-    using LibSafeMath for uint256;
+
 
     mapping (address => uint256) public balances;
     string private _nextRevertReason;

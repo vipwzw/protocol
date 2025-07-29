@@ -16,7 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.28;
 
 
 interface IZrxVault {
@@ -51,20 +51,20 @@ interface IZrxVault {
     /// Note that only the contract staker can call this function.
     /// @param _stakingProxyAddress Address of Staking proxy contract.
     function setStakingProxy(address _stakingProxyAddress)
-        external;
+        external virtual;
 
     /// @dev Vault enters into Catastrophic Failure Mode.
     /// *** WARNING - ONCE IN CATOSTROPHIC FAILURE MODE, YOU CAN NEVER GO BACK! ***
     /// Note that only the contract staker can call this function.
     function enterCatastrophicFailure()
-        external;
+        external virtual;
 
     /// @dev Sets the Zrx proxy.
     /// Note that only the contract staker can call this.
     /// Note that this can only be called when *not* in Catastrophic Failure mode.
     /// @param zrxProxyAddress Address of the 0x Zrx Proxy.
     function setZrxProxy(address zrxProxyAddress)
-        external;
+        external virtual;
 
     /// @dev Deposit an `amount` of Zrx Tokens from `staker` into the vault.
     /// Note that only the Staking contract can call this.
@@ -72,7 +72,7 @@ interface IZrxVault {
     /// @param staker of Zrx Tokens.
     /// @param amount of Zrx Tokens to deposit.
     function depositFrom(address staker, uint256 amount)
-        external;
+        external virtual;
 
     /// @dev Withdraw an `amount` of Zrx Tokens to `staker` from the vault.
     /// Note that only the Staking contract can call this.
@@ -80,7 +80,7 @@ interface IZrxVault {
     /// @param staker of Zrx Tokens.
     /// @param amount of Zrx Tokens to withdraw.
     function withdrawFrom(address staker, uint256 amount)
-        external;
+        external virtual;
 
     /// @dev Withdraw ALL Zrx Tokens to `staker` from the vault.
     /// Note that this can only be called when *in* Catastrophic Failure mode.
@@ -90,7 +90,7 @@ interface IZrxVault {
         returns (uint256);
 
     /// @dev Returns the balance in Zrx Tokens of the `staker`
-    /// @return Balance in Zrx.
+    /// @return balance Balance in Zrx.
     function balanceOf(address staker)
         external
         view

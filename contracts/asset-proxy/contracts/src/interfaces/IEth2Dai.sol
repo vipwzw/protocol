@@ -16,7 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
 
 interface IEth2Dai {
@@ -33,6 +33,6 @@ interface IEth2Dai {
         address toToken,
         uint256 minFillAmount
     )
-        external
+        external virtual
         returns (uint256 fillAmount);
 }

@@ -1,20 +1,17 @@
-import { BigNumber } from '@0x/utils';
 import BN = require('bn.js');
 import ethUtil = require('ethereumjs-util');
 
 import { constants } from './constants';
 
 export const typeEncodingUtils = {
-    encodeUint256(value: BigNumber): Buffer {
-        const base = 10;
-        const formattedValue = new BN(value.toString(base));
+    encodeUint256(value: bigint): Buffer {
+        const formattedValue = new BN(value.toString(10));
         const encodedValue = ethUtil.toBuffer(formattedValue as any);
         const paddedValue = ethUtil.setLengthLeft(encodedValue, constants.WORD_LENGTH);
         return paddedValue;
     },
-    decodeUint256(encodedValue: Buffer): BigNumber {
+    decodeUint256(encodedValue: Buffer): bigint {
         const formattedValue = ethUtil.bufferToHex(encodedValue);
-        const value = new BigNumber(formattedValue, constants.BASE_16);
-        return value;
+        return BigInt(formattedValue);
     },
 };

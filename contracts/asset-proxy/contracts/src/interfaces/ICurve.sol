@@ -16,7 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
 
 // solhint-disable func-name-mixedcase
@@ -34,7 +34,7 @@ interface ICurve {
         uint256 sellAmount,
         uint256 minBuyAmount
     )
-        external;
+        external virtual;
 
     /// @dev Get the amount of `toToken` by selling `sellAmount` of `fromToken`
     /// @param i The token index being sold.
@@ -45,7 +45,7 @@ interface ICurve {
         int128 j,
         uint256 sellAmount
     )
-        external
+        external virtual
         returns (uint256 dy);
 
     /// @dev Get the amount of `fromToken` by buying `buyAmount` of `toToken`
@@ -57,7 +57,7 @@ interface ICurve {
         int128 j,
         uint256 buyAmount
     )
-        external
+        external virtual
         returns (uint256 dx);
 
     /// @dev Get the underlying token address from the token index
@@ -65,6 +65,6 @@ interface ICurve {
     function underlying_coins(
         int128 i
     )
-        external
+        external virtual
         returns (address tokenAddress);
 }

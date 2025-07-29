@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../IBridgeAdapter.sol";
 
 /*
@@ -64,7 +64,7 @@ contract MixinGMX {
         router = IGmxRouter(_router);
 
         // Grant the GMX router an allowance to sell the first token.
-        path[0].approveIfBelow(address(router), sellAmount);
+        path[0].approve(address(router), sellAmount);
 
         //track the balance to know how much we bought
         uint256 beforeBalance = buyToken.balanceOf(address(this));

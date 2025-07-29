@@ -16,7 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
 
 interface IShell {
@@ -28,7 +28,7 @@ interface IShell {
         uint256 minTargetAmount,
         uint256 deadline
     )
-        external
+        external virtual
         returns (uint256 toAmount);
 }
 

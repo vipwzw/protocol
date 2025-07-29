@@ -1,5 +1,4 @@
 import { constants, Numberish } from '@0x/contracts-test-utils';
-import { BigNumber } from '@0x/utils';
 import { DecodedLogArgs, LogWithDecodedArgs } from 'ethereum-types';
 
 import { constants as stakingConstants } from './constants';
@@ -8,97 +7,84 @@ export { Numberish } from '@0x/contracts-test-utils';
 // tslint:disable:max-classes-per-file
 
 export interface StakingParams {
-    epochDurationInSeconds: Numberish;
-    rewardDelegatedStakeWeight: Numberish;
-    minimumPoolStake: Numberish;
-    cobbDouglasAlphaNumerator: Numberish;
-    cobbDouglasAlphaDenominator: Numberish;
+    epochDurationInSeconds: bigint;
+    rewardDelegatedStakeWeight: bigint;
+    minimumPoolStake: bigint;
+    cobbDouglasAlphaNumerator: bigint;
+    cobbDouglasAlphaDenominator: bigint;
 }
 
 export interface StakerBalances {
-    zrxBalance: BigNumber;
-    stakeBalance: BigNumber;
-    stakeBalanceInVault: BigNumber;
-    activatableStakeBalance: BigNumber;
-    activatedStakeBalance: BigNumber;
-    deactivatedStakeBalance: BigNumber;
-    timeLockedStakeBalance: BigNumber;
+    currentEpoch: bigint;
+    currentEpochBalance: bigint;
+    nextEpochBalance: bigint;
 }
 
+// A DelegatorBalances contains the balances of a delegator across different state variables.
+// Delegators have a balance of ZRX, but also a balance of stake
 export interface DelegatorBalances extends StakerBalances {
-    delegatedStakeBalance: BigNumber;
-    stakeDelegatedToPoolByOwner: BigNumber[];
-    stakeDelegatedToPool: BigNumber[];
+    // The amount of ZRX the delegator has delegated to a certain pool
+    delegatedStake: bigint;
 }
 
 export interface SimulationParams {
-    users: string[];
-    numberOfPools: number;
-    poolOperatorShares: number[];
-    stakeByPoolOperator: BigNumber[];
-    numberOfMakers: number;
-    numberOfMakersPerPool: number[];
-    protocolFeesByMaker: BigNumber[];
-    numberOfDelegators: number;
-    numberOfDelegatorsPerPool: number[];
-    stakeByDelegator: BigNumber[];
-    expectedFeesByPool: BigNumber[];
-    expectedPayoutByPool: BigNumber[];
-    expectedPayoutByPoolOperator: BigNumber[];
-    expectedMembersPayoutByPool: BigNumber[];
-    expectedPayoutByDelegator: BigNumber[];
-    exchangeAddress: string;
-    delegateInNextEpoch: boolean;
-    withdrawByUndelegating: boolean;
+    epochDurationInSeconds: bigint;
+    rewardDelegatedStakeWeight: bigint;
+    minimumPoolStake: bigint;
+    cobbDouglasAlphaNumerator: bigint;
+    cobbDouglasAlphaDenominator: bigint;
 }
 
 export interface EndOfEpochInfo {
-    closingEpoch: BigNumber;
-    activePoolIds: string[];
-    rewardsAvailable: BigNumber;
-    totalFeesCollected: BigNumber;
-    totalWeightedStake: BigNumber;
+    numPoolsToFinalize: bigint;
+    rewardsAvailable: bigint;
+    totalFeesCollected: bigint;
+    totalWeightedStake: bigint;
+    totalRewardsFinalized: bigint;
 }
 
 export class StoredBalance {
+    public epoch: bigint;
     constructor(
-        public currentEpoch: BigNumber = stakingConstants.INITIAL_EPOCH,
-        public currentEpochBalance: BigNumber = constants.ZERO_AMOUNT,
-        public nextEpochBalance: BigNumber = constants.ZERO_AMOUNT,
-    ) {}
+        public currentEpochBalance: bigint = stakingConstants.ZERO_AMOUNT,
+        public nextEpochBalance: bigint = stakingConstants.ZERO_AMOUNT,
+        epoch: Numberish = 0,
+    ) {
+        this.epoch = BigInt(epoch.toString());
+    }
 }
 
 /**
  * Simulates _loadCurrentBalance. `shouldMutate` flag specifies whether or not to update the given
  * StoredBalance instance.
  */
-export function loadCurrentBalance(balance: StoredBalance, epoch: BigNumber): StoredBalance {
+export function loadCurrentBalance(balance: StoredBalance, epoch: bigint): StoredBalance {
     return new StoredBalance(
-        epoch,
-        epoch.isGreaterThan(balance.currentEpoch) ? balance.nextEpochBalance : balance.currentEpochBalance,
+        epoch > balance.epoch ? balance.nextEpochBalance : balance.currentEpochBalance,
         balance.nextEpochBalance,
+        epoch.toString(),
     );
 }
 
 /**
  * Simulates _increaseNextBalance
  */
-export function increaseNextBalance(balance: StoredBalance, amount: Numberish, epoch: BigNumber): StoredBalance {
+export function increaseNextBalance(balance: StoredBalance, amount: Numberish, epoch: bigint): StoredBalance {
     const newBalance = loadCurrentBalance(balance, epoch);
     return {
         ...newBalance,
-        nextEpochBalance: newBalance.nextEpochBalance.plus(amount),
+        nextEpochBalance: newBalance.nextEpochBalance + BigInt(amount.toString()),
     };
 }
 
 /**
  * Simulates _decreaseNextBalance
  */
-export function decreaseNextBalance(balance: StoredBalance, amount: Numberish, epoch: BigNumber): StoredBalance {
+export function decreaseNextBalance(balance: StoredBalance, amount: Numberish, epoch: bigint): StoredBalance {
     const newBalance = loadCurrentBalance(balance, epoch);
     return {
         ...newBalance,
-        nextEpochBalance: newBalance.nextEpochBalance.minus(amount),
+        nextEpochBalance: newBalance.nextEpochBalance - BigInt(amount.toString()),
     };
 }
 
@@ -108,13 +94,14 @@ export function decreaseNextBalance(balance: StoredBalance, amount: Numberish, e
 export function increaseCurrentAndNextBalance(
     balance: StoredBalance,
     amount: Numberish,
-    epoch: BigNumber,
+    epoch: bigint,
 ): StoredBalance {
     const newBalance = loadCurrentBalance(balance, epoch);
+    const amountBigInt = BigInt(amount.toString());
     return {
         ...newBalance,
-        currentEpochBalance: newBalance.currentEpochBalance.plus(amount),
-        nextEpochBalance: newBalance.nextEpochBalance.plus(amount),
+        currentEpochBalance: newBalance.currentEpochBalance + amountBigInt,
+        nextEpochBalance: newBalance.nextEpochBalance + amountBigInt,
     };
 }
 
@@ -124,13 +111,14 @@ export function increaseCurrentAndNextBalance(
 export function decreaseCurrentAndNextBalance(
     balance: StoredBalance,
     amount: Numberish,
-    epoch: BigNumber,
+    epoch: bigint,
 ): StoredBalance {
     const newBalance = loadCurrentBalance(balance, epoch);
+    const amountBigInt = BigInt(amount.toString());
     return {
         ...newBalance,
-        currentEpochBalance: newBalance.currentEpochBalance.minus(amount),
-        nextEpochBalance: newBalance.nextEpochBalance.minus(amount),
+        currentEpochBalance: newBalance.currentEpochBalance - amountBigInt,
+        nextEpochBalance: newBalance.nextEpochBalance - amountBigInt,
     };
 }
 
@@ -148,10 +136,10 @@ export class StakeInfo {
 }
 
 export interface StakeBalances {
-    currentEpoch: BigNumber;
-    zrxBalance: BigNumber;
-    stakeBalance: BigNumber;
-    stakeBalanceInVault: BigNumber;
+    currentEpoch: bigint;
+    zrxBalance: bigint;
+    stakeBalance: bigint;
+    stakeBalanceInVault: bigint;
     undelegatedStakeBalance: StoredBalance;
     delegatedStakeBalance: StoredBalance;
     globalUndelegatedStakeBalance: StoredBalance;
@@ -161,23 +149,23 @@ export interface StakeBalances {
 }
 
 export interface RewardBalanceByPoolId {
-    [key: string]: BigNumber;
+    [key: string]: bigint;
 }
 
 export interface OperatorShareByPoolId {
-    [key: string]: BigNumber;
+    [key: string]: bigint;
 }
 
 export interface OperatorBalanceByPoolId {
-    [key: string]: BigNumber;
+    [key: string]: bigint;
 }
 
 export interface BalanceByOwner {
-    [key: string]: BigNumber;
+    [key: string]: bigint;
 }
 
 export interface RewardByPoolId {
-    [key: string]: BigNumber;
+    [key: string]: bigint;
 }
 
 export interface DelegatorBalancesByPoolId {
@@ -218,7 +206,7 @@ export interface StakingPool {
     operator: string;
     operatorShare: number;
     delegatedStake: StoredBalance;
-    lastFinalized: BigNumber; // Epoch during which the pool was most recently finalized
+    lastFinalized: bigint; // Epoch during which the pool was most recently finalized
 }
 
 export interface StakingPoolById {
@@ -226,11 +214,11 @@ export interface StakingPoolById {
 }
 
 export class PoolStats {
-    public feesCollected: BigNumber = constants.ZERO_AMOUNT;
-    public weightedStake: BigNumber = constants.ZERO_AMOUNT;
-    public membersStake: BigNumber = constants.ZERO_AMOUNT;
+    public feesCollected: bigint = stakingConstants.ZERO_AMOUNT;
+    public weightedStake: bigint = stakingConstants.ZERO_AMOUNT;
+    public membersStake: bigint = stakingConstants.ZERO_AMOUNT;
 
-    public static fromArray(arr: [BigNumber, BigNumber, BigNumber]): PoolStats {
+    public static fromArray(arr: [bigint, bigint, bigint]): PoolStats {
         const poolStats = new PoolStats();
         [poolStats.feesCollected, poolStats.weightedStake, poolStats.membersStake] = arr;
         return poolStats;
@@ -238,13 +226,13 @@ export class PoolStats {
 }
 
 export class AggregatedStats {
-    public rewardsAvailable: BigNumber = constants.ZERO_AMOUNT;
-    public numPoolsToFinalize: BigNumber = constants.ZERO_AMOUNT;
-    public totalFeesCollected: BigNumber = constants.ZERO_AMOUNT;
-    public totalWeightedStake: BigNumber = constants.ZERO_AMOUNT;
-    public totalRewardsFinalized: BigNumber = constants.ZERO_AMOUNT;
+    public rewardsAvailable: bigint = stakingConstants.ZERO_AMOUNT;
+    public numPoolsToFinalize: bigint = stakingConstants.ZERO_AMOUNT;
+    public totalFeesCollected: bigint = stakingConstants.ZERO_AMOUNT;
+    public totalWeightedStake: bigint = stakingConstants.ZERO_AMOUNT;
+    public totalRewardsFinalized: bigint = stakingConstants.ZERO_AMOUNT;
 
-    public static fromArray(arr: [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber]): AggregatedStats {
+    public static fromArray(arr: [bigint, bigint, bigint, bigint, bigint]): AggregatedStats {
         const aggregatedStats = new AggregatedStats();
         [
             aggregatedStats.rewardsAvailable,

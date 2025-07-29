@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 
 interface IVelodromeV2Router {
     struct Route {
@@ -53,7 +53,7 @@ contract MixinVelodromeV2 {
             bridgeData,
             (IVelodromeV2Router, IVelodromeV2Router.Route[])
         );
-        sellToken.approveIfBelow(address(router), sellAmount);
+        sellToken.approve(address(router), sellAmount);
 
         uint256[] memory amounts = router.swapExactTokensForTokens(
             sellAmount,

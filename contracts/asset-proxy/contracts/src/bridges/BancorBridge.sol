@@ -17,8 +17,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
@@ -34,6 +33,9 @@ contract BancorBridge is
     IWallet,
     DeploymentConstants
 {
+    // ERC1271 magic value returned when signature is valid
+    bytes4 internal constant LEGACY_WALLET_MAGIC_VALUE = 0xb0671381;
+
     struct TransferState {
         address bancorNetworkAddress;
         address[] path;
@@ -45,10 +47,7 @@ contract BancorBridge is
 
     // solhint-disable no-empty-blocks
     /// @dev Payable fallback to receive ETH from Bancor/WETH.
-    function ()
-        external
-        payable
-    {
+    fallback() external payable {
         // Poor man's receive in 0.5.9
         require(msg.data.length == 0);
     }
@@ -71,6 +70,7 @@ contract BancorBridge is
         bytes calldata bridgeData
     )
         external
+        override
         returns (bytes4 success)
     {
         // hold variables to get around stack depth limitations
@@ -102,7 +102,7 @@ contract BancorBridge is
         }
 
         // Convert the tokens
-        uint256 boughtAmount = IBancorNetwork(state.bancorNetworkAddress).convertByPath.value(payableAmount)(
+        uint256 boughtAmount = IBancorNetwork(state.bancorNetworkAddress).convertByPath{value: payableAmount}(
             state.path, // path originating with source token and terminating in destination token
             fromTokenBalance, // amount of source token to trade
             amount, // minimum amount of destination token expected to receive
@@ -112,7 +112,7 @@ contract BancorBridge is
         );
 
         if (state.path[state.path.length-1] == BANCOR_ETH_ADDRESS) {
-            state.weth.deposit.value(boughtAmount)();
+            state.weth.deposit{value: boughtAmount}();
             state.weth.transfer(to, boughtAmount);
         }
 

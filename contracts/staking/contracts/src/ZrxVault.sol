@@ -16,11 +16,12 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.28;
+
 
 import "@0x/contracts-utils/contracts/src/Authorizable.sol";
-import "@0x/contracts-utils/contracts/src/LibRichErrors.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+// LibSafeMath removed in Solidity 0.8.28 - using built-in overflow checks
 import "@0x/contracts-asset-proxy/contracts/src/interfaces/IAssetProxy.sol";
 import "@0x/contracts-asset-proxy/contracts/src/interfaces/IAssetData.sol";
 import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
@@ -32,7 +33,7 @@ contract ZrxVault is
     Authorizable,
     IZrxVault
 {
-    using LibSafeMath for uint256;
+    // // using LibSafeMath for uint256; // Removed in Solidity 0.8.28 // Removed in Solidity 0.8.28
 
     // Address of staking proxy contract
     address public stakingProxyAddress;
@@ -135,7 +136,7 @@ contract ZrxVault is
         onlyNotInCatastrophicFailure
     {
         // update balance
-        _balances[staker] = _balances[staker].safeAdd(amount);
+        _balances[staker] = _balances[staker] + amount;
 
         // notify
         emit Deposit(staker, amount);
@@ -179,7 +180,7 @@ contract ZrxVault is
     }
 
     /// @dev Returns the balance in Zrx Tokens of the `staker`
-    /// @return Balance in Zrx.
+    /// @return balance Balance in Zrx.
     function balanceOf(address staker)
         external
         view
@@ -206,7 +207,7 @@ contract ZrxVault is
         // update balance
         // note that this call will revert if trying to withdraw more
         // than the current balance
-        _balances[staker] = _balances[staker].safeSub(amount);
+        _balances[staker] = _balances[staker] - amount;
 
         // notify
         emit Withdraw(staker, amount);

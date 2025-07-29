@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../IBridgeAdapter.sol";
 
 interface IDODO {
@@ -39,7 +39,7 @@ contract MixinDodo {
         (IDODOHelper helper, IDODO pool, bool isSellBase) = abi.decode(bridgeData, (IDODOHelper, IDODO, bool));
 
         // Grant the Dodo pool contract an allowance to sell the first token.
-        sellToken.approveIfBelow(address(pool), sellAmount);
+        sellToken.approve(address(pool), sellAmount);
 
         if (isSellBase) {
             // Sell the Base token directly against the contract

@@ -16,8 +16,8 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
+// pragma experimental ABIEncoderV2; // Not needed in Solidity 0.8+
 
 import "./LibFixedMath.sol";
 
@@ -78,8 +78,8 @@ library LibCobbDouglas {
         n = LibFixedMath.exp(
             LibFixedMath.mulDiv(
                 LibFixedMath.ln(n),
-                int256(alphaNumerator),
-                int256(alphaDenominator)
+                int256(uint256(alphaNumerator)),
+                int256(uint256(alphaDenominator))
             )
         );
         // Compute

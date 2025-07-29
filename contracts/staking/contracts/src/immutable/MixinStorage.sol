@@ -16,10 +16,10 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
+// pragma experimental ABIEncoderV2; // Not needed in Solidity 0.8+
 
-import "@0x/contracts-utils/contracts/src/LibRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "@0x/contracts-utils/contracts/src/Authorizable.sol";
 import "./MixinConstants.sol";
 import "../interfaces/IZrxVault.sol";
@@ -52,16 +52,12 @@ contract MixinStorage is
     bytes32 public lastPoolId;
 
     /// @dev Mapping from Maker Address to pool Id of maker
-    /// @param 0 Maker address.
-    /// @return 0 The pool ID.
     mapping (address => bytes32) public poolIdByMaker;
 
     // mapping from Pool Id to Pool
     mapping (bytes32 => IStructs.Pool) internal _poolById;
 
     /// @dev mapping from pool ID to reward balance of members
-    /// @param 0 Pool ID.
-    /// @return 0 The total reward balance of members in this pool.
     mapping (bytes32 => uint256) public rewardsByPoolId;
 
     // The current epoch.
@@ -77,8 +73,6 @@ contract MixinStorage is
     mapping (bytes32 => uint256) internal _cumulativeRewardsByPoolLastStored;
 
     /// @dev Registered 0x Exchange contracts, capable of paying protocol fees.
-    /// @param 0 The address to check.
-    /// @return 0 Whether the address is a registered exchange.
     mapping (address => bool) public validExchanges;
 
     /* Tweakable parameters */
@@ -102,15 +96,10 @@ contract MixinStorage is
 
     /// @dev Stats for each pool that generated fees with sufficient stake to earn rewards.
     ///      See `_minimumPoolStake` in `MixinParams`.
-    /// @param 0 Pool ID.
-    /// @param 1 Epoch number.
-    /// @return 0 Pool fee stats.
     mapping (bytes32 => mapping (uint256 => IStructs.PoolStats)) public poolStatsByEpoch;
 
     /// @dev Aggregated stats across all pools that generated fees with sufficient stake to earn rewards.
     ///      See `_minimumPoolStake` in MixinParams.
-    /// @param 0 Epoch number.
-    /// @return 0 Reward computation stats.
     mapping (uint256 => IStructs.AggregatedStats) public aggregatedStatsByEpoch;
 
     /// @dev The WETH balance of this contract that is reserved for pool reward payouts.

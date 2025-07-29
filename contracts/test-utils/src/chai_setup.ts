@@ -8,7 +8,7 @@ export const chaiSetup = {
         chai.config.includeStack = true;
         chai.use(dirtyChai);
         chai.use(chaiBigNumber());
-        chai.use(chaiAsPromised);
+        // chai-as-promised functionality is provided by @nomicfoundation/hardhat-chai-matchers
     },
 };
 

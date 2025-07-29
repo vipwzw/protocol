@@ -16,10 +16,10 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
 
-contract IAssetProxyDispatcher {
+abstract contract IAssetProxyDispatcher {
 
     // Logs registration of new asset proxy
     event AssetProxyRegistered(
@@ -31,13 +31,13 @@ contract IAssetProxyDispatcher {
     ///      Once an asset proxy is registered, it cannot be unregistered.
     /// @param assetProxy Address of new asset proxy to register.
     function registerAssetProxy(address assetProxy)
-        external;
+        external virtual;
 
     /// @dev Gets an asset proxy.
     /// @param assetProxyId Id of the asset proxy.
     /// @return The asset proxy registered to assetProxyId. Returns 0x0 if no proxy is registered.
     function getAssetProxy(bytes4 assetProxyId)
-        external
+        external virtual
         view
         returns (address);
 }

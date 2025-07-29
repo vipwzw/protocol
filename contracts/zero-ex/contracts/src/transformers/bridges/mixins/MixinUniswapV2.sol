@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../IBridgeAdapter.sol";
 
 /*
@@ -63,7 +63,7 @@ contract MixinUniswapV2 {
         require(path.length >= 2, "MixinUniswapV2/PATH_LENGTH_MUST_BE_AT_LEAST_TWO");
         require(path[path.length - 1] == buyToken, "MixinUniswapV2/LAST_ELEMENT_OF_PATH_MUST_MATCH_OUTPUT_TOKEN");
         // Grant the Uniswap router an allowance to sell the first token.
-        path[0].approveIfBelow(address(router), sellAmount);
+        path[0].approve(address(router), sellAmount);
 
         uint256[] memory amounts = router.swapExactTokensForTokens(
             // Sell all tokens we hold.

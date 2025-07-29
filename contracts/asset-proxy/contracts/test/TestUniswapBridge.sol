@@ -16,11 +16,10 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
+
 import "../src/bridges/UniswapBridge.sol";
 import "../src/interfaces/IUniswapExchangeFactory.sol";
 import "../src/interfaces/IUniswapExchange.sol";
@@ -162,7 +161,7 @@ contract TestEventsRaiser {
 /// @dev A minimalist ERC20/WETH token.
 contract TestToken {
 
-    using LibSafeMath for uint256;
+
 
     mapping (address => uint256) public balances;
     string private _nextRevertReason;
@@ -209,7 +208,7 @@ contract TestToken {
         payable
     {
         _revertIfReasonExists();
-        balances[msg.sender] += balances[msg.sender].safeAdd(msg.value);
+        balances[msg.sender] += balances[msg.sender] + msg.value;
         TestEventsRaiser(msg.sender).raiseWethDeposit(msg.value);
     }
 
@@ -219,7 +218,7 @@ contract TestToken {
         external
     {
         _revertIfReasonExists();
-        balances[msg.sender] = balances[msg.sender].safeSub(amount);
+        balances[msg.sender] = balances[msg.sender] - amount;
         msg.sender.transfer(amount);
         TestEventsRaiser(msg.sender).raiseWethWithdraw(amount);
     }

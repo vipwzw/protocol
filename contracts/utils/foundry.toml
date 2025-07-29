@@ -1,7 +1,7 @@
 [profile.default]
 src = 'contracts/src'
 out = 'out'
-test = 'test'
+test = 'contracts/test'
 # Include test contracts for ABI generation
 extra_output_files = ["abi"]
 libs = ['lib', "../erc20/contracts/src/", "../governance/src/"]

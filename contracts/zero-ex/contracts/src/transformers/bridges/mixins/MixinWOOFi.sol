@@ -14,9 +14,9 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
 import "../IBridgeAdapter.sol";
 
 /// @dev WooFI pool interface.
@@ -55,7 +55,7 @@ contract MixinWOOFi {
         IWooPP _router = abi.decode(bridgeData, (IWooPP));
         uint256 beforeBalance = buyToken.balanceOf(address(this));
 
-        sellToken.approveIfBelow(address(_router), sellAmount);
+        sellToken.approve(address(_router), sellAmount);
 
         boughtAmount = _router.swap(address(sellToken), address(buyToken), sellAmount, 0, address(this), rebateAddress);
     }

@@ -119,9 +119,8 @@ export async function testWithReferenceFuncAsync(
             return expect.fail(actualError, expectedError, `${testCaseString}: expected success but instead failed`);
         }
         if (expected instanceof BigNumber) {
-            // Technically we can do this with `deep.eq`, but this prints prettier
-            // error messages for BigNumbers.
-            expect(actual).to.bignumber.eq(expected, testCaseString);
+            // Convert BigNumber to string for comparison
+            expect(actual.toString()).to.equal(expected.toString(), testCaseString);
         } else {
             expect(actual).to.deep.eq(expected, testCaseString);
         }

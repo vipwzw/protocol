@@ -16,15 +16,13 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
 import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
 import "@0x/contracts-exchange-libs/contracts/src/IWallet.sol";
 import "@0x/contracts-utils/contracts/src/DeploymentConstants.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
 import "../interfaces/IERC20Bridge.sol";
 import "../interfaces/IKyberNetworkProxy.sol";
 
@@ -35,7 +33,8 @@ contract KyberBridge is
     IWallet,
     DeploymentConstants
 {
-    using LibSafeMath for uint256;
+    // ERC1271 magic value returned when signature is valid
+    bytes4 internal constant LEGACY_WALLET_MAGIC_VALUE = 0xb0671381;
 
     // @dev Structure used internally to get around stack limits.
     struct TradeState {
@@ -49,7 +48,7 @@ contract KyberBridge is
     }
 
     /// @dev Kyber ETH pseudo-address.
-    address constant public KYBER_ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    // Removed duplicate constant - using the one from DeploymentConstants
     /// @dev `bridgeTransferFrom()` failure result.
     bytes4 constant private BRIDGE_FAILED = 0x0;
     /// @dev Precision of Kyber rates.
@@ -57,10 +56,7 @@ contract KyberBridge is
 
     // solhint-disable no-empty-blocks
     /// @dev Payable fallback to receive ETH from Kyber/WETH.
-    function ()
-        external
-        payable
-    {
+    fallback() external payable {
         // Poor man's receive in 0.5.9
         require(msg.data.length == 0);
     }
@@ -83,6 +79,7 @@ contract KyberBridge is
         bytes calldata bridgeData
     )
         external
+        override
         returns (bytes4 success)
     {
         TradeState memory state;
@@ -117,7 +114,7 @@ contract KyberBridge is
 
         // Try to sell all of this contract's input token balance through
         // `KyberNetworkProxy.trade()`.
-        uint256 boughtAmount = state.kyber.tradeWithHint.value(state.payableAmount)(
+        uint256 boughtAmount = state.kyber.tradeWithHint{value: state.payableAmount}(
             // Input token.
             state.fromTokenAddress,
             // Sell amount.
@@ -126,18 +123,18 @@ contract KyberBridge is
             isToTokenWeth ? KYBER_ETH_ADDRESS : toTokenAddress,
             // Transfer to this contract if converting to ETH, otherwise
             // transfer directly to the recipient.
-            isToTokenWeth ? address(uint160(address(this))) : address(uint160(to)),
+            isToTokenWeth ? payable(address(this)) : payable(to),
             // Buy as much as possible.
-            uint256(-1),
+            type(uint256).max,
             // The minimum conversion rate
             1,
             // No affiliate address.
-            address(0),
+            payable(address(0)),
             state.hint
         );
         // Wrap ETH output and transfer to recipient.
         if (isToTokenWeth) {
-            state.weth.deposit.value(boughtAmount)();
+            state.weth.deposit{value: boughtAmount}();
             state.weth.transfer(to, boughtAmount);
         }
 

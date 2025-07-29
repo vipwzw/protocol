@@ -16,21 +16,21 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
-import "../archive/MixinAuthorizable.sol";
+import "@0x/contracts-utils/contracts/src/Authorizable.sol";
+import "./interfaces/IAssetProxy.sol";
 
 
-contract ERC721Proxy is
-    MixinAuthorizable
+abstract contract ERC721Proxy is
+    IAssetProxy,
+    Authorizable
 {
     // Id of this proxy.
     bytes4 constant internal PROXY_ID = bytes4(keccak256("ERC721Token(address,uint256)"));
 
     // solhint-disable-next-line payable-fallback
-    function ()
-        external
-    {
+    fallback() external {
         assembly {
             // The first 4 bytes of calldata holds the function selector
             let selector := and(calldataload(0), 0xffffffff00000000000000000000000000000000000000000000000000000000)
@@ -46,8 +46,8 @@ contract ERC721Proxy is
                 // To lookup a value in a mapping, we load from the storage location keccak256(k, p),
                 // where k is the key left padded to 32 bytes and p is the storage slot
                 let start := mload(64)
-                mstore(start, and(caller, 0xffffffffffffffffffffffffffffffffffffffff))
-                mstore(add(start, 32), authorized_slot)
+                mstore(start, and(caller(), 0xffffffffffffffffffffffffffffffffffffffff))
+                mstore(add(start, 32), authorized.slot)
 
                 // Revert if authorized[msg.sender] == false
                 if iszero(sload(keccak256(start, 64))) {
@@ -134,7 +134,7 @@ contract ERC721Proxy is
                 /////// Call `token.transferFrom` using the calldata ///////
                 let token := calldataload(add(assetDataOffset, 40))
                 let success := call(
-                    gas,            // forward all gas
+                    gas(),            // forward all gas
                     token,          // call address of token contract
                     0,              // don't send any ETH
                     0,              // pointer to start of input
@@ -164,6 +164,7 @@ contract ERC721Proxy is
     function getProxyId()
         external
         pure
+        override
         returns (bytes4)
     {
         return PROXY_ID;

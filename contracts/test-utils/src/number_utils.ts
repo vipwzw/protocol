@@ -1,4 +1,3 @@
-import { Web3Wrapper } from '@0x/web3-wrapper';
 import * as crypto from 'crypto';
 import { Decimal } from 'decimal.js';
 

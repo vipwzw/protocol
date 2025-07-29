@@ -14,9 +14,9 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
 import "../IBridgeAdapter.sol";
 
 interface IUniswapExchangeFactory {
@@ -122,7 +122,7 @@ contract MixinUniswap {
             // Convert from a token to WETH.
         } else if (buyToken == WETH) {
             // Grant the exchange an allowance.
-            sellToken.approveIfBelow(address(exchange), sellAmount);
+            sellToken.approve(address(exchange), sellAmount);
             // Buy as much ETH with `sellToken` token as possible.
             boughtAmount = exchange.tokenToEthSwapInput(
                 // Sell all tokens we hold.
@@ -137,7 +137,7 @@ contract MixinUniswap {
             // Convert from one token to another.
         } else {
             // Grant the exchange an allowance.
-            sellToken.approveIfBelow(address(exchange), sellAmount);
+            sellToken.approve(address(exchange), sellAmount);
             // Buy as much `buyToken` token with `sellToken` token
             boughtAmount = exchange.tokenToTokenSwapInput(
                 // Sell all tokens we hold.

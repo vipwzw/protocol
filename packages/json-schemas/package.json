@@ -43,13 +43,10 @@
     },
     "homepage": "https://github.com/0xProject/tools/tree/main/json-schemas",
     "dependencies": {
-        "@types/node": "^20.0.0",
         "ajv": "^6.12.6",
         "lodash.values": "^4.3.0"
     },
     "devDependencies": {
-        "@types/lodash.foreach": "^4.5.3",
-        "@types/lodash.values": "^4.3.3",
         "@types/mocha": "^10.0.0",
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
         "@nomicfoundation/hardhat-ethers": "^3.0.0",

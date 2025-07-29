@@ -1,6 +1,5 @@
 import { RevertReason } from '@0x/types';
 import { logUtils } from '@0x/utils';
-import { NodeType } from '@0x/web3-wrapper';
 import * as chai from 'chai';
 import { TransactionReceipt, TransactionReceiptStatus, TransactionReceiptWithDecodedLogs } from 'ethereum-types';
 import * as _ from 'lodash';
@@ -8,6 +7,12 @@ import * as _ from 'lodash';
 import { web3Wrapper } from './web3_wrapper';
 
 const expect = chai.expect;
+
+// Define NodeType enum for compatibility
+enum NodeType {
+    Ganache = 'Ganache',
+    Geth = 'Geth',
+}
 
 let nodeType: NodeType | undefined;
 
@@ -25,7 +30,8 @@ export type sendTransactionResult = Promise<TransactionReceipt | TransactionRece
  */
 async function _getGanacheOrGethErrorAsync(ganacheError: string, gethError: string): Promise<string> {
     if (nodeType === undefined) {
-        nodeType = await web3Wrapper.getNodeTypeAsync();
+        const nodeTypeStr = await web3Wrapper.getNodeTypeAsync();
+        nodeType = nodeTypeStr === 'Geth' ? NodeType.Geth : NodeType.Ganache;
     }
     switch (nodeType) {
         case NodeType.Ganache:
@@ -100,7 +106,8 @@ export async function expectTransactionFailedAsync(p: sendTransactionResult, rea
     });
 
     if (nodeType === undefined) {
-        nodeType = await web3Wrapper.getNodeTypeAsync();
+        const nodeTypeStr = await web3Wrapper.getNodeTypeAsync();
+        nodeType = nodeTypeStr === 'Geth' ? NodeType.Geth : NodeType.Ganache;
     }
     const rejectionMessageRegex = new RegExp(`^VM Exception while processing transaction: revert ${reason}$`);
     switch (nodeType) {
@@ -132,7 +139,10 @@ export async function expectTransactionFailedWithoutReasonAsync(p: sendTransacti
                 // Result is a txHash. We need to make a web3 call to get the
                 // receipt, then get the status from the receipt.
                 const txReceipt = await web3Wrapper.awaitTransactionMinedAsync(result);
-                txReceiptStatus = txReceipt.status;
+                if (!txReceipt || txReceipt.status === null) {
+                    throw new Error('Transaction receipt not found or status is null');
+                }
+                txReceiptStatus = txReceipt.status as TransactionReceiptStatus;
             } else if ('status' in result) {
                 // Result is a transaction receipt, so we can get the status
                 // directly.

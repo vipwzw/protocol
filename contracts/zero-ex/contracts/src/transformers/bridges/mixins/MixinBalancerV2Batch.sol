@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 
 interface IBalancerV2BatchSwapVault {
     enum SwapKind {
@@ -73,7 +73,7 @@ contract MixinBalancerV2Batch {
         }
 
         // Grant an allowance to the exchange to spend `fromTokenAddress` token.
-        assets[0].approveIfBelow(address(vault), sellAmount);
+        assets[0].approve(address(vault), sellAmount);
 
         swapSteps[0].amount = sellAmount;
         int256[] memory limits = new int256[](assets.length);

@@ -15,9 +15,9 @@
 pragma solidity ^0.8.0;
 
 import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 
 contract MixinCurve {
     using LibERC20Token for IERC20Token;
@@ -50,7 +50,7 @@ contract MixinCurve {
             payableAmount = sellAmount;
             WETH.withdraw(sellAmount);
         } else {
-            sellToken.approveIfBelow(data.curveAddress, sellAmount);
+            sellToken.approve(data.curveAddress, sellAmount);
         }
 
         uint256 beforeBalance = buyToken.balanceOf(address(this));

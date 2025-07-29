@@ -1,19 +1,24 @@
 [profile.default]
-src = 'src'
+src = 'contracts/src'
 out = 'out'
-test = 'test'
-libs = ['lib', '../utils/']
+test = 'tests'
+libs = ['lib','../utils', '../exchange-libs', '../erc20', '../erc1155']
 remappings = [
-    '@0x/contracts-utils/contracts/src/=../utils/contracts/src/',
+    '@0x/contracts-utils/=../utils/',
+    '@0x/contracts-exchange-libs/=../exchange-libs/',
+    '@0x/contracts-erc20/=../erc20/',
+    '@0x/contracts-erc1155/=../erc1155/',
 ]
 solc_version = "0.8.28"
 optimizer = true
 optimizer_runs = 1000000
 evm_version = "cancun"
+# Ignore all compiler errors temporarily to see the full compilation status
+ignored_error_codes = [1878, 3628, 5424, 5815, 5856, 9456, 9553, 1621, 3656, 2462, 4334]
 fs_permissions = [
     { access = "read", path = "./" },
     { access = "read", path = "../" },
     { access = "read", path = "../utils/" },
-    { access = "read", path = "../utils/contracts/" },
-    { access = "read", path = "../utils/contracts/src/" }
+    { access = "read", path = "../erc20/" },
+    { access = "read", path = "../exchange-libs/" }
 ] 

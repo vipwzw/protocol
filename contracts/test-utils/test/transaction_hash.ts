@@ -16,9 +16,9 @@ describe('0x transaction hashing', () => {
         const fakeChainId = 1337;
         const transaction: ZeroExTransaction = {
             signerAddress: constants.NULL_ADDRESS,
-            salt: new BigNumber(0),
-            expirationTimeSeconds: new BigNumber(0),
-            gasPrice: new BigNumber(0),
+            salt: 0n,
+            expirationTimeSeconds: 0n,
+            gasPrice: 0n,
             data: constants.NULL_BYTES,
             domain: {
                 verifyingContract: fakeVerifyingContractAddress,

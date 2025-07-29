@@ -15,8 +15,8 @@
 pragma solidity ^0.8.0;
 
 import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
 import "@0x/contracts-utils/contracts/src/LibMath.sol";
 import "../errors/LibTransformERC20RichErrors.sol";
 import "../features/interfaces/INativeOrdersFeature.sol";
@@ -193,7 +193,7 @@ contract FillQuoteTransformer is Transformer {
         // Approve the exchange proxy to spend our sell tokens if native orders
         // are present.
         if (data.limitOrders.length + data.rfqOrders.length + data.otcOrders.length != 0) {
-            data.sellToken.approveIfBelow(address(zeroEx), data.fillAmount);
+            data.sellToken.approve(address(zeroEx), data.fillAmount);
             // Compute the protocol fee if a limit order is present.
             if (data.limitOrders.length != 0) {
                 state.protocolFee = uint256(zeroEx.getProtocolFeeMultiplier()) * tx.gasprice;

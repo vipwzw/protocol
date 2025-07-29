@@ -16,7 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
 import "./IUniswapExchange.sol";
 
@@ -26,7 +26,7 @@ interface IUniswapExchangeFactory {
     /// @dev Get the exchange for a token.
     /// @param tokenAddress The address of the token contract.
     function getExchange(address tokenAddress)
-        external
+        external virtual
         view
         returns (address);
 }

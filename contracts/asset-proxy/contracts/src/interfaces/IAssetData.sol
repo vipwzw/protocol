@@ -17,8 +17,7 @@
 */
 
 // solhint-disable
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 
 // @dev Interface of the asset proxy's assetData.
@@ -29,7 +28,7 @@ interface IAssetData {
     /// @dev Function signature for encoding ERC20 assetData.
     /// @param tokenAddress Address of ERC20Token contract.
     function ERC20Token(address tokenAddress)
-        external;
+        external virtual;
 
     /// @dev Function signature for encoding ERC721 assetData.
     /// @param tokenAddress Address of ERC721 token contract.
@@ -38,7 +37,7 @@ interface IAssetData {
         address tokenAddress,
         uint256 tokenId
     )
-        external;
+        external virtual;
 
     /// @dev Function signature for encoding ERC1155 assetData.
     /// @param tokenAddress Address of ERC1155 token contract.
@@ -52,7 +51,7 @@ interface IAssetData {
         uint256[] calldata values,
         bytes calldata callbackData
     )
-        external;
+        external virtual;
 
     /// @dev Function signature for encoding MultiAsset assetData.
     /// @param values Array of amounts that correspond to each asset to be transferred.
@@ -62,7 +61,7 @@ interface IAssetData {
         uint256[] calldata values,
         bytes[] calldata nestedAssetData
     )
-        external;
+        external virtual;
 
     /// @dev Function signature for encoding StaticCall assetData.
     /// @param staticCallTargetAddress Address that will execute the staticcall.
@@ -73,7 +72,7 @@ interface IAssetData {
         bytes calldata staticCallData,
         bytes32 expectedReturnDataHash
     )
-        external;
+        external virtual;
 
     /// @dev Function signature for encoding ERC20Bridge assetData.
     /// @param tokenAddress Address of token to transfer.
@@ -84,5 +83,5 @@ interface IAssetData {
         address bridgeAddress,
         bytes calldata bridgeData
     )
-        external;
+        external virtual;
 }

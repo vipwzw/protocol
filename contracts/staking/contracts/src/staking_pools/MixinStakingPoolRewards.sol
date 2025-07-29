@@ -16,36 +16,38 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
+// pragma experimental ABIEncoderV2; // Not needed in Solidity 0.8+
 
 import "@0x/contracts-exchange-libs/contracts/src/LibMath.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
+// LibSafeMath removed in Solidity 0.8.28 - using built-in overflow checks
 import "./MixinCumulativeRewards.sol";
 import "../sys/MixinAbstract.sol";
 
 
-contract MixinStakingPoolRewards is
+abstract contract MixinStakingPoolRewards is
     MixinAbstract,
     MixinCumulativeRewards
 {
-    using LibSafeMath for uint256;
+    // // using LibSafeMath for uint256; // Removed in Solidity 0.8.28 // Removed in Solidity 0.8.28
 
     /// @dev Withdraws the caller's WETH rewards that have accumulated
     ///      until the last epoch.
     /// @param poolId Unique id of pool.
     function withdrawDelegatorRewards(bytes32 poolId)
         external
+        virtual
     {
         _withdrawAndSyncDelegatorRewards(poolId, msg.sender);
     }
 
     /// @dev Computes the reward balance in ETH of the operator of a pool.
     /// @param poolId Unique id of pool.
-    /// @return totalReward Balance in ETH.
+    /// @return reward Balance in ETH.
     function computeRewardBalanceOfOperator(bytes32 poolId)
         external
         view
+        virtual
         returns (uint256 reward)
     {
         // Because operator rewards are immediately withdrawn as WETH
@@ -68,10 +70,11 @@ contract MixinStakingPoolRewards is
     /// @dev Computes the reward balance in ETH of a specific member of a pool.
     /// @param poolId Unique id of pool.
     /// @param member The member of the pool.
-    /// @return totalReward Balance in ETH.
+    /// @return reward Balance in ETH.
     function computeRewardBalanceOfDelegator(bytes32 poolId, address member)
         external
         view
+        virtual
         returns (uint256 reward)
     {
         IStructs.Pool memory pool = _poolById[poolId];
@@ -128,7 +131,7 @@ contract MixinStakingPoolRewards is
             _decreasePoolRewards(poolId, balance);
 
             // Withdraw the member's WETH balance
-            getWethContract().transfer(member, balance);
+            _getWethContract().transfer(member, balance);
         }
 
         // Ensure a cumulative reward entry exists for this epoch,
@@ -166,7 +169,7 @@ contract MixinStakingPoolRewards is
 
         if (operatorReward > 0) {
             // Transfer the operator's weth reward to the operator
-            getWethContract().transfer(pool.operator, operatorReward);
+            _getWethContract().transfer(pool.operator, operatorReward);
         }
 
         if (membersReward > 0) {
@@ -205,7 +208,7 @@ contract MixinStakingPoolRewards is
                 PPM_DENOMINATOR,
                 totalReward
             );
-            membersReward = totalReward.safeSub(operatorReward);
+            membersReward = totalReward - operatorReward;
         }
         return (operatorReward, membersReward);
     }
@@ -215,7 +218,7 @@ contract MixinStakingPoolRewards is
     /// @param member of the pool.
     /// @param unfinalizedMembersReward Unfinalized total members reward (if any).
     /// @param unfinalizedMembersStake Unfinalized total members stake (if any).
-    /// @return reward Balance in WETH.
+    /// @return reward Balance in_ WETH.
     function _computeDelegatorReward(
         bytes32 poolId,
         address member,
@@ -247,25 +250,23 @@ contract MixinStakingPoolRewards is
         );
 
         // 2/3 Finalized rewards earned in epochs [`delegatedStake.currentEpoch + 1` .. `currentEpoch - 1`]
-        uint256 delegatedStakeNextEpoch = uint256(delegatedStake.currentEpoch).safeAdd(1);
-        reward = reward.safeAdd(
+        uint256 delegatedStakeNextEpoch = uint256(delegatedStake.currentEpoch) + 1;
+        reward = reward +
             _computeMemberRewardOverInterval(
                 poolId,
                 delegatedStake.currentEpochBalance,
                 delegatedStake.currentEpoch,
                 delegatedStakeNextEpoch
-            )
-        );
+            );
 
         // 3/3 Finalized rewards earned in epoch `delegatedStake.currentEpoch`.
-        reward = reward.safeAdd(
+        reward = reward +
             _computeMemberRewardOverInterval(
                 poolId,
                 delegatedStake.nextEpochBalance,
                 delegatedStakeNextEpoch,
                 currentEpoch_
-            )
-        );
+            );
 
         return reward;
     }
@@ -275,7 +276,7 @@ contract MixinStakingPoolRewards is
     /// @param currentEpoch_ The epoch in which this call is executing
     /// @param unfinalizedMembersReward Unfinalized total members reward (if any).
     /// @param unfinalizedMembersStake Unfinalized total members stake (if any).
-    /// @return reward Balance in WETH.
+    /// @return reward Balance in_ WETH.
     function _computeUnfinalizedDelegatorReward(
         IStructs.StoredBalance memory delegatedStake,
         uint256 currentEpoch_,
@@ -294,7 +295,7 @@ contract MixinStakingPoolRewards is
 
         // Unfinalized rewards are always earned from stake in
         // the prior epoch so we want the stake at `currentEpoch_-1`.
-        uint256 unfinalizedStakeBalance = delegatedStake.currentEpoch >= currentEpoch_.safeSub(1) ?
+        uint256 unfinalizedStakeBalance = delegatedStake.currentEpoch >= currentEpoch_ - 1 ?
             delegatedStake.currentEpochBalance :
             delegatedStake.nextEpochBalance;
 
@@ -317,8 +318,8 @@ contract MixinStakingPoolRewards is
     function _increasePoolRewards(bytes32 poolId, uint256 amount)
         private
     {
-        rewardsByPoolId[poolId] = rewardsByPoolId[poolId].safeAdd(amount);
-        wethReservedForPoolRewards = wethReservedForPoolRewards.safeAdd(amount);
+        rewardsByPoolId[poolId] = rewardsByPoolId[poolId] + amount;
+        wethReservedForPoolRewards = wethReservedForPoolRewards + amount;
     }
 
     /// @dev Decreases rewards for a pool.
@@ -327,7 +328,7 @@ contract MixinStakingPoolRewards is
     function _decreasePoolRewards(bytes32 poolId, uint256 amount)
         private
     {
-        rewardsByPoolId[poolId] = rewardsByPoolId[poolId].safeSub(amount);
-        wethReservedForPoolRewards = wethReservedForPoolRewards.safeSub(amount);
+        rewardsByPoolId[poolId] = rewardsByPoolId[poolId] - amount;
+        wethReservedForPoolRewards = wethReservedForPoolRewards - amount;
     }
 }

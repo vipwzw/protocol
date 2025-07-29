@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 
 interface IPSM {
     // @dev Get the fee for selling USDC to DAI in PSM
@@ -76,15 +76,15 @@ contract MixinMakerPSM {
         IPSM psm = IPSM(data.psmAddress);
 
         if (address(sellToken) == data.gemTokenAddres) {
-            sellToken.approveIfBelow(psm.gemJoin(), sellAmount);
+            sellToken.approve(psm.gemJoin(), sellAmount);
 
             psm.sellGem(address(this), sellAmount);
         } else if (address(buyToken) == data.gemTokenAddres) {
             uint256 feeDivisor = WAD + (psm.tout()); // eg. 1.001 * 10 ** 18 with 0.1% fee [tout is in wad];
-            uint256 buyTokenBaseUnit = uint256(10) ** uint256(buyToken.decimals());
+            uint256 buyTokenBaseUnit = uint256(10) ** uint256(LibERC20Token.decimals(address(buyToken)));
             uint256 gemAmount = (sellAmount * buyTokenBaseUnit) / feeDivisor;
 
-            sellToken.approveIfBelow(data.psmAddress, sellAmount);
+            sellToken.approve(data.psmAddress, sellAmount);
             psm.buyGem(address(this), gemAmount);
         }
 

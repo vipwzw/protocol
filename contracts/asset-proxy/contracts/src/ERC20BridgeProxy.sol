@@ -16,11 +16,9 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-utils/contracts/src/LibBytes.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
 import "@0x/contracts-utils/contracts/src/Authorizable.sol";
 import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "./interfaces/IAssetProxy.sol";
@@ -32,7 +30,6 @@ contract ERC20BridgeProxy is
     Authorizable
 {
     using LibBytes for bytes;
-    using LibSafeMath for uint256;
 
     // @dev Id of this proxy. Also the result of a successful bridge call.
     //      bytes4(keccak256("ERC20Bridge(address,address,bytes)"))
@@ -57,6 +54,7 @@ contract ERC20BridgeProxy is
         uint256 amount
     )
         external
+        override
         onlyAuthorized
     {
         // Extract asset data fields.
@@ -84,7 +82,7 @@ contract ERC20BridgeProxy is
         require(success == PROXY_ID, "BRIDGE_FAILED");
         // Ensure that the balance of `to` has increased by at least `amount`.
         require(
-            balanceBefore.safeAdd(amount) <= balanceOf(tokenAddress, to),
+            balanceBefore + amount <= balanceOf(tokenAddress, to),
             "BRIDGE_UNDERPAY"
         );
     }
@@ -94,6 +92,7 @@ contract ERC20BridgeProxy is
     function getProxyId()
         external
         pure
+        override
         returns (bytes4 proxyId)
     {
         return PROXY_ID;

@@ -16,29 +16,35 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
+// // pragma experimental ABIEncoderV2; // Not needed in Solidity 0.8+ // Not needed in Solidity 0.8+
 
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
+// LibSafeMath removed in Solidity 0.8.28 - using built-in overflow checks
 import "../staking_pools/MixinStakingPool.sol";
 import "../libs/LibStakingRichErrors.sol";
 
 
-contract MixinStake is
+abstract contract MixinStake is
     MixinStakingPool
 {
-    using LibSafeMath for uint256;
+    // // using LibSafeMath for uint256; // Removed in Solidity 0.8.28 // Removed in Solidity 0.8.28
+
+    /// @dev Helper function to get the minimum of two values (replaces LibSafeMath.min256)
+    function _min(uint256 a, uint256 b) private pure returns (uint256) {
+        return a < b ? a : b;
+    }
 
     /// @dev Stake ZRX tokens. Tokens are deposited into the ZRX Vault.
     ///      Unstake to retrieve the ZRX. Stake is in the 'Active' status.
     /// @param amount Amount of ZRX to stake.
     function stake(uint256 amount)
         external
+        virtual
     {
         address staker = msg.sender;
 
         // deposit equivalent amount of ZRX into vault
-        getZrxVault().depositFrom(staker, amount);
+        _getZrxVault().depositFrom(staker, amount);
 
         // mint stake
         _increaseCurrentAndNextBalance(
@@ -59,6 +65,7 @@ contract MixinStake is
     /// @param amount Amount of ZRX to unstake.
     function unstake(uint256 amount)
         external
+        virtual
     {
         address staker = msg.sender;
 
@@ -66,7 +73,7 @@ contract MixinStake is
             _loadCurrentBalance(_ownerStakeByStatus[uint8(IStructs.StakeStatus.UNDELEGATED)][staker]);
 
         // stake must be undelegated in current and next epoch to be withdrawn
-        uint256 currentWithdrawableStake = LibSafeMath.min256(
+        uint256 currentWithdrawableStake = _min(
             undelegatedBalance.currentEpochBalance,
             undelegatedBalance.nextEpochBalance
         );
@@ -87,7 +94,7 @@ contract MixinStake is
         );
 
         // withdraw equivalent amount of ZRX from vault
-        getZrxVault().withdrawFrom(staker, amount);
+        _getZrxVault().withdrawFrom(staker, amount);
 
         // emit stake event
         emit Unstake(
@@ -108,6 +115,7 @@ contract MixinStake is
         uint256 amount
     )
         external
+        virtual
     {
         address staker = msg.sender;
 

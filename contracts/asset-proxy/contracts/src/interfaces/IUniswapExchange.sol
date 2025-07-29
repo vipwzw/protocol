@@ -16,7 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
 
 interface IUniswapExchange {
@@ -32,7 +32,7 @@ interface IUniswapExchange {
         uint256 deadline,
         address recipient
     )
-        external
+        external virtual
         payable
         returns (uint256 tokensBought);
 
@@ -46,7 +46,7 @@ interface IUniswapExchange {
         uint256 minEthBought,
         uint256 deadline
     )
-        external
+        external virtual
         returns (uint256 ethBought);
 
     /// @dev Buys at least `minTokensBought` tokens with the exchange token
@@ -65,6 +65,6 @@ interface IUniswapExchange {
         address recipient,
         address toTokenAddress
     )
-        external
+        external virtual
         returns (uint256 tokensBought);
 }

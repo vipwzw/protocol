@@ -16,23 +16,26 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
-import "../archive/MixinAssetProxyDispatcher.sol";
-import "../archive/MixinAuthorizable.sol";
+import "@0x/contracts-utils/contracts/src/Authorizable.sol";
+import "./interfaces/IAssetProxy.sol";
+import "./interfaces/IAssetProxyDispatcher.sol";
 
 
-contract MultiAssetProxy is
-    MixinAssetProxyDispatcher,
-    MixinAuthorizable
+abstract contract MultiAssetProxy is
+    IAssetProxy,
+    IAssetProxyDispatcher,
+    Authorizable
 {
     // Id of this proxy.
     bytes4 constant internal PROXY_ID = bytes4(keccak256("MultiAsset(uint256[],bytes[])"));
 
+    // Mapping from Asset Proxy Id's to their respective Asset Proxy
+    mapping (bytes4 => address) public assetProxies;
+
     // solhint-disable-next-line payable-fallback
-    function ()
-        external
-    {
+    fallback() external {
         // NOTE: The below assembly assumes that clients do some input validation and that the input is properly encoded according to the AbiV2 specification.
         // It is technically possible for inputs with very large lengths and offsets to cause overflows. However, this would make the calldata prohibitively
         // expensive and we therefore do not check for overflows in these scenarios.
@@ -50,8 +53,8 @@ contract MultiAssetProxy is
 
                 // To lookup a value in a mapping, we load from the storage location keccak256(k, p),
                 // where k is the key left padded to 32 bytes and p is the storage slot
-                mstore(0, caller)
-                mstore(32, authorized_slot)
+                mstore(0, caller())
+                mstore(32, authorized.slot)
 
                 // Revert if authorized[msg.sender] == false
                 if iszero(sload(keccak256(0, 64))) {
@@ -271,7 +274,7 @@ contract MultiAssetProxy is
                         // To lookup a value in a mapping, we load from the storage location keccak256(k, p),
                         // where k is the key left padded to 32 bytes and p is the storage slot
                         mstore(132, assetProxyId)
-                        mstore(164, assetProxies_slot)
+                        mstore(164, assetProxies.slot)
                         assetProxy := sload(keccak256(132, 64))
                     }
 
@@ -294,7 +297,7 @@ contract MultiAssetProxy is
 
                     // call `assetProxy.transferFrom`
                     let success := call(
-                        gas,                                    // forward all gas
+                        gas(),                                    // forward all gas
                         assetProxy,                             // call address of asset proxy
                         0,                                      // don't send any ETH
                         0,                                      // pointer to start of input
@@ -328,6 +331,7 @@ contract MultiAssetProxy is
     function getProxyId()
         external
         pure
+        override
         returns (bytes4)
     {
         return PROXY_ID;

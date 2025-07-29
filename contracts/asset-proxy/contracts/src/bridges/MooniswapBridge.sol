@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
@@ -35,6 +34,8 @@ contract MooniswapBridge is
     IWallet,
     DeploymentConstants
 {
+    // ERC1271 magic value returned when signature is valid
+    bytes4 internal constant LEGACY_WALLET_MAGIC_VALUE = 0xb0671381;
 
     struct TransferState {
         IMooniswap pool;
@@ -47,10 +48,7 @@ contract MooniswapBridge is
 
     // solhint-disable no-empty-blocks
     /// @dev Payable fallback to receive ETH from uniswap.
-    function ()
-        external
-        payable
-    {}
+    fallback() external payable {}
 
     /// @dev Callback for `IERC20Bridge`. Tries to buy `amount` of
     ///      `toTokenAddress` tokens by selling the entirety of the `fromTokenAddress`
@@ -69,6 +67,7 @@ contract MooniswapBridge is
         bytes calldata bridgeData
     )
         external
+        override
         returns (bytes4 success)
     {
         // State memory object to avoid stack overflows.
@@ -101,7 +100,7 @@ contract MooniswapBridge is
             );
         }
         uint256 ethValue = state.fromTokenAddress == address(0) ? state.fromTokenBalance : 0;
-        state.boughtAmount = state.pool.swap.value(ethValue)(
+        state.boughtAmount = state.pool.swap{value: ethValue}(
             state.fromTokenAddress,
             state.toTokenAddress,
             state.fromTokenBalance,
@@ -110,7 +109,7 @@ contract MooniswapBridge is
         );
         // Deposit to WETH
         if (state.toTokenAddress == address(0)) {
-            state.weth.deposit.value(state.boughtAmount)();
+            state.weth.deposit{value: state.boughtAmount}();
         }
 
         // Transfer funds to `to`

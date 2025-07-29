@@ -16,12 +16,12 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-utils/contracts/src/interfaces/IOwnable.sol";
 
 
-contract IAuthorizable is
+abstract contract IAuthorizable is
     IOwnable
 {
     // Event logged when a new address is authorized.
@@ -39,12 +39,12 @@ contract IAuthorizable is
     /// @dev Authorizes an address.
     /// @param target Address to authorize.
     function addAuthorizedAddress(address target)
-        external;
+        external virtual;
 
     /// @dev Removes authorizion of an address.
     /// @param target Address to remove authorization from.
     function removeAuthorizedAddress(address target)
-        external;
+        external virtual;
 
     /// @dev Removes authorizion of an address.
     /// @param target Address to remove authorization from.
@@ -53,12 +53,12 @@ contract IAuthorizable is
         address target,
         uint256 index
     )
-        external;
+        external virtual;
 
     /// @dev Gets all authorized addresses.
     /// @return Array of authorized addresses.
     function getAuthorizedAddresses()
-        external
+        external virtual
         view
         returns (address[] memory);
 }

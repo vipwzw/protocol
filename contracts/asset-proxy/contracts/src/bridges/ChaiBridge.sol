@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "../interfaces/IERC20Bridge.sol";
 import "../interfaces/IChai.sol";
@@ -37,13 +36,14 @@ contract ChaiBridge is
     /// @param amount Amount of asset to transfer.
     /// @return success The magic bytes `0xdc1600f3` if successful.
     function bridgeTransferFrom(
-        address /* tokenAddress */,
+        address toTokenAddress,
         address from,
         address to,
         uint256 amount,
-        bytes calldata /* bridgeData */
+        bytes calldata bridgeData
     )
         external
+        override
         returns (bytes4 success)
     {
         // Ensure that only the `ERC20BridgeProxy` can call this function.
@@ -60,9 +60,9 @@ contract ChaiBridge is
             amount
         );
 
-        (bool success,) = _getChaiAddress().call(drawCalldata);
+        (bool callSuccess,) = _getChaiAddress().call(drawCalldata);
         require(
-            success,
+            callSuccess,
             "ChaiBridge/DRAW_DAI_FAILED"
         );
 

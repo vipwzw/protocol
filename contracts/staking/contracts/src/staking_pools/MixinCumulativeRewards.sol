@@ -16,11 +16,11 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
+// pragma experimental ABIEncoderV2; // Not needed in Solidity 0.8+
 
 import "@0x/contracts-utils/contracts/src/LibFractions.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
+// LibSafeMath removed in Solidity 0.8.28 - using built-in overflow checks
 import "../stake/MixinStakeBalances.sol";
 import "../immutable/MixinConstants.sol";
 
@@ -29,7 +29,7 @@ contract MixinCumulativeRewards is
     MixinStakeBalances,
     MixinConstants
 {
-    using LibSafeMath for uint256;
+    // // using LibSafeMath for uint256; // Removed in Solidity 0.8.28 // Removed in Solidity 0.8.28
 
     /// @dev returns true iff Cumulative Rewards are set
     function _isCumulativeRewardSet(IStructs.Fraction memory cumulativeReward)
@@ -114,7 +114,7 @@ contract MixinCumulativeRewards is
     ///        the interval.
     /// @param beginEpoch Beginning of interval.
     /// @param endEpoch End of interval.
-    /// @return rewards Reward accumulated over interval [beginEpoch, endEpoch]
+    /// @return reward Reward accumulated over interval [beginEpoch, endEpoch]
     function _computeMemberRewardOverInterval(
         bytes32 poolId,
         uint256 memberStakeOverInterval,
@@ -165,7 +165,7 @@ contract MixinCumulativeRewards is
     /// @param poolId Unique ID of pool.
     /// @param epoch The epoch to find the
     /// @return cumulativeReward The cumulative reward for `poolId` at `epoch`.
-    /// @return cumulativeRewardStoredAt Epoch that the `cumulativeReward` is stored at.
+
     function _getCumulativeRewardAtEpoch(bytes32 poolId, uint256 epoch)
         private
         view
@@ -178,7 +178,7 @@ contract MixinCumulativeRewards is
         }
 
         // Return CR at `epoch-1`, given it's set.
-        uint256 lastEpoch = epoch.safeSub(1);
+        uint256 lastEpoch = epoch - 1;
         cumulativeReward = _cumulativeRewardsByPool[poolId][lastEpoch];
         if (_isCumulativeRewardSet(cumulativeReward)) {
             return cumulativeReward;

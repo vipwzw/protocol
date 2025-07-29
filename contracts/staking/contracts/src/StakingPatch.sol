@@ -16,30 +16,23 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
+// pragma experimental ABIEncoderV2; // Not needed in Solidity 0.8+
 
-import "./interfaces/IStaking.sol";
-import "./sys/MixinParams.sol";
-import "./stake/MixinStake.sol";
-import "./fees/MixinExchangeFees.sol";
+import "./Staking.sol";
 
-
-contract StakingPatch is
-    IStaking,
-    MixinParams,
-    MixinStake,
-    MixinExchangeFees
-{
+contract StakingPatch is Staking {
     /// @dev Initialize storage owned by this contract.
     ///      This function should not be called directly.
     ///      The StakingProxy contract will call it in `attachStakingContract()`.
+    ///      This is a patched version that fixes corrupted state.
     function init()
         public
+        override
         onlyAuthorized
     {
         uint256 currentEpoch_ = currentEpoch;
-        uint256 prevEpoch = currentEpoch_.safeSub(1);
+        uint256 prevEpoch = currentEpoch_ - 1; // safeSub removed in 0.8+
 
         // Patch corrupted state
         aggregatedStatsByEpoch[prevEpoch].numPoolsToFinalize = 0;

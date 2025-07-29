@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 
 interface ISolidlyRouter {
     function swapExactTokensForTokensSimple(
@@ -39,7 +39,7 @@ contract MixinSolidly {
         bytes memory bridgeData
     ) internal returns (uint256 boughtAmount) {
         (ISolidlyRouter router, bool stable) = abi.decode(bridgeData, (ISolidlyRouter, bool));
-        sellToken.approveIfBelow(address(router), sellAmount);
+        sellToken.approve(address(router), sellAmount);
 
         boughtAmount = router.swapExactTokensForTokensSimple(
             sellAmount,

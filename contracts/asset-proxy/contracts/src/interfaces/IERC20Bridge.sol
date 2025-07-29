@@ -16,10 +16,10 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
 
-contract IERC20Bridge {
+abstract contract IERC20Bridge {
 
     /// @dev Result of a successful bridge call.
     bytes4 constant internal BRIDGE_SUCCESS = 0xdc1600f3;
@@ -54,6 +54,6 @@ contract IERC20Bridge {
         uint256 amount,
         bytes calldata bridgeData
     )
-        external
+        external virtual
         returns (bytes4 success);
 }

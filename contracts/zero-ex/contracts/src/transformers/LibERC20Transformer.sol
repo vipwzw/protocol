@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
 
 library LibERC20Transformer {
     using LibERC20Token for IERC20Token;
@@ -38,7 +38,7 @@ library LibERC20Transformer {
         if (isTokenETH(token)) {
             to.transfer(amount);
         } else {
-            token.compatTransfer(to, amount);
+            token.transfer(to, amount);
         }
     }
 
@@ -49,10 +49,9 @@ library LibERC20Transformer {
     /// @param amount The transfer amount.
     function unsafeTransformerTransfer(IERC20Token token, address payable to, uint256 amount) internal {
         if (isTokenETH(token)) {
-            (bool sent, ) = to.call{value: amount}("");
-            require(sent, "LibERC20Transformer/FAILED_TO_SEND_ETHER");
+            to.transfer(amount);
         } else {
-            token.compatTransfer(to, amount);
+            token.transfer(to, amount);
         }
     }
 

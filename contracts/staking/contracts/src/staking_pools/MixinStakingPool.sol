@@ -16,23 +16,23 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
+// pragma experimental ABIEncoderV2; // Not needed in Solidity 0.8+
 
-import "@0x/contracts-utils/contracts/src/LibRichErrors.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+// LibSafeMath removed in Solidity 0.8.28 - using built-in overflow checks
 import "../libs/LibStakingRichErrors.sol";
 import "../interfaces/IStructs.sol";
 import "../sys/MixinAbstract.sol";
 import "./MixinStakingPoolRewards.sol";
 
 
-contract MixinStakingPool is
+abstract contract MixinStakingPool is
     MixinAbstract,
     MixinStakingPoolRewards
 {
-    using LibSafeMath for uint256;
-    using LibSafeDowncast for uint256;
+    // // using LibSafeMath for uint256; // Removed in Solidity 0.8.28 // Removed in Solidity 0.8.28
+    // using LibSafeDowncast for uint256; // Removed - using native Solidity 0.8 type casting
 
     /// @dev Asserts that the sender is the operator of the input pool.
     /// @param poolId Pool sender must be operator of.
@@ -48,13 +48,14 @@ contract MixinStakingPool is
     /// @return poolId The unique pool id generated for this pool.
     function createStakingPool(uint32 operatorShare, bool addOperatorAsMaker)
         external
+        virtual
         returns (bytes32 poolId)
     {
         // note that an operator must be payable
         address operator = msg.sender;
 
         // compute unique id for this pool
-        poolId = lastPoolId = bytes32(uint256(lastPoolId).safeAdd(1));
+        poolId = lastPoolId = bytes32(uint256(lastPoolId) + 1);
 
         // sanity check on operator share
         _assertNewOperatorShare(
@@ -74,7 +75,7 @@ contract MixinStakingPool is
         emit StakingPoolCreated(poolId, operator, operatorShare);
 
         if (addOperatorAsMaker) {
-            joinStakingPoolAsMaker(poolId);
+            _joinStakingPoolAsMaker(poolId);
         }
 
         return poolId;
@@ -86,6 +87,7 @@ contract MixinStakingPool is
     function decreaseStakingPoolOperatorShare(bytes32 poolId, uint32 newOperatorShare)
         external
         onlyStakingPoolOperator(poolId)
+        virtual
     {
         // load pool and assert that we can decrease
         uint32 currentOperatorShare = _poolById[poolId].operatorShare;
@@ -107,7 +109,16 @@ contract MixinStakingPool is
     /// @dev Allows caller to join a staking pool as a maker.
     /// @param poolId Unique id of pool.
     function joinStakingPoolAsMaker(bytes32 poolId)
-        public
+        external
+        virtual
+    {
+        _joinStakingPoolAsMaker(poolId);
+    }
+
+    /// @dev Internal function to join a staking pool as a maker.
+    /// @param poolId Unique id of pool.
+    function _joinStakingPoolAsMaker(bytes32 poolId)
+        internal
     {
         address maker = msg.sender;
         poolIdByMaker[maker] = poolId;
@@ -120,8 +131,9 @@ contract MixinStakingPool is
     /// @dev Returns a staking pool
     /// @param poolId Unique id of pool.
     function getStakingPool(bytes32 poolId)
-        public
+        external
         view
+        virtual
         returns (IStructs.Pool memory)
     {
         return _poolById[poolId];

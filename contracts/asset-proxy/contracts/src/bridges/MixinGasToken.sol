@@ -16,7 +16,7 @@
 
 */
 
-pragma solidity ^0.5.16;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-utils/contracts/src/DeploymentConstants.sol";
 import "../interfaces/IGasToken.sol";

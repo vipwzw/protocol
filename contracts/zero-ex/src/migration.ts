@@ -3,13 +3,30 @@ import { TxData, SupportedProvider } from 'ethereum-types';
 import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
-import { deployFromFoundryArtifactAsync } from './foundry-deployer';
 import type {
-    FoundryArtifact,
-    FoundryArtifacts,
+    HardhatArtifact,
+    HardhatArtifacts,
     BootstrapFeatureArtifacts,
     FullFeatureArtifacts,
-} from './foundry-types';
+} from './types';
+
+/**
+ * 从 Hardhat artifact 部署合约
+ */
+async function deployFromHardhatArtifactAsync<T>(
+    ContractClass: any,
+    artifact: HardhatArtifact,
+    provider: SupportedProvider,
+    txDefaults: Partial<TxData>,
+    logDecodeDependencies: HardhatArtifacts,
+    ...constructorArgs: any[]
+): Promise<T> {
+    // 使用 ContractClass 来实例化合约
+    const factory = new ContractClass(provider, artifact.abi, artifact.bytecode);
+    const contract = await factory.deploy(...constructorArgs, { ...txDefaults });
+    await contract.waitForDeployment();
+    return contract;
+}
 import {
     // // FeeCollectorControllerContract // Not available in TypeChain, // Not available in TypeChain output
     FullMigration as FullMigrationContract,
@@ -68,7 +85,7 @@ export async function deployBootstrapFeaturesAsync(
         registry:
             features.registry ||
             (
-                await deployFromFoundryArtifactAsync<SimpleFunctionRegistryFeatureContract>(
+                await deployFromHardhatArtifactAsync<SimpleFunctionRegistryFeatureContract>(
                     SimpleFunctionRegistryFeature__factory,
                     _featureArtifacts.registry,
                     provider,
@@ -79,7 +96,7 @@ export async function deployBootstrapFeaturesAsync(
         ownable:
             features.ownable ||
             (
-                await deployFromFoundryArtifactAsync<OwnableFeatureContract>(
+                await deployFromHardhatArtifactAsync<OwnableFeatureContract>(
                     OwnableFeature__factory,
                     _featureArtifacts.ownable,
                     provider,
@@ -99,7 +116,7 @@ export async function initialMigrateAsync(
     txDefaults: Partial<TxData>,
     features: Partial<BootstrapFeatures> = {},
 ): Promise<ZeroExContract> {
-    const migrator = await deployFromFoundryArtifactAsync<InitialMigrationContract>(
+    const migrator = await deployFromHardhatArtifactAsync<InitialMigrationContract>(
         InitialMigration__factory,
         artifacts.InitialMigration,
         provider,
@@ -107,7 +124,7 @@ export async function initialMigrateAsync(
         artifacts,
         txDefaults.from as string,
     );
-    const zeroEx = await deployFromFoundryArtifactAsync<ZeroExContract>(
+    const zeroEx = await deployFromHardhatArtifactAsync<ZeroExContract>(
         ZeroEx__factory,
         artifacts.ZeroEx,
         provider,
@@ -190,7 +207,7 @@ export async function deployAllFeaturesAsync(
         }
         // FeeCollectorController not available in TypeChain output
         // _config.feeCollectorController = (
-        //     await deployFromFoundryArtifactAsync<FeeCollectorControllerContract>(
+        //     await deployFromHardhatArtifactAsync<FeeCollectorControllerContract>(
         //         FeeCollectorControllerContract,
         //         _featureArtifacts.feeCollectorController,
         //         provider,
@@ -206,7 +223,7 @@ export async function deployAllFeaturesAsync(
         transformERC20:
             features.transformERC20 ||
             (
-                await deployFromFoundryArtifactAsync<TransformERC20FeatureContract>(
+                await deployFromHardhatArtifactAsync<TransformERC20FeatureContract>(
                     TransformERC20Feature__factory,
                     _featureArtifacts.transformERC20,
                     provider,
@@ -217,7 +234,7 @@ export async function deployAllFeaturesAsync(
         metaTransactions:
             features.metaTransactions ||
             (
-                await deployFromFoundryArtifactAsync<MetaTransactionsFeatureContract>(
+                await deployFromHardhatArtifactAsync<MetaTransactionsFeatureContract>(
                     MetaTransactionsFeature__factory,
                     _featureArtifacts.metaTransactions,
                     provider,
@@ -229,7 +246,7 @@ export async function deployAllFeaturesAsync(
         nativeOrders:
             features.nativeOrders ||
             (
-                await deployFromFoundryArtifactAsync<NativeOrdersFeatureContract>(
+                await deployFromHardhatArtifactAsync<NativeOrdersFeatureContract>(
                     NativeOrdersFeature__factory,
                     _featureArtifacts.nativeOrders,
                     provider,
@@ -245,7 +262,7 @@ export async function deployAllFeaturesAsync(
         otcOrders:
             features.otcOrders ||
             (
-                await deployFromFoundryArtifactAsync<OtcOrdersFeatureContract>(
+                await deployFromHardhatArtifactAsync<OtcOrdersFeatureContract>(
                     OtcOrdersFeature__factory,
                     _featureArtifacts.otcOrders,
                     provider,
@@ -269,7 +286,7 @@ export async function fullMigrateAsync(
     config: Partial<FullMigrationConfig> = {},
     featureArtifacts: Partial<FullFeatureArtifacts> = {},
 ): Promise<ZeroExContract> {
-    const migrator = await deployFromFoundryArtifactAsync<FullMigrationContract>(
+    const migrator = await deployFromHardhatArtifactAsync<FullMigrationContract>(
         FullMigration__factory,
         artifacts.FullMigration,
         provider,
@@ -277,7 +294,7 @@ export async function fullMigrateAsync(
         artifacts,
         txDefaults.from as string,
     );
-    const zeroEx = await deployFromFoundryArtifactAsync<ZeroExContract>(
+    const zeroEx = await deployFromHardhatArtifactAsync<ZeroExContract>(
         ZeroEx__factory,
         artifacts.ZeroEx,
         provider,

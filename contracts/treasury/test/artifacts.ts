@@ -5,7 +5,7 @@
  */
 
 // Hardhat artifacts import - Use Hardhat format instead of Foundry
-import * as DummyERC20TokenHardhatArtifact from '../../erc20/artifacts/src/DummyERC20Token.sol/DummyERC20Token.json';
+import * as DummyERC20TokenHardhatArtifact from '../../erc20/artifacts/contracts/test/DummyERC20Token.sol/DummyERC20Token.json';
 import * as DefaultPoolOperatorHardhatArtifact from '../artifacts/contracts/src/DefaultPoolOperator.sol/DefaultPoolOperator.json';
 import * as ZrxTreasuryHardhatArtifact from '../artifacts/contracts/src/ZrxTreasury.sol/ZrxTreasury.json';
 import * as TreasuryStakingHardhatArtifact from '../artifacts/contracts/src/TreasuryStaking.sol/TreasuryStaking.json';

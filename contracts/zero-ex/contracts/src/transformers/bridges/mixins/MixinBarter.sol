@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 
 contract MixinBarter {
@@ -28,7 +28,7 @@ contract MixinBarter {
         bytes memory bridgeData
     ) internal returns (uint256 boughtAmount) {
         (address barterRouter, bytes memory data) = abi.decode(bridgeData, (address, bytes));
-        sellToken.approveIfBelow(barterRouter, sellAmount);
+        sellToken.approve(barterRouter, sellAmount);
 
         (bool success, bytes memory resultData) = barterRouter.call(data);
         if (!success) {

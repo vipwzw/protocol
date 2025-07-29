@@ -16,17 +16,17 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
 
-contract IContractRegistry {
+abstract contract IContractRegistry {
     function addressOf(
         bytes32 contractName
-    ) external returns(address);
+    ) external virtual returns(address);
 }
 
 
-contract IBancorNetwork {
+abstract contract IBancorNetwork {
     function convertByPath(
         address[] calldata _path,
         uint256 _amount,
@@ -34,5 +34,5 @@ contract IBancorNetwork {
         address _beneficiary,
         address _affiliateAccount,
         uint256 _affiliateFee
-    ) external payable returns (uint256);
+    ) external payable virtual returns (uint256);
 }

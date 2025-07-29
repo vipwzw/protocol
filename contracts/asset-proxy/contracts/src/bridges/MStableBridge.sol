@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
@@ -32,6 +31,8 @@ contract MStableBridge is
     IWallet,
     DeploymentConstants
 {
+    // ERC1271 magic value returned when signature is valid
+    bytes4 internal constant LEGACY_WALLET_MAGIC_VALUE = 0xb0671381;
 
     /// @dev Swaps specified tokens against the mStable mUSD contract
     /// @param toTokenAddress The token to give to `to` (i.e DAI, USDC, USDT).
@@ -49,6 +50,7 @@ contract MStableBridge is
         bytes calldata bridgeData
     )
         external
+        override
         returns (bytes4 success)
     {
         // Decode the bridge data to get the `fromTokenAddress`.

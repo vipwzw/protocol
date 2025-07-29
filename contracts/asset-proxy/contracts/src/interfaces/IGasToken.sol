@@ -16,25 +16,25 @@
 
 */
 
-pragma solidity ^0.5.15;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 
 
-contract IGasToken is IERC20Token {
+abstract contract IGasToken is IERC20Token {
 
     /// @dev Frees up to `value` sub-tokens
     /// @param value The amount of tokens to free
-    /// @return How many tokens were freed
-    function freeUpTo(uint256 value) external returns (uint256 freed);
+    /// @return freed How many tokens were freed
+    function freeUpTo(uint256 value) external virtual returns (uint256 freed);
 
     /// @dev Frees up to `value` sub-tokens owned by `from`
     /// @param from The owner of tokens to spend
     /// @param value The amount of tokens to free
-    /// @return How many tokens were freed
-    function freeFromUpTo(address from, uint256 value) external returns (uint256 freed);
+    /// @return freed How many tokens were freed
+    function freeFromUpTo(address from, uint256 value) external virtual returns (uint256 freed);
 
     /// @dev Mints `value` amount of tokens
     /// @param value The amount of tokens to mint
-    function mint(uint256 value) external;
+    function mint(uint256 value) external virtual;
 }

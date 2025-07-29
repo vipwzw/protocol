@@ -16,10 +16,10 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.28;
 
-import "../libs/LibSafeDowncast.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
+// import "../libs/LibSafeDowncast.sol"; // Removed - using native Solidity 0.8 type casting
+// LibSafeMath removed in Solidity 0.8.28 - using built-in overflow checks
 import "../interfaces/IStructs.sol";
 import "../sys/MixinScheduler.sol";
 
@@ -28,8 +28,8 @@ import "../sys/MixinScheduler.sol";
 contract MixinStakeStorage is
     MixinScheduler
 {
-    using LibSafeMath for uint256;
-    using LibSafeDowncast for uint256;
+    // // using LibSafeMath for uint256; // Removed in Solidity 0.8.28 // Removed in Solidity 0.8.28
+    // using LibSafeDowncast for uint256; // Removed - using native Solidity 0.8 type casting
 
     /// @dev Moves stake between states: 'undelegated' or 'delegated'.
     ///      This change comes into effect next epoch.
@@ -63,8 +63,8 @@ contract MixinStakeStorage is
         }
 
         // move stake for next epoch
-        from.nextEpochBalance = uint256(from.nextEpochBalance).safeSub(amount).downcastToUint96();
-        to.nextEpochBalance = uint256(to.nextEpochBalance).safeAdd(amount).downcastToUint96();
+        from.nextEpochBalance = uint96(uint256(from.nextEpochBalance) - amount);
+        to.nextEpochBalance = uint96(uint256(to.nextEpochBalance) + amount);
 
         // update state in storage
         _storeBalance(fromPtr, from);
@@ -73,7 +73,7 @@ contract MixinStakeStorage is
 
     /// @dev Loads a balance from storage and updates its fields to reflect values for the current epoch.
     /// @param balancePtr to load.
-    /// @return current balance.
+    /// @return balance current balance.
     function _loadCurrentBalance(IStructs.StoredBalance storage balancePtr)
         internal
         view
@@ -82,7 +82,7 @@ contract MixinStakeStorage is
         balance = balancePtr;
         uint256 currentEpoch_ = currentEpoch;
         if (currentEpoch_ > balance.currentEpoch) {
-            balance.currentEpoch = currentEpoch_.downcastToUint64();
+            balance.currentEpoch = uint64(currentEpoch_);
             balance.currentEpochBalance = balance.nextEpochBalance;
         }
         return balance;
@@ -96,8 +96,8 @@ contract MixinStakeStorage is
     {
         // Remove stake from balance
         IStructs.StoredBalance memory balance = _loadCurrentBalance(balancePtr);
-        balance.nextEpochBalance = uint256(balance.nextEpochBalance).safeAdd(amount).downcastToUint96();
-        balance.currentEpochBalance = uint256(balance.currentEpochBalance).safeAdd(amount).downcastToUint96();
+        balance.nextEpochBalance = uint96(uint256(balance.nextEpochBalance) + amount);
+        balance.currentEpochBalance = uint96(uint256(balance.currentEpochBalance) + amount);
 
         // update state
         _storeBalance(balancePtr, balance);
@@ -111,8 +111,8 @@ contract MixinStakeStorage is
     {
         // Remove stake from balance
         IStructs.StoredBalance memory balance = _loadCurrentBalance(balancePtr);
-        balance.nextEpochBalance = uint256(balance.nextEpochBalance).safeSub(amount).downcastToUint96();
-        balance.currentEpochBalance = uint256(balance.currentEpochBalance).safeSub(amount).downcastToUint96();
+        balance.nextEpochBalance = uint96(uint256(balance.nextEpochBalance) - amount);
+        balance.currentEpochBalance = uint96(uint256(balance.currentEpochBalance) - amount);
 
         // update state
         _storeBalance(balancePtr, balance);
@@ -126,7 +126,7 @@ contract MixinStakeStorage is
     {
         // Add stake to balance
         IStructs.StoredBalance memory balance = _loadCurrentBalance(balancePtr);
-        balance.nextEpochBalance = uint256(balance.nextEpochBalance).safeAdd(amount).downcastToUint96();
+        balance.nextEpochBalance = uint96(uint256(balance.nextEpochBalance) + amount);
 
         // update state
         _storeBalance(balancePtr, balance);
@@ -140,7 +140,7 @@ contract MixinStakeStorage is
     {
         // Remove stake from balance
         IStructs.StoredBalance memory balance = _loadCurrentBalance(balancePtr);
-        balance.nextEpochBalance = uint256(balance.nextEpochBalance).safeSub(amount).downcastToUint96();
+        balance.nextEpochBalance = uint96(uint256(balance.nextEpochBalance) - amount);
 
         // update state
         _storeBalance(balancePtr, balance);
@@ -165,7 +165,7 @@ contract MixinStakeStorage is
     /// @dev Returns true iff storage pointers resolve to same storage location.
     /// @param balancePtrA first storage pointer.
     /// @param balancePtrB second storage pointer.
-    /// @return true iff pointers are equal.
+    /// @return areEqual true iff pointers are equal.
     function _arePointersEqual(
         // solhint-disable-next-line no-unused-vars
         IStructs.StoredBalance storage balancePtrA,
@@ -178,8 +178,8 @@ contract MixinStakeStorage is
     {
         assembly {
             areEqual := and(
-                eq(balancePtrA_slot, balancePtrB_slot),
-                eq(balancePtrA_offset, balancePtrB_offset)
+                eq(balancePtrA.slot, balancePtrB.slot),
+                eq(balancePtrA.offset, balancePtrB.offset)
             )
         }
         return areEqual;

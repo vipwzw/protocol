@@ -15,9 +15,9 @@
 pragma solidity ^0.8.0;
 
 import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
 import "../transformers/LibERC20Transformer.sol";
 import "../vendor/ILiquidityProvider.sol";
 import "../vendor/IMooniswapPool.sol";
@@ -65,7 +65,7 @@ contract MooniswapLiquidityProvider is ILiquidityProvider {
             abi.decode(auxiliaryData, (IMooniswapPool)),
             recipient
         );
-        outputToken.compatTransfer(recipient, boughtAmount);
+        outputToken.transfer(recipient, boughtAmount);
     }
 
     /// @dev Trades ETH for token. ETH must either be attached to this function
@@ -90,7 +90,7 @@ contract MooniswapLiquidityProvider is ILiquidityProvider {
             abi.decode(auxiliaryData, (IMooniswapPool)),
             recipient
         );
-        outputToken.compatTransfer(recipient, boughtAmount);
+        outputToken.transfer(recipient, boughtAmount);
     }
 
     /// @dev Trades token for ETH. The token must be sent to the contract prior
@@ -150,7 +150,7 @@ contract MooniswapLiquidityProvider is ILiquidityProvider {
         } else {
             // Selling a regular ERC20.
             require(inputToken != outputToken, "MooniswapLiquidityProvider/SAME_TOKEN");
-            inputToken.approveIfBelow(address(pool), sellAmount);
+            inputToken.approve(address(pool), sellAmount);
         }
 
         boughtAmount = pool.swap{value: ethValue}(

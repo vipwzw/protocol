@@ -16,21 +16,19 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-utils/contracts/src/LibBytes.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
 import "@0x/contracts-erc1155/contracts/src/interfaces/IERC1155.sol";
-import "../archive/MixinAuthorizable.sol";
+import "@0x/contracts-utils/contracts/src/Authorizable.sol";
 import "./interfaces/IAssetProxy.sol";
 
 
 contract ERC1155Proxy is
-    MixinAuthorizable,
-    IAssetProxy
+    IAssetProxy,
+    Authorizable
 {
     using LibBytes for bytes;
-    using LibSafeMath for uint256;
 
     // Id of this proxy.
     bytes4 constant internal PROXY_ID = bytes4(keccak256("ERC1155Assets(address,uint256[],uint256[],bytes)"));
@@ -48,6 +46,7 @@ contract ERC1155Proxy is
         uint256 amount
     )
         external
+        override
         onlyAuthorized
     {
         // Decode params from `assetData`
@@ -71,7 +70,7 @@ contract ERC1155Proxy is
             // to avoid copying over `ids` or `data`. This is possible if they are
             // identical to `values` and the offsets for each are pointing to the
             // same location in the ABI encoded calldata.
-            scaledValues[i] = values[i].safeMul(amount);
+            scaledValues[i] = values[i] * amount;
         }
 
         // Execute `safeBatchTransferFrom` call
@@ -90,6 +89,7 @@ contract ERC1155Proxy is
     function getProxyId()
         external
         pure
+        override
         returns (bytes4)
     {
         return PROXY_ID;

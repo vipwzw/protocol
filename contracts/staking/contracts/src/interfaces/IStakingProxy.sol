@@ -16,13 +16,13 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
+// pragma experimental ABIEncoderV2; // Not needed in Solidity 0.8+
 
 import "./IStructs.sol";
 
 
-contract IStakingProxy {
+abstract contract IStakingProxy {
 
     /// @dev Emitted by StakingProxy when a staking contract is attached.
     /// @param newStakingContractAddress Address of newly attached staking contract.
@@ -37,12 +37,12 @@ contract IStakingProxy {
     /// Note that this is callable only by an authorized address.
     /// @param _stakingContract Address of staking contract.
     function attachStakingContract(address _stakingContract)
-        external;
+        external virtual;
 
     /// @dev Detach the current staking contract.
     /// Note that this is callable only by an authorized address.
     function detachStakingContract()
-        external;
+        external virtual;
 
     /// @dev Asserts that an epoch is between 5 and 30 days long.
     //       Asserts that 0 < cobb douglas alpha value <= 1.
@@ -51,5 +51,5 @@ contract IStakingProxy {
     //       Asserts that all addresses are initialized.
     function assertValidStorageParams()
         external
-        view;
+        view virtual;
 }

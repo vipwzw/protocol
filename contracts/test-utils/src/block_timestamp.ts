@@ -21,8 +21,7 @@ export async function increaseTimeAndMineBlockAsync(seconds: number): Promise<nu
     // that a block is actually mined. The contract looks at the
     // last mined block for the timestamp.
     await web3Wrapper.awaitTransactionSuccessAsync(
-        await web3Wrapper.sendTransactionAsync({ from: firstAccount, to: firstAccount, value: 0 }),
-        constants.AWAIT_TRANSACTION_MINED_MS,
+        await web3Wrapper.sendTransactionAsync({ from: firstAccount, to: firstAccount, value: 0 })
     );
 
     return offset;
@@ -34,7 +33,7 @@ export async function increaseTimeAndMineBlockAsync(seconds: number): Promise<nu
  */
 export async function getLatestBlockTimestampAsync(): Promise<number> {
     const currentBlockIfExists = await web3Wrapper.getBlockIfExistsAsync('latest');
-    if (currentBlockIfExists === undefined) {
+    if (!currentBlockIfExists) {
         throw new Error(`Unable to fetch latest block.`);
     }
     return currentBlockIfExists.timestamp;

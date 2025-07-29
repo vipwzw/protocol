@@ -5,23 +5,29 @@
  */
 import { ContractArtifact } from 'ethereum-types';
 
-import * as IStaking from '../generated-artifacts/IStaking.json';
-import * as IStakingEvents from '../generated-artifacts/IStakingEvents.json';
-import * as IStakingProxy from '../generated-artifacts/IStakingProxy.json';
-import * as IZrxVault from '../generated-artifacts/IZrxVault.json';
-import * as LibStakingRichErrors from '../generated-artifacts/LibStakingRichErrors.json';
-import * as Staking from '../generated-artifacts/Staking.json';
-import * as StakingProxy from '../generated-artifacts/StakingProxy.json';
-import * as TestStaking from '../generated-artifacts/TestStaking.json';
-import * as ZrxVault from '../generated-artifacts/ZrxVault.json';
+// TODO: Uncomment these imports once Hardhat compilation generates the required artifacts
+// Main contracts
+// import * as IStaking from '../artifacts/contracts/src/interfaces/IStaking.sol/IStaking.json';
+// import * as IStakingEvents from '../artifacts/contracts/src/interfaces/IStakingEvents.sol/IStakingEvents.json';
+// import * as IStakingProxy from '../artifacts/contracts/src/interfaces/IStakingProxy.sol/IStakingProxy.json';
+// import * as IZrxVault from '../artifacts/contracts/src/interfaces/IZrxVault.sol/IZrxVault.json';
+// import * as LibStakingRichErrors from '../artifacts/contracts/src/libs/LibStakingRichErrors.sol/LibStakingRichErrors.json';
+// import * as Staking from '../artifacts/contracts/src/Staking.sol/Staking.json';
+// import * as StakingProxy from '../artifacts/contracts/src/StakingProxy.sol/StakingProxy.json';
+// import * as ZrxVault from '../artifacts/contracts/src/ZrxVault.sol/ZrxVault.json';
+
+// Test contracts
+// import * as TestStaking from '../artifacts/contracts/test/TestStaking.sol/TestStaking.json';
+
 export const artifacts = {
-    IStaking: IStaking as ContractArtifact,
-    IStakingEvents: IStakingEvents as ContractArtifact,
-    IStakingProxy: IStakingProxy as ContractArtifact,
-    IZrxVault: IZrxVault as ContractArtifact,
-    LibStakingRichErrors: LibStakingRichErrors as ContractArtifact,
-    Staking: Staking as ContractArtifact,
-    StakingProxy: StakingProxy as ContractArtifact,
-    ZrxVault: ZrxVault as ContractArtifact,
-    TestStaking: TestStaking as ContractArtifact,
+    // TODO: Re-enable these exports once artifacts are available
+    // IStaking: IStaking as ContractArtifact,
+    // IStakingEvents: IStakingEvents as ContractArtifact,
+    // IStakingProxy: IStakingProxy as ContractArtifact,
+    // IZrxVault: IZrxVault as ContractArtifact,
+    // LibStakingRichErrors: LibStakingRichErrors as ContractArtifact,
+    // Staking: Staking as ContractArtifact,
+    // StakingProxy: StakingProxy as ContractArtifact,
+    // ZrxVault: ZrxVault as ContractArtifact,
+    // TestStaking: TestStaking as ContractArtifact,
 };

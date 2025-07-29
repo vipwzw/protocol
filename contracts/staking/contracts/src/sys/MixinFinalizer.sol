@@ -16,11 +16,11 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
+// pragma experimental ABIEncoderV2; // Not needed in Solidity 0.8+
 
-import "@0x/contracts-utils/contracts/src/LibRichErrors.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+// LibSafeMath removed in Solidity 0.8.28 - using built-in overflow checks
 import "../libs/LibCobbDouglas.sol";
 import "../libs/LibStakingRichErrors.sol";
 import "../interfaces/IStructs.sol";
@@ -30,18 +30,19 @@ import "../staking_pools/MixinStakingPoolRewards.sol";
 contract MixinFinalizer is
     MixinStakingPoolRewards
 {
-    using LibSafeMath for uint256;
+    // using LibSafeMath for uint256; // Removed in Solidity 0.8.28
 
     /// @dev Begins a new epoch, preparing the prior one for finalization.
     ///      Throws if not enough time has passed between epochs or if the
     ///      previous epoch was not fully finalized.
-    /// @return numPoolsToFinalize The number of unfinalized pools.
+    /// @return numPoolsToFinalize_ The number of unfinalized pools.
     function endEpoch()
         external
+        virtual
         returns (uint256)
     {
         uint256 currentEpoch_ = currentEpoch;
-        uint256 prevEpoch = currentEpoch_.safeSub(1);
+        uint256 prevEpoch = currentEpoch_ - 1;
 
         // Make sure the previous epoch has been fully finalized.
         uint256 numPoolsToFinalizeFromPrevEpoch = aggregatedStatsByEpoch[prevEpoch].numPoolsToFinalize;
@@ -89,10 +90,11 @@ contract MixinFinalizer is
     /// @param poolId The pool ID to finalize.
     function finalizePool(bytes32 poolId)
         external
+        virtual
     {
         // Compute relevant epochs
         uint256 currentEpoch_ = currentEpoch;
-        uint256 prevEpoch = currentEpoch_.safeSub(1);
+        uint256 prevEpoch = currentEpoch_ - 1;
 
         // Load the aggregated stats into memory; noop if no pools to finalize.
         IStructs.AggregatedStats memory aggregatedStats = aggregatedStatsByEpoch[prevEpoch];
@@ -130,17 +132,17 @@ contract MixinFinalizer is
             membersReward
         );
 
-        uint256 totalReward = operatorReward.safeAdd(membersReward);
+        uint256 totalReward = operatorReward + membersReward;
 
         // Increase `totalRewardsFinalized`.
         aggregatedStatsByEpoch[prevEpoch].totalRewardsFinalized =
             aggregatedStats.totalRewardsFinalized =
-            aggregatedStats.totalRewardsFinalized.safeAdd(totalReward);
+            aggregatedStats.totalRewardsFinalized + totalReward;
 
         // Decrease the number of unfinalized pools left.
         aggregatedStatsByEpoch[prevEpoch].numPoolsToFinalize =
             aggregatedStats.numPoolsToFinalize =
-            aggregatedStats.numPoolsToFinalize.safeSub(1);
+            aggregatedStats.numPoolsToFinalize - 1;
 
         // If there are no more unfinalized pools remaining, the epoch is
         // finalized.
@@ -148,7 +150,7 @@ contract MixinFinalizer is
             emit EpochFinalized(
                 prevEpoch,
                 aggregatedStats.totalRewardsFinalized,
-                aggregatedStats.rewardsAvailable.safeSub(aggregatedStats.totalRewardsFinalized)
+                aggregatedStats.rewardsAvailable - aggregatedStats.totalRewardsFinalized
             );
         }
     }
@@ -156,18 +158,19 @@ contract MixinFinalizer is
     /// @dev Computes the reward owed to a pool during finalization.
     ///      Does nothing if the pool is already finalized.
     /// @param poolId The pool's ID.
-    /// @return totalReward The total reward owed to a pool.
+    /// @return reward The total reward owed to a pool.
     /// @return membersStake The total stake for all non-operator members in
     ///         this pool.
     function _getUnfinalizedPoolRewards(bytes32 poolId)
         internal
         view
+        override
         returns (
             uint256 reward,
             uint256 membersStake
         )
     {
-        uint256 prevEpoch = currentEpoch.safeSub(1);
+        uint256 prevEpoch = currentEpoch - 1;
         IStructs.PoolStats memory poolStats = poolStatsByEpoch[poolId][prevEpoch];
         reward = _getUnfinalizedPoolRewardsFromPoolStats(poolStats, aggregatedStatsByEpoch[prevEpoch]);
         membersStake = poolStats.membersStake;
@@ -179,7 +182,7 @@ contract MixinFinalizer is
     {
         uint256 ethBalance = address(this).balance;
         if (ethBalance != 0) {
-            getWethContract().deposit.value(ethBalance)();
+            _getWethContract().deposit{value: ethBalance}();
         }
     }
 
@@ -190,8 +193,8 @@ contract MixinFinalizer is
         view
         returns (uint256 wethBalance)
     {
-        wethBalance = getWethContract().balanceOf(address(this))
-            .safeSub(wethReservedForPoolRewards);
+        wethBalance = _getWethContract().balanceOf(address(this))
+            - wethReservedForPoolRewards;
 
         return wethBalance;
     }
@@ -201,8 +204,9 @@ contract MixinFinalizer is
     function _assertPoolFinalizedLastEpoch(bytes32 poolId)
         internal
         view
+        override
     {
-        uint256 prevEpoch = currentEpoch.safeSub(1);
+        uint256 prevEpoch = currentEpoch - 1;
         IStructs.PoolStats memory poolStats = poolStatsByEpoch[poolId][prevEpoch];
 
         // A pool that has any fees remaining has not been finalized
@@ -247,7 +251,7 @@ contract MixinFinalizer is
         // Clip the reward to always be under
         // `rewardsAvailable - totalRewardsPaid`,
         // in case cobb-douglas overflows, which should be unlikely.
-        uint256 rewardsRemaining = aggregatedStats.rewardsAvailable.safeSub(aggregatedStats.totalRewardsFinalized);
+        uint256 rewardsRemaining = aggregatedStats.rewardsAvailable - aggregatedStats.totalRewardsFinalized;
         if (rewardsRemaining < rewards) {
             rewards = rewardsRemaining;
         }

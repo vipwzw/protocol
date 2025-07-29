@@ -66,7 +66,7 @@ export const orderUtils = {
     },
     generatePseudoRandomOrderHash(): string {
         const randomBigNum = generatePseudoRandomSalt();
-        const randomHash = hexUtils.hash(randomBigNum);
+        const randomHash = hexUtils.hash(randomBigNum.toString());
         return randomHash;
     },
 };

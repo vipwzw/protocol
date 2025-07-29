@@ -16,8 +16,8 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
+// pragma experimental ABIEncoderV2; // Not needed in Solidity 0.8+
 
 import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
 import "./IStructs.sol";
@@ -29,7 +29,7 @@ interface IStaking {
     /// @dev Adds a new exchange address
     /// @param addr Address of exchange contract to add
     function addExchangeAddress(address addr)
-        external;
+        external virtual;
 
     /// @dev Create a new staking pool. The sender will be the operator of this pool.
     /// Note that an operator must be payable.
@@ -44,12 +44,12 @@ interface IStaking {
     /// @param poolId Unique Id of pool.
     /// @param newOperatorShare The newly decreased percentage of any rewards owned by the operator.
     function decreaseStakingPoolOperatorShare(bytes32 poolId, uint32 newOperatorShare)
-        external;
+        external virtual;
 
     /// @dev Begins a new epoch, preparing the prior one for finalization.
     ///      Throws if not enough time has passed between epochs or if the
     ///      previous epoch was not fully finalized.
-    /// @return numPoolsToFinalize The number of unfinalized pools.
+    /// @return numPoolsToFinalize_ The number of unfinalized pools.
     function endEpoch()
         external
         returns (uint256);
@@ -61,18 +61,18 @@ interface IStaking {
     ///      finalized or did not earn rewards in the previous epoch.
     /// @param poolId The pool ID to finalize.
     function finalizePool(bytes32 poolId)
-        external;
+        external virtual;
 
     /// @dev Initialize storage owned by this contract.
     ///      This function should not be called directly.
     ///      The StakingProxy contract will call it in `attachStakingContract()`.
     function init()
-        external;
+        external virtual;
 
     /// @dev Allows caller to join a staking pool as a maker.
     /// @param poolId Unique id of pool.
     function joinStakingPoolAsMaker(bytes32 poolId)
-        external;
+        external virtual;
 
     /// @dev Moves stake between statuses: 'undelegated' or 'delegated'.
     ///      Delegated stake can also be moved between pools.
@@ -85,7 +85,7 @@ interface IStaking {
         IStructs.StakeInfo calldata to,
         uint256 amount
     )
-        external;
+        external virtual;
 
     /// @dev Pays a protocol fee in ETH.
     /// @param makerAddress The address of the order's maker.
@@ -102,7 +102,7 @@ interface IStaking {
     /// @dev Removes an existing exchange address
     /// @param addr Address of exchange contract to remove
     function removeExchangeAddress(address addr)
-        external;
+        external virtual;
 
     /// @dev Set all configurable parameters at once.
     /// @param _epochDurationInSeconds Minimum seconds between epochs.
@@ -117,31 +117,31 @@ interface IStaking {
         uint32 _cobbDouglasAlphaNumerator,
         uint32 _cobbDouglasAlphaDenominator
     )
-        external;
+        external virtual;
 
     /// @dev Stake ZRX tokens. Tokens are deposited into the ZRX Vault.
     ///      Unstake to retrieve the ZRX. Stake is in the 'Active' status.
     /// @param amount of ZRX to stake.
     function stake(uint256 amount)
-        external;
+        external virtual;
 
     /// @dev Unstake. Tokens are withdrawn from the ZRX Vault and returned to
     ///      the staker. Stake must be in the 'undelegated' status in both the
     ///      current and next epoch in order to be unstaked.
     /// @param amount of ZRX to unstake.
     function unstake(uint256 amount)
-        external;
+        external virtual;
 
     /// @dev Withdraws the caller's WETH rewards that have accumulated
     ///      until the last epoch.
     /// @param poolId Unique id of pool.
     function withdrawDelegatorRewards(bytes32 poolId)
-        external;
+        external virtual;
 
     /// @dev Computes the reward balance in ETH of a specific member of a pool.
     /// @param poolId Unique id of pool.
     /// @param member The member of the pool.
-    /// @return totalReward Balance in ETH.
+    /// @return reward Balance in_ ETH.
     function computeRewardBalanceOfDelegator(bytes32 poolId, address member)
         external
         view
@@ -149,7 +149,7 @@ interface IStaking {
 
     /// @dev Computes the reward balance in ETH of the operator of a pool.
     /// @param poolId Unique id of pool.
-    /// @return totalReward Balance in ETH.
+    /// @return reward Balance in_ ETH.
     function computeRewardBalanceOfOperator(bytes32 poolId)
         external
         view
@@ -166,7 +166,7 @@ interface IStaking {
 
     /// @dev Gets global stake for a given status.
     /// @param stakeStatus UNDELEGATED or DELEGATED
-    /// @return Global stake for given status.
+    /// @return balance Global stake for given status.
     function getGlobalStakeByStatus(IStructs.StakeStatus stakeStatus)
         external
         view
@@ -175,7 +175,7 @@ interface IStaking {
     /// @dev Gets an owner's stake balances by status.
     /// @param staker Owner of stake.
     /// @param stakeStatus UNDELEGATED or DELEGATED
-    /// @return Owner's stake balances for given status.
+    /// @return balance Owner's stake balances for given status.
     function getOwnerStakeByStatus(
         address staker,
         IStructs.StakeStatus stakeStatus
@@ -203,7 +203,7 @@ interface IStaking {
 
     /// @param staker of stake.
     /// @param poolId Unique Id of pool.
-    /// @return Stake delegated to pool by staker.
+    /// @return balance Stake delegated to pool by staker.
     function getStakeDelegatedToPoolByOwner(address staker, bytes32 poolId)
         external
         view
@@ -227,7 +227,7 @@ interface IStaking {
     /// @dev Returns the total stake delegated to a specific staking pool,
     ///      across all members.
     /// @param poolId Unique Id of pool.
-    /// @return Total stake delegated to pool.
+    /// @return balance Total stake delegated to pool.
     function getTotalStakeDelegatedToPool(bytes32 poolId)
         external
         view
@@ -235,7 +235,7 @@ interface IStaking {
 
     /// @dev An overridable way to access the deployed WETH contract.
     ///      Must be view to allow overrides to access state.
-    /// @return wethContract The WETH contract instance.
+    /// @return wethContract The_ WETH contract instance.
     function getWethContract()
         external
         view

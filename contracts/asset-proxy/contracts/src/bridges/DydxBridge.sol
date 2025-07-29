@@ -16,11 +16,9 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-utils/contracts/src/DeploymentConstants.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
 import "@0x/contracts-exchange-libs/contracts/src/LibMath.sol";
 import "../interfaces/IERC20Bridge.sol";
 import "../interfaces/IDydxBridge.sol";
@@ -32,8 +30,6 @@ contract DydxBridge is
     IDydxBridge,
     DeploymentConstants
 {
-
-    using LibSafeMath for uint256;
 
     /// @dev Callback for `IERC20Bridge`. Deposits or withdraws tokens from a dydx account.
     ///      Notes:
@@ -47,16 +43,17 @@ contract DydxBridge is
     /// @param from The sender of the tokens and owner of the dydx account.
     /// @param to The recipient of the tokens.
     /// @param amount Minimum amount of `toTokenAddress` tokens to deposit or withdraw.
-    /// @param encodedBridgeData An abi-encoded `BridgeData` struct.
+    /// @param bridgeData An abi-encoded `BridgeData` struct.
     /// @return success The magic bytes if successful.
     function bridgeTransferFrom(
-        address, /* toTokenAddress */
+        address toTokenAddress,
         address from,
         address to,
         uint256 amount,
-        bytes calldata encodedBridgeData
+        bytes calldata bridgeData
     )
         external
+        override
         returns (bytes4 success)
     {
         // Ensure that only the `ERC20BridgeProxy` can call this function.
@@ -66,17 +63,17 @@ contract DydxBridge is
         );
 
         // Decode bridge data.
-        (BridgeData memory bridgeData) = abi.decode(encodedBridgeData, (BridgeData));
+        (BridgeData memory data) = abi.decode(bridgeData, (BridgeData));
 
         // The dydx accounts are owned by the `from` address.
-        IDydx.AccountInfo[] memory accounts = _createAccounts(from, bridgeData);
+        IDydx.AccountInfo[] memory accounts = _createAccounts(from, data);
 
         // Create dydx actions to run on the dydx accounts.
         IDydx.ActionArgs[] memory actions = _createActions(
             from,
             to,
             amount,
-            bridgeData
+            data
         );
 
         // Run operation. This will revert on failure.

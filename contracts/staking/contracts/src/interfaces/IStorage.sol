@@ -16,8 +16,8 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
+// pragma experimental ABIEncoderV2; // Not needed in Solidity 0.8+
 
 import "../interfaces/IZrxVault.sol";
 import "../interfaces/IStructs.sol";

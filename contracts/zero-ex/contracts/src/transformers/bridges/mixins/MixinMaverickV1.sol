@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 
 interface IMaverickV1Router {
     struct ExactInputSingleParams {
@@ -44,7 +44,7 @@ contract MixinMaverickV1 {
         (IMaverickV1Router router, address pool) = abi.decode(bridgeData, (IMaverickV1Router, address));
 
         // Grant the MaverickV1 router an allowance to sell the sellToken
-        sellToken.approveIfBelow(address(router), sellAmount);
+        sellToken.approve(address(router), sellAmount);
 
         boughtAmount = router.exactInputSingle(
             IMaverickV1Router.ExactInputSingleParams({

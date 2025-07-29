@@ -1,10 +1,20 @@
 import { BlockchainLifecycle } from './blockchain_lifecycle'; // Custom import
-import { TxData, Web3Wrapper } from '@0x/web3-wrapper';
+import { ethers } from 'ethers';
 import * as _ from 'lodash';
 import * as mocha from 'mocha';
 import * as process from 'process';
 
 import { provider, txDefaults, web3Wrapper } from './web3_wrapper';
+
+// Define TxData interface for compatibility
+interface TxData {
+    from?: string;
+    to?: string;
+    value?: bigint;
+    gas?: number;
+    gasPrice?: number;
+    data?: string;
+}
 
 export type ISuite = mocha.ISuite;
 export type ISuiteCallbackContext = mocha.ISuiteCallbackContext;
@@ -62,7 +72,7 @@ export interface BlockchainTestsEnvironment {
     blockchainLifecycle: BlockchainLifecycle;
     provider: any; // Changed from Web3ProviderEngine
     txDefaults: Partial<TxData>;
-    web3Wrapper: Web3Wrapper;
+    web3Wrapper: typeof web3Wrapper;
     accounts: string[];
 }
 
@@ -70,7 +80,7 @@ class BlockchainTestsEnvironmentBase {
     public blockchainLifecycle!: BlockchainLifecycle;
     public provider!: any; // Changed from Web3ProviderEngine
     public txDefaults!: Partial<TxData>;
-    public web3Wrapper!: Web3Wrapper;
+    public web3Wrapper!: typeof web3Wrapper;
     public accounts!: string[];
 
     public async getTxDataWithDefaults(txData: Partial<TxData> = {}): Promise<TxData> {
@@ -116,14 +126,12 @@ export class StandardBlockchainTestsEnvironmentSingleton extends BlockchainTests
         
         // Force use of hardhat.network.provider directly
         const hardhat = require('hardhat');
-        const { Web3Wrapper } = require('@0x/web3-wrapper');
         
         const correctProvider = hardhat.network.provider;
-        const correctWeb3Wrapper = new Web3Wrapper(correctProvider);
         
         this.provider = correctProvider;
         this.txDefaults = txDefaults;
-        this.web3Wrapper = correctWeb3Wrapper;
+        this.web3Wrapper = web3Wrapper;
         // Initialize with Hardhat default accounts
         this.accounts = [
             '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
@@ -179,7 +187,7 @@ export class ForkedBlockchainTestsEnvironmentSingleton extends BlockchainTestsEn
             ? ForkedBlockchainTestsEnvironmentSingleton._createWeb3Provider(process.env.FORK_RPC_URL)
             : // Create a dummy provider if no RPC backend supplied.
               createDummyProvider();
-        this.web3Wrapper = new Web3Wrapper(this.provider);
+        this.web3Wrapper = web3Wrapper;
         this.blockchainLifecycle = new BlockchainLifecycle();
         this.accounts = []; // TODO: Load from provider
     }
@@ -224,7 +232,7 @@ export class LiveBlockchainTestsEnvironmentSingleton extends BlockchainTestsEnvi
             ? LiveBlockchainTestsEnvironmentSingleton._createWeb3Provider(process.env.LIVE_RPC_URL)
             : // Create a dummy provider if no RPC backend supplied.
               createDummyProvider();
-        this.web3Wrapper = new Web3Wrapper(this.provider);
+        this.web3Wrapper = web3Wrapper;
         const snapshotHandlerAsync = async (): Promise<void> => {
             throw new Error('Snapshots are not supported with a live provider.');
         };

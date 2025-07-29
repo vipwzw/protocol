@@ -16,7 +16,7 @@
         "test:ci": "yarn test",
         "clean": "shx rm -rf lib",
         "publish:private": "yarn build && echo 'gitpkg publish disabled'"
-          },
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/0xProject/protocol.git"
@@ -27,7 +27,6 @@
     },
     "homepage": "https://github.com/0xProject/protocol/tree/main/packages/contract-addresses",
     "devDependencies": {
-        "@types/minimatch": "^3.0.5",
         "@types/mocha": "^5.2.7",
         "chai": "^4.5.0",
         "ethereumjs-util": "^7.1.5",

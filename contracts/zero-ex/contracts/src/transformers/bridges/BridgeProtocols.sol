@@ -14,7 +14,7 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 
 library BridgeProtocols {
     // A incrementally increasing, append-only list of protocol IDs.

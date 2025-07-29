@@ -16,11 +16,10 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "../src/bridges/DexForwarderBridge.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
+
 
 
 interface ITestDexForwarderBridge {
@@ -119,7 +118,7 @@ contract TestDexForwarderBridgeTestBridge {
 
 contract TestDexForwarderBridgeTestToken {
 
-    using LibSafeMath for uint256;
+
 
     mapping(address => uint256) public balanceOf;
     ITestDexForwarderBridge private _testContract;

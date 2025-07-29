@@ -16,7 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
 
 interface IMooniswapRegistry {
@@ -34,7 +34,7 @@ interface IMooniswap {
         uint256 minReturn,
         address referral
     )
-        external
+        external virtual
         payable
         returns(uint256 returnAmount);
 }

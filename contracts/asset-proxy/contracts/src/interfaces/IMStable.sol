@@ -16,7 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
 
 interface IMStable {
@@ -27,6 +27,6 @@ interface IMStable {
         uint256 _quantity,
         address _recipient
     )
-        external
+        external virtual
         returns (uint256 output);
 }

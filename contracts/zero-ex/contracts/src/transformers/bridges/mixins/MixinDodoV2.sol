@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../IBridgeAdapter.sol";
 
 interface IDODOV2 {
@@ -35,7 +35,7 @@ contract MixinDodoV2 {
         (IDODOV2 pool, bool isSellBase) = abi.decode(bridgeData, (IDODOV2, bool));
 
         // Transfer the tokens into the pool
-        sellToken.compatTransfer(address(pool), sellAmount);
+        sellToken.transfer(address(pool), sellAmount);
 
         boughtAmount = isSellBase ? pool.sellBase(address(this)) : pool.sellQuote(address(this));
     }

@@ -16,8 +16,8 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
+// pragma experimental ABIEncoderV2; // Not needed in Solidity 0.8+
 
 import "./libs/LibSafeDowncast.sol";
 import "./immutable/MixinStorage.sol";
@@ -32,7 +32,7 @@ contract StakingProxy is
     MixinStorage,
     MixinConstants
 {
-    using LibSafeDowncast for uint256;
+    // using LibSafeDowncast for uint256; // Removed - using native Solidity 0.8 type casting
 
     /// @dev Constructor.
     /// @param _stakingContract Staking contract to delegate calls to.
@@ -51,7 +51,7 @@ contract StakingProxy is
     }
 
     /// @dev Delegates calls to the staking contract, if it is set.
-    function ()
+    fallback()
         external
         payable
     {
@@ -83,6 +83,7 @@ contract StakingProxy is
     /// @param _stakingContract Address of staking contract.
     function attachStakingContract(address _stakingContract)
         external
+        override
         onlyAuthorized
     {
         _attachStakingContract(_stakingContract);
@@ -92,6 +93,7 @@ contract StakingProxy is
     /// Note that this is callable only by an authorized address.
     function detachStakingContract()
         external
+        override
         onlyAuthorized
     {
         stakingContract = NIL_ADDRESS;
@@ -146,6 +148,7 @@ contract StakingProxy is
     function assertValidStorageParams()
         public
         view
+        override
     {
         // Epoch length must be between 5 and 30 days long
         uint256 _epochDurationInSeconds = epochDurationInSeconds;
@@ -193,7 +196,7 @@ contract StakingProxy is
 
         // Call `init()` on the staking contract to initialize storage.
         (bool didInitSucceed, bytes memory initReturnData) = stakingContract.delegatecall(
-            abi.encodeWithSelector(IStorageInit(0).init.selector)
+            abi.encodeWithSelector(IStorageInit(address(0)).init.selector)
         );
 
         if (!didInitSucceed) {

@@ -16,12 +16,12 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
+// pragma experimental ABIEncoderV2; // Not needed in Solidity 0.8+
 
 import "@0x/contracts-exchange-libs/contracts/src/LibMath.sol";
-import "@0x/contracts-utils/contracts/src/LibRichErrors.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+// LibSafeMath removed in Solidity 0.8.28 - using built-in overflow checks
 import "../libs/LibStakingRichErrors.sol";
 import "../interfaces/IStructs.sol";
 import "../sys/MixinFinalizer.sol";
@@ -34,7 +34,7 @@ contract MixinExchangeFees is
     MixinStakingPool,
     MixinFinalizer
 {
-    using LibSafeMath for uint256;
+    // // using LibSafeMath for uint256; // Removed in Solidity 0.8.28 // Removed in Solidity 0.8.28
 
     /// @dev Pays a protocol fee in ETH or WETH.
     ///      Only a known 0x exchange can call this method. See
@@ -50,6 +50,7 @@ contract MixinExchangeFees is
         external
         payable
         onlyExchange
+        virtual
     {
         _assertValidProtocolFee(protocolFee);
 
@@ -61,7 +62,7 @@ contract MixinExchangeFees is
         // WETH.
         if (msg.value == 0) {
             require(
-                getWethContract().transferFrom(
+                _getWethContract().transferFrom(
                     payerAddress,
                     address(this),
                     protocolFee
@@ -79,7 +80,7 @@ contract MixinExchangeFees is
             return;
         }
 
-        uint256 poolStake = getTotalStakeDelegatedToPool(poolId).currentEpochBalance;
+        uint256 poolStake = this.getTotalStakeDelegatedToPool(poolId).currentEpochBalance;
         // Ignore pools with dust stake.
         if (poolStake < minimumPoolStake) {
             return;
@@ -99,20 +100,20 @@ contract MixinExchangeFees is
             poolStatsPtr.weightedStake = weightedStakeInPool;
 
             // Increase the total weighted stake.
-            aggregatedStatsPtr.totalWeightedStake = aggregatedStatsPtr.totalWeightedStake.safeAdd(weightedStakeInPool);
+            aggregatedStatsPtr.totalWeightedStake = aggregatedStatsPtr.totalWeightedStake + weightedStakeInPool;
 
             // Increase the number of pools to finalize.
-            aggregatedStatsPtr.numPoolsToFinalize = aggregatedStatsPtr.numPoolsToFinalize.safeAdd(1);
+            aggregatedStatsPtr.numPoolsToFinalize = aggregatedStatsPtr.numPoolsToFinalize + 1;
 
             // Emit an event so keepers know what pools earned rewards this epoch.
             emit StakingPoolEarnedRewardsInEpoch(currentEpoch_, poolId);
         }
 
         // Credit the fees to the pool.
-        poolStatsPtr.feesCollected = feesCollectedByPool.safeAdd(protocolFee);
+        poolStatsPtr.feesCollected = feesCollectedByPool + protocolFee;
 
         // Increase the total fees collected this epoch.
-        aggregatedStatsPtr.totalFeesCollected = aggregatedStatsPtr.totalFeesCollected.safeAdd(protocolFee);
+        aggregatedStatsPtr.totalFeesCollected = aggregatedStatsPtr.totalFeesCollected + protocolFee;
     }
 
     /// @dev Get stats on a staking pool in this epoch.
@@ -121,6 +122,7 @@ contract MixinExchangeFees is
     function getStakingPoolStatsThisEpoch(bytes32 poolId)
         external
         view
+        virtual
         returns (IStructs.PoolStats memory)
     {
         return poolStatsByEpoch[poolId][currentEpoch];
@@ -140,19 +142,18 @@ contract MixinExchangeFees is
         view
         returns (uint256 membersStake, uint256 weightedStake)
     {
-        uint256 operatorStake = getStakeDelegatedToPoolByOwner(
+        uint256 operatorStake = this.getStakeDelegatedToPoolByOwner(
             _poolById[poolId].operator,
             poolId
         ).currentEpochBalance;
 
-        membersStake = totalStake.safeSub(operatorStake);
-        weightedStake = operatorStake.safeAdd(
+        membersStake = totalStake - operatorStake;
+        weightedStake = operatorStake + 
             LibMath.getPartialAmountFloor(
                 rewardDelegatedStakeWeight,
                 PPM_DENOMINATOR,
                 membersStake
-            )
-        );
+            );
         return (membersStake, weightedStake);
     }
 

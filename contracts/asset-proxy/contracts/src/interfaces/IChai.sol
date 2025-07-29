@@ -16,22 +16,22 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 
 
-contract PotLike {
-    function chi() external returns (uint256);
-    function rho() external returns (uint256);
-    function drip() external returns (uint256);
-    function join(uint256) external;
-    function exit(uint256) external;
+abstract contract PotLike {
+    function chi() external virtual returns (uint256);
+    function rho() external virtual returns (uint256);
+    function drip() external virtual returns (uint256);
+    function join(uint256) external virtual;
+    function exit(uint256) external virtual;
 }
 
 
 // The actual Chai contract can be found here: https://github.com/dapphub/chai
-contract IChai is
+abstract contract IChai is
     IERC20Token
 {
     /// @dev Withdraws Dai owned by `src`
@@ -41,18 +41,18 @@ contract IChai is
         address src,
         uint256 wad
     )
-        external;
+        external virtual;
 
     /// @dev Queries Dai balance of Chai holder.
     /// @param usr Address of Chai holder.
     /// @return Dai balance.
     function dai(address usr)
-        external
+        external virtual
         returns (uint256);
 
     /// @dev Queries the Pot contract used by the Chai contract.
     function pot()
-        external
+        external virtual
         returns (PotLike);
 
     /// @dev Deposits Dai in exchange for Chai
@@ -62,5 +62,5 @@ contract IChai is
         address dst,
         uint256 wad
     )
-        external;
+        external virtual;
 }

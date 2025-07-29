@@ -1,12 +1,12 @@
 import { hexUtils } from '@0x/utils';
-import { Web3Wrapper } from '@0x/web3-wrapper';
+import { ethers } from 'ethers';
 import * as ethjs from 'ethereumjs-util';
 
 /**
  * Fetch and RLP encode the transaction count (nonce) of an account.
  */
-export async function getRLPEncodedAccountNonceAsync(web3Wrapper: Web3Wrapper, address: string): Promise<string> {
-    const nonce = await web3Wrapper.getAccountNonceAsync(address);
+export async function getRLPEncodedAccountNonceAsync(provider: ethers.Provider, address: string): Promise<string> {
+    const nonce = await provider.getTransactionCount(address);
     return rlpEncodeNonce(nonce);
 }
 

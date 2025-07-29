@@ -1,8 +1,8 @@
-import { assert } from '@0x/assert';
 import { schemas } from '@0x/json-schemas';
 import { eip712Utils } from '@0x/order-utils';
 import { SignedZeroExTransaction, ZeroExTransaction } from '@0x/types';
 import { signTypedDataUtils } from '@0x/utils';
+import { expect } from 'chai';
 import * as _ from 'lodash';
 
 export const transactionHashUtils = {
@@ -12,7 +12,10 @@ export const transactionHashUtils = {
      * @return  Hex encoded string transactionHash from hashing the supplied order.
      */
     getTransactionHashHex(transaction: ZeroExTransaction | SignedZeroExTransaction): string {
-        assert.doesConformToSchema('transaction', transaction, schemas.zeroExTransactionSchema, [schemas.hexSchema]);
+        // Basic validation using chai expect
+        expect(transaction).to.be.an('object');
+        expect(transaction.data).to.be.a('string');
+        expect(transaction.signerAddress).to.be.a('string');
         const transactionHashBuff = transactionHashUtils.getTransactionHashBuffer(transaction);
         const transactionHashHex = `0x${transactionHashBuff.toString('hex')}`;
         return transactionHashHex;

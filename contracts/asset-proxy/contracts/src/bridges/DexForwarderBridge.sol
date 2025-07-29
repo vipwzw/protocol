@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
@@ -25,7 +24,6 @@ import "@0x/contracts-exchange-libs/contracts/src/IWallet.sol";
 import "@0x/contracts-exchange-libs/contracts/src/LibMath.sol";
 import "@0x/contracts-utils/contracts/src/DeploymentConstants.sol";
 import "@0x/contracts-utils/contracts/src/LibBytes.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
 import "../interfaces/IERC20Bridge.sol";
 import "./MixinGasToken.sol";
 
@@ -37,7 +35,8 @@ contract DexForwarderBridge is
     DeploymentConstants,
     MixinGasToken
 {
-    using LibSafeMath for uint256;
+    // ERC1271 magic value returned when signature is valid
+    bytes4 internal constant LEGACY_WALLET_MAGIC_VALUE = 0xb0671381;
 
     /// @dev Data needed to reconstruct a bridge call.
     struct BridgeCall {
@@ -72,6 +71,7 @@ contract DexForwarderBridge is
         bytes calldata bridgeData
     )
         external
+        override
         freesGasTokensFromCollector
         returns (bytes4 success)
     {
@@ -95,9 +95,9 @@ contract DexForwarderBridge is
             }
 
             // Compute token amounts.
-            state.callInputTokenAmount = LibSafeMath.min256(
+            state.callInputTokenAmount = _min(
                 state.calls[i].inputTokenAmount,
-                state.initialInputTokenBalance.safeSub(state.totalInputTokenSold)
+                state.initialInputTokenBalance - state.totalInputTokenSold
             );
             state.callOutputTokenAmount = LibMath.getPartialAmountFloor(
                 state.callInputTokenAmount,
@@ -121,9 +121,8 @@ contract DexForwarderBridge is
 
             if (didSucceed) {
                 // Increase the amount of tokens sold.
-                state.totalInputTokenSold = state.totalInputTokenSold.safeAdd(
-                    state.callInputTokenAmount
-                );
+                state.totalInputTokenSold = state.totalInputTokenSold + 
+                    state.callInputTokenAmount;
             }
         }
         // Always succeed.
@@ -166,7 +165,7 @@ contract DexForwarderBridge is
         // Call the bridge.
         (bool didSucceed, bytes memory resultData) =
             bridge.call(abi.encodeWithSelector(
-                IERC20Bridge(0).bridgeTransferFrom.selector,
+                IERC20Bridge(address(0)).bridgeTransferFrom.selector,
                 outputToken,
                 bridge,
                 to,
@@ -180,7 +179,7 @@ contract DexForwarderBridge is
             didSucceed
             && resultData.length == 32
             && LibBytes.readBytes32(resultData, 0) == bytes32(BRIDGE_SUCCESS)
-            && IERC20Token(outputToken).balanceOf(to).safeSub(initialRecipientBalance) >= outputTokenAmount
+            && IERC20Token(outputToken).balanceOf(to) - initialRecipientBalance >= outputTokenAmount
         );
     }
 
@@ -196,5 +195,10 @@ contract DexForwarderBridge is
         returns (bytes4 magicValue)
     {
         return LEGACY_WALLET_MAGIC_VALUE;
+    }
+
+    /// @dev Helper function to get the minimum of two values (replaces LibSafeMath.min256)
+    function _min(uint256 a, uint256 b) private pure returns (uint256) {
+        return a < b ? a : b;
     }
 }

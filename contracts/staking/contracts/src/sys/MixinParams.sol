@@ -16,9 +16,9 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.28;
 
-import "@0x/contracts-utils/contracts/src/LibRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../immutable/MixinStorage.sol";
 import "../immutable/MixinConstants.sol";
 import "../interfaces/IStakingEvents.sol";
@@ -46,6 +46,7 @@ contract MixinParams is
     )
         external
         onlyAuthorized
+        virtual
     {
         _setParams(
             _epochDurationInSeconds,
@@ -69,6 +70,7 @@ contract MixinParams is
     function getParams()
         external
         view
+        virtual
         returns (
             uint256 _epochDurationInSeconds,
             uint32 _rewardDelegatedStakeWeight,

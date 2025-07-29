@@ -16,10 +16,10 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.28;
 
-import "@0x/contracts-utils/contracts/src/LibRichErrors.sol";
-import "@0x/contracts-utils/contracts/src/LibSafeMath.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+// LibSafeMath removed in Solidity 0.8.28 - using built-in overflow checks
 import "../libs/LibStakingRichErrors.sol";
 import "../immutable/MixinStorage.sol";
 import "../interfaces/IStakingEvents.sol";
@@ -29,18 +29,29 @@ contract MixinScheduler is
     IStakingEvents,
     MixinStorage
 {
-    using LibSafeMath for uint256;
+    // using LibSafeMath for uint256; // Removed in Solidity 0.8.28
 
     /// @dev Returns the earliest end time in seconds of this epoch.
     ///      The next epoch can begin once this time is reached.
     ///      Epoch period = [startTimeInSeconds..endTimeInSeconds)
     /// @return Time in seconds.
     function getCurrentEpochEarliestEndTimeInSeconds()
-        public
+        external
+        view
+        virtual
+        returns (uint256)
+    {
+        return _getCurrentEpochEarliestEndTimeInSeconds();
+    }
+
+    /// @dev Internal function to get the earliest end time in seconds of this epoch.
+    /// @return Time in seconds.
+    function _getCurrentEpochEarliestEndTimeInSeconds()
+        internal
         view
         returns (uint256)
     {
-        return currentEpochStartTimeInSeconds.safeAdd(epochDurationInSeconds);
+        return currentEpochStartTimeInSeconds + epochDurationInSeconds;
     }
 
     /// @dev Initializes state owned by this mixin.
@@ -67,7 +78,7 @@ contract MixinScheduler is
         uint256 currentBlockTimestamp = block.timestamp;
 
         // validate that we can increment the current epoch
-        uint256 epochEndTime = getCurrentEpochEarliestEndTimeInSeconds();
+        uint256 epochEndTime = _getCurrentEpochEarliestEndTimeInSeconds();
         if (epochEndTime > currentBlockTimestamp) {
             LibRichErrors.rrevert(LibStakingRichErrors.BlockTimestampTooLowError(
                 epochEndTime,
@@ -76,7 +87,7 @@ contract MixinScheduler is
         }
 
         // incremment epoch
-        uint256 nextEpoch = currentEpoch.safeAdd(1);
+        uint256 nextEpoch = currentEpoch + 1;
         currentEpoch = nextEpoch;
         currentEpochStartTimeInSeconds = currentBlockTimestamp;
     }

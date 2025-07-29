@@ -16,9 +16,9 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.28;
 
-import "@0x/contracts-utils/contracts/src/LibRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../libs/LibStakingRichErrors.sol";
 import "../interfaces/IStakingEvents.sol";
 import "../immutable/MixinStorage.sol";
@@ -43,6 +43,7 @@ contract MixinExchangeManager is
     function addExchangeAddress(address addr)
         external
         onlyAuthorized
+        virtual
     {
         if (validExchanges[addr]) {
             LibRichErrors.rrevert(LibStakingRichErrors.ExchangeManagerError(
@@ -59,6 +60,7 @@ contract MixinExchangeManager is
     function removeExchangeAddress(address addr)
         external
         onlyAuthorized
+        virtual
     {
         if (!validExchanges[addr]) {
             LibRichErrors.rrevert(LibStakingRichErrors.ExchangeManagerError(

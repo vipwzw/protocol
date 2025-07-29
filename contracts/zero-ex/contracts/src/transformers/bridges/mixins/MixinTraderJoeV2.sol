@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../IBridgeAdapter.sol";
 
 interface ILBRouter {
@@ -99,7 +99,7 @@ contract MixinTraderJoeV2 {
             "MixinTraderJoeV2/LAST_ELEMENT_OF_PATH_MUST_MATCH_OUTPUT_TOKEN"
         );
         // Grant the Trader Joe V2 router an allowance to sell the first token.
-        tokenPath[0].approveIfBelow(address(router), sellAmount);
+        tokenPath[0].approve(address(router), sellAmount);
 
         ILBRouter.Path memory path = ILBRouter.Path({
             pairBinSteps: pairBinSteps,

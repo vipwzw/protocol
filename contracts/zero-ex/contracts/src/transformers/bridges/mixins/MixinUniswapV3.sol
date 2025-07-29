@@ -14,8 +14,8 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../IBridgeAdapter.sol";
 
 interface IUniswapV3Router {
@@ -53,7 +53,7 @@ contract MixinUniswapV3 {
         (address router, bytes memory path, uint256 routerVersion) = abi.decode(bridgeData, (address, bytes, uint256));
 
         // Grant the Uniswap router an allowance to sell the sell token.
-        sellToken.approveIfBelow(router, sellAmount);
+        sellToken.approve(router, sellAmount);
 
         if (routerVersion != 2) {
             boughtAmount = IUniswapV3Router(router).exactInput(

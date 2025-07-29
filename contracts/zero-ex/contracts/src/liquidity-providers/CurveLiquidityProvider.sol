@@ -15,8 +15,8 @@
 pragma solidity ^0.8.0;
 
 import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../transformers/LibERC20Transformer.sol";
 import "../vendor/ILiquidityProvider.sol";
 
@@ -64,7 +64,7 @@ contract CurveLiquidityProvider is ILiquidityProvider {
         );
         // Every pool contract currently checks this but why not.
         require(boughtAmount >= minBuyAmount, "CurveLiquidityProvider/UNDERBOUGHT");
-        outputToken.compatTransfer(recipient, boughtAmount);
+        outputToken.transfer(recipient, boughtAmount);
     }
 
     /// @dev Trades ETH for token. ETH must either be attached to this function
@@ -91,7 +91,7 @@ contract CurveLiquidityProvider is ILiquidityProvider {
         );
         // Every pool contract currently checks this but why not.
         require(boughtAmount >= minBuyAmount, "CurveLiquidityProvider/UNDERBOUGHT");
-        outputToken.compatTransfer(recipient, boughtAmount);
+        outputToken.transfer(recipient, boughtAmount);
     }
 
     /// @dev Trades token for ETH. The token must be sent to the contract prior
@@ -141,7 +141,7 @@ contract CurveLiquidityProvider is ILiquidityProvider {
     ) private returns (uint256 boughtAmount) {
         uint256 sellAmount = LibERC20Transformer.getTokenBalanceOf(inputToken, address(this));
         if (!LibERC20Transformer.isTokenETH(inputToken)) {
-            inputToken.approveIfBelow(data.curveAddress, sellAmount);
+            inputToken.approve(data.curveAddress, sellAmount);
         }
 
         (bool success, bytes memory resultData) = data.curveAddress.call{

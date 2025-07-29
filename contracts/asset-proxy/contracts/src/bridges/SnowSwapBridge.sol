@@ -17,8 +17,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
@@ -35,6 +34,9 @@ contract SnowSwapBridge is
     IWallet,
     DeploymentConstants
 {
+    // ERC1271 magic value returned when signature is valid
+    bytes4 internal constant LEGACY_WALLET_MAGIC_VALUE = 0xb0671381;
+
     struct SnowSwapBridgeData {
         address curveAddress;
         bytes4 exchangeFunctionSelector;
@@ -61,6 +63,7 @@ contract SnowSwapBridge is
         bytes calldata bridgeData
     )
         external
+        override
         returns (bytes4 success)
     {
         // Decode the bridge data to get the SnowSwap metadata.

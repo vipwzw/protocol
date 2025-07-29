@@ -14,7 +14,7 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IEtherToken.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
 
 contract TestStaking {
     mapping(address => bytes32) public poolForMaker;

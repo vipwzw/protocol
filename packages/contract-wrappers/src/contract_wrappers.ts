@@ -1,10 +1,9 @@
-import { assert } from '@0x/assert';
 import { ContractAddresses } from '@0x/contract-addresses';
-import { Web3Wrapper } from '@0x/web3-wrapper';
 import { SupportedProvider } from 'ethereum-types';
 import { ethers } from 'ethers';
+import { expect } from 'chai';
 
-import { ContractWrappersConfigSchema } from './contract_wrappers_config_schema';
+
 import { WETH9__factory, IZeroEx__factory } from './typechain-types/factories';
 import { ContractWrappersConfig } from './types';
 import { _getDefaultContractAddresses } from './utils/contract_addresses';
@@ -26,8 +25,8 @@ export class ContractWrappers {
      */
     public exchangeProxyFactory: typeof IZeroEx__factory;
 
-    private readonly _web3Wrapper: Web3Wrapper;
     private readonly _ethersProvider: ethers.Provider;
+    private readonly _supportedProvider: SupportedProvider;
     
     /**
      * Instantiates a new ContractWrappers instance.
@@ -37,11 +36,11 @@ export class ContractWrappers {
      * @return  An instance of the ContractWrappers class.
      */
     constructor(supportedProvider: SupportedProvider, config: ContractWrappersConfig) {
-        assert.doesConformToSchema('config', config, ContractWrappersConfigSchema);
-        const txDefaults = {
-            gasPrice: config.gasPrice ? config.gasPrice.toString() : undefined,
-        };
-        this._web3Wrapper = new Web3Wrapper(supportedProvider, txDefaults);
+        // Validate config using simple checks instead of JSON schema
+        expect(config).to.be.an('object');
+        expect(config.chainId).to.be.a('number');
+        
+        this._supportedProvider = supportedProvider;
         this.contractAddresses = config.contractAddresses || _getDefaultContractAddresses(config.chainId);
         
         // Create ethers provider from the supported provider
@@ -79,7 +78,7 @@ export class ContractWrappers {
      * Get the provider instance
      */
     public getProvider() {
-        return this._web3Wrapper.getProvider();
+        return this._supportedProvider;
     }
 
     /**

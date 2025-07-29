@@ -16,7 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.28;
 
 import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
 import "../interfaces/IZrxVault.sol";
@@ -52,9 +52,20 @@ contract MixinDeploymentConstants {
 
     /// @dev An overridable way to access the deployed WETH contract.
     ///      Must be view to allow overrides to access state.
-    /// @return wethContract The WETH contract instance.
+    /// @return wethContract The_ WETH contract instance.
     function getWethContract()
-        public
+        external
+        view
+        virtual
+        returns (IEtherToken wethContract)
+    {
+        return _getWethContract();
+    }
+
+    /// @dev Internal function to access the deployed WETH contract.
+    /// @return wethContract The WETH contract instance.
+    function _getWethContract()
+        internal
         view
         returns (IEtherToken wethContract)
     {
@@ -66,7 +77,18 @@ contract MixinDeploymentConstants {
     ///      Must be view to allow overrides to access state.
     /// @return zrxVault The zrxVault contract.
     function getZrxVault()
-        public
+        external
+        view
+        virtual
+        returns (IZrxVault zrxVault)
+    {
+        return _getZrxVault();
+    }
+
+    /// @dev Internal function to access the deployed zrxVault.
+    /// @return zrxVault The zrxVault contract.
+    function _getZrxVault()
+        internal
         view
         returns (IZrxVault zrxVault)
     {

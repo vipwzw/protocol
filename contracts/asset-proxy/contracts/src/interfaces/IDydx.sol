@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 
 interface IDydx {
@@ -115,7 +114,7 @@ interface IDydx {
         AccountInfo[] calldata accounts,
         ActionArgs[] calldata actions
     )
-        external;
+        external virtual;
 
     // @dev Approves/disapproves any number of operators. An operator is an external address that has the
     //      same permissions to manipulate an account as the owner of the account. Operators are simply
@@ -124,7 +123,7 @@ interface IDydx {
     //      operator is a smart contract and implements the IAutoTrader interface.
     // @param args A list of OperatorArgs which have an address and a boolean. The boolean value
     //        denotes whether to approve (true) or revoke approval (false) for that address.
-    function setOperators(OperatorArg[] calldata args) external;
+    function setOperators(OperatorArg[] calldata args) external virtual;
 
     /// @dev Return true if a particular address is approved as an operator for an owner's accounts.
     ///      Approved operators can act on the accounts of the owner as if it were the operator's own.
@@ -135,7 +134,7 @@ interface IDydx {
         address owner,
         address operator
     )
-        external
+        external virtual
         view
         returns (bool isLocalOperator);
 
@@ -145,14 +144,14 @@ interface IDydx {
     function getMarketTokenAddress(
         uint256 marketId
     )
-        external
+        external virtual
         view
         returns (address tokenAddress);
 
     /// @dev Get all risk parameters in a single struct.
     /// @return riskParams All global risk parameters
     function getRiskParams()
-        external
+        external virtual
         view
         returns (RiskParams memory riskParams);
 
@@ -162,7 +161,7 @@ interface IDydx {
     function getMarketPrice(
         uint256 marketId
     )
-        external
+        external virtual
         view
         returns (Price memory price);
 
@@ -171,7 +170,7 @@ interface IDydx {
     /// @param  marketId  The market to query
     /// @return premium The market's margin premium
     function getMarketMarginPremium(uint256 marketId)
-        external
+        external virtual
         view
         returns (D256 memory premium);
 
@@ -186,7 +185,7 @@ interface IDydx {
     function getAdjustedAccountValues(
         AccountInfo calldata account
     )
-        external
+        external virtual
         view
         returns (Value memory supplyValue, Value memory borrowValue);
 }

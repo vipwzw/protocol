@@ -16,7 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8.0;
 
 
 interface IKyberNetworkProxy {
@@ -40,7 +40,7 @@ interface IKyberNetworkProxy {
         uint256 minConversionRate,
         address walletId
     )
-        external
+        external virtual
         payable
         returns (uint256 boughtAmount);
 
@@ -66,7 +66,7 @@ interface IKyberNetworkProxy {
         address payable walletId,
         bytes calldata hint
     )
-        external
+        external virtual
         payable
         returns (uint256 boughtAmount);
 }

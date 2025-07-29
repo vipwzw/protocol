@@ -1,4 +1,5 @@
 import { BigNumber } from '@0x/utils';
+// @ts-ignore - no types available for js-combinatorics
 import * as combinatorics from 'js-combinatorics';
 
 import { testWithReferenceFuncAsync } from './test_with_reference';
@@ -104,7 +105,7 @@ export function testCombinatoriallyWithReferenceFunc(
 ): void {
     const testCases = combinatorics.cartesianProduct(...allValues);
     let counter = 0;
-    testCases.forEach(async testCase => {
+    testCases.forEach(async (testCase: any) => {
         counter += 1;
         it(`${name} ${counter}/${testCases.length}`, async () => {
             await testWithReferenceFuncAsync(referenceFuncAsync, testFuncAsync, testCase as any);

@@ -15,8 +15,8 @@
 pragma solidity ^0.8.0;
 
 import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
-import "@0x/contracts-erc20/src/LibERC20Token.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 
 contract MixinCurveV2 {
     using LibERC20Token for IERC20Token;
@@ -37,7 +37,7 @@ contract MixinCurveV2 {
     ) internal returns (uint256 boughtAmount) {
         // Decode the bridge data to get the Curve metadata.
         CurveBridgeDataV2 memory data = abi.decode(bridgeData, (CurveBridgeDataV2));
-        sellToken.approveIfBelow(data.curveAddress, sellAmount);
+        sellToken.approve(data.curveAddress, sellAmount);
 
         uint256 beforeBalance = buyToken.balanceOf(address(this));
         (bool success, bytes memory resultData) = data.curveAddress.call(

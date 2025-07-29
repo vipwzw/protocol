@@ -1,5 +1,5 @@
-import { AbiDecoder, BigNumber } from '@0x/utils';
-import { Web3Wrapper } from '@0x/web3-wrapper';
+import { AbiDecoder } from '@0x/utils';
+import { ethers } from 'ethers';
 import {
     AbiDefinition,
     ContractArtifact,
@@ -13,19 +13,20 @@ import {
 import * as _ from 'lodash';
 
 export class LogDecoder {
-    private readonly _web3Wrapper: Web3Wrapper;
+    private readonly _provider: ethers.Provider;
     private readonly _abiDecoder: AbiDecoder;
     public static wrapLogBigNumbers(log: any): any {
         const argNames = _.keys(log.args);
         for (const argName of argNames) {
             const isWeb3BigNumber = _.startsWith(log.args[argName].constructor.toString(), 'function BigNumber(');
             if (isWeb3BigNumber) {
-                log.args[argName] = new BigNumber(log.args[argName]);
+                // Convert Web3 BigNumber to bigint for ethers v6 compatibility
+                log.args[argName] = BigInt(log.args[argName].toString());
             }
         }
     }
-    constructor(web3Wrapper: Web3Wrapper, artifacts: { [contractName: string]: ContractArtifact }) {
-        this._web3Wrapper = web3Wrapper;
+    constructor(provider: ethers.Provider, artifacts: { [contractName: string]: ContractArtifact }) {
+        this._provider = provider;
         const abiArrays: AbiDefinition[][] = [];
         _.forEach(artifacts, (artifact: ContractArtifact) => {
             const compilerOutput = artifact.compilerOutput;
@@ -35,15 +36,21 @@ export class LogDecoder {
     }
     public decodeLogOrThrow<ArgsType extends DecodedLogArgs>(log: LogEntry): LogWithDecodedArgs<ArgsType> | RawLog {
         const logWithDecodedArgsOrLog = this._abiDecoder.tryToDecodeLogOrNoop(log);
-        if ((logWithDecodedArgsOrLog as LogWithDecodedArgs<ArgsType>).args === undefined) {
+        // tslint:disable-next-line:no-unnecessary-type-assertion
+        if (_.isUndefined((logWithDecodedArgsOrLog as LogWithDecodedArgs<ArgsType>).args)) {
             throw new Error(`Unable to decode log: ${JSON.stringify(log)}`);
         }
         LogDecoder.wrapLogBigNumbers(logWithDecodedArgsOrLog);
         return logWithDecodedArgsOrLog;
     }
     public async getTxWithDecodedLogsAsync(txHash: string): Promise<TransactionReceiptWithDecodedLogs> {
-        const receipt = await this._web3Wrapper.awaitTransactionSuccessAsync(txHash);
-        return this.decodeReceiptLogs(receipt);
+        const receipt = await this._provider.getTransactionReceipt(txHash);
+        if (!receipt) {
+            throw new Error(`Transaction receipt not found for hash: ${txHash}`);
+        }
+        // Convert ethers TransactionReceipt to ethereum-types format
+        const convertedReceipt = receipt as any as TransactionReceipt;
+        return this.decodeReceiptLogs(convertedReceipt);
     }
     public decodeReceiptLogs(receipt: TransactionReceipt): TransactionReceiptWithDecodedLogs {
         const decodedLogs = (receipt.logs as LogEntry[]).map(log => this.decodeLogOrThrow(log));
