@@ -18,6 +18,7 @@ const artifactsToPublish = [
     'UnlimitedAllowanceERC20Token',
     'WETH9',
     'ZRXToken',
+    'ZRXWrappedToken',
     
     // 基础接口
     'IERC20Token',
@@ -274,6 +275,30 @@ for (const _path of allArtifactPaths) {
         copiedCount++;
     } catch (error) {
         console.log(`  ❌ 复制失败: ${fileName} - ${error.message}`);
+    }
+}
+
+// 创建别名文件以保持向后兼容性
+console.log(`\n📄 创建别名文件...`);
+const aliases = [
+    { from: 'ZRXWrappedToken.json', to: 'ZRXToken.json' },
+    { from: 'UnlimitedAllowanceERC20Token.json', to: 'UnlimitedAllowanceToken.json' }
+];
+
+for (const alias of aliases) {
+    const fromPath = path.join(outputDir, alias.from);
+    const toPath = path.join(outputDir, alias.to);
+    
+    if (fs.existsSync(fromPath)) {
+        try {
+            fs.copyFileSync(fromPath, toPath);
+            console.log(`  ✅ ${alias.from} → ${alias.to}`);
+            copiedCount++;
+        } catch (error) {
+            console.log(`  ❌ 创建别名失败: ${alias.to} - ${error.message}`);
+        }
+    } else {
+        console.log(`  ⚠️  源文件不存在: ${alias.from}`);
     }
 }
 
