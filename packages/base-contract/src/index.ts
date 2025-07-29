@@ -31,7 +31,7 @@ import {
     ZeroExProvider,
 } from 'ethereum-types';
 import * as _ from 'lodash';
-import * as util from '@ethereumjs/util';
+import * as util from 'ethereumjs-util';
 
 export interface TxOpts {
     pollingIntervalMs?: number;
@@ -79,7 +79,7 @@ export class BaseContract {
         values: any[],
         formatter: (type: string, value: any) => any,
     ): any {
-        return abis.reduce((formatted, abi, i) => {
+        return abis.reduce((formatted: any, abi, i) => {
             const itemValue = values[i];
             formatted[abi.name] = formatter(abi.type, itemValue);
             return formatted;
@@ -125,7 +125,7 @@ export class BaseContract {
         }
     }
 
-    protected static _removeUndefinedProperties<T>(obj: T): T {
+    protected static _removeUndefinedProperties<T extends object>(obj: T): T {
         const clone = _.clone(obj);
         return _.pickBy(clone, (v: any) => v !== undefined) as T;
     }
@@ -201,6 +201,8 @@ export class BaseContract {
                 // Convert receipt to expected format with decoded logs
                 const receiptWithDecodedLogs = {
                     ...receipt,
+                    transactionHash: receipt.hash,
+                    transactionIndex: receipt.index,
                     logs: receipt.logs.map(log => ({
                         ...log,
                         logIndex: log.index,
@@ -211,8 +213,8 @@ export class BaseContract {
                         address: log.address,
                         data: log.data,
                         topics: log.topics,
-                    })) as LogWithDecodedArgs[],
-                } as TransactionReceiptWithDecodedLogs;
+                    })) as unknown as LogWithDecodedArgs<any>[],
+                } as unknown as TransactionReceiptWithDecodedLogs;
                 
                 return receiptWithDecodedLogs;
             })(),
@@ -234,11 +236,11 @@ export class BaseContract {
             ...BaseContract._removeUndefinedProperties(txData),
         } as TxData;
 
-        if (txDataWithDefaults.gasLimit === undefined) {
+        if (txDataWithDefaults.gas === undefined) {
             if (estimateGasAsync !== undefined) {
-                txDataWithDefaults.gasLimit = await estimateGasAsync(txData);
+                txDataWithDefaults.gas = await estimateGasAsync(txData);
             } else {
-                txDataWithDefaults.gasLimit = 90000;
+                txDataWithDefaults.gas = 90000;
             }
         }
         return txDataWithDefaults;
@@ -295,10 +297,10 @@ export class BaseContract {
                 to: callDataWithDefaults.to,
                 data: callDataWithDefaults.data,
                 from: callDataWithDefaults.from,
-                gasLimit: callDataWithDefaults.gasLimit,
-                gasPrice: callDataWithDefaults.gasPrice,
-                value: callDataWithDefaults.value,
-            }, defaultBlock as any);
+                gasLimit: callDataWithDefaults.gas?.toString(),
+                gasPrice: callDataWithDefaults.gasPrice?.toString(),
+                value: callDataWithDefaults.value?.toString(),
+            });
         } catch (err) {
             BaseContract._throwIfThrownErrorIsRevertError(err instanceof Error ? err : new Error(String(err)));
             throw err;
@@ -321,11 +323,12 @@ export class BaseContract {
 
     protected _strictEncodeArguments(functionSignature: string, functionArguments: any): string {
         const abiEncoder = this._lookupAbiEncoder(functionSignature);
-        const inputAbi = abiEncoder.getDataItem().inputs;
+        const dataItem = abiEncoder.getDataItem();
+        const inputAbi = (dataItem as any).components || [];
         if (inputAbi === undefined) {
             throw new Error(`Failed to get input ABI for function signature '${functionSignature}'`);
         }
-        return abiEncoder.encodeReturnValues(functionArguments);
+        return abiEncoder.encode(functionArguments);
     }
 
     protected _evmExecIfPossible<T>(

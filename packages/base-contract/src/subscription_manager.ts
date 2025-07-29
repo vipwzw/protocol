@@ -54,14 +54,13 @@ export class SubscriptionManager<ContractEventArgs extends DecodedLogArgs, Contr
     ): string {
         const filterToken = filterUtils.generateUUID();
         const filter = filterUtils.getFilter(
-            this.abi,
+            '',  // address - empty for now
             eventName,
             indexFilterValues,
-            undefined, // fromBlock
-            undefined, // toBlock
+            this.abi,
         );
         this._filters[filterToken] = filter;
-        this._filterCallbacks[filterToken] = callback;
+        this._filterCallbacks[filterToken] = callback as EventCallback<ContractEventArgs>;
         if (this._blockAndLogStreamerIfExists === undefined) {
             this._startBlockAndLogStream(isVerbose, blockPollingIntervalMs);
         }
@@ -86,30 +85,28 @@ export class SubscriptionManager<ContractEventArgs extends DecodedLogArgs, Contr
             throw new Error(SubscriptionErrors.SubscriptionAlreadyPresent);
         }
         this._blockAndLogStreamerIfExists = new BlockAndLogStreamer(
-            // Simple provider wrapper for blockstream
-            {
-                getBlockByHashAsync: async (hash: string) => {
-                    const block = await this._provider.getBlock(hash);
-                    return block as any;
-                },
-                getLogsAsync: async (filter: any) => {
-                    const logs = await this._provider.getLogs(filter);
-                    return logs as any;
-                },
-                getLatestBlockAsync: async () => {
-                    const block = await this._provider.getBlock('latest');
-                    return block as any;
-                },
-            } as any,
-            { pollingIntervalMs: blockPollingIntervalMs || DEFAULT_BLOCK_POLLING_INTERVAL },
+            async (hash: string) => {
+                const block = await this._provider.getBlock(hash);
+                return block as any;
+            },
+            async (filter: any) => {
+                const logs = await this._provider.getLogs(filter);
+                return logs as any;
+            },
+            (error: Error) => {
+                if (isVerbose) {
+                    logUtils.warn(error);
+                }
+            },
+            {} as any,
         );
         // Subscribe to new logs
-        this._onLogAddedSubscriptionToken = this._blockAndLogStreamerIfExists.subscribeToOnLogAdded(
-            (rawLogs: RawLogEntry[]) => this._onLogStateChanged<ContractEventArgs>(rawLogs, false),
+        this._onLogAddedSubscriptionToken = this._blockAndLogStreamerIfExists.subscribeToOnLogsAdded(
+            (blockHash: string, rawLogs: Log[]) => this._onLogStateChanged<ContractEventArgs>(rawLogs as any, false),
         );
         // Subscribe to removed logs
-        this._onLogRemovedSubscriptionToken = this._blockAndLogStreamerIfExists.subscribeToOnLogRemoved(
-            (rawLogs: RawLogEntry[]) => this._onLogStateChanged<ContractEventArgs>(rawLogs, true),
+        this._onLogRemovedSubscriptionToken = this._blockAndLogStreamerIfExists.subscribeToOnLogsRemoved(
+            (blockHash: string, rawLogs: Log[]) => this._onLogStateChanged<ContractEventArgs>(rawLogs as any, true),
         );
         // Start the block and log stream
         this._blockAndLogStreamerIfExists.reconcileNewBlock((
@@ -120,8 +117,8 @@ export class SubscriptionManager<ContractEventArgs extends DecodedLogArgs, Contr
         if (this._blockAndLogStreamerIfExists === undefined) {
             throw new Error(SubscriptionErrors.SubscriptionNotFound);
         }
-        this._blockAndLogStreamerIfExists.unsubscribeFromOnLogAdded(this._onLogAddedSubscriptionToken as string);
-        this._blockAndLogStreamerIfExists.unsubscribeFromOnLogRemoved(this._onLogRemovedSubscriptionToken as string);
+        this._blockAndLogStreamerIfExists.unsubscribeFromOnLogsAdded(this._onLogAddedSubscriptionToken as string);
+        this._blockAndLogStreamerIfExists.unsubscribeFromOnLogsRemoved(this._onLogRemovedSubscriptionToken as string);
         delete this._blockAndLogStreamerIfExists;
 
         if (this._blockAndLogStreamIntervalIfExists !== undefined) {
@@ -135,11 +132,11 @@ export class SubscriptionManager<ContractEventArgs extends DecodedLogArgs, Contr
         // Convert raw logs to LogEntry format - simple unmarshalling replacement
         const logs: LogEntry[] = rawLogs.map(rawLog => ({
             ...rawLog,
-            logIndex: rawLog.logIndex || 0,
-            transactionIndex: rawLog.transactionIndex || 0,
+            logIndex: typeof rawLog.logIndex === 'string' ? parseInt(rawLog.logIndex) : (rawLog.logIndex || 0),
+            transactionIndex: typeof rawLog.transactionIndex === 'string' ? parseInt(rawLog.transactionIndex) : (rawLog.transactionIndex || 0),
             transactionHash: rawLog.transactionHash || '',
             blockHash: rawLog.blockHash || '',
-            blockNumber: rawLog.blockNumber || 0,
+            blockNumber: typeof rawLog.blockNumber === 'string' ? parseInt(rawLog.blockNumber) : (rawLog.blockNumber || 0),
             address: rawLog.address || '',
             data: rawLog.data || '',
             topics: rawLog.topics || [],
@@ -154,7 +151,7 @@ export class SubscriptionManager<ContractEventArgs extends DecodedLogArgs, Contr
                         isRemoved,
                     };
                     const callback = this._filterCallbacks[filterToken];
-                    callback(logEvent);
+                    callback(null, logEvent);
                 }
             });
         });
