@@ -18,3 +18,6 @@
 [submodule "contracts/zero-ex/lib/forge-std"]
 	path = contracts/zero-ex/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "contracts/exchange-libs/lib/forge-std"]
+	path = contracts/exchange-libs/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
