@@ -4,10 +4,9 @@ import * as IERC20Token from '../artifacts/IERC20Token.json';
 import * as IEtherToken from '../artifacts/IEtherToken.json';
 import * as IZeroEx from '../artifacts/IZeroEx.json';
 import * as WETH9 from '../artifacts/WETH9.json';
-import * as ZRXToken from '../artifacts/ZRXToken.json';
+import * as ZRXWrappedToken from '../artifacts/ZRXWrappedToken.json';
 import * as LibERC20Token from '../artifacts/LibERC20Token.json';
-// Token 已合并到 ERC20Token
-import * as UnlimitedAllowanceToken from '../artifacts/UnlimitedAllowanceToken.json';
+import * as UnlimitedAllowanceERC20Token from '../artifacts/UnlimitedAllowanceERC20Token.json';
 
 // Core contracts
 export {
@@ -17,9 +16,11 @@ export {
     IEtherToken,
     IZeroEx,
     WETH9,
-    ZRXToken,
+    ZRXWrappedToken,
     LibERC20Token,
-    UnlimitedAllowanceToken,
-    // Token 别名指向 ERC20Token
+    UnlimitedAllowanceERC20Token,
+    // 别名保持向后兼容性
     ERC20Token as Token,
+    ZRXWrappedToken as ZRXToken,
+    UnlimitedAllowanceERC20Token as UnlimitedAllowanceToken,
 };
