@@ -9,54 +9,182 @@ const MONOREPO_ROOT = path.join(__dirname, '../../..');
 const pkgJson = JSON.parse(fs.readFileSync(path.join(MONOREPO_ROOT, 'package.json')).toString());
 const pkgNames = pkgJson.config.contractsPackages.split(' ');
 
-// 定义需要发布的 artifacts
+// 定义需要发布的 artifacts - 扩展列表包含更多重要合约
 const artifactsToPublish = [
+    // 基础 ERC20 合约
     'DummyERC20Token',
     'ERC20Token', 
-    'IZeroEx',
+    'MintableERC20Token',
+    'UnlimitedAllowanceERC20Token',
     'WETH9',
     'ZRXToken',
+    
+    // 基础接口
     'IERC20Token',
     'IEtherToken',
-    'LibERC20Token',
-    'Token',
-    'UnlimitedAllowanceToken',
+    'IERC1155Token',
+    'IERC721Token',
+    'IZeroEx',
+    'IStaking',
+    'IZrxTreasury',
+    
+    // 核心 ZeroEx 合约
     'ZeroEx',
+    'ZeroExOptimized',
     'FullMigration',
     'InitialMigration',
+    'FlashWallet',
     'IFlashWallet',
-    'IERC20Transformer',
-    'IOwnableFeature',
-    'ISimpleFunctionRegistryFeature',
-    'ITransformERC20Feature',
-    'FillQuoteTransformer',
-    'PayTakerTransformer',
-    'PositiveSlippageFeeTransformer',
-    'WethTransformer',
+    
+    // 库合约
+    'LibERC20Token',
+    'LibBytes',
+    'LibMath',
+    'LibRichErrors',
+    'LibNativeOrder',
+    'LibSignature',
+    'LibEIP712',
+    'LibFractions',
+    'LibSafeMath',
+    'Authorizable',
+    'Ownable',
+    'ReentrancyGuard',
+    
+    // 功能特性
     'OwnableFeature',
+    'IOwnableFeature',
     'SimpleFunctionRegistryFeature',
+    'ISimpleFunctionRegistryFeature',
     'TransformERC20Feature',
-    'AffiliateFeeTransformer',
+    'ITransformERC20Feature',
     'MetaTransactionsFeature',
-    'LogMetadataTransformer',
+    'MetaTransactionsFeatureV2',
+    'IMetaTransactionsFeature',
+    'IMetaTransactionsFeatureV2',
     'LiquidityProviderFeature',
     'ILiquidityProviderFeature',
     'NativeOrdersFeature',
     'INativeOrdersFeature',
-    'FeeCollectorController',
-    'FeeCollector',
-    'CurveLiquidityProvider',
     'BatchFillNativeOrdersFeature',
     'IBatchFillNativeOrdersFeature',
     'MultiplexFeature',
     'IMultiplexFeature',
     'OtcOrdersFeature',
     'IOtcOrdersFeature',
+    'UniswapFeature',
+    'IUniswapFeature',
+    'UniswapV3Feature',
+    'IUniswapV3Feature',
+    'PancakeSwapFeature',
+    'IPancakeSwapFeature',
+    'ERC1155OrdersFeature',
+    'IERC1155OrdersFeature',
+    'ERC721OrdersFeature',
+    'IERC721OrdersFeature',
+    
+    // Transformers
+    'IERC20Transformer',
+    'FillQuoteTransformer',
+    'PayTakerTransformer',
+    'PositiveSlippageFeeTransformer',
+    'WethTransformer',
+    'AffiliateFeeTransformer',
+    'LogMetadataTransformer',
+    
+    // 流动性提供者
+    'CurveLiquidityProvider',
+    'MooniswapLiquidityProvider',
+    'LiquidityProviderSandbox',
+    'ILiquidityProvider',
+    'ILiquidityProviderSandbox',
+    
+    // 桥接适配器
+    'AbstractBridgeAdapter',
+    'EthereumBridgeAdapter',
+    'PolygonBridgeAdapter',
+    'BSCBridgeAdapter',
+    'AvalancheBridgeAdapter',
+    'ArbitrumBridgeAdapter',
+    'OptimismBridgeAdapter',
+    'FantomBridgeAdapter',
+    'BaseBridgeAdapter',
+    'CeloBridgeAdapter',
+    'IBridgeAdapter',
+    'BridgeProtocols',
+    
+    // 费用收集器
+    'FeeCollector',
+    'FeeCollectorController',
+    'LibFeeCollector',
+    
+    // 国库合约
     'ZrxTreasury',
-    'IZrxTreasury',
-    'DefaultPoolOperator',
     'TreasuryStaking',
-    'IStaking'
+    'DefaultPoolOperator',
+    
+    // 多重复用器
+    'MultiplexLiquidityProvider',
+    'MultiplexOtc',
+    'MultiplexRfq',
+    'MultiplexTransformERC20',
+    'MultiplexUniswapV2',
+    'MultiplexUniswapV3',
+    
+    // 原生订单
+    'NativeOrdersCancellation',
+    'NativeOrdersInfo',
+    'NativeOrdersProtocolFees',
+    'NativeOrdersSettlement',
+    'INativeOrdersEvents',
+    
+    // NFT 订单
+    'NFTOrders',
+    'LibNFTOrder',
+    
+    // Fixins
+    'FixinCommon',
+    'FixinEIP712',
+    'FixinERC1155Spender',
+    'FixinERC721Spender',
+    'FixinProtocolFees',
+    'FixinReentrancyGuard',
+    'FixinTokenSpender',
+    
+    // 部署器
+    'TransformerDeployer',
+    'PermissionlessTransformerDeployer',
+    
+    // 错误库
+    'LibCommonRichErrors',
+    'LibLiquidityProviderRichErrors',
+    'LibMetaTransactionsRichErrors',
+    'LibNativeOrdersRichErrors',
+    'LibNFTOrdersRichErrors',
+    'LibProxyRichErrors',
+    'LibSignatureRichErrors',
+    'LibTransformERC20RichErrors',
+    'LibWalletRichErrors',
+    'LibAuthorizableRichErrors',
+    'LibBytesRichErrors',
+    'LibMathRichErrors',
+    'LibOwnableRichErrors',
+    'LibReentrancyGuardRichErrors',
+    'LibSafeMathRichErrors',
+    'LibSimpleFunctionRegistryRichErrors',
+    
+    // 存储库
+    'LibERC1155OrdersStorage',
+    'LibERC721OrdersStorage',
+    'LibMetaTransactionsStorage',
+    'LibMetaTransactionsV2Storage',
+    'LibNativeOrdersStorage',
+    'LibOtcOrdersStorage',
+    'LibOwnableStorage',
+    'LibProxyStorage',
+    'LibReentrancyGuardStorage',
+    'LibSimpleFunctionRegistryStorage',
+    'LibStorage',
+    'LibTransformERC20Storage'
 ];
 
 console.log(`📦 直接复制 Hardhat artifacts (无转换)...`);
