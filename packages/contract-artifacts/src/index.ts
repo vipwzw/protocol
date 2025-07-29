@@ -6,7 +6,7 @@ import * as IZeroEx from '../artifacts/IZeroEx.json';
 import * as WETH9 from '../artifacts/WETH9.json';
 import * as ZRXToken from '../artifacts/ZRXToken.json';
 import * as LibERC20Token from '../artifacts/LibERC20Token.json';
-import * as Token from '../artifacts/Token.json';
+// Token 已合并到 ERC20Token
 import * as UnlimitedAllowanceToken from '../artifacts/UnlimitedAllowanceToken.json';
 
 // Core contracts
@@ -19,6 +19,7 @@ export {
     WETH9,
     ZRXToken,
     LibERC20Token,
-    Token,
     UnlimitedAllowanceToken,
+    // Token 别名指向 ERC20Token
+    ERC20Token as Token,
 };

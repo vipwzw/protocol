@@ -1,4 +1,5 @@
 import * as chai from 'chai';
+// @ts-ignore - lodash.foreach doesn't have types
 import forEach from 'lodash.foreach';
 import 'mocha';
 

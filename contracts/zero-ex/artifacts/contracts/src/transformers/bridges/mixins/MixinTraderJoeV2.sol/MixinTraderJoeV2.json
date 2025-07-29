@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MixinTraderJoeV2",
+  "sourceName": "contracts/src/transformers/bridges/mixins/MixinTraderJoeV2.sol",
+  "abi": [],
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220b5383d054639c95eccf6ee86ed3e566cc440204789ae4586cb443fd23e47205364736f6c634300081c0033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220b5383d054639c95eccf6ee86ed3e566cc440204789ae4586cb443fd23e47205364736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

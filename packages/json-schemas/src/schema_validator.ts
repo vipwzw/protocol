@@ -1,4 +1,5 @@
 const Ajv = require('ajv'); // require style for ajv v6
+// @ts-ignore - lodash.values doesn't have types
 import values = require('lodash.values');
 
 import { schemas } from './schemas';
@@ -11,7 +12,7 @@ function getOrCreateValidator(): any {
         _globalValidator = new Ajv({ allErrors: true, loadSchema: false });
         
         // 只添加一次所有的 schemas
-        const allSchemas = values(schemas).filter(s => s !== undefined && s.id !== undefined);
+        const allSchemas = values(schemas).filter((s: any) => s !== undefined && s.id !== undefined);
         
         // 先添加所有基础 schema
         for (const schema of allSchemas) {

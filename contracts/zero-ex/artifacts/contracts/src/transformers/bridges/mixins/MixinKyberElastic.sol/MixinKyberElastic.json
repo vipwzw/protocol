@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MixinKyberElastic",
+  "sourceName": "contracts/src/transformers/bridges/mixins/MixinKyberElastic.sol",
+  "abi": [],
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220024f43c5918ea486e61b8ac2a8d387bb6fec748fdc056b6646d3fd51f2cab93b64736f6c634300081c0033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220024f43c5918ea486e61b8ac2a8d387bb6fec748fdc056b6646d3fd51f2cab93b64736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
