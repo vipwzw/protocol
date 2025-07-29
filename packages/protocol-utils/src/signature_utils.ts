@@ -1,7 +1,7 @@
 import { SupportedProvider } from 'ethereum-types';
 import { EIP712TypedData } from '@0x/types';
 import { hexUtils, providerUtils, signTypedDataUtils } from '@0x/utils';
-import { Web3Wrapper } from '@0x/web3-wrapper';
+import { ethers } from 'ethers';
 import * as ethjs from 'ethereumjs-util';
 
 /**
@@ -49,8 +49,9 @@ export async function ethSignHashWithProviderAsync(
     signer: string,
     provider: SupportedProvider,
 ): Promise<Signature> {
-    const w3w = new Web3Wrapper(providerUtils.standardizeOrThrow(provider));
-    const rpcSig = await w3w.signMessageAsync(signer, hash);
+    const ethersProvider = new ethers.JsonRpcProvider(providerUtils.standardizeOrThrow(provider) as any);
+    const ethersigner = await ethersProvider.getSigner(signer);
+    const rpcSig = await ethersigner.signMessage(ethers.getBytes(hash));
     return {
         ...parseRpcSignature(rpcSig),
         signatureType: SignatureType.EthSign,
@@ -78,8 +79,9 @@ export async function eip712SignTypedDataWithProviderAsync(
     signer: string,
     provider: SupportedProvider,
 ): Promise<Signature> {
-    const w3w = new Web3Wrapper(providerUtils.standardizeOrThrow(provider));
-    const rpcSig = await w3w.signTypedDataAsync(signer, data);
+    const ethersProvider = new ethers.JsonRpcProvider(providerUtils.standardizeOrThrow(provider) as any);
+    const ethersigner = await ethersProvider.getSigner(signer);
+    const rpcSig = await ethersigner.signTypedData(data.domain, data.types, data.message);
     return {
         ...parseRpcSignature(rpcSig),
         signatureType: SignatureType.EIP712,

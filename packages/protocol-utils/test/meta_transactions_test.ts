@@ -1,6 +1,6 @@
 import { chaiSetup } from './chai_setup';
-import { web3Factory, Web3Wrapper } from './web3_factory';
-import { Web3ProviderEngine } from '@0x/subproviders';
+import { web3Factory } from './web3_factory';
+import { JsonRpcProvider } from 'ethers';
 
 import { expect } from 'chai';
 import * as ethjs from 'ethereumjs-util';
@@ -11,14 +11,15 @@ import { SignatureType } from '../src/signature_utils';
 chaiSetup.configure();
 
 describe('meta_transactions', () => {
-    let provider: Web3ProviderEngine;
+    let provider: any;
     let providerMaker: string;
     const key = '0xee094b79aa0315914955f2f09be9abe541dcdc51f0aae5bec5453e9f73a471a6';
     const keyMaker = ethjs.bufferToHex(ethjs.privateToAddress(ethjs.toBuffer(key)));
 
     before(async () => {
         provider = web3Factory.getRpcProvider();
-        [providerMaker] = await new Web3Wrapper(provider).getAvailableAddressesAsync();
+        // Use a test address from Hardhat's default accounts
+        providerMaker = '0x5409ED021D9299bf6814279A6A1411A7e866A631';
     });
 
     describe('MetaTransaction', () => {

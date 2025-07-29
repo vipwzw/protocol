@@ -1,5 +1,7 @@
 import * as chai from 'chai';
+// @ts-ignore - no types available for dirty-chai
 import * as dirtyChai from 'dirty-chai';
+// @ts-ignore - no types available for chai-bignumber  
 import ChaiBigNumber = require('chai-bignumber');
 
 // Setup chai

@@ -1,4 +1,3 @@
-import { Web3Wrapper } from '@0x/web3-wrapper';
 import { JsonRpcProvider } from 'ethers';
 
 // Hardhat node configuration  
@@ -32,4 +31,4 @@ export const web3Factory = {
     }
 };
 
-export { Web3Wrapper }; 
+// Web3Wrapper removed - using ethers.js directly 

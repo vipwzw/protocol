@@ -1,6 +1,6 @@
 import { chaiSetup } from './chai_setup';
-import { web3Factory, Web3Wrapper } from './web3_factory';
-import { Web3ProviderEngine } from '@0x/subproviders';
+import { web3Factory } from './web3_factory';
+import { JsonRpcProvider } from 'ethers';
 import { expect } from 'chai';
 
 import {
@@ -14,14 +14,15 @@ import {
 chaiSetup.configure();
 
 describe('signature_utils', () => {
-    let provider: Web3ProviderEngine;
+    let provider: any;
     let signer: string;
     const hash = '0x38a8da1ec749de4220312ce7fa62aaf01a6e8c1342cbce81278ae7c8885c2475';
     const key = '0xee094b79aa0315914955f2f09be9abe541dcdc51f0aae5bec5453e9f73a471a6';
 
     before(async () => {
         provider = web3Factory.getRpcProvider();
-        [signer] = await new Web3Wrapper(provider).getAvailableAddressesAsync();
+        // Use a test address from Hardhat's default accounts
+        signer = '0x5409ED021D9299bf6814279A6A1411A7e866A631';
     });
 
     describe('ethSignHashWithProviderAsync()', () => {
