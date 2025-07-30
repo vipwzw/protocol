@@ -40,4 +40,4 @@ export {
     FullMigration as FullMigrationContract,
     InitialMigration as InitialMigrationContract,
 } from './wrappers';
-export { EIP712TypedData } from '@0x/utils';
+// export type { EIP712TypedData } from '@0x/utils'; // 暂时注释掉，因为编译问题
