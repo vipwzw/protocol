@@ -32,6 +32,7 @@
     },
     "homepage": "https://github.com/0xProject/tools/tree/main/utils",
     "devDependencies": {
+        "@0x/types": "file:../../packages/types",
         "@types/lodash": "^4.14.200",
         "@types/mocha": "^10.0.0",
         "@types/node": "^20.0.0",
@@ -43,7 +44,6 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
-        "@0x/types": "file:../../packages/types",
         "abortcontroller-polyfill": "^1.1.9",
         "chalk": "^4.1.2",
         "detect-node": "^2.1.0",

@@ -900,3 +900,52 @@ export interface SimpleEvmOutput {
 export interface SimpleEvmBytecodeOutput {
     object: string;
 }
+
+// 运行时实用函数，帮助 yarn workspaces 更好地识别这个包
+export const PACKAGE_VERSION = '3.3.7';
+
+/**
+ * 获取包版本信息
+ */
+export function getPackageVersion(): string {
+    return PACKAGE_VERSION;
+}
+
+/**
+ * 检查是否为有效的订单对象
+ */
+export function isValidOrder(obj: any): obj is Order {
+    return obj && 
+           typeof obj.chainId === 'number' &&
+           typeof obj.exchangeAddress === 'string' &&
+           typeof obj.makerAddress === 'string' &&
+           typeof obj.takerAddress === 'string';
+}
+
+/**
+ * 检查是否为已签名的订单
+ */
+export function isSignedOrder(obj: any): obj is SignedOrder {
+    return isValidOrder(obj) && typeof (obj as SignedOrder).signature === 'string';
+}
+
+/**
+ * 创建一个空的索引过滤值对象
+ */
+export function createEmptyIndexedFilterValues(): IndexedFilterValues {
+    return {};
+}
+
+/**
+ * 获取支持的资产代理 ID 列表
+ */
+export function getSupportedAssetProxyIds(): string[] {
+    return Object.values(AssetProxyId);
+}
+
+/**
+ * 获取支持的签名类型列表
+ */
+export function getSupportedSignatureTypes(): SignatureType[] {
+    return Object.values(SignatureType).filter(v => typeof v === 'number') as SignatureType[];
+}

@@ -8,7 +8,7 @@
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "scripts": {
-        "build": "tsc -b",
+        "build": "rm -f tsconfig.tsbuildinfo && tsc",
         "build:ci": "yarn build",
         "clean": "shx rm -rf lib generated_docs coverage .nyc_output *.log",
         "clean:node-modules": "shx rm -rf node_modules",
