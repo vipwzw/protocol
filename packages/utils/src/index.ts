@@ -20,17 +20,15 @@ export * from './types';
 
 // 显式导出类型定义（interface 和 type 在运行时不存在，需要显式导出）
 export type {
-    // 核心类型
+    // 核心类型 (仅接口和类型别名，枚举已通过 export * 导出)
     Order,
     SignedOrder,
-    MarketOperation,
     ZeroExTransaction,
     SignedZeroExTransaction,
     ExchangeProxyMetaTransaction,
     SignedExchangeProxyMetaTransaction,
     ECSignature,
     ValidatorSignature,
-    ExchangeContractErrs,
     ArtifactContractName,
     Artifact,
     DoneCallback,
@@ -40,8 +38,6 @@ export type {
     OrderStateInvalid,
     OrderState,
     Token,
-    SignatureType,
-    AssetProxyId,
     // 资产数据类型
     ERC20AssetData,
     ERC20BridgeAssetData,
@@ -61,7 +57,7 @@ export type {
     EIP712ObjectValue,
     EIP712Object,
     EIP712TypedData,
-    // 核心功能类型 - 这些是我们要修复的类型
+    // 核心功能类型
     IndexedFilterValues,
     EventCallback,
     DecodedLogEvent,
@@ -70,18 +66,11 @@ export type {
     MatchedFillResults,
     BatchMatchedFillResults,
     OrderInfo,
-    OrderStatus,
-    OrderTransferResults,
-    RevertReason,
-    StatusCodes,
     // API 和通信类型
     OrdersChannelSubscriptionOpts,
     OrdersChannelMessage,
-    OrdersChannelMessageTypes,
     UpdateOrdersChannelMessage,
     UnknownOrdersChannelMessage,
-    WebsocketConnectionEventType,
-    WebsocketClientEventType,
     OrdersResponse,
     APIOrder,
     AssetPairsRequestOpts,
