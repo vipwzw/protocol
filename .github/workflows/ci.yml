@@ -52,6 +52,9 @@ jobs:
         if: steps.node-cache.outputs.cache-hit != 'true'
         run: yarn install --frozen-lockfile
 
+      - name: Setup workspaces
+        run: yarn setup:workspaces
+
       - name: Setup Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
@@ -99,6 +102,9 @@ jobs:
       - name: Install dependencies
         if: needs.setup.outputs.node-cache-hit != 'true'
         run: yarn install --frozen-lockfile
+
+      - name: Setup workspaces
+        run: yarn setup:workspaces
 
       - name: Setup Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -157,11 +163,11 @@ jobs:
         if: needs.setup.outputs.node-cache-hit != 'true'
         run: yarn install --frozen-lockfile
 
-      - name: Lint TypeScript
-        run: yarn lint:ts
+      - name: Setup workspaces
+        run: yarn setup:workspaces
 
-      - name: Lint Solidity contracts
-        run: yarn lint:contracts
+      - name: Lint code
+        run: yarn lint
 
       - name: Check Prettier formatting
         run: yarn prettier:ci
@@ -237,6 +243,9 @@ jobs:
         if: needs.setup.outputs.node-cache-hit != 'true'
         run: yarn install --frozen-lockfile
 
+      - name: Setup workspaces
+        run: yarn setup:workspaces
+
       - name: Setup Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
@@ -263,13 +272,15 @@ jobs:
       - name: Test @0x/contracts-*
         run: |
           yarn wsrun \
-            -p @0x/contracts-multisig \
             -p @0x/contracts-utils \
             -p @0x/contracts-exchange-libs \
             -p @0x/contracts-erc721 \
             -p @0x/contracts-erc1155 \
+            -p @0x/contracts-erc20 \
             -p @0x/contracts-asset-proxy \
-            -p @0x/contracts-broker \
+            -p @0x/contracts-staking \
+            -p @0x/contracts-treasury \
+            -p @0x/contracts-governance \
             -p @0x/contracts-zero-ex \
             -m --serial -c test:ci
 
@@ -304,6 +315,9 @@ jobs:
         if: needs.setup.outputs.node-cache-hit != 'true'
         run: yarn install --frozen-lockfile
 
+      - name: Setup workspaces
+        run: yarn setup:workspaces
+
       - name: Restore build artifacts cache
         uses: actions/cache@v4
         with:
@@ -330,7 +344,7 @@ jobs:
     timeout-minutes: 25
     strategy:
       matrix:
-        contract: [erc20, zero-ex, governance]
+        contract: [asset-proxy, erc20, erc721, erc1155, exchange-libs, governance, staking, treasury, utils, zero-ex]
       fail-fast: false
     env:
       ARBITRUM_RPC_URL: ${{ secrets.ARBITRUM_RPC_URL }}
