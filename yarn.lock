@@ -5,9 +5,9 @@
 "@0x/base-contract@file:packages/base-contract":
   version "7.0.1"
   dependencies:
-    "@0x/json-schemas" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-e9ad9b85-0c46-40a3-801a-346017172ea9-1753843232342/node_modules/packages/json-schemas"
-    "@0x/types" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-e9ad9b85-0c46-40a3-801a-346017172ea9-1753843232342/node_modules/packages/types"
-    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-e9ad9b85-0c46-40a3-801a-346017172ea9-1753843232342/node_modules/packages/utils"
+    "@0x/json-schemas" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-07c554b8-90c1-4a5a-a24c-7456521a79dd-1753843434963/node_modules/packages/json-schemas"
+    "@0x/types" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-07c554b8-90c1-4a5a-a24c-7456521a79dd-1753843434963/node_modules/packages/types"
+    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-07c554b8-90c1-4a5a-a24c-7456521a79dd-1753843434963/node_modules/packages/utils"
     "@ethereumjs/vm" "^5.9.3"
     ethereumjs-blockstream "^7.0.0"
     ethereumjs-util "^7.1.5"
@@ -21,7 +21,7 @@
 "@0x/contracts-asset-proxy@file:contracts/asset-proxy":
   version "3.7.18"
   dependencies:
-    "@0x/contracts-erc1155" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-asset-proxy-3.7.18-32eab46e-4210-46f8-a453-16742b1fa5c8-1753843232341/node_modules/@0x/erc1155"
+    "@0x/contracts-erc1155" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-asset-proxy-3.7.18-c132acc3-c403-48f3-a6d2-e3f16b683b0f-1753843434964/node_modules/@0x/erc1155"
     ethereum-types "^3.5.0"
     lodash "^4.17.11"
 
@@ -36,7 +36,7 @@
 "@0x/contracts-exchange-libs@file:contracts/exchange-libs":
   version "4.3.36"
   dependencies:
-    "@0x/contracts-utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-exchange-libs-4.3.36-efa23b48-a50e-4ed2-9d59-f380bc28252a-1753843232342/node_modules/@0x/utils"
+    "@0x/contracts-utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-exchange-libs-4.3.36-cbb301c2-035b-4dfe-8dd4-083e8696b1c1-1753843434963/node_modules/@0x/utils"
     ethereum-types "^3.5.0"
 
 "@0x/contracts-staking@file:contracts/staking":
@@ -57,8 +57,8 @@
 "@0x/protocol-utils@file:packages/protocol-utils":
   version "11.24.1"
   dependencies:
-    "@0x/contract-addresses" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-95bdbda6-a98a-41e5-835c-f304ca346d6e-1753843232343/node_modules/packages/contract-addresses"
-    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-95bdbda6-a98a-41e5-835c-f304ca346d6e-1753843232343/node_modules/packages/utils"
+    "@0x/contract-addresses" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-a56cea2e-2dac-47d5-8770-f6398afa6680-1753843434964/node_modules/packages/contract-addresses"
+    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-a56cea2e-2dac-47d5-8770-f6398afa6680-1753843434964/node_modules/packages/utils"
     chai "^4.5.0"
     ethereumjs-util "^7.0.10"
     ethers "^6.15.0"
@@ -107,11 +107,6 @@
   version "7.27.1"
   resolved "https://registry.npmjs.org/@babel/helper-validator-identifier/-/helper-validator-identifier-7.27.1.tgz#a7054dcc145a967dd4dc8fee845a57c1316c9df8"
   integrity sha512-D2hP9eA+Sqx1kBZgzxZh0y1trbuU+JoDkiEwqhQ36nodYqJwyEIhPSdMNd7lOm/4io72luTPWH20Yda0xOuUow==
-
-"@bytecodealliance/preview2-shim@0.17.2":
-  version "0.17.2"
-  resolved "https://registry.npmjs.org/@bytecodealliance/preview2-shim/-/preview2-shim-0.17.2.tgz#8d0c732cba29169a85aa3e603c767e039378f89b"
-  integrity sha512-mNm/lblgES8UkVle8rGImXOz4TtL3eU3inHay/7TVchkKrb/lgcVvTK0+VAw8p5zQ0rgQsXm1j5dOlAAd+MeoA==
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
@@ -672,13 +667,6 @@
   version "4.0.0"
   resolved "https://registry.npmjs.org/@nomicfoundation/hardhat-toolbox/-/hardhat-toolbox-4.0.0.tgz#eb1f619218dd1414fa161dfec92d3e5e53a2f407"
   integrity sha512-jhcWHp0aHaL0aDYj8IJl80v4SZXWMS1A2XxXa1CA6pBiFfJKuZinCkO6wb+POAt0LIfXB3gA3AgdcOccrcwBwA==
-
-"@nomicfoundation/slang@1.2.0":
-  version "1.2.0"
-  resolved "https://registry.npmjs.org/@nomicfoundation/slang/-/slang-1.2.0.tgz#38a389729bf2bc882b75e3feada9995bedc50091"
-  integrity sha512-+04Z1RHbbz0ldDbHKQFOzveCdI9Rd3TZZu7fno5hHy3OsqTo9UK5Jgqo68wMvRovCO99POv6oCEyO7+urGeN8Q==
-  dependencies:
-    "@bytecodealliance/preview2-shim" "0.17.2"
 
 "@nomicfoundation/solidity-analyzer-darwin-arm64@0.1.2":
   version "0.1.2"
@@ -5805,22 +5793,13 @@ prettier-linter-helpers@^1.0.0:
   dependencies:
     fast-diff "^1.1.2"
 
-prettier-plugin-solidity@^1.0.0-alpha.4:
+prettier-plugin-solidity@1.4.3, prettier-plugin-solidity@^1.0.0-alpha.4:
   version "1.4.3"
   resolved "https://registry.npmjs.org/prettier-plugin-solidity/-/prettier-plugin-solidity-1.4.3.tgz#73f8adeb0214fb3db1c2d59023b39e079be69019"
   integrity sha512-Mrr/iiR9f9IaeGRMZY2ApumXcn/C5Gs3S7B7hWB3gigBFML06C0yEyW86oLp0eqiA0qg+46FaChgLPJCj/pIlg==
   dependencies:
     "@solidity-parser/parser" "^0.20.1"
     semver "^7.7.1"
-
-prettier-plugin-solidity@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.npmjs.org/prettier-plugin-solidity/-/prettier-plugin-solidity-2.1.0.tgz#2298aefc92c5ebd3a0323f98151d2a82f38fc7c6"
-  integrity sha512-O5HX4/PCE5aqiaEiNGbSRLbSBZQ6kLswAav5LBSewwzhT+sZlN6iAaLZlZcJzPEnIAxwLEHP03xKEg92fflT9Q==
-  dependencies:
-    "@nomicfoundation/slang" "1.2.0"
-    "@solidity-parser/parser" "^0.20.1"
-    semver "^7.7.2"
 
 prettier@^1.14.3:
   version "1.19.1"
@@ -6261,7 +6240,7 @@ semver@^6.3.0:
   resolved "https://registry.npmjs.org/semver/-/semver-6.3.1.tgz#556d2ef8689146e46dcea4bfdd095f3434dffcb4"
   integrity sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==
 
-semver@^7.5.2, semver@^7.6.0, semver@^7.7.1, semver@^7.7.2:
+semver@^7.5.2, semver@^7.6.0, semver@^7.7.1:
   version "7.7.2"
   resolved "https://registry.npmjs.org/semver/-/semver-7.7.2.tgz#67d99fdcd35cec21e6f8b87a7fd515a33f982b58"
   integrity sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==
