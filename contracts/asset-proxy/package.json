@@ -13,7 +13,7 @@
         "build": "tsc -b",
         "build:full": "forge build && npx hardhat compile && npx hardhat typechain && tsc -b",
         "build:ts": "tsc -b",
-        "compile": "npx hardhat compile",
+        "compile": "forge build && npx hardhat compile",
         "typechain": "npx hardhat typechain",
         "test": "npx hardhat test",
         "test:foundry": "forge test",
