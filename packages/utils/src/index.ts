@@ -17,9 +17,10 @@ export { hexUtils } from './hex_utils';
 export import AbiEncoder = require('./abi_encoder');
 export { EncodingRules, DecodingRules } from './abi_encoder';
 export * from './types';
-// 从合并的 types.ts 导出所有原 @0x/utils 的类型和函数
-export {
-    // 接口和类型
+
+// 显式导出类型定义（interface 和 type 在运行时不存在，需要显式导出）
+export type {
+    // 核心类型
     Order,
     SignedOrder,
     MarketOperation,
@@ -41,6 +42,7 @@ export {
     Token,
     SignatureType,
     AssetProxyId,
+    // 资产数据类型
     ERC20AssetData,
     ERC20BridgeAssetData,
     ERC721AssetData,
@@ -52,13 +54,18 @@ export {
     MultiAssetDataWithRecursiveDecoding,
     DutchAuctionData,
     AssetData,
+    // EIP712 类型
     EIP712DomainWithDefaultSchema,
     EIP712Parameter,
     EIP712Types,
     EIP712ObjectValue,
     EIP712Object,
     EIP712TypedData,
+    // 核心功能类型 - 这些是我们要修复的类型
     IndexedFilterValues,
+    EventCallback,
+    DecodedLogEvent,
+    // 交易和订单类型
     FillResults,
     MatchedFillResults,
     BatchMatchedFillResults,
@@ -67,6 +74,7 @@ export {
     OrderTransferResults,
     RevertReason,
     StatusCodes,
+    // API 和通信类型
     OrdersChannelSubscriptionOpts,
     OrdersChannelMessage,
     OrdersChannelMessageTypes,
@@ -93,34 +101,10 @@ export {
     DutchAuctionDetails,
     PackageJSONConfig,
     PackageJSON,
-    DecodedLogEvent,
-    EventCallback,
     SimpleContractArtifact,
     SimpleStandardContractOutput,
     SimpleEvmOutput,
     SimpleEvmBytecodeOutput,
-    // 常量
-    TYPES_PACKAGE_VERSION,
-    TYPES_PACKAGE_NAME,
-    TYPES_NULL_ADDRESS,
-    TYPES_NULL_BYTES,
-    TYPES_BYTES_IN_ADDRESS,
-    TYPES_BYTES32_LENGTH,
-    TYPES_HEX_PREFIX,
-    // 函数
-    isValidAddress,
-    isValidOrder,
-    isSignedOrder,
-    createEmptyIndexedFilterValues,
-    getSupportedAssetProxyIds,
-    getSupportedSignatureTypes,
-    createEmptyOrder,
-    isValidHex,
-    normalizeAddress,
-    addressesEqual,
-    generateRandomSalt,
-    bigIntToHex,
-    hexToBigInt,
 } from './types';
 export { generatePseudoRandom256BitNumber } from './random';
 export {
