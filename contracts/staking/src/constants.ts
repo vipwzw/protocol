@@ -1,4 +1,4 @@
-import { constants as testConstants } from '@0x/contracts-test-utils';
+import { constants as testConstants } from '@0x/test-utils';
 
 const TEN_DAYS = 10 * 24 * 60 * 60;
 const PPM = 10 ** 6;

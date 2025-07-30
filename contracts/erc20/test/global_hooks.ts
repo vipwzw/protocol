@@ -1,6 +1,6 @@
 import { env, EnvVars } from '@0x/dev-utils';
 
-import { coverage, profiler, provider } from '@0x/contracts-test-utils';
+import { coverage, profiler, provider } from '@0x/test-utils';
 import { providerUtils } from '@0x/utils';
 
 before('start web3 provider', () => {

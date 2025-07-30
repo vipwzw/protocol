@@ -5,7 +5,7 @@ import {
     expect,
     getRandomPortion,
     verifyEventsFromLogs,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { LimitOrder, LimitOrderFields, OrderStatus, RevertErrors, RfqOrder, RfqOrderFields } from '@0x/protocol-utils';
 import { BigNumber } from '@0x/utils';
 import { TransactionReceiptWithDecodedLogs } from 'ethereum-types';

@@ -1,4 +1,4 @@
-import { blockchainTests, constants, expect, verifyEventsFromLogs } from '@0x/contracts-test-utils';
+import { blockchainTests, constants, expect, verifyEventsFromLogs } from '@0x/test-utils';
 import { BigNumber, StakingRevertErrors } from '@0x/utils';
 import { LogWithDecodedArgs } from 'ethereum-types';
 

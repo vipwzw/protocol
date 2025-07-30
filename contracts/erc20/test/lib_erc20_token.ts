@@ -5,7 +5,7 @@ import {
     getRandomInteger,
     randomAddress,
     verifyEventsFromLogs,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { hexUtils, RawRevertError, StringRevertError } from '@0x/utils';
 
 import { TestLibERC20TokenContract, TestLibERC20TokenTargetEvents } from './wrappers';

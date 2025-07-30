@@ -6,7 +6,7 @@ import {
     getRandomPortion,
     randomAddress,
     verifyEventsFromLogs,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import {
     LimitOrder,
     LimitOrderFields,

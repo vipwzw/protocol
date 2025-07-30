@@ -1,4 +1,4 @@
-import { blockchainTests, describe, expect } from '@0x/contracts-test-utils';
+import { blockchainTests, describe, expect } from '@0x/test-utils';
 
 import { artifacts } from './artifacts';
 import { getRandomLimitOrder, getRandomRfqOrder } from './utils/orders';

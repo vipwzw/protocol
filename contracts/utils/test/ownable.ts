@@ -1,4 +1,4 @@
-import { expect } from '@0x/contracts-test-utils';
+import { expect } from '@0x/test-utils';
 const { ethers } = require('hardhat');
 
 describe('Ownable', () => {

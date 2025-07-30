@@ -1,5 +1,5 @@
 import { LibMathRevertErrors } from '@0x/contracts-exchange-libs';
-import { blockchainTests, constants, expect, verifyEventsFromLogs } from '@0x/contracts-test-utils';
+import { blockchainTests, constants, expect, verifyEventsFromLogs } from '@0x/test-utils';
 import { AssetProxyId, RevertReason } from '@0x/utils';
 import { BigNumber } from '@0x/utils';
 import * as _ from 'lodash';

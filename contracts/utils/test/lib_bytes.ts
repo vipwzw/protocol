@@ -1,4 +1,4 @@
-import { expect } from '@0x/contracts-test-utils';
+import { expect } from '@0x/test-utils';
 import { BigNumber } from '@0x/utils';
 import * as ethUtil from 'ethereumjs-util';
 

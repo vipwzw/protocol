@@ -5,7 +5,7 @@ import {
     getRandomInteger,
     randomAddress,
     verifyEventsFromLogs,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { MetaTransaction, MetaTransactionFields } from '@0x/protocol-utils';
 import { BigNumber, hexUtils, StringRevertError, ZeroExRevertErrors } from '@0x/utils';
 import * as _ from 'lodash';

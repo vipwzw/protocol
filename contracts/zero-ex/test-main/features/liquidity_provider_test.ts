@@ -1,5 +1,5 @@
 import { artifacts as erc20Artifacts, DummyERC20TokenContract } from '@0x/contracts-erc20';
-import { blockchainTests, constants, expect, verifyEventsFromLogs } from '@0x/contracts-test-utils';
+import { blockchainTests, constants, expect, verifyEventsFromLogs } from '@0x/test-utils';
 import { BigNumber, OwnableRevertErrors, ZeroExRevertErrors } from '@0x/utils';
 
 import { IOwnableFeatureContract, IZeroExContract, LiquidityProviderFeatureContract } from '../../src/wrappers';

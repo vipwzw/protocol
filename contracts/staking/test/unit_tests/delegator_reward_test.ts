@@ -8,7 +8,7 @@ import {
     Numberish,
     randomAddress,
     toBaseUnitAmount,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { BigNumber, hexUtils } from '@0x/utils';
 import { LogEntry } from 'ethereum-types';
 

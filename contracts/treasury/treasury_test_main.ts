@@ -16,7 +16,7 @@ import {
     getRandomInteger,
     randomAddress,
     verifyEventsFromLogs,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { TreasuryVote } from '@0x/protocol-utils';
 import { BigNumber, hexUtils } from '@0x/utils';
 import * as ethUtil from 'ethereumjs-util';

@@ -5,7 +5,7 @@ import {
     expect,
     getRandomInteger,
     Numberish,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import {
     encodeFillQuoteTransformerData,
     FillQuoteTransformerBridgeOrder as BridgeOrder,

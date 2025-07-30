@@ -17,7 +17,7 @@ import {
     sendTransactionResult,
     txDefaults,
     web3Wrapper,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 ```
 
 ## Contributing
@@ -45,13 +45,13 @@ yarn install
 To build this package and all other monorepo packages that it depends on, run the following from the monorepo root directory:
 
 ```bash
-PKG=@0x/contracts-test-utils yarn build
+PKG=@0x/test-utils yarn build
 ```
 
 Or continuously rebuild on change:
 
 ```bash
-PKG=@0x/contracts-test-utils yarn watch
+PKG=@0x/test-utils yarn watch
 ```
 
 ### Clean

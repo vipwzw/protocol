@@ -4,7 +4,7 @@ import {
     expect,
     filterLogsToArguments,
     verifyEventsFromLogs,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { BigNumber, hexUtils } from '@0x/utils';
 import * as _ from 'lodash';

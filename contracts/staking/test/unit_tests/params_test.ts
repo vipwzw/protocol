@@ -1,4 +1,4 @@
-import { blockchainTests, expect, filterLogsToArguments } from '@0x/contracts-test-utils';
+import { blockchainTests, expect, filterLogsToArguments } from '@0x/test-utils';
 import { AuthorizableRevertErrors } from '@0x/contracts-utils';
 import { BigNumber } from '@0x/utils';
 import { TransactionReceiptWithDecodedLogs } from 'ethereum-types';

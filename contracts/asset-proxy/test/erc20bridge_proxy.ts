@@ -5,7 +5,7 @@ import {
     getRandomInteger,
     Numberish,
     randomAddress,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { AuthorizableRevertErrors } from '@0x/contracts-utils';
 import { AssetProxyId } from '@0x/utils';
 import { AbiEncoder, BigNumber, hexUtils, StringRevertError } from '@0x/utils';

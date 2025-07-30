@@ -1,4 +1,4 @@
-import { blockchainTests } from '@0x/contracts-test-utils';
+import { blockchainTests } from '@0x/test-utils';
 
 import { artifacts } from './artifacts';
 import { TestStorageLayoutAndConstantsContract } from './wrappers';

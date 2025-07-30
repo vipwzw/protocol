@@ -243,7 +243,7 @@ fi
 log_step "Package Tests"
 echo "运行本地包测试..."
 
-LOCAL_PACKAGES="@0x/contracts-test-utils @0x/contract-addresses @0x/contract-artifacts @0x/contract-wrappers-test @0x/order-utils"
+LOCAL_PACKAGES="@0x/test-utils @0x/contract-addresses @0x/contract-artifacts @0x/contract-wrappers-test @0x/order-utils"
 
 echo "测试本地包: $LOCAL_PACKAGES"
 if yarn wsrun -p $LOCAL_PACKAGES -m --serial -c test:ci; then

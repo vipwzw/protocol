@@ -6,7 +6,7 @@
 
 - **@0x/contract-addresses**: 24/24 测试通过
 - **@0x/contract-artifacts**: 2/2 测试通过
-- **@0x/contracts-test-utils**: 27/31 测试通过 (4 个跳过)
+- **@0x/test-utils**: 27/31 测试通过 (4 个跳过)
 - **@0x/contracts-treasury**: 43/43 测试通过 ✅ (已修复性能测试)
 - **@0x/contracts-utils**: 64/64 测试通过
 

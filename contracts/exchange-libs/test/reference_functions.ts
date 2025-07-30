@@ -1,4 +1,4 @@
-import { constants, describe, expect } from '@0x/contracts-test-utils';
+import { constants, describe, expect } from '@0x/test-utils';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { BigNumber, LibMathRevertErrors } from '@0x/utils';
 import * as _ from 'lodash';

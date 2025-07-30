@@ -5,7 +5,7 @@ import {
     getRandomInteger,
     toBaseUnitAmount,
     verifyEventsFromLogs,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { OtcOrder, RfqOrder, SIGNATURE_ABI } from '@0x/protocol-utils';
 import { AbiEncoder, BigNumber, hexUtils } from '@0x/utils';
 import { LogWithDecodedArgs } from 'ethereum-types';

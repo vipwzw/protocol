@@ -1,4 +1,4 @@
-import { blockchainTests, expect, randomAddress } from '@0x/contracts-test-utils';
+import { blockchainTests, expect, randomAddress } from '@0x/test-utils';
 import { hexUtils, ZeroExRevertErrors } from '@0x/utils';
 
 import { artifacts } from './artifacts';

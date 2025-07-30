@@ -1,4 +1,4 @@
-import { blockchainTests, constants, expect, randomAddress } from '@0x/contracts-test-utils';
+import { blockchainTests, constants, expect, randomAddress } from '@0x/test-utils';
 import { BigNumber, signTypedDataUtils } from '@0x/utils';
 import * as ethUtil from 'ethereumjs-util';
 

@@ -7,7 +7,7 @@ import {
     getRandomPortion,
     randomAddress,
     verifyEventsFromLogs,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { ERC1155Order, NFTOrder, RevertErrors, SIGNATURE_ABI, SignatureType } from '@0x/protocol-utils';
 import { AbiEncoder, BigNumber, hexUtils, NULL_BYTES, StringRevertError } from '@0x/utils';
 

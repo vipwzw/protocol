@@ -1,5 +1,5 @@
 import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
-import { blockchainTests, describe } from '@0x/contracts-test-utils';
+import { blockchainTests, describe } from '@0x/test-utils';
 import * as _ from 'lodash';
 
 import { deployAndConfigureContractsAsync, StakingApiWrapper } from './utils/api_wrapper';

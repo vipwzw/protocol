@@ -6,7 +6,7 @@ import {
     ERC1155NonFungibleHoldingsByOwner,
     LogDecoder,
     txDefaults,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { BigNumber } from '@0x/utils';
 import { Web3Wrapper } from '@0x/web3-wrapper';
 import { Provider, TransactionReceiptWithDecodedLogs } from 'ethereum-types';

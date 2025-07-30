@@ -1,4 +1,4 @@
-import { blockchainTests, constants, expect, getRandomInteger, randomAddress } from '@0x/contracts-test-utils';
+import { blockchainTests, constants, expect, getRandomInteger, randomAddress } from '@0x/test-utils';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { BigNumber, hexUtils } from '@0x/utils';
 

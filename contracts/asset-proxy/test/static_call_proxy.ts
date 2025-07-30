@@ -5,7 +5,7 @@ import {
     provider,
     txDefaults,
     web3Wrapper,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { BlockchainLifecycle } from '@0x/dev-utils';
 import { AssetProxyId, RevertReason } from '@0x/utils';
 import { AbiEncoder, BigNumber } from '@0x/utils';

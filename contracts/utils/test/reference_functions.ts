@@ -1,5 +1,5 @@
 import { BigNumber } from '@0x/utils';
-import { constants, describe, expect } from '@0x/contracts-test-utils';
+import { constants, describe, expect } from '@0x/test-utils';
 import { SafeMathRevertErrors } from '@0x/utils';
 
 import { safeAdd, safeDiv, safeMul, safeSub } from '../src/reference_functions';

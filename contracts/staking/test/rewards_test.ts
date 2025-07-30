@@ -1,5 +1,5 @@
 import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
-import { blockchainTests, constants, describe, expect, shortZip, toBaseUnitAmount } from '@0x/contracts-test-utils';
+import { blockchainTests, constants, describe, expect, shortZip, toBaseUnitAmount } from '@0x/test-utils';
 import { BigNumber, StakingRevertErrors } from '@0x/utils';
 import * as _ from 'lodash';
 

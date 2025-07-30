@@ -1,4 +1,4 @@
-import { blockchainTests, expect, Numberish } from '@0x/contracts-test-utils';
+import { blockchainTests, expect, Numberish } from '@0x/test-utils';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { BigNumber } from '@0x/utils';
 

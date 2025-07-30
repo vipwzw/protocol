@@ -154,7 +154,7 @@ treasury
 | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | [`@0x/contracts-zero-ex`](/contracts/zero-ex)       | [![npm](https://img.shields.io/npm/v/@0x/contracts-zero-ex.svg)](https://www.npmjs.com/package/@0x/contracts-zero-ex)       | 用于在协议内结算交易的合约                    |
 | [`@0x/contracts-erc20`](/contracts/erc20)           | [![npm](https://img.shields.io/npm/v/@0x/contracts-erc20.svg)](https://www.npmjs.com/package/@0x/contracts-erc20)           | 各种 ERC20 代币的实现                         |
-| [`@0x/contracts-test-utils`](/contracts/test-utils) | [![npm](https://img.shields.io/npm/v/@0x/contracts-test-utils.svg)](https://www.npmjs.com/package/@0x/contracts-test-utils) | 用于测试合约的 TypeScript/Javascript 共享工具 |
+| [`@0x/test-utils`](/packages/test-utils) | [![npm](https://img.shields.io/npm/v/@0x/test-utils.svg)](https://www.npmjs.com/package/@0x/test-utils) | 用于测试合约的 TypeScript/Javascript 共享工具 |
 | [`@0x/contracts-utils`](/contracts/utils)           | [![npm](https://img.shields.io/npm/v/@0x/contracts-utils.svg)](https://www.npmjs.com/package/@0x/contracts-utils)           | 在所有合约中使用的通用库和工具                |
 
 ### TypeScript/Javascript 包

@@ -1,4 +1,4 @@
-import { blockchainTests, expect, Numberish } from '@0x/contracts-test-utils';
+import { blockchainTests, expect, Numberish } from '@0x/test-utils';
 import { BigNumber } from '@0x/utils';
 
 import { constants } from '../../src/constants';

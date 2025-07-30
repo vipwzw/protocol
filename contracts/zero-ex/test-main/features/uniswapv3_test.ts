@@ -5,7 +5,7 @@ import {
     expect,
     getRandomPortion,
     randomAddress,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { BigNumber, hexUtils } from '@0x/utils';
 import { LogWithDecodedArgs } from 'ethereum-types';
 

@@ -1,4 +1,4 @@
-import { blockchainTests, expect, provider, txDefaults, web3Wrapper } from '@0x/contracts-test-utils';
+import { blockchainTests, expect, provider, txDefaults, web3Wrapper } from '@0x/test-utils';
 import { RevertReason } from '@0x/utils';
 import { BigNumber } from '@0x/utils';
 

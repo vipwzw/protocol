@@ -326,7 +326,7 @@ jobs:
             - name: Test local @0x/contracts-*
               run: |
                   yarn wsrun \
-                    -p @0x/contracts-test-utils \
+                    -p @0x/test-utils \
                     -p @0x/contract-addresses \
                     -p @0x/contract-artifacts \
                     -p @0x/contract-wrappers-test \

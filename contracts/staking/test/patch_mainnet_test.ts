@@ -1,4 +1,4 @@
-import { blockchainTests, constants, expect, filterLogsToArguments } from '@0x/contracts-test-utils';
+import { blockchainTests, constants, expect, filterLogsToArguments } from '@0x/test-utils';
 import { BigNumber, logUtils } from '@0x/utils';
 import * as _ from 'lodash';
 

@@ -6,7 +6,7 @@ import {
     getRandomPortion,
     randomAddress,
     verifyEventsFromLogs,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { AssetProxyId } from '@0x/utils';
 import { BigNumber, hexUtils } from '@0x/utils';
 import { DecodedLogs } from 'ethereum-types';

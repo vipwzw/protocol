@@ -5,7 +5,7 @@ import {
     getRandomPortion,
     Numberish,
     toDecimal,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { BigNumber } from '@0x/utils';
 import * as _ from 'lodash';
 

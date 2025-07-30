@@ -1,4 +1,4 @@
-import { blockchainTests, constants, expect, filterLogsToArguments } from '@0x/contracts-test-utils';
+import { blockchainTests, constants, expect, filterLogsToArguments } from '@0x/test-utils';
 import { AuthorizableRevertErrors } from '@0x/contracts-utils';
 import { BigNumber, StakingRevertErrors, StringRevertError } from '@0x/utils';
 

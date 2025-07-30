@@ -1,4 +1,4 @@
-import { blockchainTests, expect, LogDecoder, randomAddress, verifyEventsFromLogs } from '@0x/contracts-test-utils';
+import { blockchainTests, expect, LogDecoder, randomAddress, verifyEventsFromLogs } from '@0x/test-utils';
 import { hexUtils, OwnableRevertErrors, StringRevertError, ZeroExRevertErrors } from '@0x/utils';
 
 import { artifacts } from '../artifacts';

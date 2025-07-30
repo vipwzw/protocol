@@ -1,5 +1,5 @@
 import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
-import { blockchainTests, constants, expect, filterLogsToArguments } from '@0x/contracts-test-utils';
+import { blockchainTests, constants, expect, filterLogsToArguments } from '@0x/test-utils';
 import { assetDataUtils } from '@0x/order-utils';
 import { RevertReason } from '@0x/utils';
 import { AuthorizableRevertErrors, BigNumber, SafeMathRevertErrors, StakingRevertErrors } from '@0x/utils';

@@ -1,9 +1,9 @@
-import { constants, Numberish } from '@0x/contracts-test-utils';
+import { constants, Numberish } from '@0x/test-utils';
 import { DecodedLogArgs, LogWithDecodedArgs } from 'ethereum-types';
 
 import { constants as stakingConstants } from './constants';
 
-export { Numberish } from '@0x/contracts-test-utils';
+export { Numberish } from '@0x/test-utils';
 // tslint:disable:max-classes-per-file
 
 export interface StakingParams {

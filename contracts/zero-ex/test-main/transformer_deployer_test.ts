@@ -1,4 +1,4 @@
-import { blockchainTests, constants, expect, randomAddress, verifyEventsFromLogs } from '@0x/contracts-test-utils';
+import { blockchainTests, constants, expect, randomAddress, verifyEventsFromLogs } from '@0x/test-utils';
 import { AuthorizableRevertErrors, BigNumber } from '@0x/utils';
 
 import { artifacts } from './artifacts';

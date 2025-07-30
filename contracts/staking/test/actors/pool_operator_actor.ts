@@ -1,4 +1,4 @@
-import { expect } from '@0x/contracts-test-utils';
+import { expect } from '@0x/test-utils';
 import { RevertError } from '@0x/utils';
 import * as _ from 'lodash';
 

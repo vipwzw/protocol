@@ -5,7 +5,7 @@ import {
     expect,
     testCombinatoriallyWithReferenceFunc,
     uint256Values,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { FillResults, MatchedFillResults, Order } from '@0x/utils';
 import { BigNumber, hexUtils, LibMathRevertErrors } from '@0x/utils';

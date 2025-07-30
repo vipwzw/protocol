@@ -1,4 +1,4 @@
-import { blockchainTests, constants, expect, filterLogsToArguments } from '@0x/contracts-test-utils';
+import { blockchainTests, constants, expect, filterLogsToArguments } from '@0x/test-utils';
 import {
     AuthorizableAuthorizedAddressAddedEventArgs,
     AuthorizableAuthorizedAddressRemovedEventArgs,

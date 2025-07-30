@@ -1,4 +1,4 @@
-import { blockchainTests, constants, describe, expect, verifyEventsFromLogs } from '@0x/contracts-test-utils';
+import { blockchainTests, constants, describe, expect, verifyEventsFromLogs } from '@0x/test-utils';
 import { OrderStatus, OtcOrder, RevertErrors, SignatureType } from '@0x/protocol-utils';
 import { BigNumber } from '@0x/utils';
 

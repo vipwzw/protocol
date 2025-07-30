@@ -6,7 +6,7 @@ import {
     getRandomInteger,
     Numberish,
     shortZip,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { BigNumber, hexUtils, StakingRevertErrors } from '@0x/utils';
 import * as _ from 'lodash';
 

@@ -1,5 +1,5 @@
 import { artifacts as erc20Artifacts, DummyERC20TokenContract } from '@0x/contracts-erc20';
-import { constants, ERC20BalancesByOwner, txDefaults } from '@0x/contracts-test-utils';
+import { constants, ERC20BalancesByOwner, txDefaults } from '@0x/test-utils';
 import { BigNumber } from '@0x/utils';
 import { ZeroExProvider } from 'ethereum-types';
 import * as _ from 'lodash';

@@ -1,4 +1,4 @@
-import { constants, getRandomInteger, randomAddress } from '@0x/contracts-test-utils';
+import { constants, getRandomInteger, randomAddress } from '@0x/test-utils';
 import { ERC1155Order, ERC721Order } from '@0x/protocol-utils';
 
 /**

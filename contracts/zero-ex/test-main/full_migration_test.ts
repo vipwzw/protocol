@@ -1,5 +1,5 @@
 import { BaseContract } from '@0x/base-contract';
-import { blockchainTests, constants, expect, randomAddress } from '@0x/contracts-test-utils';
+import { blockchainTests, constants, expect, randomAddress } from '@0x/test-utils';
 import { BigNumber, hexUtils, ZeroExRevertErrors } from '@0x/utils';
 import { DataItem, MethodAbi } from 'ethereum-types';
 import * as _ from 'lodash';

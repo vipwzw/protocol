@@ -10,6 +10,12 @@ const config: HardhatUserConfig = {
         externalArtifacts: ['artifacts/**/*.json', '!artifacts/**/*.dbg.json', '!artifacts/**/build-info/**'],
         dontOverrideCompile: true,
     },
+    paths: {
+        sources: './contracts',
+        tests: './test',
+        cache: './cache/hardhat',
+        artifacts: './artifacts',
+    }
 };
 
 export default config;

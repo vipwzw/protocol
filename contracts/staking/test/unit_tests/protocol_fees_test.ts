@@ -6,7 +6,7 @@ import {
     getRandomInteger,
     Numberish,
     randomAddress,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { BigNumber, hexUtils, StakingRevertErrors } from '@0x/utils';
 import { LogEntry } from 'ethereum-types';
 import * as _ from 'lodash';

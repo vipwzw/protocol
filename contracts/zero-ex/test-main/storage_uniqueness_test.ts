@@ -1,4 +1,4 @@
-import { describe } from '@0x/contracts-test-utils';
+import { describe } from '@0x/test-utils';
 import { readdir, readFile } from 'fs';
 import { basename, resolve } from 'path';
 import { promisify } from 'util';

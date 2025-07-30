@@ -1,4 +1,4 @@
-import { blockchainTests, expect, verifyEventsFromLogs } from '@0x/contracts-test-utils';
+import { blockchainTests, expect, verifyEventsFromLogs } from '@0x/test-utils';
 import { BigNumber, hexUtils } from '@0x/utils';
 
 import { artifacts } from './artifacts';

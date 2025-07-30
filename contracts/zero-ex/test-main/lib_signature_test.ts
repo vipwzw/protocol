@@ -1,4 +1,4 @@
-import { blockchainTests, expect } from '@0x/contracts-test-utils';
+import { blockchainTests, expect } from '@0x/test-utils';
 import { hexUtils } from '@0x/utils';
 import * as ethjs from 'ethereumjs-util';
 

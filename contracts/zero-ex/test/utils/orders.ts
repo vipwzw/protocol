@@ -4,7 +4,7 @@ import {
     expect,
     getRandomInteger,
     randomAddress,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import {
     LimitOrder,
     LimitOrderFields,

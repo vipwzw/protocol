@@ -6,7 +6,7 @@ import {
     Numberish,
     toDecimal,
     toFixed,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { BigNumber, FixedMathRevertErrors, hexUtils } from '@0x/utils';
 import { Decimal } from 'decimal.js';
 import * as _ from 'lodash';

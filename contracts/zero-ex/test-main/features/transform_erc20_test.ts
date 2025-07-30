@@ -7,7 +7,7 @@ import {
     Numberish,
     randomAddress,
     verifyEventsFromLogs,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { ETH_TOKEN_ADDRESS } from '@0x/protocol-utils';
 import { AbiEncoder, hexUtils, OwnableRevertErrors, ZeroExRevertErrors } from '@0x/utils';
 import * as ethjs from 'ethereumjs-util';

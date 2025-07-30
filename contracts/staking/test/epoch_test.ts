@@ -1,5 +1,5 @@
 import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
-import { blockchainTests, expect } from '@0x/contracts-test-utils';
+import { blockchainTests, expect } from '@0x/test-utils';
 import * as _ from 'lodash';
 
 import { constants as stakingConstants } from '../src/constants';
