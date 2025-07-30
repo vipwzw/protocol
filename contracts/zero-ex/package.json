@@ -62,7 +62,6 @@
         "@typechain/ethers-v6": "^0.5.1",
         "@typechain/hardhat": "^9.1.0",
         "typechain": "^8.3.2",
-        "@0x/json-schemas": "file:../../packages/json-schemas",
         "@types/lodash": "4.14.104",
         "@types/mocha": "^5.2.7",
         "@types/node": "12.12.54",
@@ -81,10 +80,6 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
-        "@0x/contracts-erc20": "file:../erc20",
-        "@0x/contracts-utils": "file:../utils",
-        "@0x/protocol-utils": "file:../../packages/protocol-utils",
-        "@0x/utils": "file:../../packages/utils",
         "ethereum-types": "^3.7.1",
         "ethereumjs-util": "^7.0.10",
         "ethers": "^6.15.0"

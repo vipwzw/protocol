@@ -12,8 +12,15 @@
         "strict": true,
         "useUnknownInCatchVariables": false,
         "resolveJsonModule": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "composite": true
     },
     "include": ["src/**/*"],
-    "exclude": ["lib/**/*", "out/**/*", "test/**/*", "**/*.json", "src/migration.ts"]
+    "exclude": ["lib/**/*", "out/**/*", "test/**/*", "**/*.json", "src/migration.ts"],
+    "references": [
+        { "path": "../erc20" },
+        { "path": "../utils" },
+        { "path": "../../packages/protocol-utils" },
+        { "path": "../../packages/utils" }
+    ]
 }

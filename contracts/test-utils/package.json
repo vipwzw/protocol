@@ -45,7 +45,6 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
-        "@0x/json-schemas": "file:../../packages/json-schemas",
         "bn.js": "^4.11.8",
         "chai": "^4.5.0",
         "chai-bignumber": "^3.0.0",

@@ -1,6 +1,17 @@
 {
     "extends": "../../tsconfig",
-    "compilerOptions": { "outDir": "lib", "rootDir": ".", "resolveJsonModule": true },
+    "compilerOptions": { 
+        "outDir": "lib", 
+        "rootDir": ".", 
+        "resolveJsonModule": true,
+        "composite": true
+    },
     "include": ["./src/**/*", "./test/**/*"],
-    "exclude": ["./deploy/solc/solc_bin", "./out/**/*", "./lib/**/*"]
+    "exclude": ["./deploy/solc/solc_bin", "./out/**/*", "./lib/**/*"],
+    "references": [
+        { "path": "../../packages/contract-addresses" },
+        { "path": "../asset-proxy" },
+        { "path": "../staking" },
+        { "path": "../../packages/protocol-utils" }
+    ]
 }

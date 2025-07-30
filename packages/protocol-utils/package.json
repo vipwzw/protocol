@@ -56,8 +56,6 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
-        "@0x/contract-addresses": "file:../../packages/contract-addresses",
-        "@0x/utils": "file:../../packages/utils",
         "chai": "^4.5.0",
         "ethereumjs-util": "^7.0.10",
         "ethers": "^6.15.0",

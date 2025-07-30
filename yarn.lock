@@ -2,67 +2,6 @@
 # yarn lockfile v1
 
 
-"@0x/base-contract@file:packages/base-contract":
-  version "7.0.1"
-  dependencies:
-    "@0x/json-schemas" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-132734ee-68ab-4d58-b682-f97dea721346-1753884499844/node_modules/@0x/json-schemas"
-    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-132734ee-68ab-4d58-b682-f97dea721346-1753884499844/node_modules/@0x/utils"
-    "@ethereumjs/vm" "^5.9.3"
-    ethereumjs-blockstream "^7.0.0"
-    ethereumjs-util "^7.1.5"
-    ethers "^6.15.0"
-    js-sha3 "^0.8.0"
-    uuid "^9.0.0"
-
-"@0x/contract-addresses@file:packages/contract-addresses":
-  version "8.12.0"
-
-"@0x/contracts-asset-proxy@file:contracts/asset-proxy":
-  version "3.7.18"
-  dependencies:
-    "@0x/contracts-erc1155" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-asset-proxy-3.7.18-5ff7cfd0-288a-4208-a630-dec7336b627f-1753884499847/node_modules/@0x/erc1155"
-    ethereum-types "^3.5.0"
-    lodash "^4.17.11"
-
-"@0x/contracts-erc1155@file:contracts/erc1155":
-  version "2.1.36"
-  dependencies:
-    lodash "^4.17.11"
-
-"@0x/contracts-erc20@file:contracts/erc20":
-  version "3.3.15"
-
-"@0x/contracts-exchange-libs@file:contracts/exchange-libs":
-  version "4.3.36"
-  dependencies:
-    "@0x/contracts-utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-exchange-libs-4.3.36-b89621c4-a9ea-4285-bd97-011b83dd01bb-1753884499847/node_modules/@0x/utils"
-    ethereum-types "^3.5.0"
-
-"@0x/contracts-staking@file:contracts/staking":
-  version "2.0.44"
-  dependencies:
-    ethereum-types "^3.5.0"
-    ethereumjs-util "^7.0.10"
-
-"@0x/contracts-utils@file:contracts/utils":
-  version "5.8.71"
-
-"@0x/json-schemas@file:packages/json-schemas":
-  version "6.4.6"
-  dependencies:
-    ajv "^6.12.6"
-    lodash.values "^4.3.0"
-
-"@0x/protocol-utils@file:packages/protocol-utils":
-  version "11.24.1"
-  dependencies:
-    "@0x/contract-addresses" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-72461a37-5398-497a-9ac7-51c6d8dafa08-1753884499845/node_modules/packages/contract-addresses"
-    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-72461a37-5398-497a-9ac7-51c6d8dafa08-1753884499845/node_modules/packages/utils"
-    chai "^4.5.0"
-    ethereumjs-util "^7.0.10"
-    ethers "^6.15.0"
-    lodash "^4.17.21"
-
 "@0x/types@^3.3.7":
   version "3.3.7"
   resolved "https://registry.npmjs.org/@0x/types/-/types-3.3.7.tgz#2a8556b3398b6d6fac942c63de23ab22836624ee"
@@ -84,7 +23,7 @@
     ethereum-types "^3.7.1"
     popper.js "1.14.3"
 
-"@0x/utils@^7.0.0", "@0x/utils@file:packages/utils":
+"@0x/utils@^7.0.0":
   version "7.0.0"
   resolved "https://registry.npmjs.org/@0x/utils/-/utils-7.0.0.tgz#322168b21cf11741003c9cc490b13adafbe57393"
   integrity sha512-g+Bp0eHUGhnVGeVZqGn7UVtpzs/FuoXksiDaajfJrHFW0owwo5YwpwFIAVU7/ca0B6IKa74e71gskLwWGINEFg==

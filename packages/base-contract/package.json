@@ -9,6 +9,7 @@
     "types": "lib/src/index.d.ts",
     "scripts": {
         "build": "tsc -b",
+        "build:ts": "tsc -b",
         "build:ci": "yarn build",
         "clean": "shx rm -rf lib generated_docs coverage .nyc_output *.log",
         "clean:node-modules": "shx rm -rf node_modules",
@@ -49,8 +50,6 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
-        "@0x/utils": "file:../utils",
-        "@0x/json-schemas": "file:../json-schemas",
         "@ethereumjs/vm": "^5.9.3",
         "ethereumjs-blockstream": "^7.0.0",
         "ethereumjs-util": "^7.1.5",

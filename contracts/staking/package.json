@@ -48,10 +48,6 @@
     },
     "homepage": "https://github.com/0xProject/protocol/tree/main/contracts/tokens",
     "devDependencies": {
-        "@0x/contracts-asset-proxy": "file:../asset-proxy",
-        "@0x/contracts-erc20": "file:../erc20",
-        "@0x/contracts-exchange-libs": "file:../exchange-libs",
-        "@0x/contracts-utils": "file:../utils",
         "@typechain/ethers-v6": "^0.5.1",
         "@typechain/hardhat": "^9.1.0",
         "@types/lodash": "4.14.104",

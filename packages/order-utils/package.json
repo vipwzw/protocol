@@ -62,9 +62,6 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
-        "@0x/utils": "file:../../packages/utils",
-        "@0x/contract-addresses": "file:../../packages/contract-addresses",
-        "@0x/json-schemas": "file:../../packages/json-schemas",
         "ethereumjs-util": "^7.1.5",
         "ethers": "^6.15.0",
         "lodash": "^4.17.21"

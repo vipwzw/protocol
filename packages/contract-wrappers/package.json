@@ -59,9 +59,6 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
-        "@0x/base-contract": "file:../../packages/base-contract",
-        "@0x/contract-addresses": "file:../../packages/contract-addresses",
-        "@0x/utils": "file:../../packages/utils",
         "ethereum-types": "^3.7.1",
         "ethers": "^6.15.0"
     },

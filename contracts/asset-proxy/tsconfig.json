@@ -3,7 +3,8 @@
     "compilerOptions": {
         "outDir": "lib",
         "rootDir": ".",
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "composite": true
     },
     "include": [
         "./src/artifacts.ts",
@@ -24,5 +25,9 @@
         "./src/erc1155_proxy_wrapper.ts",
         "./src/erc20_wrapper.ts",
         "./src/erc721_wrapper.ts"
+    ],
+    "references": [
+        { "path": "../utils" },
+        { "path": "../erc1155" }
     ]
 }

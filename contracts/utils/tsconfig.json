@@ -12,8 +12,9 @@
         "strict": true,
         "useUnknownInCatchVariables": false,
         "resolveJsonModule": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "composite": true
     },
-    "include": ["src/**/*"],
+    "include": ["src/**/*", "artifacts/**/*.json"],
     "exclude": ["lib/**/*", "test/**/*", "out/**/*"]
 }

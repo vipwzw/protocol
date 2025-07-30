@@ -10,6 +10,7 @@
     "references": [
         { "path": "../utils" },
         { "path": "../base-contract" },
+        { "path": "../contract-addresses" },
         { "path": "../contract-artifacts" }
     ]
 }

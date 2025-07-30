@@ -34,7 +34,6 @@
     },
     "homepage": "https://github.com/0xProject/protocol/tree/main/contracts/protocol",
     "devDependencies": {
-        "@0x/contracts-utils": "file:../utils",
         "@nomicfoundation/hardhat-ethers": "^3.0.0",
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
         "@typechain/hardhat": "^9.1.0",
@@ -47,7 +46,6 @@
         "typedoc": "~0.16.11"
     },
     "dependencies": {
-        "@0x/contracts-erc1155": "file:../erc1155",
         "ethereum-types": "^3.5.0",
         "lodash": "^4.17.11"
     },

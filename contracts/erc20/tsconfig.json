@@ -3,9 +3,13 @@
     "compilerOptions": {
         "outDir": "lib",
         "rootDir": ".",
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "composite": true
     },
     "files": ["./src/artifacts.ts", "./src/index.ts", "./src/wrappers.ts"],
-    "include": ["./src/**/*", "./typechain-types/**/*"],
-    "exclude": ["./node_modules/**/*", "./lib/**/*", "./artifacts/**/*", "./test/**/*"]
+    "include": ["./src/**/*", "./typechain-types/**/*", "./artifacts/**/*.json"],
+    "exclude": ["./node_modules/**/*", "./lib/**/*", "./test/**/*"],
+    "references": [
+        { "path": "../utils" }
+    ]
 }

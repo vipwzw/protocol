@@ -11,6 +11,7 @@
     },
     "scripts": {
         "build": "forge build && npx hardhat compile && npx hardhat typechain && tsc -b",
+        "build:ts": "tsc -b",
         "build:ci": "yarn build",
         "pre_build": "run-s compile typechain",
         "test": "hardhat test",
@@ -75,7 +76,6 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
-        "@0x/contracts-utils": "file:../utils",
         "ethereum-types": "^3.5.0"
     },
     "publishConfig": {

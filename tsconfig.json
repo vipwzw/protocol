@@ -26,6 +26,14 @@
     "references": [
         { "path": "./contracts/test-utils" },
         { "path": "./contracts/utils" },
+        { "path": "./contracts/erc20" },
+        { "path": "./contracts/erc721" },
+        { "path": "./contracts/erc1155" },
+        { "path": "./contracts/asset-proxy" },
+        { "path": "./contracts/exchange-libs" },
+        { "path": "./contracts/staking" },
+        { "path": "./contracts/treasury" },
+        { "path": "./contracts/zero-ex" },
 
         { "path": "./packages/utils" },
         { "path": "./packages/base-contract" },

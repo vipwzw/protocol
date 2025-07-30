@@ -3,7 +3,8 @@
     "compilerOptions": {
         "outDir": "lib",
         "rootDir": ".",
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "composite": true
     },
     "include": ["./src/**/*", "./artifacts/**/*.json", "./typechain-types/**/*"],
     "exclude": [
@@ -14,5 +15,11 @@
         "./generated-artifacts/**/*",
         "./generated-wrappers/**/*",
         "./test/**/*"
+    ],
+    "references": [
+        { "path": "../asset-proxy" },
+        { "path": "../erc20" },
+        { "path": "../exchange-libs" },
+        { "path": "../utils" }
     ]
 }

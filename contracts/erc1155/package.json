@@ -11,6 +11,7 @@
     },
     "scripts": {
         "build": "forge build && npx hardhat compile && npx hardhat typechain && tsc -b",
+        "build:ts": "tsc -b",
         "build:ci": "yarn build",
         "pre_build": "run-s compile typechain",
         "test": "yarn run_mocha",
@@ -52,7 +53,6 @@
     },
     "homepage": "https://github.com/0xProject/protocol/tree/main/contracts/tokens",
     "devDependencies": {
-        "@0x/contracts-utils": "file:../utils",
         "@types/lodash": "4.14.104",
         "@types/mocha": "^5.2.7",
         "@types/node": "12.12.54",
