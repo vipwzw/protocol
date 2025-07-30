@@ -22,6 +22,8 @@
         "run_mocha": "mocha --require source-map-support/register --require make-promises-safe 'lib/test/**/*.js' --timeout 100000 --bail --exit",
         "compile": "forge build && npx hardhat compile",
         "typechain": "npx hardhat typechain",
+        "generate_contract_wrappers": "npx hardhat typechain",
+        "generate_contract_wrappers:force": "rm -rf typechain-types && npx hardhat typechain",
         "watch": "forge build --watch",
         "clean": "forge clean && hardhat clean && rm -rf typechain-types && shx rm -rf lib",
         "lint": "tslint --format stylish --project . --exclude ./generated-wrappers/**/* --exclude ./test/generated-wrappers/**/* --exclude ./generated-artifacts/**/* --exclude ./test/generated-artifacts/**/* --exclude **/lib/**/* && yarn lint-contracts",

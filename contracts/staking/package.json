@@ -14,6 +14,8 @@
         "build:ts": "tsc -b",
         "compile": "forge build && npx hardhat compile",
         "typechain": "npx hardhat typechain",
+        "generate_contract_wrappers": "npx hardhat typechain",
+        "generate_contract_wrappers:force": "rm -rf typechain-types && npx hardhat typechain",
         "test": "npx hardhat test",
         "test:foundry": "forge test",
         "test:ci": "npx hardhat test",
