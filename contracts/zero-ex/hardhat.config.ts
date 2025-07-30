@@ -12,7 +12,6 @@ const config: HardhatUserConfig = {
         outDir: 'src/typechain-types',
         target: 'ethers-v6',
         alwaysGenerateOverloads: false,
-        dontOverrideCompile: true,
     },
 };
 

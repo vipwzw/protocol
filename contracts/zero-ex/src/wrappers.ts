@@ -5,10 +5,10 @@
  */
 
 // Export TypeChain generated contract types
-export { ZeroEx } from './typechain-types/ZeroEx';
-export { ZeroExOptimized } from './typechain-types/ZeroExOptimized';
-export { FullMigration } from './typechain-types/FullMigration';
-export { InitialMigration } from './typechain-types/InitialMigration';
+export { ZeroEx } from './typechain-types/contracts/src/ZeroEx';
+export { ZeroExOptimized } from './typechain-types/contracts/src/ZeroExOptimized';
+export { FullMigration } from './typechain-types/contracts/src/migrations/FullMigration';
+export { InitialMigration } from './typechain-types/contracts/src/migrations/InitialMigration';
 
 // Export factory types for contract deployment
 export * from './typechain-types/factories';

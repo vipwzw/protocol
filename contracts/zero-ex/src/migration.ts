@@ -12,7 +12,8 @@ import {
     ZeroEx as ZeroExContract,
 } from './wrappers';
 
-import { FullMigration__factory, InitialMigration__factory, ZeroEx__factory } from './typechain-types/factories';
+import { FullMigration__factory, InitialMigration__factory } from './typechain-types/factories/contracts/src/migrations';
+import { ZeroEx__factory } from './typechain-types/factories/contracts/src';
 
 /**
  * 从 Hardhat artifact 部署合约

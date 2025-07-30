@@ -15,8 +15,8 @@
         "skipLibCheck": true,
         "composite": true
     },
-    "include": ["src/**/*"],
-    "exclude": ["lib/**/*", "out/**/*", "test/**/*", "**/*.json", "src/migration.ts"],
+    "include": ["src/**/*", "typechain-types/**/*", "artifacts/**/*.json"],
+    "exclude": ["lib/**/*", "out/**/*", "test/**/*"],
     "references": [
         { "path": "../erc20" },
         { "path": "../utils" },

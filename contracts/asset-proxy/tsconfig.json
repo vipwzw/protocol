@@ -7,12 +7,9 @@
         "composite": true
     },
     "include": [
-        "./src/artifacts.ts",
-        "./src/index.ts",
-        "./src/wrappers.ts",
-        "./src/asset_data.ts",
-        "./src/dex_forwarder_bridge.ts",
-        "./src/dydx_bridge_encoder.ts"
+        "./src/**/*",
+        "./typechain-types/**/*",
+        "./artifacts/**/*.json"
     ],
     "exclude": [
         "./node_modules/**/*",
