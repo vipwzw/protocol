@@ -54,7 +54,7 @@
         "@types/node": "^20.0.0",
         "chai": "^4.5.0",
         "ethereum-types": "^3.5.0",
-        "hardhat": "^2.19.0",
+        "hardhat": "^2.26.0",
         "make-promises-safe": "^1.1.0",
         "mocha": "^10.2.0",
         "npm-run-all": "^4.1.2",

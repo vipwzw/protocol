@@ -9,7 +9,7 @@
         "pretty": true,
         "skipLibCheck": true,
         "skipDefaultLibCheck": true,
-        "typeRoots": ["node_modules/@0x/typescript-typings/types", "node_modules/@types", "types"],
+        "typeRoots": ["node_modules/@types", "types"],
         "strict": true,
         "useUnknownInCatchVariables": false,
         "allowSyntheticDefaultImports": true,

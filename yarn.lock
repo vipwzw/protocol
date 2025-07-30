@@ -5,9 +5,8 @@
 "@0x/base-contract@file:packages/base-contract":
   version "7.0.1"
   dependencies:
-    "@0x/json-schemas" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-d287628b-65a6-4cf6-80f4-78c3b9b6dfd5-1753869463297/node_modules/@0x/json-schemas"
-    "@0x/types" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-d287628b-65a6-4cf6-80f4-78c3b9b6dfd5-1753869463297/node_modules/@0x/types"
-    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-d287628b-65a6-4cf6-80f4-78c3b9b6dfd5-1753869463297/node_modules/@0x/utils"
+    "@0x/json-schemas" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-c09e4294-d88b-4b5a-8a97-0eb815b22f4d-1753877722160/node_modules/@0x/json-schemas"
+    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-c09e4294-d88b-4b5a-8a97-0eb815b22f4d-1753877722160/node_modules/@0x/utils"
     "@ethereumjs/vm" "^5.9.3"
     ethereumjs-blockstream "^7.0.0"
     ethereumjs-util "^7.1.5"
@@ -21,7 +20,7 @@
 "@0x/contracts-asset-proxy@file:contracts/asset-proxy":
   version "3.7.18"
   dependencies:
-    "@0x/contracts-erc1155" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-asset-proxy-3.7.18-56f82e44-0302-4467-a92a-cb6748c019e0-1753869463298/node_modules/@0x/erc1155"
+    "@0x/contracts-erc1155" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-asset-proxy-3.7.18-42107f44-d801-41ad-98b3-c6b89017fd3a-1753877722159/node_modules/@0x/erc1155"
     ethereum-types "^3.5.0"
     lodash "^4.17.11"
 
@@ -36,7 +35,7 @@
 "@0x/contracts-exchange-libs@file:contracts/exchange-libs":
   version "4.3.36"
   dependencies:
-    "@0x/contracts-utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-exchange-libs-4.3.36-54484a0e-0e26-4717-b71a-fd1e4c41f5e9-1753869463299/node_modules/@0x/utils"
+    "@0x/contracts-utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-exchange-libs-4.3.36-221fe66c-6ba2-418e-afe3-51321738c4aa-1753877722162/node_modules/@0x/utils"
     ethereum-types "^3.5.0"
 
 "@0x/contracts-staking@file:contracts/staking":
@@ -57,28 +56,52 @@
 "@0x/protocol-utils@file:packages/protocol-utils":
   version "11.24.1"
   dependencies:
-    "@0x/contract-addresses" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-0a9a1743-c874-4998-9aeb-d21ead0ad875-1753869463298/node_modules/packages/contract-addresses"
-    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-0a9a1743-c874-4998-9aeb-d21ead0ad875-1753869463298/node_modules/packages/utils"
+    "@0x/contract-addresses" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-77811367-18ce-4148-b092-85a2a26ef8f2-1753877722161/node_modules/packages/contract-addresses"
+    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-77811367-18ce-4148-b092-85a2a26ef8f2-1753877722161/node_modules/packages/utils"
     chai "^4.5.0"
     ethereumjs-util "^7.0.10"
     ethers "^6.15.0"
-    lodash "^4.17.11"
+    lodash "^4.17.21"
 
-"@0x/types@file:packages/types":
+"@0x/types@^3.3.7":
   version "3.3.7"
+  resolved "https://registry.npmjs.org/@0x/types/-/types-3.3.7.tgz#2a8556b3398b6d6fac942c63de23ab22836624ee"
+  integrity sha512-6lPXPnvKaIfAJ5hIgs81SytqNCPCLstQ/DA598iLpb90KKjjz8QsdrfII4JeKdrEREvLcWSH9SeH4sNPWyLhlA==
   dependencies:
+    "@types/node" "12.12.54"
+    bignumber.js "~9.0.2"
     ethereum-types "^3.7.1"
 
-"@0x/utils@file:packages/utils":
-  version "7.0.0"
+"@0x/typescript-typings@^5.3.2":
+  version "5.3.2"
+  resolved "https://registry.npmjs.org/@0x/typescript-typings/-/typescript-typings-5.3.2.tgz#b2b2a46ebff7f9d885b1357feae615225cb0bb31"
+  integrity sha512-VIo8PS/IRXrI1aEzM8TenUMViX4MFMKBnIAwqC4K/ewVDSnKyYZSk8fzw0XZph6tN07obchPf+1sHIWYe8EUow==
   dependencies:
+    "@types/bn.js" "^4.11.0"
+    "@types/node" "12.12.54"
+    "@types/react" "*"
+    bignumber.js "~9.0.2"
+    ethereum-types "^3.7.1"
+    popper.js "1.14.3"
+
+"@0x/utils@^7.0.0", "@0x/utils@file:packages/utils":
+  version "7.0.0"
+  resolved "https://registry.npmjs.org/@0x/utils/-/utils-7.0.0.tgz#322168b21cf11741003c9cc490b13adafbe57393"
+  integrity sha512-g+Bp0eHUGhnVGeVZqGn7UVtpzs/FuoXksiDaajfJrHFW0owwo5YwpwFIAVU7/ca0B6IKa74e71gskLwWGINEFg==
+  dependencies:
+    "@0x/types" "^3.3.7"
+    "@0x/typescript-typings" "^5.3.2"
+    "@types/mocha" "^5.2.7"
+    "@types/node" "12.12.54"
     abortcontroller-polyfill "^1.1.9"
-    chalk "^4.1.2"
-    detect-node "^2.1.0"
+    bignumber.js "~9.0.2"
+    chalk "^2.3.0"
+    detect-node "2.0.3"
     ethereum-types "^3.7.1"
     ethereumjs-util "^7.1.5"
-    ethers "^6.15.0"
+    ethers "~4.0.4"
     isomorphic-fetch "^3.0.0"
+    js-sha3 "^0.7.0"
     lodash "^4.17.21"
 
 "@0xproject/npm-cli-login@^0.0.11":
@@ -920,6 +943,13 @@
   resolved "https://registry.npmjs.org/@types/abstract-leveldown/-/abstract-leveldown-7.2.5.tgz#db2cf364c159fb1f12be6cd3549f56387eaf8d73"
   integrity sha512-/2B0nQF4UdupuxeKTJA2+Rj1D+uDemo6P4kMwKCpbfpnzeVaWSELTsAw4Lxn3VJD6APtRrZOCuYo+4nHUQfTfg==
 
+"@types/bn.js@^4.11.0":
+  version "4.11.6"
+  resolved "https://registry.npmjs.org/@types/bn.js/-/bn.js-4.11.6.tgz#c306c70d9358aaea33cd4eda092a742b9505967c"
+  integrity sha512-pqr857jrp2kPuO9uRjZ3PwnJTjoQy+fcdxvBTvHm6dkmEL9q+hDD/2j/0ELOBPtPnS8LjCX0gI9nbl8lVkadpg==
+  dependencies:
+    "@types/node" "*"
+
 "@types/bn.js@^5.1.0":
   version "5.2.0"
   resolved "https://registry.npmjs.org/@types/bn.js/-/bn.js-5.2.0.tgz#4349b9710e98f9ab3cdc50f1c5e4dcbd8ef29c80"
@@ -1018,7 +1048,7 @@
   resolved "https://registry.npmjs.org/@types/lodash/-/lodash-4.14.144.tgz#12e57fc99064bce45e5ab3c8bc4783feb75eab8e"
   integrity sha512-ogI4g9W5qIQQUhXAclq6zhqgqNUr7UlFaqDHbch7WLSLeeM/7d3CRaw7GLajxvyFvhJqw4Rpcz5bhoaYtIx6Tg==
 
-"@types/lodash@^4.14.179", "@types/lodash@^4.14.200":
+"@types/lodash@^4.14.200":
   version "4.17.20"
   resolved "https://registry.npmjs.org/@types/lodash/-/lodash-4.17.20.tgz#1ca77361d7363432d29f5e55950d9ec1e1c6ea93"
   integrity sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==
@@ -1080,9 +1110,9 @@
   integrity sha512-w+tIMs3rq2afQdsPJlODhoUEKzFP1ayaoyl1CcnwtIlsVe7K7bA1NGm4s3PraqTLlXnbIN84zuBlxBWo1u9BLw==
 
 "@types/node@^18.0.0":
-  version "18.19.120"
-  resolved "https://registry.npmjs.org/@types/node/-/node-18.19.120.tgz#07b3bd73875956d5281fa27e6d77a66415f7d455"
-  integrity sha512-WtCGHFXnVI8WHLxDAt5TbnCM4eSE+nI0QN2NJtwzcgMhht2eNz6V9evJrk+lwC8bCY8OWV5Ym8Jz7ZEyGnKnMA==
+  version "18.19.121"
+  resolved "https://registry.npmjs.org/@types/node/-/node-18.19.121.tgz#c50d353ea2d1fb1261a8bbd0bf2850306f5af2b3"
+  integrity sha512-bHOrbyztmyYIi4f1R0s17QsPs1uyyYnGcXeZoGEd227oZjry0q6XQBQxd82X1I57zEfwO8h9Xo+Kl5gX1d9MwQ==
   dependencies:
     undici-types "~5.26.4"
 
@@ -1104,6 +1134,13 @@
   version "2.7.3"
   resolved "https://registry.npmjs.org/@types/prettier/-/prettier-2.7.3.tgz#3e51a17e291d01d17d3fc61422015a933af7a08f"
   integrity sha512-+68kP9yzs4LMp7VNh8gdzMSPZFL44MLGqiHWvttYJe+6qnuVr4Ek9wSBQoveqY/r+LwjCcU29kNVkidwim+kYA==
+
+"@types/react@*":
+  version "19.1.9"
+  resolved "https://registry.npmjs.org/@types/react/-/react-19.1.9.tgz#f42b24f35474566a39b5c3a98e4d0c425b79a849"
+  integrity sha512-WmdoynAX8Stew/36uTSVMcLJJ1KRh6L3IZRx1PZ7qJtBqT3dYTgyDTx8H1qoRghErydW7xw9mSJ3wS//tCRpFA==
+  dependencies:
+    csstype "^3.0.2"
 
 "@types/secp256k1@^4.0.1":
   version "4.0.6"
@@ -2376,6 +2413,11 @@ cross-spawn@^7.0.3, cross-spawn@^7.0.6:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
+csstype@^3.0.2:
+  version "3.1.3"
+  resolved "https://registry.npmjs.org/csstype/-/csstype-3.1.3.tgz#d80ff294d114fb0e6ac500fbf85b60137d7eff81"
+  integrity sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==
+
 dashdash@^1.12.0:
   version "1.14.1"
   resolved "https://registry.npmjs.org/dashdash/-/dashdash-1.14.1.tgz#853cfa0f7cbe2fed5de20326b8dd581035f6e2f0"
@@ -2551,6 +2593,11 @@ depd@2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/depd/-/depd-2.0.0.tgz#b696163cc757560d09cf22cc8fad1571b79e76df"
   integrity sha512-g7nH6P6dyDioJogAAGprGpCtVImJhpPk/roCzdb3fIh61/s/nPsfR6onyMwkCAR/OlC3yBC0lESvUoQEAssIrw==
+
+detect-node@2.0.3:
+  version "2.0.3"
+  resolved "https://registry.npmjs.org/detect-node/-/detect-node-2.0.3.tgz#a2033c09cc8e158d37748fbde7507832bd6ce127"
+  integrity sha512-64uDTOK+fKEa6XoSbkkDoeAX8Ep1XhwxwZtL1aw1En5p5UOK/ekJoFqd5BB1o+uOvF1iHVv6qDUxdOQ/VgWEQg==
 
 detect-node@^2.1.0:
   version "2.1.0"
@@ -3071,7 +3118,7 @@ ethereumjs-util@^7.0.10, ethereumjs-util@^7.1.1, ethereumjs-util@^7.1.4, ethereu
     ethereum-cryptography "^0.1.3"
     rlp "^2.2.4"
 
-ethers@^6.0.0, ethers@^6.15.0:
+ethers@^6.15.0, ethers@~4.0.4:
   version "6.15.0"
   resolved "https://registry.npmjs.org/ethers/-/ethers-6.15.0.tgz#2980f2a3baf0509749b7e21f8692fa8a8349c0e3"
   integrity sha512-Kf/3ZW54L4UT0pZtsY/rf+EkBU7Qi5nnhonjUb8yTXcxH3cdcWrV2cRyk0Xk/4jK6OoHhxxZHriyhje20If2hQ==
@@ -3721,7 +3768,7 @@ har-validator@~5.1.3:
     ajv "^6.12.3"
     har-schema "^2.0.0"
 
-hardhat@^2.0.0, hardhat@^2.19.0, hardhat@^2.19.4, hardhat@^2.22.0, hardhat@^2.26.0, hardhat@^2.26.1, hardhat@^2.6.0:
+hardhat@^2.0.0, hardhat@^2.19.0, hardhat@^2.19.4, hardhat@^2.22.0, hardhat@^2.26.0, hardhat@^2.26.1:
   version "2.26.1"
   resolved "https://registry.npmjs.org/hardhat/-/hardhat-2.26.1.tgz#c5f7418be0cba5224c6ac42eae3e24db113e55f6"
   integrity sha512-CXWuUaTtehxiHPCdlitntctfeYRgujmXkNX5gnrD5jdA6HhRQt+WWBZE/gHXbE29y/wDmmUL2d652rI0ctjqjw==
@@ -4451,6 +4498,11 @@ js-sha3@0.8.0, js-sha3@^0.8.0:
   version "0.8.0"
   resolved "https://registry.npmjs.org/js-sha3/-/js-sha3-0.8.0.tgz#b9b7a5da73afad7dedd0f8c463954cbde6818840"
   integrity sha512-gF1cRrHhIzNfToc802P800N8PpXS+evLLXfsVpowqmAFR9uwbi89WvXg2QspOmXL8QL86J4T1EpFu+yUkwJY3Q==
+
+js-sha3@^0.7.0:
+  version "0.7.0"
+  resolved "https://registry.npmjs.org/js-sha3/-/js-sha3-0.7.0.tgz#0a5c57b36f79882573b2d84051f8bb85dd1bd63a"
+  integrity sha512-Wpks3yBDm0UcL5qlVhwW9Jr9n9i4FfeWBFOOXP5puDS/SiudJGhw7DPyBqn3487qD4F0lsC0q3zxink37f7zeA==
 
 js-tokens@^3.0.2:
   version "3.0.2"
@@ -5764,6 +5816,11 @@ pluralize@^8.0.0:
   version "8.0.0"
   resolved "https://registry.npmjs.org/pluralize/-/pluralize-8.0.0.tgz#1a6fa16a38d12a1901e0320fa017051c539ce3b1"
   integrity sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==
+
+popper.js@1.14.3:
+  version "1.14.3"
+  resolved "https://registry.npmjs.org/popper.js/-/popper.js-1.14.3.tgz#1438f98d046acf7b4d78cd502bf418ac64d4f095"
+  integrity sha512-3lmujhsHXzb83+sI0PzfrE3O1XHZG8m8MXNMTupvA6LrM1/nnsiqYaacYc/RIente9VqnTDPztGEM8uvPAMGyg==
 
 posix-character-classes@^0.1.0:
   version "0.1.1"
@@ -7242,7 +7299,7 @@ typedoc@~0.16.11:
     typedoc-default-themes "^0.7.2"
     typescript "3.7.x"
 
-typescript@3.7.x, typescript@4.2.2, typescript@^4.6.2, typescript@^5.0.0:
+typescript@3.7.x, typescript@4.2.2, typescript@^5.0.0:
   version "5.8.3"
   resolved "https://registry.npmjs.org/typescript/-/typescript-5.8.3.tgz#92f8a3e5e3cf497356f4178c34cd65a7f5e8440e"
   integrity sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==

@@ -32,7 +32,7 @@
         "@types/mocha": "^5.2.7",
         "chai": "^4.5.0",
         "ethereumjs-util": "^7.1.5",
-        "mocha": "^6.2.0",
+        "mocha": "^10.2.0",
         "shx": "^0.4.0",
         "ts-node": "^10.9.0",
         "typescript": "^5.0.0"
