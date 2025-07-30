@@ -40,7 +40,6 @@
     },
     "homepage": "https://github.com/0xProject/protocol/tree/main/packages/protocol-utils",
     "devDependencies": {
-        "@0x/utils": "file:../../packages/utils",
         "@types/lodash": "^4.14.200",
         "@types/mocha": "^9.1.0",
         "@types/node": "^17.0.21",
