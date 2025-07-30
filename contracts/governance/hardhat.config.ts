@@ -1,6 +1,7 @@
 import { HardhatUserConfig } from 'hardhat/config';
 import '@nomicfoundation/hardhat-ethers';
 import '@nomicfoundation/hardhat-chai-matchers';
+import '@typechain/hardhat';
 import * as path from 'path';
 
 const config: HardhatUserConfig = {
@@ -20,6 +21,11 @@ const config: HardhatUserConfig = {
         cache: './cache/hardhat',
         artifacts: './artifacts',
         root: path.join(__dirname, '.'),
+    },
+    typechain: {
+        outDir: 'typechain-types',
+        target: 'ethers-v6',
+        alwaysGenerateOverloads: false,
     },
     networks: {
         hardhat: {

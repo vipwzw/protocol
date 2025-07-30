@@ -1,6 +1,7 @@
 import { HardhatUserConfig } from 'hardhat/config';
 import '@nomicfoundation/hardhat-ethers';
 import '@nomicfoundation/hardhat-chai-matchers';
+import '@typechain/hardhat';
 
 const config: HardhatUserConfig = {
     solidity: {
@@ -30,6 +31,11 @@ const config: HardhatUserConfig = {
         tests: './test',
         cache: './cache/hardhat',
         artifacts: './artifacts',
+    },
+    typechain: {
+        outDir: 'typechain-types',
+        target: 'ethers-v6',
+        alwaysGenerateOverloads: false,
     },
     mocha: {
         timeout: 100000,
