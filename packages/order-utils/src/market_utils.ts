@@ -1,5 +1,5 @@
 import { schemas } from '@0x/json-schemas';
-import { MarketOperation, Order } from '@0x/types';
+import { MarketOperation, Order } from '@0x/utils';
 // BigNumber 已替换为 bigint
 import * as _ from 'lodash';
 

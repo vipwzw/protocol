@@ -26,7 +26,7 @@
     "references": [
         { "path": "./contracts/test-utils" },
         { "path": "./contracts/utils" },
-        { "path": "./packages/types" },
+
         { "path": "./packages/utils" },
         { "path": "./packages/base-contract" },
         { "path": "./packages/contract-addresses" },

@@ -1,5 +1,5 @@
 import { generatePseudoRandomSalt } from '@0x/order-utils';
-import { SignatureType, SignedZeroExTransaction, ZeroExTransaction } from '@0x/types';
+import { SignatureType, SignedZeroExTransaction, ZeroExTransaction } from '@0x/utils';
 import { BigNumber } from '@0x/utils';
 import * as ethUtil from 'ethereumjs-util';
 

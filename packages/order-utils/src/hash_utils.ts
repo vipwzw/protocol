@@ -1,4 +1,4 @@
-import { ExchangeProxyMetaTransaction, Order, ZeroExTransaction } from '@0x/types';
+import { ExchangeProxyMetaTransaction, Order, ZeroExTransaction } from '@0x/utils';
 import { hexUtils, signTypedDataUtils } from "./utils";;
 
 import { eip712Utils } from './eip712_utils';

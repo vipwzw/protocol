@@ -1,4 +1,4 @@
-import { RevertReason } from '@0x/types';
+import { RevertReason } from '@0x/utils';
 import { logUtils } from '@0x/utils';
 import * as chai from 'chai';
 import { TransactionReceipt, TransactionReceiptStatus, TransactionReceiptWithDecodedLogs } from 'ethereum-types';

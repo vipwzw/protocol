@@ -1,4 +1,4 @@
-import { Order } from '@0x/types';
+import { Order } from '@0x/utils';
 // BigNumber 已替换为 bigint
 
 import { constants } from './constants';

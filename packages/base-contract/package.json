@@ -49,9 +49,8 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
-        "@0x/types": "file:../../packages/types",
-        "@0x/json-schemas": "file:../../packages/json-schemas",
-        "@0x/utils": "file:../../packages/utils",
+        "@0x/utils": "file:../utils",
+        "@0x/json-schemas": "file:../json-schemas",
         "@ethereumjs/vm": "^5.9.3",
         "ethereumjs-blockstream": "^7.0.0",
         "ethereumjs-util": "^7.1.5",

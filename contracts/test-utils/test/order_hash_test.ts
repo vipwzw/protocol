@@ -1,4 +1,4 @@
-import { Order } from '@0x/types';
+import { Order } from '@0x/utils';
 import { BigNumber } from '@0x/utils';
 import 'mocha';
 

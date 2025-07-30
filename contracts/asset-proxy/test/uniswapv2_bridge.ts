@@ -6,7 +6,7 @@ import {
     getRandomInteger,
     randomAddress,
 } from '@0x/contracts-test-utils';
-import { AssetProxyId } from '@0x/types';
+import { AssetProxyId } from '@0x/utils';
 import { AbiEncoder, BigNumber, hexUtils } from '@0x/utils';
 import { DecodedLogs } from 'ethereum-types';
 import * as _ from 'lodash';

@@ -1,5 +1,5 @@
 import { AbiEncoder, BigNumber } from '@0x/utils';
-import { AssetProxyId } from '@0x/types';
+import { AssetProxyId } from '@0x/utils';
 import { keccak256 } from 'ethereum-cryptography/keccak';
 // TODO: Re-enable when TypeChain compilation is successful
 // import { IAssetDataContract } from './wrappers';

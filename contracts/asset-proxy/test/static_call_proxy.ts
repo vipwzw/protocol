@@ -7,7 +7,7 @@ import {
     web3Wrapper,
 } from '@0x/contracts-test-utils';
 import { BlockchainLifecycle } from '@0x/dev-utils';
-import { AssetProxyId, RevertReason } from '@0x/types';
+import { AssetProxyId, RevertReason } from '@0x/utils';
 import { AbiEncoder, BigNumber } from '@0x/utils';
 import * as chai from 'chai';
 import * as ethUtil from 'ethereumjs-util';

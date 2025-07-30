@@ -1,6 +1,6 @@
 import { schemas } from '@0x/json-schemas';
 import { eip712Utils } from '@0x/order-utils';
-import { SignedZeroExTransaction, ZeroExTransaction } from '@0x/types';
+import { SignedZeroExTransaction, ZeroExTransaction } from '@0x/utils';
 import { signTypedDataUtils } from '@0x/utils';
 import { expect } from 'chai';
 import * as _ from 'lodash';

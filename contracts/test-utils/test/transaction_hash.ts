@@ -1,4 +1,4 @@
-import { ZeroExTransaction } from '@0x/types';
+import { ZeroExTransaction } from '@0x/utils';
 import { BigNumber } from '@0x/utils';
 import 'mocha';
 

@@ -1,4 +1,4 @@
-import { Order } from '@0x/types';
+import { Order } from '@0x/utils';
 // 临时注释掉 AbiEncoder 导入，这个文件需要重构
 // import { AbiEncoder } from '@0x/utils';
 

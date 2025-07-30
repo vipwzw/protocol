@@ -1,5 +1,5 @@
 import { assert as chaiAssert } from 'chai';
-import { SignatureType } from '@0x/types';
+import { SignatureType } from '@0x/utils';
 import { ethers } from 'ethers';
 import { SchemaValidator } from '@0x/json-schemas';
 import * as _ from 'lodash';

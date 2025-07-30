@@ -5,9 +5,9 @@
 "@0x/base-contract@file:packages/base-contract":
   version "7.0.1"
   dependencies:
-    "@0x/json-schemas" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-07c554b8-90c1-4a5a-a24c-7456521a79dd-1753843434963/node_modules/packages/json-schemas"
-    "@0x/types" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-07c554b8-90c1-4a5a-a24c-7456521a79dd-1753843434963/node_modules/packages/types"
-    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-07c554b8-90c1-4a5a-a24c-7456521a79dd-1753843434963/node_modules/packages/utils"
+    "@0x/json-schemas" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-d287628b-65a6-4cf6-80f4-78c3b9b6dfd5-1753869463297/node_modules/@0x/json-schemas"
+    "@0x/types" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-d287628b-65a6-4cf6-80f4-78c3b9b6dfd5-1753869463297/node_modules/@0x/types"
+    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-d287628b-65a6-4cf6-80f4-78c3b9b6dfd5-1753869463297/node_modules/@0x/utils"
     "@ethereumjs/vm" "^5.9.3"
     ethereumjs-blockstream "^7.0.0"
     ethereumjs-util "^7.1.5"
@@ -21,7 +21,7 @@
 "@0x/contracts-asset-proxy@file:contracts/asset-proxy":
   version "3.7.18"
   dependencies:
-    "@0x/contracts-erc1155" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-asset-proxy-3.7.18-c132acc3-c403-48f3-a6d2-e3f16b683b0f-1753843434964/node_modules/@0x/erc1155"
+    "@0x/contracts-erc1155" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-asset-proxy-3.7.18-56f82e44-0302-4467-a92a-cb6748c019e0-1753869463298/node_modules/@0x/erc1155"
     ethereum-types "^3.5.0"
     lodash "^4.17.11"
 
@@ -36,7 +36,7 @@
 "@0x/contracts-exchange-libs@file:contracts/exchange-libs":
   version "4.3.36"
   dependencies:
-    "@0x/contracts-utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-exchange-libs-4.3.36-cbb301c2-035b-4dfe-8dd4-083e8696b1c1-1753843434963/node_modules/@0x/utils"
+    "@0x/contracts-utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-exchange-libs-4.3.36-54484a0e-0e26-4717-b71a-fd1e4c41f5e9-1753869463299/node_modules/@0x/utils"
     ethereum-types "^3.5.0"
 
 "@0x/contracts-staking@file:contracts/staking":
@@ -57,8 +57,8 @@
 "@0x/protocol-utils@file:packages/protocol-utils":
   version "11.24.1"
   dependencies:
-    "@0x/contract-addresses" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-a56cea2e-2dac-47d5-8770-f6398afa6680-1753843434964/node_modules/packages/contract-addresses"
-    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-a56cea2e-2dac-47d5-8770-f6398afa6680-1753843434964/node_modules/packages/utils"
+    "@0x/contract-addresses" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-0a9a1743-c874-4998-9aeb-d21ead0ad875-1753869463298/node_modules/packages/contract-addresses"
+    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-0a9a1743-c874-4998-9aeb-d21ead0ad875-1753869463298/node_modules/packages/utils"
     chai "^4.5.0"
     ethereumjs-util "^7.0.10"
     ethers "^6.15.0"
@@ -72,7 +72,6 @@
 "@0x/utils@file:packages/utils":
   version "7.0.0"
   dependencies:
-    "@0x/types" "file:packages/types"
     abortcontroller-polyfill "^1.1.9"
     chalk "^4.1.2"
     detect-node "^2.1.0"

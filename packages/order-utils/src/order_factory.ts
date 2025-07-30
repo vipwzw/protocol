@@ -1,4 +1,4 @@
-import { Order, SignedOrder } from '@0x/types';
+import { Order, SignedOrder } from '@0x/utils';
 // providerUtils 已替换为 ethers
 // SupportedProvider 类型已在 signature_utils 中定义
 

@@ -1,5 +1,5 @@
 import { generatePseudoRandomSalt } from '@0x/order-utils';
-import { Order, SignatureType, SignedOrder } from '@0x/types';
+import { Order, SignatureType, SignedOrder } from '@0x/utils';
 import { BigNumber } from '@0x/utils';
 
 import { getLatestBlockTimestampAsync } from './block_timestamp';

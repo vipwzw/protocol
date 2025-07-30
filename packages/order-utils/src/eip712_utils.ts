@@ -9,7 +9,7 @@ import {
     Order,
     SignedZeroExTransaction,
     ZeroExTransaction,
-} from '@0x/types';
+} from '@0x/utils';
 import { hexUtils, signTypedDataUtils } from './utils';
 import * as _ from 'lodash';
 

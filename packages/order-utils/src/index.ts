@@ -51,7 +51,7 @@ export {
     ValidatorSignature,
     ExchangeProxyMetaTransaction,
     SignedExchangeProxyMetaTransaction,
-} from '@0x/types';
+} from '@0x/utils';
 
 export {
     TypedDataError,

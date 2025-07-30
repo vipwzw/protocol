@@ -1,4 +1,4 @@
-import { Order, SignedOrder } from '@0x/types';
+import { Order, SignedOrder } from '@0x/utils';
 import * as _ from 'lodash';
 
 import { constants } from '../../src/constants';

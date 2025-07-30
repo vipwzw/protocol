@@ -1,8 +1,8 @@
-import { Order } from '@0x/types';
+import { Order } from '@0x/utils';
 // Removed BigNumber import - using bigint instead
 import { AbiDefinition } from 'ethereum-types';
 
-export { OrderStatus } from '@0x/types';
+export { OrderStatus } from '@0x/utils';
 
 export interface ERC20BalancesByOwner {
     [ownerAddress: string]: {

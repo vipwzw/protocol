@@ -1,6 +1,6 @@
 import { chaiSetup, constants, provider, txDefaults, web3Wrapper } from '@0x/contracts-test-utils';
 import { BlockchainLifecycle } from '@0x/dev-utils';
-import { RevertReason } from '@0x/types';
+import { RevertReason } from '@0x/utils';
 import { BigNumber } from '@0x/utils';
 import * as chai from 'chai';
 

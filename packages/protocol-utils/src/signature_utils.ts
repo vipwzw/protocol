@@ -1,5 +1,5 @@
 import { SupportedProvider } from 'ethereum-types';
-import { EIP712TypedData } from '@0x/types';
+import { EIP712TypedData } from '@0x/utils';
 import { hexUtils, providerUtils, signTypedDataUtils } from '@0x/utils';
 import { ethers } from 'ethers';
 import * as ethjs from 'ethereumjs-util';

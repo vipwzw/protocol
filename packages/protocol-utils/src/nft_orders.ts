@@ -1,6 +1,6 @@
 import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses';
 import { SupportedProvider } from 'ethereum-types';
-import { EIP712TypedData } from '@0x/types';
+import { EIP712TypedData } from '@0x/utils';
 import { hexUtils, NULL_ADDRESS } from '@0x/utils';
 
 import { ZERO } from './constants';

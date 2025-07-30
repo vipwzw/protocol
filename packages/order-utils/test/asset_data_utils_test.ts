@@ -1,6 +1,6 @@
 import * as chai from 'chai';
 
-import { AssetProxyId, ERC1155AssetData, ERC20AssetData, ERC721AssetData, MultiAssetData } from '@0x/types';
+import { AssetProxyId, ERC1155AssetData, ERC20AssetData, ERC721AssetData, MultiAssetData } from '@0x/utils';
 
 import { assetDataUtils } from '../src/asset_data_utils';
 

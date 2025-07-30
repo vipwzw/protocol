@@ -1,5 +1,5 @@
 import { generatePseudoRandomSalt } from '@0x/order-utils';
-import { Order, SignedOrder } from '@0x/types';
+import { Order, SignedOrder } from '@0x/utils';
 import { hexUtils } from '@0x/utils';
 
 import { constants } from './constants';

@@ -1,4 +1,4 @@
-import { OrderStatus } from '@0x/types';
+import { OrderStatus } from '../../types';
 import * as _ from 'lodash';
 
 import { BigNumber } from '../../configured_bignumber';

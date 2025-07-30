@@ -1,6 +1,6 @@
 import { blockchainTests, constants, describe, expect, orderHashUtils } from '@0x/contracts-test-utils';
 import { eip712Utils } from '@0x/order-utils';
-import { Order } from '@0x/types';
+import { Order } from '@0x/utils';
 import { BigNumber, hexUtils, signTypedDataUtils } from '@0x/utils';
 import * as ethUtil from 'ethereumjs-util';
 import * as _ from 'lodash';

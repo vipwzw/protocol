@@ -1,5 +1,5 @@
 import { assert } from '../src/assert';
-import { Order, SignatureType, ZeroExTransaction, ECSignature } from '@0x/types';
+import { Order, SignatureType, ZeroExTransaction, ECSignature } from '@0x/utils';
 import * as chai from 'chai';
 import { JSONRPCErrorCallback, JSONRPCRequestPayload } from 'ethereum-types';
 import * as ethUtil from 'ethereumjs-util';

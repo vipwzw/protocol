@@ -1,4 +1,4 @@
-import { SignedOrder } from '@0x/types';
+import { SignedOrder } from '@0x/utils';
 import * as chai from 'chai';
 import 'mocha';
 

@@ -1,6 +1,6 @@
 import { orderHashUtils } from '@0x/contracts-test-utils';
 import { ReferenceFunctions } from '@0x/contracts-utils';
-import { FillResults, MatchedFillResults, Order } from '@0x/types';
+import { FillResults, MatchedFillResults, Order } from '@0x/utils';
 import { BigNumber, ExchangeRevertErrors, LibMathRevertErrors } from '@0x/utils';
 
 const { safeAdd, safeSub, safeMul, safeDiv } = ReferenceFunctions;

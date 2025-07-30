@@ -9,7 +9,7 @@ import {
     SignedZeroExTransaction,
     ValidatorSignature,
     ZeroExTransaction,
-} from '@0x/types';
+} from '@0x/utils';
 import { hexUtils } from "./utils";;
 import { ethers } from 'ethers';
 import * as ethUtil from 'ethereumjs-util';

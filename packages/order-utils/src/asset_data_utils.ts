@@ -10,7 +10,7 @@ import {
     MultiAssetDataWithRecursiveDecoding,
     SingleAssetData,
     StaticCallAssetData,
-} from '@0x/types';
+} from '@0x/utils';
 import { hexUtils, NULL_ADDRESS } from "./utils";;
 import * as _ from 'lodash';
 

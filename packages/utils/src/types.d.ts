@@ -1,4 +1,4 @@
-declare module '@0x/types' {
+declare module '@0x/utils' {
     export interface Order {
         [key: string]: any;
     }
