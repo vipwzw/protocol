@@ -125,6 +125,7 @@ contracts/zero-ex/typechain-wrappers/
 # foundry packages
 contracts/governance/cache
 contracts/governance/out
+contracts/governance/lib
 
 # Doc README copy
 packages/*/docs/README.md
