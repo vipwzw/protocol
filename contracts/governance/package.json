@@ -12,6 +12,7 @@
     "test:foundry": "forge test",
     "build": "forge build && npx hardhat compile",
     "build:smt": "FOUNDRY_PROFILE=smt forge build",
+    "compile": "forge build && npx hardhat compile",
     "clean": "forge clean && npx hardhat clean && rm -rf typechain-types lib artifacts cache out src/typechain-types generated-* test/generated-* test/typechain-types",
     "clean:node-modules": "shx rm -rf node_modules",
     "clean:all": "yarn clean && yarn clean:node-modules",
