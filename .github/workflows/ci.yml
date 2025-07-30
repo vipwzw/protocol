@@ -100,7 +100,6 @@ jobs:
           key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install dependencies
-        if: needs.setup.outputs.node-cache-hit != 'true'
         run: yarn install --frozen-lockfile
 
       - name: Setup workspaces
@@ -160,7 +159,6 @@ jobs:
           key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install dependencies
-        if: needs.setup.outputs.node-cache-hit != 'true'
         run: yarn install --frozen-lockfile
 
       - name: Setup workspaces
@@ -240,7 +238,6 @@ jobs:
           key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install dependencies
-        if: needs.setup.outputs.node-cache-hit != 'true'
         run: yarn install --frozen-lockfile
 
       - name: Setup workspaces
@@ -312,7 +309,6 @@ jobs:
           key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install dependencies
-        if: needs.setup.outputs.node-cache-hit != 'true'
         run: yarn install --frozen-lockfile
 
       - name: Setup workspaces
