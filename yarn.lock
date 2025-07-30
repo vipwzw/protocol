@@ -5,8 +5,8 @@
 "@0x/base-contract@file:packages/base-contract":
   version "7.0.1"
   dependencies:
-    "@0x/json-schemas" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-c09e4294-d88b-4b5a-8a97-0eb815b22f4d-1753877722160/node_modules/@0x/json-schemas"
-    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-c09e4294-d88b-4b5a-8a97-0eb815b22f4d-1753877722160/node_modules/@0x/utils"
+    "@0x/json-schemas" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-d3483943-344b-482f-a3a4-70a75c3bddf6-1753882703787/node_modules/@0x/json-schemas"
+    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-base-contract-7.0.1-d3483943-344b-482f-a3a4-70a75c3bddf6-1753882703787/node_modules/@0x/utils"
     "@ethereumjs/vm" "^5.9.3"
     ethereumjs-blockstream "^7.0.0"
     ethereumjs-util "^7.1.5"
@@ -20,7 +20,7 @@
 "@0x/contracts-asset-proxy@file:contracts/asset-proxy":
   version "3.7.18"
   dependencies:
-    "@0x/contracts-erc1155" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-asset-proxy-3.7.18-42107f44-d801-41ad-98b3-c6b89017fd3a-1753877722159/node_modules/@0x/erc1155"
+    "@0x/contracts-erc1155" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-asset-proxy-3.7.18-3c7a3d89-223a-4c5d-a6da-a5f3a95c5ac8-1753882703789/node_modules/@0x/erc1155"
     ethereum-types "^3.5.0"
     lodash "^4.17.11"
 
@@ -35,7 +35,7 @@
 "@0x/contracts-exchange-libs@file:contracts/exchange-libs":
   version "4.3.36"
   dependencies:
-    "@0x/contracts-utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-exchange-libs-4.3.36-221fe66c-6ba2-418e-afe3-51321738c4aa-1753877722162/node_modules/@0x/utils"
+    "@0x/contracts-utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-contracts-exchange-libs-4.3.36-22851f00-802b-40d6-9f77-4b8fbf5a89ca-1753882703789/node_modules/@0x/utils"
     ethereum-types "^3.5.0"
 
 "@0x/contracts-staking@file:contracts/staking":
@@ -56,8 +56,8 @@
 "@0x/protocol-utils@file:packages/protocol-utils":
   version "11.24.1"
   dependencies:
-    "@0x/contract-addresses" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-77811367-18ce-4148-b092-85a2a26ef8f2-1753877722161/node_modules/packages/contract-addresses"
-    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-77811367-18ce-4148-b092-85a2a26ef8f2-1753877722161/node_modules/packages/utils"
+    "@0x/contract-addresses" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-fa65c791-d885-40df-9285-79fcafd549a1-1753882703790/node_modules/packages/contract-addresses"
+    "@0x/utils" "file:../../Library/Caches/Yarn/v6/npm-@0x-protocol-utils-11.24.1-fa65c791-d885-40df-9285-79fcafd549a1-1753882703790/node_modules/packages/utils"
     chai "^4.5.0"
     ethereumjs-util "^7.0.10"
     ethers "^6.15.0"

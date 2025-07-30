@@ -9,6 +9,7 @@
     "types": "lib/src/index.d.ts",
     "scripts": {
         "build": "yarn tsc -b",
+        "build:ts": "tsc -b",
         "build:ci": "yarn build",
         "watch": "tsc -w -p tsconfig.json",
         "publish:private": "yarn clean && yarn build && echo 'gitpkg publish disabled'",

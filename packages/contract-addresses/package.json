@@ -11,6 +11,7 @@
     },
     "scripts": {
         "build": "yarn tsc -b",
+        "build:ts": "tsc -b",
         "build:ci": "yarn build",
         "test": "npx mocha test/*.ts --require ts-node/register",
         "test:ci": "yarn test",
