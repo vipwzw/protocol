@@ -6,12 +6,15 @@
         "lib": ["es2020"],
         "module": "commonjs",
         "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "strict": true,
         "isolatedModules": false,
         "resolveJsonModule": true,
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        "composite": true
     },
     "include": ["./src/**/*", "./test/**/*"],
     "exclude": ["node_modules", "lib"],

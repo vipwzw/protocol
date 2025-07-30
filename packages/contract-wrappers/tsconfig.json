@@ -2,8 +2,14 @@
     "extends": "../../tsconfig",
     "compilerOptions": {
         "outDir": "lib",
-        "rootDir": "."
+        "rootDir": ".",
+        "composite": true
     },
     "include": ["./src/**/*", "./test/**/*"],
-    "exclude": ["node_modules"]
+    "exclude": ["node_modules"],
+    "references": [
+        { "path": "../utils" },
+        { "path": "../base-contract" },
+        { "path": "../contract-artifacts" }
+    ]
 }

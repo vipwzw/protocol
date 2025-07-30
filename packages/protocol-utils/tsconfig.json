@@ -2,7 +2,11 @@
     "extends": "../../tsconfig",
     "compilerOptions": {
         "outDir": "lib",
-        "rootDir": "."
+        "rootDir": ".",
+        "composite": true
     },
-    "include": ["src/**/*", "test/**/*"]
+    "include": ["src/**/*", "test/**/*"],
+    "references": [
+        { "path": "../utils" }
+    ]
 }
