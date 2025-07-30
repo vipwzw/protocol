@@ -19,7 +19,7 @@
         "run_mocha": "npx hardhat test",
         "compile": "forge build && npx hardhat compile",
         "watch": "forge build --watch",
-        "clean": "shx rm -rf lib out test/generated-wrappers test/typechain-types generated-artifacts generated-wrappers",
+        "clean": "shx rm -rf lib out test/generated-wrappers test/typechain-types generated-artifacts generated-wrappers artifacts cache src/typechain-types",
         "generate_contract_wrappers": "hardhat typechain",
         "generate_contract_wrappers:force": "rm -rf test/typechain-types && hardhat typechain",
         "lint": "eslint src test",

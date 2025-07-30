@@ -7,7 +7,10 @@ import {
     TxData,
 } from 'ethereum-types';
 
-import { PromiseWithTransactionHash } from './index';
+// Define PromiseWithTransactionHash type here to avoid circular dependency
+export interface PromiseWithTransactionHash<T> extends Promise<T> {
+    readonly txHashPromise: Promise<string>;
+}
 
 export type LogEvent = LogEntryEvent;
 

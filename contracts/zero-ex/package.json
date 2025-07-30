@@ -31,7 +31,7 @@
         "clean:node-modules": "shx rm -rf node_modules",
         "clean:force": "yarn clean:all && yarn install",
         "generate_contract_wrappers": "hardhat typechain",
-        "generate_contract_wrappers:force": "rm -rf test/typechain-types && hardhat typechain",
+        "generate_contract_wrappers:force": "rm -rf src/typechain-types && hardhat typechain",
         "fix-wrappers": "node scripts/fix-ethers-v6.js",
         "lint": "eslint src test scripts",
         "fix": "eslint --fix src scripts test",

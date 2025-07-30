@@ -33,6 +33,21 @@ import {
 import * as _ from 'lodash';
 import * as util from 'ethereumjs-util';
 
+// Export types
+export {
+    AwaitTransactionSuccessOpts,
+    ContractEvent,
+    ContractFunctionObj,
+    ContractTxFunctionObj,
+    SendTransactionOpts,
+    SubscriptionErrors,
+} from './types';
+
+// Re-export PromiseWithTransactionHash from types
+export { PromiseWithTransactionHash as IPromiseWithTransactionHash } from './types';
+
+export { SubscriptionManager } from './subscription_manager';
+
 export interface TxOpts {
     pollingIntervalMs?: number;
     timeoutMs?: number;

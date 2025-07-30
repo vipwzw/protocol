@@ -27,16 +27,14 @@ const config: HardhatUserConfig = {
       },
     ],
   },
+  paths: {
+    artifacts: "./artifacts",
+    sources: "./contracts",
+  },
   typechain: {
-    outDir: "test/typechain-types",
+    outDir: "src/typechain-types",
     target: "ethers-v6",
-    alwaysGenerateOverloads: false,
-    externalArtifacts: [
-      "artifacts/**/*.json",
-      "!artifacts/**/*.dbg.json",
-      "!artifacts/**/build-info/**"
-    ],
-    dontOverrideCompile: true
+    alwaysGenerateOverloads: false
   },
 };
 

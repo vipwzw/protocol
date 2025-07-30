@@ -36,6 +36,10 @@ export interface TreasuryHardhatArtifacts extends HardhatArtifacts {
     ZrxTreasury: HardhatArtifact;
     DefaultPoolOperator: HardhatArtifact;
     DummyERC20Token: HardhatArtifact;
+    IStaking: HardhatArtifact;
+    IZrxTreasury: HardhatArtifact;
+    TreasuryStaking: HardhatArtifact;
+    ISablier: HardhatArtifact;
 }
 
 /**

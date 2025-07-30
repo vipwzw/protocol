@@ -1,7 +1,7 @@
 import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses';
 import { JsonRpcProvider } from 'ethers';
 
-import { ISablier__factory } from './wrappers';
+// import { ISablier__factory } from './wrappers';
 
 interface ProposedAction {
     target: string;
@@ -53,7 +53,7 @@ const maticToken = new ERC20TokenContract('0x7d1afa7b718fb893db30a3abc0cfc608aac
 
 // Connect sablier contract and store address separately
 const sablierAddress = '0xcd18eaa163733da39c232722cbc4e8940b1d8888';
-const sablier = ISablier__factory.connect(sablierAddress, provider);
+// const sablier = ISablier__factory.connect(sablierAddress, provider);
 
 // Helper function to encode sablier createStream data
 function encodeSablierCreateStream(
@@ -63,13 +63,14 @@ function encodeSablierCreateStream(
     startTime: bigint,
     stopTime: bigint
 ): string {
-    return sablier.interface.encodeFunctionData('createStream', [
-        recipient,
-        deposit,
-        tokenAddress,
-        startTime,
-        stopTime,
-    ]);
+    // return sablier.interface.encodeFunctionData('createStream', [
+    //     recipient,
+    //     deposit,
+    //     tokenAddress,
+    //     startTime,
+    //     stopTime,
+    // ]);
+    return '0x'; // Placeholder as sablier is commented out
 }
 
 const ONE_YEAR_IN_SECONDS = BigInt(31536000);

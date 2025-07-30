@@ -5,10 +5,12 @@
  */
 
 // Hardhat artifacts import - Use Hardhat format instead of Foundry
-import * as DummyERC20TokenHardhatArtifact from '../../erc20/artifacts/contracts/test/DummyERC20Token.sol/DummyERC20Token.json';
+import * as DummyERC20TokenHardhatArtifact from '../artifacts/contracts/src/DummyERC20Token.sol/DummyERC20Token.json';
 import * as DefaultPoolOperatorHardhatArtifact from '../artifacts/contracts/src/DefaultPoolOperator.sol/DefaultPoolOperator.json';
 import * as ZrxTreasuryHardhatArtifact from '../artifacts/contracts/src/ZrxTreasury.sol/ZrxTreasury.json';
 import * as TreasuryStakingHardhatArtifact from '../artifacts/contracts/src/TreasuryStaking.sol/TreasuryStaking.json';
+import * as IStakingHardhatArtifact from '../artifacts/contracts/src/IStaking.sol/IStaking.json';
+import * as IZrxTreasuryHardhatArtifact from '../artifacts/contracts/src/IZrxTreasury.sol/IZrxTreasury.json';
 
 // Export artifacts directly as Hardhat format (compatible with ethers.js)
 export const artifacts = {
@@ -16,6 +18,8 @@ export const artifacts = {
     DefaultPoolOperator: DefaultPoolOperatorHardhatArtifact,
     ZrxTreasury: ZrxTreasuryHardhatArtifact,
     TreasuryStaking: TreasuryStakingHardhatArtifact,
+    IStaking: IStakingHardhatArtifact,
+    IZrxTreasury: IZrxTreasuryHardhatArtifact,
 };
 
 // Also export for compatibility
@@ -28,4 +32,6 @@ export const treasuryArtifacts = {
     TreasuryStaking: TreasuryStakingHardhatArtifact,
     ZrxTreasury: ZrxTreasuryHardhatArtifact,
     DefaultPoolOperator: DefaultPoolOperatorHardhatArtifact,
+    IStaking: IStakingHardhatArtifact,
+    IZrxTreasury: IZrxTreasuryHardhatArtifact,
 };

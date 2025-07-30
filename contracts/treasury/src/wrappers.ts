@@ -4,22 +4,26 @@
  * -----------------------------------------------------------------------------
  */
 // Export TypeChain generated contract types
-export { DefaultPoolOperator } from '../test/typechain-types/src/DefaultPoolOperator.sol/DefaultPoolOperator';
-export { DummyERC20Token } from '../test/typechain-types/src/DummyERC20Token';
-export { ISablier } from '../test/typechain-types/external/ISablier';
-export { IStaking } from '../test/typechain-types/src/IStaking';
-export { IZrxTreasury } from '../test/typechain-types/src/IZrxTreasury';
-export { TreasuryStaking } from '../test/typechain-types/src/TreasuryStaking.sol/TreasuryStaking';
-export { ZrxTreasury } from '../test/typechain-types/src/ZrxTreasury';
+export { 
+    IZrxTreasury,
+    IStaking,
+    ZrxTreasury,
+    TreasuryStaking,
+    DefaultPoolOperator,
+    DummyERC20Token,
+    ISablier
+} from './typechain-types';
 
 // Export factory types for contract deployment
-export { DefaultPoolOperator__factory } from '../test/typechain-types/factories/src/DefaultPoolOperator.sol/DefaultPoolOperator__factory';
-export { DummyERC20Token__factory } from '../test/typechain-types/factories/src/DummyERC20Token__factory';
-export { ISablier__factory } from '../test/typechain-types/factories/external/ISablier__factory';
-export { IStaking__factory } from '../test/typechain-types/factories/src/IStaking__factory';
-export { IZrxTreasury__factory } from '../test/typechain-types/factories/src/IZrxTreasury__factory';
-export { TreasuryStaking__factory } from '../test/typechain-types/factories/src/TreasuryStaking.sol/TreasuryStaking__factory';
-export { ZrxTreasury__factory } from '../test/typechain-types/factories/src/ZrxTreasury__factory';
+export { 
+    IZrxTreasury__factory,
+    IStaking__factory,
+    ZrxTreasury__factory,
+    TreasuryStaking__factory,
+    DefaultPoolOperator__factory,
+    DummyERC20Token__factory,
+    ISablier__factory
+} from './typechain-types';
 
 // Re-export common types
-export * from '../test/typechain-types/common';
+export * from './typechain-types/common';
