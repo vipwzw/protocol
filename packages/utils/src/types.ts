@@ -6,8 +6,8 @@ import {
     DevdocOutput,
     LogWithDecodedArgs,
 } from 'ethereum-types';
-import { AbiEncoder } from '.';
-import { BigNumber } from './index';
+import * as AbiEncoder from './abi_encoder';
+import { BigNumber } from './configured_bignumber';
 
 // 从原 @0x/utils 迁移的类型定义
 export interface Order {

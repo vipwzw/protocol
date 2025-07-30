@@ -1,4 +1,4 @@
-import { IndexedFilterValues } from '@0x/utils';
+import type { IndexedFilterValues } from '../../../utils/lib/src/types';
 import { BigNumber } from '@0x/utils';
 import { BlockRange, ContractAbi, EventAbi, FilterObject, LogEntry } from 'ethereum-types';
 import * as ethUtil from 'ethereumjs-util';

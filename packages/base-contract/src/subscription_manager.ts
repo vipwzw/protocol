@@ -14,7 +14,7 @@ import {
 } from 'ethereum-types';
 import { Block, BlockAndLogStreamer, Log } from 'ethereumjs-blockstream';
 
-import { EventCallback, IndexedFilterValues } from '@0x/utils';
+import type { EventCallback, IndexedFilterValues } from '../../utils/lib/src/types';
 
 import { SubscriptionErrors } from './types';
 import { filterUtils } from './utils/filter_utils';
