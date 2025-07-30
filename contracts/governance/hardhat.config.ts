@@ -23,7 +23,7 @@ const config: HardhatUserConfig = {
         root: path.join(__dirname, '.'),
     },
     typechain: {
-        outDir: 'typechain-types',
+        outDir: 'src/typechain-types',
         target: 'ethers-v6',
         alwaysGenerateOverloads: false,
     },

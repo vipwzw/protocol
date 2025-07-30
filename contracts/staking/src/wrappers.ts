@@ -5,4 +5,4 @@
  */
 
 // Export all typechain types from the main index file
-export * from '../typechain-types';
+export * from './typechain-types';

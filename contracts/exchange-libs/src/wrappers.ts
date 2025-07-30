@@ -8,7 +8,7 @@ export {
     IWallet__factory,
     LibEIP712ExchangeDomain,
     LibEIP712ExchangeDomain__factory,
-} from '../typechain-types';
+} from './typechain-types';
 
 // For other library contracts, they don't have factory classes since they are libraries
 // The artifacts can be used directly for deployment or linking

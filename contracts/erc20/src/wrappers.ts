@@ -16,4 +16,4 @@ export {
     IERC20Token__factory,
     IEtherToken,
     IEtherToken__factory,
-} from '../typechain-types';
+} from './typechain-types';

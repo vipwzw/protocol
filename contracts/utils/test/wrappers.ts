@@ -4,26 +4,26 @@
  * -----------------------------------------------------------------------------
  */
 // Export TypeChain generated contract types
-export { Authorizable } from './typechain-types/src/Authorizable';
-export { IAuthorizable } from './typechain-types/src/interfaces/IAuthorizable';
-export { IOwnable } from './typechain-types/src/interfaces/IOwnable';
-export { Ownable } from './typechain-types/src/Ownable';
-export { TestLibBytes } from './typechain-types/test/TestLibBytes';
-export { TestLibRichErrors } from './typechain-types/test/TestLibRichErrors';
-export { TestLibSafeMath } from './typechain-types/test/TestLibSafeMath';
-export { TestOwnable } from './typechain-types/test/TestOwnable';
-export { TestReentrancyGuard } from './typechain-types/test/TestReentrancyGuard';
+export { Authorizable } from '../src/typechain-types/src/Authorizable';
+export { IAuthorizable } from '../src/typechain-types/src/interfaces/IAuthorizable';
+export { IOwnable } from '../src/typechain-types/src/interfaces/IOwnable';
+export { Ownable } from '../src/typechain-types/src/Ownable';
+export { TestLibBytes } from '../src/typechain-types/test/TestLibBytes';
+export { TestLibRichErrors } from '../src/typechain-types/test/TestLibRichErrors';
+export { TestLibSafeMath } from '../src/typechain-types/test/TestLibSafeMath';
+export { TestOwnable } from '../src/typechain-types/test/TestOwnable';
+export { TestReentrancyGuard } from '../src/typechain-types/test/TestReentrancyGuard';
 
 // Export factory types for contract deployment
-export { Authorizable__factory } from './typechain-types/factories/src/Authorizable__factory';
-export { IAuthorizable__factory } from './typechain-types/factories/src/interfaces/IAuthorizable__factory';
-export { IOwnable__factory } from './typechain-types/factories/src/interfaces/IOwnable__factory';
-export { Ownable__factory } from './typechain-types/factories/src/Ownable__factory';
-export { TestLibBytes__factory } from './typechain-types/factories/test/TestLibBytes__factory';
-export { TestLibRichErrors__factory } from './typechain-types/factories/test/TestLibRichErrors__factory';
-export { TestLibSafeMath__factory } from './typechain-types/factories/test/TestLibSafeMath__factory';
-export { TestOwnable__factory } from './typechain-types/factories/test/TestOwnable__factory';
-export { TestReentrancyGuard__factory } from './typechain-types/factories/test/TestReentrancyGuard__factory';
+export { Authorizable__factory } from '../src/typechain-types/factories/src/Authorizable__factory';
+export { IAuthorizable__factory } from '../src/typechain-types/factories/src/interfaces/IAuthorizable__factory';
+export { IOwnable__factory } from '../src/typechain-types/factories/src/interfaces/IOwnable__factory';
+export { Ownable__factory } from '../src/typechain-types/factories/src/Ownable__factory';
+export { TestLibBytes__factory } from '../src/typechain-types/factories/test/TestLibBytes__factory';
+export { TestLibRichErrors__factory } from '../src/typechain-types/factories/test/TestLibRichErrors__factory';
+export { TestLibSafeMath__factory } from '../src/typechain-types/factories/test/TestLibSafeMath__factory';
+export { TestOwnable__factory } from '../src/typechain-types/factories/test/TestOwnable__factory';
+export { TestReentrancyGuard__factory } from '../src/typechain-types/factories/test/TestReentrancyGuard__factory';
 
 // Re-export common types
-export * from './typechain-types/common';
+export * from '../src/typechain-types/common';

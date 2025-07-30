@@ -12,4 +12,4 @@ export {
     IERC721Token__factory,
     IERC721Receiver,
     IERC721Receiver__factory,
-} from '../typechain-types';
+} from './typechain-types';
