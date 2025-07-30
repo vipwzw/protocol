@@ -12,7 +12,7 @@
         "build:ci": "yarn build",
         "clean": "shx rm -rf lib",
         "watch": "tsc -b -w",
-        "lint": "tslint --format stylish --project .",
+        "lint": "eslint src --ext .ts",
         "fix": "tslint --fix --format stylish --project .",
         "test": "yarn run_mocha",
         "test:circleci": "yarn test:coverage",

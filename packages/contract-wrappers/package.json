@@ -19,7 +19,7 @@
         "rebuild": "yarn typechain:clean && yarn typechain:generate && yarn typechain:prettier && yarn build",
         "build:ci": "yarn build",
         "publish:private": "yarn rebuild && echo 'gitpkg publish disabled'",
-        "lint": "eslint src",
+        "lint": "eslint src --ext .ts,.js",
         "fix": "eslint --fix src",
         "prettier": "prettier --write **/* --config ../../.prettierrc",
         "clean": "shx rm -rf lib generated_docs",

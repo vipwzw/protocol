@@ -23,7 +23,7 @@
         "clean": "shx rm -rf lib generated_docs test/generated-wrappers test/typechain-types",
         "generate_contract_wrappers": "hardhat typechain",
         "generate_contract_wrappers:force": "rm -rf test/typechain-types && hardhat typechain",
-        "lint": "eslint src test",
+        "lint": "eslint src test --ext .ts,.js",
         "fix": "eslint --fix src test",
         "profiler:report:html": "istanbul report html && open coverage/index.html",
         "test:ci": "yarn test",

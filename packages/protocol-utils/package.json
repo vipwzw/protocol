@@ -16,7 +16,7 @@
         "rebuild_and_test": "run-s build test",
         "run_mocha": "npx mocha test/*.ts --require ts-node/register",
         "clean": "shx rm -rf lib generated_docs",
-        "lint": "eslint src",
+        "lint": "eslint src --ext .ts,.js",
         "fix": "eslint --fix --quiet src test",
         "diff_docs": "git diff --exit-code ./docs",
         "s3:sync_md_docs": "aws s3 sync ./docs s3://docs-markdown/${npm_package_name}/v${npm_package_version} --profile 0xproject --region us-east-1 --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers",

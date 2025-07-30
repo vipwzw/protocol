@@ -33,7 +33,7 @@
         "generate_contract_wrappers": "hardhat typechain",
         "generate_contract_wrappers:force": "rm -rf src/typechain-types && hardhat typechain",
         "fix-wrappers": "node scripts/fix-ethers-v6.js",
-        "lint": "eslint src test scripts",
+        "lint": "eslint src test scripts --ext .ts,.js",
         "fix": "eslint --fix src scripts test",
         "test:ci": "yarn test",
         "contracts:gen": "echo \"Skipping contracts-gen (using Foundry)\"",
