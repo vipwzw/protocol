@@ -12,7 +12,7 @@ describe('Ownable', () => {
         accounts = await ethers.getSigners();
         owner = accounts[0].address;
         nonOwner = accounts[1].address;
-        
+
         // Try to deploy the contract
         try {
             const OwnableFactory = await ethers.getContractFactory('Ownable');
@@ -31,9 +31,7 @@ describe('Ownable', () => {
                 return;
             }
             try {
-                await expect(
-                    ownable.connect(accounts[1]).externalOnlyOwner()
-                ).to.be.reverted;
+                await expect(ownable.connect(accounts[1]).externalOnlyOwner()).to.be.reverted;
             } catch (error) {
                 console.log('externalOnlyOwner method not available');
             }
@@ -62,9 +60,7 @@ describe('Ownable', () => {
             }
             try {
                 const zeroAddress = '0x0000000000000000000000000000000000000000';
-                await expect(
-                    ownable.connect(accounts[0]).transferOwnership(zeroAddress)
-                ).to.be.reverted;
+                await expect(ownable.connect(accounts[0]).transferOwnership(zeroAddress)).to.be.reverted;
             } catch (error) {
                 console.log('transferOwnership method not available');
             }

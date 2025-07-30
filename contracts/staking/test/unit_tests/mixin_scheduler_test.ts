@@ -90,9 +90,9 @@ blockchainTests.resets('MixinScheduler unit tests', env => {
             const epochEndTimeDelta = constants.ZERO_AMOUNT;
             const txReceipt = await testContract.goToNextEpochTest(epochEndTimeDelta).awaitTransactionSuccessAsync();
             // tslint:disable-next-line no-unnecessary-type-assertion
-            const testLog: TestMixinSchedulerGoToNextEpochTestInfoEventArgs = (txReceipt.logs[0] as LogWithDecodedArgs<
-                TestMixinSchedulerGoToNextEpochTestInfoEventArgs
-            >).args;
+            const testLog: TestMixinSchedulerGoToNextEpochTestInfoEventArgs = (
+                txReceipt.logs[0] as LogWithDecodedArgs<TestMixinSchedulerGoToNextEpochTestInfoEventArgs>
+            ).args;
             const currentEpoch = await testContract.currentEpoch().callAsync();
             const currentEpochStartTimeInSeconds = await testContract.currentEpochStartTimeInSeconds().callAsync();
             expect(currentEpoch).to.bignumber.equal(testLog.oldEpoch.plus(1));

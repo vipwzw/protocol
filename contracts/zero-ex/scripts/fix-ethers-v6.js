@@ -2,7 +2,7 @@
 
 /**
  * 修复生成的contract wrapper文件中的ethers v6兼容性问题
- * 
+ *
  * 主要修复：
  * 1. ethers.utils.Interface -> Interface
  * 2. iface.deployFunction -> Contract.getDeployTransaction
@@ -20,16 +20,16 @@ console.log('🔧 开始修复 ethers v6 兼容性问题...');
 function getAllTsFiles(dir) {
     const files = [];
     const items = fs.readdirSync(dir);
-    
+
     for (const item of items) {
         const fullPath = path.join(dir, item);
         const stat = fs.statSync(fullPath);
-        
+
         if (stat.isFile() && item.endsWith('.ts')) {
             files.push(fullPath);
         }
     }
-    
+
     return files;
 }
 
@@ -46,11 +46,13 @@ wrapperFiles.forEach(filePath => {
     let fileFixes = 0;
 
     // 1. 添加 Interface 导入（如果还没有）
-    if (content.includes(`import * as ethers from 'ethers';`) && 
-        !content.includes(`import { Interface } from 'ethers';`)) {
+    if (
+        content.includes(`import * as ethers from 'ethers';`) &&
+        !content.includes(`import { Interface } from 'ethers';`)
+    ) {
         content = content.replace(
             `import * as ethers from 'ethers';`,
-            `import * as ethers from 'ethers';\nimport { Interface } from 'ethers';`
+            `import * as ethers from 'ethers';\nimport { Interface } from 'ethers';`,
         );
         modified = true;
         fileFixes++;
@@ -68,15 +70,15 @@ wrapperFiles.forEach(filePath => {
         // 处理简单的单行情况
         content = content.replace(
             /const deployInfo = iface\.deployFunction;/g,
-            '// const deployInfo = iface.deployFunction; // Removed for ethers v6 compatibility'
+            '// const deployInfo = iface.deployFunction; // Removed for ethers v6 compatibility',
         );
-        
+
         // 处理跨行的 encode 调用
         content = content.replace(
             /const txData = deployInfo\.encode\(bytecode,\s*\[([^\]]*)\]\);/gs,
-            'const txData = bytecode; // Simplified for ethers v6 compatibility'
+            'const txData = bytecode; // Simplified for ethers v6 compatibility',
         );
-        
+
         modified = true;
         fileFixes++;
     }
@@ -110,10 +112,12 @@ try {
 } catch (error) {
     console.log('⚠️  仍有编译错误，需要进一步检查:');
     const output = error.stdout ? error.stdout.toString() : error.stderr.toString();
-    const lines = output.split('\n').slice(0, 10);  // 只显示前10行错误
+    const lines = output.split('\n').slice(0, 10); // 只显示前10行错误
     console.log(lines.join('\n'));
-    
+
     if (output.includes('deployFunction')) {
-        console.log('\n💡 建议：deployFunction 相关错误可能需要手动处理，或者这些wrapper文件可能不会在实际测试中使用。');
+        console.log(
+            '\n💡 建议：deployFunction 相关错误可能需要手动处理，或者这些wrapper文件可能不会在实际测试中使用。',
+        );
     }
-} 
+}

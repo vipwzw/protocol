@@ -60,7 +60,7 @@ describe('ReentrancyGuard', () => {
             try {
                 // Check if we can access the reentrancy status
                 // This is implementation-dependent
-                const status = await reentrancyGuard._status ? await reentrancyGuard._status() : null;
+                const status = (await reentrancyGuard._status) ? await reentrancyGuard._status() : null;
                 if (status !== null) {
                     expect(status).to.not.be.undefined;
                 }

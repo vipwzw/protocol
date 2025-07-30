@@ -413,4 +413,4 @@ export function getActualFillableTakerTokenAmount(
         .times(order.takerAmount)
         .div(order.makerAmount)
         .integerValue(BigNumber.ROUND_UP);
-} 
+}

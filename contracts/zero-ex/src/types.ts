@@ -42,4 +42,4 @@ export interface FullFeatureArtifacts extends BootstrapFeatureArtifacts {
     nativeOrders: HardhatArtifact;
     feeCollectorController: HardhatArtifact;
     otcOrders: HardhatArtifact;
-} 
+}

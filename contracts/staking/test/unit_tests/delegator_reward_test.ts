@@ -633,13 +633,11 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
                 });
                 await advanceEpochAsync(); // epoch 4
                 await advanceEpochAsync(); // epoch 5
-                const {
-                    membersReward: unfinalizedReward,
-                    membersStake: unfinalizedStake,
-                } = await setUnfinalizedPoolRewardAsync({
-                    poolId,
-                    membersStake: new BigNumber(stake).times(5),
-                });
+                const { membersReward: unfinalizedReward, membersStake: unfinalizedStake } =
+                    await setUnfinalizedPoolRewardAsync({
+                        poolId,
+                        membersStake: new BigNumber(stake).times(5),
+                    });
                 const reward = await getDelegatorRewardBalanceAsync(poolId, delegator);
                 const expectedReward = BigNumber.sum(
                     computeDelegatorRewards(prevReward, stake, prevStake),

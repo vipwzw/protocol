@@ -19,7 +19,7 @@ import * as IERC1155Receiver from '../artifacts/contracts/src/interfaces/IERC115
 export const artifacts = {
     // Test contracts
     DummyERC1155Receiver: DummyERC1155Receiver,
-    
+
     // Production contracts
     ERC1155: ERC1155,
     ERC1155Mintable: ERC1155Mintable,

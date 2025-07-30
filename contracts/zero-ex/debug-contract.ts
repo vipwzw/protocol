@@ -42,7 +42,7 @@ async function debugContract() {
     // 创建使用真实地址的测试数据
     console.log('\n📊 创建测试数据（使用真实地址）...');
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-    
+
     // 使用真实的桥接数据
     const boughtAmount = 1000000000000000000n; // 1 ether
     const lpData = abiCoder.encode(['uint256'], [boughtAmount]);
@@ -52,20 +52,20 @@ async function debugContract() {
         source: '0x0000000000000000000000000000000000000000000000000000000000000000',
         takerTokenAmount: 1000000000000000000n,
         makerTokenAmount: 1000000000000000000n,
-        bridgeData: bridgeData
+        bridgeData: bridgeData,
     };
 
     const transformData = {
         side: FillQuoteTransformerSide.Sell,
         sellToken: takerTokenAddr, // ✅ 使用真实地址
-        buyToken: makerTokenAddr,  // ✅ 使用真实地址
+        buyToken: makerTokenAddr, // ✅ 使用真实地址
         bridgeOrders: [bridgeOrder],
         limitOrders: [],
         rfqOrders: [],
         fillSequence: [FillQuoteTransformerOrderType.Bridge],
         fillAmount: 1000000000000000000n,
         refundReceiver: '0x0000000000000000000000000000000000000000',
-        otcOrders: []
+        otcOrders: [],
     };
 
     console.log('📋 测试数据概览（真实地址）:');
@@ -85,20 +85,24 @@ async function debugContract() {
     console.log('\n🔍 验证编码数据...');
     console.log('- 编码前 sellToken:', transformData.sellToken);
     console.log('- 编码前 buyToken:', transformData.buyToken);
-    
+
     // 手动解码前几个字段来验证
     try {
         const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-        const decoded = abiCoder.decode([
-            'tuple(uint8,address,address,tuple(bytes32,uint256,uint256,bytes)[],bytes,bytes,uint8[],uint256,address,bytes)'
-        ], encodedData);
-        
+        const decoded = abiCoder.decode(
+            [
+                'tuple(uint8,address,address,tuple(bytes32,uint256,uint256,bytes)[],bytes,bytes,uint8[],uint256,address,bytes)',
+            ],
+            encodedData,
+        );
+
         const [side, sellToken, buyToken] = decoded[0];
         console.log('- 解码后 sellToken:', sellToken);
         console.log('- 解码后 buyToken:', buyToken);
-        console.log('- 地址是否匹配:', 
+        console.log(
+            '- 地址是否匹配:',
             sellToken.toLowerCase() === transformData.sellToken.toLowerCase() &&
-            buyToken.toLowerCase() === transformData.buyToken.toLowerCase()
+                buyToken.toLowerCase() === transformData.buyToken.toLowerCase(),
         );
     } catch (decodeErr) {
         console.log('❌ 手动解码失败:', decodeErr.message);
@@ -113,7 +117,7 @@ async function debugContract() {
     } catch (error) {
         console.log('❌ 调试调用失败:');
         console.log('错误信息:', error.message);
-        
+
         // 提取可能的错误代码
         if (error.message.includes('0x')) {
             const errorMatch = error.message.match(/0x[a-fA-F0-9]+/);
@@ -124,4 +128,4 @@ async function debugContract() {
     }
 }
 
-debugContract().catch(console.error); 
+debugContract().catch(console.error);

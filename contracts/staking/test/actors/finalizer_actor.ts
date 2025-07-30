@@ -46,16 +46,14 @@ export class FinalizerActor extends BaseActor {
         const operatorBalanceByPoolId = await this._getOperatorBalanceByPoolIdAsync(this._operatorByPoolId);
         const rewardByPoolId = await this._getRewardByPoolIdAsync(this._poolIds);
         // compute expected changes
-        const [
-            expectedOperatorBalanceByPoolId,
-            expectedRewardBalanceByPoolId,
-        ] = this._computeExpectedRewardBalanceByPoolId(
-            rewardByPoolId,
-            operatorBalanceByPoolId,
-            rewardBalanceByPoolId,
-            delegatorStakesByPoolId,
-            operatorShareByPoolId,
-        );
+        const [expectedOperatorBalanceByPoolId, expectedRewardBalanceByPoolId] =
+            this._computeExpectedRewardBalanceByPoolId(
+                rewardByPoolId,
+                operatorBalanceByPoolId,
+                rewardBalanceByPoolId,
+                delegatorStakesByPoolId,
+                operatorShareByPoolId,
+            );
         const expectedDelegatorBalancesByPoolId = await this._computeExpectedDelegatorBalancesByPoolIdAsync(
             this._delegatorsByPoolId,
             delegatorBalancesByPoolId,
@@ -118,10 +116,8 @@ export class FinalizerActor extends BaseActor {
     private async _getDelegatorBalancesByPoolIdAsync(
         delegatorsByPoolId: DelegatorsByPoolId,
     ): Promise<DelegatorBalancesByPoolId> {
-        const {
-            computeRewardBalanceOfDelegator,
-            computeRewardBalanceOfOperator,
-        } = this._stakingApiWrapper.stakingContract;
+        const { computeRewardBalanceOfDelegator, computeRewardBalanceOfOperator } =
+            this._stakingApiWrapper.stakingContract;
         const delegatorBalancesByPoolId: DelegatorBalancesByPoolId = {};
 
         for (const poolId of Object.keys(delegatorsByPoolId)) {
@@ -178,17 +174,15 @@ export class FinalizerActor extends BaseActor {
         const expectedRewardBalanceByPoolId = _.cloneDeep(rewardBalanceByPoolId);
         for (const poolId of Object.keys(rewardByPoolId)) {
             const operatorShare = operatorShareByPoolId[poolId];
-            [
-                expectedOperatorBalanceByPoolId[poolId],
-                expectedRewardBalanceByPoolId[poolId],
-            ] = this._computeExpectedRewardBalance(
-                poolId,
-                rewardByPoolId[poolId],
-                expectedOperatorBalanceByPoolId[poolId],
-                expectedRewardBalanceByPoolId[poolId],
-                delegatorStakesByPoolId[poolId],
-                operatorShare,
-            );
+            [expectedOperatorBalanceByPoolId[poolId], expectedRewardBalanceByPoolId[poolId]] =
+                this._computeExpectedRewardBalance(
+                    poolId,
+                    rewardByPoolId[poolId],
+                    expectedOperatorBalanceByPoolId[poolId],
+                    expectedRewardBalanceByPoolId[poolId],
+                    delegatorStakesByPoolId[poolId],
+                    operatorShare,
+                );
         }
         return [expectedOperatorBalanceByPoolId, expectedRewardBalanceByPoolId];
     }

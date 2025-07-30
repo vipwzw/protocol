@@ -4,25 +4,25 @@
  * -----------------------------------------------------------------------------
  */
 // Export TypeChain generated contract types
-export { 
+export {
     IZrxTreasury,
     IStaking,
     ZrxTreasury,
     TreasuryStaking,
     DefaultPoolOperator,
     DummyERC20Token,
-    ISablier
+    ISablier,
 } from './typechain-types';
 
 // Export factory types for contract deployment
-export { 
+export {
     IZrxTreasury__factory,
     IStaking__factory,
     ZrxTreasury__factory,
     TreasuryStaking__factory,
     DefaultPoolOperator__factory,
     DummyERC20Token__factory,
-    ISablier__factory
+    ISablier__factory,
 } from './typechain-types';
 
 // Re-export common types

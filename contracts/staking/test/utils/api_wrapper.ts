@@ -128,7 +128,7 @@ export class StakingApiWrapper {
         },
 
         getParamsAsync: async (): Promise<StakingParams> => {
-            return (_.zipObject(
+            return _.zipObject(
                 [
                     'epochDurationInSeconds',
                     'rewardDelegatedStakeWeight',
@@ -139,7 +139,7 @@ export class StakingApiWrapper {
                     'zrxVaultAddress',
                 ],
                 await this.stakingContract.getParams().callAsync(),
-            ) as any) as StakingParams;
+            ) as any as StakingParams;
         },
 
         cobbDouglasAsync: async (

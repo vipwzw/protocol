@@ -133,7 +133,7 @@ blockchainTests.resets('UniswapBridge unit tests', env => {
             return {
                 opts: _opts,
                 result,
-                logs: (receipt.logs as any) as DecodedLogs,
+                logs: receipt.logs as any as DecodedLogs,
                 blockTime: await env.web3Wrapper.getBlockTimestampAsync(receipt.blockNumber),
             };
         }

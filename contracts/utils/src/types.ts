@@ -55,7 +55,7 @@ export interface UtilsHardhatArtifacts extends HardhatArtifacts {
     LibSafeMath: HardhatArtifact;
     Ownable: HardhatArtifact;
     ReentrancyGuard: HardhatArtifact;
-    
+
     // 错误库
     LibAuthorizableRichErrors: HardhatArtifact;
     LibBytesRichErrors: HardhatArtifact;
@@ -64,7 +64,7 @@ export interface UtilsHardhatArtifacts extends HardhatArtifacts {
     LibReentrancyGuardRichErrors: HardhatArtifact;
     LibRichErrors: HardhatArtifact;
     LibSafeMathRichErrors: HardhatArtifact;
-    
+
     // 测试合约
     TestLibBytes: HardhatArtifact;
     TestLibRichErrors: HardhatArtifact;
@@ -133,4 +133,4 @@ export interface ContractFactory {
     bytecode: string;
     interface: any;
     deploy(...args: any[]): Promise<ContractInstance>;
-} 
+}

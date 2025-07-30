@@ -2,8 +2,9 @@ async function simpleErrorAnalysis() {
     console.log('🔍 简单分析 InvalidTransformDataError...');
 
     // 从测试输出中重新提取的错误数据
-    const fullErrorData: string = '0xadc35ca600000000000000000000000025b8fe1de9daf8ba351890744ff28cf7dfa8f5e300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a7640000';
-    
+    const fullErrorData: string =
+        '0xadc35ca600000000000000000000000025b8fe1de9daf8ba351890744ff28cf7dfa8f5e300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a7640000';
+
     console.log('完整错误数据:', fullErrorData);
     console.log('错误数据长度:', fullErrorData.length);
 
@@ -23,17 +24,17 @@ async function simpleErrorAnalysis() {
     console.log('\n按32字节分解:');
     chunks.forEach((chunk: string, index: number) => {
         console.log(`第${index + 1}个32字节:`, chunk);
-        
+
         // 尝试解释这些字节
         if (chunk.length === 64) {
             // 作为地址解释
             const address = '0x' + chunk.slice(24); // 地址是后20字节
             console.log(`  作为地址: ${address}`);
-            
-            // 作为数字解释  
+
+            // 作为数字解释
             const bigintValue = BigInt('0x' + chunk);
             console.log(`  作为数字: ${bigintValue.toString()}`);
-            
+
             // 检查是否是 ETH 地址
             const ETH_TOKEN_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
             if (address.toLowerCase() === ETH_TOKEN_ADDRESS.toLowerCase()) {
@@ -77,7 +78,7 @@ async function simpleErrorAnalysis() {
     console.log('错误应该包含:');
     console.log('1. uint8 errorCode');
     console.log('2. bytes transformData');
-    
+
     // 前32字节可能是 errorCode (但实际上应该只是 uint8)
     if (chunks.length > 0) {
         const errorCodeValue = BigInt('0x' + chunks[0]);
@@ -90,4 +91,4 @@ async function simpleErrorAnalysis() {
     }
 }
 
-simpleErrorAnalysis().catch(console.error); 
+simpleErrorAnalysis().catch(console.error);

@@ -28,17 +28,14 @@ chmod +x .git/hooks/pre-commit
 在提交前执行以下检查：
 
 1. **文件大小检查** 🗂️
-
     - 阻止提交大于 10MB 的文件
     - 防止意外提交大型二进制文件
 
 2. **build-info 文件检查** 🚫
-
     - 阻止提交 `artifacts/build-info/` 目录下的文件
     - 这些文件应该通过 `.gitignore` 忽略
 
 3. **敏感文件检查** ⚠️
-
     - 警告可能不应该提交的文件：
         - `node_modules/`
         - `.env` 文件
@@ -88,15 +85,15 @@ git commit --no-verify -m "your message"
 
 ### Hook 没有执行？
 
--   确保文件有执行权限：`chmod +x .git/hooks/pre-commit`
--   检查 Git 版本：需要 Git 2.9+
+- 确保文件有执行权限：`chmod +x .git/hooks/pre-commit`
+- 检查 Git 版本：需要 Git 2.9+
 
 ### 误报？
 
--   检查文件是否应该在 `.gitignore` 中
--   考虑使用 Git LFS 管理大文件
+- 检查文件是否应该在 `.gitignore` 中
+- 考虑使用 Git LFS 管理大文件
 
 ### 性能问题？
 
--   对于大型仓库，可以调整检查范围
--   考虑只检查暂存的文件而不是所有文件
+- 对于大型仓库，可以调整检查范围
+- 考虑只检查暂存的文件而不是所有文件

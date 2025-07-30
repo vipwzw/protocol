@@ -7,7 +7,7 @@ export {
     // Test contracts
     DummyERC1155Receiver,
     DummyERC1155Receiver__factory,
-    
+
     // Production contracts for testing
     ERC1155,
     ERC1155__factory,
@@ -20,5 +20,5 @@ export {
     IERC1155Mintable,
     IERC1155Mintable__factory,
     IERC1155Receiver,
-    IERC1155Receiver__factory
+    IERC1155Receiver__factory,
 } from '../typechain-types';

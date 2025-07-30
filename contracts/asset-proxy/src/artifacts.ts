@@ -48,7 +48,7 @@ export const artifacts = {
     ERC721Proxy: ERC721Proxy as unknown as ContractArtifact,
     MultiAssetProxy: MultiAssetProxy as unknown as ContractArtifact,
     StaticCallProxy: StaticCallProxy as unknown as ContractArtifact,
-    
+
     // Bridge contracts
     BalancerBridge: BalancerBridge as unknown as ContractArtifact,
     BancorBridge: BancorBridge as unknown as ContractArtifact,
@@ -70,7 +70,7 @@ export const artifacts = {
     SwerveBridge: SwerveBridge as unknown as ContractArtifact,
     UniswapBridge: UniswapBridge as unknown as ContractArtifact,
     UniswapV2Bridge: UniswapV2Bridge as unknown as ContractArtifact,
-    
+
     // Interface contracts
     IAssetData: IAssetData as unknown as ContractArtifact,
     IAssetProxy: IAssetProxy as unknown as ContractArtifact,

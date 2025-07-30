@@ -27,11 +27,11 @@ const web3Wrapper = {
             return 'Ganache'; // Default fallback
         }
     },
-    
+
     async awaitTransactionMinedAsync(txHash: string) {
         return await provider.getTransactionReceipt(txHash);
     },
-    
+
     async awaitTransactionSuccessAsync(txHash: string) {
         const receipt = await provider.getTransactionReceipt(txHash);
         if (!receipt) {
@@ -39,24 +39,24 @@ const web3Wrapper = {
         }
         return receipt;
     },
-    
+
     async getAvailableAddressesAsync() {
         const accounts = await provider.send('eth_accounts', []);
         return accounts;
     },
-    
+
     async increaseTimeAsync(seconds: number) {
         await provider.send('evm_increaseTime', [seconds]);
         await provider.send('evm_mine', []);
         return seconds;
     },
-    
+
     async sendTransactionAsync(txData: any) {
         const signer = await provider.getSigner(0);
         const tx = await signer.sendTransaction(txData);
         return tx.hash;
     },
-    
+
     async getBlockIfExistsAsync(blockIdentifier: string | number) {
         try {
             return await provider.getBlock(blockIdentifier);
@@ -64,10 +64,10 @@ const web3Wrapper = {
             return null;
         }
     },
-    
+
     getProvider() {
         return hardhat.network.provider;
-    }
+    },
 };
 
 export { provider, web3Wrapper };

@@ -414,9 +414,8 @@ describe('ERC1155Proxy', () => {
             );
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
-            const receiverLog = txReceipt.logs[1] as LogWithDecodedArgs<
-                DummyERC1155ReceiverBatchTokenReceivedEventArgs
-            >;
+            const receiverLog = txReceipt
+                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
@@ -458,9 +457,8 @@ describe('ERC1155Proxy', () => {
             );
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
-            const receiverLog = txReceipt.logs[1] as LogWithDecodedArgs<
-                DummyERC1155ReceiverBatchTokenReceivedEventArgs
-            >;
+            const receiverLog = txReceipt
+                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
@@ -506,9 +504,8 @@ describe('ERC1155Proxy', () => {
             );
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
-            const receiverLog = txReceipt.logs[1] as LogWithDecodedArgs<
-                DummyERC1155ReceiverBatchTokenReceivedEventArgs
-            >;
+            const receiverLog = txReceipt
+                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
@@ -557,9 +554,8 @@ describe('ERC1155Proxy', () => {
             );
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
-            const receiverLog = txReceipt.logs[1] as LogWithDecodedArgs<
-                DummyERC1155ReceiverBatchTokenReceivedEventArgs
-            >;
+            const receiverLog = txReceipt
+                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
@@ -609,9 +605,8 @@ describe('ERC1155Proxy', () => {
             );
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
-            const receiverLog = txReceipt.logs[1] as LogWithDecodedArgs<
-                DummyERC1155ReceiverBatchTokenReceivedEventArgs
-            >;
+            const receiverLog = txReceipt
+                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
@@ -659,9 +654,8 @@ describe('ERC1155Proxy', () => {
             );
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
-            const receiverLog = txReceipt.logs[1] as LogWithDecodedArgs<
-                DummyERC1155ReceiverBatchTokenReceivedEventArgs
-            >;
+            const receiverLog = txReceipt
+                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
@@ -874,9 +868,8 @@ describe('ERC1155Proxy', () => {
             );
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
-            const receiverLog = txReceipt.logs[1] as LogWithDecodedArgs<
-                DummyERC1155ReceiverBatchTokenReceivedEventArgs
-            >;
+            const receiverLog = txReceipt
+                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(2);
@@ -995,9 +988,8 @@ describe('ERC1155Proxy', () => {
             );
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
-            const receiverLog = txReceipt.logs[1] as LogWithDecodedArgs<
-                DummyERC1155ReceiverBatchTokenReceivedEventArgs
-            >;
+            const receiverLog = txReceipt
+                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(2);

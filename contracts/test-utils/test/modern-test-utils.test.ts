@@ -1,7 +1,7 @@
-import { expect } from "chai";
+import { expect } from 'chai';
 const { ethers } = require('hardhat');
 
-describe("🔧 Test-Utils Package Modern Tests", function () {
+describe('🔧 Test-Utils Package Modern Tests', function () {
     let accounts: any[];
     let deployer: any;
     let user1: any;
@@ -12,7 +12,7 @@ describe("🔧 Test-Utils Package Modern Tests", function () {
         [deployer, user1, user2] = accounts;
     });
 
-    it("✅ should have proper test account setup", async function () {
+    it('✅ should have proper test account setup', async function () {
         expect(accounts.length).to.be.greaterThan(2);
         expect(ethers.isAddress(deployer.address)).to.be.true;
         expect(ethers.isAddress(user1.address)).to.be.true;
@@ -22,8 +22,8 @@ describe("🔧 Test-Utils Package Modern Tests", function () {
         console.log(`✅ User2: ${user2.address}`);
     });
 
-    describe("📋 Order Hashing Functionality", function () {
-        it("✅ should support order hashing with TypeScript", async function () {
+    describe('📋 Order Hashing Functionality', function () {
+        it('✅ should support order hashing with TypeScript', async function () {
             // Order 类型定义
             interface Order {
                 makerToken: string;
@@ -39,29 +39,29 @@ describe("🔧 Test-Utils Package Modern Tests", function () {
             const order: Order = {
                 makerToken: deployer.address,
                 takerToken: user1.address,
-                makerAmount: ethers.parseEther("100"),
-                takerAmount: ethers.parseEther("200"),
+                makerAmount: ethers.parseEther('100'),
+                takerAmount: ethers.parseEther('200'),
                 maker: deployer.address,
                 taker: user1.address,
                 salt: BigInt(Date.now()),
-                expiry: Math.floor(Date.now() / 1000) + 3600
+                expiry: Math.floor(Date.now() / 1000) + 3600,
             };
 
             // 生成订单哈希
             const orderData = ethers.AbiCoder.defaultAbiCoder().encode(
-                ["address", "address", "uint256", "uint256", "address", "address", "uint256", "uint256"],
+                ['address', 'address', 'uint256', 'uint256', 'address', 'address', 'uint256', 'uint256'],
                 [
                     order.makerToken,
-                    order.takerToken, 
+                    order.takerToken,
                     order.makerAmount,
                     order.takerAmount,
                     order.maker,
                     order.taker,
                     order.salt,
-                    order.expiry
-                ]
+                    order.expiry,
+                ],
             );
-            
+
             const orderHash = ethers.keccak256(orderData);
 
             expect(orderHash).to.match(/^0x[0-9a-fA-F]{64}$/);
@@ -75,8 +75,8 @@ describe("🔧 Test-Utils Package Modern Tests", function () {
         });
     });
 
-    describe("🔐 Transaction Hashing", function () {
-        it("✅ should handle transaction hashing with modern types", async function () {
+    describe('🔐 Transaction Hashing', function () {
+        it('✅ should handle transaction hashing with modern types', async function () {
             interface Transaction {
                 to: string;
                 value: bigint;
@@ -88,26 +88,26 @@ describe("🔧 Test-Utils Package Modern Tests", function () {
 
             const transaction: Transaction = {
                 to: user1.address,
-                value: ethers.parseEther("1"),
-                data: "0x",
+                value: ethers.parseEther('1'),
+                data: '0x',
                 nonce: 42n,
                 gasLimit: 21000n,
-                gasPrice: ethers.parseUnits("20", "gwei")
+                gasPrice: ethers.parseUnits('20', 'gwei'),
             };
 
             // 生成交易哈希
             const txData = ethers.AbiCoder.defaultAbiCoder().encode(
-                ["address", "uint256", "bytes", "uint256", "uint256", "uint256"],
+                ['address', 'uint256', 'bytes', 'uint256', 'uint256', 'uint256'],
                 [
                     transaction.to,
                     transaction.value,
                     transaction.data,
                     transaction.nonce,
                     transaction.gasLimit,
-                    transaction.gasPrice
-                ]
+                    transaction.gasPrice,
+                ],
             );
-            
+
             const txHash = ethers.keccak256(txData);
 
             expect(txHash).to.match(/^0x[0-9a-fA-F]{64}$/);
@@ -118,17 +118,17 @@ describe("🔧 Test-Utils Package Modern Tests", function () {
 
             console.log(`✅ Transaction hash: ${txHash.slice(0, 10)}...`);
             console.log(`✅ Value: ${ethers.formatEther(transaction.value.toString())} ETH`);
-            console.log(`✅ Gas price: ${ethers.formatUnits(transaction.gasPrice.toString(), "gwei")} gwei`);
+            console.log(`✅ Gas price: ${ethers.formatUnits(transaction.gasPrice.toString(), 'gwei')} gwei`);
         });
     });
 
-    describe("🧪 Reference Function Testing Pattern", function () {
-        it("✅ should demonstrate reference function testing with TypeScript", async function () {
+    describe('🧪 Reference Function Testing Pattern', function () {
+        it('✅ should demonstrate reference function testing with TypeScript', async function () {
             // 模拟一个参考函数测试模式
             function safeAdd(a: bigint, b: bigint): bigint {
                 const result = a + b;
                 if (result < a) {
-                    throw new Error("Addition overflow");
+                    throw new Error('Addition overflow');
                 }
                 return result;
             }
@@ -139,33 +139,33 @@ describe("🔧 Test-Utils Package Modern Tests", function () {
 
             const testCases = [
                 { a: 100n, b: 200n, expected: 300n },
-                { a: ethers.parseEther("1"), b: ethers.parseEther("2"), expected: ethers.parseEther("3") },
-                { a: 0n, b: 1000n, expected: 1000n }
+                { a: ethers.parseEther('1'), b: ethers.parseEther('2'), expected: ethers.parseEther('3') },
+                { a: 0n, b: 1000n, expected: 1000n },
             ];
 
             for (const testCase of testCases) {
                 const referenceResult = safeAdd(testCase.a, testCase.b);
                 const testResult = testSafeAdd(testCase.a, testCase.b);
-                
+
                 expect(testResult).to.equal(referenceResult);
                 expect(testResult).to.equal(testCase.expected);
-                
+
                 console.log(`✅ ${testCase.a} + ${testCase.b} = ${testResult}`);
             }
         });
 
-        it("✅ should handle error cases in reference testing", async function () {
+        it('✅ should handle error cases in reference testing', async function () {
             function testOverflow(): void {
-                const maxUint256 = (2n ** 256n) - 1n;
+                const maxUint256 = 2n ** 256n - 1n;
                 const a = maxUint256;
                 const b = 1n;
-                
+
                 expect(() => {
                     const result = a + b;
                     if (result < a) {
-                        throw new Error("Addition overflow");
+                        throw new Error('Addition overflow');
                     }
-                }).to.throw("Addition overflow");
+                }).to.throw('Addition overflow');
             }
 
             // 这里不会真的溢出，因为 JavaScript 的 bigint 不会溢出
@@ -174,8 +174,8 @@ describe("🔧 Test-Utils Package Modern Tests", function () {
         });
     });
 
-    describe("🔗 Blockchain Test Environment", function () {
-        it("✅ should provide proper blockchain environment", async function () {
+    describe('🔗 Blockchain Test Environment', function () {
+        it('✅ should provide proper blockchain environment', async function () {
             // 检查网络连接
             const network = await ethers.provider.getNetwork();
             const blockNumber = await ethers.provider.getBlockNumber();
@@ -191,7 +191,7 @@ describe("🔧 Test-Utils Package Modern Tests", function () {
             console.log(`✅ Deployer balance: ${ethers.formatEther(balance)} ETH`);
         });
 
-        it("✅ should support contract deployment testing pattern", async function () {
+        it('✅ should support contract deployment testing pattern', async function () {
             // 模拟合约部署测试模式
             interface ContractDeployment {
                 address: string;
@@ -203,8 +203,8 @@ describe("🔧 Test-Utils Package Modern Tests", function () {
             const mockDeployment: ContractDeployment = {
                 address: ethers.Wallet.createRandom().address,
                 deployer: deployer.address,
-                constructorArgs: ["TestContract", "TEST", 18],
-                gasUsed: 1500000n
+                constructorArgs: ['TestContract', 'TEST', 18],
+                gasUsed: 1500000n,
             };
 
             expect(ethers.isAddress(mockDeployment.address)).to.be.true;
@@ -217,4 +217,4 @@ describe("🔧 Test-Utils Package Modern Tests", function () {
             console.log(`✅ Gas used: ${mockDeployment.gasUsed.toString()}`);
         });
     });
-}); 
+});

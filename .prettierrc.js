@@ -7,4 +7,5 @@ module.exports = {
     useTabs: false,
     bracketSpacing: true,
     arrowParens: 'avoid',
-}; 
+    plugins: ['prettier-plugin-solidity'],
+};

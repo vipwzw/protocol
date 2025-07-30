@@ -60,12 +60,12 @@ export function getRandomPortion(total: Numberish): bigint {
 export function getRandomFloat(min: Numberish, max: Numberish): bigint {
     const minBig = toBigInt(min);
     const maxBig = toBigInt(max);
-    
+
     // Generate a random bigint using crypto
     const randomBytes = crypto.randomBytes(32);
     const randomHex = randomBytes.toString('hex');
     const randomBig = BigInt('0x' + randomHex);
-    
+
     // Scale to [0, max-min] range
     const maxUint256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
     const range = maxBig - minBig;
@@ -95,10 +95,10 @@ export function fromFixed(n: Numberish): bigint {
 export function getNumericalDivergence(a: Numberish, b: Numberish, precision = 18): number {
     const _a = toBigInt(a);
     const _b = toBigInt(b);
-    
+
     // Simple approximation for integer divergence
     const diff = _a > _b ? _a - _b : _b - _a;
-    
+
     // Convert to number for comparison (may lose precision for very large numbers)
     return Number(diff);
 }
@@ -121,7 +121,7 @@ export function assertIntegerRoughlyEquals(actual: Numberish, expected: Numberis
     const actualBig = toBigInt(actual);
     const expectedBig = toBigInt(expected);
     const diff = actualBig > expectedBig ? actualBig - expectedBig : expectedBig - actualBig;
-    
+
     if (Number(diff) <= maxError) {
         return;
     }
@@ -145,7 +145,7 @@ export function getPercentageOfValue(value: Numberish, percentage: Numberish): b
     const valueBig = toBigInt(value);
     const percentageBig = toBigInt(percentage);
     const percentageDenominator = constants.PERCENTAGE_DENOMINATOR;
-    
+
     const numerator = (percentageDenominator * percentageBig) / 100n;
     const newValue = (numerator * valueBig) / percentageDenominator;
     return newValue;

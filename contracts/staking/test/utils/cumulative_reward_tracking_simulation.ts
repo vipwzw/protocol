@@ -76,14 +76,15 @@ export class CumulativeRewardTrackingSimulation {
         await this._stakingApiWrapper.stakingContract
             .addExchangeAddress(this._exchangeAddress)
             .awaitTransactionSuccessAsync();
-        this._testCumulativeRewardTrackingContract = await TestCumulativeRewardTrackingContract.deployFrom0xArtifactAsync(
-            artifacts.TestCumulativeRewardTracking,
-            env.provider,
-            txDefaults,
-            artifacts,
-            this._stakingApiWrapper.wethContract.address,
-            this._stakingApiWrapper.zrxVaultContract.address,
-        );
+        this._testCumulativeRewardTrackingContract =
+            await TestCumulativeRewardTrackingContract.deployFrom0xArtifactAsync(
+                artifacts.TestCumulativeRewardTracking,
+                env.provider,
+                txDefaults,
+                artifacts,
+                this._stakingApiWrapper.wethContract.address,
+                this._stakingApiWrapper.zrxVaultContract.address,
+            );
     }
 
     public getTestCumulativeRewardTrackingContract(): TestCumulativeRewardTrackingContract {

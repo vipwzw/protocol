@@ -4,19 +4,19 @@
 
 ### ✅ 通过的包
 
--   **@0x/contract-addresses**: 24/24 测试通过
--   **@0x/contract-artifacts**: 2/2 测试通过
--   **@0x/contracts-test-utils**: 27/31 测试通过 (4 个跳过)
--   **@0x/contracts-treasury**: 43/43 测试通过 ✅ (已修复性能测试)
--   **@0x/contracts-utils**: 64/64 测试通过
+- **@0x/contract-addresses**: 24/24 测试通过
+- **@0x/contract-artifacts**: 2/2 测试通过
+- **@0x/contracts-test-utils**: 27/31 测试通过 (4 个跳过)
+- **@0x/contracts-treasury**: 43/43 测试通过 ✅ (已修复性能测试)
+- **@0x/contracts-utils**: 64/64 测试通过
 
 ### 🔶 部分通过的包
 
--   **@0x/protocol-utils**: 27/30 测试通过 (3 个网络连接失败)
+- **@0x/protocol-utils**: 27/30 测试通过 (3 个网络连接失败)
 
 ### ❌ 失败的包
 
--   **@0x/contracts-zero-ex**: 157 个测试失败，严重问题
+- **@0x/contracts-zero-ex**: 157 个测试失败，严重问题
 
 ## 错误分类详细分析
 
@@ -26,14 +26,14 @@
 
 **影响的测试**:
 
--   OtcOrdersFeature 所有测试 (40+ 个)
--   Native Orders Feature 部分测试
--   所有涉及订单哈希生成的测试
+- OtcOrdersFeature 所有测试 (40+ 个)
+- Native Orders Feature 部分测试
+- 所有涉及订单哈希生成的测试
 
 **根本原因**:
 
--   项目已迁移到 `bigint` 类型，但测试代码仍在使用 `JSON.stringify()` 处理 bigint
--   `getOrderHash()` 函数尝试序列化包含 bigint 的对象
+- 项目已迁移到 `bigint` 类型，但测试代码仍在使用 `JSON.stringify()` 处理 bigint
+- `getOrderHash()` 函数尝试序列化包含 bigint 的对象
 
 **修复策略**:
 
@@ -48,15 +48,15 @@ JSON.stringify(obj, (key, value) => (typeof value === 'bigint' ? value.toString(
 
 **影响的测试**:
 
--   Native Orders Feature 部分测试 ✅
--   OTC Orders Feature 部分测试 ✅
--   Transform ERC20 Feature 测试 ✅
+- Native Orders Feature 部分测试 ✅
+- OTC Orders Feature 部分测试 ✅
+- Transform ERC20 Feature 测试 ✅
 
 **修复方案**:
 
--   添加了缺失的 `zeroEx` 变量声明
--   将错误的方法调用重定向到正确的 feature 接口
--   `zeroEx.getLimitOrderHash()` → `nativeOrdersFeature.getLimitOrderHash()`
+- 添加了缺失的 `zeroEx` 变量声明
+- 将错误的方法调用重定向到正确的 feature 接口
+- `zeroEx.getLimitOrderHash()` → `nativeOrdersFeature.getLimitOrderHash()`
 
 ### 3. **构造函数参数错误** (影响~8 个测试)
 
@@ -64,10 +64,10 @@ JSON.stringify(obj, (key, value) => (typeof value === 'bigint' ? value.toString(
 
 **影响的测试**:
 
--   UniswapV3Feature 测试
--   CurveLiquidityProvider 测试
--   MooniswapLiquidityProvider 测试
--   PayTakerTransformer 测试
+- UniswapV3Feature 测试
+- CurveLiquidityProvider 测试
+- MooniswapLiquidityProvider 测试
+- PayTakerTransformer 测试
 
 **根本原因**: 合约升级到 Solidity 0.8.28 后构造函数签名变化
 
@@ -90,8 +90,8 @@ but got 'Do not know how to serialize a BigInt'
 
 **示例错误**:
 
--   `FullMigration/INVALID_SENDER`
--   `function selector was not recognized`
+- `FullMigration/INVALID_SENDER`
+- `function selector was not recognized`
 
 **根本原因**: 合约升级后部署脚本或权限配置问题
 
@@ -115,9 +115,9 @@ but got 'Do not know how to serialize a BigInt'
 
 **影响的测试**:
 
--   meta_transactions 测试
--   orders 测试
--   signature_utils 测试
+- meta_transactions 测试
+- orders 测试
+- signature_utils 测试
 
 **根本原因**: 测试尝试连接外部区块链节点但连接失败
 
@@ -141,12 +141,12 @@ but got 'Do not know how to serialize a BigInt'
 
 ## 估计修复工作量
 
--   **BigInt 序列化**: 2-3 天 (需要全面测试)
--   **变量定义**: 1 天
--   **构造函数适配**: 1-2 天
--   **Artifacts 配置**: 0.5 天
--   **部署脚本修复**: 1-2 天
--   **性能测试调优**: 0.5 天
+- **BigInt 序列化**: 2-3 天 (需要全面测试)
+- **变量定义**: 1 天
+- **构造函数适配**: 1-2 天
+- **Artifacts 配置**: 0.5 天
+- **部署脚本修复**: 1-2 天
+- **性能测试调优**: 0.5 天
 
 **总计**: 约 6-9 个工作日
 
@@ -159,9 +159,9 @@ but got 'Do not know how to serialize a BigInt'
 
 ## 项目当前状态评估
 
--   **基础设施**: ✅ 良好 (utils, treasury, test-utils 基本正常)
--   **核心协议**: ❌ 需要大量修复工作 (zero-ex 包)
--   **整体可用性**: 🔶 部分可用，但核心功能受影响
+- **基础设施**: ✅ 良好 (utils, treasury, test-utils 基本正常)
+- **核心协议**: ❌ 需要大量修复工作 (zero-ex 包)
+- **整体可用性**: 🔶 部分可用，但核心功能受影响
 
 修复完成后，预期可以将测试通过率从当前的 ~40% 提升到 90%+ 。
 
@@ -169,9 +169,9 @@ but got 'Do not know how to serialize a BigInt'
 
 ### 当前测试统计
 
--   **总测试数**: ~350 个
--   **通过测试**: ~171 个 (48.9%) ⬆️ (+10 个，修复变量未定义错误)
--   **失败测试**: ~179 个 (51.1%)
+- **总测试数**: ~350 个
+- **通过测试**: ~171 个 (48.9%) ⬆️ (+10 个，修复变量未定义错误)
+- **失败测试**: ~179 个 (51.1%)
 
 ### 核心问题
 
@@ -187,11 +187,11 @@ but got 'Do not know how to serialize a BigInt'
 
 ### ✅ 已完成的修复
 
--   ✅ **contracts-utils** 包 - 从完全失败修复到 64/64 全部通过
--   ✅ **contracts-treasury** 包 - 修复性能测试边界问题，43/43 全部通过
--   ✅ **BigInt 序列化错误** - 修复所有 JSON.stringify bigint 问题 (~80 个测试)
--   ✅ **变量未定义错误** - 修复所有 zeroEx 变量引用问题 (~10 个测试)
--   ✅ **文档注释问题** - 修复所有 docstring 错误
--   ✅ **Solidity 版本升级** - 统一到 0.8.28
--   ✅ **合约 wrapper 生成** - 重新生成所有必要的 wrappers
--   ✅ **性能测试优化** - 修复时间断言的边界情况
+- ✅ **contracts-utils** 包 - 从完全失败修复到 64/64 全部通过
+- ✅ **contracts-treasury** 包 - 修复性能测试边界问题，43/43 全部通过
+- ✅ **BigInt 序列化错误** - 修复所有 JSON.stringify bigint 问题 (~80 个测试)
+- ✅ **变量未定义错误** - 修复所有 zeroEx 变量引用问题 (~10 个测试)
+- ✅ **文档注释问题** - 修复所有 docstring 错误
+- ✅ **Solidity 版本升级** - 统一到 0.8.28
+- ✅ **合约 wrapper 生成** - 重新生成所有必要的 wrappers
+- ✅ **性能测试优化** - 修复时间断言的边界情况

@@ -4,10 +4,7 @@
  */
 
 import { BaseContract } from '@0x/base-contract';
-import {
-    ContractAbi,
-    TxData,
-} from 'ethereum-types';
+import { ContractAbi, TxData } from 'ethereum-types';
 
 /**
  * Hardhat 合约 Artifact - 主要类型
@@ -66,17 +63,21 @@ export async function deployFromHardhatArtifactAsync<T extends BaseContract>(
             abi: hardhatArtifact.abi,
             evm: {
                 bytecode: {
-                    object: hardhatArtifact.bytecode.startsWith('0x') ? hardhatArtifact.bytecode : `0x${hardhatArtifact.bytecode}`
+                    object: hardhatArtifact.bytecode.startsWith('0x')
+                        ? hardhatArtifact.bytecode
+                        : `0x${hardhatArtifact.bytecode}`,
                 },
                 deployedBytecode: {
-                    object: hardhatArtifact.deployedBytecode ? 
-                        (hardhatArtifact.deployedBytecode.startsWith('0x') ? hardhatArtifact.deployedBytecode : `0x${hardhatArtifact.deployedBytecode}`) : 
-                        '0x'
-                }
-            }
-        }
+                    object: hardhatArtifact.deployedBytecode
+                        ? hardhatArtifact.deployedBytecode.startsWith('0x')
+                            ? hardhatArtifact.deployedBytecode
+                            : `0x${hardhatArtifact.deployedBytecode}`
+                        : '0x',
+                },
+            },
+        },
     };
-    
+
     // 转换 logDecodeDependencies 中的每个 artifact
     const convertedLogDecodeDependencies: any = {};
     if (logDecodeDependencies) {
@@ -86,8 +87,8 @@ export async function deployFromHardhatArtifactAsync<T extends BaseContract>(
                 // 这是 Hardhat artifact，需要转换
                 convertedLogDecodeDependencies[key] = {
                     compilerOutput: {
-                        abi: dep.abi
-                    }
+                        abi: dep.abi,
+                    },
                 };
             } else {
                 // 已经是正确格式或者是其他格式，直接使用
@@ -95,7 +96,7 @@ export async function deployFromHardhatArtifactAsync<T extends BaseContract>(
             }
         }
     }
-    
+
     // 使用 deployFrom0xArtifactAsync 方法
     return await ContractClass.deployFrom0xArtifactAsync(
         convertedArtifact,
@@ -104,4 +105,4 @@ export async function deployFromHardhatArtifactAsync<T extends BaseContract>(
         convertedLogDecodeDependencies,
         ...constructorArgs,
     );
-} 
+}

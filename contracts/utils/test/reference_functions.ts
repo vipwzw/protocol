@@ -13,15 +13,15 @@ function toBigNumber(value: bigint): BigNumber {
 function bigintSqrt(value: bigint): bigint {
     if (value === BigInt(0)) return BigInt(0);
     if (value < BigInt(4)) return BigInt(1);
-    
+
     let x = value;
     let y = (value + BigInt(1)) / BigInt(2);
-    
+
     while (y < x) {
         x = y;
         y = (y + value / y) / BigInt(2);
     }
-    
+
     return x;
 }
 

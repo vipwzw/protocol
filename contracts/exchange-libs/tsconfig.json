@@ -5,20 +5,7 @@
         "rootDir": ".",
         "resolveJsonModule": true
     },
-    "files": [
-        "./src/artifacts.ts",
-        "./src/index.ts",
-        "./src/wrappers.ts"
-    ],
-    "include": [
-        "./src/**/*",
-        "./typechain-types/**/*"
-    ],
-    "exclude": [
-        "./node_modules/**/*",
-        "./lib/**/*",
-        "./artifacts/**/*",
-        "./test/**/*",
-        "./src/reference_functions.ts"
-    ]
+    "files": ["./src/artifacts.ts", "./src/index.ts", "./src/wrappers.ts"],
+    "include": ["./src/**/*", "./typechain-types/**/*"],
+    "exclude": ["./node_modules/**/*", "./lib/**/*", "./artifacts/**/*", "./test/**/*", "./src/reference_functions.ts"]
 }

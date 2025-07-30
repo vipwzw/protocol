@@ -14,9 +14,9 @@ export function safeAdd(a: bigint, b: bigint): bigint {
     const r = a + b;
     if (r > MAX_UINT256) {
         throw new SafeMathRevertErrors.Uint256BinOpError(
-            SafeMathRevertErrors.BinOpErrorCodes.AdditionOverflow, 
-            toBigNumber(a), 
-            toBigNumber(b)
+            SafeMathRevertErrors.BinOpErrorCodes.AdditionOverflow,
+            toBigNumber(a),
+            toBigNumber(b),
         );
     }
     return r;
@@ -57,9 +57,9 @@ export function safeMul(a: bigint, b: bigint): bigint {
 export function safeDiv(a: bigint, b: bigint): bigint {
     if (b === BigInt(0)) {
         throw new SafeMathRevertErrors.Uint256BinOpError(
-            SafeMathRevertErrors.BinOpErrorCodes.DivisionByZero, 
-            toBigNumber(a), 
-            toBigNumber(b)
+            SafeMathRevertErrors.BinOpErrorCodes.DivisionByZero,
+            toBigNumber(a),
+            toBigNumber(b),
         );
     }
     return a / b;

@@ -23,7 +23,7 @@ async function testZeroAddress() {
     `;
 
     console.log('📝 尝试通过内联部署测试...');
-    
+
     // 由于内联部署可能复杂，让我们直接测试地址比较
     const ETH_TOKEN_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
     const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -37,7 +37,7 @@ async function testZeroAddress() {
     console.log('\n🔍 我们编码数据中的地址:');
     const sellTokenFromError = '0x25b8fe1de9daf8ba351890744ff28cf7dfa8f5e3';
     const buyTokenFromError = '0x0000000000000000000000000000000000000000';
-    
+
     console.log('- sellToken:', sellTokenFromError);
     console.log('- buyToken:', buyTokenFromError);
     console.log('- sellToken == ETH:', sellTokenFromError.toLowerCase() === ETH_TOKEN_ADDRESS.toLowerCase());
@@ -59,4 +59,4 @@ async function testZeroAddress() {
     console.log('4. 某个地方有额外的验证逻辑我们没有发现');
 }
 
-testZeroAddress().catch(console.error); 
+testZeroAddress().catch(console.error);

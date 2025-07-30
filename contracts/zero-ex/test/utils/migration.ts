@@ -6,4 +6,4 @@ export {
     fullMigrateAsync,
     FullMigrationConfig,
     FullFeatures,
-} from '../../src/migration'; 
+} from '../../src/migration';

@@ -13,7 +13,7 @@ async function verifyDeployment() {
 
     console.log('\n📋 部署的合约地址:');
     console.log('- Exchange:', await testEnv.exchange.getAddress());
-    console.log('- BridgeAdapter:', await testEnv.bridgeAdapter.getAddress()); 
+    console.log('- BridgeAdapter:', await testEnv.bridgeAdapter.getAddress());
     console.log('- Transformer:', await testEnv.transformer.getAddress());
     console.log('- Host:', await testEnv.host.getAddress());
     console.log('- Bridge:', await testEnv.bridge.getAddress());
@@ -43,8 +43,9 @@ async function verifyDeployment() {
 
         // 验证地址是否匹配
         const zeroExMatches = zeroExAddr.toLowerCase() === (await testEnv.exchange.getAddress()).toLowerCase();
-        const bridgeAdapterMatches = bridgeAdapterAddr.toLowerCase() === (await testEnv.bridgeAdapter.getAddress()).toLowerCase();
-        
+        const bridgeAdapterMatches =
+            bridgeAdapterAddr.toLowerCase() === (await testEnv.bridgeAdapter.getAddress()).toLowerCase();
+
         console.log('\n✅ 地址验证结果:');
         console.log('- ZeroEx 地址匹配:', zeroExMatches);
         console.log('- BridgeAdapter 地址匹配:', bridgeAdapterMatches);
@@ -54,10 +55,9 @@ async function verifyDeployment() {
         } else {
             console.log('❌ 合约配置有问题！');
         }
-
     } catch (error) {
         console.log('❌ 验证 transformer 时出错:', error.message);
     }
 }
 
-verifyDeployment().catch(console.error); 
+verifyDeployment().catch(console.error);

@@ -19,7 +19,7 @@ export const constants = {
     DEFAULT_PARAMS: {
         epochDurationInSeconds: BigInt(TEN_DAYS),
         rewardDelegatedStakeWeight: BigInt(PPM * 0.9),
-        minimumPoolStake: (10n ** DUMMY_TOKEN_DECIMALS) * 100n,
+        minimumPoolStake: 10n ** DUMMY_TOKEN_DECIMALS * 100n,
         cobbDouglasAlphaNumerator: 2n,
         cobbDouglasAlphaDenominator: 3n,
     },

@@ -9,5 +9,5 @@ export {
     IERC721Token,
     IERC721Token__factory,
     IERC721Receiver,
-    IERC721Receiver__factory
+    IERC721Receiver__factory,
 } from './wrappers';

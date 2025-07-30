@@ -43,7 +43,7 @@ describe('SafeMath', () => {
             }
         });
 
-        it('should calculate correct value for values that don\'t overflow', async () => {
+        it("should calculate correct value for values that don't overflow", async () => {
             if (!safeMath) {
                 console.log('Test skipped - contract not available');
                 return;

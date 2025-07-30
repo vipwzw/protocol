@@ -18,7 +18,7 @@ export class Erc1155Wrapper {
     }
     public async getBalancesAsync(owners: string[], tokens: BigNumber[]): Promise<BigNumber[]> {
         const balances = await this._erc1155Contract.balanceOfBatch(owners, tokens);
-        return balances.map((balance) => new BigNumber(balance.toString()));
+        return balances.map(balance => new BigNumber(balance.toString()));
     }
     public async safeTransferFromAsync(
         from: string,

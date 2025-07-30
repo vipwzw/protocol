@@ -123,7 +123,7 @@ blockchainTests.resets.skip('KyberBridge unit tests', env => {
             return {
                 opts: _opts,
                 result,
-                logs: (logs as any) as DecodedLogs,
+                logs: logs as any as DecodedLogs,
             };
         }
 

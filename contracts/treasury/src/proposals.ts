@@ -61,7 +61,7 @@ function encodeSablierCreateStream(
     deposit: bigint,
     tokenAddress: string,
     startTime: bigint,
-    stopTime: bigint
+    stopTime: bigint,
 ): string {
     // return sablier.interface.encodeFunctionData('createStream', [
     //     recipient,
@@ -85,7 +85,10 @@ export const proposals: Proposal[] = [
             {
                 target: zrxToken,
                 data: zrx
-                    .transfer('0xf9347f751a6a1467Abc722eC7d80bA2698dd9d6c', BigInt(400000) * BigInt("1000000000000000000"))
+                    .transfer(
+                        '0xf9347f751a6a1467Abc722eC7d80bA2698dd9d6c',
+                        BigInt(400000) * BigInt('1000000000000000000'),
+                    )
                     .getABIEncodedTransactionData(),
                 value: BigInt(0),
             },
@@ -98,14 +101,20 @@ export const proposals: Proposal[] = [
             {
                 target: zrxToken,
                 data: zrx
-                    .transfer('0xab66cc8fd10457ebc9d13b9760c835f0a4cbc487', BigInt(330813) * BigInt("1000000000000000000"))
+                    .transfer(
+                        '0xab66cc8fd10457ebc9d13b9760c835f0a4cbc487',
+                        BigInt(330813) * BigInt('1000000000000000000'),
+                    )
                     .getABIEncodedTransactionData(),
                 value: BigInt(0),
             },
             {
                 target: maticToken.address,
                 data: maticToken
-                    .transfer('0xab66cc8fd10457ebc9d13b9760c835f0a4cbc487', BigInt(420000) * BigInt("1000000000000000000"))
+                    .transfer(
+                        '0xab66cc8fd10457ebc9d13b9760c835f0a4cbc487',
+                        BigInt(420000) * BigInt('1000000000000000000'),
+                    )
                     .getABIEncodedTransactionData(),
                 value: BigInt(0),
             },

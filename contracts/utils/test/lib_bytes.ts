@@ -24,7 +24,7 @@ describe('LibBytes', () => {
         const signers = await ethers.getSigners();
         testAddress = signers[1].address;
         testAddressB = signers[2].address;
-        
+
         // Deploy LibBytesTest using modern ethers approach
         try {
             const LibBytesTestFactory = await ethers.getContractFactory('LibBytesTest');
@@ -34,7 +34,7 @@ describe('LibBytes', () => {
             console.log('LibBytesTest contract not available, using basic tests only');
             return; // Skip specific tests if contract not available
         }
-        
+
         // Verify lengths of test data
         const byteArrayShorterThan32BytesLength = ethUtil.toBuffer(byteArrayShorterThan32Bytes).byteLength;
         expect(byteArrayShorterThan32BytesLength).to.be.lessThan(32);

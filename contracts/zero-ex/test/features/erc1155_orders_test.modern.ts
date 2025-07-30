@@ -4,11 +4,10 @@ const { ethers } = require('hardhat');
 import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
 
-
-describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
+describe('ERC1155OrdersFeature - Complete Modern Tests', function () {
     // Extended timeout for ERC1155 operations
     this.timeout(300000);
-    
+
     let owner: any;
     let maker: any;
     let taker: any;
@@ -22,36 +21,36 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
     let erc1155OrdersFeature: any;
     let propertyValidator: any;
     let nftOrderPresigner: any;
-    
+
     const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
     const ETH_TOKEN_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
     const MAX_UINT256 = MaxUint256;
     const NULL_BYTES = '0x';
     const ZERO_AMOUNT = 0n;
-    
+
     // NFT Order enums
     const TradeDirection = {
         SellNFT: 0,
-        BuyNFT: 1
+        BuyNFT: 1,
     };
-    
+
     const SignatureType = {
         EthSign: 0,
         EIP712: 1,
-        PreSigned: 2
+        PreSigned: 2,
     };
-    
+
     interface ERC1155Fee {
         recipient: string;
         amount: bigint;
         feeData: string;
     }
-    
+
     interface ERC1155Property {
         propertyValidator: string;
         propertyData: string;
     }
-    
+
     interface ERC1155Order {
         direction: number;
         maker: string;
@@ -66,69 +65,69 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
         erc1155TokenAmount: bigint;
         erc1155TokenProperties: ERC1155Property[];
     }
-    
-    before(async function() {
+
+    before(async function () {
         console.log('🚀 Setting up Complete ERC1155OrdersFeature Test...');
-        
+
         // Get signers
         const signers = await ethers.getSigners();
         [owner, maker, taker, otherMaker, otherTaker] = signers;
-        
+
         console.log('👤 Owner:', owner.target);
         console.log('👤 Maker:', maker.target);
         console.log('👤 Taker:', taker.target);
-        
+
         await deployContractsAsync();
         await setupApprovalsAsync();
-        
+
         console.log('✅ Complete ERC1155OrdersFeature test environment ready!');
     });
-    
+
     async function deployContractsAsync(): Promise<void> {
         console.log('📦 Deploying Complete ERC1155OrdersFeature contracts...');
-        
+
         // Deploy WETH
         const WethFactory = await ethers.getContractFactory('TestWeth');
         weth = await WethFactory.deploy();
         await weth.waitForDeployment();
         console.log(`✅ WETH: ${await weth.getAddress()}`);
-        
+
         // Deploy ERC20 token using TestMintableERC20Token (no constructor params)
         const ERC20Factory = await ethers.getContractFactory('TestMintableERC20Token');
         erc20Token = await ERC20Factory.deploy();
         await erc20Token.waitForDeployment();
         console.log(`✅ ERC20 Token: ${await erc20Token.getAddress()}`);
-        
+
         // Deploy ERC1155 token using TestMintableERC1155Token (no constructor params)
         const ERC1155Factory = await ethers.getContractFactory('TestMintableERC1155Token');
         erc1155Token = await ERC1155Factory.deploy();
         await erc1155Token.waitForDeployment();
         console.log(`✅ ERC1155 Token: ${await erc1155Token.getAddress()}`);
-        
+
         // Deploy basic ZeroEx contract
         const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
         zeroEx = await ZeroExFactory.deploy(owner.target);
         await zeroEx.waitForDeployment();
         console.log(`✅ ZeroEx: ${await zeroEx.getAddress()}`);
-        
+
         // Deploy ERC1155OrdersFeature
         const ERC1155OrdersFactory = await ethers.getContractFactory('ERC1155OrdersFeature');
         erc1155OrdersFeature = await ERC1155OrdersFactory.deploy(await zeroEx.getAddress(), await weth.getAddress());
         await erc1155OrdersFeature.waitForDeployment();
         console.log(`✅ ERC1155OrdersFeature: ${await erc1155OrdersFeature.getAddress()}`);
-        
+
         // Deploy fee recipient
         const FeeRecipientFactory = await ethers.getContractFactory('TestFeeRecipient');
         feeRecipient = await FeeRecipientFactory.deploy();
         await feeRecipient.waitForDeployment();
         console.log(`✅ Fee Recipient: ${await feeRecipient.getAddress()}`);
-        
+
         // Deploy property validator
         const PropertyValidatorFactory = await ethers.getContractFactory('TestPropertyValidator');
         propertyValidator = await PropertyValidatorFactory.deploy();
         await propertyValidator.waitForDeployment();
         console.log(`✅ Property Validator: ${await propertyValidator.getAddress()}`);
-        
+
         // Deploy NFT order presigner
         const PresignerFactory = await ethers.getContractFactory('TestNFTOrderPresigner');
         nftOrderPresigner = await PresignerFactory.deploy(await zeroEx.getAddress());
@@ -138,11 +137,11 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
 
     async function setupApprovalsAsync(): Promise<void> {
         console.log('🔐 Setting up token approvals...');
-        
+
         const accounts = [maker, otherMaker, taker, otherTaker];
         const zeroExAddress = await zeroEx.getAddress();
         const featureAddress = await erc1155OrdersFeature.getAddress();
-        
+
         // Approve ERC20 tokens for both zeroEx and feature contracts
         for (const account of accounts) {
             await erc20Token.connect(account).approve(zeroExAddress, MAX_UINT256);
@@ -150,13 +149,13 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
             await erc20Token.connect(account).approve(featureAddress, MAX_UINT256);
             await weth.connect(account).approve(featureAddress, MAX_UINT256);
         }
-        
+
         // Approve ERC1155 tokens (setApprovalForAll) for both contracts
         for (const account of accounts) {
             await erc1155Token.connect(account).setApprovalForAll(zeroExAddress, true);
             await erc1155Token.connect(account).setApprovalForAll(featureAddress, true);
         }
-        
+
         console.log(`✅ All token approvals set`);
     }
 
@@ -187,14 +186,14 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
             taker: fields.taker || NULL_ADDRESS,
             expiry: fields.expiry || createExpiry(3600),
             nonce: fields.nonce || BigInt(Math.floor(Math.random() * 1000000)),
-            erc20Token: fields.erc20Token || (erc20Token.target || erc20Token.target),
+            erc20Token: fields.erc20Token || erc20Token.target || erc20Token.target,
             erc20TokenAmount: fields.erc20TokenAmount || ethers.parseEther('1'),
             fees: fields.fees || [],
-            erc1155Token: fields.erc1155Token || (erc1155Token.target || erc1155Token.target),
+            erc1155Token: fields.erc1155Token || erc1155Token.target || erc1155Token.target,
             erc1155TokenId: fields.erc1155TokenId || BigInt(Math.floor(Math.random() * 1000000)),
             erc1155TokenAmount: fields.erc1155TokenAmount || BigInt(Math.floor(Math.random() * 100) + 1),
             erc1155TokenProperties: fields.erc1155TokenProperties || [],
-            ...fields
+            ...fields,
         };
     }
 
@@ -202,12 +201,11 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
         order: ERC1155Order,
         tokenId: bigint = order.erc1155TokenId,
         tokenAmount: bigint = order.erc1155TokenAmount,
-        _taker: string = taker.target
+        _taker: string = taker.target,
     ): Promise<void> {
-        const totalFeeAmount = order.fees.length > 0 
-            ? order.fees.reduce((sum, fee) => sum + fee.amount, 0n) 
-            : ZERO_AMOUNT;
-        
+        const totalFeeAmount =
+            order.fees.length > 0 ? order.fees.reduce((sum, fee) => sum + fee.amount, 0n) : ZERO_AMOUNT;
+
         if (order.direction === TradeDirection.SellNFT) {
             // Seller has ERC1155 tokens, buyer needs ERC20/ETH
             await erc1155Token.mint(order.maker, tokenId, tokenAmount);
@@ -220,7 +218,7 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
             await erc1155Token.mint(_taker, tokenId, tokenAmount);
             if (order.erc20Token === (weth.target || weth.target)) {
                 await weth.connect(await ethers.getSigner(order.maker)).deposit({
-                    value: order.erc20TokenAmount + totalFeeAmount
+                    value: order.erc20TokenAmount + totalFeeAmount,
                 });
             } else {
                 await erc20Token.mint(order.maker, order.erc20TokenAmount + totalFeeAmount);
@@ -232,15 +230,15 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
         order: ERC1155Order,
         tokenId: bigint = order.erc1155TokenId,
         tokenAmount: bigint = order.erc1155TokenAmount,
-        _taker: string = taker.target
+        _taker: string = taker.target,
     ): Promise<void> {
         const token = order.erc20Token === (weth.target || weth.target) ? weth : erc20Token;
-        
+
         if (order.direction === TradeDirection.SellNFT) {
             // Check maker received ERC20
             const makerBalance = await token.balanceOf(order.maker);
             expect(Number(makerBalance)).to.equal(Number(order.erc20TokenAmount));
-            
+
             // Check taker received ERC1155 tokens
             const takerERC1155Balance = await erc1155Token.balanceOf(_taker, tokenId);
             expect(Number(takerERC1155Balance)).to.equal(Number(tokenAmount));
@@ -248,12 +246,12 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
             // Check taker received ERC20
             const erc20Balance = await token.balanceOf(_taker);
             expect(Number(erc20Balance)).to.equal(Number(order.erc20TokenAmount));
-            
+
             // Check maker received ERC1155 tokens
             const makerERC1155Balance = await erc1155Token.balanceOf(order.maker, tokenId);
             expect(Number(makerERC1155Balance)).to.equal(Number(tokenAmount));
         }
-        
+
         // Check fee recipients received fees
         if (order.fees.length > 0) {
             for (const fee of order.fees) {
@@ -267,7 +265,7 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
         order: ERC1155Order,
         _taker: string = taker.target,
         erc1155TokenId: bigint = order.erc1155TokenId,
-        erc1155TokenAmount: bigint = order.erc1155TokenAmount
+        erc1155TokenAmount: bigint = order.erc1155TokenAmount,
     ): any {
         return {
             direction: order.direction,
@@ -286,14 +284,14 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
     async function createOrderSignature(order: ERC1155Order, signer: any = maker): Promise<any> {
         const orderHash = await getOrderHash(order);
         const signatureString = await signer.signMessage(ethers.getBytes(orderHash));
-        
+
         // Convert string signature to LibSignature.Signature struct
         const { v, r, s } = ethers.Signature.from(signatureString);
         return {
             signatureType: 3, // ETHSIGN (not EIP712, because we use signMessage)
             v: v,
             r: r,
-            s: s
+            s: s,
         };
     }
 
@@ -302,7 +300,7 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
             signatureType: 4, // PRESIGNED (not 2)
             v: 0,
             r: ethers.ZeroHash,
-            s: ethers.ZeroHash
+            s: ethers.ZeroHash,
         };
     }
 
@@ -310,18 +308,18 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
         return await erc1155OrdersFeature.getERC1155OrderHash(order);
     }
 
-    describe('getERC1155OrderHash()', function() {
-        it('returns the correct hash for order with no fees or properties', async function() {
+    describe('getERC1155OrderHash()', function () {
+        it('returns the correct hash for order with no fees or properties', async function () {
             const order = getTestERC1155Order();
             const hash = await erc1155OrdersFeature.getERC1155OrderHash(order);
-            
+
             expect(hash).to.not.equal(ethers.ZeroHash);
             expect(hash).to.have.lengthOf(66); // 0x + 64 hex chars
-            
+
             console.log(`✅ Generated ERC1155 order hash: ${hash.slice(0, 10)}...`);
         });
 
-        it('returns the correct hash for order with null property', async function() {
+        it('returns the correct hash for order with null property', async function () {
             const order = getTestERC1155Order({
                 erc1155TokenProperties: [
                     {
@@ -331,13 +329,13 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 ],
             });
             const hash = await erc1155OrdersFeature.getERC1155OrderHash(order);
-            
+
             expect(hash).to.not.equal(ethers.ZeroHash);
-            
+
             console.log(`✅ Generated hash for order with null property`);
         });
 
-        it('returns the correct hash for order with 1 fee, 1 property', async function() {
+        it('returns the correct hash for order with 1 fee, 1 property', async function () {
             const order = getTestERC1155Order({
                 fees: [
                     {
@@ -354,45 +352,45 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 ],
             });
             const hash = await erc1155OrdersFeature.getERC1155OrderHash(order);
-            
+
             expect(hash).to.not.equal(ethers.ZeroHash);
-            
+
             console.log(`✅ Generated hash for order with fee and property`);
         });
 
-        it('different orders have different hashes', async function() {
+        it('different orders have different hashes', async function () {
             const order1 = getTestERC1155Order();
             const order2 = getTestERC1155Order({ nonce: order1.nonce + 1n });
-            
+
             const hash1 = await erc1155OrdersFeature.getERC1155OrderHash(order1);
             const hash2 = await erc1155OrdersFeature.getERC1155OrderHash(order2);
-            
+
             expect(hash1).to.not.equal(hash2);
-            
+
             console.log(`✅ Different orders produce different hashes`);
         });
 
-        it('handles different token amounts', async function() {
+        it('handles different token amounts', async function () {
             const order1 = getTestERC1155Order({ erc1155TokenAmount: 1n });
-            const order2 = getTestERC1155Order({ 
+            const order2 = getTestERC1155Order({
                 erc1155TokenId: order1.erc1155TokenId,
-                erc1155TokenAmount: 10n 
+                erc1155TokenAmount: 10n,
             });
-            
+
             const hash1 = await erc1155OrdersFeature.getERC1155OrderHash(order1);
             const hash2 = await erc1155OrdersFeature.getERC1155OrderHash(order2);
-            
+
             expect(hash1).to.not.equal(hash2);
-            
+
             console.log(`✅ Different token amounts produce different hashes`);
         });
     });
 
-    describe('validateERC1155OrderSignature', function() {
-        it('validates a valid signature', async function() {
+    describe('validateERC1155OrderSignature', function () {
+        it('validates a valid signature', async function () {
             const order = getTestERC1155Order();
             const signature = await createOrderSignature(order);
-            
+
             // validateERC1155OrderSignature is void - throws on invalid, succeeds on valid
             let error: any;
             try {
@@ -401,19 +399,19 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 error = e;
             }
             expect(error).to.be.undefined;
-            
+
             console.log(`✅ Valid signature correctly validated`);
         });
 
-        it('rejects an invalid signature', async function() {
+        it('rejects an invalid signature', async function () {
             const order = getTestERC1155Order();
             const invalidSignature = {
                 signatureType: 1,
                 v: 27,
                 r: ethers.randomBytes(32),
-                s: ethers.randomBytes(32)
+                s: ethers.randomBytes(32),
             };
-            
+
             let error: any;
             try {
                 await erc1155OrdersFeature.validateERC1155OrderSignature(order, invalidSignature);
@@ -421,18 +419,18 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 error = e;
             }
             expect(error).to.not.be.undefined;
-            
+
             console.log(`✅ Invalid signature correctly rejected`);
         });
 
-        it('validates pre-signed order', async function() {
+        it('validates pre-signed order', async function () {
             const order = getTestERC1155Order();
-            
+
             // Pre-sign the order
             await erc1155OrdersFeature.connect(maker).preSignERC1155Order(order);
-            
+
             const preSignedSignature = createPreSignedSignature();
-            
+
             let error: any;
             try {
                 await erc1155OrdersFeature.validateERC1155OrderSignature(order, preSignedSignature);
@@ -440,14 +438,14 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 error = e;
             }
             expect(error).to.be.undefined;
-            
+
             console.log(`✅ Pre-signed order correctly validated`);
         });
 
-        it('rejects signature from wrong signer', async function() {
+        it('rejects signature from wrong signer', async function () {
             const order = getTestERC1155Order();
             const signature = await createOrderSignature(order, taker); // Wrong signer
-            
+
             let error: any;
             try {
                 await erc1155OrdersFeature.validateERC1155OrderSignature(order, signature);
@@ -455,47 +453,47 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 error = e;
             }
             expect(error).to.not.be.undefined;
-            
+
             console.log(`✅ Wrong signer signature correctly rejected`);
         });
     });
 
-    describe('cancelERC1155Order', function() {
-        it('can cancel an unfilled order', async function() {
+    describe('cancelERC1155Order', function () {
+        it('can cancel an unfilled order', async function () {
             const order = getTestERC1155Order();
-            
+
             const result = await erc1155OrdersFeature.connect(maker).cancelERC1155Order(order.nonce);
             const receipt = await result.wait();
-            
+
             // Check for cancellation event
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
-            
+
             // Check order is cancelled using getERC1155OrderInfo
             const orderInfo = await erc1155OrdersFeature.getERC1155OrderInfo(order);
             expect(orderInfo.status).to.equal(2n); // UNFILLABLE status (cancelled orders are UNFILLABLE)
-            
+
             console.log(`✅ Cancelled unfilled ERC1155 order`);
         });
 
-        it('can cancel multiple orders', async function() {
+        it('can cancel multiple orders', async function () {
             const nonces = [1n, 2n, 3n];
-            
+
             for (const nonce of nonces) {
                 await erc1155OrdersFeature.connect(maker).cancelERC1155Order(nonce);
-                
+
                 // Create a test order with this nonce to check status
                 const order = getTestERC1155Order({ nonce });
                 const orderInfo = await erc1155OrdersFeature.getERC1155OrderInfo(order);
                 expect(orderInfo.status).to.equal(2n); // UNFILLABLE status (cancelled orders are UNFILLABLE)
             }
-            
+
             console.log(`✅ Cancelled multiple ERC1155 orders`);
         });
 
-        it('cannot cancel someone else\'s order', async function() {
+        it("cannot cancel someone else's order", async function () {
             const order = getTestERC1155Order();
-            
+
             // Try to cancel someone else's order - may or may not have authorization check
             let error: any;
             try {
@@ -503,97 +501,92 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
             } catch (e) {
                 error = e;
             }
-            
+
             // If no error, it means contract allows anyone to cancel (no auth check)
             // If error exists, it means auth check is working
             console.log(`✅ Cancel authorization behavior verified`);
         });
 
-        it('can cancel already cancelled order', async function() {
+        it('can cancel already cancelled order', async function () {
             const order = getTestERC1155Order();
-            
+
             // Cancel once
             await erc1155OrdersFeature.connect(maker).cancelERC1155Order(order.nonce);
-            
+
             // Cancel again - should not revert
             const result = await erc1155OrdersFeature.connect(maker).cancelERC1155Order(order.nonce);
             const receipt = await result.wait();
-            
+
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
-            
+
             console.log(`✅ Can cancel already cancelled order`);
         });
     });
 
-    describe('sellERC1155', function() {
-        it('can sell ERC1155 tokens for ERC20', async function() {
+    describe('sellERC1155', function () {
+        it('can sell ERC1155 tokens for ERC20', async function () {
             const order = getTestERC1155Order({
                 direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
                 erc1155TokenAmount: 5n,
             });
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
-            
+
             const result = await erc1155OrdersFeature.connect(taker).sellERC1155(
                 order,
                 signature,
                 order.erc1155TokenId,
                 order.erc1155TokenAmount,
                 false, // unwrapNativeToken
-                NULL_BYTES // callbackData
+                NULL_BYTES, // callbackData
             );
             const receipt = await result.wait();
-            
+
             // Check for fill event
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
             expect(fillEvent).to.not.be.undefined;
-            
+
             // Check balances
             await assertBalancesAsync(order);
-            
+
             console.log(`✅ Successfully sold ${order.erc1155TokenAmount} ERC1155 tokens for ERC20`);
         });
 
-        it('can sell partial amount of ERC1155 tokens', async function() {
+        it('can sell partial amount of ERC1155 tokens', async function () {
             const order = getTestERC1155Order({
                 direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
                 erc1155TokenAmount: 10n,
             });
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
-            
+
             const sellAmount = 3n; // Partial amount
             const expectedERC20Amount = (order.erc20TokenAmount * sellAmount) / order.erc1155TokenAmount;
-            
+
             // Record initial balances
             const initialTakerERC20Balance = await erc20Token.balanceOf(taker.target);
             const initialMakerERC1155Balance = await erc1155Token.balanceOf(order.maker, order.erc1155TokenId);
-            
-            const result = await erc1155OrdersFeature.connect(taker).sellERC1155(
-                order,
-                signature,
-                order.erc1155TokenId,
-                sellAmount,
-                false,
-                NULL_BYTES
-            );
+
+            const result = await erc1155OrdersFeature
+                .connect(taker)
+                .sellERC1155(order, signature, order.erc1155TokenId, sellAmount, false, NULL_BYTES);
             const receipt = await result.wait();
-            
+
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
             expect(fillEvent).to.not.be.undefined;
-            
+
             // Check partial balances (BuyNFT order: maker pays ERC20, taker gets ERC20)
             const finalTakerERC20Balance = await erc20Token.balanceOf(taker.target);
             expect(Number(finalTakerERC20Balance - initialTakerERC20Balance)).to.equal(Number(expectedERC20Amount));
-            
+
             const finalMakerERC1155Balance = await erc1155Token.balanceOf(order.maker, order.erc1155TokenId);
             expect(Number(finalMakerERC1155Balance - initialMakerERC1155Balance)).to.equal(Number(sellAmount));
-            
+
             console.log(`✅ Successfully sold partial amount: ${sellAmount}/${order.erc1155TokenAmount} tokens`);
         });
 
-        it('can sell ERC1155 tokens for WETH', async function() {
+        it('can sell ERC1155 tokens for WETH', async function () {
             const order = getTestERC1155Order({
                 direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
                 erc20Token: await weth.getAddress(),
@@ -601,26 +594,21 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
             });
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
-            
-            const result = await erc1155OrdersFeature.connect(taker).sellERC1155(
-                order,
-                signature,
-                order.erc1155TokenId,
-                order.erc1155TokenAmount,
-                false,
-                NULL_BYTES
-            );
+
+            const result = await erc1155OrdersFeature
+                .connect(taker)
+                .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             const receipt = await result.wait();
-            
+
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
             expect(fillEvent).to.not.be.undefined;
-            
+
             await assertBalancesAsync(order);
-            
+
             console.log(`✅ Successfully sold ERC1155 tokens for WETH`);
         });
 
-        it('can sell with unwrapping WETH to ETH', async function() {
+        it('can sell with unwrapping WETH to ETH', async function () {
             const order = getTestERC1155Order({
                 direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
                 erc20Token: await weth.getAddress(),
@@ -628,138 +616,119 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
             });
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
-            
+
             const wethBalanceBefore = await weth.balanceOf(taker.target);
-            
+
             const result = await erc1155OrdersFeature.connect(taker).sellERC1155(
                 order,
                 signature,
                 order.erc1155TokenId,
                 order.erc1155TokenAmount,
                 false, // unwrapNativeToken - simplified for now
-                NULL_BYTES
+                NULL_BYTES,
             );
             const receipt = await result.wait();
-            
+
             const wethBalanceAfter = await weth.balanceOf(taker.target);
-            
+
             // Should have received WETH (since we didn't unwrap)
             const wethReceived = wethBalanceAfter - wethBalanceBefore;
             expect(wethReceived).to.equal(order.erc20TokenAmount);
-            
+
             console.log(`✅ Successfully sold ERC1155 tokens for WETH (simplified)`);
         });
 
-        it('cannot sell with wrong token ID', async function() {
+        it('cannot sell with wrong token ID', async function () {
             const order = getTestERC1155Order({
                 direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
             });
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
-            
+
             const wrongTokenId = order.erc1155TokenId + 1n;
-            
+
             let error: any;
             try {
-                await erc1155OrdersFeature.connect(taker).sellERC1155(
-                    order,
-                    signature,
-                    wrongTokenId,
-                    order.erc1155TokenAmount,
-                    false,
-                    NULL_BYTES
-                );
+                await erc1155OrdersFeature
+                    .connect(taker)
+                    .sellERC1155(order, signature, wrongTokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             } catch (e) {
                 error = e;
             }
             expect(error).to.not.be.undefined;
-            
+
             console.log(`✅ Correctly rejected wrong token ID`);
         });
 
-        it('cannot sell more tokens than available', async function() {
+        it('cannot sell more tokens than available', async function () {
             const order = getTestERC1155Order({
                 direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
                 erc1155TokenAmount: 5n,
             });
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
-            
+
             const excessAmount = order.erc1155TokenAmount + 1n;
-            
+
             let error: any;
             try {
-                await erc1155OrdersFeature.connect(taker).sellERC1155(
-                    order,
-                    signature,
-                    excessAmount,
-                    false,
-                    NULL_BYTES
-                );
+                await erc1155OrdersFeature
+                    .connect(taker)
+                    .sellERC1155(order, signature, excessAmount, false, NULL_BYTES);
             } catch (e) {
                 error = e;
             }
             expect(error).to.not.be.undefined;
-            
+
             console.log(`✅ Correctly rejected excess token amount`);
         });
 
-        it('cannot sell expired order', async function() {
+        it('cannot sell expired order', async function () {
             const order = getTestERC1155Order({
                 direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
                 expiry: Math.floor(Date.now() / 1000) - 60, // Expired
             });
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
-            
+
             let error: any;
             try {
-                await erc1155OrdersFeature.connect(taker).sellERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenId,
-                order.erc1155TokenAmount,
-                    false,
-                    NULL_BYTES
-                );
+                await erc1155OrdersFeature
+                    .connect(taker)
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             } catch (e) {
                 error = e;
             }
             expect(error).to.not.be.undefined;
-            
+
             console.log(`✅ Correctly rejected expired order`);
         });
 
-        it('cannot sell cancelled order', async function() {
+        it('cannot sell cancelled order', async function () {
             const order = getTestERC1155Order({
                 direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
             });
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
-            
+
             // Cancel the order
             await erc1155OrdersFeature.connect(maker).cancelERC1155Order(order.nonce);
-            
+
             let error: any;
             try {
-                await erc1155OrdersFeature.connect(taker).sellERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenId,
-                order.erc1155TokenAmount,
-                    false,
-                    NULL_BYTES
-                );
+                await erc1155OrdersFeature
+                    .connect(taker)
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             } catch (e) {
                 error = e;
             }
             expect(error).to.not.be.undefined;
-            
+
             console.log(`✅ Correctly rejected cancelled order`);
         });
 
-        describe('fees', function() {
-            it('pays single fee to recipient', async function() {
+        describe('fees', function () {
+            it('pays single fee to recipient', async function () {
                 const feeAmount = ethers.parseEther('0.1');
                 const order = getTestERC1155Order({
                     direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
@@ -774,32 +743,27 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
-                const result = await erc1155OrdersFeature.connect(taker).sellERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenId,
-                order.erc1155TokenAmount,
-                    false,
-                    NULL_BYTES
-                );
+
+                const result = await erc1155OrdersFeature
+                    .connect(taker)
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
                 const receipt = await result.wait();
-                
+
                 const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
                 expect(fillEvent).to.not.be.undefined;
-                
+
                 // Check fee recipient received fee
                 const feeRecipientBalance = await erc20Token.balanceOf(await feeRecipient.getAddress());
                 expect(Number(feeRecipientBalance)).to.equal(Number(feeAmount));
-                
+
                 console.log(`✅ Single fee correctly paid: ${ethers.formatEther(feeAmount)} tokens`);
             });
 
-            it('pays multiple fees to different recipients', async function() {
+            it('pays multiple fees to different recipients', async function () {
                 const fee1Amount = ethers.parseEther('0.1');
                 const fee2Amount = ethers.parseEther('0.05');
                 const secondRecipient = generateRandomAddress();
-                
+
                 const order = getTestERC1155Order({
                     direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
                     erc1155TokenAmount: 2n,
@@ -818,34 +782,31 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
+
                 // Record initial balances
                 const initialFeeRecipient1Balance = await erc20Token.balanceOf(await feeRecipient.getAddress());
                 const initialFeeRecipient2Balance = await erc20Token.balanceOf(secondRecipient);
-                
-                const result = await erc1155OrdersFeature.connect(taker).sellERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenId,
-                order.erc1155TokenAmount,
-                    false,
-                    NULL_BYTES
-                );
+
+                const result = await erc1155OrdersFeature
+                    .connect(taker)
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
                 const receipt = await result.wait();
-                
+
                 const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
                 expect(fillEvent).to.not.be.undefined;
-                
+
                 // Check both fee recipients received fees (using balance differences)
                 const finalFeeRecipient1Balance = await erc20Token.balanceOf(await feeRecipient.getAddress());
                 const finalFeeRecipient2Balance = await erc20Token.balanceOf(secondRecipient);
                 expect(Number(finalFeeRecipient1Balance - initialFeeRecipient1Balance)).to.equal(Number(fee1Amount));
                 expect(Number(finalFeeRecipient2Balance - initialFeeRecipient2Balance)).to.equal(Number(fee2Amount));
-                
-                console.log(`✅ Multiple fees correctly paid: ${ethers.formatEther(fee1Amount)} + ${ethers.formatEther(fee2Amount)}`);
+
+                console.log(
+                    `✅ Multiple fees correctly paid: ${ethers.formatEther(fee1Amount)} + ${ethers.formatEther(fee2Amount)}`,
+                );
             });
 
-            it('handles proportional fees for partial fills', async function() {
+            it('handles proportional fees for partial fills', async function () {
                 const feeAmount = ethers.parseEther('0.1');
                 const order = getTestERC1155Order({
                     direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
@@ -860,34 +821,29 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
+
                 const sellAmount = 3n; // 30% of the order
                 const expectedFee = (feeAmount * sellAmount) / order.erc1155TokenAmount;
-                
+
                 // Record initial balance
                 const initialFeeRecipientBalance = await erc20Token.balanceOf(await feeRecipient.getAddress());
-                
-                const result = await erc1155OrdersFeature.connect(taker).sellERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenId,
-                    sellAmount,
-                    false,
-                    NULL_BYTES
-                );
+
+                const result = await erc1155OrdersFeature
+                    .connect(taker)
+                    .sellERC1155(order, signature, order.erc1155TokenId, sellAmount, false, NULL_BYTES);
                 const receipt = await result.wait();
-                
+
                 const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
                 expect(fillEvent).to.not.be.undefined;
-                
+
                 // Check proportional fee was paid (using balance difference)
                 const finalFeeRecipientBalance = await erc20Token.balanceOf(await feeRecipient.getAddress());
                 expect(Number(finalFeeRecipientBalance - initialFeeRecipientBalance)).to.equal(Number(expectedFee));
-                
+
                 console.log(`✅ Proportional fee correctly paid for partial fill: ${ethers.formatEther(expectedFee)}`);
             });
 
-            it('handles zero fee amounts', async function() {
+            it('handles zero fee amounts', async function () {
                 const order = getTestERC1155Order({
                     direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
                     fees: [
@@ -900,24 +856,19 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
-                const result = await erc1155OrdersFeature.connect(taker).sellERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenId,
-                order.erc1155TokenAmount,
-                    false,
-                    NULL_BYTES
-                );
+
+                const result = await erc1155OrdersFeature
+                    .connect(taker)
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
                 const receipt = await result.wait();
-                
+
                 const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
                 expect(fillEvent).to.not.be.undefined;
-                
+
                 console.log(`✅ Zero fee amount handled correctly`);
             });
 
-            it('reverts if taker has insufficient balance for fees', async function() {
+            it('reverts if taker has insufficient balance for fees', async function () {
                 const order = getTestERC1155Order({
                     direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
                     fees: [
@@ -928,82 +879,74 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                         },
                     ],
                 });
-                
+
                 // Only mint base amount, not enough for fees
                 await erc1155Token.mint(order.maker, order.erc1155TokenId, order.erc1155TokenAmount);
                 await erc20Token.mint(taker.target, order.erc20TokenAmount); // Not including fee
-                
+
                 const signature = await createOrderSignature(order);
-                
+
                 let error: any;
-            try {
-                await erc1155OrdersFeature.connect(taker).sellERC1155(
-                        order,
-                        signature,
-                        order.erc1155TokenId,
-                order.erc1155TokenAmount,
-                        false,
-                        NULL_BYTES
-                    );
-            } catch (e) {
-                error = e;
-            }
-            expect(error).to.not.be.undefined;
-                
+                try {
+                    await erc1155OrdersFeature
+                        .connect(taker)
+                        .sellERC1155(
+                            order,
+                            signature,
+                            order.erc1155TokenId,
+                            order.erc1155TokenAmount,
+                            false,
+                            NULL_BYTES,
+                        );
+                } catch (e) {
+                    error = e;
+                }
+                expect(error).to.not.be.undefined;
+
                 console.log(`✅ Correctly rejected insufficient balance for fees`);
             });
         });
 
-        describe('properties', function() {
-            it('validates token properties', async function() {
+        describe('properties', function () {
+            it('validates token properties', async function () {
                 const order = getTestERC1155Order({
                     direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
                     erc1155TokenProperties: [], // Simplified: no properties for now
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
-                const result = await erc1155OrdersFeature.connect(taker).sellERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenId,
-                order.erc1155TokenAmount,
-                    false,
-                    NULL_BYTES
-                );
+
+                const result = await erc1155OrdersFeature
+                    .connect(taker)
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
                 const receipt = await result.wait();
-                
+
                 const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
                 expect(fillEvent).to.not.be.undefined;
-                
+
                 console.log(`✅ Token properties validated successfully`);
             });
 
-            it('handles null property validator', async function() {
+            it('handles null property validator', async function () {
                 const order = getTestERC1155Order({
                     direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
                     erc1155TokenProperties: [], // Simplified: no properties for null validator test
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
-                const result = await erc1155OrdersFeature.connect(taker).sellERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenId,
-                order.erc1155TokenAmount,
-                    false,
-                    NULL_BYTES
-                );
+
+                const result = await erc1155OrdersFeature
+                    .connect(taker)
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
                 const receipt = await result.wait();
-                
+
                 const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
                 expect(fillEvent).to.not.be.undefined;
-                
+
                 console.log(`✅ Null property validator handled correctly`);
             });
 
-            it('reverts if property validation fails', async function() {
+            it('reverts if property validation fails', async function () {
                 // Simplified: test basic functionality without failing validator
                 const order = getTestERC1155Order({
                     direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
@@ -1011,187 +954,173 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
-                const result = await erc1155OrdersFeature.connect(taker).sellERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenId,
-                order.erc1155TokenAmount,
-                    false,
-                    NULL_BYTES
-                );
+
+                const result = await erc1155OrdersFeature
+                    .connect(taker)
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
                 const receipt = await result.wait();
-                
+
                 const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
                 expect(fillEvent).to.not.be.undefined;
-                
+
                 console.log(`✅ Property validation (simplified) handled correctly`);
             });
 
-            it('validates multiple properties', async function() {
+            it('validates multiple properties', async function () {
                 const order = getTestERC1155Order({
                     direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
                     erc1155TokenProperties: [], // Simplified: no properties for multiple validation test
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
-                const result = await erc1155OrdersFeature.connect(taker).sellERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenId,
-                order.erc1155TokenAmount,
-                    false,
-                    NULL_BYTES
-                );
+
+                const result = await erc1155OrdersFeature
+                    .connect(taker)
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
                 const receipt = await result.wait();
-                
+
                 const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
                 expect(fillEvent).to.not.be.undefined;
-                
+
                 console.log(`✅ Multiple properties validated successfully`);
             });
         });
     });
 
-    describe('onERC1155Received', function() {
-        it('handles single ERC1155 token transfers to contract', async function() {
+    describe('onERC1155Received', function () {
+        it('handles single ERC1155 token transfers to contract', async function () {
             const tokenId = BigInt(Math.floor(Math.random() * 1000000));
             const amount = BigInt(Math.floor(Math.random() * 100) + 1);
             await erc1155Token.mint(taker.target, tokenId, amount);
-            
+
             // Simplified: Check that tokens were minted successfully
             const balance = await erc1155Token.balanceOf(taker.target, tokenId);
             expect(Number(balance)).to.equal(Number(amount));
-            
+
             console.log(`✅ Single ERC1155 token balance verified: ${amount} tokens of ID ${tokenId}`);
         });
 
-        it('can handle ERC1155 transfers with data', async function() {
+        it('can handle ERC1155 transfers with data', async function () {
             const tokenId = BigInt(Math.floor(Math.random() * 1000000));
             const amount = 5n;
             await erc1155Token.mint(taker.target, tokenId, amount);
-            
+
             // Simplified: Check that tokens were minted successfully with custom data context
             const balance = await erc1155Token.balanceOf(taker.target, tokenId);
             expect(Number(balance)).to.equal(Number(amount));
-            
+
             console.log(`✅ ERC1155 token balance with data context verified: ${amount} tokens of ID ${tokenId}`);
         });
 
-        it('handles batch ERC1155 token transfers to contract', async function() {
+        it('handles batch ERC1155 token transfers to contract', async function () {
             const tokenIds = [1n, 2n, 3n];
             const amounts = [5n, 10n, 3n];
-            
+
             // Mint tokens
             for (let i = 0; i < tokenIds.length; i++) {
                 await erc1155Token.mint(taker.target, tokenIds[i], amounts[i]);
             }
-            
+
             // Simplified: Check that all tokens were minted successfully
             for (let i = 0; i < tokenIds.length; i++) {
                 const balance = await erc1155Token.balanceOf(taker.target, tokenIds[i]);
                 expect(Number(balance)).to.equal(Number(amounts[i]));
             }
-            
+
             console.log(`✅ Batch ERC1155 token balances verified: ${tokenIds.length} token types`);
         });
 
-        it('returns correct selector for single transfer', async function() {
+        it('returns correct selector for single transfer', async function () {
             // Simplified: Verify the expected ERC1155 receiver selector
             const expectedSelector = '0xf23a6e61'; // bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))
             expect(expectedSelector).to.not.be.undefined;
-            
+
             console.log(`✅ Correct ERC1155 single transfer receiver selector returned`);
         });
 
-        it('returns correct selector for batch transfer', async function() {
+        it('returns correct selector for batch transfer', async function () {
             // Simplified: Verify the expected ERC1155 batch receiver selector
             const expectedSelector = '0xbc197c81'; // bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))
             expect(expectedSelector).to.not.be.undefined;
-            
+
             console.log(`✅ Correct ERC1155 batch receiver selector returned`);
         });
     });
 
-    describe('buyERC1155', function() {
-        it('can buy ERC1155 tokens with ERC20', async function() {
+    describe('buyERC1155', function () {
+        it('can buy ERC1155 tokens with ERC20', async function () {
             const order = getTestERC1155Order({
                 direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
                 erc1155TokenAmount: 7n,
             });
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
-            
+
             // Get initial balances
             const makerInitialBalance = await erc20Token.balanceOf(order.maker);
             const takerInitialERC1155Balance = await erc1155Token.balanceOf(taker.target, order.erc1155TokenId);
-            
-            const result = await erc1155OrdersFeature.connect(taker).buyERC1155(
-                order,
-                signature,
-                order.erc1155TokenAmount,
-                NULL_BYTES
-            );
+
+            const result = await erc1155OrdersFeature
+                .connect(taker)
+                .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
             const receipt = await result.wait();
-            
+
             // Check for fill event
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
             expect(fillEvent).to.not.be.undefined;
-            
+
             // Check balance changes
             const makerFinalBalance = await erc20Token.balanceOf(order.maker);
             const takerFinalERC1155Balance = await erc1155Token.balanceOf(taker.target, order.erc1155TokenId);
-            
+
             expect(Number(makerFinalBalance - makerInitialBalance)).to.equal(Number(order.erc20TokenAmount));
-            expect(Number(takerFinalERC1155Balance - takerInitialERC1155Balance)).to.equal(Number(order.erc1155TokenAmount));
-            
+            expect(Number(takerFinalERC1155Balance - takerInitialERC1155Balance)).to.equal(
+                Number(order.erc1155TokenAmount),
+            );
+
             console.log(`✅ Successfully bought ${order.erc1155TokenAmount} ERC1155 tokens with ERC20`);
         });
 
-        it('can buy partial amount of ERC1155 tokens', async function() {
+        it('can buy partial amount of ERC1155 tokens', async function () {
             const order = getTestERC1155Order({
                 direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
                 erc1155TokenAmount: 10n,
             });
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
-            
+
             const buyAmount = 4n; // Partial amount
             const expectedERC20Amount = (order.erc20TokenAmount * buyAmount) / order.erc1155TokenAmount;
-            
+
             // Get initial balances
             const takerInitialERC20Balance = await erc20Token.balanceOf(taker.target);
             const makerInitialERC1155Balance = await erc1155Token.balanceOf(order.maker, order.erc1155TokenId);
-            
-            const result = await erc1155OrdersFeature.connect(taker).buyERC1155(
-                order,
-                signature,
-                buyAmount,
-                NULL_BYTES
-            );
+
+            const result = await erc1155OrdersFeature
+                .connect(taker)
+                .buyERC1155(order, signature, buyAmount, NULL_BYTES);
             const receipt = await result.wait();
-            
+
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
             expect(fillEvent).to.not.be.undefined;
-            
+
             // Check partial balance changes
             const takerFinalERC20Balance = await erc20Token.balanceOf(taker.target);
             const takerFinalERC1155Balance = await erc1155Token.balanceOf(taker.target, order.erc1155TokenId);
             const makerFinalERC20Balance = await erc20Token.balanceOf(order.maker);
             const makerFinalERC1155Balance = await erc1155Token.balanceOf(order.maker, order.erc1155TokenId);
-            
+
             // Taker pays ERC20, gets ERC1155
             expect(Number(takerFinalERC20Balance - takerInitialERC20Balance)).to.equal(Number(-expectedERC20Amount));
             expect(Number(takerFinalERC1155Balance)).to.equal(Number(buyAmount));
-            
-            // Maker loses ERC1155, gets ERC20  
+
+            // Maker loses ERC1155, gets ERC20
             expect(Number(makerFinalERC1155Balance - makerInitialERC1155Balance)).to.equal(Number(-buyAmount));
-            
+
             console.log(`✅ Successfully bought partial amount: ${buyAmount}/${order.erc1155TokenAmount} tokens`);
         });
 
-        it('can buy ERC1155 tokens with WETH', async function() {
+        it('can buy ERC1155 tokens with WETH', async function () {
             const order = getTestERC1155Order({
                 direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
                 erc20Token: await weth.getAddress(),
@@ -1199,103 +1128,88 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
             });
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
-            
-            const result = await erc1155OrdersFeature.connect(taker).buyERC1155(
-                order,
-                signature,
-                order.erc1155TokenAmount,
-                NULL_BYTES
-            );
+
+            const result = await erc1155OrdersFeature
+                .connect(taker)
+                .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
             const receipt = await result.wait();
-            
+
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
             expect(fillEvent).to.not.be.undefined;
-            
+
             await assertBalancesAsync(order);
-            
+
             console.log(`✅ Successfully bought ERC1155 tokens with WETH`);
         });
 
-        it('cannot buy with wrong token ID', async function() {
+        it('cannot buy with wrong token ID', async function () {
             const order = getTestERC1155Order({
                 direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
             });
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
-            
+
             const wrongTokenId = order.erc1155TokenId + 1n;
-            
+
             let error: any;
             try {
-                await erc1155OrdersFeature.connect(taker).buyERC1155(
-                    order,
-                    signature,
-                    wrongTokenId,
-                    order.erc1155TokenAmount,
-                    NULL_BYTES
-                );
+                await erc1155OrdersFeature
+                    .connect(taker)
+                    .buyERC1155(order, signature, wrongTokenId, order.erc1155TokenAmount, NULL_BYTES);
             } catch (e) {
                 error = e;
             }
             expect(error).to.not.be.undefined;
-            
+
             console.log(`✅ Correctly rejected wrong token ID for buy order`);
         });
 
-        it('cannot buy more tokens than available', async function() {
+        it('cannot buy more tokens than available', async function () {
             const order = getTestERC1155Order({
                 direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
                 erc1155TokenAmount: 5n,
             });
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
-            
+
             const excessAmount = order.erc1155TokenAmount + 1n;
-            
+
             let error: any;
             try {
-                await erc1155OrdersFeature.connect(taker).buyERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenId,
-                    excessAmount,
-                    NULL_BYTES
-                );
+                await erc1155OrdersFeature
+                    .connect(taker)
+                    .buyERC1155(order, signature, order.erc1155TokenId, excessAmount, NULL_BYTES);
             } catch (e) {
                 error = e;
             }
             expect(error).to.not.be.undefined;
-            
+
             console.log(`✅ Correctly rejected excess token amount for buy order`);
         });
 
-        it('cannot buy expired order', async function() {
+        it('cannot buy expired order', async function () {
             const order = getTestERC1155Order({
                 direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
                 expiry: Math.floor(Date.now() / 1000) - 60, // Expired
             });
             await mintAssetsAsync(order);
             const signature = await createOrderSignature(order);
-            
+
             let error: any;
             try {
-                await erc1155OrdersFeature.connect(taker).buyERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenId,
-                    order.erc1155TokenAmount,
-                    NULL_BYTES
-                );
+                await erc1155OrdersFeature
+                    .connect(taker)
+                    .buyERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, NULL_BYTES);
             } catch (e) {
                 error = e;
             }
             expect(error).to.not.be.undefined;
-            
+
             console.log(`✅ Correctly rejected expired buy order`);
         });
 
-        describe('ETH', function() {
-            it('can buy ERC1155 tokens with ETH', async function() {
+        describe('ETH', function () {
+            it('can buy ERC1155 tokens with ETH', async function () {
                 const order = getTestERC1155Order({
                     direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
                     erc20Token: ETH_TOKEN_ADDRESS,
@@ -1303,23 +1217,21 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
-                const result = await erc1155OrdersFeature.connect(taker).buyERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenAmount,
-                    NULL_BYTES,
-                    { value: order.erc20TokenAmount }
-                );
+
+                const result = await erc1155OrdersFeature
+                    .connect(taker)
+                    .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, {
+                        value: order.erc20TokenAmount,
+                    });
                 const receipt = await result.wait();
-                
+
                 const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
                 expect(fillEvent).to.not.be.undefined;
-                
+
                 console.log(`✅ Successfully bought ERC1155 tokens with ETH`);
             });
 
-            it('can buy partial amount with ETH', async function() {
+            it('can buy partial amount with ETH', async function () {
                 const order = getTestERC1155Order({
                     direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
                     erc20Token: ETH_TOKEN_ADDRESS,
@@ -1327,86 +1239,75 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
+
                 const buyAmount = 3n;
                 const requiredETH = (order.erc20TokenAmount * buyAmount) / order.erc1155TokenAmount;
-                
-                const result = await erc1155OrdersFeature.connect(taker).buyERC1155(
-                    order,
-                    signature,
-                    buyAmount,
-                    NULL_BYTES,
-                    { value: requiredETH }
-                );
+
+                const result = await erc1155OrdersFeature
+                    .connect(taker)
+                    .buyERC1155(order, signature, buyAmount, NULL_BYTES, { value: requiredETH });
                 const receipt = await result.wait();
-                
+
                 const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
                 expect(fillEvent).to.not.be.undefined;
-                
+
                 console.log(`✅ Successfully bought partial amount with ETH: ${buyAmount} tokens`);
             });
 
-            it('reverts if insufficient ETH sent', async function() {
+            it('reverts if insufficient ETH sent', async function () {
                 const order = getTestERC1155Order({
                     direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
                     erc20Token: ETH_TOKEN_ADDRESS,
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
+
                 const insufficientAmount = order.erc20TokenAmount - 1n;
-                
+
                 let error: any;
-            try {
-                await erc1155OrdersFeature.connect(taker).buyERC1155(
-                        order,
-                        signature,
-                        order.erc1155TokenId,
-                        order.erc1155TokenAmount,
-                        NULL_BYTES,
-                        { value: insufficientAmount }
-                    );
-            } catch (e) {
-                error = e;
-            }
-            expect(error).to.not.be.undefined;
-                
+                try {
+                    await erc1155OrdersFeature
+                        .connect(taker)
+                        .buyERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, NULL_BYTES, {
+                            value: insufficientAmount,
+                        });
+                } catch (e) {
+                    error = e;
+                }
+                expect(error).to.not.be.undefined;
+
                 console.log(`✅ Correctly rejected insufficient ETH`);
             });
 
-            it('refunds excess ETH', async function() {
+            it('refunds excess ETH', async function () {
                 const order = getTestERC1155Order({
                     direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
                     erc20Token: ETH_TOKEN_ADDRESS,
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
+
                 const excessAmount = order.erc20TokenAmount + ethers.parseEther('1');
                 const balanceBefore = await ethers.provider.getBalance(taker.target);
-                
-                const result = await erc1155OrdersFeature.connect(taker).buyERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenAmount,
-                    NULL_BYTES,
-                    { value: excessAmount }
-                );
+
+                const result = await erc1155OrdersFeature
+                    .connect(taker)
+                    .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, { value: excessAmount });
                 const receipt = await result.wait();
-                
+
                 const balanceAfter = await ethers.provider.getBalance(taker.target);
                 const gasUsed = receipt.gasUsed * receipt.gasPrice;
                 const netChange = balanceBefore - balanceAfter - gasUsed;
-                
+
                 // Should only have spent the order amount, not the excess
                 expect(netChange).to.equal(order.erc20TokenAmount);
-                
+
                 console.log(`✅ Excess ETH correctly refunded`);
             });
         });
 
-        describe('fees', function() {
-            it('pays fees in ETH transactions', async function() {
+        describe('fees', function () {
+            it('pays fees in ETH transactions', async function () {
                 const feeAmount = ethers.parseEther('0.1');
                 const order = getTestERC1155Order({
                     direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
@@ -1422,28 +1323,24 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
+
                 const totalValue = order.erc20TokenAmount + feeAmount;
                 const feeRecipientBalanceBefore = await ethers.provider.getBalance(await feeRecipient.getAddress());
-                
-                const result = await erc1155OrdersFeature.connect(taker).buyERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenAmount,
-                    NULL_BYTES,
-                    { value: totalValue }
-                );
+
+                const result = await erc1155OrdersFeature
+                    .connect(taker)
+                    .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, { value: totalValue });
                 const receipt = await result.wait();
-                
+
                 const feeRecipientBalanceAfter = await ethers.provider.getBalance(await feeRecipient.getAddress());
                 const feeReceived = feeRecipientBalanceAfter - feeRecipientBalanceBefore;
-                
+
                 expect(feeReceived).to.equal(feeAmount);
-                
+
                 console.log(`✅ ETH fee correctly paid: ${ethers.formatEther(feeAmount)} ETH`);
             });
 
-            it('handles fee payments with ERC20 tokens', async function() {
+            it('handles fee payments with ERC20 tokens', async function () {
                 const feeAmount = ethers.parseEther('0.1');
                 const order = getTestERC1155Order({
                     direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
@@ -1458,30 +1355,27 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
+
                 // Get initial fee recipient balance
                 const feeRecipientInitialBalance = await erc20Token.balanceOf(await feeRecipient.getAddress());
-                
-                const result = await erc1155OrdersFeature.connect(taker).buyERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenAmount,
-                    NULL_BYTES
-                );
+
+                const result = await erc1155OrdersFeature
+                    .connect(taker)
+                    .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
                 const receipt = await result.wait();
-                
+
                 // Check fee recipient received ERC20 tokens
                 const feeRecipientFinalBalance = await erc20Token.balanceOf(await feeRecipient.getAddress());
                 expect(Number(feeRecipientFinalBalance - feeRecipientInitialBalance)).to.equal(Number(feeAmount));
-                
+
                 console.log(`✅ ERC20 fee correctly paid: ${ethers.formatEther(feeAmount)} tokens`);
             });
 
-            it('distributes fees among multiple recipients', async function() {
+            it('distributes fees among multiple recipients', async function () {
                 const fee1Amount = ethers.parseEther('0.1');
                 const fee2Amount = ethers.parseEther('0.05');
                 const secondRecipient = generateRandomAddress();
-                
+
                 const order = getTestERC1155Order({
                     direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
                     erc20Token: ETH_TOKEN_ADDRESS,
@@ -1501,31 +1395,27 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
+
                 const totalValue = order.erc20TokenAmount + fee1Amount + fee2Amount;
-                
+
                 const fee1BalanceBefore = await ethers.provider.getBalance(await feeRecipient.getAddress());
                 const fee2BalanceBefore = await ethers.provider.getBalance(secondRecipient);
-                
-                const result = await erc1155OrdersFeature.connect(taker).buyERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenAmount,
-                    NULL_BYTES,
-                    { value: totalValue }
-                );
+
+                const result = await erc1155OrdersFeature
+                    .connect(taker)
+                    .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, { value: totalValue });
                 const receipt = await result.wait();
-                
+
                 const fee1BalanceAfter = await ethers.provider.getBalance(await feeRecipient.getAddress());
                 const fee2BalanceAfter = await ethers.provider.getBalance(secondRecipient);
-                
+
                 expect(Number(fee1BalanceAfter - fee1BalanceBefore)).to.equal(Number(fee1Amount));
                 expect(Number(fee2BalanceAfter - fee2BalanceBefore)).to.equal(Number(fee2Amount));
-                
+
                 console.log(`✅ Multiple ETH fees distributed correctly`);
             });
 
-            it('handles proportional fees for partial fills', async function() {
+            it('handles proportional fees for partial fills', async function () {
                 const feeAmount = ethers.parseEther('0.1');
                 const order = getTestERC1155Order({
                     direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
@@ -1540,32 +1430,29 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 });
                 await mintAssetsAsync(order);
                 const signature = await createOrderSignature(order);
-                
+
                 const buyAmount = 3n; // 30% of the order
                 const expectedFee = (feeAmount * buyAmount) / order.erc1155TokenAmount;
-                
+
                 // Get initial fee recipient balance
                 const feeRecipientInitialBalance = await erc20Token.balanceOf(await feeRecipient.getAddress());
-                
-                const result = await erc1155OrdersFeature.connect(taker).buyERC1155(
-                    order,
-                    signature,
-                    buyAmount,
-                    NULL_BYTES
-                );
+
+                const result = await erc1155OrdersFeature
+                    .connect(taker)
+                    .buyERC1155(order, signature, buyAmount, NULL_BYTES);
                 const receipt = await result.wait();
-                
+
                 // Check proportional fee was paid
                 const feeRecipientFinalBalance = await erc20Token.balanceOf(await feeRecipient.getAddress());
                 expect(Number(feeRecipientFinalBalance - feeRecipientInitialBalance)).to.equal(Number(expectedFee));
-                
+
                 console.log(`✅ Proportional fee correctly paid for partial buy: ${ethers.formatEther(expectedFee)}`);
             });
         });
     });
 
-    describe('batchBuyERC1155s', function() {
-        it('can buy multiple ERC1155 orders in one transaction', async function() {
+    describe('batchBuyERC1155s', function () {
+        it('can buy multiple ERC1155 orders in one transaction', async function () {
             const orders = [
                 getTestERC1155Order({
                     direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
@@ -1583,38 +1470,38 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                     erc1155TokenAmount: 7n,
                 }),
             ];
-            
+
             const signatures = [];
             const tokenAmounts = [];
             const callbackData = [];
-            
+
             for (const order of orders) {
                 await mintAssetsAsync(order);
                 signatures.push(await createOrderSignature(order));
                 tokenAmounts.push(order.erc1155TokenAmount);
                 callbackData.push(NULL_BYTES);
             }
-            
+
             const result = await erc1155OrdersFeature.connect(taker).batchBuyERC1155s(
                 orders,
                 signatures,
                 tokenAmounts,
                 callbackData,
-                false // revertIfIncomplete
+                false, // revertIfIncomplete
             );
             const receipt = await result.wait();
-            
+
             // Check for multiple fill events
             const fillEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
             expect(fillEvents.length).to.equal(orders.length);
-            
+
             // Verify all balances - simplified for batch test to avoid cumulative balance issues
             // The fillEvents check above already confirms successful transactions
-            
+
             console.log(`✅ Successfully batch bought ${orders.length} ERC1155 orders`);
         });
 
-        it('can buy multiple ERC1155 orders with ETH', async function() {
+        it('can buy multiple ERC1155 orders with ETH', async function () {
             const orders = [
                 getTestERC1155Order({
                     direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
@@ -1631,12 +1518,12 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                     erc20TokenAmount: ethers.parseEther('1.5'),
                 }),
             ];
-            
+
             const signatures = [];
             const tokenAmounts = [];
             const callbackData = [];
             let totalValue = 0n;
-            
+
             for (const order of orders) {
                 await mintAssetsAsync(order);
                 signatures.push(await createOrderSignature(order));
@@ -1644,24 +1531,19 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 callbackData.push(NULL_BYTES);
                 totalValue += order.erc20TokenAmount;
             }
-            
-            const result = await erc1155OrdersFeature.connect(taker).batchBuyERC1155s(
-                orders,
-                signatures,
-                tokenAmounts,
-                callbackData,
-                false,
-                { value: totalValue }
-            );
+
+            const result = await erc1155OrdersFeature
+                .connect(taker)
+                .batchBuyERC1155s(orders, signatures, tokenAmounts, callbackData, false, { value: totalValue });
             const receipt = await result.wait();
-            
+
             const fillEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
             expect(fillEvents.length).to.equal(orders.length);
-            
+
             console.log(`✅ Successfully batch bought ${orders.length} ERC1155 orders with ETH`);
         });
 
-        it('handles partial success when revertIfIncomplete is false', async function() {
+        it('handles partial success when revertIfIncomplete is false', async function () {
             const orders = [
                 getTestERC1155Order({
                     direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
@@ -1677,37 +1559,38 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                     erc1155TokenId: 3n,
                 }),
             ];
-            
+
             const signatures = [];
             const tokenAmounts = [];
             const callbackData = [];
-            
+
             for (let i = 0; i < orders.length; i++) {
-                if (i !== 1) { // Don't mint for expired order
+                if (i !== 1) {
+                    // Don't mint for expired order
                     await mintAssetsAsync(orders[i]);
                 }
                 signatures.push(await createOrderSignature(orders[i]));
                 tokenAmounts.push(orders[i].erc1155TokenAmount);
                 callbackData.push(NULL_BYTES);
             }
-            
+
             const result = await erc1155OrdersFeature.connect(taker).batchBuyERC1155s(
                 orders,
                 signatures,
                 tokenAmounts,
                 callbackData,
-                false // revertIfIncomplete = false, so should not revert
+                false, // revertIfIncomplete = false, so should not revert
             );
             const receipt = await result.wait();
-            
+
             // Should have 2 successful fills (orders 0 and 2)
             const fillEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
             expect(fillEvents.length).to.equal(2);
-            
+
             console.log(`✅ Batch buy handled partial success correctly`);
         });
 
-        it('reverts all when revertIfIncomplete is true and one order fails', async function() {
+        it('reverts all when revertIfIncomplete is true and one order fails', async function () {
             const orders = [
                 getTestERC1155Order({
                     direction: TradeDirection.SellNFT, // Sell NFT order for buyERC1155 call
@@ -1719,20 +1602,21 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                     expiry: Math.floor(Date.now() / 1000) - 60, // Expired order
                 }),
             ];
-            
+
             const signatures = [];
             const tokenAmounts = [];
             const callbackData = [];
-            
+
             for (let i = 0; i < orders.length; i++) {
-                if (i !== 1) { // Don't mint for expired order
+                if (i !== 1) {
+                    // Don't mint for expired order
                     await mintAssetsAsync(orders[i]);
                 }
                 signatures.push(await createOrderSignature(orders[i]));
                 tokenAmounts.push(orders[i].erc1155TokenAmount);
                 callbackData.push(NULL_BYTES);
             }
-            
+
             let error: any;
             try {
                 await erc1155OrdersFeature.connect(taker).batchBuyERC1155s(
@@ -1740,33 +1624,27 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                     signatures,
                     tokenAmounts,
                     callbackData,
-                    true // revertIfIncomplete = true
+                    true, // revertIfIncomplete = true
                 );
             } catch (e) {
                 error = e;
             }
             expect(error).to.not.be.undefined;
-            
+
             console.log(`✅ Batch buy correctly reverted when revertIfIncomplete is true`);
         });
 
-        it('handles empty batch', async function() {
-            const result = await erc1155OrdersFeature.connect(taker).batchBuyERC1155s(
-                [],
-                [],
-                [],
-                [],
-                false
-            );
+        it('handles empty batch', async function () {
+            const result = await erc1155OrdersFeature.connect(taker).batchBuyERC1155s([], [], [], [], false);
             const receipt = await result.wait();
-            
+
             const fillEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
             expect(fillEvents.length).to.equal(0);
-            
+
             console.log(`✅ Empty batch handled correctly`);
         });
 
-        it('handles mixed token amounts for same token ID', async function() {
+        it('handles mixed token amounts for same token ID', async function () {
             const tokenId = 123n;
             const orders = [
                 getTestERC1155Order({
@@ -1781,11 +1659,11 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                     maker: otherMaker.target,
                 }),
             ];
-            
+
             const signatures = [];
             const tokenAmounts = [];
             const callbackData = [];
-            
+
             for (let i = 0; i < orders.length; i++) {
                 await mintAssetsAsync(orders[i]);
                 const signer = i === 0 ? maker : otherMaker;
@@ -1793,34 +1671,30 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 tokenAmounts.push(orders[i].erc1155TokenAmount);
                 callbackData.push(NULL_BYTES);
             }
-            
-            const result = await erc1155OrdersFeature.connect(taker).batchBuyERC1155s(
-                orders,
-                signatures,
-                tokenAmounts,
-                callbackData,
-                false
-            );
+
+            const result = await erc1155OrdersFeature
+                .connect(taker)
+                .batchBuyERC1155s(orders, signatures, tokenAmounts, callbackData, false);
             const receipt = await result.wait();
-            
+
             const fillEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
             expect(fillEvents.length).to.equal(orders.length);
-            
+
             console.log(`✅ Mixed token amounts for same token ID handled correctly`);
         });
     });
 
-    describe('preSignERC1155Order', function() {
-        it('can pre-sign an order', async function() {
+    describe('preSignERC1155Order', function () {
+        it('can pre-sign an order', async function () {
             const order = getTestERC1155Order();
-            
+
             const result = await erc1155OrdersFeature.connect(maker).preSignERC1155Order(order);
             const receipt = await result.wait();
-            
+
             // Check for pre-sign event
             const preSignEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderPreSigned');
             expect(preSignEvent).to.not.be.undefined;
-            
+
             // Verify order is pre-signed by testing with PRESIGNED signature
             const preSignedSignature = createPreSignedSignature();
             let error: any;
@@ -1830,20 +1704,20 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 error = e;
             }
             expect(error).to.be.undefined; // Should not throw error if pre-signed
-            
+
             console.log(`✅ Successfully pre-signed ERC1155 order`);
         });
 
-        it('pre-signed order can be filled without signature', async function() {
+        it('pre-signed order can be filled without signature', async function () {
             const order = getTestERC1155Order({
                 direction: TradeDirection.BuyNFT, // Buy NFT order for sellERC1155 call
                 erc1155TokenAmount: 6n,
             });
             await mintAssetsAsync(order);
-            
+
             // Pre-sign the order
             await erc1155OrdersFeature.connect(maker).preSignERC1155Order(order);
-            
+
             // Fill without providing signature (use pre-signed signature)
             const preSignedSignature = createPreSignedSignature();
             const result = await erc1155OrdersFeature.connect(taker).sellERC1155(
@@ -1852,21 +1726,21 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 order.erc1155TokenId,
                 order.erc1155TokenAmount,
                 false,
-                NULL_BYTES
+                NULL_BYTES,
             );
             const receipt = await result.wait();
-            
+
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderFilled');
             expect(fillEvent).to.not.be.undefined;
-            
+
             // Balance verification simplified - fillEvent confirms successful transaction
-            
+
             console.log(`✅ Pre-signed order filled successfully without signature`);
         });
 
-        it('only maker can pre-sign order', async function() {
+        it('only maker can pre-sign order', async function () {
             const order = getTestERC1155Order();
-            
+
             let error: any;
             try {
                 await erc1155OrdersFeature.connect(taker).preSignERC1155Order(order);
@@ -1874,20 +1748,20 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 error = e;
             }
             expect(error).to.not.be.undefined;
-            
+
             console.log(`✅ Correctly prevented non-maker from pre-signing`);
         });
 
-        it('can pre-sign multiple orders', async function() {
+        it('can pre-sign multiple orders', async function () {
             const orders = [
                 getTestERC1155Order({ nonce: 1n }),
                 getTestERC1155Order({ nonce: 2n }),
                 getTestERC1155Order({ nonce: 3n }),
             ];
-            
+
             for (const order of orders) {
                 await erc1155OrdersFeature.connect(maker).preSignERC1155Order(order);
-                
+
                 // Verify order is pre-signed by testing with PRESIGNED signature
                 const preSignedSignature = createPreSignedSignature();
                 let error: any;
@@ -1898,36 +1772,36 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 }
                 expect(error).to.be.undefined; // Should not throw error if pre-signed
             }
-            
+
             console.log(`✅ Successfully pre-signed ${orders.length} orders`);
         });
 
-        it('pre-signing already pre-signed order has no effect', async function() {
+        it('pre-signing already pre-signed order has no effect', async function () {
             const order = getTestERC1155Order();
-            
+
             // Pre-sign once
             await erc1155OrdersFeature.connect(maker).preSignERC1155Order(order);
-            
+
             // Pre-sign again - should not revert
             const result = await erc1155OrdersFeature.connect(maker).preSignERC1155Order(order);
             const receipt = await result.wait();
-            
+
             const preSignEvent = receipt.logs.find((log: any) => log.fragment?.name === 'ERC1155OrderPreSigned');
             expect(preSignEvent).to.not.be.undefined;
-            
+
             console.log(`✅ Re-pre-signing order handled correctly`);
         });
 
-        it('can pre-sign order for different token amounts', async function() {
+        it('can pre-sign order for different token amounts', async function () {
             const orders = [
                 getTestERC1155Order({ nonce: 1n, erc1155TokenAmount: 5n }),
                 getTestERC1155Order({ nonce: 2n, erc1155TokenAmount: 10n }),
                 getTestERC1155Order({ nonce: 3n, erc1155TokenAmount: 1n }),
             ];
-            
+
             for (const order of orders) {
                 await erc1155OrdersFeature.connect(maker).preSignERC1155Order(order);
-                
+
                 // Verify order is pre-signed by testing with PRESIGNED signature
                 const preSignedSignature = createPreSignedSignature();
                 let error: any;
@@ -1938,8 +1812,8 @@ describe('ERC1155OrdersFeature - Complete Modern Tests', function() {
                 }
                 expect(error).to.be.undefined; // Should not throw error if pre-signed
             }
-            
+
             console.log(`✅ Successfully pre-signed orders with different token amounts`);
         });
     });
-}); 
+});

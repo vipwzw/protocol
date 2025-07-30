@@ -15,7 +15,7 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
     let owner: any;
     let maker: any;
     let taker: any;
-    
+
     // 合约实例
     let fillQuoteTransformer: any;
     let bridgeAdapter: any;
@@ -28,9 +28,9 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
     before(async () => {
         accounts = await ethers.getSigners();
         [owner, maker, taker] = accounts;
-        
+
         console.log('🚀 开始部署测试环境（使用更新后的 protocol-utils）...');
-        
+
         // 1. 部署测试代币
         const TestMintableERC20Factory = await ethers.getContractFactory('TestMintableERC20Token');
         takerToken = await TestMintableERC20Factory.deploy();
@@ -55,7 +55,7 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
         const FillQuoteTransformerFactory = await ethers.getContractFactory('FillQuoteTransformer');
         fillQuoteTransformer = await FillQuoteTransformerFactory.deploy(
             await bridgeAdapter.getAddress(),
-            await testExchange.getAddress()
+            await testExchange.getAddress(),
         );
         await fillQuoteTransformer.waitForDeployment();
         console.log(`✅ FillQuoteTransformer: ${await fillQuoteTransformer.getAddress()}`);
@@ -71,7 +71,7 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
         testBridge = await TestBridgeFactory.deploy();
         await testBridge.waitForDeployment();
         console.log(`✅ 测试桥接合约: ${await testBridge.getAddress()}`);
-        
+
         console.log('🎉 测试环境部署完成！');
     });
 
@@ -94,7 +94,7 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
                 fillSequence: [],
                 fillAmount: 0n,
                 refundReceiver: taker.target,
-                otcOrders: []
+                otcOrders: [],
             };
 
             // 使用更新后的 protocol-utils 编码器
@@ -108,7 +108,7 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
                     0, // sellAmount
                     owner.target,
                     owner.target,
-                    encodedData
+                    encodedData,
                 );
 
                 console.log('✅ 空数据测试成功！');
@@ -129,14 +129,14 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
             const lpData = ethers.AbiCoder.defaultAbiCoder().encode(['uint256'], [ethers.parseEther('1')]);
             const bridgeData = ethers.AbiCoder.defaultAbiCoder().encode(
                 ['address', 'bytes'],
-                [await testBridge.getAddress(), lpData]
+                [await testBridge.getAddress(), lpData],
             );
 
             const bridgeOrder: FillQuoteTransformerBridgeOrder = {
                 source: '0x' + '01'.repeat(16).padEnd(64, '0'), // 16字节source + padding
                 takerTokenAmount: ethers.parseEther('1'),
                 makerTokenAmount: ethers.parseEther('1'),
-                bridgeData: bridgeData
+                bridgeData: bridgeData,
             };
 
             const transformData: FillQuoteTransformerData = {
@@ -149,7 +149,7 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
                 fillSequence: [FillQuoteTransformerOrderType.Bridge],
                 fillAmount: ethers.parseEther('1'),
                 refundReceiver: taker.target,
-                otcOrders: []
+                otcOrders: [],
             };
 
             const encodedData = encodeFillQuoteTransformerData(transformData);
@@ -163,7 +163,7 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
                     ethers.parseEther('1'),
                     owner.target,
                     owner.target,
-                    encodedData
+                    encodedData,
                 );
 
                 console.log('✅ 桥接订单测试成功！');
@@ -171,7 +171,7 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
             } catch (error: any) {
                 console.log(`❌ 桥接订单测试失败: ${error.message}`);
                 console.log(`🔧 完整编码数据: ${encodedData}`);
-                
+
                 if (error.message.includes('0xadc35ca6')) {
                     console.log('🔍 InvalidTransformDataError - 分析桥接订单结构');
                     console.log(`📊 桥接订单详情:`);
@@ -181,7 +181,7 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
                     console.log(`  bridgeData length: ${bridgeOrder.bridgeData.length}`);
                     console.log(`  bridgeData: ${bridgeOrder.bridgeData}`);
                 }
-                
+
                 // 不让测试失败，继续分析
                 console.log('⚠️ 桥接订单编码需要进一步调试');
             }
@@ -191,14 +191,14 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
             const lpData = ethers.AbiCoder.defaultAbiCoder().encode(['uint256'], [ethers.parseEther('1')]);
             const bridgeData = ethers.AbiCoder.defaultAbiCoder().encode(
                 ['address', 'bytes'],
-                [await testBridge.getAddress(), lpData]
+                [await testBridge.getAddress(), lpData],
             );
 
             const bridgeOrder: FillQuoteTransformerBridgeOrder = {
                 source: '0x' + '02'.repeat(16).padEnd(64, '0'),
                 takerTokenAmount: ethers.parseEther('1'),
                 makerTokenAmount: ethers.parseEther('1'),
-                bridgeData: bridgeData
+                bridgeData: bridgeData,
             };
 
             const transformData: FillQuoteTransformerData = {
@@ -211,7 +211,7 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
                 fillSequence: [FillQuoteTransformerOrderType.Bridge],
                 fillAmount: MaxUint256, // 使用 MAX_UINT256
                 refundReceiver: taker.target,
-                otcOrders: []
+                otcOrders: [],
             };
 
             const encodedData = encodeFillQuoteTransformerData(transformData);
@@ -224,7 +224,7 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
                     ethers.parseEther('1'), // sellAmount
                     owner.target,
                     owner.target,
-                    encodedData
+                    encodedData,
                 );
 
                 console.log('✅ MAX_UINT256 测试成功！');
@@ -242,7 +242,7 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
     describe('🔍 编码深度分析', () => {
         it('应该对比不同编码方式的结果', async () => {
             console.log('🔬 进行详细的编码分析...');
-            
+
             const testData: FillQuoteTransformerData = {
                 side: FillQuoteTransformerSide.Sell,
                 sellToken: await takerToken.getAddress(),
@@ -253,22 +253,22 @@ describe('🧪 Protocol Utils Integration with FillQuoteTransformer', () => {
                 fillSequence: [],
                 fillAmount: 1000000000000000000n, // 1 ether
                 refundReceiver: taker.target,
-                otcOrders: []
+                otcOrders: [],
             };
 
             const encoding = encodeFillQuoteTransformerData(testData);
-            
+
             console.log(`📊 编码分析结果:`);
             console.log(`  长度: ${encoding.length} 字符`);
             console.log(`  字节数: ${(encoding.length - 2) / 2} 字节`);
             console.log(`  前100字符: ${encoding.substring(0, 100)}`);
-            
+
             // 解析编码结构
             const prefix = encoding.substring(0, 66); // 前32字节
             console.log(`  前缀 (offset): ${prefix}`);
-            
+
             expect(encoding).to.be.a('string');
             expect(encoding).to.match(/^0x[0-9a-fA-F]+$/);
         });
     });
-}); 
+});

@@ -159,9 +159,8 @@ export class ERC721Wrapper {
         const tokenInfo: Array<{ tokenId: BigNumber; tokenAddress: string }> = [];
         for (const dummyTokenContract of this._dummyTokenContracts) {
             for (const tokenOwnerAddress of this._tokenOwnerAddresses) {
-                const initialTokenOwnerIds = this._initialTokenIdsByOwner[tokenOwnerAddress][
-                    dummyTokenContract.address
-                ];
+                const initialTokenOwnerIds =
+                    this._initialTokenIdsByOwner[tokenOwnerAddress][dummyTokenContract.address];
                 for (const tokenId of initialTokenOwnerIds) {
                     tokenOwnerAddresses.push(await dummyTokenContract.ownerOf(tokenId).callAsync());
                     tokenInfo.push({

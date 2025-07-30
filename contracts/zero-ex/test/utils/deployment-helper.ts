@@ -29,12 +29,14 @@ export interface FillQuoteTransformerTestEnvironment {
  * 部署完整的 FillQuoteTransformer 测试环境
  * 使用 TestFillQuoteTransformerHost 而不是真实的 ZeroEx 系统
  */
-export async function deployFillQuoteTransformerTestEnvironment(accounts: string[]): Promise<FillQuoteTransformerTestEnvironment> {
+export async function deployFillQuoteTransformerTestEnvironment(
+    accounts: string[],
+): Promise<FillQuoteTransformerTestEnvironment> {
     console.log('🚀 开始 FillQuoteTransformer 测试环境部署（完全匹配 test-main）...');
-    
+
     // ⭐ 关键常量：与 test-main 完全一致
     const GAS_PRICE = 1337;
-    
+
     // 1. 获取测试账户
     const [owner, maker, taker, feeRecipient, sender] = accounts;
     console.log(`👤 测试账户: ${accounts.length} 个`);
@@ -57,7 +59,7 @@ export async function deployFillQuoteTransformerTestEnvironment(accounts: string
     const FillQuoteTransformerFactory = await ethers.getContractFactory('FillQuoteTransformer');
     const transformer = await FillQuoteTransformerFactory.deploy(
         await bridgeAdapter.getAddress(),
-        await exchange.getAddress()
+        await exchange.getAddress(),
     );
     await transformer.waitForDeployment();
     console.log(`✅ FillQuoteTransformer: ${await transformer.getAddress()}`);
@@ -73,7 +75,10 @@ export async function deployFillQuoteTransformerTestEnvironment(accounts: string
     // 6. ⭐ 部署 TestFillQuoteTransformerBridge（使用 sender 账户，匹配 test-main）
     console.log(`📦 部署 TestFillQuoteTransformerBridge (from: ${sender})...`);
     const [, , , , senderSigner] = await ethers.getSigners();
-    const TestFillQuoteTransformerBridgeFactory = await ethers.getContractFactory('TestFillQuoteTransformerBridge', senderSigner);
+    const TestFillQuoteTransformerBridgeFactory = await ethers.getContractFactory(
+        'TestFillQuoteTransformerBridge',
+        senderSigner,
+    );
     const bridge = await TestFillQuoteTransformerBridgeFactory.deploy();
     await bridge.waitForDeployment();
     console.log(`✅ TestFillQuoteTransformerBridge: ${await bridge.getAddress()}`);
@@ -84,11 +89,11 @@ export async function deployFillQuoteTransformerTestEnvironment(accounts: string
     const makerToken = await TestMintableERC20Factory.deploy();
     const takerToken = await TestMintableERC20Factory.deploy();
     const takerFeeToken = await TestMintableERC20Factory.deploy();
-    
+
     await Promise.all([
         makerToken.waitForDeployment(),
         takerToken.waitForDeployment(),
-        takerFeeToken.waitForDeployment()
+        takerFeeToken.waitForDeployment(),
     ]);
     console.log('✅ 测试代币部署完成');
 
@@ -106,7 +111,7 @@ export async function deployFillQuoteTransformerTestEnvironment(accounts: string
         bridge,
         tokens: { makerToken, takerToken, takerFeeToken },
         accounts: { owner, maker, taker, feeRecipient, sender },
-        singleProtocolFee
+        singleProtocolFee,
     };
 }
 
@@ -152,13 +157,9 @@ export interface DeploymentOptions {
 export async function deployZeroExWithFullMigration(
     owner: any,
     wethToken: any,
-    options: DeploymentOptions = {}
+    options: DeploymentOptions = {},
 ): Promise<ZeroExDeploymentResult> {
-    const {
-        protocolFeeMultiplier = 70000,
-        transformerDeployer,
-        logProgress = true
-    } = options;
+    const { protocolFeeMultiplier = 70000, transformerDeployer, logProgress = true } = options;
 
     if (logProgress) {
         console.log('📦 开始部署 ZeroEx (使用 FullMigration 模式)...');
@@ -172,7 +173,7 @@ export async function deployZeroExWithFullMigration(
         console.log(`✅ FullMigration: ${await migrator.getAddress()}`);
     }
 
-    // 2. 获取正确的 bootstrapper 
+    // 2. 获取正确的 bootstrapper
     const bootstrapper = await migrator.getBootstrapper();
 
     // 3. 部署 ZeroEx 代理合约
@@ -197,7 +198,7 @@ export async function deployZeroExWithFullMigration(
     const TestTransformERC20Factory = await ethers.getContractFactory('TestTransformERC20');
     const testTransformERC20 = await TestTransformERC20Factory.deploy();
     await testTransformERC20.waitForDeployment();
-    
+
     const TransformERC20Factory = await ethers.getContractFactory('TransformERC20Feature');
     const transformERC20 = await TransformERC20Factory.deploy();
     await transformERC20.waitForDeployment();
@@ -222,7 +223,7 @@ export async function deployZeroExWithFullMigration(
         await wethToken.getAddress(),
         await staking.getAddress(),
         await feeCollector.getAddress(),
-        protocolFeeMultiplier
+        protocolFeeMultiplier,
     );
     await nativeOrders.waitForDeployment();
 
@@ -256,39 +257,22 @@ export async function deployZeroExWithFullMigration(
         transformERC20: await testTransformERC20.getAddress(), // 🎯 使用 TestTransformERC20
         metaTransactions: await metaTransactions.getAddress(),
         nativeOrders: await nativeOrders.getAddress(),
-        otcOrders: await otcOrders.getAddress()
+        otcOrders: await otcOrders.getAddress(),
     };
 
-    await migrator.migrateZeroEx(
-        owner.target,
-        verifyingContract,
-        features,
-        {
-            transformerDeployer: actualTransformerDeployer
-        }
-    );
+    await migrator.migrateZeroEx(owner.target, verifyingContract, features, {
+        transformerDeployer: actualTransformerDeployer,
+    });
     if (logProgress) {
         console.log(`✅ ZeroEx 完全迁移，所有 features 已注册`);
     }
 
     // 10. 创建 feature 接口 (基于 TestTransformERC20)
-    const transformFeature = new ethers.Contract(
-        verifyingContract,
-        testTransformERC20.interface,
-        ethers.provider
-    );
+    const transformFeature = new ethers.Contract(verifyingContract, testTransformERC20.interface, ethers.provider);
 
-    const nativeOrdersFeature = new ethers.Contract(
-        verifyingContract,
-        nativeOrders.interface,
-        ethers.provider
-    );
+    const nativeOrdersFeature = new ethers.Contract(verifyingContract, nativeOrders.interface, ethers.provider);
 
-    const otcFeature = new ethers.Contract(
-        verifyingContract,
-        otcOrders.interface,
-        ethers.provider
-    );
+    const otcFeature = new ethers.Contract(verifyingContract, otcOrders.interface, ethers.provider);
 
     if (logProgress) {
         console.log(`✅ Feature 接口创建完成`);
@@ -304,34 +288,34 @@ export async function deployZeroExWithFullMigration(
             transformERC20,
             metaTransactions,
             nativeOrders,
-            otcOrders
+            otcOrders,
         },
         featureInterfaces: {
             transformFeature,
             nativeOrdersFeature,
-            otcFeature
+            otcFeature,
         },
         migrator,
         dependencies: {
             staking,
-            feeCollector
-        }
+            feeCollector,
+        },
     };
 }
 
 /**
  * 简化的代币部署函数
  */
-export async function deployTestTokens(): Promise<{ 
-    makerToken: any; 
-    takerToken: any; 
+export async function deployTestTokens(): Promise<{
+    makerToken: any;
+    takerToken: any;
     wethToken: any;
     dai?: any;
-    shib?: any; 
+    shib?: any;
     zrx?: any;
 }> {
     console.log('📦 部署测试代币...');
-    
+
     const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
     const WethFactory = await ethers.getContractFactory('TestWeth');
 
@@ -349,7 +333,7 @@ export async function deployTestTokens(): Promise<{
     return {
         makerToken,
         takerToken,
-        wethToken
+        wethToken,
     };
 }
 
@@ -357,10 +341,10 @@ export async function deployTestTokens(): Promise<{
  * 给测试账户分发代币
  */
 export async function distributeTokensToAccounts(
-    tokens: any[], 
-    accounts: any[], 
+    tokens: any[],
+    accounts: any[],
     amount: bigint = ethers.parseEther('10000'),
-    logProgress: boolean = true
+    logProgress: boolean = true,
 ): Promise<void> {
     if (logProgress) {
         console.log('💰 分发代币给测试账户...');
@@ -381,10 +365,10 @@ export async function distributeTokensToAccounts(
  * 批量代币授权函数
  */
 export async function approveTokensForAccounts(
-    tokens: any[], 
-    accounts: any[], 
+    tokens: any[],
+    accounts: any[],
     spenderAddress: string,
-    logProgress: boolean = true
+    logProgress: boolean = true,
 ): Promise<void> {
     if (logProgress) {
         console.log('📝 批量授权代币...');
@@ -399,4 +383,4 @@ export async function approveTokensForAccounts(
     if (logProgress) {
         console.log('✅ 所有代币授权完成');
     }
-} 
+}

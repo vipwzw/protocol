@@ -3,12 +3,7 @@ import { TxData, SupportedProvider } from 'ethereum-types';
 import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
-import type {
-    HardhatArtifact,
-    HardhatArtifacts,
-    BootstrapFeatureArtifacts,
-    FullFeatureArtifacts,
-} from './types';
+import type { HardhatArtifact, HardhatArtifacts, BootstrapFeatureArtifacts, FullFeatureArtifacts } from './types';
 
 // Import TypeChain factories
 import {
@@ -17,11 +12,7 @@ import {
     ZeroEx as ZeroExContract,
 } from './wrappers';
 
-import { 
-    FullMigration__factory,
-    InitialMigration__factory,
-    ZeroEx__factory,
-} from './typechain-types/factories';
+import { FullMigration__factory, InitialMigration__factory, ZeroEx__factory } from './typechain-types/factories';
 
 /**
  * 从 Hardhat artifact 部署合约
@@ -70,7 +61,7 @@ export async function deployBootstrapFeaturesAsync(
         ...DEFAULT_BOOTSTRAP_FEATURE_ARTIFACTS,
         ...featureArtifacts,
     };
-    
+
     // TODO: 实现实际的合约部署逻辑，等待 typechain 生成完整的类型
     // 目前使用 NULL_ADDRESS 作为占位符
     return {
@@ -104,9 +95,11 @@ export async function initialMigrateAsync(
         artifacts,
         migrator.target as string,
     );
-    await migrator
-        .initializeZeroEx(owner, zeroEx.target as string, await deployBootstrapFeaturesAsync(provider, txDefaults, features))
-        ;
+    await migrator.initializeZeroEx(
+        owner,
+        zeroEx.target as string,
+        await deployBootstrapFeaturesAsync(provider, txDefaults, features),
+    );
     return zeroEx;
 }
 
@@ -160,7 +153,7 @@ export async function deployAllFeaturesAsync(
         ...DEFAULT_FULL_FEATURE_ARTIFACTS,
         ...featureArtifacts,
     };
-    
+
     // TODO: 实现实际的合约部署逻辑，等待 typechain 生成完整的类型
     // 目前使用 NULL_ADDRESS 作为占位符
     return {
@@ -200,13 +193,10 @@ export async function fullMigrateAsync(
         artifacts,
         migrator.target as string,
     );
-    
+
     const allFeatures = await deployAllFeaturesAsync(provider, txDefaults, features, config, featureArtifacts);
-    await migrator.migrateZeroEx(
-        owner, 
-        zeroEx.target as string, 
-        allFeatures,
-        { transformerDeployer: config.transformerDeployer || NULL_ADDRESS }
-    );
+    await migrator.migrateZeroEx(owner, zeroEx.target as string, allFeatures, {
+        transformerDeployer: config.transformerDeployer || NULL_ADDRESS,
+    });
     return zeroEx;
 }

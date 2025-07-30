@@ -91,11 +91,7 @@ export function decreaseNextBalance(balance: StoredBalance, amount: Numberish, e
 /**
  * Simulates _increaseCurrentAndNextBalance
  */
-export function increaseCurrentAndNextBalance(
-    balance: StoredBalance,
-    amount: Numberish,
-    epoch: bigint,
-): StoredBalance {
+export function increaseCurrentAndNextBalance(balance: StoredBalance, amount: Numberish, epoch: bigint): StoredBalance {
     const newBalance = loadCurrentBalance(balance, epoch);
     const amountBigInt = BigInt(amount.toString());
     return {
@@ -108,11 +104,7 @@ export function increaseCurrentAndNextBalance(
 /**
  * Simulates _decreaseCurrentAndNextBalance
  */
-export function decreaseCurrentAndNextBalance(
-    balance: StoredBalance,
-    amount: Numberish,
-    epoch: bigint,
-): StoredBalance {
+export function decreaseCurrentAndNextBalance(balance: StoredBalance, amount: Numberish, epoch: bigint): StoredBalance {
     const newBalance = loadCurrentBalance(balance, epoch);
     const amountBigInt = BigInt(amount.toString());
     return {
@@ -132,7 +124,10 @@ export enum StakeStatus {
 }
 
 export class StakeInfo {
-    constructor(public status: StakeStatus, public poolId: string = stakingConstants.NIL_POOL_ID) {}
+    constructor(
+        public status: StakeStatus,
+        public poolId: string = stakingConstants.NIL_POOL_ID,
+    ) {}
 }
 
 export interface StakeBalances {

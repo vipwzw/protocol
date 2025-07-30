@@ -1,8 +1,8 @@
-import { expect } from "chai";
+import { expect } from 'chai';
 const { ethers } = require('hardhat');
 import { Contract, MaxUint256 } from 'ethers';
 
-describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
+describe('🌟 ZeroEx Protocol TypeScript Tests - Modern', function () {
     let accounts: any[];
     let deployer: any;
     let user1: any;
@@ -12,16 +12,16 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
     beforeEach(async function () {
         accounts = await ethers.getSigners();
         [deployer, user1, user2] = accounts;
-        
+
         // 部署 WETH9 for testing
-        const WETH9 = await ethers.getContractFactory("WETH9");
+        const WETH9 = await ethers.getContractFactory('WETH9');
         weth = await WETH9.deploy();
         await weth.waitForDeployment();
-        
+
         console.log(`✅ WETH9 deployed to: ${await weth.getAddress()}`);
     });
 
-    it("✅ should have proper test account setup", async function () {
+    it('✅ should have proper test account setup', async function () {
         expect(accounts.length).to.be.greaterThan(2);
         expect(deployer.target).to.match(/^0x[0-9a-fA-F]{40}$/);
         expect(user1.target).to.match(/^0x[0-9a-fA-F]{40}$/);
@@ -31,8 +31,8 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
         console.log(`✅ User2: ${user2.target}`);
     });
 
-    describe("🏛️ Core Protocol", function () {
-        it("✅ should support protocol configuration with TypeScript", async function () {
+    describe('🏛️ Core Protocol', function () {
+        it('✅ should support protocol configuration with TypeScript', async function () {
             // 协议配置类型
             interface ProtocolConfig {
                 version: string;
@@ -43,11 +43,11 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
             }
 
             const config: ProtocolConfig = {
-                version: "4.0.0",
+                version: '4.0.0',
                 chainId: 1337,
-                protocolFeeMultiplier: ethers.parseUnits("150000", 18), // 15%
+                protocolFeeMultiplier: ethers.parseUnits('150000', 18), // 15%
                 exchangeAddress: ethers.ZeroAddress, // placeholder
-                wethAddress: await weth.getAddress()
+                wethAddress: await weth.getAddress(),
             };
 
             expect(config.version).to.be.a('string');
@@ -62,13 +62,13 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
         });
     });
 
-    describe("📋 Native Orders", function () {
-        it("✅ should support order types with TypeScript", async function () {
+    describe('📋 Native Orders', function () {
+        it('✅ should support order types with TypeScript', async function () {
             // 订单类型枚举
             enum OrderType {
                 FILL = 0,
                 FILL_OR_KILL = 1,
-                FILL_AND_KILL = 2
+                FILL_AND_KILL = 2,
             }
 
             // 订单结构类型
@@ -87,13 +87,13 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
             const order: Order = {
                 makerToken: await weth.getAddress(),
                 takerToken: ethers.ZeroAddress, // ETH
-                makerAmount: ethers.parseEther("1"),
-                takerAmount: ethers.parseEther("2000"),
+                makerAmount: ethers.parseEther('1'),
+                takerAmount: ethers.parseEther('2000'),
                 maker: deployer.target,
                 taker: ethers.ZeroAddress, // anyone
                 orderType: OrderType.FILL,
                 salt: BigInt(Date.now()),
-                expiry: Math.floor(Date.now() / 1000) + 3600 // 1 hour
+                expiry: Math.floor(Date.now() / 1000) + 3600, // 1 hour
             };
 
             expect(order.makerToken).to.match(/^0x[0-9a-fA-F]{40}$/);
@@ -108,14 +108,14 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
         });
     });
 
-    describe("🔄 Transform ERC20", function () {
-        it("✅ should support transformation types", async function () {
+    describe('🔄 Transform ERC20', function () {
+        it('✅ should support transformation types', async function () {
             // 转换类型枚举
             enum TransformationType {
                 FILL_QUOTE_TRANSFORMER = 0,
                 PAY_TO_TRANSFER_TRANSFORMER = 1,
                 AFFILIATE_FEE_TRANSFORMER = 2,
-                POSITIVE_SLIPPAGE_FEE_TRANSFORMER = 3
+                POSITIVE_SLIPPAGE_FEE_TRANSFORMER = 3,
             }
 
             // 转换数据类型
@@ -127,8 +127,8 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
 
             const transform: TransformData = {
                 transformationType: TransformationType.FILL_QUOTE_TRANSFORMER,
-                data: "0x",
-                gasLimit: 300000n
+                data: '0x',
+                gasLimit: 300000n,
             };
 
             expect(transform.transformationType).to.equal(TransformationType.FILL_QUOTE_TRANSFORMER);
@@ -140,8 +140,8 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
         });
     });
 
-    describe("🎯 Multiplex", function () {
-        it("✅ should support multiplex call types", async function () {
+    describe('🎯 Multiplex', function () {
+        it('✅ should support multiplex call types', async function () {
             // 批量调用类型
             interface MultiplexCall {
                 target: string;
@@ -159,12 +159,12 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
                 calls: [
                     {
                         target: await weth.getAddress(),
-                        callData: "0x", // placeholder
-                        value: 0n
-                    }
+                        callData: '0x', // placeholder
+                        value: 0n,
+                    },
                 ],
                 revertOnFailure: true,
-                totalValue: 0n
+                totalValue: 0n,
             };
 
             expect(batch.calls).to.be.an('array');
@@ -177,15 +177,15 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
         });
     });
 
-    describe("💧 Liquidity Provider", function () {
-        it("✅ should support liquidity source types", async function () {
+    describe('💧 Liquidity Provider', function () {
+        it('✅ should support liquidity source types', async function () {
             // 流动性来源枚举
             enum LiquiditySource {
-                UNISWAP_V2 = "UniswapV2",
-                UNISWAP_V3 = "UniswapV3",
-                SUSHISWAP = "SushiSwap",
-                CURVE = "Curve",
-                BALANCER = "Balancer"
+                UNISWAP_V2 = 'UniswapV2',
+                UNISWAP_V3 = 'UniswapV3',
+                SUSHISWAP = 'SushiSwap',
+                CURVE = 'Curve',
+                BALANCER = 'Balancer',
             }
 
             interface LiquidityPool {
@@ -204,8 +204,8 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
                 token0: await weth.getAddress(),
                 token1: ethers.ZeroAddress,
                 fee: 3000, // 0.3%
-                reserve0: ethers.parseEther("100"),
-                reserve1: ethers.parseEther("200000")
+                reserve0: ethers.parseEther('100'),
+                reserve1: ethers.parseEther('200000'),
             };
 
             expect(pool.source).to.equal(LiquiditySource.UNISWAP_V2);
@@ -219,8 +219,8 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
         });
     });
 
-    describe("📊 Advanced Features", function () {
-        it("✅ should support gas estimation and optimization", async function () {
+    describe('📊 Advanced Features', function () {
+        it('✅ should support gas estimation and optimization', async function () {
             interface GasEstimate {
                 estimatedGas: bigint;
                 maxFeePerGas: bigint;
@@ -230,9 +230,9 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
 
             const gasEstimate: GasEstimate = {
                 estimatedGas: 200000n,
-                maxFeePerGas: ethers.parseUnits("20", "gwei"),
-                maxPriorityFeePerGas: ethers.parseUnits("2", "gwei"),
-                totalCost: 0n
+                maxFeePerGas: ethers.parseUnits('20', 'gwei'),
+                maxPriorityFeePerGas: ethers.parseUnits('2', 'gwei'),
+                totalCost: 0n,
             };
 
             // Calculate total cost
@@ -243,11 +243,11 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
             expect(gasEstimate.totalCost).to.be.greaterThan(0n);
 
             console.log(`✅ Estimated gas: ${gasEstimate.estimatedGas.toString()}`);
-            console.log(`✅ Max fee per gas: ${ethers.formatUnits(gasEstimate.maxFeePerGas.toString(), "gwei")} gwei`);
+            console.log(`✅ Max fee per gas: ${ethers.formatUnits(gasEstimate.maxFeePerGas.toString(), 'gwei')} gwei`);
             console.log(`✅ Total cost: ${ethers.formatEther(gasEstimate.totalCost.toString())} ETH`);
         });
 
-        it("✅ should handle complex data structures", async function () {
+        it('✅ should handle complex data structures', async function () {
             interface TradeRoute {
                 hops: {
                     tokenIn: string;
@@ -266,14 +266,14 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
                     {
                         tokenIn: await weth.getAddress(),
                         tokenOut: ethers.ZeroAddress,
-                        amountIn: ethers.parseEther("1"),
-                        amountOut: ethers.parseEther("2000"),
-                        pool: ethers.ZeroAddress
-                    }
+                        amountIn: ethers.parseEther('1'),
+                        amountOut: ethers.parseEther('2000'),
+                        pool: ethers.ZeroAddress,
+                    },
                 ],
-                totalAmountIn: ethers.parseEther("1"),
-                totalAmountOut: ethers.parseEther("2000"),
-                priceImpact: 0.1 // 0.1%
+                totalAmountIn: ethers.parseEther('1'),
+                totalAmountOut: ethers.parseEther('2000'),
+                priceImpact: 0.1, // 0.1%
             };
 
             expect(route.hops).to.be.an('array');
@@ -286,4 +286,4 @@ describe("🌟 ZeroEx Protocol TypeScript Tests - Modern", function () {
             console.log(`✅ Price impact: ${route.priceImpact}%`);
         });
     });
-}); 
+});

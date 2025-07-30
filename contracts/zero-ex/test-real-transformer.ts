@@ -23,25 +23,22 @@ async function testRealTransformer() {
 
     await testEnv.tokens.takerToken.mint(testEnv.host, mintAmount);
     await testEnv.tokens.makerToken.mint(testEnv.bridge, mintAmount);
-    
+
     console.log('✅ 代币分发完成');
 
     // 创建与测试相同的数据
     console.log('\n📊 创建测试数据...');
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-    
+
     const boughtAmount = 1000000000000000000n; // 1 ether
     const lpData = abiCoder.encode(['uint256'], [boughtAmount]);
-    const bridgeData = abiCoder.encode(
-        ['address', 'bytes'], 
-        [await testEnv.bridge.getAddress(), lpData]
-    );
+    const bridgeData = abiCoder.encode(['address', 'bytes'], [await testEnv.bridge.getAddress(), lpData]);
 
     const bridgeOrder = {
         source: '0x0000000000000000000000000000000000000000000000000000000000000000',
         takerTokenAmount: 1000000000000000000n,
         makerTokenAmount: 1000000000000000000n,
-        bridgeData: bridgeData
+        bridgeData: bridgeData,
     };
 
     const transformData = {
@@ -54,7 +51,7 @@ async function testRealTransformer() {
         fillSequence: [FillQuoteTransformerOrderType.Bridge],
         fillAmount: 1000000000000000000n,
         refundReceiver: '0x0000000000000000000000000000000000000000',
-        otcOrders: []
+        otcOrders: [],
     };
 
     console.log('📋 测试数据概览:');
@@ -70,7 +67,7 @@ async function testRealTransformer() {
 
     // 测试真实的 transform 调用
     console.log('\n🎯 测试真实的 FillQuoteTransformer...');
-    
+
     try {
         console.log('📞 调用 host.executeTransform...');
         console.log('参数:');
@@ -87,18 +84,17 @@ async function testRealTransformer() {
             transformData.fillAmount,
             sender,
             taker,
-            encodedData
+            encodedData,
         );
 
         const receipt = await tx.wait();
         console.log('✅ 交易成功！');
         console.log('- Gas 使用:', receipt.gasUsed.toString());
         console.log('- 交易哈希:', receipt.hash);
-
     } catch (error) {
         console.log('❌ 真实 transformer 调用失败:');
         console.log('错误信息:', error.message);
-        
+
         // 分析错误
         if (error.message.includes('0xadc35ca6')) {
             console.log('🔍 检测到 InvalidTransformDataError (0xadc35ca6)');
@@ -116,7 +112,7 @@ async function testRealTransformer() {
             const transformResult = await testEnv.transformer.transform.staticCall({
                 sender: sender,
                 recipient: taker,
-                data: encodedData
+                data: encodedData,
             });
             console.log('✅ 直接调用成功:', transformResult);
         } catch (directError) {
@@ -125,4 +121,4 @@ async function testRealTransformer() {
     }
 }
 
-testRealTransformer().catch(console.error); 
+testRealTransformer().catch(console.error);

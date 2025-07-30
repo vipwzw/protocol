@@ -15,65 +15,74 @@
 ### 📁 主要合约模块
 
 #### 1. **Zero-Ex (核心协议)** `/contracts/zero-ex/`
+
 这是 0x 协议的核心，实现了代理模式和各种交易功能：
 
 **核心合约：**
+
 - `ZeroEx.sol` - 主入口合约，实现代理模式
 - `IZeroEx.sol` - 主接口定义
 
 **Features (功能模块)：**
+
 - **交易类功能**：
-  - `TransformERC20Feature` - ERC20代币转换
-  - `UniswapFeature` / `UniswapV3Feature` - Uniswap集成
-  - `PancakeSwapFeature` - PancakeSwap集成
-  - `LiquidityProviderFeature` - 流动性提供者集成
-  
+    - `TransformERC20Feature` - ERC20代币转换
+    - `UniswapFeature` / `UniswapV3Feature` - Uniswap集成
+    - `PancakeSwapFeature` - PancakeSwap集成
+    - `LiquidityProviderFeature` - 流动性提供者集成
 - **订单类功能**：
-  - `NativeOrdersFeature` - 原生订单处理
-  - `OtcOrdersFeature` - OTC订单
-  - `BatchFillNativeOrdersFeature` - 批量填充订单
-  - NFT订单（ERC721/ERC1155）
+    - `NativeOrdersFeature` - 原生订单处理
+    - `OtcOrdersFeature` - OTC订单
+    - `BatchFillNativeOrdersFeature` - 批量填充订单
+    - NFT订单（ERC721/ERC1155）
 
 - **元交易功能**：
-  - `MetaTransactionsFeature` / `MetaTransactionsFeatureV2`
-  
+    - `MetaTransactionsFeature` / `MetaTransactionsFeatureV2`
 - **管理功能**：
-  - `OwnableFeature` - 所有权管理
-  - `SimpleFunctionRegistryFeature` - 函数注册管理
+    - `OwnableFeature` - 所有权管理
+    - `SimpleFunctionRegistryFeature` - 函数注册管理
 
 #### 2. **Governance (治理)** `/contracts/governance/`
+
 实现了完全去中心化的治理机制：
 
 **核心合约：**
+
 - `ZRXWrappedToken.sol` - 封装的ZRX代币(wZRX)
 - `ZeroExVotes.sol` - 投票权管理（可升级）
 - `ZeroExProtocolGovernor.sol` - 协议治理者
-- `ZeroExTreasuryGovernor.sol` - 国库治理者  
+- `ZeroExTreasuryGovernor.sol` - 国库治理者
 - `ZeroExTimelock.sol` - 时间锁合约
 - `SecurityCouncil.sol` - 安全委员会功能
 
 #### 3. **Treasury (国库)** `/contracts/treasury/`
+
 管理协议国库资金：
 
 **核心合约：**
+
 - `ZrxTreasury.sol` - 主要国库合约
 - `DefaultPoolOperator.sol` - 默认池操作器
 - `IStaking.sol` - Staking接口
 - `IZrxTreasury.sol` - Treasury接口
 
 #### 4. **ERC20 (代币)** `/contracts/erc20/`
+
 ERC20代币实现和工具：
 
 **核心合约：**
+
 - `ZRXToken.sol` - ZRX代币合约
 - `WETH9.sol` - Wrapped Ether实现
 - `LibERC20Token.sol` - ERC20工具库
 - `IERC20Token.sol` / `IEtherToken.sol` - 接口定义
 
 #### 5. **Utils (工具库)** `/contracts/utils/`
+
 为其他模块提供的基础工具库：
 
 **核心合约：**
+
 - `LibBytes.sol` - 字节操作库
 - `LibMath.sol` - 数学库
 - `Ownable.sol` - 所有权管理
@@ -85,19 +94,25 @@ ERC20代币实现和工具：
 ### 🔧 技术特性
 
 #### Solidity版本
+
 项目已统一升级到：
+
 - **Solidity**: 0.8.28
 - **EVM版本**: cancun
 - **优化器运行次数**: 200-1,000,000
 
 #### 代理架构
+
 Zero-Ex合约采用了独特的per-function代理模式：
+
 - 每个功能可以有独立的实现合约
 - 通过fallback机制路由调用
 - 支持功能的注册、升级和回滚
 
 #### 治理架构
+
 采用Compound风格的治理设计：
+
 - 两个独立的Governor（协议和国库）
 - 时间锁机制
 - 封装的ZRX代币用于投票
@@ -111,7 +126,7 @@ zero-ex (核心)
   ├── erc20 (代币支持)
   └── governance (治理接口)
 
-governance 
+governance
   ├── treasury (国库管理)
   └── utils (基础库)
 
@@ -135,12 +150,12 @@ treasury
 
 这些包都在开发中。查看 [/contracts/README.md](/contracts/README.md) 获取已部署包的列表。
 
-| 包名                                                 | 版本                                                                                                                        | 描述                         |
-| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| [`@0x/contracts-zero-ex`](/contracts/zero-ex)       | [![npm](https://img.shields.io/npm/v/@0x/contracts-zero-ex.svg)](https://www.npmjs.com/package/@0x/contracts-zero-ex)       | 用于在协议内结算交易的合约      |
-| [`@0x/contracts-erc20`](/contracts/erc20)           | [![npm](https://img.shields.io/npm/v/@0x/contracts-erc20.svg)](https://www.npmjs.com/package/@0x/contracts-erc20)           | 各种 ERC20 代币的实现         |
+| 包名                                                | 版本                                                                                                                        | 描述                                          |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| [`@0x/contracts-zero-ex`](/contracts/zero-ex)       | [![npm](https://img.shields.io/npm/v/@0x/contracts-zero-ex.svg)](https://www.npmjs.com/package/@0x/contracts-zero-ex)       | 用于在协议内结算交易的合约                    |
+| [`@0x/contracts-erc20`](/contracts/erc20)           | [![npm](https://img.shields.io/npm/v/@0x/contracts-erc20.svg)](https://www.npmjs.com/package/@0x/contracts-erc20)           | 各种 ERC20 代币的实现                         |
 | [`@0x/contracts-test-utils`](/contracts/test-utils) | [![npm](https://img.shields.io/npm/v/@0x/contracts-test-utils.svg)](https://www.npmjs.com/package/@0x/contracts-test-utils) | 用于测试合约的 TypeScript/Javascript 共享工具 |
-| [`@0x/contracts-utils`](/contracts/utils)           | [![npm](https://img.shields.io/npm/v/@0x/contracts-utils.svg)](https://www.npmjs.com/package/@0x/contracts-utils)           | 在所有合约中使用的通用库和工具   |
+| [`@0x/contracts-utils`](/contracts/utils)           | [![npm](https://img.shields.io/npm/v/@0x/contracts-utils.svg)](https://www.npmjs.com/package/@0x/contracts-utils)           | 在所有合约中使用的通用库和工具                |
 
 ### TypeScript/Javascript 包
 
@@ -148,12 +163,12 @@ treasury
 
 以下是本 monorepo 中维护的 TypeScript/JavaScript 包。查看 [/packages/README.md](/packages/README.md) 获取详细的包功能说明和使用指南。
 
-| 包名                                                     | 版本                                                                                                                    | 描述                                       |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| 包名                                                     | 版本                                                                                                                    | 描述                                           |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | [`@0x/protocol-utils`](/packages/protocol-utils)         | [![npm](https://img.shields.io/npm/v/@0x/protocol-utils.svg)](https://www.npmjs.com/package/@0x/protocol-utils)         | 用于生成、解析、签名和验证 0x 订单的工具集     |
-| [`@0x/contract-addresses`](/packages/contract-addresses) | [![npm](https://img.shields.io/npm/v/@0x/contract-addresses.svg)](https://www.npmjs.com/package/@0x/contract-addresses) | 用于获取特定网络上已知部署合约地址的小型工具库   |
-| [`@0x/contract-wrappers`](/packages/contract-wrappers)   | [![npm](https://img.shields.io/npm/v/@0x/contract-wrappers.svg)](https://www.npmjs.com/package/@0x/contract-wrappers)   | 用于与 0x 智能合约交互的 JS/TS 包装器        |
-| [`@0x/contract-artifacts`](/packages/contract-artifacts) | [![npm](https://img.shields.io/npm/v/@0x/contract-artifacts.svg)](https://www.npmjs.com/package/@0x/contract-artifacts) | 0x 智能合约编译工件                         |
+| [`@0x/contract-addresses`](/packages/contract-addresses) | [![npm](https://img.shields.io/npm/v/@0x/contract-addresses.svg)](https://www.npmjs.com/package/@0x/contract-addresses) | 用于获取特定网络上已知部署合约地址的小型工具库 |
+| [`@0x/contract-wrappers`](/packages/contract-wrappers)   | [![npm](https://img.shields.io/npm/v/@0x/contract-wrappers.svg)](https://www.npmjs.com/package/@0x/contract-wrappers)   | 用于与 0x 智能合约交互的 JS/TS 包装器          |
+| [`@0x/contract-artifacts`](/packages/contract-artifacts) | [![npm](https://img.shields.io/npm/v/@0x/contract-artifacts.svg)](https://www.npmjs.com/package/@0x/contract-artifacts) | 0x 智能合约编译工件                            |
 
 ## 使用说明
 

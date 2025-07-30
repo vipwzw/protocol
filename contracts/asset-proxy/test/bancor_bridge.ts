@@ -116,7 +116,7 @@ blockchainTests.resets('Bancor unit tests', env => {
             return {
                 opts: _opts,
                 result,
-                logs: (receipt.logs as any) as DecodedLogs,
+                logs: receipt.logs as any as DecodedLogs,
                 blocktime: await env.web3Wrapper.getBlockTimestampAsync(receipt.blockNumber),
             };
         }

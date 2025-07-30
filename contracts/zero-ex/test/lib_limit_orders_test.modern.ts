@@ -11,7 +11,7 @@ function getRandomLimitOrder(fields: Partial<any> = {}): any {
     const now = Math.floor(Date.now() / 1000);
     return new LimitOrder({
         makerToken: '0x' + randomBytes(20).toString('hex'),
-        takerToken: '0x' + randomBytes(20).toString('hex'), 
+        takerToken: '0x' + randomBytes(20).toString('hex'),
         makerAmount: new BigNumber(ethers.parseEther('100').toString()),
         takerAmount: new BigNumber(ethers.parseEther('1').toString()),
         takerTokenFeeAmount: new BigNumber(ethers.parseEther('0.01').toString()),
@@ -42,30 +42,30 @@ function getRandomRfqOrder(fields: Partial<any> = {}): any {
     });
 }
 
-describe('LibLimitOrder Tests - Modern', function() {
+describe('LibLimitOrder Tests - Modern', function () {
     // Extended timeout for blockchain operations
     this.timeout(180000);
-    
+
     let admin: any;
     let testContract: Contract;
-    
-    before(async function() {
+
+    before(async function () {
         console.log('🚀 Setting up LibLimitOrder Test...');
-        
+
         // Get signers
         const signers = await ethers.getSigners();
         [admin] = signers;
-        
+
         console.log('👤 Admin:', admin.target);
-        
+
         await deployContractsAsync();
-        
+
         console.log('✅ LibLimitOrder test environment ready!');
     });
-    
+
     async function deployContractsAsync(): Promise<void> {
         console.log('📦 Deploying TestLibNativeOrder contract...');
-        
+
         // Deploy TestLibNativeOrder
         const TestLibNativeOrderFactory = await ethers.getContractFactory('TestLibNativeOrder');
         testContract = await TestLibNativeOrderFactory.deploy();
@@ -95,25 +95,25 @@ describe('LibLimitOrder Tests - Modern', function() {
         return converted;
     }
 
-    describe('getLimitOrderStructHash()', function() {
-        it('returns the correct hash', async function() {
+    describe('getLimitOrderStructHash()', function () {
+        it('returns the correct hash', async function () {
             const order = getRandomLimitOrder();
             const convertedOrder = convertOrderForContract(order);
             const structHash = await testContract.getLimitOrderStructHash(convertedOrder);
             expect(structHash).to.equal(order.getStructHash());
-            
+
             console.log('✅ Limit order struct hash verified');
         });
     });
 
-    describe('getRfqOrderStructHash()', function() {
-        it('returns the correct hash', async function() {
+    describe('getRfqOrderStructHash()', function () {
+        it('returns the correct hash', async function () {
             const order = getRandomRfqOrder();
             const convertedOrder = convertOrderForContract(order);
             const structHash = await testContract.getRfqOrderStructHash(convertedOrder);
             expect(structHash).to.equal(order.getStructHash());
-            
+
             console.log('✅ RFQ order struct hash verified');
         });
     });
-}); 
+});

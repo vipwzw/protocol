@@ -15,5 +15,5 @@ export {
     IERC1155Mintable,
     IERC1155Mintable__factory,
     IERC1155Receiver,
-    IERC1155Receiver__factory
+    IERC1155Receiver__factory,
 } from '../typechain-types';

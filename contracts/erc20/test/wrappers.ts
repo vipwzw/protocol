@@ -17,7 +17,7 @@ export {
     TestLibERC20TokenTarget__factory,
     UntransferrableDummyERC20Token,
     UntransferrableDummyERC20Token__factory,
-    
+
     // Production contracts for testing
     ERC20Token,
     ERC20Token__factory,
@@ -30,5 +30,5 @@ export {
     IERC20Token,
     IERC20Token__factory,
     IEtherToken,
-    IEtherToken__factory
+    IEtherToken__factory,
 } from '../typechain-types';

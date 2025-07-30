@@ -30,7 +30,7 @@ export const artifacts = {
     TestLibERC20Token: TestLibERC20Token,
     TestLibERC20TokenTarget: TestLibERC20TokenTarget,
     UntransferrableDummyERC20Token: UntransferrableDummyERC20Token,
-    
+
     // Production contracts
     ERC20Token: ERC20Token,
     LibERC20Token: LibERC20Token,

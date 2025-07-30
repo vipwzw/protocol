@@ -38,4 +38,4 @@ export function getRandomERC1155Order(fields: Partial<ERC1155Order> = {}): ERC11
         expiry: BigInt(Math.floor(Date.now() / 1000 + 60)),
         ...fields,
     });
-} 
+}

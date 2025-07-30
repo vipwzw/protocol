@@ -23,7 +23,7 @@ export function decodeERC20AssetData(encoded: string): string {
  */
 export function decodeERC721AssetData(encoded: string): [string, BigNumber] {
     // return assetDataIface.getABIDecodedTransactionData<[string, BigNumber]>('ERC721Token', encoded);
-         return ['ERC721Token', new BigNumber(0)]; // Placeholder
+    return ['ERC721Token', new BigNumber(0)]; // Placeholder
 }
 
 /**

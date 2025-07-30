@@ -130,7 +130,7 @@ blockchainTests.resets('ERC20BridgeProxy unit tests', env => {
             const { logs } = await assetProxy
                 .transferFrom(encodeAssetData(_opts.assetData), _opts.from, _opts.to, new BigNumber(_opts.amount))
                 .awaitTransactionSuccessAsync({ from: caller });
-            return (logs as any) as DecodedLogs;
+            return logs as any as DecodedLogs;
         }
 
         it('succeeds if the bridge succeeds and balance increases by `amount`', async () => {

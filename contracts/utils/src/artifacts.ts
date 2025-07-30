@@ -42,7 +42,7 @@ export const artifacts = {
     LibSafeMath,
     Ownable,
     ReentrancyGuard,
-    
+
     // 错误库
     LibAuthorizableRichErrors,
     LibBytesRichErrors,
@@ -51,7 +51,7 @@ export const artifacts = {
     LibReentrancyGuardRichErrors,
     LibRichErrors,
     LibSafeMathRichErrors,
-    
+
     // 测试合约
     TestLibBytes,
     TestLibRichErrors,

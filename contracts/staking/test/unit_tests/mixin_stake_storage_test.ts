@@ -46,11 +46,8 @@ blockchainTests.resets('MixinStakeStorage unit tests', env => {
 
     async function getTestBalancesAsync(index: Numberish): Promise<StoredBalance> {
         const storedBalance: Partial<StoredBalance> = {};
-        [
-            storedBalance.currentEpoch,
-            storedBalance.currentEpochBalance,
-            storedBalance.nextEpochBalance,
-        ] = await testContract.testBalances(new BigNumber(index)).callAsync();
+        [storedBalance.currentEpoch, storedBalance.currentEpochBalance, storedBalance.nextEpochBalance] =
+            await testContract.testBalances(new BigNumber(index)).callAsync();
         return storedBalance as StoredBalance;
     }
 

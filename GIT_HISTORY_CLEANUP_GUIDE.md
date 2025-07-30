@@ -12,10 +12,10 @@
 
 当前仓库中存在的大文件：
 
--   `contracts/zero-ex/artifacts/build-info/68f133729da008c783c12f9ea6aab8b6.json` (51MB)
--   `contracts/zero-ex/artifacts/build-info/ccb1d7a3408f48b0d3a789f14d152e5d.json` (37MB)
--   `contracts/zero-ex/artifacts/build-info/642f7b799d34d939eeca74e52ef4fbfd.json` (37MB)
--   其他多个 build-info JSON 文件（7-29MB）
+- `contracts/zero-ex/artifacts/build-info/68f133729da008c783c12f9ea6aab8b6.json` (51MB)
+- `contracts/zero-ex/artifacts/build-info/ccb1d7a3408f48b0d3a789f14d152e5d.json` (37MB)
+- `contracts/zero-ex/artifacts/build-info/642f7b799d34d939eeca74e52ef4fbfd.json` (37MB)
+- 其他多个 build-info JSON 文件（7-29MB）
 
 ## ✅ 已完成的步骤
 
@@ -26,7 +26,6 @@
     ```
 
 2. **删除当前文件** ✅
-
     - 已从工作目录删除所有 build-info 文件
 
 3. **提交更改** ✅
@@ -96,7 +95,6 @@
 ## 📋 后续步骤
 
 1. **通知团队成员**
-
     - 发送通知，要求所有人重新克隆仓库
     - 或者使用以下命令更新本地仓库：
 
@@ -140,7 +138,6 @@
     ```
 
 2. **Pre-commit Hook**
-
     - 添加文件大小检查
     - 阻止提交大文件
 

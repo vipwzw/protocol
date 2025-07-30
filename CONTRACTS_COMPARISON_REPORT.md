@@ -82,32 +82,26 @@ const features = {
 ### 🔴 **缺失的 Features (导致测试失败)**
 
 1. **BatchFillNativeOrdersFeature**
-
     - 影响：`batch_fill_native_orders_test.ts`
     - 错误：`batchFillLimitOrders is not a function`
 
 2. **ERC721OrdersFeature**
-
     - 影响：`erc721_orders_test.ts`
     - NFT 订单功能缺失
 
 3. **ERC1155OrdersFeature**
-
     - 影响：`erc1155_orders_test.ts`
     - NFT 批量订单功能缺失
 
 4. **FundRecoveryFeature**
-
     - 影响：`fund_recovery_tests.ts`
     - 资金恢复功能缺失
 
 5. **LiquidityProviderFeature**
-
     - 影响：`liquidity_provider_test.ts`
     - 流动性提供者功能缺失
 
 6. **MultiplexFeature**
-
     - 影响：`multiplex_test.ts`
     - 复合交易功能缺失
 
@@ -130,12 +124,10 @@ const features = {
 ### 🎯 失败模式分类
 
 1. **函数不存在错误** (~40 个测试)
-
     - `batchFillLimitOrders is not a function`
     - 缺失 Feature 导致方法调用失败
 
 2. **合约部署失败** (~25 个测试)
-
     - 测试尝试部署不存在的 Features
     - 合约 artifacts 缺失
 
@@ -180,9 +172,9 @@ struct Features {
 
 ### 🔧 **方案 C：混合方案** (平衡)
 
--   核心测试使用 FullMigration
--   专门的 Feature 测试使用独立部署
--   明确区分测试类型和部署策略
+- 核心测试使用 FullMigration
+- 专门的 Feature 测试使用独立部署
+- 明确区分测试类型和部署策略
 
 ---
 

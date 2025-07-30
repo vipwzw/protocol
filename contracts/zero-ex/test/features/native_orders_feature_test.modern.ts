@@ -4,18 +4,17 @@ const { ethers } = require('hardhat');
 import { Contract, MaxUint256 } from 'ethers';
 import { randomBytes } from 'crypto';
 // 导入通用部署函数
-import { 
-    deployZeroExWithFullMigration, 
-    deployTestTokens, 
+import {
+    deployZeroExWithFullMigration,
+    deployTestTokens,
     approveTokensForAccounts,
-    type ZeroExDeploymentResult 
+    type ZeroExDeploymentResult,
 } from '../utils/deployment-helper';
 
-
-describe('NativeOrdersFeature - Complete Modern Tests', function() {
+describe('NativeOrdersFeature - Complete Modern Tests', function () {
     // Extended timeout for native orders operations
     this.timeout(300000);
-    
+
     let owner: any;
     let maker: any;
     let taker: any;
@@ -33,7 +32,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
     let nativeOrdersFeature: any; // NativeOrdersFeature interface pointing to ZeroEx
     let zeroEx: any; // Main ZeroEx contract
     let verifyingContract: string; // ZeroEx contract address
-    
+
     const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
     const MAX_UINT256 = MaxUint256;
     const NULL_BYTES32 = ethers.ZeroHash;
@@ -41,102 +40,102 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
     const GAS_PRICE = ethers.parseUnits('123', 'gwei');
     const PROTOCOL_FEE_MULTIPLIER = 1337000;
     const SINGLE_PROTOCOL_FEE = GAS_PRICE * BigInt(PROTOCOL_FEE_MULTIPLIER);
-    
+
     // Mock order status enum (BigInt values to match contract returns)
     const OrderStatus = {
         Invalid: 0n,
         Fillable: 1n,
         Filled: 2n,
         Cancelled: 3n,
-        Expired: 4n
+        Expired: 4n,
     };
-    
+
     // Mock signature type enum
     const SignatureType = {
         EthSign: 0,
         EIP712: 1,
-        PreSigned: 2
+        PreSigned: 2,
     };
-    
-    before(async function() {
+
+    before(async function () {
         console.log('🚀 Setting up Complete NativeOrdersFeature Test...');
-        
+
         // Get signers
         const signers = await ethers.getSigners();
         [owner, maker, taker, notMaker, notTaker, contractWalletOwner, contractWalletSigner] = signers;
-        
+
         console.log('👤 Owner:', owner.target);
         console.log('👤 Maker:', maker.target);
         console.log('👤 Taker:', taker.target);
-        
+
         await deployContractsAsync();
         await setupTestUtilsAsync();
-        
+
         console.log('✅ Complete NativeOrdersFeature test environment ready!');
     });
-    
+
     async function deployContractsAsync(): Promise<void> {
         console.log('📦 Deploying Complete NativeOrdersFeature contracts using FullMigration pattern...');
-        
+
         // Deploy tokens using TestMintableERC20Token (no constructor params)
         const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
-        
+
         makerToken = await TokenFactory.deploy();
         await makerToken.waitForDeployment();
         console.log(`✅ MakerToken: ${await makerToken.getAddress()}`);
-        
+
         takerToken = await TokenFactory.deploy();
         await takerToken.waitForDeployment();
         console.log(`✅ TakerToken: ${await takerToken.getAddress()}`);
-        
+
         // Deploy WETH using TestWeth
         const WethFactory = await ethers.getContractFactory('TestWeth');
         wethToken = await WethFactory.deploy();
         await wethToken.waitForDeployment();
         console.log(`✅ WETH: ${await wethToken.getAddress()}`);
-        
+
         // Use FullMigration pattern like other successful tests
         const FullMigrationFactory = await ethers.getContractFactory('FullMigration');
         const migrator = await FullMigrationFactory.deploy(owner.target);
         await migrator.waitForDeployment();
         console.log(`✅ FullMigration: ${await migrator.getAddress()}`);
-        
+
         // Get correct bootstrapper from migrator
         const bootstrapper = await migrator.getBootstrapper();
-        
+
         // Deploy ZeroEx with correct bootstrapper
         const ZeroExFactory = await ethers.getContractFactory('ZeroEx');
         zeroEx = await ZeroExFactory.deploy(bootstrapper);
         await zeroEx.waitForDeployment();
         verifyingContract = await zeroEx.getAddress();
         console.log(`✅ ZeroEx: ${verifyingContract}`);
-        
+
         // Deploy all required features for full migration
         const SimpleFunctionRegistryFactory = await ethers.getContractFactory('SimpleFunctionRegistryFeature');
         const registry = await SimpleFunctionRegistryFactory.deploy();
         await registry.waitForDeployment();
-        
+
         const OwnableFactory = await ethers.getContractFactory('OwnableFeature');
         const ownable = await OwnableFactory.deploy();
         await ownable.waitForDeployment();
-        
+
         const TransformERC20Factory = await ethers.getContractFactory('TransformERC20Feature');
         const transformERC20 = await TransformERC20Factory.deploy();
         await transformERC20.waitForDeployment();
-        
+
         const MetaTransactionsFactory = await ethers.getContractFactory('MetaTransactionsFeature');
         const metaTransactions = await MetaTransactionsFactory.deploy(verifyingContract);
         await metaTransactions.waitForDeployment();
-        
+
         // Deploy staking and fee collector for NativeOrdersFeature
         const TestStakingFactory = await ethers.getContractFactory('TestStaking');
         const staking = await TestStakingFactory.deploy(await wethToken.getAddress());
         await staking.waitForDeployment();
-        
+
         const FeeCollectorFactory = await ethers.getContractFactory('FeeCollectorController');
         const feeCollector = await FeeCollectorFactory.deploy(await wethToken.getAddress(), await staking.getAddress());
         await feeCollector.waitForDeployment();
-        
+
         // Use TestNativeOrdersFeature for testing
         const TestNativeOrdersFactory = await ethers.getContractFactory('TestNativeOrdersFeature');
         const nativeOrders = await TestNativeOrdersFactory.deploy(
@@ -144,16 +143,16 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             await wethToken.getAddress(),
             await staking.getAddress(),
             await feeCollector.getAddress(),
-            70000 // protocolFeeMultiplier
+            70000, // protocolFeeMultiplier
         );
         await nativeOrders.waitForDeployment();
-        
+
         const OtcOrdersFactory = await ethers.getContractFactory('OtcOrdersFeature');
         const otcOrders = await OtcOrdersFactory.deploy(verifyingContract, await wethToken.getAddress());
         await otcOrders.waitForDeployment();
-        
+
         console.log(`✅ All features deployed`);
-        
+
         // Use FullMigration's migrateZeroEx with all features
         const features = {
             registry: await registry.getAddress(),
@@ -161,52 +160,43 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             transformERC20: await transformERC20.getAddress(),
             metaTransactions: await metaTransactions.getAddress(),
             nativeOrders: await nativeOrders.getAddress(),
-            otcOrders: await otcOrders.getAddress()
+            otcOrders: await otcOrders.getAddress(),
         };
-        
-        await migrator.migrateZeroEx(
-            owner.target,
-            verifyingContract,
-            features,
-            {
-                transformerDeployer: owner.target
-            }
-        );
+
+        await migrator.migrateZeroEx(owner.target, verifyingContract, features, {
+            transformerDeployer: owner.target,
+        });
         console.log(`✅ ZeroEx fully migrated with TestNativeOrdersFeature`);
-        
+
         // Create NativeOrdersFeature interface pointing to ZeroEx (proxy pattern)
-        nativeOrdersFeature = new ethers.Contract(
-            verifyingContract,
-            nativeOrders.interface,
-            ethers.provider
-        );
+        nativeOrdersFeature = new ethers.Contract(verifyingContract, nativeOrders.interface, ethers.provider);
         console.log(`✅ NativeOrdersFeature interface created`);
-        
+
         // Approve tokens for all accounts
         const accounts = [maker, notMaker];
         for (const account of accounts) {
             await makerToken.connect(account).approve(verifyingContract, MAX_UINT256);
         }
-        
+
         const takerAccounts = [taker, notTaker];
         for (const account of takerAccounts) {
             await takerToken.connect(account).approve(verifyingContract, MAX_UINT256);
         }
         console.log(`✅ Approved all tokens for all accounts`);
-        
+
         // Deploy test contracts
         const RfqRegistrationFactory = await ethers.getContractFactory('TestRfqOriginRegistration');
         testRfqOriginRegistration = await RfqRegistrationFactory.deploy();
         await testRfqOriginRegistration.waitForDeployment();
-        
+
         const ContractWalletFactory = await ethers.getContractFactory('TestOrderSignerRegistryWithContractWallet');
         contractWallet = await ContractWalletFactory.connect(contractWalletOwner).deploy(verifyingContract);
         await contractWallet.waitForDeployment();
         console.log(`✅ Deployed test contracts`);
-        
+
         // Set up deployment object for test utility functions
         deployment = await deployZeroExWithFullMigration(owner, wethToken, {
-            transformerDeployer: owner.target
+            transformerDeployer: owner.target,
         });
         console.log(`✅ Deployment object set up for test utilities`);
     }
@@ -214,67 +204,67 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
     async function setupTestUtilsAsync(): Promise<void> {
         testUtils = {
             // Prepare balances for orders
-            prepareBalancesForOrdersAsync: async function(orders: any[], recipient?: any) {
+            prepareBalancesForOrdersAsync: async function (orders: any[], recipient?: any) {
                 for (const order of orders) {
                     const recipientAddr = recipient ? recipient.target : taker.target;
-                    
+
                     // Mint maker tokens to maker
                     await makerToken.mint(order.maker, order.makerAmount);
-                    
+
                     // Mint taker tokens to taker/recipient
                     await takerToken.mint(recipientAddr, order.takerAmount);
                 }
             },
-            
+
             // Fill limit order
-            fillLimitOrderAsync: async function(order: any, options: any = {}) {
+            fillLimitOrderAsync: async function (order: any, options: any = {}) {
                 const fillAmount = options.fillAmount || order.takerAmount;
                 const txOriginAddr = options.txOrigin || taker;
                 await this.prepareBalancesForOrdersAsync([order]);
                 const signature = await this.createOrderSignature(order);
-                
+
                 return await nativeOrdersFeature.connect(txOriginAddr).fillLimitOrder(order, signature, fillAmount);
             },
-            
+
             // Fill RFQ order
-            fillRfqOrderAsync: async function(order: any, fillAmount?: bigint, txOriginAddr?: any) {
+            fillRfqOrderAsync: async function (order: any, fillAmount?: bigint, txOriginAddr?: any) {
                 await this.prepareBalancesForOrdersAsync([order]);
                 const signature = await this.createOrderSignature(order);
                 const amount = fillAmount || order.takerAmount;
                 const fromAddr = txOriginAddr || taker;
-                
+
                 return await nativeOrdersFeature.connect(fromAddr).fillRfqOrder(order, signature, amount);
             },
-            
+
             // Fill or kill limit order
-            fillOrKillLimitOrderAsync: async function(order: any, fillAmount?: bigint, txOriginAddr?: any) {
+            fillOrKillLimitOrderAsync: async function (order: any, fillAmount?: bigint, txOriginAddr?: any) {
                 await this.prepareBalancesForOrdersAsync([order]);
                 const signature = await this.createOrderSignature(order);
                 const amount = fillAmount || order.takerAmount;
                 const fromAddr = txOriginAddr || taker;
-                
+
                 return await nativeOrdersFeature.connect(fromAddr).fillOrKillLimitOrder(order, signature, amount);
             },
-            
+
             // Fill or kill RFQ order
-            fillOrKillRfqOrderAsync: async function(order: any, fillAmount?: bigint, txOriginAddr?: any) {
+            fillOrKillRfqOrderAsync: async function (order: any, fillAmount?: bigint, txOriginAddr?: any) {
                 await this.prepareBalancesForOrdersAsync([order]);
                 const signature = await this.createOrderSignature(order);
                 const amount = fillAmount || order.takerAmount;
                 const fromAddr = txOriginAddr || taker;
-                
+
                 return await nativeOrdersFeature.connect(fromAddr).fillOrKillRfqOrder(order, signature, amount);
             },
-            
+
             // Create order signature
-            createOrderSignature: async function(order: any, signer?: any) {
+            createOrderSignature: async function (order: any, signer?: any) {
                 const signerAccount = signer || maker;
                 const orderHash = await this.getOrderHash(order);
                 return await signerAccount.signMessage(ethers.getBytes(orderHash));
             },
-            
+
             // Get order hash - 使用合约标准方法而不是JSON.stringify
-            getOrderHash: async function(order: any): Promise<string> {
+            getOrderHash: async function (order: any): Promise<string> {
                 // 根据订单类型选择正确的哈希方法
                 if (order.txOrigin !== undefined) {
                     // RFQ 订单
@@ -284,28 +274,31 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                     return await deployment.featureInterfaces.nativeOrdersFeature.getLimitOrderHash(order);
                 }
             },
-            
+
             // Compute limit order filled amounts
-            computeLimitOrderFilledAmounts: function(order: any, fillAmount: bigint) {
+            computeLimitOrderFilledAmounts: function (order: any, fillAmount: bigint) {
                 const takerTokenFilledAmount = fillAmount;
                 const makerTokenFilledAmount = (fillAmount * order.makerAmount) / order.takerAmount;
-                
+
                 return { makerTokenFilledAmount, takerTokenFilledAmount };
             },
-            
+
             // Compute RFQ order filled amounts
-            computeRfqOrderFilledAmounts: function(order: any, fillAmount: bigint) {
+            computeRfqOrderFilledAmounts: function (order: any, fillAmount: bigint) {
                 const takerTokenFilledAmount = fillAmount;
                 const makerTokenFilledAmount = (fillAmount * order.makerAmount) / order.takerAmount;
-                
+
                 return { makerTokenFilledAmount, takerTokenFilledAmount };
             },
-            
+
             // Create limit order filled event args
-            createLimitOrderFilledEventArgs: async function(order: any, fillAmount?: bigint) {
+            createLimitOrderFilledEventArgs: async function (order: any, fillAmount?: bigint) {
                 const filledAmount = fillAmount || order.takerAmount;
-                const { makerTokenFilledAmount, takerTokenFilledAmount } = this.computeLimitOrderFilledAmounts(order, filledAmount);
-                
+                const { makerTokenFilledAmount, takerTokenFilledAmount } = this.computeLimitOrderFilledAmounts(
+                    order,
+                    filledAmount,
+                );
+
                 return {
                     orderHash: await this.getOrderHash(order),
                     maker: order.maker,
@@ -313,15 +306,18 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                     makerToken: order.makerToken,
                     takerToken: order.takerToken,
                     makerTokenFilledAmount,
-                    takerTokenFilledAmount
+                    takerTokenFilledAmount,
                 };
             },
-            
+
             // Create RFQ order filled event args
-            createRfqOrderFilledEventArgs: async function(order: any, fillAmount?: bigint) {
+            createRfqOrderFilledEventArgs: async function (order: any, fillAmount?: bigint) {
                 const filledAmount = fillAmount || order.takerAmount;
-                const { makerTokenFilledAmount, takerTokenFilledAmount } = this.computeRfqOrderFilledAmounts(order, filledAmount);
-                
+                const { makerTokenFilledAmount, takerTokenFilledAmount } = this.computeRfqOrderFilledAmounts(
+                    order,
+                    filledAmount,
+                );
+
                 return {
                     orderHash: await this.getOrderHash(order),
                     maker: order.maker,
@@ -329,9 +325,9 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                     makerToken: order.makerToken,
                     takerToken: order.takerToken,
                     makerTokenFilledAmount,
-                    takerTokenFilledAmount
+                    takerTokenFilledAmount,
                 };
-            }
+            },
         };
     }
 
@@ -359,8 +355,8 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         return {
             maker: fields.maker || maker.target,
             taker: fields.taker || NULL_ADDRESS,
-            makerToken: fields.makerToken || (makerToken.target || makerToken.target),
-            takerToken: fields.takerToken || (takerToken.target || takerToken.target),
+            makerToken: fields.makerToken || makerToken.target || makerToken.target,
+            takerToken: fields.takerToken || takerToken.target || takerToken.target,
             makerAmount: fields.makerAmount || ethers.parseEther('100'),
             takerAmount: fields.takerAmount || ethers.parseEther('50'),
             takerTokenFeeAmount: fields.takerTokenFeeAmount || ZERO_AMOUNT,
@@ -369,7 +365,7 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
             pool: fields.pool || NULL_BYTES32,
             expiry: fields.expiry || createExpiry(3600),
             salt: fields.salt || generateRandomBytes32(),
-            ...fields
+            ...fields,
         };
     }
 
@@ -377,15 +373,15 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
         return {
             maker: fields.maker || maker.target,
             taker: fields.taker || taker.target,
-            makerToken: fields.makerToken || (makerToken.target || makerToken.target),
-            takerToken: fields.takerToken || (takerToken.target || takerToken.target),
+            makerToken: fields.makerToken || makerToken.target || makerToken.target,
+            takerToken: fields.takerToken || takerToken.target || takerToken.target,
             makerAmount: fields.makerAmount || ethers.parseEther('100'),
             takerAmount: fields.takerAmount || ethers.parseEther('50'),
             txOrigin: fields.txOrigin || taker.target,
             pool: fields.pool || NULL_BYTES32,
             expiry: fields.expiry || createExpiry(3600),
             salt: fields.salt || generateRandomBytes32(),
-            ...fields
+            ...fields,
         };
     }
 
@@ -397,61 +393,61 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
 
     // Helper function to advance time
     async function increaseTimeAsync(seconds: number): Promise<void> {
-        await ethers.provider.send("evm_increaseTime", [seconds]);
-        await ethers.provider.send("evm_mine", []);
+        await ethers.provider.send('evm_increaseTime', [seconds]);
+        await ethers.provider.send('evm_mine', []);
     }
 
-    describe('getProtocolFeeMultiplier()', function() {
-        it('returns the expected protocol fee multiplier', async function() {
+    describe('getProtocolFeeMultiplier()', function () {
+        it('returns the expected protocol fee multiplier', async function () {
             const result = await nativeOrdersFeature.getProtocolFeeMultiplier();
             expect(result).to.equal(PROTOCOL_FEE_MULTIPLIER);
-            
+
             console.log(`✅ Protocol fee multiplier: ${result}`);
         });
     });
 
-    describe('getLimitOrderHash()', function() {
-        it('returns the expected hash', async function() {
+    describe('getLimitOrderHash()', function () {
+        it('returns the expected hash', async function () {
             const order = getTestLimitOrder();
             const hash = await nativeOrdersFeature.getLimitOrderHash(order);
             expect(hash).to.not.equal(ethers.ZeroHash);
-            
+
             console.log(`✅ Generated limit order hash: ${hash.slice(0, 10)}...`);
         });
 
-        it('different orders have different hashes', async function() {
+        it('different orders have different hashes', async function () {
             const order1 = getTestLimitOrder();
             const order2 = getTestLimitOrder({ salt: generateRandomBytes32() });
             const hash1 = await nativeOrdersFeature.getLimitOrderHash(order1);
             const hash2 = await nativeOrdersFeature.getLimitOrderHash(order2);
             expect(hash1).to.not.equal(hash2);
-            
+
             console.log(`✅ Different orders have different hashes`);
         });
     });
 
-    describe('getRfqOrderHash()', function() {
-        it('returns the expected hash', async function() {
+    describe('getRfqOrderHash()', function () {
+        it('returns the expected hash', async function () {
             const order = getTestRfqOrder();
             const hash = await nativeOrdersFeature.getRfqOrderHash(order);
             expect(hash).to.not.equal(ethers.ZeroHash);
-            
+
             console.log(`✅ Generated RFQ order hash: ${hash.slice(0, 10)}...`);
         });
 
-        it('different orders have different hashes', async function() {
+        it('different orders have different hashes', async function () {
             const order1 = getTestRfqOrder();
             const order2 = getTestRfqOrder({ salt: generateRandomBytes32() });
             const hash1 = await nativeOrdersFeature.getRfqOrderHash(order1);
             const hash2 = await nativeOrdersFeature.getRfqOrderHash(order2);
             expect(hash1).to.not.equal(hash2);
-            
+
             console.log(`✅ Different RFQ orders have different hashes`);
         });
     });
 
-    describe('getLimitOrderInfo()', function() {
-        it('valid order', async function() {
+    describe('getLimitOrderInfo()', function () {
+        it('valid order', async function () {
             const order = getTestLimitOrder();
             const info = await nativeOrdersFeature.getLimitOrderInfo(order);
             assertOrderInfoEquals(info, {
@@ -459,11 +455,11 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: ZERO_AMOUNT,
             });
-            
+
             console.log(`✅ Valid limit order - Status: ${info.status}`);
         });
 
-        it('expired order', async function() {
+        it('expired order', async function () {
             const expiry = createExpiry(-60);
             const order = getTestLimitOrder({ expiry });
             const info = await nativeOrdersFeature.getLimitOrderInfo(order);
@@ -472,33 +468,33 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: ZERO_AMOUNT,
             });
-            
+
             console.log(`✅ Correctly identified expired limit order`);
         });
 
-        it('filled then expired order', async function() {
+        it('filled then expired order', async function () {
             const expiry = createExpiry(60);
             const order = getTestLimitOrder({ expiry });
             await testUtils.prepareBalancesForOrdersAsync([order]);
             const sig = await testUtils.createOrderSignature(order);
-            
+
             // Fill the order first
             await nativeOrdersFeature.connect(taker).fillLimitOrder(order, sig, order.takerAmount);
-            
+
             // Advance time to expire the order
             await increaseTimeAsync(61);
-            
+
             const info = await nativeOrdersFeature.getLimitOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Filled, // Still reports filled
                 orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: order.takerAmount,
             });
-            
+
             console.log(`✅ Filled then expired order still shows as filled`);
         });
 
-        it('filled order', async function() {
+        it('filled order', async function () {
             const order = getTestLimitOrder();
             await testUtils.fillLimitOrderAsync(order);
             const info = await nativeOrdersFeature.getLimitOrderInfo(order);
@@ -507,11 +503,11 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: order.takerAmount,
             });
-            
+
             console.log(`✅ Filled limit order correctly identified`);
         });
 
-        it('partially filled order', async function() {
+        it('partially filled order', async function () {
             const order = getTestLimitOrder();
             const fillAmount = order.takerAmount - 1n;
             await testUtils.fillLimitOrderAsync(order, { fillAmount });
@@ -521,11 +517,11 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: fillAmount,
             });
-            
+
             console.log(`✅ Partially filled limit order correctly identified`);
         });
 
-        it('filled then cancelled order', async function() {
+        it('filled then cancelled order', async function () {
             const order = getTestLimitOrder();
             await testUtils.fillLimitOrderAsync(order);
             await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
@@ -535,11 +531,11 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: order.takerAmount,
             });
-            
+
             console.log(`✅ Filled then cancelled order still shows as filled`);
         });
 
-        it('partially filled then cancelled order', async function() {
+        it('partially filled then cancelled order', async function () {
             const order = getTestLimitOrder();
             const fillAmount = order.takerAmount - 1n;
             await testUtils.fillLimitOrderAsync(order, { fillAmount });
@@ -550,14 +546,14 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: fillAmount,
             });
-            
+
             console.log(`✅ Partially filled then cancelled order correctly identified`);
         });
 
-        it('invalid taker', async function() {
-            const order = getTestLimitOrder({ 
+        it('invalid taker', async function () {
+            const order = getTestLimitOrder({
                 taker: generateRandomAddress(),
-                takerToken: NULL_ADDRESS // Invalid taker token
+                takerToken: NULL_ADDRESS, // Invalid taker token
             });
             const info = await nativeOrdersFeature.getLimitOrderInfo(order);
             assertOrderInfoEquals(info, {
@@ -565,13 +561,13 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 orderHash: await nativeOrdersFeature.getLimitOrderHash(order),
                 takerTokenFilledAmount: ZERO_AMOUNT,
             });
-            
+
             console.log(`✅ Invalid taker order correctly identified`);
         });
     });
 
-    describe('getRfqOrderInfo()', function() {
-        it('valid order', async function() {
+    describe('getRfqOrderInfo()', function () {
+        it('valid order', async function () {
             const order = getTestRfqOrder();
             const info = await nativeOrdersFeature.getRfqOrderInfo(order);
             assertOrderInfoEquals(info, {
@@ -579,11 +575,11 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: ZERO_AMOUNT,
             });
-            
+
             console.log(`✅ Valid RFQ order - Status: ${info.status}`);
         });
 
-        it('expired order', async function() {
+        it('expired order', async function () {
             const expiry = createExpiry(-60);
             const order = getTestRfqOrder({ expiry });
             const info = await nativeOrdersFeature.getRfqOrderInfo(order);
@@ -592,33 +588,33 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: ZERO_AMOUNT,
             });
-            
+
             console.log(`✅ Correctly identified expired RFQ order`);
         });
 
-        it('filled then expired order', async function() {
+        it('filled then expired order', async function () {
             const expiry = createExpiry(60);
             const order = getTestRfqOrder({ expiry });
             await testUtils.prepareBalancesForOrdersAsync([order]);
             const sig = await testUtils.createOrderSignature(order);
-            
+
             // Fill the order first
             await nativeOrdersFeature.connect(taker).fillRfqOrder(order, sig, order.takerAmount);
-            
+
             // Advance time to expire the order
             await increaseTimeAsync(61);
-            
+
             const info = await nativeOrdersFeature.getRfqOrderInfo(order);
             assertOrderInfoEquals(info, {
                 status: OrderStatus.Filled, // Still reports filled
                 orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: order.takerAmount,
             });
-            
+
             console.log(`✅ Filled then expired RFQ order still shows as filled`);
         });
 
-        it('filled order', async function() {
+        it('filled order', async function () {
             const order = getTestRfqOrder();
             await testUtils.fillRfqOrderAsync(order, order.takerAmount, taker);
             const info = await nativeOrdersFeature.getRfqOrderInfo(order);
@@ -627,11 +623,11 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: order.takerAmount,
             });
-            
+
             console.log(`✅ Filled RFQ order correctly identified`);
         });
 
-        it('partially filled order', async function() {
+        it('partially filled order', async function () {
             const order = getTestRfqOrder();
             const fillAmount = order.takerAmount - 1n;
             await testUtils.fillRfqOrderAsync(order, fillAmount);
@@ -641,11 +637,11 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: fillAmount,
             });
-            
+
             console.log(`✅ Partially filled RFQ order correctly identified`);
         });
 
-        it('filled then cancelled order', async function() {
+        it('filled then cancelled order', async function () {
             const order = getTestRfqOrder();
             await testUtils.fillRfqOrderAsync(order);
             await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
@@ -655,11 +651,11 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: order.takerAmount,
             });
-            
+
             console.log(`✅ Filled then cancelled RFQ order still shows as filled`);
         });
 
-        it('partially filled then cancelled order', async function() {
+        it('partially filled then cancelled order', async function () {
             const order = getTestRfqOrder();
             const fillAmount = order.takerAmount - 1n;
             await testUtils.fillRfqOrderAsync(order, fillAmount);
@@ -670,11 +666,11 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: fillAmount,
             });
-            
+
             console.log(`✅ Partially filled then cancelled RFQ order correctly identified`);
         });
 
-        it('invalid origin', async function() {
+        it('invalid origin', async function () {
             const order = getTestRfqOrder({ txOrigin: NULL_ADDRESS });
             const info = await nativeOrdersFeature.getRfqOrderInfo(order);
             assertOrderInfoEquals(info, {
@@ -682,838 +678,830 @@ describe('NativeOrdersFeature - Complete Modern Tests', function() {
                 orderHash: await nativeOrdersFeature.getRfqOrderHash(order),
                 takerTokenFilledAmount: ZERO_AMOUNT,
             });
-            
+
             console.log(`✅ Invalid origin RFQ order correctly identified`);
         });
     });
 
-    describe('cancelLimitOrder()', function() {
-        it('can cancel an unfilled order', async function() {
+    describe('cancelLimitOrder()', function () {
+        it('can cancel an unfilled order', async function () {
             const order = getTestLimitOrder();
             const result = await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
             const receipt = await result.wait();
-            
+
             // Check for OrderCancelled event
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
-            
+
             const { status } = await nativeOrdersFeature.getLimitOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
-            
+
             console.log(`✅ Cancelled unfilled limit order`);
         });
 
-        it('can cancel a fully filled order', async function() {
+        it('can cancel a fully filled order', async function () {
             const order = getTestLimitOrder();
             await testUtils.fillLimitOrderAsync(order);
             const result = await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
             const receipt = await result.wait();
-            
+
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
-            
+
             const { status } = await nativeOrdersFeature.getLimitOrderInfo(order);
             expect(status).to.equal(OrderStatus.Filled); // Still reports filled
-            
+
             console.log(`✅ Cancelled fully filled limit order`);
         });
 
-        it('can cancel a partially filled order', async function() {
+        it('can cancel a partially filled order', async function () {
             const order = getTestLimitOrder();
             await testUtils.fillLimitOrderAsync(order, { fillAmount: order.takerAmount - 1n });
             const result = await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
             const receipt = await result.wait();
-            
+
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
-            
+
             const { status } = await nativeOrdersFeature.getLimitOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
-            
+
             console.log(`✅ Cancelled partially filled limit order`);
         });
 
-        it('can cancel an expired order', async function() {
+        it('can cancel an expired order', async function () {
             const expiry = createExpiry(-60);
             const order = getTestLimitOrder({ expiry });
             const result = await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
             const receipt = await result.wait();
-            
+
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
-            
+
             const { status } = await nativeOrdersFeature.getLimitOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
-            
+
             console.log(`✅ Cancelled expired limit order`);
         });
 
-        it('can cancel a cancelled order', async function() {
+        it('can cancel a cancelled order', async function () {
             const order = getTestLimitOrder();
             await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
             const result = await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
             const receipt = await result.wait();
-            
+
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
-            
+
             const { status } = await nativeOrdersFeature.getLimitOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
-            
+
             console.log(`✅ Cancelled already cancelled limit order`);
         });
 
-        it("cannot cancel someone else's order", async function() {
+        it("cannot cancel someone else's order", async function () {
             const order = getTestLimitOrder();
-            
-            await expect(
-                nativeOrdersFeature.connect(notMaker).cancelLimitOrder(order)
-            ).to.be.revertedWith('OnlyOrderMakerAllowed');
-            
+
+            await expect(nativeOrdersFeature.connect(notMaker).cancelLimitOrder(order)).to.be.revertedWith(
+                'OnlyOrderMakerAllowed',
+            );
+
             console.log(`✅ Correctly rejected non-maker cancellation`);
         });
     });
 
-    describe('cancelRfqOrder()', function() {
-        it('can cancel an unfilled order', async function() {
+    describe('cancelRfqOrder()', function () {
+        it('can cancel an unfilled order', async function () {
             const order = getTestRfqOrder();
             const result = await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
             const receipt = await result.wait();
-            
+
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
-            
+
             const { status } = await nativeOrdersFeature.getRfqOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
-            
+
             console.log(`✅ Cancelled unfilled RFQ order`);
         });
 
-        it('can cancel a fully filled order', async function() {
+        it('can cancel a fully filled order', async function () {
             const order = getTestRfqOrder();
             await testUtils.fillRfqOrderAsync(order);
             const result = await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
             const receipt = await result.wait();
-            
+
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
-            
+
             const { status } = await nativeOrdersFeature.getRfqOrderInfo(order);
             expect(status).to.equal(OrderStatus.Filled); // Still reports filled
-            
+
             console.log(`✅ Cancelled fully filled RFQ order`);
         });
 
-        it('can cancel a partially filled order', async function() {
+        it('can cancel a partially filled order', async function () {
             const order = getTestRfqOrder();
             await testUtils.fillRfqOrderAsync(order, order.takerAmount - 1n);
             const result = await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
             const receipt = await result.wait();
-            
+
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
-            
+
             const { status } = await nativeOrdersFeature.getRfqOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
-            
+
             console.log(`✅ Cancelled partially filled RFQ order`);
         });
 
-        it('can cancel an expired order', async function() {
+        it('can cancel an expired order', async function () {
             const expiry = createExpiry(-60);
             const order = getTestRfqOrder({ expiry });
             const result = await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
             const receipt = await result.wait();
-            
+
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
-            
+
             const { status } = await nativeOrdersFeature.getRfqOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
-            
+
             console.log(`✅ Cancelled expired RFQ order`);
         });
 
-        it('can cancel a cancelled order', async function() {
+        it('can cancel a cancelled order', async function () {
             const order = getTestRfqOrder();
             await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
             const result = await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
             const receipt = await result.wait();
-            
+
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvent).to.not.be.undefined;
-            
+
             const { status } = await nativeOrdersFeature.getRfqOrderInfo(order);
             expect(status).to.equal(OrderStatus.Cancelled);
-            
+
             console.log(`✅ Cancelled already cancelled RFQ order`);
         });
 
-        it("cannot cancel someone else's order", async function() {
+        it("cannot cancel someone else's order", async function () {
             const order = getTestRfqOrder();
-            
-            await expect(
-                nativeOrdersFeature.connect(notMaker).cancelRfqOrder(order)
-            ).to.be.revertedWith('OnlyOrderMakerAllowed');
-            
+
+            await expect(nativeOrdersFeature.connect(notMaker).cancelRfqOrder(order)).to.be.revertedWith(
+                'OnlyOrderMakerAllowed',
+            );
+
             console.log(`✅ Correctly rejected non-maker RFQ cancellation`);
         });
     });
 
-    describe('batchCancelLimitOrders()', function() {
-        it('can cancel multiple orders', async function() {
+    describe('batchCancelLimitOrders()', function () {
+        it('can cancel multiple orders', async function () {
             const orders = [getTestLimitOrder(), getTestLimitOrder(), getTestLimitOrder()];
             const result = await nativeOrdersFeature.connect(maker).batchCancelLimitOrders(orders);
             const receipt = await result.wait();
-            
+
             const cancelEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvents.length).to.equal(orders.length);
-            
+
             const infos = await Promise.all(orders.map(o => nativeOrdersFeature.getLimitOrderInfo(o)));
             expect(infos.map(i => i.status)).to.deep.equal(infos.map(() => OrderStatus.Cancelled));
-            
+
             console.log(`✅ Batch cancelled ${orders.length} limit orders`);
         });
 
-        it("cannot cancel someone else's orders", async function() {
+        it("cannot cancel someone else's orders", async function () {
             const orders = [getTestLimitOrder(), getTestLimitOrder(), getTestLimitOrder()];
-            
-            await expect(
-                nativeOrdersFeature.connect(notMaker).batchCancelLimitOrders(orders)
-            ).to.be.revertedWith('OnlyOrderMakerAllowed');
-            
+
+            await expect(nativeOrdersFeature.connect(notMaker).batchCancelLimitOrders(orders)).to.be.revertedWith(
+                'OnlyOrderMakerAllowed',
+            );
+
             console.log(`✅ Correctly rejected non-maker batch cancellation`);
         });
     });
 
-    describe('batchCancelRfqOrders()', function() {
-        it('can cancel multiple orders', async function() {
+    describe('batchCancelRfqOrders()', function () {
+        it('can cancel multiple orders', async function () {
             const orders = [getTestRfqOrder(), getTestRfqOrder(), getTestRfqOrder()];
             const result = await nativeOrdersFeature.connect(maker).batchCancelRfqOrders(orders);
             const receipt = await result.wait();
-            
+
             const cancelEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'OrderCancelled');
             expect(cancelEvents.length).to.equal(orders.length);
-            
+
             const infos = await Promise.all(orders.map(o => nativeOrdersFeature.getRfqOrderInfo(o)));
             expect(infos.map(i => i.status)).to.deep.equal(infos.map(() => OrderStatus.Cancelled));
-            
+
             console.log(`✅ Batch cancelled ${orders.length} RFQ orders`);
         });
 
-        it("cannot cancel someone else's orders", async function() {
+        it("cannot cancel someone else's orders", async function () {
             const orders = [getTestRfqOrder(), getTestRfqOrder(), getTestRfqOrder()];
-            
-            await expect(
-                nativeOrdersFeature.connect(notMaker).batchCancelRfqOrders(orders)
-            ).to.be.revertedWith('OnlyOrderMakerAllowed');
-            
+
+            await expect(nativeOrdersFeature.connect(notMaker).batchCancelRfqOrders(orders)).to.be.revertedWith(
+                'OnlyOrderMakerAllowed',
+            );
+
             console.log(`✅ Correctly rejected non-maker RFQ batch cancellation`);
         });
     });
 
-    describe('cancelPairOrders()', function() {
-        it('can cancel multiple limit orders of the same pair with salt < minValidSalt', async function() {
+    describe('cancelPairOrders()', function () {
+        it('can cancel multiple limit orders of the same pair with salt < minValidSalt', async function () {
             const orders = [
                 getTestLimitOrder({ salt: 0n }),
                 getTestLimitOrder({ salt: 1n }),
-                getTestLimitOrder({ salt: 2n })
+                getTestLimitOrder({ salt: 2n }),
             ];
-            
+
             // Cancel the first two orders
             const minValidSalt = orders[2].salt;
-            const result = await nativeOrdersFeature.connect(maker).cancelPairLimitOrders(
-                makerToken.target || makerToken.target,
-                takerToken.target || takerToken.target,
-                minValidSalt
-            );
+            const result = await nativeOrdersFeature
+                .connect(maker)
+                .cancelPairLimitOrders(
+                    makerToken.target || makerToken.target,
+                    takerToken.target || takerToken.target,
+                    minValidSalt,
+                );
             const receipt = await result.wait();
-            
+
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'PairCancelledLimitOrders');
             expect(cancelEvent).to.not.be.undefined;
-            
+
             // Check that the first two orders are cancelled
             const info0 = await nativeOrdersFeature.getLimitOrderInfo(orders[0]);
             const info1 = await nativeOrdersFeature.getLimitOrderInfo(orders[1]);
             const info2 = await nativeOrdersFeature.getLimitOrderInfo(orders[2]);
-            
+
             expect(info0.status).to.equal(OrderStatus.Cancelled);
             expect(info1.status).to.equal(OrderStatus.Cancelled);
             expect(info2.status).to.equal(OrderStatus.Fillable);
-            
+
             console.log(`✅ Cancelled pair limit orders with salt < ${minValidSalt}`);
         });
 
-        it('can cancel multiple RFQ orders of the same pair with salt < minValidSalt', async function() {
+        it('can cancel multiple RFQ orders of the same pair with salt < minValidSalt', async function () {
             const orders = [
                 getTestRfqOrder({ salt: 0n }),
                 getTestRfqOrder({ salt: 1n }),
-                getTestRfqOrder({ salt: 2n })
+                getTestRfqOrder({ salt: 2n }),
             ];
-            
+
             // Cancel the first two orders
             const minValidSalt = orders[2].salt;
-            const result = await nativeOrdersFeature.connect(maker).cancelPairRfqOrders(
-                makerToken.target || makerToken.target,
-                takerToken.target || takerToken.target,
-                minValidSalt
-            );
+            const result = await nativeOrdersFeature
+                .connect(maker)
+                .cancelPairRfqOrders(
+                    makerToken.target || makerToken.target,
+                    takerToken.target || takerToken.target,
+                    minValidSalt,
+                );
             const receipt = await result.wait();
-            
+
             const cancelEvent = receipt.logs.find((log: any) => log.fragment?.name === 'PairCancelledRfqOrders');
             expect(cancelEvent).to.not.be.undefined;
-            
+
             // Check that the first two orders are cancelled
             const info0 = await nativeOrdersFeature.getRfqOrderInfo(orders[0]);
             const info1 = await nativeOrdersFeature.getRfqOrderInfo(orders[1]);
             const info2 = await nativeOrdersFeature.getRfqOrderInfo(orders[2]);
-            
+
             expect(info0.status).to.equal(OrderStatus.Cancelled);
             expect(info1.status).to.equal(OrderStatus.Cancelled);
             expect(info2.status).to.equal(OrderStatus.Fillable);
-            
+
             console.log(`✅ Cancelled pair RFQ orders with salt < ${minValidSalt}`);
         });
     });
 
-    describe('batchCancelPairOrders()', function() {
-        it('can cancel multiple pairs of limit orders', async function() {
+    describe('batchCancelPairOrders()', function () {
+        it('can cancel multiple pairs of limit orders', async function () {
             const pairs = [
                 {
                     makerToken: makerToken.target || makerToken.target,
                     takerToken: takerToken.target || takerToken.target,
-                    minValidSalt: 1n
+                    minValidSalt: 1n,
                 },
                 {
                     makerToken: takerToken.target || takerToken.target,
                     takerToken: makerToken.target || makerToken.target,
-                    minValidSalt: 1n
-                }
+                    minValidSalt: 1n,
+                },
             ];
-            
+
             const result = await nativeOrdersFeature.connect(maker).batchCancelPairLimitOrders(pairs);
             const receipt = await result.wait();
-            
+
             const cancelEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'PairCancelledLimitOrders');
             expect(cancelEvents.length).to.equal(pairs.length);
-            
+
             console.log(`✅ Batch cancelled ${pairs.length} limit order pairs`);
         });
 
-        it('can cancel multiple pairs of RFQ orders', async function() {
+        it('can cancel multiple pairs of RFQ orders', async function () {
             const pairs = [
                 {
                     makerToken: makerToken.target || makerToken.target,
                     takerToken: takerToken.target || takerToken.target,
-                    minValidSalt: 1n
+                    minValidSalt: 1n,
                 },
                 {
                     makerToken: takerToken.target || takerToken.target,
                     takerToken: makerToken.target || makerToken.target,
-                    minValidSalt: 1n
-                }
+                    minValidSalt: 1n,
+                },
             ];
-            
+
             const result = await nativeOrdersFeature.connect(maker).batchCancelPairRfqOrders(pairs);
             const receipt = await result.wait();
-            
+
             const cancelEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'PairCancelledRfqOrders');
             expect(cancelEvents.length).to.equal(pairs.length);
-            
+
             console.log(`✅ Batch cancelled ${pairs.length} RFQ order pairs`);
         });
     });
 
-    describe('fillLimitOrder()', function() {
-        it('can fully fill a limit order', async function() {
+    describe('fillLimitOrder()', function () {
+        it('can fully fill a limit order', async function () {
             const order = getTestLimitOrder();
             const result = await testUtils.fillLimitOrderAsync(order);
             const receipt = await result.wait();
-            
+
             // Check for LimitOrderFilled event
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'LimitOrderFilled');
             expect(fillEvent).to.not.be.undefined;
-            
+
             // Check final balances
             const makerBalance = await takerToken.balanceOf(order.maker);
             const takerBalance = await makerToken.balanceOf(taker.target);
             expect(Number(makerBalance)).to.equal(Number(order.takerAmount));
             expect(Number(takerBalance)).to.equal(Number(order.makerAmount));
-            
-            console.log(`✅ Fully filled limit order: ${ethers.formatEther(order.takerAmount.toString())} taker tokens`);
+
+            console.log(
+                `✅ Fully filled limit order: ${ethers.formatEther(order.takerAmount.toString())} taker tokens`,
+            );
         });
 
-        it('can partially fill a limit order', async function() {
+        it('can partially fill a limit order', async function () {
             const order = getTestLimitOrder();
             const fillAmount = order.takerAmount / 2n;
             const result = await testUtils.fillLimitOrderAsync(order, { fillAmount });
             const receipt = await result.wait();
-            
+
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'LimitOrderFilled');
             expect(fillEvent).to.not.be.undefined;
-            
+
             // Check partial fill
             const info = await nativeOrdersFeature.getLimitOrderInfo(order);
             expect(info.takerTokenFilledAmount).to.equal(fillAmount);
-            
-            console.log(`✅ Partially filled limit order: ${ethers.formatEther(fillAmount.toString())} / ${ethers.formatEther(order.takerAmount.toString())}`);
+
+            console.log(
+                `✅ Partially filled limit order: ${ethers.formatEther(fillAmount.toString())} / ${ethers.formatEther(order.takerAmount.toString())}`,
+            );
         });
 
-        it('cannot fill with wrong taker', async function() {
+        it('cannot fill with wrong taker', async function () {
             const order = getTestLimitOrder({ taker: notTaker.target });
-            
-            await expect(
-                testUtils.fillLimitOrderAsync(order)
-            ).to.be.revertedWith('OrderNotFillableByTaker');
-            
+
+            await expect(testUtils.fillLimitOrderAsync(order)).to.be.revertedWith('OrderNotFillableByTaker');
+
             console.log(`✅ Correctly rejected wrong taker for limit order`);
         });
 
-        it('cannot fill expired order', async function() {
+        it('cannot fill expired order', async function () {
             const order = getTestLimitOrder({ expiry: createExpiry(-60) });
-            
-            await expect(
-                testUtils.fillLimitOrderAsync(order)
-            ).to.be.revertedWith('OrderNotFillable');
-            
+
+            await expect(testUtils.fillLimitOrderAsync(order)).to.be.revertedWith('OrderNotFillable');
+
             console.log(`✅ Correctly rejected expired limit order`);
         });
 
-        it('cannot overfill an order', async function() {
+        it('cannot overfill an order', async function () {
             const order = getTestLimitOrder();
             await testUtils.fillLimitOrderAsync(order);
-            
-            await expect(
-                testUtils.fillLimitOrderAsync(order)
-            ).to.be.revertedWith('OrderNotFillable');
-            
+
+            await expect(testUtils.fillLimitOrderAsync(order)).to.be.revertedWith('OrderNotFillable');
+
             console.log(`✅ Correctly prevented overfilling limit order`);
         });
 
-        it('pays protocol fees', async function() {
+        it('pays protocol fees', async function () {
             const order = getTestLimitOrder();
             const balanceBefore = await ethers.provider.getBalance(taker.target);
-            
+
             const result = await testUtils.fillLimitOrderAsync(order);
             await result.wait();
-            
+
             const balanceAfter = await ethers.provider.getBalance(taker.target);
             const gasUsed = balanceBefore - balanceAfter;
-            
+
             // Should have paid some gas (including protocol fees)
             expect(gasUsed > 0n).to.be.true;
-            
+
             console.log(`✅ Paid protocol fees: ${ethers.formatEther(gasUsed)} ETH`);
         });
     });
 
-    describe('registerAllowedRfqOrigins()', function() {
-        it('can register allowed origins', async function() {
+    describe('registerAllowedRfqOrigins()', function () {
+        it('can register allowed origins', async function () {
             const origins = [generateRandomAddress(), generateRandomAddress()];
-            
+
             const result = await nativeOrdersFeature.connect(taker).registerAllowedRfqOrigins(origins, true);
             const receipt = await result.wait();
-            
+
             // Check for registration events
             const registerEvents = receipt.logs.filter((log: any) => log.fragment?.name === 'RfqOriginRegistered');
             expect(registerEvents.length).to.equal(origins.length);
-            
+
             // Check registration (assuming contract has a method to check)
             for (const origin of origins) {
                 const isAllowed = await zeroEx.isAllowedRfqOrigin(taker.target, origin);
                 expect(isAllowed).to.be.true;
             }
-            
+
             console.log(`✅ Registered ${origins.length} allowed RFQ origins`);
         });
 
-        it('can unregister allowed origins', async function() {
+        it('can unregister allowed origins', async function () {
             const origins = [generateRandomAddress()];
-            
+
             // Register first
             await nativeOrdersFeature.connect(taker).registerAllowedRfqOrigins(origins, true);
-            
+
             // Then unregister
             const result = await nativeOrdersFeature.connect(taker).registerAllowedRfqOrigins(origins, false);
             const receipt = await result.wait();
-            
+
             const unregisterEvent = receipt.logs.filter((log: any) => log.fragment?.name === 'RfqOriginUnregistered');
             expect(unregisterEvent.length).to.equal(origins.length);
-            
+
             const isAllowed = await zeroEx.isAllowedRfqOrigin(taker.target, origins[0]);
             expect(isAllowed).to.be.false;
-            
+
             console.log(`✅ Unregistered allowed RFQ origins`);
         });
     });
 
-    describe('fillRfqOrder()', function() {
-        it('can fully fill an RFQ order', async function() {
+    describe('fillRfqOrder()', function () {
+        it('can fully fill an RFQ order', async function () {
             const order = getTestRfqOrder();
             const result = await testUtils.fillRfqOrderAsync(order);
             const receipt = await result.wait();
-            
+
             // Check for RfqOrderFilled event
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'RfqOrderFilled');
             expect(fillEvent).to.not.be.undefined;
-            
+
             // Check final balances
             const makerBalance = await takerToken.balanceOf(order.maker);
             const takerBalance = await makerToken.balanceOf(order.taker);
             expect(Number(makerBalance)).to.equal(Number(order.takerAmount));
             expect(Number(takerBalance)).to.equal(Number(order.makerAmount));
-            
+
             console.log(`✅ Fully filled RFQ order: ${ethers.formatEther(order.takerAmount.toString())} taker tokens`);
         });
 
-        it('can partially fill an RFQ order', async function() {
+        it('can partially fill an RFQ order', async function () {
             const order = getTestRfqOrder();
             const fillAmount = order.takerAmount / 2n;
             const result = await testUtils.fillRfqOrderAsync(order, fillAmount);
             const receipt = await result.wait();
-            
+
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'RfqOrderFilled');
             expect(fillEvent).to.not.be.undefined;
-            
+
             // Check partial fill
             const info = await nativeOrdersFeature.getRfqOrderInfo(order);
             expect(info.takerTokenFilledAmount).to.equal(fillAmount);
-            
-            console.log(`✅ Partially filled RFQ order: ${ethers.formatEther(fillAmount.toString())} / ${ethers.formatEther(order.takerAmount.toString())}`);
+
+            console.log(
+                `✅ Partially filled RFQ order: ${ethers.formatEther(fillAmount.toString())} / ${ethers.formatEther(order.takerAmount.toString())}`,
+            );
         });
 
-        it('cannot fill with wrong taker', async function() {
+        it('cannot fill with wrong taker', async function () {
             const order = getTestRfqOrder({ taker: notTaker.target });
-            
-            await expect(
-                testUtils.fillRfqOrderAsync(order)
-            ).to.be.revertedWith('OrderNotFillableByTaker');
-            
+
+            await expect(testUtils.fillRfqOrderAsync(order)).to.be.revertedWith('OrderNotFillableByTaker');
+
             console.log(`✅ Correctly rejected wrong taker for RFQ order`);
         });
 
-        it('cannot fill with wrong tx.origin', async function() {
+        it('cannot fill with wrong tx.origin', async function () {
             const order = getTestRfqOrder({ txOrigin: notTaker.target });
-            
-            await expect(
-                testUtils.fillRfqOrderAsync(order)
-            ).to.be.revertedWith('OrderNotFillableByOrigin');
-            
+
+            await expect(testUtils.fillRfqOrderAsync(order)).to.be.revertedWith('OrderNotFillableByOrigin');
+
             console.log(`✅ Correctly rejected wrong tx.origin for RFQ order`);
         });
 
-        it('cannot fill expired RFQ order', async function() {
+        it('cannot fill expired RFQ order', async function () {
             const order = getTestRfqOrder({ expiry: createExpiry(-60) });
-            
-            await expect(
-                testUtils.fillRfqOrderAsync(order)
-            ).to.be.revertedWith('OrderNotFillable');
-            
+
+            await expect(testUtils.fillRfqOrderAsync(order)).to.be.revertedWith('OrderNotFillable');
+
             console.log(`✅ Correctly rejected expired RFQ order`);
         });
 
-        it('cannot overfill an RFQ order', async function() {
+        it('cannot overfill an RFQ order', async function () {
             const order = getTestRfqOrder();
             await testUtils.fillRfqOrderAsync(order);
-            
-            await expect(
-                testUtils.fillRfqOrderAsync(order)
-            ).to.be.revertedWith('OrderNotFillable');
-            
+
+            await expect(testUtils.fillRfqOrderAsync(order)).to.be.revertedWith('OrderNotFillable');
+
             console.log(`✅ Correctly prevented overfilling RFQ order`);
         });
     });
 
-    describe('fillOrKillLimitOrder()', function() {
-        it('can fill or kill a fillable limit order', async function() {
+    describe('fillOrKillLimitOrder()', function () {
+        it('can fill or kill a fillable limit order', async function () {
             const order = getTestLimitOrder();
             const result = await testUtils.fillOrKillLimitOrderAsync(order);
             const receipt = await result.wait();
-            
+
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'LimitOrderFilled');
             expect(fillEvent).to.not.be.undefined;
-            
+
             console.log(`✅ Fill-or-kill succeeded for limit order`);
         });
 
-        it('kills partially fillable order', async function() {
+        it('kills partially fillable order', async function () {
             const order = getTestLimitOrder();
             // Partially fill first
             await testUtils.fillLimitOrderAsync(order, { fillAmount: order.takerAmount / 2n });
-            
-            await expect(
-                testUtils.fillOrKillLimitOrderAsync(order)
-            ).to.be.revertedWith('IncompleteFillError');
-            
+
+            await expect(testUtils.fillOrKillLimitOrderAsync(order)).to.be.revertedWith('IncompleteFillError');
+
             console.log(`✅ Fill-or-kill correctly killed partially filled order`);
         });
 
-        it('kills unfillable order', async function() {
+        it('kills unfillable order', async function () {
             const order = getTestLimitOrder({ expiry: createExpiry(-60) });
-            
-            await expect(
-                testUtils.fillOrKillLimitOrderAsync(order)
-            ).to.be.revertedWith('OrderNotFillable');
-            
+
+            await expect(testUtils.fillOrKillLimitOrderAsync(order)).to.be.revertedWith('OrderNotFillable');
+
             console.log(`✅ Fill-or-kill correctly killed unfillable order`);
         });
     });
 
-    describe('fillOrKillRfqOrder()', function() {
-        it('can fill or kill a fillable RFQ order', async function() {
+    describe('fillOrKillRfqOrder()', function () {
+        it('can fill or kill a fillable RFQ order', async function () {
             const order = getTestRfqOrder();
             const result = await testUtils.fillOrKillRfqOrderAsync(order);
             const receipt = await result.wait();
-            
+
             const fillEvent = receipt.logs.find((log: any) => log.fragment?.name === 'RfqOrderFilled');
             expect(fillEvent).to.not.be.undefined;
-            
+
             console.log(`✅ Fill-or-kill succeeded for RFQ order`);
         });
 
-        it('kills partially fillable RFQ order', async function() {
+        it('kills partially fillable RFQ order', async function () {
             const order = getTestRfqOrder();
             // Partially fill first
             await testUtils.fillRfqOrderAsync(order, order.takerAmount / 2n);
-            
-            await expect(
-                testUtils.fillOrKillRfqOrderAsync(order)
-            ).to.be.revertedWith('IncompleteFillError');
-            
+
+            await expect(testUtils.fillOrKillRfqOrderAsync(order)).to.be.revertedWith('IncompleteFillError');
+
             console.log(`✅ Fill-or-kill correctly killed partially filled RFQ order`);
         });
 
-        it('kills unfillable RFQ order', async function() {
+        it('kills unfillable RFQ order', async function () {
             const order = getTestRfqOrder({ expiry: createExpiry(-60) });
-            
-            await expect(
-                testUtils.fillOrKillRfqOrderAsync(order)
-            ).to.be.revertedWith('OrderNotFillable');
-            
+
+            await expect(testUtils.fillOrKillRfqOrderAsync(order)).to.be.revertedWith('OrderNotFillable');
+
             console.log(`✅ Fill-or-kill correctly killed unfillable RFQ order`);
         });
     });
 
-    describe('getLimitOrderRelevantState()', function() {
-        it('returns correct state for fillable order', async function() {
+    describe('getLimitOrderRelevantState()', function () {
+        it('returns correct state for fillable order', async function () {
             const order = getTestLimitOrder();
             const state = await zeroEx.getLimitOrderRelevantState(order, taker.target);
-            
+
             expect(state.orderInfo.status).to.equal(OrderStatus.Fillable);
             expect(state.actualFillableTakerTokenAmount).to.equal(order.takerAmount);
             expect(state.isSignatureValid).to.be.true;
-            
-            console.log(`✅ Limit order relevant state - Fillable: ${ethers.formatEther(state.actualFillableTakerTokenAmount.toString())}`);
+
+            console.log(
+                `✅ Limit order relevant state - Fillable: ${ethers.formatEther(state.actualFillableTakerTokenAmount.toString())}`,
+            );
         });
 
-        it('returns zero fillable for expired order', async function() {
+        it('returns zero fillable for expired order', async function () {
             const order = getTestLimitOrder({ expiry: createExpiry(-60) });
             const state = await zeroEx.getLimitOrderRelevantState(order, taker.target);
-            
+
             expect(state.orderInfo.status).to.equal(OrderStatus.Expired);
             expect(state.actualFillableTakerTokenAmount).to.equal(0n);
-            
+
             console.log(`✅ Correctly identified expired order with zero fillable amount`);
         });
 
-        it('returns partial fillable for partially filled order', async function() {
+        it('returns partial fillable for partially filled order', async function () {
             const order = getTestLimitOrder();
             const fillAmount = order.takerAmount / 2n;
             await testUtils.fillLimitOrderAsync(order, { fillAmount });
-            
+
             const state = await zeroEx.getLimitOrderRelevantState(order, taker.target);
-            
+
             expect(state.orderInfo.status).to.equal(OrderStatus.Fillable);
             expect(state.actualFillableTakerTokenAmount).to.equal(order.takerAmount - fillAmount);
-            
+
             console.log(`✅ Partially filled order shows correct remaining fillable amount`);
         });
 
-        it('returns correct state for cancelled order', async function() {
+        it('returns correct state for cancelled order', async function () {
             const order = getTestLimitOrder();
             await nativeOrdersFeature.connect(maker).cancelLimitOrder(order);
-            
+
             const state = await zeroEx.getLimitOrderRelevantState(order, taker.target);
-            
+
             expect(state.orderInfo.status).to.equal(OrderStatus.Cancelled);
             expect(state.actualFillableTakerTokenAmount).to.equal(0n);
-            
+
             console.log(`✅ Cancelled order shows zero fillable amount`);
         });
 
-        it('checks signature validity', async function() {
+        it('checks signature validity', async function () {
             const order = getTestLimitOrder();
             const state = await zeroEx.getLimitOrderRelevantState(order, taker.target);
-            
+
             expect(state.isSignatureValid).to.be.true;
-            
+
             console.log(`✅ Signature validity correctly checked`);
         });
     });
 
-    describe('getRfqOrderRelevantState()', function() {
-        it('returns correct state for fillable RFQ order', async function() {
+    describe('getRfqOrderRelevantState()', function () {
+        it('returns correct state for fillable RFQ order', async function () {
             const order = getTestRfqOrder();
             const state = await zeroEx.getRfqOrderRelevantState(order, taker.target);
-            
+
             expect(state.orderInfo.status).to.equal(OrderStatus.Fillable);
             expect(state.actualFillableTakerTokenAmount).to.equal(order.takerAmount);
             expect(state.isSignatureValid).to.be.true;
-            
-            console.log(`✅ RFQ order relevant state - Fillable: ${ethers.formatEther(state.actualFillableTakerTokenAmount.toString())}`);
+
+            console.log(
+                `✅ RFQ order relevant state - Fillable: ${ethers.formatEther(state.actualFillableTakerTokenAmount.toString())}`,
+            );
         });
 
-        it('returns zero fillable for expired RFQ order', async function() {
+        it('returns zero fillable for expired RFQ order', async function () {
             const order = getTestRfqOrder({ expiry: createExpiry(-60) });
             const state = await zeroEx.getRfqOrderRelevantState(order, taker.target);
-            
+
             expect(state.orderInfo.status).to.equal(OrderStatus.Expired);
             expect(state.actualFillableTakerTokenAmount).to.equal(0n);
-            
+
             console.log(`✅ Correctly identified expired RFQ order with zero fillable amount`);
         });
 
-        it('returns partial fillable for partially filled RFQ order', async function() {
+        it('returns partial fillable for partially filled RFQ order', async function () {
             const order = getTestRfqOrder();
             const fillAmount = order.takerAmount / 2n;
             await testUtils.fillRfqOrderAsync(order, fillAmount);
-            
+
             const state = await zeroEx.getRfqOrderRelevantState(order, taker.target);
-            
+
             expect(state.orderInfo.status).to.equal(OrderStatus.Fillable);
             expect(state.actualFillableTakerTokenAmount).to.equal(order.takerAmount - fillAmount);
-            
+
             console.log(`✅ Partially filled RFQ order shows correct remaining fillable amount`);
         });
 
-        it('returns correct state for cancelled RFQ order', async function() {
+        it('returns correct state for cancelled RFQ order', async function () {
             const order = getTestRfqOrder();
             await nativeOrdersFeature.connect(maker).cancelRfqOrder(order);
-            
+
             const state = await zeroEx.getRfqOrderRelevantState(order, taker.target);
-            
+
             expect(state.orderInfo.status).to.equal(OrderStatus.Cancelled);
             expect(state.actualFillableTakerTokenAmount).to.equal(0n);
-            
+
             console.log(`✅ Cancelled RFQ order shows zero fillable amount`);
         });
 
-        it('checks signature validity for RFQ order', async function() {
+        it('checks signature validity for RFQ order', async function () {
             const order = getTestRfqOrder();
             const state = await zeroEx.getRfqOrderRelevantState(order, taker.target);
-            
+
             expect(state.isSignatureValid).to.be.true;
-            
+
             console.log(`✅ RFQ signature validity correctly checked`);
         });
     });
 
-    describe('batchGetLimitOrderRelevantStates()', function() {
-        it('returns correct states for multiple orders', async function() {
+    describe('batchGetLimitOrderRelevantStates()', function () {
+        it('returns correct states for multiple orders', async function () {
             const orders = [
                 getTestLimitOrder(),
                 getTestLimitOrder({ expiry: createExpiry(-60) }), // expired
-                getTestLimitOrder()
+                getTestLimitOrder(),
             ];
-            
+
             // Fill the third order partially
             await testUtils.fillLimitOrderAsync(orders[2], { fillAmount: orders[2].takerAmount / 2n });
-            
+
             const states = await zeroEx.batchGetLimitOrderRelevantStates(orders, taker.target);
-            
+
             expect(states.length).to.equal(orders.length);
             expect(states[0].orderInfo.status).to.equal(OrderStatus.Fillable);
             expect(states[1].orderInfo.status).to.equal(OrderStatus.Expired);
             expect(states[2].orderInfo.status).to.equal(OrderStatus.Fillable);
             expect(states[2].actualFillableTakerTokenAmount).to.equal(orders[2].takerAmount / 2n);
-            
+
             console.log(`✅ Batch got states for ${orders.length} limit orders`);
         });
 
-        it('handles empty array', async function() {
+        it('handles empty array', async function () {
             const states = await zeroEx.batchGetLimitOrderRelevantStates([], taker.target);
             expect(states.length).to.equal(0);
-            
+
             console.log(`✅ Correctly handled empty order array`);
         });
     });
 
-    describe('batchGetRfqOrderRelevantStates()', function() {
-        it('returns correct states for multiple RFQ orders', async function() {
+    describe('batchGetRfqOrderRelevantStates()', function () {
+        it('returns correct states for multiple RFQ orders', async function () {
             const orders = [
                 getTestRfqOrder(),
                 getTestRfqOrder({ expiry: createExpiry(-60) }), // expired
-                getTestRfqOrder()
+                getTestRfqOrder(),
             ];
-            
+
             // Fill the third order partially
             await testUtils.fillRfqOrderAsync(orders[2], orders[2].takerAmount / 2n);
-            
+
             const states = await zeroEx.batchGetRfqOrderRelevantStates(orders, taker.target);
-            
+
             expect(states.length).to.equal(orders.length);
             expect(states[0].orderInfo.status).to.equal(OrderStatus.Fillable);
             expect(states[1].orderInfo.status).to.equal(OrderStatus.Expired);
             expect(states[2].orderInfo.status).to.equal(OrderStatus.Fillable);
             expect(states[2].actualFillableTakerTokenAmount).to.equal(orders[2].takerAmount / 2n);
-            
+
             console.log(`✅ Batch got states for ${orders.length} RFQ orders`);
         });
 
-        it('handles empty array', async function() {
+        it('handles empty array', async function () {
             const states = await zeroEx.batchGetRfqOrderRelevantStates([], taker.target);
             expect(states.length).to.equal(0);
-            
+
             console.log(`✅ Correctly handled empty RFQ order array`);
         });
     });
 
-    describe('registerAllowedSigner()', function() {
-        it('can register an allowed signer', async function() {
+    describe('registerAllowedSigner()', function () {
+        it('can register an allowed signer', async function () {
             const signerAddress = generateRandomAddress();
             const allowed = true;
-            
+
             const result = await nativeOrdersFeature.connect(maker).registerAllowedSigner(signerAddress, allowed);
             const receipt = await result.wait();
-            
+
             const registerEvent = receipt.logs.find((log: any) => log.fragment?.name === 'SignerRegistered');
             expect(registerEvent).to.not.be.undefined;
-            
+
             const isAllowed = await zeroEx.isAllowedSigner(maker.target, signerAddress);
             expect(isAllowed).to.equal(allowed);
-            
+
             console.log(`✅ Registered allowed signer: ${signerAddress}`);
         });
 
-        it('can unregister an allowed signer', async function() {
+        it('can unregister an allowed signer', async function () {
             const signerAddress = generateRandomAddress();
-            
+
             // Register first
             await nativeOrdersFeature.connect(maker).registerAllowedSigner(signerAddress, true);
-            
+
             // Then unregister
             const result = await nativeOrdersFeature.connect(maker).registerAllowedSigner(signerAddress, false);
             const receipt = await result.wait();
-            
+
             const unregisterEvent = receipt.logs.find((log: any) => log.fragment?.name === 'SignerUnregistered');
             expect(unregisterEvent).to.not.be.undefined;
-            
+
             const isAllowed = await zeroEx.isAllowedSigner(maker.target, signerAddress);
             expect(isAllowed).to.be.false;
-            
+
             console.log(`✅ Unregistered allowed signer: ${signerAddress}`);
         });
 
-        it('can register multiple signers', async function() {
+        it('can register multiple signers', async function () {
             const signers = [generateRandomAddress(), generateRandomAddress()];
-            
+
             for (const signerAddr of signers) {
                 await nativeOrdersFeature.connect(maker).registerAllowedSigner(signerAddr, true);
                 const isAllowed = await zeroEx.isAllowedSigner(maker.target, signerAddr);
                 expect(isAllowed).to.be.true;
             }
-            
+
             console.log(`✅ Registered ${signers.length} allowed signers`);
         });
     });
-}); 
+});

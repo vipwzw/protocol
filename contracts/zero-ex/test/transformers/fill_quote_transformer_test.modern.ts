@@ -13,13 +13,13 @@ import {
     FillQuoteTransformerBridgeOrder,
     FillQuoteTransformerLimitOrderInfo,
     FillQuoteTransformerRfqOrderInfo,
-    FillQuoteTransformerOtcOrderInfo
+    FillQuoteTransformerOtcOrderInfo,
 } from '@0x/protocol-utils';
 
 // 使用 test-main 完全一致的测试架构
 import {
     deployFillQuoteTransformerTestEnvironment,
-    FillQuoteTransformerTestEnvironment
+    FillQuoteTransformerTestEnvironment,
 } from '../utils/deployment-helper';
 
 // 🎯 参考 test-main 的实现，用现代化 ethers 版本
@@ -107,20 +107,20 @@ interface ExecuteTransformParams {
 
 describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', function () {
     let testEnv: FillQuoteTransformerTestEnvironment;
-    
+
     // 测试账户
     let owner: string;
     let maker: string;
     let taker: string;
     let feeRecipient: string;
     let sender: string;
-    
+
     // 测试常量
-    // 🎯 关键修复：与 test-main 匹配的 TEST_BRIDGE_SOURCE 
+    // 🎯 关键修复：与 test-main 匹配的 TEST_BRIDGE_SOURCE
     // Left half is 0, corresponding to BridgeProtocol.Unknown
     const TEST_BRIDGE_SOURCE = ethers.zeroPadValue(ethers.randomBytes(16), 32);
     const REVERT_AMOUNT = 0xdeadbeefn;
-    
+
     // 零余额对象
     const ZERO_BALANCES: Balances = {
         makerTokenBalance: ZERO_AMOUNT,
@@ -132,7 +132,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
     before(async function () {
         this.timeout(30000);
         console.log('🚀 开始 FillQuoteTransformer 测试环境设置（与 test-main 一致）...');
-        
+
         // 获取测试账户
         const signers = await ethers.getSigners();
         const accounts = signers.slice(0, 20).map((s: any) => s.target);
@@ -140,41 +140,41 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
 
         // 部署完整的 FillQuoteTransformer 测试环境（与 test-main 一致）
         testEnv = await deployFillQuoteTransformerTestEnvironment(accounts);
-        
+
         // ✅ 预先获取代币地址，避免后续地址获取错误
         takerTokenAddress = await testEnv.tokens.takerToken.getAddress();
         makerTokenAddress = await testEnv.tokens.makerToken.getAddress();
         bridgeAddress = await testEnv.bridge.getAddress();
-        
+
         // 🎯 根据 TestFillQuoteTransformerHost.sol 的逻辑，不需要预先铸造代币
         // host 合约会根据需要自动铸造：if (inputTokenAmount != 0) { inputToken.mint(address(this), inputTokenAmount); }
         // 移除预先铸造逻辑，避免与 host 合约的自动铸造冲突
-        
+
         console.log('✅ 代币地址获取完成');
         console.log('- Host 合约会根据需要自动铸造代币（无需预先铸造）');
-        
+
         // 🎯 与 test-main 一致：只添加必要的授权
         // 经过测试发现：只有 Host → Exchange 授权是必需的（用于 Limit Orders 的 approveIfBelow）
         console.log('🔑 添加最小必要授权（与 test-main 行为匹配）...');
-        
+
         const hostAddress = await testEnv.host.getAddress();
         const exchangeAddress = await testEnv.exchange.getAddress();
         const maxAllowance = MaxUint256;
-        
+
         // ⭐ 唯一必要的授权：Host → Exchange（用于 Limit Orders 的 approveIfBelow）
         await testEnv.tokens.takerToken.approveAs(hostAddress, exchangeAddress, maxAllowance);
         console.log('✅ Host → Exchange: 无限授权 (修复 Limit Orders 的 approveIfBelow 错误)');
-        
+
         // 🎯 尝试添加 Host → BridgeAdapter 授权（虽然理论上 delegatecall 不需要）
         const bridgeAdapterAddress = await testEnv.bridgeAdapter.getAddress();
         await testEnv.tokens.takerToken.approveAs(hostAddress, bridgeAdapterAddress, maxAllowance);
         console.log('✅ Host → BridgeAdapter: 无限授权 (尝试修复 Bridge Orders)');
-        
+
         // 🎯 添加 Host → Bridge Provider 授权（Bridge Orders 的实际执行者）
         const bridgeProviderAddress = await testEnv.bridge.getAddress();
         await testEnv.tokens.takerToken.approveAs(hostAddress, bridgeProviderAddress, maxAllowance);
         console.log('✅ Host → Bridge Provider: 无限授权 (Bridge Orders 代币转移)');
-        
+
         console.log('🎉 FillQuoteTransformer 测试环境设置完成（最小授权模式，接近 test-main）！');
         console.log('📋 代币地址:');
         console.log('- takerToken:', testEnv.tokens.takerToken.target);
@@ -250,10 +250,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
     function encodeBridgeData(boughtAmount: bigint): string {
         // 🎯 正确的 ABI 编码（已验证工作）
         const lpData = ethers.AbiCoder.defaultAbiCoder().encode(['uint256'], [boughtAmount]);
-        return ethers.AbiCoder.defaultAbiCoder().encode(
-            ['address', 'bytes'],
-            [bridgeAddress, lpData]
-        );
+        return ethers.AbiCoder.defaultAbiCoder().encode(['address', 'bytes'], [bridgeAddress, lpData]);
     }
 
     // 在测试环境设置完成后预先获取地址
@@ -265,7 +262,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
         return {
             side: FillQuoteTransformerSide.Sell,
             sellToken: takerTokenAddress, // ✅ 使用预获取的地址
-            buyToken: makerTokenAddress,  // ✅ 使用预获取的地址
+            buyToken: makerTokenAddress, // ✅ 使用预获取的地址
             bridgeOrders: [],
             limitOrders: [],
             otcOrders: [],
@@ -291,7 +288,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
 
     function normalizeFillAmount(raw: bigint, balance: bigint): bigint {
         if (raw >= HIGH_BIT) {
-            return (raw - HIGH_BIT) * balance / BigInt(1e18);
+            return ((raw - HIGH_BIT) * balance) / BigInt(1e18);
         }
         return raw;
     }
@@ -299,7 +296,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
     // 简化的余额检查和结果预测（用于演示）
     function getExpectedQuoteFillResults(
         data: FillQuoteTransformerData,
-        state: SimulationState = createSimulationState()
+        state: SimulationState = createSimulationState(),
     ): QuoteFillResults {
         // 简化实现 - 在真实迁移中需要完整实现复杂的模拟逻辑
         let takerTokensSpent = 0n;
@@ -333,17 +330,17 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
 
     async function executeTransformAsync(params: ExecuteTransformParams = {}): Promise<any> {
         const data = params.data || createTransformData();
-        
+
         // 🎯 关键修复：使用与 test-main 完全一致的 takerTokenBalance 计算逻辑
         // test-main: 不对 MAX_UINT256 进行特殊处理，直接使用传递的 takerTokenBalance
         let takerTokenBalance = params.takerTokenBalance || data.fillAmount;
-        
+
         // ❌ 移除错误的 MAX_UINT256 特殊处理逻辑
         // if (data.fillAmount === MAX_UINT256) {
         //     // 计算所有桥接订单的 takerTokenAmount 总和
         //     takerTokenBalance = data.bridgeOrders.reduce((sum, order) => sum + order.takerTokenAmount, 0n);
         // }
-        
+
         const _params = {
             takerTokenBalance,
             ethBalance: 0n,
@@ -364,17 +361,17 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
         console.log('- sender:', _params.sender);
         console.log('- recipient:', _params.taker);
         console.log('- data 长度:', encodedData.length, '字符');
-        
+
         // 🔍 调试：检查 host 合约调用前后的余额
         const hostAddress = await testEnv.host.getAddress();
         const transformerAddress = await testEnv.transformer.getAddress();
         const balanceBefore = await testEnv.tokens.takerToken.balanceOf(hostAddress);
         console.log('- Host takerToken balance BEFORE executeTransform:', balanceBefore.toString());
-        
+
         // 🔍 调试：检查授权
         const allowance = await testEnv.tokens.takerToken.allowance(hostAddress, transformerAddress);
         console.log('- Host → FillQuoteTransformer allowance:', allowance.toString());
-        
+
         // 🔍 调试：检查 bridgeData 编码（仅当有 bridge orders 时）
         if (_params.data.bridgeOrders.length > 0) {
             console.log('- Bridge address used in bridgeData:', bridgeAddress);
@@ -391,11 +388,9 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
         }
 
         // 🎯 调试：检查铸造前后的余额
-        const transformerBalance = await testEnv.tokens.takerToken.balanceOf(
-            await testEnv.transformer.getAddress()
-        );
+        const transformerBalance = await testEnv.tokens.takerToken.balanceOf(await testEnv.transformer.getAddress());
         console.log('- Transformer takerToken balance BEFORE executeTransform:', transformerBalance.toString());
-        
+
         // 🎯 使用现代 ethers v6 的正确参数类型
         const tx = await testEnv.host.executeTransform(
             testEnv.transformer.target || testEnv.transformer.target,
@@ -404,21 +399,21 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
             _params.sender, // ✅ string: sender
             _params.taker || _params.sender, // ✅ string: recipient
             encodedData, // ✅ bytes: transform 数据
-            { value: _params.ethBalance } // ✅ options: msg.value = ethBalance
+            { value: _params.ethBalance }, // ✅ options: msg.value = ethBalance
         );
-        
+
         // 等待交易完成
         const receipt = await tx.wait();
-        
+
         // 🎯 调试：检查铸造后的余额
         const transformerBalanceAfter = await testEnv.tokens.takerToken.balanceOf(
-            await testEnv.transformer.getAddress()
+            await testEnv.transformer.getAddress(),
         );
         console.log('- Transformer takerToken balance AFTER executeTransform:', transformerBalanceAfter.toString());
-        
+
         const balanceAfter = await testEnv.tokens.takerToken.balanceOf(hostAddress);
         console.log('- Host takerToken balance AFTER executeTransform:', balanceAfter.toString());
-        
+
         const bridgeBalance = await testEnv.tokens.takerToken.balanceOf(bridgeAddress);
         const hostMakerBalance = await testEnv.tokens.makerToken.balanceOf(hostAddress);
         console.log('- Host takerToken balance AFTER executeTransform:', balanceAfter.toString());
@@ -431,7 +426,9 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
 
     async function assertFinalBalancesAsync(qfr: QuoteFillResults): Promise<void> {
         // 简化的余额断言 - 在真实迁移中需要完整实现
-        console.log(`✅ 预期结果: 买入 ${qfr.makerTokensBought}, 卖出 ${qfr.takerTokensSpent}, 费用 ${qfr.protocolFeePaid}`);
+        console.log(
+            `✅ 预期结果: 买入 ${qfr.makerTokensBought}, 卖出 ${qfr.takerTokensSpent}, 费用 ${qfr.protocolFeePaid}`,
+        );
     }
 
     // 🔧 基础功能测试
@@ -444,8 +441,6 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
         });
     });
 
-
-
     // 💰 Sell Quotes (16个测试用例)
     describe('💰 Sell Quotes', function () {
         it('1️⃣ can fully sell to a single bridge order with -1 fillAmount', async function () {
@@ -456,12 +451,12 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
                 fillSequence: bridgeOrders.map(() => FillQuoteTransformerOrderType.Bridge),
             });
             const qfr = getExpectedQuoteFillResults(data);
-            
+
             await executeTransformAsync({
                 takerTokenBalance: data.fillAmount,
                 data: { ...data, fillAmount: MAX_UINT256 },
             });
-            
+
             await assertFinalBalancesAsync(qfr);
             console.log('✅ 测试1: bridge order with -1 fillAmount 通过');
         });
@@ -474,12 +469,12 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
                 fillAmount: encodeFractionalFillAmount(0.5),
                 fillSequence: bridgeOrders.map(() => FillQuoteTransformerOrderType.Bridge),
             });
-            
+
             await executeTransformAsync({
                 takerTokenBalance: totalTakerBalance,
                 data,
             });
-            
+
             console.log('✅ 测试2: partial sell bridge order 通过');
         });
 
@@ -490,7 +485,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
                 fillAmount: bridgeOrders.reduce((sum, o) => sum + o.takerTokenAmount, 0n),
                 fillSequence: bridgeOrders.map(() => FillQuoteTransformerOrderType.Bridge),
             });
-            
+
             try {
                 await executeTransformAsync({
                     takerTokenBalance: data.fillAmount,
@@ -511,12 +506,12 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
                 fillSequence: bridgeOrders.map(() => FillQuoteTransformerOrderType.Bridge),
             });
             const qfr = getExpectedQuoteFillResults(data);
-            
+
             await executeTransformAsync({
                 takerTokenBalance: data.fillAmount,
                 data,
             });
-            
+
             await assertFinalBalancesAsync(qfr);
             console.log('✅ 测试4: fully sell bridge order 通过');
         });
@@ -529,7 +524,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
             console.log('- makerAmount:', limitOrders[0].makerAmount.toString());
             console.log('- maker:', limitOrders[0].maker);
             console.log('- feeRecipient:', limitOrders[0].feeRecipient);
-            
+
             const data = createTransformData({
                 limitOrders: limitOrders.map(o => ({
                     order: o,
@@ -539,24 +534,24 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
                 fillAmount: limitOrders.reduce((sum, o) => sum + o.takerAmount + o.takerTokenFeeAmount, 0n),
                 fillSequence: limitOrders.map(() => FillQuoteTransformerOrderType.Limit),
             });
-            
+
             console.log('🔍 Transform Data:');
             console.log('- fillAmount:', data.fillAmount.toString());
             console.log('- 计算结果:', (limitOrders[0].takerAmount + limitOrders[0].takerTokenFeeAmount).toString());
-            
+
             // 🎯 关键修复：为 Limit Order 提供协议费用（ETH）
             const protocolFeePerOrder = 1337n * 1337n; // PROTOCOL_FEE_MULTIPLIER * GAS_PRICE
             const totalProtocolFee = protocolFeePerOrder * BigInt(limitOrders.length);
             console.log('🔍 协议费用计算:');
             console.log('- 单个订单协议费用:', protocolFeePerOrder.toString());
             console.log('- 总协议费用:', totalProtocolFee.toString());
-            
+
             await executeTransformAsync({
                 takerTokenBalance: data.fillAmount,
-                ethBalance: totalProtocolFee,  // 🎯 提供协议费用
+                ethBalance: totalProtocolFee, // 🎯 提供协议费用
                 data,
             });
-            
+
             console.log('✅ 测试5: fully sell limit order 通过');
         });
 
@@ -568,7 +563,7 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
             console.log('- takerTokenFeeAmount:', limitOrders[0].takerTokenFeeAmount.toString());
             console.log('- maker:', limitOrders[0].maker);
             console.log('- feeRecipient:', limitOrders[0].feeRecipient);
-            
+
             const data = createTransformData({
                 limitOrders: limitOrders.map(o => ({
                     order: o,
@@ -578,17 +573,17 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
                 fillAmount: limitOrders.reduce((sum, o) => sum + o.takerAmount + o.takerTokenFeeAmount, 0n),
                 fillSequence: limitOrders.map(() => FillQuoteTransformerOrderType.Limit),
             });
-            
+
             // 提供协议费用
             const protocolFeePerOrder = 1337n * 1337n;
             const totalProtocolFee = protocolFeePerOrder * BigInt(limitOrders.length);
-            
+
             await executeTransformAsync({
                 takerTokenBalance: data.fillAmount,
                 ethBalance: totalProtocolFee,
                 data,
             });
-            
+
             console.log('✅ 测试5-debug: zero fee limit order 通过');
         });
 
@@ -616,12 +611,12 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
                 fillAmount: rfqOrders.reduce((sum, o) => sum + o.takerAmount, 0n),
                 fillSequence: rfqOrders.map(() => FillQuoteTransformerOrderType.Rfq),
             });
-            
+
             await executeTransformAsync({
                 takerTokenBalance: data.fillAmount,
                 data,
             });
-            
+
             console.log('✅ 测试9: fully sell RFQ order 通过');
         });
 
@@ -670,12 +665,12 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
                 fillAmount: bridgeOrders.reduce((sum, o) => sum + o.makerTokenAmount, 0n),
                 fillSequence: bridgeOrders.map(() => FillQuoteTransformerOrderType.Bridge),
             });
-            
+
             await executeTransformAsync({
                 takerTokenBalance: bridgeOrders[0].takerTokenAmount,
                 data,
             });
-            
+
             console.log('✅ 测试18: fully buy bridge order 通过');
         });
 
@@ -685,9 +680,9 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
             console.log('- takerAmount:', limitOrders[0].takerAmount.toString());
             console.log('- takerTokenFeeAmount:', limitOrders[0].takerTokenFeeAmount.toString());
             console.log('- makerAmount:', limitOrders[0].makerAmount.toString());
-            
+
             const data = createTransformData({
-                side: FillQuoteTransformerSide.Buy,  // 🎯 关键：设置为 Buy 侧
+                side: FillQuoteTransformerSide.Buy, // 🎯 关键：设置为 Buy 侧
                 limitOrders: limitOrders.map(o => ({
                     order: o,
                     maxTakerTokenFillAmount: MAX_UINT256,
@@ -696,26 +691,26 @@ describe('🧪 FillQuoteTransformer Modern Tests (27个完整测试用例)', fun
                 fillAmount: limitOrders.reduce((sum, o) => sum + o.makerAmount, 0n), // Buy 侧用 makerAmount
                 fillSequence: limitOrders.map(() => FillQuoteTransformerOrderType.Limit),
             });
-            
+
             console.log('🔍 Buy Transform Data:');
             console.log('- side: Buy');
             console.log('- fillAmount (makerAmount):', data.fillAmount.toString());
-            
+
             // 计算所需的 takerToken 数量（包含手续费）
             const totalTakerTokens = limitOrders.reduce((sum, o) => sum + o.takerAmount + o.takerTokenFeeAmount, 0n);
             const protocolFeePerOrder = 1337n * 1337n;
             const totalProtocolFee = protocolFeePerOrder * BigInt(limitOrders.length);
-            
+
             console.log('🔍 Buy 侧所需资源:');
             console.log('- totalTakerTokens (含手续费):', totalTakerTokens.toString());
             console.log('- totalProtocolFee:', totalProtocolFee.toString());
-            
+
             await executeTransformAsync({
-                takerTokenBalance: totalTakerTokens,  // 🎯 提供足够的 takerToken
-                ethBalance: totalProtocolFee,         // 🎯 提供协议费用
+                takerTokenBalance: totalTakerTokens, // 🎯 提供足够的 takerToken
+                ethBalance: totalProtocolFee, // 🎯 提供协议费用
                 data,
             });
-            
+
             console.log('✅ 测试19: real buy limit order 通过');
         });
 

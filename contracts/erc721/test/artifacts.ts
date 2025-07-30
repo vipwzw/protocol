@@ -21,7 +21,7 @@ export const artifacts = {
     DummyERC721Token: DummyERC721Token,
     DummyERC721Receiver: DummyERC721Receiver,
     InvalidERC721Receiver: InvalidERC721Receiver,
-    
+
     // Production contracts
     ERC721Token: ERC721Token,
     MintableERC721Token: MintableERC721Token,

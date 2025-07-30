@@ -11,7 +11,7 @@ export {
     DummyERC721Receiver__factory,
     InvalidERC721Receiver,
     InvalidERC721Receiver__factory,
-    
+
     // Production contracts for testing
     ERC721Token,
     ERC721Token__factory,
@@ -20,5 +20,5 @@ export {
     IERC721Token,
     IERC721Token__factory,
     IERC721Receiver,
-    IERC721Receiver__factory
+    IERC721Receiver__factory,
 } from '../typechain-types';

@@ -393,11 +393,7 @@ blockchainTests('LibFixedMath unit tests', env => {
 
     describe('mul()', () => {
         function mul(a: Numberish, b: Numberish): BigNumber {
-            return fromFixed(
-                toFixed(a)
-                    .times(toFixed(b))
-                    .dividedToIntegerBy(FIXED_POINT_DIVISOR),
-            );
+            return fromFixed(toFixed(a).times(toFixed(b)).dividedToIntegerBy(FIXED_POINT_DIVISOR));
         }
 
         it('x * 0 == 0', async () => {
@@ -533,11 +529,7 @@ blockchainTests('LibFixedMath unit tests', env => {
 
     describe('div()', () => {
         function div(a: Numberish, b: Numberish): BigNumber {
-            return fromFixed(
-                toFixed(a)
-                    .times(FIXED_POINT_DIVISOR)
-                    .dividedBy(toFixed(b)),
-            );
+            return fromFixed(toFixed(a).times(FIXED_POINT_DIVISOR).dividedBy(toFixed(b)));
         }
 
         it('x / 0 throws', async () => {
@@ -817,11 +809,7 @@ blockchainTests('LibFixedMath unit tests', env => {
         const LN_PRECISION = 16;
 
         function ln(x: Numberish): BigNumber {
-            return new BigNumber(
-                toDecimal(x)
-                    .ln()
-                    .toFixed(128),
-            );
+            return new BigNumber(toDecimal(x).ln().toFixed(128));
         }
 
         it('ln(x = 0) throws', async () => {
@@ -899,11 +887,7 @@ blockchainTests('LibFixedMath unit tests', env => {
         const EXP_PRECISION = 18;
 
         function exp(x: Numberish): BigNumber {
-            return new BigNumber(
-                toDecimal(x)
-                    .exp()
-                    .toFixed(128),
-            );
+            return new BigNumber(toDecimal(x).exp().toFixed(128));
         }
 
         it('exp(x = 0) == 1', async () => {

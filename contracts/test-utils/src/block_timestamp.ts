@@ -21,7 +21,7 @@ export async function increaseTimeAndMineBlockAsync(seconds: number): Promise<nu
     // that a block is actually mined. The contract looks at the
     // last mined block for the timestamp.
     await web3Wrapper.awaitTransactionSuccessAsync(
-        await web3Wrapper.sendTransactionAsync({ from: firstAccount, to: firstAccount, value: 0 })
+        await web3Wrapper.sendTransactionAsync({ from: firstAccount, to: firstAccount, value: 0 }),
     );
 
     return offset;
