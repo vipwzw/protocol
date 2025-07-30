@@ -10,7 +10,9 @@
     "scripts": {
         "build": "tsc -b",
         "build:ci": "yarn build",
-        "clean": "shx rm -rf lib",
+        "clean": "shx rm -rf lib generated_docs coverage .nyc_output *.log",
+        "clean:node-modules": "shx rm -rf node_modules",
+        "clean:all": "yarn clean && yarn clean:node-modules",
         "watch": "tsc -b -w",
         "test": "npx hardhat test",
         "rebuild_and_test": "run-s clean build test",

@@ -14,7 +14,9 @@
         "build:ci": "yarn build",
         "test": "npx mocha test/*.ts --require ts-node/register",
         "test:ci": "yarn test",
-        "clean": "shx rm -rf lib",
+        "clean": "shx rm -rf lib generated_docs coverage .nyc_output *.log",
+        "clean:node-modules": "shx rm -rf node_modules",
+        "clean:all": "yarn clean && yarn clean:node-modules",
         "publish:private": "yarn build && echo 'gitpkg publish disabled'"
     },
     "repository": {
