@@ -5,29 +5,23 @@
  */
 import { ContractArtifact } from 'ethereum-types';
 
-// TODO: Uncomment these imports once Hardhat compilation generates the required artifacts
 // Main contracts
-// import * as IStaking from '../artifacts/contracts/src/interfaces/IStaking.sol/IStaking.json';
-// import * as IStakingEvents from '../artifacts/contracts/src/interfaces/IStakingEvents.sol/IStakingEvents.json';
-// import * as IStakingProxy from '../artifacts/contracts/src/interfaces/IStakingProxy.sol/IStakingProxy.json';
-// import * as IZrxVault from '../artifacts/contracts/src/interfaces/IZrxVault.sol/IZrxVault.json';
-// import * as LibStakingRichErrors from '../artifacts/contracts/src/libs/LibStakingRichErrors.sol/LibStakingRichErrors.json';
-// import * as Staking from '../artifacts/contracts/src/Staking.sol/Staking.json';
-// import * as StakingProxy from '../artifacts/contracts/src/StakingProxy.sol/StakingProxy.json';
-// import * as ZrxVault from '../artifacts/contracts/src/ZrxVault.sol/ZrxVault.json';
-
-// Test contracts
-// import * as TestStaking from '../artifacts/contracts/test/TestStaking.sol/TestStaking.json';
+import * as IStaking from '../artifacts/contracts/src/interfaces/IStaking.sol/IStaking.json';
+import * as IStakingEvents from '../artifacts/contracts/src/interfaces/IStakingEvents.sol/IStakingEvents.json';
+import * as IStakingProxy from '../artifacts/contracts/src/interfaces/IStakingProxy.sol/IStakingProxy.json';
+import * as IZrxVault from '../artifacts/contracts/src/interfaces/IZrxVault.sol/IZrxVault.json';
+import * as LibStakingRichErrors from '../artifacts/contracts/src/libs/LibStakingRichErrors.sol/LibStakingRichErrors.json';
+import * as Staking from '../artifacts/contracts/src/Staking.sol/Staking.json';
+import * as StakingProxy from '../artifacts/contracts/src/StakingProxy.sol/StakingProxy.json';
+import * as ZrxVault from '../artifacts/contracts/src/ZrxVault.sol/ZrxVault.json';
 
 export const artifacts = {
-    // TODO: Re-enable these exports once artifacts are available
-    // IStaking: IStaking as ContractArtifact,
-    // IStakingEvents: IStakingEvents as ContractArtifact,
-    // IStakingProxy: IStakingProxy as ContractArtifact,
-    // IZrxVault: IZrxVault as ContractArtifact,
-    // LibStakingRichErrors: LibStakingRichErrors as ContractArtifact,
-    // Staking: Staking as ContractArtifact,
-    // StakingProxy: StakingProxy as ContractArtifact,
-    // ZrxVault: ZrxVault as ContractArtifact,
-    // TestStaking: TestStaking as ContractArtifact,
+    IStaking: IStaking as unknown as ContractArtifact,
+    IStakingEvents: IStakingEvents as unknown as ContractArtifact,
+    IStakingProxy: IStakingProxy as unknown as ContractArtifact,
+    IZrxVault: IZrxVault as unknown as ContractArtifact,
+    LibStakingRichErrors: LibStakingRichErrors as unknown as ContractArtifact,
+    Staking: Staking as unknown as ContractArtifact,
+    StakingProxy: StakingProxy as unknown as ContractArtifact,
+    ZrxVault: ZrxVault as unknown as ContractArtifact,
 };

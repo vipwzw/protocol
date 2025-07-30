@@ -71,7 +71,8 @@ export async function deployBootstrapFeaturesAsync(
         ...featureArtifacts,
     };
     
-    // TODO: 暂时返回空对象，等待更多 typechain 类型生成
+    // TODO: 实现实际的合约部署逻辑，等待 typechain 生成完整的类型
+    // 目前使用 NULL_ADDRESS 作为占位符
     return {
         registry: features.registry || NULL_ADDRESS,
         ownable: features.ownable || NULL_ADDRESS,
@@ -160,7 +161,8 @@ export async function deployAllFeaturesAsync(
         ...featureArtifacts,
     };
     
-    // TODO: 暂时返回空对象，等待更多 typechain 类型生成
+    // TODO: 实现实际的合约部署逻辑，等待 typechain 生成完整的类型
+    // 目前使用 NULL_ADDRESS 作为占位符
     return {
         registry: features.registry || NULL_ADDRESS,
         ownable: features.ownable || NULL_ADDRESS,

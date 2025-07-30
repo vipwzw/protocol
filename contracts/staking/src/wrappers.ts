@@ -4,19 +4,5 @@
  * -----------------------------------------------------------------------------
  */
 
-// TODO: Uncomment these exports once TypeChain compilation generates the required types
-// Main contract types and factories
-// export * from '../typechain-types/IStaking';
-// export * from '../typechain-types/IStakingEvents';
-// export * from '../typechain-types/IStakingProxy';
-// export * from '../typechain-types/IZrxVault';
-// export * from '../typechain-types/LibStakingRichErrors';
-// export * from '../typechain-types/Staking';
-// export * from '../typechain-types/StakingProxy';
-// export * from '../typechain-types/ZrxVault';
-
-// Test contract types
-// export * from '../typechain-types/TestStaking';
-
-// Export empty object to make this a valid module
-export const wrappers = {};
+// Export all typechain types from the main index file
+export * from '../typechain-types';

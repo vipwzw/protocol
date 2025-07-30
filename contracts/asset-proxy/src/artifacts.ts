@@ -5,36 +5,74 @@
  */
 import { ContractArtifact } from 'ethereum-types';
 
-// TODO: Uncomment these imports once Solidity compilation is successful
-// Asset Proxy Core Interfaces
-// import * as IAssetData from '../artifacts/contracts/src/interfaces/IAssetData.sol/IAssetData.json';
-// import * as IAssetProxy from '../artifacts/contracts/src/interfaces/IAssetProxy.sol/IAssetProxy.json';
-// import * as IAssetProxyDispatcher from '../artifacts/contracts/src/interfaces/IAssetProxyDispatcher.sol/IAssetProxyDispatcher.json';
-// import * as IAuthorizable from '../artifacts/contracts/src/interfaces/IAuthorizable.sol/IAuthorizable.json';
+// Main contracts
+import * as ERC1155Proxy from '../artifacts/contracts/src/ERC1155Proxy.sol/ERC1155Proxy.json';
+import * as ERC20BridgeProxy from '../artifacts/contracts/src/ERC20BridgeProxy.sol/ERC20BridgeProxy.json';
+import * as ERC20Proxy from '../artifacts/contracts/src/ERC20Proxy.sol/ERC20Proxy.json';
+import * as ERC721Proxy from '../artifacts/contracts/src/ERC721Proxy.sol/ERC721Proxy.json';
+import * as MultiAssetProxy from '../artifacts/contracts/src/MultiAssetProxy.sol/MultiAssetProxy.json';
+import * as StaticCallProxy from '../artifacts/contracts/src/StaticCallProxy.sol/StaticCallProxy.json';
 
-// Main Asset Proxies
-// import * as ERC20Proxy from '../artifacts/contracts/src/ERC20Proxy.sol/ERC20Proxy.json';
-// import * as ERC721Proxy from '../artifacts/contracts/src/ERC721Proxy.sol/ERC721Proxy.json';
-// import * as ERC1155Proxy from '../artifacts/contracts/src/ERC1155Proxy.sol/ERC1155Proxy.json';
-// import * as ERC20BridgeProxy from '../artifacts/contracts/src/ERC20BridgeProxy.sol/ERC20BridgeProxy.json';
-// import * as MultiAssetProxy from '../artifacts/contracts/src/MultiAssetProxy.sol/MultiAssetProxy.json';
-// import * as StaticCallProxy from '../artifacts/contracts/src/StaticCallProxy.sol/StaticCallProxy.json';
+// Bridge contracts
+import * as BalancerBridge from '../artifacts/contracts/src/bridges/BalancerBridge.sol/BalancerBridge.json';
+import * as BancorBridge from '../artifacts/contracts/src/bridges/BancorBridge.sol/BancorBridge.json';
+import * as ChaiBridge from '../artifacts/contracts/src/bridges/ChaiBridge.sol/ChaiBridge.json';
+import * as CreamBridge from '../artifacts/contracts/src/bridges/CreamBridge.sol/CreamBridge.json';
+import * as CryptoComBridge from '../artifacts/contracts/src/bridges/CryptoComBridge.sol/CryptoComBridge.json';
+import * as CurveBridge from '../artifacts/contracts/src/bridges/CurveBridge.sol/CurveBridge.json';
+import * as DODOBridge from '../artifacts/contracts/src/bridges/DODOBridge.sol/DODOBridge.json';
+import * as DexForwarderBridge from '../artifacts/contracts/src/bridges/DexForwarderBridge.sol/DexForwarderBridge.json';
+import * as DydxBridge from '../artifacts/contracts/src/bridges/DydxBridge.sol/DydxBridge.json';
+import * as Eth2DaiBridge from '../artifacts/contracts/src/bridges/Eth2DaiBridge.sol/Eth2DaiBridge.json';
+import * as KyberBridge from '../artifacts/contracts/src/bridges/KyberBridge.sol/KyberBridge.json';
+import * as MStableBridge from '../artifacts/contracts/src/bridges/MStableBridge.sol/MStableBridge.json';
+import * as MixinGasToken from '../artifacts/contracts/src/bridges/MixinGasToken.sol/MixinGasToken.json';
+import * as MooniswapBridge from '../artifacts/contracts/src/bridges/MooniswapBridge.sol/MooniswapBridge.json';
+import * as ShellBridge from '../artifacts/contracts/src/bridges/ShellBridge.sol/ShellBridge.json';
+import * as SnowSwapBridge from '../artifacts/contracts/src/bridges/SnowSwapBridge.sol/SnowSwapBridge.json';
+import * as SushiSwapBridge from '../artifacts/contracts/src/bridges/SushiSwapBridge.sol/SushiSwapBridge.json';
+import * as SwerveBridge from '../artifacts/contracts/src/bridges/SwerveBridge.sol/SwerveBridge.json';
+import * as UniswapBridge from '../artifacts/contracts/src/bridges/UniswapBridge.sol/UniswapBridge.json';
+import * as UniswapV2Bridge from '../artifacts/contracts/src/bridges/UniswapV2Bridge.sol/UniswapV2Bridge.json';
 
-// Bridge Interfaces
-// import * as IERC20Bridge from '../artifacts/contracts/src/interfaces/IERC20Bridge.sol/IERC20Bridge.json';
+// Interface contracts
+import * as IAssetData from '../artifacts/contracts/src/interfaces/IAssetData.sol/IAssetData.json';
+import * as IAssetProxy from '../artifacts/contracts/src/interfaces/IAssetProxy.sol/IAssetProxy.json';
+import * as IAssetProxyDispatcher from '../artifacts/contracts/src/interfaces/IAssetProxyDispatcher.sol/IAssetProxyDispatcher.json';
 
-// Placeholder for artifacts - will be populated once contracts compile successfully
-export const artifacts: Record<string, ContractArtifact> = {
-    // TODO: Add actual artifacts once Solidity compilation is fixed
-    // IAssetData: IAssetData as any as ContractArtifact,
-    // IAssetProxy: IAssetProxy as any as ContractArtifact,
-    // IAssetProxyDispatcher: IAssetProxyDispatcher as any as ContractArtifact,
-    // IAuthorizable: IAuthorizable as any as ContractArtifact,
-    // IERC20Bridge: IERC20Bridge as any as ContractArtifact,
-    // ERC20Proxy: ERC20Proxy as any as ContractArtifact,
-    // ERC721Proxy: ERC721Proxy as any as ContractArtifact,
-    // ERC1155Proxy: ERC1155Proxy as any as ContractArtifact,
-    // ERC20BridgeProxy: ERC20BridgeProxy as any as ContractArtifact,
-    // MultiAssetProxy: MultiAssetProxy as any as ContractArtifact,
-    // StaticCallProxy: StaticCallProxy as any as ContractArtifact,
+export const artifacts = {
+    // Main contracts
+    ERC1155Proxy: ERC1155Proxy as unknown as ContractArtifact,
+    ERC20BridgeProxy: ERC20BridgeProxy as unknown as ContractArtifact,
+    ERC20Proxy: ERC20Proxy as unknown as ContractArtifact,
+    ERC721Proxy: ERC721Proxy as unknown as ContractArtifact,
+    MultiAssetProxy: MultiAssetProxy as unknown as ContractArtifact,
+    StaticCallProxy: StaticCallProxy as unknown as ContractArtifact,
+    
+    // Bridge contracts
+    BalancerBridge: BalancerBridge as unknown as ContractArtifact,
+    BancorBridge: BancorBridge as unknown as ContractArtifact,
+    ChaiBridge: ChaiBridge as unknown as ContractArtifact,
+    CreamBridge: CreamBridge as unknown as ContractArtifact,
+    CryptoComBridge: CryptoComBridge as unknown as ContractArtifact,
+    CurveBridge: CurveBridge as unknown as ContractArtifact,
+    DODOBridge: DODOBridge as unknown as ContractArtifact,
+    DexForwarderBridge: DexForwarderBridge as unknown as ContractArtifact,
+    DydxBridge: DydxBridge as unknown as ContractArtifact,
+    Eth2DaiBridge: Eth2DaiBridge as unknown as ContractArtifact,
+    KyberBridge: KyberBridge as unknown as ContractArtifact,
+    MStableBridge: MStableBridge as unknown as ContractArtifact,
+    MixinGasToken: MixinGasToken as unknown as ContractArtifact,
+    MooniswapBridge: MooniswapBridge as unknown as ContractArtifact,
+    ShellBridge: ShellBridge as unknown as ContractArtifact,
+    SnowSwapBridge: SnowSwapBridge as unknown as ContractArtifact,
+    SushiSwapBridge: SushiSwapBridge as unknown as ContractArtifact,
+    SwerveBridge: SwerveBridge as unknown as ContractArtifact,
+    UniswapBridge: UniswapBridge as unknown as ContractArtifact,
+    UniswapV2Bridge: UniswapV2Bridge as unknown as ContractArtifact,
+    
+    // Interface contracts
+    IAssetData: IAssetData as unknown as ContractArtifact,
+    IAssetProxy: IAssetProxy as unknown as ContractArtifact,
+    IAssetProxyDispatcher: IAssetProxyDispatcher as unknown as ContractArtifact,
 };
