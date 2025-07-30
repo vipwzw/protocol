@@ -112,6 +112,10 @@ foundry-cache/
 #foundry output artifacts
 out/
 
+# hardhat artifacts (temporary build output)
+**/artifacts/
+artifacts/
+
 # hardhat build-info (very large files)
 **/artifacts/build-info/
 
