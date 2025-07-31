@@ -27,8 +27,24 @@ export {
     UnlimitedAllowanceERC20Token__factory,
     WETH9,
     WETH9__factory,
+    ZRXToken,
+    ZRXToken__factory,
     IERC20Token,
     IERC20Token__factory,
     IEtherToken,
     IEtherToken__factory,
 } from '../src/typechain-types';
+
+// Re-export event namespaces for testing
+export {
+    ApproveCalledEvent,
+    TransferCalledEvent,
+    TransferFromCalledEvent,
+} from '../src/typechain-types/contracts/test/TestLibERC20TokenTarget';
+
+// Legacy compatibility: Create event objects for old test patterns
+export const TestLibERC20TokenTargetEvents = {
+    ApproveCalled: 'ApproveCalled' as const,
+    TransferCalled: 'TransferCalled' as const,
+    TransferFromCalled: 'TransferFromCalled' as const,
+};

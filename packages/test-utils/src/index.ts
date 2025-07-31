@@ -16,6 +16,23 @@ export { getLatestBlockTimestampAsync, increaseTimeAndMineBlockAsync } from './b
 export { provider, txDefaults, web3Wrapper } from './web3_wrapper';
 export { LogDecoder } from './log_decoder';
 export { filterLogs, filterLogsToArguments, verifyEvents, verifyEventsFromLogs } from './log_utils';
+export {
+    parseEventFromReceipt,
+    parseAllEventsFromReceipt,
+    expectEventInReceipt,
+    verifyTransferEvent,
+    verifyApprovalEvent,
+    verifyERC721TransferEvent,
+    verifyERC721ApprovalEvent,
+    verifyERC721ApprovalForAllEvent,
+    EventArgs,
+    ParsedEvent,
+    TransferEventArgs,
+    ApprovalEventArgs,
+    ERC721TransferEventArgs,
+    ERC721ApprovalEventArgs,
+    ERC721ApprovalForAllEventArgs,
+} from './event_utils';
 export { signingUtils } from './signing_utils';
 export { orderUtils } from './order_utils';
 export { typeEncodingUtils } from './type_encoding_utils';

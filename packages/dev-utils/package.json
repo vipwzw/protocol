@@ -1,0 +1,68 @@
+{
+    "name": "@0x/dev-utils",
+    "version": "5.0.3",
+    "engines": {
+        "node": ">=6.12"
+    },
+    "description": "0x dev TS utils",
+    "main": "lib/src/index.js",
+    "types": "lib/src/index.d.ts",
+    "scripts": {
+        "build": "tsc -b",
+        "build:ts": "tsc -b",
+        "build:ci": "yarn build",
+        "clean": "shx rm -rf lib generated_docs coverage .nyc_output *.log",
+        "clean:node-modules": "shx rm -rf node_modules",
+        "clean:all": "yarn clean && yarn clean:node-modules",
+        "watch": "tsc -b -w",
+        "lint": "eslint src --ext .ts",
+        "fix": "tslint --fix --format stylish --project .",
+        "test": "yarn test:hardhat",
+        "test:hardhat": "npx hardhat test",
+        "test:ci": "yarn test",
+        "test:circleci": "yarn test:coverage",
+        "run_mocha": "mocha --require source-map-support/register --require make-promises-safe 'lib/test/**/*_test.js' 'lib/test/*_test.js'  --bail --exit",
+        "test:coverage": "nyc npm run test --all && yarn coverage:report:lcov",
+        "coverage:report:lcov": "nyc report --reporter=text-lcov > coverage/lcov.info"
+    },
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/0xProject/tools.git"
+    },
+    "bugs": {
+        "url": "https://github.com/0xProject/tools/issues"
+    },
+    "homepage": "https://github.com/0xProject/tools/tree/main/dev-utils",
+    "devDependencies": {
+        "@types/lodash": "^4.14.200",
+        "@types/mocha": "^10.0.0",
+        "@types/node": "^20.0.0",
+        "chai": "^4.5.0",
+        "make-promises-safe": "^1.1.0",
+        "mocha": "^10.2.0",
+        "npm-run-all": "^4.1.2",
+        "shx": "^0.3.4",
+        "typescript": "^5.0.0",
+        "@nomicfoundation/hardhat-ethers": "^3.0.0",
+        "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+        "@typechain/hardhat": "^9.1.0",
+        "@typechain/ethers-v6": "^0.5.1",
+        "hardhat": "^2.19.0",
+        "typechain": "^8.3.2"
+    },
+    "dependencies": {
+        "abortcontroller-polyfill": "^1.1.9",
+        "chalk": "^4.1.2",
+        "detect-node": "^2.1.0",
+        "ethereum-types": "^3.7.1",
+        "ethereumjs-util": "^7.1.5",
+        "ethers": "^6.15.0",
+        "isomorphic-fetch": "^3.0.0",
+        "lodash": "^4.17.21"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "gitHead": "4f91bfd907996b2f4dd383778b50c479c2602b56"
+}

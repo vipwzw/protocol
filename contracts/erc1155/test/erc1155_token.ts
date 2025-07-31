@@ -1,28 +1,20 @@
-import { chaiSetup, constants, provider, txDefaults, web3Wrapper } from '@0x/test-utils';
-import { SafeMathRevertErrors } from '@0x/contracts-utils';
-import { BlockchainLifecycle } from '@0x/dev-utils';
+import { constants, BlockchainLifecycle } from '@0x/test-utils';
 import { RevertReason } from '@0x/utils';
-import { BigNumber } from '@0x/utils';
-import * as chai from 'chai';
-import { LogWithDecodedArgs } from 'ethereum-types';
+import { ethers } from 'hardhat';
+import { expect } from 'chai';
 import * as _ from 'lodash';
 
-import { Erc1155Wrapper } from '../src/erc1155_wrapper';
-import { ERC1155MintableContract } from '../src/wrappers';
+import { DummyERC1155Receiver__factory, ERC1155Mintable__factory, DummyERC1155Receiver, ERC1155Mintable } from './wrappers';
 
-import { artifacts } from './artifacts';
-import { DummyERC1155ReceiverBatchTokenReceivedEventArgs, DummyERC1155ReceiverContract } from './wrappers';
-chaiSetup.configure();
-const expect = chai.expect;
-const blockchainLifecycle = new BlockchainLifecycle(web3Wrapper);
+const blockchainLifecycle = new BlockchainLifecycle();
 // tslint:disable:no-unnecessary-type-assertion
 describe('ERC1155Token', () => {
     // constant values used in transfer tests
-    const nftOwnerBalance = new BigNumber(1);
-    const nftNotOwnerBalance = new BigNumber(0);
-    const spenderInitialFungibleBalance = new BigNumber(500);
-    const receiverInitialFungibleBalance = new BigNumber(0);
-    const fungibleValueToTransfer = spenderInitialFungibleBalance.div(2);
+    const nftOwnerBalance = 1n;
+    const nftNotOwnerBalance = 0n;
+    const spenderInitialFungibleBalance = 500n;
+    const receiverInitialFungibleBalance = 0n;
+    const fungibleValueToTransfer = spenderInitialFungibleBalance / 2n;
     const nonFungibleValueToTransfer = nftOwnerBalance;
     const receiverCallbackData = '0x01020304';
     // tokens & addresses
@@ -30,11 +22,10 @@ describe('ERC1155Token', () => {
     let spender: string;
     let delegatedSpender: string;
     let receiver: string;
-    let erc1155Contract: ERC1155MintableContract;
-    let erc1155Receiver: DummyERC1155ReceiverContract;
-    let nonFungibleToken: BigNumber;
-    let erc1155Wrapper: Erc1155Wrapper;
-    let fungibleToken: BigNumber;
+    let erc1155Contract: ERC1155Mintable;
+    let erc1155Receiver: DummyERC1155Receiver;
+    let nonFungibleToken: bigint;
+    let fungibleToken: bigint;
     // tests
     before(async () => {
         await blockchainLifecycle.startAsync();
@@ -44,27 +35,40 @@ describe('ERC1155Token', () => {
     });
     before(async () => {
         // deploy erc1155 contract & receiver
-        const accounts = await web3Wrapper.getAvailableAddressesAsync();
-        [owner, spender, delegatedSpender] = accounts;
-        erc1155Contract = await ERC1155MintableContract.deployFrom0xArtifactAsync(
-            artifacts.ERC1155Mintable,
-            provider,
-            txDefaults,
-            artifacts,
+        const signers = await ethers.getSigners();
+        [owner, spender, delegatedSpender] = [signers[0].address, signers[1].address, signers[2].address];
+        
+        erc1155Contract = await new ERC1155Mintable__factory(signers[0]).deploy();
+        erc1155Receiver = await new DummyERC1155Receiver__factory(signers[0]).deploy();
+        receiver = await erc1155Receiver.getAddress();
+        
+        // 创建和 mint tokens
+        const ownerSigner = signers[0];
+        
+        // Create fungible token type and get the returned token ID
+        fungibleToken = await erc1155Contract.connect(ownerSigner).create.staticCall('https://example.com/fungible', false);
+        await erc1155Contract.connect(ownerSigner).create('https://example.com/fungible', false);
+        
+        // Create non-fungible token type and get the returned token ID
+        nonFungibleToken = await erc1155Contract.connect(ownerSigner).create.staticCall('https://example.com/nft', true);
+        await erc1155Contract.connect(ownerSigner).create('https://example.com/nft', true);
+        
+        // Mint fungible tokens to spender
+        await erc1155Contract.connect(ownerSigner).mintFungible(
+            fungibleToken,
+            [spender],
+            [spenderInitialFungibleBalance]
         );
-        erc1155Receiver = await DummyERC1155ReceiverContract.deployFrom0xArtifactAsync(
-            artifacts.DummyERC1155Receiver,
-            provider,
-            txDefaults,
-            artifacts,
+        
+        // Mint non-fungible token to spender  
+        await erc1155Contract.connect(ownerSigner).mintNonFungible(
+            nonFungibleToken,
+            [spender]
         );
-        receiver = erc1155Receiver.address;
-        // create wrapper & mint erc1155 tokens
-        erc1155Wrapper = new Erc1155Wrapper(erc1155Contract, owner);
-        fungibleToken = await erc1155Wrapper.mintFungibleTokensAsync([spender], spenderInitialFungibleBalance);
-        let nonFungibleTokens: BigNumber[];
-        [, nonFungibleTokens] = await erc1155Wrapper.mintNonFungibleTokensAsync([spender]);
-        nonFungibleToken = nonFungibleTokens[0];
+        
+        // 计算实际的 NFT item ID (base type | index)
+        // index 从 1 开始，第一个 NFT 的 index 是 1
+        const nftItemId = nonFungibleToken | 1n;
     });
     beforeEach(async () => {
         await blockchainLifecycle.startAsync();
@@ -75,46 +79,60 @@ describe('ERC1155Token', () => {
     describe('safeTransferFrom', () => {
         it('should transfer fungible token if called by token owner', async () => {
             // setup test parameters
-            const tokenHolders = [spender, receiver];
             const tokenToTransfer = fungibleToken;
             const valueToTransfer = fungibleValueToTransfer;
+            
             // check balances before transfer
-            const expectedInitialBalances = [spenderInitialFungibleBalance, receiverInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, [tokenToTransfer], expectedInitialBalances);
+            const spenderBalanceBefore = await erc1155Contract.balanceOf(spender, tokenToTransfer);
+            const receiverBalanceBefore = await erc1155Contract.balanceOf(receiver, tokenToTransfer);
+            expect(spenderBalanceBefore).to.equal(spenderInitialFungibleBalance);
+            expect(receiverBalanceBefore).to.equal(receiverInitialFungibleBalance);
+            
             // execute transfer
-            await erc1155Wrapper.safeTransferFromAsync(
+            const signers = await ethers.getSigners();
+            const spenderSigner = signers[1]; // spender is signers[1].address
+            await erc1155Contract.connect(spenderSigner).safeTransferFrom(
                 spender,
                 receiver,
                 fungibleToken,
                 valueToTransfer,
-                receiverCallbackData,
+                receiverCallbackData
             );
+            
             // check balances after transfer
-            const expectedFinalBalances = [
-                spenderInitialFungibleBalance.minus(valueToTransfer),
-                receiverInitialFungibleBalance.plus(valueToTransfer),
-            ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, [tokenToTransfer], expectedFinalBalances);
+            const spenderBalanceAfter = await erc1155Contract.balanceOf(spender, tokenToTransfer);
+            const receiverBalanceAfter = await erc1155Contract.balanceOf(receiver, tokenToTransfer);
+            expect(spenderBalanceAfter).to.equal(spenderInitialFungibleBalance - valueToTransfer);
+            expect(receiverBalanceAfter).to.equal(receiverInitialFungibleBalance + valueToTransfer);
         });
         it('should transfer non-fungible token if called by token owner', async () => {
-            // setup test parameters
-            const tokenHolders = [spender, receiver];
-            const tokenToTransfer = nonFungibleToken;
+            // setup test parameters - 使用实际的 NFT item ID
+            const nftItemId = nonFungibleToken | 1n; // base type | index
+            const tokenToTransfer = nftItemId;
             const valueToTransfer = nonFungibleValueToTransfer;
+            
             // check balances before transfer
-            const expectedInitialBalances = [nftOwnerBalance, nftNotOwnerBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, [tokenToTransfer], expectedInitialBalances);
+            const spenderBalanceBefore = await erc1155Contract.balanceOf(spender, tokenToTransfer);
+            const receiverBalanceBefore = await erc1155Contract.balanceOf(receiver, tokenToTransfer);
+            expect(spenderBalanceBefore).to.equal(nftOwnerBalance);
+            expect(receiverBalanceBefore).to.equal(nftNotOwnerBalance);
+            
             // execute transfer
-            await erc1155Wrapper.safeTransferFromAsync(
+            const signers = await ethers.getSigners();
+            const spenderSigner = signers[1];
+            await erc1155Contract.connect(spenderSigner).safeTransferFrom(
                 spender,
                 receiver,
                 tokenToTransfer,
                 valueToTransfer,
-                receiverCallbackData,
+                receiverCallbackData
             );
+            
             // check balances after transfer
-            const expectedFinalBalances = [nftNotOwnerBalance, nftOwnerBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, [tokenToTransfer], expectedFinalBalances);
+            const spenderBalanceAfter = await erc1155Contract.balanceOf(spender, tokenToTransfer);
+            const receiverBalanceAfter = await erc1155Contract.balanceOf(receiver, tokenToTransfer);
+            expect(spenderBalanceAfter).to.equal(nftNotOwnerBalance);
+            expect(receiverBalanceAfter).to.equal(nftOwnerBalance);
         });
         it('should trigger callback if transferring to a contract', async () => {
             // setup test parameters
@@ -154,15 +172,15 @@ describe('ERC1155Token', () => {
             expect(receiverLog.args.data).to.be.deep.equal(expectedCallbackLog.data);
             // check balances after transfer
             const expectedFinalBalances = [
-                spenderInitialFungibleBalance.minus(valueToTransfer),
-                receiverInitialFungibleBalance.plus(valueToTransfer),
+                spenderInitialFungibleBalance - valueToTransfer,
+                receiverInitialFungibleBalance + valueToTransfer,
             ];
             await erc1155Wrapper.assertBalancesAsync(tokenHolders, [tokenToTransfer], expectedFinalBalances);
         });
         it('should revert if transfer reverts', async () => {
             // setup test parameters
             const tokenToTransfer = fungibleToken;
-            const valueToTransfer = spenderInitialFungibleBalance.plus(1);
+            const valueToTransfer = spenderInitialFungibleBalance + 1n;
             // create the expected error (a uint256 underflow)
             const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                 SafeMathRevertErrors.BinOpErrorCodes.SubtractionUnderflow,
@@ -212,8 +230,8 @@ describe('ERC1155Token', () => {
             );
             // check balances after transfer
             const expectedFinalBalances = [
-                spenderInitialFungibleBalance.minus(valuesToTransfer[0]),
-                receiverInitialFungibleBalance.plus(valuesToTransfer[0]),
+                spenderInitialFungibleBalance - valuesToTransfer[0],
+                receiverInitialFungibleBalance + valuesToTransfer[0],
             ];
             await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
@@ -263,10 +281,10 @@ describe('ERC1155Token', () => {
             // check balances after transfer
             const expectedFinalBalances = [
                 // spender
-                spenderInitialFungibleBalance.minus(valuesToTransfer[0]),
+                spenderInitialFungibleBalance - valuesToTransfer[0],
                 nftNotOwnerBalance,
                 // receiver
-                receiverInitialFungibleBalance.plus(valuesToTransfer[0]),
+                receiverInitialFungibleBalance + valuesToTransfer[0],
                 nftOwnerBalance,
             ];
             await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
@@ -316,10 +334,10 @@ describe('ERC1155Token', () => {
             // check balances after transfer
             const expectedFinalBalances = [
                 // spender
-                spenderInitialFungibleBalance.minus(valuesToTransfer[0]),
+                spenderInitialFungibleBalance - valuesToTransfer[0],
                 nftNotOwnerBalance,
                 // receiver
-                receiverInitialFungibleBalance.plus(valuesToTransfer[0]),
+                receiverInitialFungibleBalance + valuesToTransfer[0],
                 nftOwnerBalance,
             ];
             await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
@@ -327,7 +345,7 @@ describe('ERC1155Token', () => {
         it('should revert if transfer reverts', async () => {
             // setup test parameters
             const tokensToTransfer = [fungibleToken];
-            const valuesToTransfer = [spenderInitialFungibleBalance.plus(1)];
+            const valuesToTransfer = [spenderInitialFungibleBalance + 1n];
             // create the expected error (a uint256 underflow)
             const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                 SafeMathRevertErrors.BinOpErrorCodes.SubtractionUnderflow,
@@ -383,8 +401,8 @@ describe('ERC1155Token', () => {
             );
             // check balances after transfer
             const expectedFinalBalances = [
-                spenderInitialFungibleBalance.minus(valueToTransfer),
-                receiverInitialFungibleBalance.plus(valueToTransfer),
+                spenderInitialFungibleBalance - valueToTransfer,
+                receiverInitialFungibleBalance + valueToTransfer,
             ];
             await erc1155Wrapper.assertBalancesAsync(tokenHolders, [tokenToTransfer], expectedFinalBalances);
         });
@@ -430,8 +448,8 @@ describe('ERC1155Token', () => {
             );
             // check balances after transfer
             const expectedFinalBalances = [
-                spenderInitialFungibleBalance.minus(valuesToTransfer[0]),
-                receiverInitialFungibleBalance.plus(valuesToTransfer[0]),
+                spenderInitialFungibleBalance - valuesToTransfer[0],
+                receiverInitialFungibleBalance + valuesToTransfer[0],
             ];
             await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
         });

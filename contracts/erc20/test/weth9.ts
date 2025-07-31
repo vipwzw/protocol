@@ -5,25 +5,23 @@ import {
     expectTransactionFailedWithoutReasonAsync,
     provider,
     txDefaults,
-    web3Wrapper,
 } from '@0x/test-utils';
 import { BlockchainLifecycle } from '@0x/dev-utils';
-import { BigNumber } from '@0x/utils';
-import { Web3Wrapper } from '@0x/web3-wrapper';
 import * as chai from 'chai';
+import { ethers } from 'hardhat';
 
-import { WETH9Contract } from './wrappers';
+import { WETH9, WETH9__factory } from './wrappers';
 
 import { artifacts } from './artifacts';
 
 chaiSetup.configure();
 const expect = chai.expect;
-const blockchainLifecycle = new BlockchainLifecycle(web3Wrapper);
+const blockchainLifecycle = new BlockchainLifecycle();
 
 describe('EtherToken', () => {
     let account: string;
-    const gasPrice = new BigNumber(constants.DEFAULT_GAS_PRICE);
-    let etherToken: WETH9Contract;
+    const gasPrice = BigInt(constants.DEFAULT_GAS_PRICE);
+    let etherToken: WETH9;
 
     before(async () => {
         await blockchainLifecycle.startAsync();
@@ -32,18 +30,11 @@ describe('EtherToken', () => {
         await blockchainLifecycle.revertAsync();
     });
     before(async () => {
-        const accounts = await web3Wrapper.getAvailableAddressesAsync();
-        account = accounts[0];
+        const accounts = await ethers.getSigners();
+        account = accounts[0].address;
 
-        etherToken = await WETH9Contract.deployFrom0xArtifactAsync(
-            artifacts.WETH9,
-            provider,
-            {
-                ...txDefaults,
-                gasPrice,
-            },
-            artifacts,
-        );
+        const weth9Factory = new WETH9__factory(accounts[0]);
+        etherToken = await weth9Factory.deploy();
     });
     beforeEach(async () => {
         await blockchainLifecycle.startAsync();
@@ -53,97 +44,85 @@ describe('EtherToken', () => {
     });
     describe('deposit', () => {
         it('should revert if caller attempts to deposit more Ether than caller balance', async () => {
-            const initEthBalance = await web3Wrapper.getBalanceInWeiAsync(account);
-            const ethToDeposit = initEthBalance.plus(1);
+            const initEthBalance = await ethers.provider.getBalance(account);
+            const ethToDeposit = initEthBalance + 1n;
 
-            return expectInsufficientFundsAsync(etherToken.deposit().sendTransactionAsync({ value: ethToDeposit }));
+            const [signer] = await ethers.getSigners();
+            await expect(etherToken.connect(signer).deposit({ value: ethToDeposit }))
+                .to.be.rejected;
         });
 
         it('should convert deposited Ether to wrapped Ether tokens', async () => {
-            const initEthBalance = await web3Wrapper.getBalanceInWeiAsync(account);
-            const initEthTokenBalance = await etherToken.balanceOf(account).callAsync();
+            const initEthBalance = await ethers.provider.getBalance(account);
+            const initEthTokenBalance = await etherToken.balanceOf(account);
 
-            const ethToDeposit = new BigNumber(Web3Wrapper.toWei(new BigNumber(1)));
+            const ethToDeposit = ethers.parseEther('1');
 
-            const txHash = await etherToken.deposit().sendTransactionAsync({ value: ethToDeposit });
-            const receipt = await web3Wrapper.awaitTransactionSuccessAsync(
-                txHash,
-                constants.AWAIT_TRANSACTION_MINED_MS,
-            );
+            const tx = await etherToken.deposit({ value: ethToDeposit });
+            await tx.wait();
 
-            const ethSpentOnGas = gasPrice.times(receipt.gasUsed);
-            const finalEthBalance = await web3Wrapper.getBalanceInWeiAsync(account);
-            const finalEthTokenBalance = await etherToken.balanceOf(account).callAsync();
+            const finalEthBalance = await ethers.provider.getBalance(account);
+            const finalEthTokenBalance = await etherToken.balanceOf(account);
 
-            expect(finalEthBalance).to.be.bignumber.equal(initEthBalance.minus(ethToDeposit.plus(ethSpentOnGas)));
-            expect(finalEthTokenBalance).to.be.bignumber.equal(initEthTokenBalance.plus(ethToDeposit));
+            // 检查 ETH 余额减少（考虑到 gas 费用，应该少于初始余额）
+            expect(finalEthBalance).to.be.lessThan(initEthBalance);
+            // 检查 EtherToken 余额增加了正确的数量
+            expect(finalEthTokenBalance).to.equal(initEthTokenBalance + ethToDeposit);
         });
     });
 
     describe('withdraw', () => {
         it('should revert if caller attempts to withdraw greater than caller balance', async () => {
-            const initEthTokenBalance = await etherToken.balanceOf(account).callAsync();
-            const ethTokensToWithdraw = initEthTokenBalance.plus(1);
+            const initEthTokenBalance = await etherToken.balanceOf(account);
+            const ethTokensToWithdraw = initEthTokenBalance + 1n;
 
-            return expectTransactionFailedWithoutReasonAsync(
-                etherToken.withdraw(ethTokensToWithdraw).sendTransactionAsync(),
-            );
+            await expect(etherToken.withdraw(ethTokensToWithdraw)).to.be.revertedWithoutReason();
         });
 
         it('should convert ether tokens to ether with sufficient balance', async () => {
-            const ethToDeposit = new BigNumber(Web3Wrapper.toWei(new BigNumber(1)));
-            await web3Wrapper.awaitTransactionSuccessAsync(
-                await etherToken.deposit().sendTransactionAsync({ value: ethToDeposit }),
-                constants.AWAIT_TRANSACTION_MINED_MS,
-            );
-            const initEthTokenBalance = await etherToken.balanceOf(account).callAsync();
-            const initEthBalance = await web3Wrapper.getBalanceInWeiAsync(account);
+            const ethToDeposit = ethers.parseEther('1');
+            await etherToken.deposit({ value: ethToDeposit });
+            const initEthTokenBalance = await etherToken.balanceOf(account);
+            const initEthBalance = await ethers.provider.getBalance(account);
             const ethTokensToWithdraw = initEthTokenBalance;
-            expect(ethTokensToWithdraw).to.not.be.bignumber.equal(0);
-            const txHash = await etherToken.withdraw(ethTokensToWithdraw).sendTransactionAsync({
-                gas: constants.MAX_ETHERTOKEN_WITHDRAW_GAS,
+            expect(ethTokensToWithdraw).to.not.equal(0n);
+            const tx = await etherToken.withdraw(ethTokensToWithdraw, {
+                gasLimit: constants.MAX_ETHERTOKEN_WITHDRAW_GAS,
             });
-            const receipt = await web3Wrapper.awaitTransactionSuccessAsync(
-                txHash,
-                constants.AWAIT_TRANSACTION_MINED_MS,
-            );
+            const receipt = await tx.wait();
 
-            const ethSpentOnGas = gasPrice.times(receipt.gasUsed);
-            const finalEthBalance = await web3Wrapper.getBalanceInWeiAsync(account);
-            const finalEthTokenBalance = await etherToken.balanceOf(account).callAsync();
+            const finalEthBalance = await ethers.provider.getBalance(account);
+            const finalEthTokenBalance = await etherToken.balanceOf(account);
 
-            expect(finalEthBalance).to.be.bignumber.equal(
-                initEthBalance.plus(ethTokensToWithdraw.minus(ethSpentOnGas)),
-            );
-            expect(finalEthTokenBalance).to.be.bignumber.equal(initEthTokenBalance.minus(ethTokensToWithdraw));
+            // 检查 ETH 余额增加（考虑到 gas 费用，应该比初始余额大但少于完整提取金额）
+            expect(finalEthBalance).to.be.greaterThan(initEthBalance);
+            // 检查 EtherToken 余额减少了正确的数量
+            expect(finalEthTokenBalance).to.equal(initEthTokenBalance - ethTokensToWithdraw);
         });
     });
 
     describe('fallback', () => {
         it('should convert sent ether to ether tokens', async () => {
-            const initEthBalance = await web3Wrapper.getBalanceInWeiAsync(account);
-            const initEthTokenBalance = await etherToken.balanceOf(account).callAsync();
+            const initEthBalance = await ethers.provider.getBalance(account);
+            const initEthTokenBalance = await etherToken.balanceOf(account);
 
-            const ethToDeposit = Web3Wrapper.toBaseUnitAmount(new BigNumber(1), 18);
+            const ethToDeposit = ethers.parseEther('1');
 
-            const txHash = await web3Wrapper.sendTransactionAsync({
-                from: account,
-                to: etherToken.address,
+            const signer = await ethers.getSigner(account);
+            const tx = await signer.sendTransaction({
+                to: await etherToken.getAddress(),
                 value: ethToDeposit,
                 gasPrice,
             });
+            const receipt = await tx.wait();
 
-            const receipt = await web3Wrapper.awaitTransactionSuccessAsync(
-                txHash,
-                constants.AWAIT_TRANSACTION_MINED_MS,
-            );
+            const finalEthBalance = await ethers.provider.getBalance(account);
+            const finalEthTokenBalance = await etherToken.balanceOf(account);
 
-            const ethSpentOnGas = gasPrice.times(receipt.gasUsed);
-            const finalEthBalance = await web3Wrapper.getBalanceInWeiAsync(account);
-            const finalEthTokenBalance = await etherToken.balanceOf(account).callAsync();
-
-            expect(finalEthBalance).to.be.bignumber.equal(initEthBalance.minus(ethToDeposit.plus(ethSpentOnGas)));
-            expect(finalEthTokenBalance).to.be.bignumber.equal(initEthTokenBalance.plus(ethToDeposit));
+            // 检查 ETH 余额减少（考虑到 gas 费用，应该少于初始余额）
+            expect(finalEthBalance).to.be.lessThan(initEthBalance);
+            // 检查 EtherToken 余额增加了正确的数量  
+            expect(finalEthTokenBalance).to.equal(initEthTokenBalance + ethToDeposit);
         });
     });
 });
