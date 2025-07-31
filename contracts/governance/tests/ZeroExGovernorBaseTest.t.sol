@@ -19,10 +19,10 @@
 pragma solidity ^0.8.0;
 
 import "./BaseTest.t.sol";
-import "../../src/IZeroExGovernor.sol";
-import "../../src/ZeroExTimelock.sol";
-import "../../src/ZeroExProtocolGovernor.sol";
-import "../../src/ZRXWrappedToken.sol";
+import "../contracts/IZeroExGovernor.sol";
+import "../contracts/ZeroExTimelock.sol";
+import "../contracts/ZeroExProtocolGovernor.sol";
+import "../contracts/ZRXWrappedToken.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/mocks/CallReceiverMock.sol";
 

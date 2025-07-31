@@ -18,7 +18,7 @@
 */
 pragma solidity ^0.8.0;
 
-import "../../src/ZeroExVotes.sol";
+import "../../contracts/ZeroExVotes.sol";
 
 contract ZeroExVotesMalicious is ZeroExVotes {
     constructor(address _token, uint256 _quadraticThreshold) ZeroExVotes(_token, _quadraticThreshold) {}

@@ -24,11 +24,11 @@ import "forge-std/console.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./mocks/ZRXMock.sol";
-import "../src/ZRXWrappedToken.sol";
-import "../src/ZeroExVotes.sol";
-import "../src/ZeroExTimelock.sol";
-import "../src/ZeroExProtocolGovernor.sol";
-import "../src/ZeroExTreasuryGovernor.sol";
+import "../contracts/ZRXWrappedToken.sol";
+import "../contracts/ZeroExVotes.sol";
+import "../contracts/ZeroExTimelock.sol";
+import "../contracts/ZeroExProtocolGovernor.sol";
+import "../contracts/ZeroExTreasuryGovernor.sol";
 
 contract BaseTest is Test {
     address payable internal account1 = payable(vm.addr(1));
@@ -105,7 +105,7 @@ contract BaseTest is Test {
         vm.stopPrank();
     }
 
-    // Sourced from https://github.com/grappafinance/core/blob/master/src/test/utils/Utilities.sol
+    // Sourced from https://github.com/grappafinance/core/blob/mast../contracts/test/utils/Utilities.sol
     function predictAddress(address _origin, uint256 _nonce) public pure returns (address) {
         if (_nonce == 0x00) {
             return

@@ -1,7 +1,7 @@
 [profile.default]
-src = 'src'
+src = 'contracts'
 out = 'out'
-test = 'test'
+test = 'tests'
 libs = ['lib']
 remappings = [
     '@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/',
@@ -20,7 +20,7 @@ fs_permissions = [
 via_ir = true
 
 [profile.integration]
-match_path = "test/integration/*.sol"
+match_path = "tests/integration/*.sol"
 gas_price = 31_000_000_000
 
 [rpc_endpoints]
@@ -40,4 +40,4 @@ targets = [
     'outOfBounds',
     'underflow'
 ]
-contracts = { 'src/ZeroExProtocolGovernor.sol' = [ 'ZeroExProtocolGovernor' ] }
+contracts = { 'contracts/ZeroExProtocolGovernor.sol' = [ 'ZeroExProtocolGovernor' ] }

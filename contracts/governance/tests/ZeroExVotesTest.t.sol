@@ -22,8 +22,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./BaseTest.t.sol";
 import "./mocks/ZeroExVotesMalicious.sol";
 import "./mocks/ZeroExVotesMigration.sol";
-import "../../src/ZRXWrappedToken.sol";
-import "../../src/ZeroExVotes.sol";
+import "../contracts/ZRXWrappedToken.sol";
+import "../contracts/ZeroExVotes.sol";
 
 contract ZeroExVotesTest is BaseTest {
     IERC20 internal token;

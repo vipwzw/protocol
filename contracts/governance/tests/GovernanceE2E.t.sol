@@ -25,11 +25,11 @@ import "./mocks/IZrxTreasuryMock.sol";
 import "./mocks/IStakingMock.sol";
 import "./mocks/IZrxVaultMock.sol";
 import "./BaseTest.t.sol";
-import "../../src/ZRXWrappedToken.sol";
-import "../../src/ZeroExVotes.sol";
-import "../../src/ZeroExTimelock.sol";
-import "../../src/ZeroExProtocolGovernor.sol";
-import "../../src/ZeroExTreasuryGovernor.sol";
+import "../contracts/ZRXWrappedToken.sol";
+import "../contracts/ZeroExVotes.sol";
+import "../contracts/ZeroExTimelock.sol";
+import "../contracts/ZeroExProtocolGovernor.sol";
+import "../contracts/ZeroExTreasuryGovernor.sol";
 
 contract GovernanceE2ETest is BaseTest {
     uint256 internal mainnetFork;

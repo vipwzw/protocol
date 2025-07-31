@@ -12,11 +12,11 @@ const config: HardhatUserConfig = {
                 enabled: true,
                 runs: 1000000,
             },
-            evmVersion: 'cancun',
+            evmVersion: 'shanghai',
         },
     },
     paths: {
-        sources: './src',
+        sources: './contracts',
         tests: './test',
         cache: './cache/hardhat',
         artifacts: './artifacts',
