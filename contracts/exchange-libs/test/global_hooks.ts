@@ -1,29 +1,14 @@
-import { coverage, profiler, provider } from '@0x/test-utils';
-import { env, EnvVars } from '@0x/dev-utils';
-import { prependSubprovider } from '@0x/subproviders';
-import { providerUtils } from '@0x/utils';
+import { ethers } from 'ethers';
 
-const coverageSubprovider = coverage.getCoverageSubproviderSingleton();
-const profilerSubprovider = profiler.getProfilerSubproviderSingleton();
+// Simple global test hooks for exchange-libs
+// Using native Hardhat provider instead of custom subproviders
 
-if (env.parseBoolean(EnvVars.SolidityCoverage)) {
-    prependSubprovider(provider, coverageSubprovider);
-    provider.stop();
-}
-if (env.parseBoolean(EnvVars.SolidityProfiler)) {
-    prependSubprovider(provider, profilerSubprovider);
-    provider.stop();
-}
-
-before('start web3 provider', () => {
-    providerUtils.startProviderEngine(provider);
+before('setup test environment', async () => {
+    // Basic test setup - Hardhat handles provider management
+    // No additional setup needed as we use Hardhat's built-in provider
 });
-after('generate coverage report', async () => {
-    if (env.parseBoolean(EnvVars.SolidityCoverage)) {
-        await coverageSubprovider.writeCoverageAsync();
-    }
-    if (env.parseBoolean(EnvVars.SolidityProfiler)) {
-        await profilerSubprovider.writeProfilerOutputAsync();
-    }
-    provider.stop();
+
+after('cleanup test environment', async () => {
+    // Basic cleanup if needed
+    // Hardhat handles provider cleanup automatically
 });

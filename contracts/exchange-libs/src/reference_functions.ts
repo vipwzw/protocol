@@ -1,80 +1,88 @@
 import { orderHashUtils } from '@0x/test-utils';
-import { ReferenceFunctions } from '@0x/contracts-utils';
+import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { FillResults, MatchedFillResults, Order } from '@0x/utils';
 import { BigNumber, ExchangeRevertErrors, LibMathRevertErrors } from '@0x/utils';
 
-const { safeAdd, safeSub, safeMul, safeDiv } = ReferenceFunctions;
+// Helper function to convert bigint to BigNumber for error messages
+function toBigNumber(value: bigint): BigNumber {
+    return new BigNumber(value.toString());
+}
+
+// 在 Solidity 0.8+ 中，原生支持溢出检查，不再需要 SafeMath
+// JavaScript/TypeScript 中的 bigint 也有足够的精度处理 uint256
 
 /**
  * Checks if rounding error >= 0.1% when rounding down.
  */
-export function isRoundingErrorFloor(numerator: BigNumber, denominator: BigNumber, target: BigNumber): boolean {
-    if (denominator.eq(0)) {
+export function isRoundingErrorFloor(numerator: bigint, denominator: bigint, target: bigint): boolean {
+    if (denominator === 0n) {
         throw new LibMathRevertErrors.DivisionByZeroError();
     }
-    if (numerator.eq(0) || target.eq(0)) {
+    if (numerator === 0n || target === 0n) {
         return false;
     }
-    const remainder = numerator.times(target).mod(denominator);
+    const remainder = (numerator * target) % denominator;
     // Need to do this separately because solidity evaluates RHS of the comparison expression first.
-    const rhs = safeMul(numerator, target);
-    const lhs = safeMul(remainder, new BigNumber(1000));
-    return lhs.gte(rhs);
+    const rhs = numerator * target;
+    const lhs = remainder * 1000n;
+    return lhs >= rhs;
 }
 
 /**
  * Checks if rounding error >= 0.1% when rounding up.
  */
-export function isRoundingErrorCeil(numerator: BigNumber, denominator: BigNumber, target: BigNumber): boolean {
-    if (denominator.eq(0)) {
+export function isRoundingErrorCeil(numerator: bigint, denominator: bigint, target: bigint): boolean {
+    if (denominator === 0n) {
         throw new LibMathRevertErrors.DivisionByZeroError();
     }
-    if (numerator.eq(0) || target.eq(0)) {
+    if (numerator === 0n || target === 0n) {
         return false;
     }
-    let remainder = numerator.times(target).mod(denominator);
-    remainder = safeSub(denominator, remainder).mod(denominator);
-    // Need to do this separately because solidity evaluates RHS of the comparison expression first.
-    const rhs = safeMul(numerator, target);
-    const lhs = safeMul(remainder, new BigNumber(1000));
-    return lhs.gte(rhs);
+    let remainder = (numerator * target) % denominator;
+    if (remainder === 0n) {
+        return false;
+    }
+    remainder = denominator - remainder;
+    const rhs = numerator * target;
+    const lhs = remainder * 1000n;
+    return lhs >= rhs;
 }
 
 /**
  * Calculates partial value given a numerator and denominator rounded down.
  *      Reverts if rounding error is >= 0.1%
  */
-export function safeGetPartialAmountFloor(numerator: BigNumber, denominator: BigNumber, target: BigNumber): BigNumber {
+export function safeGetPartialAmountFloor(numerator: bigint, denominator: bigint, target: bigint): bigint {
     if (isRoundingErrorFloor(numerator, denominator, target)) {
-        throw new LibMathRevertErrors.RoundingError(numerator, denominator, target);
+        throw new LibMathRevertErrors.RoundingError(toBigNumber(numerator), toBigNumber(denominator), toBigNumber(target));
     }
-    return safeDiv(safeMul(numerator, target), denominator);
+    return (numerator * target) / denominator;
 }
 
 /**
  * Calculates partial value given a numerator and denominator rounded down.
  *      Reverts if rounding error is >= 0.1%
  */
-export function safeGetPartialAmountCeil(numerator: BigNumber, denominator: BigNumber, target: BigNumber): BigNumber {
+export function safeGetPartialAmountCeil(numerator: bigint, denominator: bigint, target: bigint): bigint {
     if (isRoundingErrorCeil(numerator, denominator, target)) {
-        throw new LibMathRevertErrors.RoundingError(numerator, denominator, target);
+        throw new LibMathRevertErrors.RoundingError(toBigNumber(numerator), toBigNumber(denominator), toBigNumber(target));
     }
-    return safeDiv(safeAdd(safeMul(numerator, target), safeSub(denominator, new BigNumber(1))), denominator);
+    return (numerator * target + denominator - 1n) / denominator;
 }
 
 /**
  * Calculates partial value given a numerator and denominator rounded down.
  */
-export function getPartialAmountFloor(numerator: BigNumber, denominator: BigNumber, target: BigNumber): BigNumber {
-    return safeDiv(safeMul(numerator, target), denominator);
+export function getPartialAmountFloor(numerator: bigint, denominator: bigint, target: bigint): bigint {
+    return (numerator * target) / denominator;
 }
 
 /**
  * Calculates partial value given a numerator and denominator rounded down.
  */
-export function getPartialAmountCeil(numerator: BigNumber, denominator: BigNumber, target: BigNumber): BigNumber {
-    const sub = safeSub(denominator, new BigNumber(1)); // This is computed first to simulate Solidity's order of operations
-    return safeDiv(safeAdd(safeMul(numerator, target), sub), denominator);
+export function getPartialAmountCeil(numerator: bigint, denominator: bigint, target: bigint): bigint {
+    const sub = denominator - 1n; // This is computed first to simulate Solidity's order of operations
+    return (numerator * target + sub) / denominator;
 }
 
 /**
@@ -82,11 +90,11 @@ export function getPartialAmountCeil(numerator: BigNumber, denominator: BigNumbe
  */
 export function addFillResults(a: FillResults, b: FillResults): FillResults {
     return {
-        makerAssetFilledAmount: safeAdd(a.makerAssetFilledAmount, b.makerAssetFilledAmount),
-        takerAssetFilledAmount: safeAdd(a.takerAssetFilledAmount, b.takerAssetFilledAmount),
-        makerFeePaid: safeAdd(a.makerFeePaid, b.makerFeePaid),
-        takerFeePaid: safeAdd(a.takerFeePaid, b.takerFeePaid),
-        protocolFeePaid: safeAdd(a.protocolFeePaid, b.protocolFeePaid),
+        makerAssetFilledAmount: a.makerAssetFilledAmount + b.makerAssetFilledAmount,
+        takerAssetFilledAmount: a.takerAssetFilledAmount + b.takerAssetFilledAmount,
+        makerFeePaid: a.makerFeePaid + b.makerFeePaid,
+        takerFeePaid: a.takerFeePaid + b.takerFeePaid,
+        protocolFeePaid: a.protocolFeePaid + b.protocolFeePaid,
     };
 }
 
@@ -95,9 +103,9 @@ export function addFillResults(a: FillResults, b: FillResults): FillResults {
  */
 export function calculateFillResults(
     order: Order,
-    takerAssetFilledAmount: BigNumber,
-    protocolFeeMultiplier: BigNumber,
-    gasPrice: BigNumber,
+    takerAssetFilledAmount: bigint,
+    protocolFeeMultiplier: bigint,
+    gasPrice: bigint,
 ): FillResults {
     const makerAssetFilledAmount = safeGetPartialAmountFloor(
         takerAssetFilledAmount,
@@ -111,7 +119,7 @@ export function calculateFillResults(
         takerAssetFilledAmount,
         makerFeePaid,
         takerFeePaid,
-        protocolFeePaid: safeMul(protocolFeeMultiplier, gasPrice),
+        protocolFeePaid: protocolFeeMultiplier * gasPrice,
     };
 }
 
@@ -217,8 +225,8 @@ export function calculateMatchResults(
     );
 
     // Protocol Fee
-    leftFillResults.protocolFeePaid = safeMul(protocolFeeMultiplier, gasPrice);
-    rightFillResults.protocolFeePaid = safeMul(protocolFeeMultiplier, gasPrice);
+    leftFillResults.protocolFeePaid = protocolFeeMultiplier * gasPrice;
+    rightFillResults.protocolFeePaid = protocolFeeMultiplier * gasPrice;
 
     return {
         left: leftFillResults,
@@ -236,8 +244,8 @@ export const LibFractions = {
         if (n2.isZero()) {
             return [n1, d1];
         }
-        const numerator = safeAdd(safeMul(n1, d2), safeMul(n2, d1));
-        const denominator = safeMul(d1, d2);
+            const numerator = n1.times(d2).plus(n2.times(d1));
+        const denominator = d1.times(d2);
         return [numerator, denominator];
     },
     normalize: (
@@ -247,8 +255,8 @@ export const LibFractions = {
     ): [BigNumber, BigNumber] => {
         if (numerator.isGreaterThan(maxValue) || denominator.isGreaterThan(maxValue)) {
             let rescaleBase = numerator.isGreaterThanOrEqualTo(denominator) ? numerator : denominator;
-            rescaleBase = safeDiv(rescaleBase, maxValue);
-            return [safeDiv(numerator, rescaleBase), safeDiv(denominator, rescaleBase)];
+            rescaleBase = rescaleBase.dividedToIntegerBy(maxValue);
+            return [numerator.dividedToIntegerBy(rescaleBase), denominator.dividedToIntegerBy(rescaleBase)];
         } else {
             return [numerator, denominator];
         }

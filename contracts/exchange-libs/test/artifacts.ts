@@ -5,19 +5,14 @@
  */
 import { ContractArtifact } from 'ethereum-types';
 
-import * as IWallet from '../test/generated-artifacts/IWallet.json';
-import * as LibEIP712ExchangeDomain from '../test/generated-artifacts/LibEIP712ExchangeDomain.json';
-import * as LibExchangeRichErrors from '../test/generated-artifacts/LibExchangeRichErrors.json';
-import * as LibFillResults from '../test/generated-artifacts/LibFillResults.json';
-import * as LibMath from '../test/generated-artifacts/LibMath.json';
-import * as LibMathRichErrors from '../test/generated-artifacts/LibMathRichErrors.json';
-import * as LibOrder from '../test/generated-artifacts/LibOrder.json';
-import * as LibZeroExTransaction from '../test/generated-artifacts/LibZeroExTransaction.json';
-import * as TestLibEIP712ExchangeDomain from '../test/generated-artifacts/TestLibEIP712ExchangeDomain.json';
-import * as TestLibFillResults from '../test/generated-artifacts/TestLibFillResults.json';
-import * as TestLibMath from '../test/generated-artifacts/TestLibMath.json';
-import * as TestLibOrder from '../test/generated-artifacts/TestLibOrder.json';
-import * as TestLibZeroExTransaction from '../test/generated-artifacts/TestLibZeroExTransaction.json';
+import * as IWallet from '../artifacts/contracts/src/IWallet.sol/IWallet.json';
+import * as LibEIP712ExchangeDomain from '../artifacts/contracts/src/LibEIP712ExchangeDomain.sol/LibEIP712ExchangeDomain.json';
+import * as LibExchangeRichErrors from '../artifacts/contracts/src/LibExchangeRichErrors.sol/LibExchangeRichErrors.json';
+import * as LibFillResults from '../artifacts/contracts/src/LibFillResults.sol/LibFillResults.json';
+import * as LibMath from '../artifacts/contracts/src/LibMath.sol/LibMath.json';
+import * as LibMathRichErrors from '../artifacts/contracts/src/LibMathRichErrors.sol/LibMathRichErrors.json';
+import * as LibOrder from '../artifacts/contracts/src/LibOrder.sol/LibOrder.json';
+import * as LibZeroExTransaction from '../artifacts/contracts/src/LibZeroExTransaction.sol/LibZeroExTransaction.json';
 export const artifacts = {
     IWallet: IWallet as ContractArtifact,
     LibEIP712ExchangeDomain: LibEIP712ExchangeDomain as ContractArtifact,
@@ -27,9 +22,4 @@ export const artifacts = {
     LibMathRichErrors: LibMathRichErrors as ContractArtifact,
     LibOrder: LibOrder as ContractArtifact,
     LibZeroExTransaction: LibZeroExTransaction as ContractArtifact,
-    TestLibEIP712ExchangeDomain: TestLibEIP712ExchangeDomain as ContractArtifact,
-    TestLibFillResults: TestLibFillResults as ContractArtifact,
-    TestLibMath: TestLibMath as ContractArtifact,
-    TestLibOrder: TestLibOrder as ContractArtifact,
-    TestLibZeroExTransaction: TestLibZeroExTransaction as ContractArtifact,
 };
