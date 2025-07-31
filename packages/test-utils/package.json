@@ -5,7 +5,7 @@
         "node": ">=6.12"
     },
     "description": "Modern Hardhat-based test utilities with backward compatibility",
-    "main": "lib/src/index.js",
+    "main": "lib/index.js",
     "directories": {
         "test": "test"
     },
