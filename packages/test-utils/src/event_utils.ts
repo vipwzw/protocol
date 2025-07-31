@@ -138,7 +138,34 @@ export function expectEventInReceipt(
     
     if (expectedArgs) {
         for (const [key, expectedValue] of Object.entries(expectedArgs)) {
-            const actualValue = event.args[key];
+            // ethers v6 事件参数访问：尝试名称访问，然后通过索引访问
+            let actualValue = event.args[key];
+            
+            // 如果通过名称访问失败，使用索引映射（ethers v6 兼容性）
+            if (actualValue === undefined && event.args) {
+                // 常见事件参数的索引映射
+                const paramIndexMap: { [eventParam: string]: number } = {
+                    // Transfer 事件
+                    'from': 0,
+                    'to': 1,
+                    'value': 2,
+                    // Approval 事件
+                    'owner': 0,
+                    'spender': 1,
+                    // ERC1155 事件
+                    'operator': 0,
+                    'id': 3,
+                    'ids': 3,
+                    'values': 4,
+                    'approved': 2
+                };
+                
+                const index = paramIndexMap[key];
+                if (index !== undefined && event.args[index] !== undefined) {
+                    actualValue = event.args[index];
+                }
+            }
+            
             expect(actualValue).to.equal(expectedValue, 
                 `Event '${eventName}' argument '${key}' mismatch`);
         }
