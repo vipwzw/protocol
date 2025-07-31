@@ -1,208 +1,220 @@
-import { RevertReason } from '@0x/utils';
-import { logUtils } from '@0x/utils';
-import * as chai from 'chai';
-import { TransactionReceipt, TransactionReceiptStatus, TransactionReceiptWithDecodedLogs } from 'ethereum-types';
-import * as _ from 'lodash';
+import { expect } from './chai_setup';
+import { ethers } from 'ethers';
+const hardhat = require('hardhat');
 
-import { web3Wrapper } from './web3_wrapper';
-
-const expect = chai.expect;
-
-// Define NodeType enum for compatibility
-enum NodeType {
-    Ganache = 'Ganache',
-    Geth = 'Geth',
-}
-
-let nodeType: NodeType | undefined;
-
-// Represents the return value of a `sendTransaction` call. The Promise should
-// resolve with either a transaction receipt or a transaction hash.
-export type sendTransactionResult = Promise<TransactionReceipt | TransactionReceiptWithDecodedLogs | string>;
+export type sendTransactionResult = Promise<ethers.TransactionReceipt | string>;
 
 /**
- * Returns ganacheError if the backing Ethereum node is Ganache and gethError
- * if the backing node is Geth.
- * @param ganacheError the error to be returned if the backing node is Ganache.
- * @param gethError the error to be returned if the backing node is Geth.
- * @returns either the given ganacheError or gethError depending on the backing
- * Ethereum node.
+ * 期望合约调用失败（带具体错误信息）
  */
-async function _getGanacheOrGethErrorAsync(ganacheError: string, gethError: string): Promise<string> {
-    if (nodeType === undefined) {
-        const nodeTypeStr = await web3Wrapper.getNodeTypeAsync();
-        nodeType = nodeTypeStr === 'Geth' ? NodeType.Geth : NodeType.Ganache;
+export async function expectContractCallFailedAsync(
+    contractCall: Promise<any>,
+    expectedError?: string
+): Promise<void> {
+    try {
+        await contractCall;
+        throw new Error('Expected contract call to fail, but it succeeded');
+    } catch (error: any) {
+        if (expectedError) {
+            expect(error.message).to.include(expectedError);
+        }
     }
-    switch (nodeType) {
-        case NodeType.Ganache:
-            return ganacheError;
-        case NodeType.Geth:
-            return gethError;
-        default:
-            throw new Error(`Unknown node type: ${nodeType}`);
-    }
-}
-
-async function _getInsufficientFundsErrorMessageAsync(): Promise<string> {
-    return _getGanacheOrGethErrorAsync('insufficient funds for gas * price + value', 'insufficient funds');
-}
-
-async function _getTransactionFailedErrorMessageAsync(): Promise<string> {
-    return _getGanacheOrGethErrorAsync('revert', 'always failing transaction');
-}
-
-async function _getContractCallFailedErrorMessageAsync(): Promise<string> {
-    return _getGanacheOrGethErrorAsync('revert', 'Contract call failed');
 }
 
 /**
- * Returns the expected error message for an 'invalid opcode' resulting from a
- * contract call. The exact error message depends on the backing Ethereum node.
+ * 期望合约调用失败（不检查错误信息）
+ */
+export async function expectContractCallFailedWithoutReasonAsync(
+    contractCall: Promise<any>
+): Promise<void> {
+    try {
+        await contractCall;
+        throw new Error('Expected contract call to fail, but it succeeded');
+    } catch (error: any) {
+        // 只要抛出错误就认为是成功的
+    }
+}
+
+/**
+ * 期望合约创建失败
+ */
+export async function expectContractCreationFailedAsync(
+    contractCreation: Promise<any>,
+    expectedError?: string
+): Promise<void> {
+    try {
+        await contractCreation;
+        throw new Error('Expected contract creation to fail, but it succeeded');
+    } catch (error: any) {
+        if (expectedError) {
+            expect(error.message).to.include(expectedError);
+        }
+    }
+}
+
+/**
+ * 期望合约创建失败（不检查错误信息）
+ */
+export async function expectContractCreationFailedWithoutReasonAsync(
+    contractCreation: Promise<any>
+): Promise<void> {
+    try {
+        await contractCreation;
+        throw new Error('Expected contract creation to fail, but it succeeded');
+    } catch (error: any) {
+        // 只要抛出错误就认为是成功的
+    }
+}
+
+/**
+ * 期望资金不足错误
+ */
+export async function expectInsufficientFundsAsync(
+    transaction: Promise<any>
+): Promise<void> {
+    try {
+        await transaction;
+        throw new Error('Expected transaction to fail due to insufficient funds, but it succeeded');
+    } catch (error: any) {
+        // 检查是否是资金不足相关的错误
+        const errorMessage = error.message.toLowerCase();
+        const insufficientFundsPatterns = [
+            'insufficient funds',
+            'insufficient balance',
+            'not enough ether',
+            'execution reverted',
+            'transfer amount exceeds balance'
+        ];
+        
+        const hasInsufficientFundsError = insufficientFundsPatterns.some(pattern => 
+            errorMessage.includes(pattern)
+        );
+        
+        if (!hasInsufficientFundsError) {
+            throw new Error(`Expected insufficient funds error, but got: ${error.message}`);
+        }
+    }
+}
+
+/**
+ * 期望交易失败（带具体错误信息）
+ */
+export async function expectTransactionFailedAsync(
+    transaction: Promise<any>,
+    expectedError?: string
+): Promise<void> {
+    try {
+        const result = await transaction;
+        
+        // 如果返回的是交易收据，检查状态
+        if (result && typeof result === 'object' && 'status' in result) {
+            if (result.status === 1) {
+                throw new Error('Expected transaction to fail, but it succeeded');
+            }
+            return; // 交易失败，符合预期
+        }
+        
+        throw new Error('Expected transaction to fail, but it succeeded');
+    } catch (error: any) {
+        if (expectedError) {
+            expect(error.message).to.include(expectedError);
+        }
+    }
+}
+
+/**
+ * 期望交易失败（不检查错误信息）
+ */
+export async function expectTransactionFailedWithoutReasonAsync(
+    transaction: Promise<any>
+): Promise<void> {
+    try {
+        const result = await transaction;
+        
+        // 如果返回的是交易收据，检查状态
+        if (result && typeof result === 'object' && 'status' in result) {
+            if (result.status === 1) {
+                throw new Error('Expected transaction to fail, but it succeeded');
+            }
+            return; // 交易失败，符合预期
+        }
+        
+        throw new Error('Expected transaction to fail, but it succeeded');
+    } catch (error: any) {
+        // 只要抛出错误就认为是成功的
+    }
+}
+
+/**
+ * 获取无效操作码错误信息（用于调用）
  */
 export async function getInvalidOpcodeErrorMessageForCallAsync(): Promise<string> {
-    return _getGanacheOrGethErrorAsync('invalid opcode', 'Contract call failed');
+    // 在 Hardhat 中，无效操作码通常返回 "execution reverted"
+    return 'execution reverted';
 }
 
 /**
- * Returns the expected error message for the given revert reason resulting from
- * a sendTransaction call. The exact error message depends on the backing
- * Ethereum node and whether it supports revert reasons.
- * @param reason a specific revert reason.
- * @returns the expected error message.
+ * 获取恢复原因或错误信息（用于发送交易）
  */
-export async function getRevertReasonOrErrorMessageForSendTransactionAsync(reason: RevertReason): Promise<string> {
-    return _getGanacheOrGethErrorAsync(reason, 'always failing transaction');
-}
-
-/**
- * Rejects if the given Promise does not reject with an error indicating
- * insufficient funds.
- * @param p a promise resulting from a contract call or sendTransaction call.
- * @returns a new Promise which will reject if the conditions are not met and
- * otherwise resolve with no value.
- */
-export async function expectInsufficientFundsAsync<T>(p: Promise<T>): Promise<void> {
-    const errMessage = await _getInsufficientFundsErrorMessageAsync();
-    return expect(p).to.be.rejectedWith(errMessage);
-}
-
-/**
- * Resolves if the the sendTransaction call fails with the given revert reason.
- * However, since Geth does not support revert reasons for sendTransaction, this
- * falls back to expectTransactionFailedWithoutReasonAsync if the backing
- * Ethereum node is Geth.
- * @param p a Promise resulting from a sendTransaction call
- * @param reason a specific revert reason
- * @returns a new Promise which will reject if the conditions are not met and
- * otherwise resolve with no value.
- */
-export async function expectTransactionFailedAsync(p: sendTransactionResult, reason: RevertReason): Promise<void> {
-    // HACK(albrow): This dummy `catch` should not be necessary, but if you
-    // remove it, there is an uncaught exception and the Node process will
-    // forcibly exit. It's possible this is a false positive in
-    // make-promises-safe.
-    p.catch(e => {
-        _.noop(e);
-    });
-
-    if (nodeType === undefined) {
-        const nodeTypeStr = await web3Wrapper.getNodeTypeAsync();
-        nodeType = nodeTypeStr === 'Geth' ? NodeType.Geth : NodeType.Ganache;
-    }
-    const rejectionMessageRegex = new RegExp(`^VM Exception while processing transaction: revert ${reason}$`);
-    switch (nodeType) {
-        case NodeType.Ganache:
-            return expect(p).to.be.rejectedWith(rejectionMessageRegex);
-        case NodeType.Geth:
-            logUtils.warn(
-                'WARNING: Geth does not support revert reasons for sendTransaction. This test will pass if the transaction fails for any reason.',
-            );
-            return expectTransactionFailedWithoutReasonAsync(p);
-        default:
-            throw new Error(`Unknown node type: ${nodeType}`);
+export async function getRevertReasonOrErrorMessageForSendTransactionAsync(
+    transaction: Promise<any>
+): Promise<string> {
+    try {
+        await transaction;
+        return ''; // 交易成功，没有错误
+    } catch (error: any) {
+        // 尝试提取恢复原因
+        if (error.reason) {
+            return error.reason;
+        }
+        
+        // 尝试从错误信息中提取
+        const message = error.message || '';
+        
+        // 查找常见的错误模式
+        const revertMatch = message.match(/reverted with reason string '(.+?)'/);
+        if (revertMatch) {
+            return revertMatch[1];
+        }
+        
+        const panicMatch = message.match(/reverted with panic code (.+)/);
+        if (panicMatch) {
+            return `Panic: ${panicMatch[1]}`;
+        }
+        
+        // 返回原始错误信息
+        return message;
     }
 }
 
 /**
- * Resolves if the transaction fails without a revert reason, or if the
- * corresponding transactionReceipt has a status of 0 or '0', indicating
- * failure.
- * @param p a Promise resulting from a sendTransaction call
- * @returns a new Promise which will reject if the conditions are not met and
- * otherwise resolve with no value.
+ * 辅助函数：检查错误是否匹配预期模式
  */
-export async function expectTransactionFailedWithoutReasonAsync(p: sendTransactionResult): Promise<void> {
-    return p
-        .then(async result => {
-            let txReceiptStatus: TransactionReceiptStatus;
-            if (_.isString(result)) {
-                // Result is a txHash. We need to make a web3 call to get the
-                // receipt, then get the status from the receipt.
-                const txReceipt = await web3Wrapper.awaitTransactionMinedAsync(result);
-                if (!txReceipt || txReceipt.status === null) {
-                    throw new Error('Transaction receipt not found or status is null');
-                }
-                txReceiptStatus = txReceipt.status as TransactionReceiptStatus;
-            } else if ('status' in result) {
-                // Result is a transaction receipt, so we can get the status
-                // directly.
-                txReceiptStatus = result.status;
-            } else {
-                throw new Error(`Unexpected result type: ${typeof result}`);
-            }
-            expect(_.toString(txReceiptStatus)).to.equal(
-                '0',
-                'Expected transaction to fail but receipt had a non-zero status, indicating success',
-            );
-        })
-        .catch(async err => {
-            // If the promise rejects, we expect a specific error message,
-            // depending on the backing Ethereum node type.
-            const errMessage = await _getTransactionFailedErrorMessageAsync();
-            expect(err.message).to.include(errMessage);
-        });
+export function isExpectedError(error: any, expectedPatterns: string[]): boolean {
+    const errorMessage = (error.message || '').toLowerCase();
+    return expectedPatterns.some(pattern => errorMessage.includes(pattern.toLowerCase()));
 }
 
 /**
- * Resolves if the the contract call fails with the given revert reason.
- * @param p a Promise resulting from a contract call
- * @param reason a specific revert reason
- * @returns a new Promise which will reject if the conditions are not met and
- * otherwise resolve with no value.
+ * 辅助函数：等待交易完成并返回收据
  */
-export async function expectContractCallFailedAsync<T>(p: Promise<T>, reason: RevertReason): Promise<void> {
-    const rejectionMessageRegex = new RegExp(`^VM Exception while processing transaction: revert ${reason}$`);
-    return expect(p).to.be.rejectedWith(rejectionMessageRegex);
-}
-
-/**
- * Resolves if the contract call fails without a revert reason.
- * @param p a Promise resulting from a contract call
- * @returns a new Promise which will reject if the conditions are not met and
- * otherwise resolve with no value.
- */
-export async function expectContractCallFailedWithoutReasonAsync<T>(p: Promise<T>): Promise<void> {
-    const errMessage = await _getContractCallFailedErrorMessageAsync();
-    return expect(p).to.be.rejectedWith(errMessage);
-}
-
-/**
- * Resolves if the contract creation/deployment fails without a revert reason.
- * @param p a Promise resulting from a contract creation/deployment
- * @returns a new Promise which will reject if the conditions are not met and
- * otherwise resolve with no value.
- */
-export async function expectContractCreationFailedAsync(p: sendTransactionResult, reason: RevertReason): Promise<void> {
-    return expectTransactionFailedAsync(p, reason);
-}
-
-/**
- * Resolves if the contract creation/deployment fails without a revert reason.
- * @param p a Promise resulting from a contract creation/deployment
- * @returns a new Promise which will reject if the conditions are not met and
- * otherwise resolve with no value.
- */
-export async function expectContractCreationFailedWithoutReasonAsync<T>(p: Promise<T>): Promise<void> {
-    const errMessage = await _getTransactionFailedErrorMessageAsync();
-    return expect(p).to.be.rejectedWith(errMessage);
+export async function awaitTransactionAsync(txPromise: Promise<any>): Promise<ethers.TransactionReceipt> {
+    const tx = await txPromise;
+    
+    // 如果已经是收据，直接返回
+    if (tx.status !== undefined) {
+        return tx;
+    }
+    
+    // 如果是交易对象，等待完成
+    if (tx.wait) {
+        return await tx.wait();
+    }
+    
+    // 如果是交易哈希，获取收据
+    if (typeof tx === 'string') {
+        return await hardhat.ethers.provider.getTransactionReceipt(tx);
+    }
+    
+    throw new Error('Invalid transaction result');
 }

@@ -4,7 +4,7 @@
     "engines": {
         "node": ">=6.12"
     },
-    "description": "Test utils for 0x contracts",
+    "description": "Modern Hardhat-based test utilities with backward compatibility",
     "main": "lib/src/index.js",
     "directories": {
         "test": "test"
@@ -13,7 +13,6 @@
         "build": "yarn pre_build && tsc -b",
         "build:ci": "yarn build",
         "build:ts": "tsc -b",
-
         "clean": "shx rm -rf lib generated_docs coverage .nyc_output *.log artifacts cache out typechain-types generated-* test/generated-*",
         "clean:node-modules": "shx rm -rf node_modules",
         "clean:all": "yarn clean && yarn clean:node-modules",
@@ -36,7 +35,6 @@
     },
     "homepage": "https://github.com/0xProject/protocol/tree/main/packages/test-utils",
     "devDependencies": {
-
         "@types/js-combinatorics": "^0.5.29",
         "npm-run-all": "^4.1.2",
         "shx": "^0.4.0",
@@ -46,12 +44,13 @@
     "dependencies": {
         "bn.js": "^4.11.8",
         "chai": "^4.5.0",
-        "chai-bignumber": "^3.0.0",
+        "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
         "decimal.js": "^10.2.0",
         "dirty-chai": "^2.0.1",
         "ethereum-types": "^3.7.1",
         "ethereumjs-util": "^7.0.10",
         "ethers": "^6.15.0",
+        "hardhat": "^2.22.0",
         "js-combinatorics": "^0.5.3",
         "lodash": "^4.17.11",
         "mocha": "^6.2.0"
