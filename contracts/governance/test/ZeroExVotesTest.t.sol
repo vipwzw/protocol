@@ -19,9 +19,9 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "../BaseTest.t.sol";
-import "../mocks/ZeroExVotesMalicious.sol";
-import "../mocks/ZeroExVotesMigration.sol";
+import "./BaseTest.t.sol";
+import "./mocks/ZeroExVotesMalicious.sol";
+import "./mocks/ZeroExVotesMigration.sol";
 import "../../src/ZRXWrappedToken.sol";
 import "../../src/ZeroExVotes.sol";
 

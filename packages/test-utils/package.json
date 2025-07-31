@@ -20,7 +20,8 @@
         "docs:json": "typedoc --excludePrivate --excludeExternals --target ES5 --tsconfig typedoc-tsconfig.json --json $JSON_FILE_PATH $PROJECT_FILES",
         "lint": "tslint --project . --format stylish",
         "pre_build": "copyfiles 'test/fixtures/**/*' lib/",
-        "test": "npx hardhat test",
+        "test": "yarn test:hardhat",
+        "test:hardhat": "npx hardhat test",
         "test:all": "npx hardhat test",
         "test:legacy": "npx hardhat test test/mocha_blockchain.ts test/order_hash_test.ts test/test_with_reference.ts",
         "test:ci": "yarn test"

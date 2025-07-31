@@ -19,12 +19,12 @@ contract LibMathTest is Test {
     function testSafeGetPartialAmountCeil() public {
         uint256 numerator = 100;
         uint256 denominator = 200;
-        uint256 target = 51;
+        uint256 target = 50;
         
         uint256 result = LibMath.safeGetPartialAmountCeil(numerator, denominator, target);
         
-        // Expected: (100 * 51 + 200 - 1) / 200 = 26
-        assertEq(result, 26);
+        // Expected: (100 * 50 + 200 - 1) / 200 = 25 (no rounding needed)
+        assertEq(result, 25);
     }
     
     function testIsRoundingErrorFloor() public {

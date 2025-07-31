@@ -8,8 +8,10 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npx hardhat test",
-    "test:foundry": "forge test",
+    "test": "run-s test:hardhat test:forge",
+    "test:forge": "MAINNET_RPC_URL=http://localhost:8545 forge test --match-path 'test/ZeroEx*.sol'",
+    "test:hardhat": "npx hardhat test",
+    "test:ci": "yarn test",
     "build": "forge build && npx hardhat compile",
     "build:ts": "npx hardhat compile",
     "build:smt": "FOUNDRY_PROFILE=smt forge build",

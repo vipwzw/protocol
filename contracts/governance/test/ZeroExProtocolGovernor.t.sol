@@ -19,7 +19,7 @@
 pragma solidity ^0.8.0;
 
 import "./ZeroExGovernorBaseTest.t.sol";
-import "../mocks/ZeroExMock.sol";
+import "./mocks/ZeroExMock.sol";
 import "../../src/ZeroExProtocolGovernor.sol";
 
 contract ZeroExProtocolGovernorTest is ZeroExGovernorBaseTest {

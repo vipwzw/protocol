@@ -3,7 +3,7 @@
 	url = https://github.com/foundry-rs/forge-std
 [submodule "contracts/erc20/lib/forge-std"]
 	path = contracts/erc20/lib/forge-std
-    url = https://github.com/foundry-rs/forge-std
+	url = https://github.com/foundry-rs/forge-std
 [submodule "contracts/governance/lib/forge-std"]
 	path = contracts/governance/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
@@ -20,4 +20,19 @@
 	url = https://github.com/foundry-rs/forge-std
 [submodule "contracts/exchange-libs/lib/forge-std"]
 	path = contracts/exchange-libs/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "contracts/erc721/lib/forge-std"]
+	path = contracts/erc721/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "contracts/erc1155/lib/forge-std"]
+	path = contracts/erc1155/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "contracts/asset-proxy/lib/forge-std"]
+	path = contracts/asset-proxy/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "contracts/staking/lib/forge-std"]
+	path = contracts/staking/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "contracts/treasury/lib/forge-std"]
+	path = contracts/treasury/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std

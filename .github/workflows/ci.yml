@@ -396,6 +396,66 @@ jobs:
                   flag-name: forge-${{ matrix.contract }}
                   parallel: true
 
+    forge-tests-unified:
+        name: Unified Forge tests with Hardhat node
+        runs-on: ubuntu-latest
+        needs: [setup, build]
+        timeout-minutes: 30
+        env:
+            MAINNET_RPC_URL: http://localhost:8545
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: 'yarn'
+
+            - name: Setup Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: ${{ env.FORGE_VERSION }}
+
+            - name: Restore node modules cache
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      node_modules
+                      packages/*/node_modules
+                      contracts/*/node_modules
+                      ~/.yarn
+                  key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/yarn.lock') }}
+
+            - name: Install dependencies
+              run: yarn install --frozen-lockfile
+
+            - name: Restore Foundry cache
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.foundry
+                      contracts/*/cache
+                      contracts/*/out
+                  key: ${{ runner.os }}-foundry-${{ env.FORGE_VERSION }}-${{ hashFiles('contracts/**/foundry.toml', 'contracts/**/*.sol') }}
+
+            - name: Restore build artifacts cache
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      packages/*/lib
+                      contracts/*/lib
+                      contracts/*/generated-*
+                  key: ${{ runner.os }}-build-${{ github.sha }}
+
+            - name: Run unified Forge tests with Hardhat node
+              run: |
+                  echo "🚀 Starting unified Forge tests with automatic Hardhat node..."
+                  yarn test:forge:auto
+
     coverage-check:
         name: Coverage threshold check
         runs-on: ubuntu-latest
@@ -440,7 +500,7 @@ jobs:
     final-check:
         name: All checks passed
         runs-on: ubuntu-latest
-        needs: [build, lint, quality-checks, test-contracts, test-packages, forge-tests, coverage-check]
+        needs: [build, lint, quality-checks, test-contracts, test-packages, forge-tests, forge-tests-unified, coverage-check]
         if: always()
         steps:
             - name: Check all jobs
@@ -451,6 +511,7 @@ jobs:
                         "${{ needs.test-contracts.result }}" != "success" || \
                         "${{ needs.test-packages.result }}" != "success" || \
                         "${{ needs.forge-tests.result }}" != "success" || \
+                        "${{ needs.forge-tests-unified.result }}" != "success" || \
                         "${{ needs.coverage-check.result }}" != "success" ]]; then
                     echo "One or more jobs failed"
                     exit 1

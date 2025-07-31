@@ -20,11 +20,11 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../mocks/IZeroExMock.sol";
-import "../mocks/IZrxTreasuryMock.sol";
-import "../mocks/IStakingMock.sol";
-import "../mocks/IZrxVaultMock.sol";
-import "../BaseTest.t.sol";
+import "./mocks/IZeroExMock.sol";
+import "./mocks/IZrxTreasuryMock.sol";
+import "./mocks/IStakingMock.sol";
+import "./mocks/IZrxVaultMock.sol";
+import "./BaseTest.t.sol";
 import "../../src/ZRXWrappedToken.sol";
 import "../../src/ZeroExVotes.sol";
 import "../../src/ZeroExTimelock.sol";

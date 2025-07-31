@@ -31,7 +31,7 @@ contract LibBytesTest {
     function testSlice() public view {
         bytes memory data = hex"deadbeefcafebabe";
         bytes memory result = data.slice(2, 6);
-        bytes memory expected = hex"adbeefca";
+        bytes memory expected = hex"beefcafe";
         require(result.equals(expected), "Slice test failed");
     }
 }

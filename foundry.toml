@@ -1,11 +1,16 @@
 [profile.default]
-src = 'contracts/src'
+src = 'contracts/*/src'
 out = 'out'
-test = 'test'
-libs = ['lib']
+test = 'contracts/*/tests'
+script = 'contracts/*/script'
+libs = ['contracts/*/lib']
 remappings = [
-    '@0x/contracts-utils/=../utils/',
-    '@0x/contracts-erc20/=../erc20/'
+    '@0x/contracts-utils/=contracts/utils/',
+    '@0x/contracts-erc20/=contracts/erc20/',
+    '@0x/contracts-governance/=contracts/governance/',
+    '@0x/contracts-exchange-libs/=contracts/exchange-libs/',
+    '@openzeppelin/contracts/=contracts/governance/lib/openzeppelin-contracts/contracts/',
+    '@openzeppelin/contracts-upgradeable/=contracts/governance/lib/openzeppelin-contracts-upgradeable/contracts/'
 ]
 solc_version = "0.8.28"
 optimizer = true
@@ -13,7 +18,8 @@ optimizer_runs = 1000000
 evm_version = "shanghai"
 fs_permissions = [
     { access = "read", path = "./" },
-    { access = "read", path = "../" },
-    { access = "read-write", path = "../utils/" },
-    { access = "read-write", path = "../erc20/" }
+    { access = "read", path = "contracts/" },
+    { access = "read-write", path = "contracts/utils/" },
+    { access = "read-write", path = "contracts/erc20/" },
+    { access = "read-write", path = "contracts/governance/" }
 ] 
