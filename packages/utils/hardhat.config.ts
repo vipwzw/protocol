@@ -31,8 +31,6 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: 30000,
-    // 指定测试文件模式
-    testFiles: ['test/**/*.ts', 'test/*.ts'],
   },
 };
 

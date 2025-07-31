@@ -4,25 +4,26 @@ import "@nomicfoundation/hardhat-chai-matchers";
 
 const config: HardhatUserConfig = {
   paths: {
-    sources: "./src",
+    sources: "./src", // 虽然没有.sol文件，但指向src目录
     tests: "./test",
-    cache: "./cache",
-    artifacts: "./artifacts",
+    cache: "./cache/hardhat", // 避免冲突
+    artifacts: "./.artifacts", // 使用不同的目录避免被清理
   },
   solidity: {
-    version: "0.8.28",
+    version: "0.8.28", // 使用项目标准的Solidity版本
     settings: {
       optimizer: {
         enabled: true,
         runs: 1000000,
       },
+      evmVersion: "cancun",
     },
   },
   networks: {
     hardhat: {
       chainId: 1337,
       accounts: {
-        mnemonic: "test test test test test test test test test test test junk",
+        mnemonic: "concert load couple harbor equip island argue ramp clarify fence smart topic",
         count: 20,
         accountsBalance: "10000000000000000000000", // 10000 ETH
       },
@@ -31,8 +32,7 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: 30000,
-    // 指定测试文件模式
-    testFiles: ['test/**/*.ts', 'test/*.ts'],
+    testFiles: ['test/**/*.ts', 'test/*.ts'], // 确保能找到TypeScript测试文件
   },
 };
 
