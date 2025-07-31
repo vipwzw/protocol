@@ -1,16 +1,16 @@
-import { ERC1155MintableContract, Erc1155Wrapper } from '@0x/contracts-erc1155';
+import { ERC1155MintableContract, Erc1155Wrapper } from '../../erc1155/src';
 import {
     artifacts as erc20Artifacts,
     DummyERC20TokenContract,
     DummyERC20TokenTransferEventArgs,
     DummyMultipleReturnERC20TokenContract,
     DummyNoReturnERC20TokenContract,
-} from '@0x/contracts-erc20';
+} from '../../erc20/src';
 import {
     artifacts as erc721Artifacts,
     DummyERC721ReceiverContract,
     DummyERC721TokenContract,
-} from '@0x/contracts-erc721';
+} from '../../erc721/src';
 import {
     chaiSetup,
     constants,
@@ -40,12 +40,12 @@ import { ERC721Wrapper } from '../src/erc721_wrapper';
 import { ERC1155ProxyContract, ERC20ProxyContract, ERC721ProxyContract } from '../src/wrappers';
 
 import { artifacts } from './artifacts';
-import { IAssetProxyContract, MultiAssetProxyContract } from './wrappers';
+import { IAssetProxy, IAssetProxy__factory, MultiAssetProxyContract } from './wrappers';
 
 chaiSetup.configure();
 const expect = chai.expect;
 const blockchainLifecycle = new BlockchainLifecycle(web3Wrapper);
-const assetProxyInterface = new IAssetProxyContract(constants.NULL_ADDRESS, provider);
+const assetProxyInterface = IAssetProxy__factory.connect(constants.NULL_ADDRESS, provider);
 
 // tslint:disable:no-unnecessary-type-assertion
 describe('Asset Transfer Proxies', () => {

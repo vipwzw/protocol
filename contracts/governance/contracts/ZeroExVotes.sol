@@ -263,7 +263,7 @@ contract ZeroExVotes is IZeroExVotes, Initializable, OwnableUpgradeable, UUPSUpg
         Checkpoint[] storage ckpts,
         function(uint256, uint256) view returns (uint256) op,
         uint256 userBalance,
-        uint96 balanceLastUpdated,
+        uint96 /* balanceLastUpdated */,
         uint256 delta
     )
         internal
@@ -330,7 +330,7 @@ contract ZeroExVotes is IZeroExVotes, Initializable, OwnableUpgradeable, UUPSUpg
         }
     }
 
-    function _checkSenderIsToken() private {
+    function _checkSenderIsToken() private view {
         require(msg.sender == token, "ZeroExVotes: only token allowed");
     }
 }

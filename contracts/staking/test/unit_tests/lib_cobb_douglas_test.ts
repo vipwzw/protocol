@@ -198,7 +198,7 @@ blockchainTests('LibCobbDouglas unit tests', env => {
         blockchainTests.optional('fuzzing', () => {
             const inputs = _.times(FUZZ_COUNT, () => getRandomParams());
             for (const params of inputs) {
-                it(`cobbDouglas(${JSON.stringify(params)})`, async () => {
+                it(`cobbDouglas(${JSON.stringify(params, (key, value) => typeof value === 'bigint' ? value.toString() : value)})`, async () => {
                     const expected = cobbDouglas(params);
                     const r = await callCobbDouglasAsync(params);
                     assertRoughlyEquals(r, expected, PRECISION);

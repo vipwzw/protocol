@@ -47,7 +47,7 @@ contract ZeroExProtocolGovernor is
         securityCouncil = _securityCouncil;
     }
 
-    function quorum(uint256 blockNumber) public pure override returns (uint256) {
+    function quorum(uint256 /* blockNumber */) public pure override returns (uint256) {
         return 10000000e18;
     }
 

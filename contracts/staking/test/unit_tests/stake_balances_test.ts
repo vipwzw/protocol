@@ -11,7 +11,7 @@ import { StakeStatus, StoredBalance } from '../../src/types';
 blockchainTests.resets('MixinStakeBalances unit tests', env => {
     let testContract: TestMixinStakeBalancesContract;
     const { INITIAL_EPOCH } = stakingConstants;
-    const CURRENT_EPOCH = INITIAL_EPOCH.plus(1);
+    const CURRENT_EPOCH = new BigNumber(INITIAL_EPOCH).plus(1);
     const EMPTY_BALANCE = {
         currentEpochBalance: constants.ZERO_AMOUNT,
         nextEpochBalance: constants.ZERO_AMOUNT,
@@ -28,14 +28,14 @@ blockchainTests.resets('MixinStakeBalances unit tests', env => {
     });
 
     function randomAmount(): BigNumber {
-        return getRandomInteger(1, 100e18);
+        return new BigNumber(getRandomInteger(1, 100e18));
     }
 
     function randomStoredBalance(): StoredBalance {
         return {
             currentEpochBalance: randomAmount(),
             nextEpochBalance: randomAmount(),
-            currentEpoch: INITIAL_EPOCH,
+            currentEpoch: new BigNumber(INITIAL_EPOCH),
         };
     }
 
@@ -50,7 +50,7 @@ blockchainTests.resets('MixinStakeBalances unit tests', env => {
 
     describe('getGlobalStakeByStatus()', () => {
         const delegatedBalance = randomStoredBalance();
-        const zrxVaultBalance = randomAmount().plus(
+        const zrxVaultBalance = new BigNumber(randomAmount()).plus(
             BigNumber.max(delegatedBalance.currentEpochBalance, delegatedBalance.nextEpochBalance),
         );
 
@@ -143,7 +143,7 @@ blockchainTests.resets('MixinStakeBalances unit tests', env => {
     describe('getTotalStake()', () => {
         const staker = randomAddress();
         const notStaker = randomAddress();
-        const stakerAmount = randomAmount();
+        const stakerAmount = new BigNumber(randomAmount());
 
         before(async () => {
             await testContract.setZrxBalanceOf(staker, stakerAmount).awaitTransactionSuccessAsync();

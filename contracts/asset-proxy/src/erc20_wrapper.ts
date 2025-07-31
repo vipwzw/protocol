@@ -1,4 +1,4 @@
-import { artifacts as erc20Artifacts, DummyERC20TokenContract } from '@0x/contracts-erc20';
+import { artifacts as erc20Artifacts, DummyERC20TokenContract } from '../../erc20/src';
 import { constants, ERC20BalancesByOwner, txDefaults } from '@0x/test-utils';
 import { BigNumber } from '@0x/utils';
 import { ZeroExProvider } from 'ethereum-types';

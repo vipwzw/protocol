@@ -70,8 +70,7 @@ contract SimpleStaking {
     mapping(bytes32 => StoredBalance) private _delegatedStakeToPoolByOwner;
     mapping(address => mapping(bytes32 => StoredBalance)) private _delegatedStakeByOwnerToPool;
     
-    event Stake(address indexed staker, uint256 amount);
-    event Unstake(address indexed staker, uint256 amount);
+    // Events moved to the end of the contract to avoid duplication
     event MoveStake(
         address indexed staker,
         uint256 amount,
@@ -114,7 +113,7 @@ contract SimpleStaking {
         emit Unstake(msg.sender, amount);
     }
     
-    function createStakingPool(uint32 operatorShare, bool addOperatorAsMaker) 
+    function createStakingPool(uint32 operatorShare, bool /* addOperatorAsMaker */) 
         external 
         returns (bytes32 poolId) 
     {
@@ -182,7 +181,7 @@ contract StakingTest is Test {
         vm.stopPrank();
     }
     
-    function testInitialState() public {
+    function testInitialState() public view {
         assertEq(staking.currentEpoch(), 1);
         assertEq(staking.epochDurationInSeconds(), 7 days);
         assertEq(address(staking.stakingToken()), address(zrxToken));

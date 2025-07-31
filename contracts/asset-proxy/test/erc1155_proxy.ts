@@ -4,7 +4,7 @@ import {
     DummyERC1155ReceiverContract,
     ERC1155MintableContract,
     Erc1155Wrapper,
-} from '@0x/contracts-erc1155';
+} from '../../erc1155/src';
 import {
     chaiSetup,
     constants,
@@ -40,8 +40,8 @@ describe('ERC1155Proxy', () => {
     const spenderInitialFungibleBalance = constants.INITIAL_ERC1155_FUNGIBLE_BALANCE;
     const receiverInitialFungibleBalance = constants.INITIAL_ERC1155_FUNGIBLE_BALANCE;
     const receiverContractInitialFungibleBalance = new BigNumber(0);
-    const fungibleValueToTransferSmall = spenderInitialFungibleBalance.div(100);
-    const fungibleValueToTransferLarge = spenderInitialFungibleBalance.div(4);
+    const fungibleValueToTransferSmall = spenderInitialFungibleBalance / 100n;
+    const fungibleValueToTransferLarge = spenderInitialFungibleBalance / 4n;
     const valueMultiplierSmall = new BigNumber(2);
     const valueMultiplierNft = new BigNumber(1);
     const nonFungibleValueToTransfer = nftOwnerBalance;

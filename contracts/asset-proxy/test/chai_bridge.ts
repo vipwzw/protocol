@@ -1,4 +1,4 @@
-import { ERC20TokenContract } from '@0x/contracts-erc20';
+import { ERC20TokenContract } from '../../erc20/src';
 import { blockchainTests, constants, expect, randomAddress } from '@0x/test-utils';
 import { AssetProxyId, RevertReason } from '@0x/utils';
 import { BigNumber } from '@0x/utils';

@@ -87,7 +87,7 @@ contract SimpleTreasuryTest is Test {
         token.mint(address(this), 1000 ether);
     }
     
-    function testInitialState() public {
+    function testInitialState() public view {
         assertEq(treasury.owner(), address(this));
         assertEq(treasury.totalFees(), 0);
         assertEq(treasury.getBalance(), 0);

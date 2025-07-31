@@ -5,123 +5,195 @@
  */
 import { ContractArtifact } from 'ethereum-types';
 
-import * as BalancerBridge from '../test/generated-artifacts/BalancerBridge.json';
-import * as BancorBridge from '../test/generated-artifacts/BancorBridge.json';
-import * as ChaiBridge from '../test/generated-artifacts/ChaiBridge.json';
-import * as CreamBridge from '../test/generated-artifacts/CreamBridge.json';
-import * as CryptoComBridge from '../test/generated-artifacts/CryptoComBridge.json';
-import * as CurveBridge from '../test/generated-artifacts/CurveBridge.json';
-import * as DexForwarderBridge from '../test/generated-artifacts/DexForwarderBridge.json';
-import * as DODOBridge from '../test/generated-artifacts/DODOBridge.json';
-import * as DydxBridge from '../test/generated-artifacts/DydxBridge.json';
-import * as ERC1155Proxy from '../test/generated-artifacts/ERC1155Proxy.json';
-import * as ERC20BridgeProxy from '../test/generated-artifacts/ERC20BridgeProxy.json';
-import * as ERC20Proxy from '../test/generated-artifacts/ERC20Proxy.json';
-import * as ERC721Proxy from '../test/generated-artifacts/ERC721Proxy.json';
-import * as Eth2DaiBridge from '../test/generated-artifacts/Eth2DaiBridge.json';
-import * as IAssetData from '../test/generated-artifacts/IAssetData.json';
-import * as IAssetProxy from '../test/generated-artifacts/IAssetProxy.json';
-import * as IAssetProxyDispatcher from '../test/generated-artifacts/IAssetProxyDispatcher.json';
-import * as IAuthorizable from '../test/generated-artifacts/IAuthorizable.json';
-import * as IBalancerPool from '../test/generated-artifacts/IBalancerPool.json';
-import * as IBancorNetwork from '../test/generated-artifacts/IBancorNetwork.json';
-import * as IChai from '../test/generated-artifacts/IChai.json';
-import * as ICurve from '../test/generated-artifacts/ICurve.json';
-import * as IDydx from '../test/generated-artifacts/IDydx.json';
-import * as IDydxBridge from '../test/generated-artifacts/IDydxBridge.json';
-import * as IERC20Bridge from '../test/generated-artifacts/IERC20Bridge.json';
-import * as IEth2Dai from '../test/generated-artifacts/IEth2Dai.json';
-import * as IGasToken from '../test/generated-artifacts/IGasToken.json';
-import * as IKyberNetworkProxy from '../test/generated-artifacts/IKyberNetworkProxy.json';
-import * as IMooniswap from '../test/generated-artifacts/IMooniswap.json';
-import * as IMStable from '../test/generated-artifacts/IMStable.json';
-import * as IShell from '../test/generated-artifacts/IShell.json';
-import * as IUniswapExchange from '../test/generated-artifacts/IUniswapExchange.json';
-import * as IUniswapExchangeFactory from '../test/generated-artifacts/IUniswapExchangeFactory.json';
-import * as IUniswapV2Router01 from '../test/generated-artifacts/IUniswapV2Router01.json';
-import * as KyberBridge from '../test/generated-artifacts/KyberBridge.json';
-import * as MixinAssetProxyDispatcher from '../test/generated-artifacts/MixinAssetProxyDispatcher.json';
-import * as MixinAuthorizable from '../test/generated-artifacts/MixinAuthorizable.json';
-import * as MixinGasToken from '../test/generated-artifacts/MixinGasToken.json';
-import * as MooniswapBridge from '../test/generated-artifacts/MooniswapBridge.json';
-import * as MStableBridge from '../test/generated-artifacts/MStableBridge.json';
-import * as MultiAssetProxy from '../test/generated-artifacts/MultiAssetProxy.json';
-import * as Ownable from '../test/generated-artifacts/Ownable.json';
-import * as ShellBridge from '../test/generated-artifacts/ShellBridge.json';
-import * as SnowSwapBridge from '../test/generated-artifacts/SnowSwapBridge.json';
-import * as StaticCallProxy from '../test/generated-artifacts/StaticCallProxy.json';
-import * as SushiSwapBridge from '../test/generated-artifacts/SushiSwapBridge.json';
-import * as SwerveBridge from '../test/generated-artifacts/SwerveBridge.json';
-import * as TestBancorBridge from '../test/generated-artifacts/TestBancorBridge.json';
-import * as TestChaiBridge from '../test/generated-artifacts/TestChaiBridge.json';
-import * as TestDexForwarderBridge from '../test/generated-artifacts/TestDexForwarderBridge.json';
-import * as TestDydxBridge from '../test/generated-artifacts/TestDydxBridge.json';
-import * as TestERC20Bridge from '../test/generated-artifacts/TestERC20Bridge.json';
-import * as TestEth2DaiBridge from '../test/generated-artifacts/TestEth2DaiBridge.json';
-import * as TestKyberBridge from '../test/generated-artifacts/TestKyberBridge.json';
-import * as TestStaticCallTarget from '../test/generated-artifacts/TestStaticCallTarget.json';
-import * as TestUniswapBridge from '../test/generated-artifacts/TestUniswapBridge.json';
-import * as TestUniswapV2Bridge from '../test/generated-artifacts/TestUniswapV2Bridge.json';
-import * as UniswapBridge from '../test/generated-artifacts/UniswapBridge.json';
-import * as UniswapV2Bridge from '../test/generated-artifacts/UniswapV2Bridge.json';
+// Asset Proxy contracts
+import * as ERC1155Proxy from '../artifacts/contracts/src/ERC1155Proxy.sol/ERC1155Proxy.json';
+import * as ERC20BridgeProxy from '../artifacts/contracts/src/ERC20BridgeProxy.sol/ERC20BridgeProxy.json';
+import * as ERC20Proxy from '../artifacts/contracts/src/ERC20Proxy.sol/ERC20Proxy.json';
+import * as ERC721Proxy from '../artifacts/contracts/src/ERC721Proxy.sol/ERC721Proxy.json';
+import * as MultiAssetProxy from '../artifacts/contracts/src/MultiAssetProxy.sol/MultiAssetProxy.json';
+import * as StaticCallProxy from '../artifacts/contracts/src/StaticCallProxy.sol/StaticCallProxy.json';
+
+// Bridge contracts
+import * as BalancerBridge from '../artifacts/contracts/src/bridges/BalancerBridge.sol/BalancerBridge.json';
+import * as BancorBridge from '../artifacts/contracts/src/bridges/BancorBridge.sol/BancorBridge.json';
+import * as ChaiBridge from '../artifacts/contracts/src/bridges/ChaiBridge.sol/ChaiBridge.json';
+import * as CreamBridge from '../artifacts/contracts/src/bridges/CreamBridge.sol/CreamBridge.json';
+import * as CryptoComBridge from '../artifacts/contracts/src/bridges/CryptoComBridge.sol/CryptoComBridge.json';
+import * as CurveBridge from '../artifacts/contracts/src/bridges/CurveBridge.sol/CurveBridge.json';
+import * as DexForwarderBridge from '../artifacts/contracts/src/bridges/DexForwarderBridge.sol/DexForwarderBridge.json';
+import * as DODOBridge from '../artifacts/contracts/src/bridges/DODOBridge.sol/DODOBridge.json';
+import * as DydxBridge from '../artifacts/contracts/src/bridges/DydxBridge.sol/DydxBridge.json';
+import * as Eth2DaiBridge from '../artifacts/contracts/src/bridges/Eth2DaiBridge.sol/Eth2DaiBridge.json';
+import * as KyberBridge from '../artifacts/contracts/src/bridges/KyberBridge.sol/KyberBridge.json';
+import * as MixinGasToken from '../artifacts/contracts/src/bridges/MixinGasToken.sol/MixinGasToken.json';
+import * as MooniswapBridge from '../artifacts/contracts/src/bridges/MooniswapBridge.sol/MooniswapBridge.json';
+import * as MStableBridge from '../artifacts/contracts/src/bridges/MStableBridge.sol/MStableBridge.json';
+import * as ShellBridge from '../artifacts/contracts/src/bridges/ShellBridge.sol/ShellBridge.json';
+import * as SnowSwapBridge from '../artifacts/contracts/src/bridges/SnowSwapBridge.sol/SnowSwapBridge.json';
+import * as SushiSwapBridge from '../artifacts/contracts/src/bridges/SushiSwapBridge.sol/SushiSwapBridge.json';
+import * as SwerveBridge from '../artifacts/contracts/src/bridges/SwerveBridge.sol/SwerveBridge.json';
+import * as UniswapBridge from '../artifacts/contracts/src/bridges/UniswapBridge.sol/UniswapBridge.json';
+import * as UniswapV2Bridge from '../artifacts/contracts/src/bridges/UniswapV2Bridge.sol/UniswapV2Bridge.json';
+
+// Interface contracts
+import * as IAssetData from '../artifacts/contracts/src/interfaces/IAssetData.sol/IAssetData.json';
+import * as IAssetProxy from '../artifacts/contracts/src/interfaces/IAssetProxy.sol/IAssetProxy.json';
+import * as IAssetProxyDispatcher from '../artifacts/contracts/src/interfaces/IAssetProxyDispatcher.sol/IAssetProxyDispatcher.json';
+import * as IAuthorizable from '../artifacts/contracts/src/interfaces/IAuthorizable.sol/IAuthorizable.json';
+import * as IBalancerPool from '../artifacts/contracts/src/interfaces/IBalancerPool.sol/IBalancerPool.json';
+import * as IBancorNetwork from '../artifacts/contracts/src/interfaces/IBancorNetwork.sol/IBancorNetwork.json';
+import * as IChai from '../artifacts/contracts/src/interfaces/IChai.sol/IChai.json';
+import * as ICurve from '../artifacts/contracts/src/interfaces/ICurve.sol/ICurve.json';
+import * as IDydx from '../artifacts/contracts/src/interfaces/IDydx.sol/IDydx.json';
+import * as IDydxBridge from '../artifacts/contracts/src/interfaces/IDydxBridge.sol/IDydxBridge.json';
+import * as IERC20Bridge from '../artifacts/contracts/src/interfaces/IERC20Bridge.sol/IERC20Bridge.json';
+import * as IEth2Dai from '../artifacts/contracts/src/interfaces/IEth2Dai.sol/IEth2Dai.json';
+import * as IGasToken from '../artifacts/contracts/src/interfaces/IGasToken.sol/IGasToken.json';
+import * as IKyberNetworkProxy from '../artifacts/contracts/src/interfaces/IKyberNetworkProxy.sol/IKyberNetworkProxy.json';
+import * as IMooniswap from '../artifacts/contracts/src/interfaces/IMooniswap.sol/IMooniswap.json';
+import * as IMStable from '../artifacts/contracts/src/interfaces/IMStable.sol/IMStable.json';
+import * as IShell from '../artifacts/contracts/src/interfaces/IShell.sol/IShell.json';
+import * as IUniswapExchange from '../artifacts/contracts/src/interfaces/IUniswapExchange.sol/IUniswapExchange.json';
+import * as IUniswapExchangeFactory from '../artifacts/contracts/src/interfaces/IUniswapExchangeFactory.sol/IUniswapExchangeFactory.json';
+import * as IUniswapV2Router01 from '../artifacts/contracts/src/interfaces/IUniswapV2Router01.sol/IUniswapV2Router01.json';
+
+// External dependencies (from @0x packages)
+import * as Authorizable from '../artifacts/@0x/contracts-utils/contracts/src/Authorizable.sol/Authorizable.json';
+import * as IAuthorizableExternal from '../artifacts/@0x/contracts-utils/contracts/src/interfaces/IAuthorizable.sol/IAuthorizable.json';
+import * as Ownable from '../artifacts/@0x/contracts-utils/contracts/src/Ownable.sol/Ownable.json';
+import * as LibBytes from '../artifacts/@0x/contracts-utils/contracts/src/LibBytes.sol/LibBytes.json';
+
+// Note: Test contracts are not available in compiled artifacts
+// The following would be test contracts if they existed:
+// TestBancorBridge, TestChaiBridge, TestDexForwarderBridge, TestDydxBridge, 
+// TestERC20Bridge, TestEth2DaiBridge, TestKyberBridge, TestStaticCallTarget,
+// TestUniswapBridge, TestUniswapV2Bridge
+
+// Also note: MixinAssetProxyDispatcher and MixinAuthorizable are likely internal mixins
+// that may not have standalone artifacts
+/**
+ * Asset-Proxy 包的 Hardhat artifacts
+ * 使用 Hardhat 编译生成的标准 artifacts 格式
+ */
 export const artifacts = {
-    MixinAssetProxyDispatcher: MixinAssetProxyDispatcher as ContractArtifact,
-    MixinAuthorizable: MixinAuthorizable as ContractArtifact,
-    Ownable: Ownable as ContractArtifact,
-    ERC1155Proxy: ERC1155Proxy as ContractArtifact,
-    ERC20BridgeProxy: ERC20BridgeProxy as ContractArtifact,
-    ERC20Proxy: ERC20Proxy as ContractArtifact,
-    ERC721Proxy: ERC721Proxy as ContractArtifact,
-    MultiAssetProxy: MultiAssetProxy as ContractArtifact,
-    StaticCallProxy: StaticCallProxy as ContractArtifact,
-    BalancerBridge: BalancerBridge as ContractArtifact,
-    BancorBridge: BancorBridge as ContractArtifact,
-    ChaiBridge: ChaiBridge as ContractArtifact,
-    CreamBridge: CreamBridge as ContractArtifact,
-    CryptoComBridge: CryptoComBridge as ContractArtifact,
-    CurveBridge: CurveBridge as ContractArtifact,
-    DODOBridge: DODOBridge as ContractArtifact,
-    DexForwarderBridge: DexForwarderBridge as ContractArtifact,
-    DydxBridge: DydxBridge as ContractArtifact,
-    Eth2DaiBridge: Eth2DaiBridge as ContractArtifact,
-    KyberBridge: KyberBridge as ContractArtifact,
-    MStableBridge: MStableBridge as ContractArtifact,
-    MixinGasToken: MixinGasToken as ContractArtifact,
-    MooniswapBridge: MooniswapBridge as ContractArtifact,
-    ShellBridge: ShellBridge as ContractArtifact,
-    SnowSwapBridge: SnowSwapBridge as ContractArtifact,
-    SushiSwapBridge: SushiSwapBridge as ContractArtifact,
-    SwerveBridge: SwerveBridge as ContractArtifact,
-    UniswapBridge: UniswapBridge as ContractArtifact,
-    UniswapV2Bridge: UniswapV2Bridge as ContractArtifact,
-    IAssetData: IAssetData as ContractArtifact,
-    IAssetProxy: IAssetProxy as ContractArtifact,
-    IAssetProxyDispatcher: IAssetProxyDispatcher as ContractArtifact,
-    IAuthorizable: IAuthorizable as ContractArtifact,
-    IBalancerPool: IBalancerPool as ContractArtifact,
-    IBancorNetwork: IBancorNetwork as ContractArtifact,
-    IChai: IChai as ContractArtifact,
-    ICurve: ICurve as ContractArtifact,
-    IDydx: IDydx as ContractArtifact,
-    IDydxBridge: IDydxBridge as ContractArtifact,
-    IERC20Bridge: IERC20Bridge as ContractArtifact,
-    IEth2Dai: IEth2Dai as ContractArtifact,
-    IGasToken: IGasToken as ContractArtifact,
-    IKyberNetworkProxy: IKyberNetworkProxy as ContractArtifact,
-    IMStable: IMStable as ContractArtifact,
-    IMooniswap: IMooniswap as ContractArtifact,
-    IShell: IShell as ContractArtifact,
-    IUniswapExchange: IUniswapExchange as ContractArtifact,
-    IUniswapExchangeFactory: IUniswapExchangeFactory as ContractArtifact,
-    IUniswapV2Router01: IUniswapV2Router01 as ContractArtifact,
-    TestBancorBridge: TestBancorBridge as ContractArtifact,
-    TestChaiBridge: TestChaiBridge as ContractArtifact,
-    TestDexForwarderBridge: TestDexForwarderBridge as ContractArtifact,
-    TestDydxBridge: TestDydxBridge as ContractArtifact,
-    TestERC20Bridge: TestERC20Bridge as ContractArtifact,
-    TestEth2DaiBridge: TestEth2DaiBridge as ContractArtifact,
-    TestKyberBridge: TestKyberBridge as ContractArtifact,
-    TestStaticCallTarget: TestStaticCallTarget as ContractArtifact,
-    TestUniswapBridge: TestUniswapBridge as ContractArtifact,
-    TestUniswapV2Bridge: TestUniswapV2Bridge as ContractArtifact,
+    // Core Utility contracts
+    Authorizable,
+    Ownable,
+    LibBytes,
+
+    // Asset Proxy contracts
+    ERC1155Proxy,
+    ERC20BridgeProxy,
+    ERC20Proxy,
+    ERC721Proxy,
+    MultiAssetProxy,
+    StaticCallProxy,
+
+    // Bridge contracts
+    BalancerBridge,
+    BancorBridge,
+    ChaiBridge,
+    CreamBridge,
+    CryptoComBridge,
+    CurveBridge,
+    DODOBridge,
+    DexForwarderBridge,
+    DydxBridge,
+    Eth2DaiBridge,
+    KyberBridge,
+    MStableBridge,
+    MixinGasToken,
+    MooniswapBridge,
+    ShellBridge,
+    SnowSwapBridge,
+    SushiSwapBridge,
+    SwerveBridge,
+    UniswapBridge,
+    UniswapV2Bridge,
+
+    // Interface contracts
+    IAssetData,
+    IAssetProxy,
+    IAssetProxyDispatcher,
+    IAuthorizable,
+    IBalancerPool,
+    IBancorNetwork,
+    IChai,
+    ICurve,
+    IDydx,
+    IDydxBridge,
+    IERC20Bridge,
+    IEth2Dai,
+    IGasToken,
+    IKyberNetworkProxy,
+    IMStable,
+    IMooniswap,
+    IShell,
+    IUniswapExchange,
+    IUniswapExchangeFactory,
+    IUniswapV2Router01,
+
+    // External interface with different name to avoid conflicts
+    IAuthorizableExternal,
+};
+
+// 为了向后兼容，也导出单独的 artifacts
+export {
+    // Core contracts
+    Authorizable,
+    Ownable,
+    LibBytes,
+
+    // Asset Proxy contracts
+    ERC1155Proxy,
+    ERC20BridgeProxy,
+    ERC20Proxy,
+    ERC721Proxy,
+    MultiAssetProxy,
+    StaticCallProxy,
+
+    // Bridge contracts
+    BalancerBridge,
+    BancorBridge,
+    ChaiBridge,
+    CreamBridge,
+    CryptoComBridge,
+    CurveBridge,
+    DODOBridge,
+    DexForwarderBridge,
+    DydxBridge,
+    Eth2DaiBridge,
+    KyberBridge,
+    MStableBridge,
+    MixinGasToken,
+    MooniswapBridge,
+    ShellBridge,
+    SnowSwapBridge,
+    SushiSwapBridge,
+    SwerveBridge,
+    UniswapBridge,
+    UniswapV2Bridge,
+
+    // Interface contracts
+    IAssetData,
+    IAssetProxy,
+    IAssetProxyDispatcher,
+    IAuthorizable,
+    IBalancerPool,
+    IBancorNetwork,
+    IChai,
+    ICurve,
+    IDydx,
+    IDydxBridge,
+    IERC20Bridge,
+    IEth2Dai,
+    IGasToken,
+    IKyberNetworkProxy,
+    IMStable,
+    IMooniswap,
+    IShell,
+    IUniswapExchange,
+    IUniswapExchangeFactory,
+    IUniswapV2Router01,
+    IAuthorizableExternal,
 };

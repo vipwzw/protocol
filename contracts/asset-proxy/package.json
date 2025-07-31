@@ -10,18 +10,18 @@
         "test": "test"
     },
     "scripts": {
-        "build": "tsc -b",
-        "build:full": "forge build && npx hardhat compile && npx hardhat typechain && tsc -b",
+        "build": "yarn pre_build && tsc -b",
+        "build:ci": "yarn build",
         "build:ts": "tsc -b",
+        "pre_build": "run-s compile generate_contract_wrappers",
         "compile": "forge build && npx hardhat compile",
-        "typechain": "npx hardhat typechain",
-        "generate_contract_wrappers": "npx hardhat typechain",
-        "generate_contract_wrappers:force": "rm -rf typechain-types && npx hardhat typechain",
+        "generate_contract_wrappers": "find artifacts/ -name '*.json' -not -path '*/build-info/*' -not -name '*.dbg.json' | xargs npx typechain --target ethers-v6 --out-dir src/typechain-types",
+        "generate_contract_wrappers:force": "rm -rf src/typechain-types && find artifacts/ -name '*.json' -not -path '*/build-info/*' -not -name '*.dbg.json' | xargs npx typechain --target ethers-v6 --out-dir src/typechain-types",
         "test": "run-s test:hardhat test:forge",
         "test:forge": "forge test",
         "test:hardhat": "npx hardhat test",
         "test:ci": "yarn test",
-        "clean": "hardhat clean && rm -rf typechain-types lib artifacts cache out src/typechain-types generated-* test/generated-* test/typechain-types",
+        "clean": "shx rm -rf lib generated_docs test/generated-wrappers test/typechain-types src/typechain-types artifacts cache out",
         "clean:node-modules": "shx rm -rf node_modules",
         "clean:all": "yarn clean && yarn clean:node-modules",
         "docs:md": "ts-doc-gen --sourceDir='$PROJECT_FILES' --output=$MD_FILE_DIR --fileExtension=mdx --tsconfig=./typedoc-tsconfig.json",
@@ -46,7 +46,9 @@
         "chai": "^4.5.0",
         "ts-node": "^10.9.0",
         "typechain": "^8.3.2",
-        "typedoc": "~0.16.11"
+        "typedoc": "~0.16.11",
+        "npm-run-all": "^4.1.2",
+        "shx": "^0.4.0"
     },
     "dependencies": {
         "ethereum-types": "^3.5.0",

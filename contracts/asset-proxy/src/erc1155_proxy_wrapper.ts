@@ -1,4 +1,4 @@
-import { artifacts as erc1155Artifacts, ERC1155MintableContract, Erc1155Wrapper } from '@0x/contracts-erc1155';
+import { artifacts as erc1155Artifacts, ERC1155MintableContract, Erc1155Wrapper } from '../../erc1155/src';
 import {
     constants,
     ERC1155FungibleHoldingsByOwner,
@@ -8,13 +8,13 @@ import {
     txDefaults,
 } from '@0x/test-utils';
 import { BigNumber } from '@0x/utils';
-import { Web3Wrapper } from '@0x/web3-wrapper';
 import { Provider, TransactionReceiptWithDecodedLogs } from 'ethereum-types';
+import { ethers } from 'ethers';
 import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
 
-import { ERC1155ProxyContract, IAssetDataContract, IAssetProxyContract } from './wrappers';
+import { ERC1155ProxyContract, IAssetData, IAssetData__factory, IAssetProxy, IAssetProxy__factory } from './wrappers';
 
 export class ERC1155ProxyWrapper {
     private readonly _tokenOwnerAddresses: string[];
@@ -22,24 +22,22 @@ export class ERC1155ProxyWrapper {
     private readonly _nonFungibleTokenIds: string[];
     private readonly _nfts: Array<{ id: BigNumber; tokenId: BigNumber }>;
     private readonly _contractOwnerAddress: string;
-    private readonly _web3Wrapper: Web3Wrapper;
     private readonly _provider: Provider;
     private readonly _logDecoder: LogDecoder;
     private readonly _dummyTokenWrappers: Erc1155Wrapper[];
-    private readonly _assetProxyInterface: IAssetProxyContract;
-    private readonly _assetDataInterface: IAssetDataContract;
+    private readonly _assetProxyInterface: IAssetProxy;
+    private readonly _assetDataInterface: IAssetData;
     private _proxyContract?: ERC1155ProxyContract;
     private _proxyIdIfExists?: string;
     private _initialTokenIdsByOwner: ERC1155HoldingsByOwner = { fungible: {}, nonFungible: {} };
 
     constructor(provider: Provider, tokenOwnerAddresses: string[], contractOwnerAddress: string) {
-        this._web3Wrapper = new Web3Wrapper(provider);
         this._provider = provider;
         const allArtifacts = _.merge(artifacts, erc1155Artifacts);
-        this._logDecoder = new LogDecoder(this._web3Wrapper, allArtifacts);
+        this._logDecoder = new LogDecoder(this._provider, allArtifacts);
         this._dummyTokenWrappers = [];
-        this._assetProxyInterface = new IAssetProxyContract(constants.NULL_ADDRESS, provider);
-        this._assetDataInterface = new IAssetDataContract(constants.NULL_ADDRESS, provider);
+        this._assetProxyInterface = IAssetProxy__factory.connect(constants.NULL_ADDRESS, provider);
+        this._assetDataInterface = IAssetData__factory.connect(constants.NULL_ADDRESS, provider);
         this._tokenOwnerAddresses = tokenOwnerAddresses;
         this._contractOwnerAddress = contractOwnerAddress;
         this._fungibleTokenIds = [];

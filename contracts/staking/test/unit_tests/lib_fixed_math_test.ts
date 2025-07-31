@@ -801,8 +801,9 @@ blockchainTests('LibFixedMath unit tests', env => {
 
     function getRandomDecimal(min: Numberish, max: Numberish): BigNumber {
         const range = new BigNumber(max).minus(min);
-        const random = fromFixed(new BigNumber(hexUtils.random().substr(2), 16));
-        return random.mod(range).plus(min);
+        const randomHex = hexUtils.random().substr(2);
+        const random = new BigNumber(randomHex, 16).dividedBy(new BigNumber(2).pow(256));
+        return random.multipliedBy(range).plus(min);
     }
 
     describe('ln()', () => {

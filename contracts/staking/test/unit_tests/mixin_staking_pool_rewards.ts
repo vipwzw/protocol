@@ -131,7 +131,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
     });
 
     describe('_withdrawAndSyncDelegatorRewards()', () => {
-        const POOL_REWARD = getRandomInteger(1, 100e18);
+        const POOL_REWARD = new BigNumber(getRandomInteger(1, 100e18));
         const WETH_RESERVED_FOR_POOL_REWARDS = POOL_REWARD.plus(getRandomInteger(1, 100e18));
         const DELEGATOR = randomAddress();
         let stake: StoredBalance;
@@ -350,7 +350,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
     });
 
     describe('_syncPoolRewards()', async () => {
-        const POOL_REWARD = getRandomInteger(1, 100e18);
+        const POOL_REWARD = new BigNumber(getRandomInteger(1, 100e18));
         const WETH_RESERVED_FOR_POOL_REWARDS = POOL_REWARD.plus(getRandomInteger(1, 100e18));
 
         before(async () => {

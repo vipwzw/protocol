@@ -15,8 +15,10 @@ import * as ethUtil from 'ethereumjs-util';
 import { artifacts } from './artifacts';
 
 import {
-    IAssetDataContract,
-    IAssetProxyContract,
+    IAssetData,
+    IAssetData__factory,
+    IAssetProxy,
+    IAssetProxy__factory,
     StaticCallProxyContract,
     TestStaticCallTargetContract,
 } from './wrappers';
@@ -30,8 +32,8 @@ describe('StaticCallProxy', () => {
     let fromAddress: string;
     let toAddress: string;
 
-    let assetDataInterface: IAssetDataContract;
-    let staticCallProxy: IAssetProxyContract;
+    let assetDataInterface: IAssetData;
+    let staticCallProxy: IAssetProxy;
     let staticCallTarget: TestStaticCallTargetContract;
 
     before(async () => {
@@ -49,13 +51,10 @@ describe('StaticCallProxy', () => {
             txDefaults,
             artifacts,
         );
-        assetDataInterface = new IAssetDataContract(constants.NULL_ADDRESS, provider);
-        staticCallProxy = new IAssetProxyContract(
+        assetDataInterface = IAssetData__factory.connect(constants.NULL_ADDRESS, provider);
+        staticCallProxy = IAssetProxy__factory.connect(
             staticCallProxyWithoutTransferFrom.address,
-            provider,
-            txDefaults,
-            {},
-            StaticCallProxyContract.deployedBytecode,
+            provider
         );
         staticCallTarget = await TestStaticCallTargetContract.deployFrom0xArtifactAsync(
             artifacts.TestStaticCallTarget,

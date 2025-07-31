@@ -25,6 +25,9 @@ export {
     verifyERC721TransferEvent,
     verifyERC721ApprovalEvent,
     verifyERC721ApprovalForAllEvent,
+    verifyERC1155TransferSingleEvent,
+    verifyERC1155TransferBatchEvent,
+    verifyERC1155ApprovalForAllEvent,
     EventArgs,
     ParsedEvent,
     TransferEventArgs,
@@ -32,6 +35,9 @@ export {
     ERC721TransferEventArgs,
     ERC721ApprovalEventArgs,
     ERC721ApprovalForAllEventArgs,
+    ERC1155TransferSingleEventArgs,
+    ERC1155TransferBatchEventArgs,
+    ERC1155ApprovalForAllEventArgs,
 } from './event_utils';
 export { signingUtils } from './signing_utils';
 export { orderUtils } from './order_utils';

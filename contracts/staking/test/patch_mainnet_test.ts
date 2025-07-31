@@ -5,7 +5,7 @@ import * as _ from 'lodash';
 import { artifacts } from './artifacts';
 import { StakingEvents, StakingPatchContract, StakingProxyContract, StakingProxyEvents } from './wrappers';
 
-const abis = _.mapValues(artifacts, v => v.compilerOutput.abi);
+const abis = _.mapValues(_.pickBy(artifacts, v => v && v.compilerOutput), v => v.compilerOutput.abi);
 const STAKING_PROXY = '0xa26e80e7dea86279c6d778d702cc413e6cffa777';
 const STAKING_OWNER = '0x7d3455421bbc5ed534a83c88fd80387dc8271392';
 const EXCHANGE_PROXY = '0xdef1c0ded9bec7f1a1670819833240f027b25eff';

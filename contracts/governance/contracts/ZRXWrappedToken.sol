@@ -144,19 +144,19 @@ contract ZRXWrappedToken is ERC20, ERC20Permit, ERC20Wrapper {
      * Emits events {DelegateChanged} and {IZeroExVotes-DelegateVotesChanged}.
      */
     function _delegate(address delegator, address delegatee) internal virtual {
-        DelegateInfo memory delegateInfo = delegateInfo(delegator);
+        DelegateInfo memory currentDelegateInfo = delegateInfo(delegator);
         uint256 delegatorBalance = balanceOf(delegator);
 
         _delegates[delegator] = DelegateInfo(delegatee, SafeCast.toUint96(block.timestamp));
 
-        emit DelegateChanged(delegator, delegateInfo.delegate, delegatee);
+        emit DelegateChanged(delegator, currentDelegateInfo.delegate, delegatee);
 
         zeroExVotes.moveVotingPower(
-            delegateInfo.delegate,
+            currentDelegateInfo.delegate,
             delegatee,
             delegatorBalance,
             0,
-            delegateInfo.balanceLastUpdated,
+            currentDelegateInfo.balanceLastUpdated,
             0,
             delegatorBalance
         );

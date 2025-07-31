@@ -12,11 +12,11 @@ import { DecodedLogs } from 'ethereum-types';
 import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
-import { TestBancorBridgeContract } from './generated-wrappers/test_bancor_bridge';
+import { BancorBridge, BancorBridge__factory } from './wrappers';
 import {
-    TestBancorBridgeConvertByPathInputEventArgs as ConvertByPathArgs,
-    TestBancorBridgeEvents as ContractEvents,
-    TestBancorBridgeTokenApproveEventArgs as TokenApproveArgs,
+    BancorBridgeConvertByPathInputEventArgs as ConvertByPathArgs,
+    BancorBridgeEvents as ContractEvents,
+    BancorBridgeTokenApproveEventArgs as TokenApproveArgs,
 } from './wrappers';
 
 blockchainTests.resets('Bancor unit tests', env => {
@@ -24,15 +24,11 @@ blockchainTests.resets('Bancor unit tests', env => {
     const TO_TOKEN_DECIMALS = 18;
     const FROM_TOKEN_BASE = new BigNumber(10).pow(FROM_TOKEN_DECIMALS);
     const TO_TOKEN_BASE = new BigNumber(10).pow(TO_TOKEN_DECIMALS);
-    let testContract: TestBancorBridgeContract;
+    let testContract: BancorBridge;
 
     before(async () => {
-        testContract = await TestBancorBridgeContract.deployFrom0xArtifactAsync(
-            artifacts.TestBancorBridge,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
+        const factory = new BancorBridge__factory(env.accounts[0]);
+        testContract = await factory.deploy();
     });
 
     describe('isValidSignature()', () => {
