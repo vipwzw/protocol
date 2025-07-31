@@ -5,16 +5,16 @@ import { BigNumber, hexUtils, signTypedDataUtils } from '@0x/utils';
 import * as ethUtil from 'ethereumjs-util';
 import * as _ from 'lodash';
 
-import { TestLibZeroExTransactionContract } from './wrappers';
+import { TestLibZeroExTransaction__factory } from '../src/typechain-types';
 
 import { artifacts } from './artifacts';
 
 blockchainTests('LibZeroExTransaction', env => {
-    let libZeroExTransactionContract: TestLibZeroExTransactionContract;
+    let libZeroExTransactionContract: any;
 
     const randomAddress = () => hexUtils.random(constants.ADDRESS_LENGTH);
     const randomHash = () => hexUtils.random(constants.WORD_LENGTH);
-    const randomUint256 = () => new BigNumber(randomHash());
+    const randomUint256 = () => BigInt('0x' + randomHash().slice(2));
     const randomAssetData = () => hexUtils.random(36);
 
     const EMPTY_TRANSACTION: ZeroExTransaction = {
@@ -30,12 +30,9 @@ blockchainTests('LibZeroExTransaction', env => {
     };
 
     before(async () => {
-        libZeroExTransactionContract = await TestLibZeroExTransactionContract.deployFrom0xArtifactAsync(
-            artifacts.TestLibZeroExTransaction,
-            env.provider,
-            env.txDefaults,
-            {},
-        );
+        const { ethers } = require('hardhat');
+        const signer = (await ethers.getSigners())[0];
+        libZeroExTransactionContract = await new TestLibZeroExTransaction__factory(signer).deploy();
     });
 
     /**
@@ -50,7 +47,7 @@ blockchainTests('LibZeroExTransaction', env => {
                 version: constants.EIP712_DOMAIN_VERSION,
             }),
         );
-        const actualHash = await libZeroExTransactionContract.getTypedDataHash(transaction, domainHash).callAsync();
+        const actualHash = await libZeroExTransactionContract.getTypedDataHash(transaction, domainHash)();
         expect(actualHash).to.be.eq(expectedHash);
     }
 
@@ -96,10 +93,10 @@ blockchainTests('LibZeroExTransaction', env => {
             );
             const transactionHashHex1 = await libZeroExTransactionContract
                 .getTypedDataHash(EMPTY_TRANSACTION, domainHash1)
-                .callAsync();
+                ();
             const transactionHashHex2 = await libZeroExTransactionContract
                 .getTypedDataHash(EMPTY_TRANSACTION, domainHash2)
-                .callAsync();
+                ();
             expect(transactionHashHex1).to.be.not.equal(transactionHashHex2);
         });
     });
@@ -110,7 +107,7 @@ blockchainTests('LibZeroExTransaction', env => {
     async function testGetStructHashAsync(transaction: ZeroExTransaction): Promise<void> {
         const typedData = eip712Utils.createZeroExTransactionTypedData(transaction);
         const expectedHash = ethUtil.bufferToHex(signTypedDataUtils.generateTypedDataHashWithoutDomain(typedData));
-        const actualHash = await libZeroExTransactionContract.getStructHash(transaction).callAsync();
+        const actualHash = await libZeroExTransactionContract.getStructHash(transaction)();
         expect(actualHash).to.be.eq(expectedHash);
     }
 

@@ -19,19 +19,16 @@ import {
 } from '../src/reference_functions';
 
 import { artifacts } from './artifacts';
-import { TestLibMathContract } from './wrappers';
+import { TestLibMath__factory } from '../src/typechain-types';
 
 blockchainTests('LibMath', env => {
     const { ONE_ETHER, MAX_UINT256, MAX_UINT256_ROOT, ZERO_AMOUNT } = constants;
-    let libsContract: TestLibMathContract;
+    let libsContract: any;
 
     before(async () => {
-        libsContract = await TestLibMathContract.deployFrom0xArtifactAsync(
-            artifacts.TestLibMath,
-            env.provider,
-            env.txDefaults,
-            {},
-        );
+        const { ethers } = require('hardhat');
+        const signer = (await ethers.getSigners())[0];
+        libsContract = await new TestLibMath__factory(signer).deploy();
     });
 
     // Wrap a reference function with identical arguments in a promise.
@@ -60,10 +57,10 @@ blockchainTests('LibMath', env => {
         describe('explicit tests', () => {
             it('matches the reference function output', async () => {
                 const numerator = ONE_ETHER;
-                const denominator = ONE_ETHER.dividedToIntegerBy(2);
+                const denominator = ONE_ETHER / 2n;
                 const target = ethers.parseEther('0.01');
                 const expected = getPartialAmountFloor(numerator, denominator, target);
-                const actual = await libsContract.getPartialAmountFloor(numerator, denominator, target).callAsync();
+                const actual = await libsContract.getPartialAmountFloor(numerator, denominator, target)();
                 expect(actual).to.bignumber.eq(expected);
             });
 
@@ -71,8 +68,8 @@ blockchainTests('LibMath', env => {
                 const numerator = ethers.parseEther('0.6');
                 const denominator = ethers.parseEther('1.8');
                 const target = ONE_ETHER;
-                const expected = ONE_ETHER.dividedToIntegerBy(3);
-                const actual = await libsContract.getPartialAmountFloor(numerator, denominator, target).callAsync();
+                const expected = ONE_ETHER / 3n;
+                const actual = await libsContract.getPartialAmountFloor(numerator, denominator, target)();
                 expect(actual).to.bignumber.eq(expected);
             });
 
@@ -86,13 +83,13 @@ blockchainTests('LibMath', env => {
                     denominator,
                 );
                 return expect(
-                    libsContract.getPartialAmountFloor(numerator, denominator, target).callAsync(),
-                ).to.be.revertedWith(expectedError);
+                    libsContract.getPartialAmountFloor(numerator, denominator, target)(),
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if `numerator * target` overflows', async () => {
                 const numerator = MAX_UINT256;
-                const denominator = ONE_ETHER.dividedToIntegerBy(2);
+                const denominator = ONE_ETHER / 2n;
                 const target = MAX_UINT256_ROOT.times(2);
                 const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                     SafeMathRevertErrors.BinOpErrorCodes.MultiplicationOverflow,
@@ -100,8 +97,8 @@ blockchainTests('LibMath', env => {
                     target,
                 );
                 return expect(
-                    libsContract.getPartialAmountFloor(numerator, denominator, target).callAsync(),
-                ).to.be.revertedWith(expectedError);
+                    libsContract.getPartialAmountFloor(numerator, denominator, target)(),
+                ).to.be.revertedWith(expectedError.message);
             });
         });
     });
@@ -119,10 +116,10 @@ blockchainTests('LibMath', env => {
         describe('explicit tests', () => {
             it('matches the reference function output', async () => {
                 const numerator = ONE_ETHER;
-                const denominator = ONE_ETHER.dividedToIntegerBy(2);
+                const denominator = ONE_ETHER / 2n;
                 const target = ethers.parseEther('0.01');
                 const expected = getPartialAmountCeil(numerator, denominator, target);
-                const actual = await libsContract.getPartialAmountCeil(numerator, denominator, target).callAsync();
+                const actual = await libsContract.getPartialAmountCeil(numerator, denominator, target)();
                 expect(actual).to.bignumber.eq(expected);
             });
 
@@ -130,8 +127,8 @@ blockchainTests('LibMath', env => {
                 const numerator = ethers.parseEther('0.6');
                 const denominator = ethers.parseEther('1.8');
                 const target = ONE_ETHER;
-                const expected = ONE_ETHER.dividedToIntegerBy(3).plus(1);
-                const actual = await libsContract.getPartialAmountCeil(numerator, denominator, target).callAsync();
+                const expected = ONE_ETHER / 3n+ 1n;
+                const actual = await libsContract.getPartialAmountCeil(numerator, denominator, target)();
                 expect(actual).to.bignumber.eq(expected);
             });
 
@@ -146,13 +143,13 @@ blockchainTests('LibMath', env => {
                     new BigNumber(1),
                 );
                 return expect(
-                    libsContract.getPartialAmountCeil(numerator, denominator, target).callAsync(),
-                ).to.be.revertedWith(expectedError);
+                    libsContract.getPartialAmountCeil(numerator, denominator, target)(),
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if `numerator * target` overflows', async () => {
                 const numerator = MAX_UINT256;
-                const denominator = ONE_ETHER.dividedToIntegerBy(2);
+                const denominator = ONE_ETHER / 2n;
                 const target = MAX_UINT256_ROOT.times(2);
                 const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                     SafeMathRevertErrors.BinOpErrorCodes.MultiplicationOverflow,
@@ -160,8 +157,8 @@ blockchainTests('LibMath', env => {
                     target,
                 );
                 return expect(
-                    libsContract.getPartialAmountCeil(numerator, denominator, target).callAsync(),
-                ).to.be.revertedWith(expectedError);
+                    libsContract.getPartialAmountCeil(numerator, denominator, target)(),
+                ).to.be.revertedWith(expectedError.message);
             });
         });
     });
@@ -179,10 +176,10 @@ blockchainTests('LibMath', env => {
         describe('explicit tests', () => {
             it('matches the reference function output', async () => {
                 const numerator = ONE_ETHER;
-                const denominator = ONE_ETHER.dividedToIntegerBy(2);
+                const denominator = ONE_ETHER / 2n;
                 const target = ethers.parseEther('0.01');
                 const expected = safeGetPartialAmountFloor(numerator, denominator, target);
-                const actual = await libsContract.safeGetPartialAmountFloor(numerator, denominator, target).callAsync();
+                const actual = await libsContract.safeGetPartialAmountFloor(numerator, denominator, target)();
                 expect(actual).to.bignumber.eq(expected);
             });
 
@@ -190,8 +187,8 @@ blockchainTests('LibMath', env => {
                 const numerator = ethers.parseEther('0.6');
                 const denominator = ethers.parseEther('1.8');
                 const target = ONE_ETHER;
-                const expected = ONE_ETHER.dividedToIntegerBy(3);
-                const actual = await libsContract.safeGetPartialAmountFloor(numerator, denominator, target).callAsync();
+                const expected = ONE_ETHER / 3n;
+                const actual = await libsContract.safeGetPartialAmountFloor(numerator, denominator, target)();
                 expect(actual).to.bignumber.eq(expected);
             });
 
@@ -201,8 +198,8 @@ blockchainTests('LibMath', env => {
                 const target = new BigNumber(333);
                 const expectedError = new LibMathRevertErrors.RoundingError(numerator, denominator, target);
                 return expect(
-                    libsContract.safeGetPartialAmountFloor(numerator, denominator, target).callAsync(),
-                ).to.be.revertedWith(expectedError);
+                    libsContract.safeGetPartialAmountFloor(numerator, denominator, target)(),
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if `denominator` is zero', async () => {
@@ -211,13 +208,13 @@ blockchainTests('LibMath', env => {
                 const target = ethers.parseEther('0.01');
                 const expectedError = new LibMathRevertErrors.DivisionByZeroError();
                 return expect(
-                    libsContract.safeGetPartialAmountFloor(numerator, denominator, target).callAsync(),
-                ).to.be.revertedWith(expectedError);
+                    libsContract.safeGetPartialAmountFloor(numerator, denominator, target)(),
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if `numerator * target` overflows', async () => {
                 const numerator = MAX_UINT256;
-                const denominator = ONE_ETHER.dividedToIntegerBy(2);
+                const denominator = ONE_ETHER / 2n;
                 const target = MAX_UINT256_ROOT.times(2);
                 const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                     SafeMathRevertErrors.BinOpErrorCodes.MultiplicationOverflow,
@@ -225,8 +222,8 @@ blockchainTests('LibMath', env => {
                     target,
                 );
                 return expect(
-                    libsContract.safeGetPartialAmountFloor(numerator, denominator, target).callAsync(),
-                ).to.be.revertedWith(expectedError);
+                    libsContract.safeGetPartialAmountFloor(numerator, denominator, target)(),
+                ).to.be.revertedWith(expectedError.message);
             });
         });
     });
@@ -244,10 +241,10 @@ blockchainTests('LibMath', env => {
         describe('explicit tests', () => {
             it('matches the reference function output', async () => {
                 const numerator = ONE_ETHER;
-                const denominator = ONE_ETHER.dividedToIntegerBy(2);
+                const denominator = ONE_ETHER / 2n;
                 const target = ethers.parseEther('0.01');
                 const expected = safeGetPartialAmountCeil(numerator, denominator, target);
-                const actual = await libsContract.safeGetPartialAmountCeil(numerator, denominator, target).callAsync();
+                const actual = await libsContract.safeGetPartialAmountCeil(numerator, denominator, target)();
                 expect(actual).to.bignumber.eq(expected);
             });
 
@@ -255,8 +252,8 @@ blockchainTests('LibMath', env => {
                 const numerator = ethers.parseEther('0.6');
                 const denominator = ethers.parseEther('1.8');
                 const target = ONE_ETHER;
-                const expected = ONE_ETHER.dividedToIntegerBy(3).plus(1);
-                const actual = await libsContract.safeGetPartialAmountCeil(numerator, denominator, target).callAsync();
+                const expected = ONE_ETHER / 3n+ 1n;
+                const actual = await libsContract.safeGetPartialAmountCeil(numerator, denominator, target)();
                 expect(actual).to.bignumber.eq(expected);
             });
 
@@ -266,8 +263,8 @@ blockchainTests('LibMath', env => {
                 const target = new BigNumber(333);
                 const expectedError = new LibMathRevertErrors.RoundingError(numerator, denominator, target);
                 return expect(
-                    libsContract.safeGetPartialAmountCeil(numerator, denominator, target).callAsync(),
-                ).to.be.revertedWith(expectedError);
+                    libsContract.safeGetPartialAmountCeil(numerator, denominator, target)(),
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if `denominator` is zero', async () => {
@@ -276,13 +273,13 @@ blockchainTests('LibMath', env => {
                 const target = ethers.parseEther('0.01');
                 const expectedError = new LibMathRevertErrors.DivisionByZeroError();
                 return expect(
-                    libsContract.safeGetPartialAmountCeil(numerator, denominator, target).callAsync(),
-                ).to.be.revertedWith(expectedError);
+                    libsContract.safeGetPartialAmountCeil(numerator, denominator, target)(),
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if `numerator * target` overflows', async () => {
                 const numerator = MAX_UINT256;
-                const denominator = ONE_ETHER.dividedToIntegerBy(2);
+                const denominator = ONE_ETHER / 2n;
                 const target = MAX_UINT256_ROOT.times(2);
                 const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                     SafeMathRevertErrors.BinOpErrorCodes.MultiplicationOverflow,
@@ -290,8 +287,8 @@ blockchainTests('LibMath', env => {
                     target,
                 );
                 return expect(
-                    libsContract.safeGetPartialAmountCeil(numerator, denominator, target).callAsync(),
-                ).to.be.revertedWith(expectedError);
+                    libsContract.safeGetPartialAmountCeil(numerator, denominator, target)(),
+                ).to.be.revertedWith(expectedError.message);
             });
         });
     });
@@ -312,7 +309,7 @@ blockchainTests('LibMath', env => {
                 const denominator = new BigNumber(102);
                 const target = new BigNumber(52);
                 // tslint:disable-next-line: boolean-naming
-                const actual = await libsContract.isRoundingErrorFloor(numerator, denominator, target).callAsync();
+                const actual = await libsContract.isRoundingErrorFloor(numerator, denominator, target)();
                 expect(actual).to.eq(true);
             });
 
@@ -321,18 +318,18 @@ blockchainTests('LibMath', env => {
                 const denominator = new BigNumber(101);
                 const target = new BigNumber(92);
                 // tslint:disable-next-line: boolean-naming
-                const actual = await libsContract.isRoundingErrorFloor(numerator, denominator, target).callAsync();
+                const actual = await libsContract.isRoundingErrorFloor(numerator, denominator, target)();
                 expect(actual).to.eq(false);
             });
 
             it('matches the reference function output', async () => {
                 const numerator = ONE_ETHER;
-                const denominator = ONE_ETHER.dividedToIntegerBy(2);
+                const denominator = ONE_ETHER / 2n;
                 const target = ethers.parseEther('0.01');
                 // tslint:disable-next-line: boolean-naming
                 const expected = isRoundingErrorFloor(numerator, denominator, target);
                 // tslint:disable-next-line: boolean-naming
-                const actual = await libsContract.isRoundingErrorFloor(numerator, denominator, target).callAsync();
+                const actual = await libsContract.isRoundingErrorFloor(numerator, denominator, target)();
                 expect(actual).to.eq(expected);
             });
 
@@ -342,13 +339,13 @@ blockchainTests('LibMath', env => {
                 const target = ethers.parseEther('0.01');
                 const expectedError = new LibMathRevertErrors.DivisionByZeroError();
                 return expect(
-                    libsContract.isRoundingErrorFloor(numerator, denominator, target).callAsync(),
-                ).to.be.revertedWith(expectedError);
+                    libsContract.isRoundingErrorFloor(numerator, denominator, target)(),
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if `numerator * target` overflows', async () => {
                 const numerator = MAX_UINT256;
-                const denominator = ONE_ETHER.dividedToIntegerBy(2);
+                const denominator = ONE_ETHER / 2n;
                 const target = MAX_UINT256_ROOT.times(2);
                 const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                     SafeMathRevertErrors.BinOpErrorCodes.MultiplicationOverflow,
@@ -356,8 +353,8 @@ blockchainTests('LibMath', env => {
                     target,
                 );
                 return expect(
-                    libsContract.isRoundingErrorFloor(numerator, denominator, target).callAsync(),
-                ).to.be.revertedWith(expectedError);
+                    libsContract.isRoundingErrorFloor(numerator, denominator, target)(),
+                ).to.be.revertedWith(expectedError.message);
             });
         });
     });
@@ -378,7 +375,7 @@ blockchainTests('LibMath', env => {
                 const denominator = new BigNumber(101);
                 const target = new BigNumber(92);
                 // tslint:disable-next-line: boolean-naming
-                const actual = await libsContract.isRoundingErrorCeil(numerator, denominator, target).callAsync();
+                const actual = await libsContract.isRoundingErrorCeil(numerator, denominator, target)();
                 expect(actual).to.eq(true);
             });
 
@@ -387,18 +384,18 @@ blockchainTests('LibMath', env => {
                 const denominator = new BigNumber(102);
                 const target = new BigNumber(52);
                 // tslint:disable-next-line: boolean-naming
-                const actual = await libsContract.isRoundingErrorCeil(numerator, denominator, target).callAsync();
+                const actual = await libsContract.isRoundingErrorCeil(numerator, denominator, target)();
                 expect(actual).to.eq(false);
             });
 
             it('matches the reference function output', async () => {
                 const numerator = ONE_ETHER;
-                const denominator = ONE_ETHER.dividedToIntegerBy(2);
+                const denominator = ONE_ETHER / 2n;
                 const target = ethers.parseEther('0.01');
                 // tslint:disable-next-line: boolean-naming
                 const expected = isRoundingErrorCeil(numerator, denominator, target);
                 // tslint:disable-next-line: boolean-naming
-                const actual = await libsContract.isRoundingErrorCeil(numerator, denominator, target).callAsync();
+                const actual = await libsContract.isRoundingErrorCeil(numerator, denominator, target)();
                 expect(actual).to.eq(expected);
             });
 
@@ -408,13 +405,13 @@ blockchainTests('LibMath', env => {
                 const target = ethers.parseEther('0.01');
                 const expectedError = new LibMathRevertErrors.DivisionByZeroError();
                 return expect(
-                    libsContract.isRoundingErrorCeil(numerator, denominator, target).callAsync(),
-                ).to.be.revertedWith(expectedError);
+                    libsContract.isRoundingErrorCeil(numerator, denominator, target)(),
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if `numerator * target` overflows', async () => {
                 const numerator = MAX_UINT256;
-                const denominator = ONE_ETHER.dividedToIntegerBy(2);
+                const denominator = ONE_ETHER / 2n;
                 const target = MAX_UINT256_ROOT.times(2);
                 const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                     SafeMathRevertErrors.BinOpErrorCodes.MultiplicationOverflow,
@@ -422,8 +419,8 @@ blockchainTests('LibMath', env => {
                     target,
                 );
                 return expect(
-                    libsContract.isRoundingErrorCeil(numerator, denominator, target).callAsync(),
-                ).to.be.revertedWith(expectedError);
+                    libsContract.isRoundingErrorCeil(numerator, denominator, target)(),
+                ).to.be.revertedWith(expectedError.message);
             });
         });
     });

@@ -48,7 +48,7 @@ blockchainTests('LibFillResults', env => {
 
     const randomAddress = () => hexUtils.random(constants.ADDRESS_LENGTH);
     const randomAssetData = () => hexUtils.random(36);
-    const randomUint256 = () => new BigNumber(hexUtils.random(constants.WORD_LENGTH));
+    const randomUint256 = () => BigInt('0x' + hexUtils.random(constants.WORD_LENGTH).slice(2));
 
     let libsContract: TestLibFillResults;
     let makerAddressLeft: string;
@@ -125,8 +125,8 @@ blockchainTests('LibFillResults', env => {
 
         describe('explicit tests', () => {
             const MAX_UINT256_ROOT = constants.MAX_UINT256_ROOT;
-            const DEFAULT_GAS_PRICE = new BigNumber(200000);
-            const DEFAULT_PROTOCOL_FEE_MULTIPLIER = new BigNumber(150000);
+            const DEFAULT_GAS_PRICE = 200000n;
+            const DEFAULT_PROTOCOL_FEE_MULTIPLIER = 150000n;
 
             function makeOrder(details?: Partial<Order>): Order {
                 return _.assign({}, EMPTY_ORDER, details);
@@ -152,7 +152,17 @@ blockchainTests('LibFillResults', env => {
                     DEFAULT_PROTOCOL_FEE_MULTIPLIER,
                     DEFAULT_GAS_PRICE,
                 );
-                expect(actual).to.deep.eq(expected);
+                
+                // 转换合约返回的数组为 FillResults 对象
+                const actualConverted = {
+                    makerAssetFilledAmount: BigInt(actual[0].toString()),
+                    takerAssetFilledAmount: BigInt(actual[1].toString()),
+                    makerFeePaid: BigInt(actual[2].toString()),
+                    takerFeePaid: BigInt(actual[3].toString()),
+                    protocolFeePaid: BigInt(actual[4].toString()),
+                };
+                
+                expect(actualConverted).to.deep.eq(expected);
             });
 
             it('reverts if computing `fillResults.makerAssetFilledAmount` overflows', async () => {
@@ -176,7 +186,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_GAS_PRICE,
                         )
                         ,
-                ).to.be.revertedWith(expectedError);
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if computing `fillResults.makerFeePaid` overflows', async () => {
@@ -206,7 +216,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_GAS_PRICE,
                         )
                         ,
-                ).to.be.revertedWith(expectedError);
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if computing `fillResults.takerFeePaid` overflows', async () => {
@@ -231,7 +241,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_GAS_PRICE,
                         )
                         ,
-                ).to.be.revertedWith(expectedError);
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if `order.takerAssetAmount` is 0', async () => {
@@ -250,12 +260,12 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_GAS_PRICE,
                         )
                         ,
-                ).to.be.revertedWith(expectedError);
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if there is a rounding error computing `makerAsssetFilledAmount`', async () => {
                 const order = makeOrder({
-                    makerAssetAmount: new BigNumber(100),
+                    makerAssetAmount: 100n,
                     takerAssetAmount: ONE_ETHER,
                 });
                 const takerAssetFilledAmount = order.takerAssetAmount/ 3n;
@@ -273,14 +283,14 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_GAS_PRICE,
                         )
                         ,
-                ).to.be.revertedWith(expectedError);
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if there is a rounding error computing `makerFeePaid`', async () => {
                 const order = makeOrder({
                     makerAssetAmount: ONE_ETHER,
                     takerAssetAmount: ONE_ETHER,
-                    makerFee: new BigNumber(100),
+                    makerFee: 100n,
                 });
                 const takerAssetFilledAmount = order.takerAssetAmount/ 3n;
                 const makerAssetFilledAmount = getPartialAmountFloor(
@@ -302,14 +312,14 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_GAS_PRICE,
                         )
                         ,
-                ).to.be.revertedWith(expectedError);
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if there is a rounding error computing `takerFeePaid`', async () => {
                 const order = makeOrder({
                     makerAssetAmount: ONE_ETHER,
                     takerAssetAmount: ONE_ETHER,
-                    takerFee: new BigNumber(100),
+                    takerFee: 100n,
                 });
                 const takerAssetFilledAmount = order.takerAssetAmount/ 3n;
                 const makerAssetFilledAmount = getPartialAmountFloor(
@@ -331,7 +341,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_GAS_PRICE,
                         )
                         ,
-                ).to.be.revertedWith(expectedError);
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if computing `fillResults.protocolFeePaid` overflows', async () => {
@@ -351,14 +361,14 @@ blockchainTests('LibFillResults', env => {
                     libsContract
                         .calculateFillResults(order, takerAssetFilledAmount, MAX_UINT256, DEFAULT_GAS_PRICE)
                         ,
-                ).to.be.revertedWith(expectedError);
+                ).to.be.revertedWith(expectedError.message);
             });
 
             it('reverts if there is a rounding error computing `makerFeePaid`', async () => {
                 const order = makeOrder({
                     makerAssetAmount: ONE_ETHER,
                     takerAssetAmount: ONE_ETHER,
-                    makerFee: new BigNumber(100),
+                    makerFee: 100n,
                 });
                 const takerAssetFilledAmount = order.takerAssetAmount/ 3n;
                 const makerAssetFilledAmount = getPartialAmountFloor(
@@ -380,7 +390,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_GAS_PRICE,
                         )
                         ,
-                ).to.be.revertedWith(expectedError);
+                ).to.be.revertedWith(expectedError.message);
             });
         });
     });
@@ -536,8 +546,8 @@ blockchainTests('LibFillResults', env => {
                 left: {
                     makerAssetFilledAmount: ethers.parseUnits(String(13), 0),
                     takerAssetFilledAmount: ethers.parseUnits(String(75), 0),
-                    makerFeePaid: ethers.parseUnits(String(new BigNumber('76.4705882352941176')), 16),
-                    takerFeePaid: ethers.parseUnits(String(new BigNumber('76.5306122448979591')), 16),
+                    makerFeePaid: ethers.parseUnits('76.4705882352941176', 16),
+                    takerFeePaid: ethers.parseUnits('76.5306122448979591', 16),
                     protocolFeePaid: ethers.parseUnits(String(15), 9),
                 },
                 right: {
@@ -579,8 +589,8 @@ blockchainTests('LibFillResults', env => {
                 right: {
                     makerAssetFilledAmount: ethers.parseUnits(String(90), 0),
                     takerAssetFilledAmount: ethers.parseUnits(String(13), 0),
-                    makerFeePaid: ethers.parseUnits(String(new BigNumber('92.7835051546391752')), 16), // 92.85%
-                    takerFeePaid: ethers.parseUnits(String(new BigNumber('92.8571428571428571')), 16), // 92.85%
+                    makerFeePaid: ethers.parseUnits('92.7835051546391752', 16), // 92.85%
+                    takerFeePaid: ethers.parseUnits('92.8571428571428571', 16), // 92.85%
                     protocolFeePaid: ethers.parseUnits(String(15), 9),
                 },
                 profitInLeftMakerAsset: ethers.parseUnits(String(2), 0),
@@ -618,8 +628,8 @@ blockchainTests('LibFillResults', env => {
                 right: {
                     makerAssetFilledAmount: ethers.parseUnits(String(22), 0),
                     takerAssetFilledAmount: ethers.parseUnits(String(13), 0),
-                    makerFeePaid: ethers.parseUnits(String(new BigNumber('26.5060240963855421')), 16), // 26.506%
-                    takerFeePaid: ethers.parseUnits(String(new BigNumber('26.5306122448979591')), 16), // 26.531%
+                    makerFeePaid: ethers.parseUnits('26.5060240963855421', 16), // 26.506%
+                    takerFeePaid: ethers.parseUnits('26.5306122448979591', 16), // 26.531%
                     protocolFeePaid: ethers.parseUnits(String(15), 9),
                 },
                 profitInLeftMakerAsset: ethers.parseUnits(String(3), 0),
@@ -650,8 +660,8 @@ blockchainTests('LibFillResults', env => {
                 left: {
                     makerAssetFilledAmount: ethers.parseUnits(String(11), 0),
                     takerAssetFilledAmount: ethers.parseUnits(String(89), 0),
-                    makerFeePaid: ethers.parseUnits(String(new BigNumber('91.6666666666666666')), 16), // 91.6%
-                    takerFeePaid: ethers.parseUnits(String(new BigNumber('91.7525773195876288')), 16), // 91.75%
+                    makerFeePaid: ethers.parseUnits('91.6666666666666666', 16), // 91.6%
+                    takerFeePaid: ethers.parseUnits('91.7525773195876288', 16), // 91.75%
                     protocolFeePaid: ethers.parseUnits(String(15), 9),
                 },
                 right: {
@@ -779,8 +789,8 @@ blockchainTests('LibFillResults', env => {
                 right: {
                     makerAssetFilledAmount: ethers.parseUnits(String(1005), 0),
                     takerAssetFilledAmount: ethers.parseUnits(String(503), 0),
-                    makerFeePaid: ethers.parseUnits(String(new BigNumber('47.2718720602069614')), 16), // 47.27%
-                    takerFeePaid: ethers.parseUnits(String(new BigNumber('47.3189087488240827')), 16), // 47.31%
+                    makerFeePaid: ethers.parseUnits('47.2718720602069614', 16), // 47.27%
+                    takerFeePaid: ethers.parseUnits('47.3189087488240827', 16), // 47.31%
                     protocolFeePaid: ethers.parseUnits(String(15), 9),
                 },
                 profitInLeftMakerAsset: ethers.parseUnits(String(497), 0),
@@ -1210,8 +1220,8 @@ blockchainTests('LibFillResults', env => {
                 left: {
                     makerAssetFilledAmount: ethers.parseUnits(String(13), 0),
                     takerAssetFilledAmount: ethers.parseUnits(String(75), 0),
-                    makerFeePaid: ethers.parseUnits(String(new BigNumber('76.4705882352941176')), 16), // 76.47%
-                    takerFeePaid: ethers.parseUnits(String(new BigNumber('76.5306122448979591')), 16), // 76.53%
+                    makerFeePaid: ethers.parseUnits('76.4705882352941176', 16), // 76.47%
+                    takerFeePaid: ethers.parseUnits('76.5306122448979591', 16), // 76.53%
                     protocolFeePaid: ethers.parseUnits(String(15), 9),
                 },
                 right: {
@@ -1228,8 +1238,8 @@ blockchainTests('LibFillResults', env => {
                 rightOrder,
                 constants.ZERO_AMOUNT,
                 constants.ZERO_AMOUNT,
-                new BigNumber(150000),
-                new BigNumber(100000),
+                150000n,
+                100000n,
             );
         });
 
@@ -1255,8 +1265,8 @@ blockchainTests('LibFillResults', env => {
                 right: {
                     makerAssetFilledAmount: ethers.parseUnits(String(105), 0),
                     takerAssetFilledAmount: ethers.parseUnits(String(15), 0),
-                    makerFeePaid: ethers.parseUnits(String(new BigNumber('53.5714285714285714')), 16), // 53.57%
-                    takerFeePaid: ethers.parseUnits(String(new BigNumber('53.5714285714285714')), 16), // 53.57%
+                    makerFeePaid: ethers.parseUnits('53.5714285714285714', 16), // 53.57%
+                    takerFeePaid: ethers.parseUnits('53.5714285714285714', 16), // 53.57%
                     protocolFeePaid: ethers.parseUnits(String(15), 9),
                 },
                 profitInLeftMakerAsset: constants.ZERO_AMOUNT,
@@ -1268,8 +1278,8 @@ blockchainTests('LibFillResults', env => {
                 rightOrder,
                 constants.ZERO_AMOUNT,
                 constants.ZERO_AMOUNT,
-                new BigNumber(150000),
-                new BigNumber(100000),
+                150000n,
+                100000n,
             );
         });
 
@@ -1295,8 +1305,8 @@ blockchainTests('LibFillResults', env => {
                 right: {
                     makerAssetFilledAmount: ethers.parseUnits(String(29), 0),
                     takerAssetFilledAmount: ethers.parseUnits(String(16), 0),
-                    makerFeePaid: ethers.parseUnits(String(new BigNumber('33.3333333333333333')), 16), // 33.33%
-                    takerFeePaid: ethers.parseUnits(String(new BigNumber('33.3333333333333333')), 16), // 33.33%
+                    makerFeePaid: ethers.parseUnits('33.3333333333333333', 16), // 33.33%
+                    takerFeePaid: ethers.parseUnits('33.3333333333333333', 16), // 33.33%
                     protocolFeePaid: ethers.parseUnits(String(15), 9),
                 },
                 profitInLeftMakerAsset: constants.ZERO_AMOUNT,
@@ -1368,8 +1378,8 @@ blockchainTests('LibFillResults', env => {
                 left: {
                     makerAssetFilledAmount: ethers.parseUnits(String(11), 0),
                     takerAssetFilledAmount: ethers.parseUnits(String(89), 0),
-                    makerFeePaid: ethers.parseUnits(String(new BigNumber('91.6666666666666666')), 16), // 91.6%
-                    takerFeePaid: ethers.parseUnits(String(new BigNumber('91.7525773195876288')), 16), // 91.75%
+                    makerFeePaid: ethers.parseUnits('91.6666666666666666', 16), // 91.6%
+                    takerFeePaid: ethers.parseUnits('91.7525773195876288', 16), // 91.75%
                     protocolFeePaid: ethers.parseUnits(String(15), 9),
                 },
                 right: {
@@ -1553,8 +1563,8 @@ blockchainTests('LibFillResults', env => {
                 right: {
                     makerAssetFilledAmount: ethers.parseUnits(String(2000), 0),
                     takerAssetFilledAmount: ethers.parseUnits(String(1000), 0),
-                    makerFeePaid: ethers.parseUnits(String(new BigNumber('94.0733772342427093')), 16), // 94.07%
-                    takerFeePaid: ethers.parseUnits(String(new BigNumber('94.0733772342427093')), 16), // 94.07%
+                    makerFeePaid: ethers.parseUnits('94.0733772342427093', 16), // 94.07%
+                    takerFeePaid: ethers.parseUnits('94.0733772342427093', 16), // 94.07%
                     protocolFeePaid: ethers.parseUnits(String(15), 9),
                 },
                 profitInRightMakerAsset: ethers.parseUnits(String(995), 0),

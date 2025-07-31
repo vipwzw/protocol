@@ -5,16 +5,16 @@ import { BigNumber, hexUtils, signTypedDataUtils } from '@0x/utils';
 import * as ethUtil from 'ethereumjs-util';
 import * as _ from 'lodash';
 
-import { TestLibOrderContract } from './wrappers';
+import { TestLibOrder__factory } from '../src/typechain-types';
 
 import { artifacts } from './artifacts';
 
 blockchainTests('LibOrder', env => {
-    let libOrderContract: TestLibOrderContract;
+    let libOrderContract: any;
 
     const randomAddress = () => hexUtils.random(constants.ADDRESS_LENGTH);
     const randomHash = () => hexUtils.random(constants.WORD_LENGTH);
-    const randomUint256 = () => new BigNumber(randomHash());
+    const randomUint256 = () => BigInt('0x' + randomHash().slice(2));
     const randomAssetData = () => hexUtils.random(36);
 
     const EMPTY_ORDER: Order = {
@@ -37,12 +37,9 @@ blockchainTests('LibOrder', env => {
     };
 
     before(async () => {
-        libOrderContract = await TestLibOrderContract.deployFrom0xArtifactAsync(
-            artifacts.TestLibOrder,
-            env.provider,
-            env.txDefaults,
-            {},
-        );
+        const { ethers } = require('hardhat');
+        const signer = (await ethers.getSigners())[0];
+        libOrderContract = await new TestLibOrder__factory(signer).deploy();
     });
 
     /**
@@ -58,7 +55,7 @@ blockchainTests('LibOrder', env => {
                 version: constants.EIP712_DOMAIN_VERSION,
             }),
         );
-        const actualHash = await libOrderContract.getTypedDataHash(order, domainHash).callAsync();
+        const actualHash = await libOrderContract.getTypedDataHash(order, domainHash)();
         expect(actualHash).to.be.eq(expectedHash);
     }
 
@@ -108,8 +105,8 @@ blockchainTests('LibOrder', env => {
                     chainId: 1337,
                 }),
             );
-            const orderHashHex1 = await libOrderContract.getTypedDataHash(EMPTY_ORDER, domainHash1).callAsync();
-            const orderHashHex2 = await libOrderContract.getTypedDataHash(EMPTY_ORDER, domainHash2).callAsync();
+            const orderHashHex1 = await libOrderContract.getTypedDataHash(EMPTY_ORDER, domainHash1)();
+            const orderHashHex2 = await libOrderContract.getTypedDataHash(EMPTY_ORDER, domainHash2)();
             expect(orderHashHex1).to.be.not.equal(orderHashHex2);
         });
     });
@@ -120,7 +117,7 @@ blockchainTests('LibOrder', env => {
     async function testGetStructHashAsync(order: Order): Promise<void> {
         const typedData = eip712Utils.createOrderTypedData(order);
         const expectedHash = ethUtil.bufferToHex(signTypedDataUtils.generateTypedDataHashWithoutDomain(typedData));
-        const actualHash = await libOrderContract.getStructHash(order).callAsync();
+        const actualHash = await libOrderContract.getStructHash(order)();
         expect(actualHash).to.be.eq(expectedHash);
     }
 
