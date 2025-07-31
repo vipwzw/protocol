@@ -119,40 +119,32 @@ blockchainTests('🏗️ BlockchainTests Environment', (env) => {
 
 describe('🎭 Mock Contract Tests', function () {
     let mockToken: any;
+    let testAccounts: any[];
+    let testDeployer: any;
+    let testUser1: any;
 
     beforeEach(async function () {
+        // 获取测试账户
+        testAccounts = await ethers.getSigners();
+        [testDeployer, testUser1] = testAccounts;
+        
         // 部署一个简单的 ERC20 模拟合约用于测试
-        const MockERC20 = await ethers.getContractFactory('MockERC20', deployer);
+        const MockERC20 = await ethers.getContractFactory('MockERC20');
         mockToken = await MockERC20.deploy('Test Token', 'TEST', 18);
+        await mockToken.waitForDeployment();
     });
 
     it('✅ should verify transfer events', async function () {
         const amount = ethers.parseEther('100');
         
         // 铸造一些代币
-        await mockToken.mint(deployer.address, amount);
+        await mockToken.mint(testDeployer.address, amount);
         
         // 转账
-        const tx = await mockToken.transfer(user1.address, amount);
+        const tx = await mockToken.transfer(testUser1.address, amount);
         const receipt = await tx.wait();
 
         // 使用现代化的事件验证函数
-        verifyTransferEvent(receipt, mockToken, deployer.address, user1.address, amount);
+        verifyTransferEvent(receipt, mockToken, testDeployer.address, testUser1.address, amount);
     });
 });
-
-// 简单的 MockERC20 合约定义（用于测试）
-// 注意：在实际使用中，这应该是一个单独的 Solidity 文件
-const mockERC20ABI = [
-    "function name() view returns (string)",
-    "function symbol() view returns (string)",
-    "function decimals() view returns (uint8)",
-    "function totalSupply() view returns (uint256)",
-    "function balanceOf(address) view returns (uint256)",
-    "function transfer(address to, uint256 amount) returns (bool)",
-    "function approve(address spender, uint256 amount) returns (bool)",
-    "function allowance(address owner, address spender) view returns (uint256)",
-    "function mint(address to, uint256 amount)",
-    "event Transfer(address indexed from, address indexed to, uint256 value)",
-    "event Approval(address indexed owner, address indexed spender, uint256 value)"
-];
