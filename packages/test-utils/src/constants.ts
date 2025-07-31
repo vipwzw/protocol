@@ -41,6 +41,12 @@ export const constants = {
     // Token constants
     DECIMALS_DEFAULT: 18,
     
+    // Dummy token constants (for testing)
+    DUMMY_TOKEN_NAME: 'DummyToken',
+    DUMMY_TOKEN_SYMBOL: 'DUM',
+    DUMMY_TOKEN_DECIMALS: 18n,
+    DUMMY_TOKEN_TOTAL_SUPPLY: ethers.parseEther('1000000000'), // 1 billion tokens
+    
     // Order and trading constants
     MAX_UINT256_ROOT: 340282366920938463463374607431768211455n,
     
@@ -63,4 +69,8 @@ export const {
     PERCENTAGE_DENOMINATOR,
     PPM_DENOMINATOR,
     PPM_100_PERCENT,
+    DUMMY_TOKEN_NAME,
+    DUMMY_TOKEN_SYMBOL,
+    DUMMY_TOKEN_DECIMALS,
+    DUMMY_TOKEN_TOTAL_SUPPLY,
 } = constants;
