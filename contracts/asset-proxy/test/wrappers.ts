@@ -64,5 +64,9 @@ export * from '../src/typechain-types/contracts/src/interfaces/IAssetData';
 export { IAssetProxy__factory } from '../src/typechain-types/factories/contracts/src/interfaces/IAssetProxy__factory';
 export { IAssetData__factory } from '../src/typechain-types/factories/contracts/src/interfaces/IAssetData__factory';
 
+// Test contracts
+export type { TestStaticCallTarget } from '../src/typechain-types/contracts/test/TestStaticCallTarget';
+export { TestStaticCallTarget__factory } from '../src/typechain-types/factories/contracts/test/TestStaticCallTarget__factory';
+
 // Note: Once Solidity compilation is fixed and TypeChain generates the types,
 // uncomment the relevant exports above and remove this empty export.
