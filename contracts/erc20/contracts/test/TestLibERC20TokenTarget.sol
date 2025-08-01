@@ -61,7 +61,24 @@ contract TestLibERC20TokenTarget {
         returns (bool)
     {
         emit ApproveCalled(spender, allowance);
-        _execute();
+        if (_shouldRevert) {
+            if (_revertData.length > 0) {
+                bytes memory revertData = _revertData;
+                assembly { revert(add(revertData, 0x20), mload(revertData)) }
+            } else {
+                revert("TestLibERC20TokenTarget: approve revert");
+            }
+        }
+        
+        if (_returnData.length == 0) {
+            return true;
+        } else if (_returnData.length == 32) {
+            return abi.decode(_returnData, (bool));
+        } else {
+            // Custom return data handling
+            bytes memory returnData = _returnData;
+            assembly { return(add(returnData, 0x20), mload(returnData)) }
+        }
     }
 
     function transfer(
@@ -72,7 +89,24 @@ contract TestLibERC20TokenTarget {
         returns (bool)
     {
         emit TransferCalled(to, amount);
-        _execute();
+        if (_shouldRevert) {
+            if (_revertData.length > 0) {
+                bytes memory revertData = _revertData;
+                assembly { revert(add(revertData, 0x20), mload(revertData)) }
+            } else {
+                revert("TestLibERC20TokenTarget: transfer revert");
+            }
+        }
+        
+        if (_returnData.length == 0) {
+            return true;
+        } else if (_returnData.length == 32) {
+            return abi.decode(_returnData, (bool));
+        } else {
+            // Custom return data handling
+            bytes memory returnData = _returnData;
+            assembly { return(add(returnData, 0x20), mload(returnData)) }
+        }
     }
 
     function transferFrom(
@@ -84,7 +118,24 @@ contract TestLibERC20TokenTarget {
         returns (bool)
     {
         emit TransferFromCalled(from, to, amount);
-        _execute();
+        if (_shouldRevert) {
+            if (_revertData.length > 0) {
+                bytes memory revertData = _revertData;
+                assembly { revert(add(revertData, 0x20), mload(revertData)) }
+            } else {
+                revert("TestLibERC20TokenTarget: transferFrom revert");
+            }
+        }
+        
+        if (_returnData.length == 0) {
+            return true;
+        } else if (_returnData.length == 32) {
+            return abi.decode(_returnData, (bool));
+        } else {
+            // Custom return data handling
+            bytes memory returnData = _returnData;
+            assembly { return(add(returnData, 0x20), mload(returnData)) }
+        }
     }
 
     function decimals()
@@ -92,15 +143,23 @@ contract TestLibERC20TokenTarget {
         view
         returns (uint8)
     {
-        _execute();
-    }
-
-    function _execute() private view {
         if (_shouldRevert) {
-            bytes memory revertData = _revertData;
-            assembly { revert(add(revertData, 0x20), mload(revertData)) }
+            if (_revertData.length > 0) {
+                bytes memory revertData = _revertData;
+                assembly { revert(add(revertData, 0x20), mload(revertData)) }
+            } else {
+                revert("TestLibERC20TokenTarget: decimals revert");
+            }
         }
-        bytes memory returnData = _returnData;
-        assembly { return(add(returnData, 0x20), mload(returnData)) }
+        
+        if (_returnData.length == 0) {
+            return 18; // Default ERC20 decimals
+        } else if (_returnData.length == 32) {
+            return abi.decode(_returnData, (uint8));
+        } else {
+            // Custom return data handling
+            bytes memory returnData = _returnData;
+            assembly { return(add(returnData, 0x20), mload(returnData)) }
+        }
     }
 }

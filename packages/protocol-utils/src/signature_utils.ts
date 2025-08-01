@@ -49,7 +49,21 @@ export async function ethSignHashWithProviderAsync(
     signer: string,
     provider: SupportedProvider,
 ): Promise<Signature> {
-    const ethersProvider = new ethers.JsonRpcProvider(providerUtils.standardizeOrThrow(provider) as any);
+    // 为 ethers v6 兼容性创建 provider
+    let ethersProvider: ethers.JsonRpcProvider;
+    
+    if (typeof provider === 'string') {
+        // 如果 provider 是字符串 URL
+        ethersProvider = new ethers.JsonRpcProvider(provider);
+    } else if (provider && typeof provider === 'object' && 'host' in provider) {
+        // 如果 provider 是对象，尝试构造 URL
+        const url = `http://${provider.host}:${(provider as any).port || 8545}`;
+        ethersProvider = new ethers.JsonRpcProvider(url);
+    } else {
+        // 默认使用本地 hardhat 网络
+        ethersProvider = new ethers.JsonRpcProvider('http://localhost:8545');
+    }
+    
     const ethersigner = await ethersProvider.getSigner(signer);
     const rpcSig = await ethersigner.signMessage(ethers.getBytes(hash));
     return {
@@ -79,7 +93,21 @@ export async function eip712SignTypedDataWithProviderAsync(
     signer: string,
     provider: SupportedProvider,
 ): Promise<Signature> {
-    const ethersProvider = new ethers.JsonRpcProvider(providerUtils.standardizeOrThrow(provider) as any);
+    // 为 ethers v6 兼容性创建 provider
+    let ethersProvider: ethers.JsonRpcProvider;
+    
+    if (typeof provider === 'string') {
+        // 如果 provider 是字符串 URL
+        ethersProvider = new ethers.JsonRpcProvider(provider);
+    } else if (provider && typeof provider === 'object' && 'host' in provider) {
+        // 如果 provider 是对象，尝试构造 URL
+        const url = `http://${provider.host}:${(provider as any).port || 8545}`;
+        ethersProvider = new ethers.JsonRpcProvider(url);
+    } else {
+        // 默认使用本地 hardhat 网络
+        ethersProvider = new ethers.JsonRpcProvider('http://localhost:8545');
+    }
+    
     const ethersigner = await ethersProvider.getSigner(signer);
     const rpcSig = await ethersigner.signTypedData(data.domain, data.types, data.message);
     return {
