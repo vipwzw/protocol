@@ -86,10 +86,11 @@ export class ERC1155ProxyWrapper {
      * @dev Deploys the ERC1155 proxy
      * @return Deployed ERC1155 proxy contract instance
      */
-    public async deployProxyAsync(): Promise<ERC1155ProxyContract> {
+    public async deployProxyAsync(): Promise<ERC1155Proxy> {
         const signers = await ethers.getSigners();
         const deployer = signers[0];
         this._proxyContract = await new ERC1155Proxy__factory(deployer).deploy();
+        await this._proxyContract.waitForDeployment();
         this._proxyIdIfExists = await this._proxyContract.getProxyId();
         return this._proxyContract;
     }
