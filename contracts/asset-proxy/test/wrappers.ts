@@ -68,5 +68,8 @@ export { IAssetData__factory } from '../src/typechain-types/factories/contracts/
 export type { TestStaticCallTarget } from '../src/typechain-types/contracts/test/TestStaticCallTarget';
 export { TestStaticCallTarget__factory } from '../src/typechain-types/factories/contracts/test/TestStaticCallTarget__factory';
 
+export type { TestERC20Bridge } from '../src/typechain-types/contracts/test/TestERC20Bridge.sol/TestERC20Bridge';
+export { TestERC20Bridge__factory } from '../src/typechain-types/factories/contracts/test/TestERC20Bridge.sol/TestERC20Bridge__factory';
+
 // Note: Once Solidity compilation is fixed and TypeChain generates the types,
 // uncomment the relevant exports above and remove this empty export.

@@ -64,12 +64,12 @@ blockchainTests.resets('Bancor unit tests', env => {
         }
 
         function createTransferFromOpts(opts?: Partial<TransferFromOpts>): TransferFromOpts {
-            const amount = getRandomInteger(1, TO_TOKEN_BASE.times(100));
+            const amount = getRandomInteger(1, TO_TOKEN_BASE * 100n);
             return {
                 tokenAddressesPath: Array(3).fill(constants.NULL_ADDRESS),
                 amount,
                 toAddress: randomAddress(),
-                fromTokenBalance: getRandomInteger(1, FROM_TOKEN_BASE.times(100)),
+                fromTokenBalance: getRandomInteger(1, FROM_TOKEN_BASE * 100n),
                 routerRevertReason: '',
                 ...opts,
             };

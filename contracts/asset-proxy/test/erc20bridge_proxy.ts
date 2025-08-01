@@ -1,4 +1,5 @@
 import {
+    chaiSetup,
     constants,
     expect,
     getRandomInteger,
@@ -8,14 +9,16 @@ import {
 } from '@0x/test-utils';
 import { AuthorizableRevertErrors } from '@0x/contracts-utils';
 import { AssetProxyId } from '@0x/utils';
-import { AbiEncoder, BigNumber, hexUtils, StringRevertError } from '@0x/utils';
+import { AbiEncoder, hexUtils, StringRevertError } from '@0x/utils';
 import { DecodedLogs } from 'ethereum-types';
 import { ethers } from 'hardhat';
 import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
 
-import { ERC20BridgeProxyContract, TestERC20BridgeContract, ERC20BridgeProxy__factory } from './wrappers';
+import { ERC20BridgeProxyContract, TestERC20Bridge, ERC20BridgeProxy__factory, TestERC20Bridge__factory } from './wrappers';
+
+chaiSetup.configure();
 
 describe('ERC20BridgeProxy unit tests', () => {
     const PROXY_ID = AssetProxyId.ERC20Bridge;
@@ -23,7 +26,7 @@ describe('ERC20BridgeProxy unit tests', () => {
     let owner: string;
     let badCaller: string;
     let assetProxy: ERC20BridgeProxyContract;
-    let bridgeContract: TestERC20BridgeContract;
+    let bridgeContract: TestERC20Bridge;
     let testTokenAddress: string;
 
     before(async () => {
@@ -32,12 +35,12 @@ describe('ERC20BridgeProxy unit tests', () => {
         const signers = await ethers.getSigners();
         const deployer = signers[0];
         assetProxy = await new ERC20BridgeProxy__factory(deployer).deploy();
+        await assetProxy.waitForDeployment();
         
-        // Skip TestERC20Bridge deployment for now - needs modern factory
-        console.log('Skipping TestERC20Bridge deployment - needs modern factory');
-        // bridgeContract = await new TestERC20Bridge__factory(deployer).deploy();
-        // Skip testToken address for now since we're skipping bridge deployment
-        testTokenAddress = '0x0000000000000000000000000000000000000001';
+        bridgeContract = await new TestERC20Bridge__factory(deployer).deploy();
+        await bridgeContract.waitForDeployment();
+        
+        testTokenAddress = await bridgeContract.testToken();
         await assetProxy.addAuthorizedAddress(owner);
     });
 
@@ -53,11 +56,11 @@ describe('ERC20BridgeProxy unit tests', () => {
         returnData: string;
     }
 
-    function createAssetData(opts?: Partial<AssetDataOpts>): AssetDataOpts {
+    async function createAssetData(opts?: Partial<AssetDataOpts>): Promise<AssetDataOpts> {
         return _.merge(
             {
                 tokenAddress: testTokenAddress,
-                bridgeAddress: bridgeContract.address,
+                bridgeAddress: await bridgeContract.getAddress(),
                 bridgeData: createBridgeData(),
             },
             opts,
@@ -91,11 +94,12 @@ describe('ERC20BridgeProxy unit tests', () => {
         ]);
         const revertErrorBytes =
             opts.revertError !== undefined ? new StringRevertError(opts.revertError).encode() : '0x';
-        return encoder.encode([new BigNumber(opts.transferAmount), revertErrorBytes, opts.returnData]);
+        return encoder.encode([opts.transferAmount, revertErrorBytes, opts.returnData]);
     }
 
     async function setTestTokenBalanceAsync(_owner: string, balance: Numberish): Promise<void> {
-        await bridgeContract.setTestTokenBalance(_owner, new BigNumber(balance)).awaitTransactionSuccessAsync();
+        const tx = await bridgeContract.setTestTokenBalance(_owner, balance);
+        await tx.wait();
     }
 
     describe('transferFrom()', () => {
@@ -106,11 +110,11 @@ describe('ERC20BridgeProxy unit tests', () => {
             amount: Numberish;
         }
 
-        function createTransferFromOpts(opts?: Partial<TransferFromOpts>): TransferFromOpts {
-            const transferAmount = _.get(opts, ['amount'], getRandomInteger(1, 100e18)) as BigNumber;
+        async function createTransferFromOpts(opts?: Partial<TransferFromOpts>): Promise<TransferFromOpts> {
+            const transferAmount = _.get(opts, ['amount'], getRandomInteger(1, 100e18)) as bigint;
             return _.merge(
                 {
-                    assetData: createAssetData({
+                    assetData: await createAssetData({
                         bridgeData: createBridgeData({
                             transferAmount,
                         }),
@@ -124,40 +128,38 @@ describe('ERC20BridgeProxy unit tests', () => {
         }
 
         async function transferFromAsync(opts?: Partial<TransferFromOpts>, caller?: string): Promise<DecodedLogs> {
-            const _opts = createTransferFromOpts(opts);
-            const { logs } = await assetProxy
-                .transferFrom(encodeAssetData(_opts.assetData), _opts.from, _opts.to, new BigNumber(_opts.amount))
-                .awaitTransactionSuccessAsync({ from: caller });
-            return logs as any as DecodedLogs;
+            const _opts = await createTransferFromOpts(opts);
+            const tx = await assetProxy.transferFrom(encodeAssetData(_opts.assetData), _opts.from, _opts.to, _opts.amount);
+            const receipt = await tx.wait();
+            return receipt.logs as any as DecodedLogs;
         }
 
         it('succeeds if the bridge succeeds and balance increases by `amount`', async () => {
-            const tx = transferFromAsync();
-            return expect(tx).to.be.fulfilled('');
+            await transferFromAsync(); // Should not throw
         });
 
         it('succeeds if balance increases more than `amount`', async () => {
             const amount = getRandomInteger(1, 100e18);
             const tx = transferFromAsync({
                 amount,
-                assetData: createAssetData({
+                assetData: await createAssetData({
                     bridgeData: createBridgeData({
-                        transferAmount: amount.plus(1),
+                        transferAmount: amount + 1n,
                     }),
                 }),
             });
-            return expect(tx).to.be.fulfilled('');
+            await tx; // Should not throw
         });
 
         it('passes the correct arguments to the bridge contract', async () => {
-            const opts = createTransferFromOpts();
+            const opts = await createTransferFromOpts();
             const logs = await transferFromAsync(opts);
             expect(logs.length).to.eq(1);
             const args = logs[0].args;
             expect(args.tokenAddress).to.eq(opts.assetData.tokenAddress);
             expect(args.from).to.eq(opts.from);
             expect(args.to).to.eq(opts.to);
-            expect(args.amount).to.bignumber.eq(opts.amount);
+            expect(args.amount).to.equal(opts.amount);
             expect(args.bridgeData).to.eq(encodeBridgeData(opts.assetData.bridgeData));
         });
 
@@ -172,7 +174,7 @@ describe('ERC20BridgeProxy unit tests', () => {
             const tx = assetProxy
                 .transferFrom(truncatedAssetData, opts.from, opts.to, new BigNumber(opts.amount))
                 .awaitTransactionSuccessAsync();
-            return expect(tx).to.be.rejected();
+            return expect(tx).to.be.reverted;
         });
 
         it('fails if bridge returns nothing', async () => {
@@ -185,7 +187,7 @@ describe('ERC20BridgeProxy unit tests', () => {
             });
             // This will actually revert when the AP tries to decode the return
             // value.
-            return expect(tx).to.be.rejected();
+            return expect(tx).to.be.reverted;
         });
 
         it('fails if bridge returns true', async () => {
@@ -198,7 +200,7 @@ describe('ERC20BridgeProxy unit tests', () => {
             });
             // This will actually revert when the AP tries to decode the return
             // value.
-            return expect(tx).to.be.rejected();
+            return expect(tx).to.be.reverted;
         });
 
         it('fails if bridge returns 0x1', async () => {
@@ -220,7 +222,7 @@ describe('ERC20BridgeProxy unit tests', () => {
             });
             // This will actually revert when the AP tries to decode the return
             // value.
-            return expect(tx).to.be.rejected();
+            return expect(tx).to.be.reverted;
         });
 
         it('fails if bridge reverts', async () => {
@@ -241,7 +243,7 @@ describe('ERC20BridgeProxy unit tests', () => {
                 amount,
                 assetData: createAssetData({
                     bridgeData: createBridgeData({
-                        transferAmount: amount.minus(1),
+                        transferAmount: amount - 1n,
                     }),
                 }),
             });
