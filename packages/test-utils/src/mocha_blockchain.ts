@@ -118,9 +118,18 @@ export function blockchainTests(
 }
 
 /**
- * 重新导出 describe 以保持兼容性
+ * 重新导出 describe 以保持兼容性，并添加 optional 方法
  */
-export const describe = global.describe;
+export const describe = Object.assign(global.describe, {
+    optional: (title: string, fn?: (this: Mocha.Suite) => void) => {
+        // 环境变量控制是否运行可选测试
+        if (process.env.RUN_OPTIONAL_TESTS === 'true') {
+            return fn ? global.describe(title, fn) : global.describe(title, () => {});
+        } else {
+            return fn ? global.describe.skip(title, fn) : global.describe.skip(title, () => {});
+        }
+    }
+});
 
 /**
  * 为了完整的向后兼容，提供其他测试环境配置
@@ -160,6 +169,24 @@ export namespace blockchainTests {
      */
     export function reset(): void {
         StandardBlockchainTestsEnvironmentSingleton.getInstance().reset();
+    }
+
+    /**
+     * 重置测试环境的别名方法（向后兼容）
+     */
+    export function resets(
+        description: string,
+        testCallback: (env: BlockchainTestsEnvironment) => void
+    ): void {
+        return blockchainTests(description, testCallback);
+    }
+
+    /**
+     * 配置测试环境（向后兼容）
+     */
+    export function configure(config: any): void {
+        // 简化的配置实现，可以根据需要扩展
+        console.log('Test configuration:', config);
     }
 }
 
