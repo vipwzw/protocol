@@ -54,9 +54,10 @@ describe('StaticCallProxy', () => {
         const contractAddress = await staticCallProxyWithoutTransferFrom.getAddress();
         staticCallProxy = IAssetProxy__factory.connect(
             contractAddress,
-            provider
+            deployer
         );
         staticCallTarget = await new TestStaticCallTarget__factory(deployer).deploy();
+        await staticCallTarget.waitForDeployment();
     });
     beforeEach(async () => {
         await blockchainLifecycle.startAsync();
@@ -113,7 +114,7 @@ describe('StaticCallProxy', () => {
             const assetDataByteLen = (assetData.length - 2) / 2;
             expect((assetDataByteLen - 4) % 32).to.equal(0);
             await expectTransactionFailedWithoutReasonAsync(
-                staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount).sendTransactionAsync(),
+                staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount),
             );
         });
         it('should revert if the offset to `staticCallData` points to outside of assetData', async () => {
@@ -131,7 +132,7 @@ describe('StaticCallProxy', () => {
                 invalidOffsetToStaticCallData,
             )}${newStaticCallData}`;
             await expectTransactionFailedWithoutReasonAsync(
-                staticCallProxy.transferFrom(badAssetData, fromAddress, toAddress, amount).sendTransactionAsync(),
+                staticCallProxy.transferFrom(badAssetData, fromAddress, toAddress, amount),
             );
         });
         it('should revert if the callTarget attempts to write to state', async () => {
@@ -140,7 +141,7 @@ describe('StaticCallProxy', () => {
             const staticCallTargetAddress = await staticCallTarget.getAddress();
             const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
             await expectTransactionFailedWithoutReasonAsync(
-                staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount).sendTransactionAsync(),
+                staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount),
             );
         });
         it('should revert with data provided by the callTarget if the staticcall reverts', async () => {
@@ -148,9 +149,8 @@ describe('StaticCallProxy', () => {
             const expectedResultHash = constants.KECCAK256_NULL;
             const staticCallTargetAddress = await staticCallTarget.getAddress();
             const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
-            return expect(
-                staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount).awaitTransactionSuccessAsync(),
-            ).to.be.revertedWith(RevertReason.TargetNotEven);
+            const tx = staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount);
+            return expect(tx).to.be.revertedWith(RevertReason.TargetNotEven);
         });
         it('should revert if the hash of the output is different than expected expected', async () => {
             const staticCallData = staticCallTarget.interface.encodeFunctionData('isOddNumber', [0n]);
@@ -158,28 +158,23 @@ describe('StaticCallProxy', () => {
             const expectedResultHash = ethUtil.bufferToHex(ethUtil.keccak256(trueAsBuffer));
             const staticCallTargetAddress = await staticCallTarget.getAddress();
             const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
-            return expect(
-                staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount).awaitTransactionSuccessAsync(),
-            ).to.be.revertedWith(RevertReason.UnexpectedStaticCallResult);
+            const tx = staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount);
+            return expect(tx).to.be.revertedWith(RevertReason.UnexpectedStaticCallResult);
         });
         it('should be successful if a function call with no inputs and no outputs is successful', async () => {
             const staticCallData = staticCallTarget.interface.encodeFunctionData('noInputFunction');
             const expectedResultHash = constants.KECCAK256_NULL;
             const staticCallTargetAddress = await staticCallTarget.getAddress();
             const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
-            await staticCallProxy
-                .transferFrom(assetData, fromAddress, toAddress, amount)
-                .awaitTransactionSuccessAsync();
+            const tx = await staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount);
+            await tx.wait();
         });
         it('should be successful if the staticCallTarget is not a contract and no return value is expected', async () => {
             const staticCallData = '0x0102030405060708';
             const expectedResultHash = constants.KECCAK256_NULL;
-            const assetData = assetDataInterface
-                .StaticCall(toAddress, staticCallData, expectedResultHash)
-                .getABIEncodedTransactionData();
-            await staticCallProxy
-                .transferFrom(assetData, fromAddress, toAddress, amount)
-                .awaitTransactionSuccessAsync();
+            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [toAddress, staticCallData, expectedResultHash]);
+            const tx = await staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount);
+            await tx.wait();
         });
         it('should be successful if a function call with one static input returns the correct value', async () => {
             const staticCallData = staticCallTarget.interface.encodeFunctionData('isOddNumber', [1n]);
@@ -187,9 +182,8 @@ describe('StaticCallProxy', () => {
             const expectedResultHash = ethUtil.bufferToHex(ethUtil.keccak256(trueAsBuffer));
             const staticCallTargetAddress = await staticCallTarget.getAddress();
             const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
-            await staticCallProxy
-                .transferFrom(assetData, fromAddress, toAddress, amount)
-                .awaitTransactionSuccessAsync();
+            const tx = await staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount);
+            await tx.wait();
         });
         it('should be successful if a function with one dynamic input is successful', async () => {
             const dynamicInput = '0x0102030405060708';
@@ -197,9 +191,8 @@ describe('StaticCallProxy', () => {
             const expectedResultHash = constants.KECCAK256_NULL;
             const staticCallTargetAddress = await staticCallTarget.getAddress();
             const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
-            await staticCallProxy
-                .transferFrom(assetData, fromAddress, toAddress, amount)
-                .awaitTransactionSuccessAsync();
+            const tx = await staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount);
+            await tx.wait();
         });
         it('should be successful if a function call returns a complex type', async () => {
             const a = 1n;
@@ -219,9 +212,8 @@ describe('StaticCallProxy', () => {
                 ethUtil.keccak256(ethUtil.toBuffer(encodedExpectedResultWithOffset)),
             );
             const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
-            await staticCallProxy
-                .transferFrom(assetData, fromAddress, toAddress, amount)
-                .awaitTransactionSuccessAsync();
+            const tx = await staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount);
+            await tx.wait();
         });
     });
 });
