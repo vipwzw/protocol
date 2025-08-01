@@ -15,7 +15,7 @@
         "skipLibCheck": true,
         "composite": true
     },
-    "include": ["src/**/*", "typechain-types/**/*", "artifacts/**/*.json"],
+    "include": ["src/**/*", "src/typechain-types/**/*", "artifacts/**/*.json"],
     "exclude": ["lib/**/*", "out/**/*", "test/**/*"],
     "references": [
         { "path": "../erc20" },

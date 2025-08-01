@@ -6,7 +6,7 @@
         "resolveJsonModule": true,
         "composite": true
     },
-    "include": ["./src/**/*", "./artifacts/**/*.json", "./typechain-types/**/*"],
+    "include": ["./src/**/*", "./artifacts/**/*.json", "./src/typechain-types/**/*"],
     "exclude": [
         "./node_modules/**/*",
         "./lib/**/*",
