@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
 
 import "../src/Staking.sol";
 
@@ -45,6 +44,8 @@ contract TestStakingNoWETH is
     function getWethContract()
         public
         view
+        virtual
+        override
         returns (IEtherToken)
     {
         return IEtherToken(address(this));
@@ -52,11 +53,13 @@ contract TestStakingNoWETH is
 
     function _wrapEth()
         internal
+        override
     {}
 
     function _getAvailableWethBalance()
         internal
         view
+        override
         returns (uint256)
     {
         return address(this).balance;

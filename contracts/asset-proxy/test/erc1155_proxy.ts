@@ -78,8 +78,9 @@ describe('ERC1155Proxy', () => {
         const usedAddresses = ([owner, notAuthorized, authorized, spender, receiver] = _.slice(accounts, 0, 5));
         erc1155ProxyWrapper = new ERC1155ProxyWrapper(provider, usedAddresses, owner);
         erc1155Proxy = await erc1155ProxyWrapper.deployProxyAsync();
-        await erc1155Proxy.addAuthorizedAddress(authorized).awaitTransactionSuccessAsync({ from: owner });
-        await erc1155Proxy.addAuthorizedAddress(erc1155Proxy.address).awaitTransactionSuccessAsync({ from: owner });
+        await erc1155Proxy.addAuthorizedAddress(authorized);
+        const erc1155ProxyAddress = await erc1155Proxy.getAddress();
+        await erc1155Proxy.addAuthorizedAddress(erc1155ProxyAddress);
         // deploy & configure ERC1155 tokens and receiver
         [erc1155Wrapper] = await erc1155ProxyWrapper.deployDummyContractsAsync();
         erc1155Contract = erc1155Wrapper.getContract();

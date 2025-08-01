@@ -149,6 +149,7 @@ contract StakingProxy is
     function assertValidStorageParams()
         public
         view
+        virtual
         override
     {
         // Epoch length must be between 5 and 30 days long

@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
 
 import "../src/interfaces/IStructs.sol";
 import "./TestStakingNoWETH.sol";
@@ -191,6 +190,7 @@ contract TestMixinStake is
         uint256 amount
     )
         internal
+        override
     {
         emit IncreaseNextBalance(
             _getPtrSlot(balancePtr),
@@ -204,6 +204,7 @@ contract TestMixinStake is
         uint256 amount
     )
         internal
+        override
     {
         emit DecreaseNextBalance(
             _getPtrSlot(balancePtr),
@@ -215,6 +216,7 @@ contract TestMixinStake is
     function _loadCurrentBalance(IStructs.StoredBalance storage balancePtr)
         internal
         view
+        override
         returns (IStructs.StoredBalance memory balance)
     {
         balance = balancePtr;
@@ -224,6 +226,7 @@ contract TestMixinStake is
     function _assertStakingPoolExists(bytes32 poolId)
         internal
         view
+        override
     {
         require(poolId != bytes32(0), "INVALID_POOL");
     }
@@ -235,7 +238,7 @@ contract TestMixinStake is
         returns (bytes32 offset)
     {
         assembly {
-            offset := ptr_slot
+            offset := ptr.slot
         }
     }
 }

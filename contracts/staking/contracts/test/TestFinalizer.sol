@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
 
 import "../src/interfaces/IStructs.sol";
 import "../src/libs/LibCobbDouglas.sol";
@@ -65,7 +64,7 @@ contract TestFinalizer is
 
     // this contract can receive ETH
     // solhint-disable no-empty-blocks
-    function ()
+    receive()
         external
         payable
     {}
@@ -100,7 +99,7 @@ contract TestFinalizer is
     function drainBalance()
         external
     {
-        address(0).transfer(address(this).balance);
+        payable(address(0)).transfer(address(this).balance);
     }
 
     /// @dev Compute Cobb-Douglas.
@@ -161,6 +160,7 @@ contract TestFinalizer is
         uint256 membersStake
     )
         internal
+        override
         returns (uint256 operatorReward, uint256 membersReward)
     {
         uint32 operatorShare = _operatorSharesByPool[poolId];
@@ -169,13 +169,13 @@ contract TestFinalizer is
             reward,
             membersStake
         );
-        address(_operatorRewardsReceiver).transfer(operatorReward);
-        address(_membersRewardsReceiver).transfer(membersReward);
+        payable(address(_operatorRewardsReceiver)).transfer(operatorReward);
+        payable(address(_membersRewardsReceiver)).transfer(membersReward);
         emit DepositStakingPoolRewards(poolId, reward, membersStake);
     }
 
     /// @dev Overriden to just increase the epoch counter.
-    function _goToNextEpoch() internal {
+    function _goToNextEpoch() internal override {
         currentEpoch += 1;
     }
 }

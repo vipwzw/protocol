@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
 
 import "../src/Staking.sol";
 
@@ -64,6 +63,7 @@ contract TestProxyDestination is
     ///      sets storage params and emits `InitCalled`.
     function init()
         public
+        override
     {
         if (initFailFlag) {
             revert("INIT_FAIL_FLAG_SET");

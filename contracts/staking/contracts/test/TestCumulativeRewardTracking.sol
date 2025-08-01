@@ -15,8 +15,7 @@
   limitations under the License.
 
 */
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
 
 import "./TestStaking.sol";
 
@@ -41,7 +40,7 @@ contract TestCumulativeRewardTracking is
         )
     {}
 
-    function init() public {}
+    function init() public override {}
 
     function _addCumulativeReward(
         bytes32 poolId,
@@ -49,6 +48,7 @@ contract TestCumulativeRewardTracking is
         uint256 stake
     )
         internal
+        override
     {
         uint256 lastStoredEpoch = _cumulativeRewardsByPoolLastStored[poolId];
         MixinCumulativeRewards._addCumulativeReward(

@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
 
 import "../src/interfaces/IStructs.sol";
 import "./TestStakingNoWETH.sol";
@@ -41,7 +40,7 @@ contract TestProtocolFees is
     mapping(bytes32 => TestPool) private _testPools;
     mapping(address => bytes32) private _makersToTestPoolIds;
 
-    constructor(address exchangeAddress) public {
+    constructor(address exchangeAddress) {
         _addAuthorizedAddress(msg.sender);
         init();
         validExchanges[exchangeAddress] = true;
@@ -107,6 +106,7 @@ contract TestProtocolFees is
     function getTotalStakeDelegatedToPool(bytes32 poolId)
         public
         view
+        override
         returns (IStructs.StoredBalance memory balance)
     {
         TestPool memory pool = _testPools[poolId];
@@ -122,6 +122,7 @@ contract TestProtocolFees is
     function getStakeDelegatedToPoolByOwner(address, bytes32 poolId)
         public
         view
+        override
         returns (IStructs.StoredBalance memory balance)
     {
         TestPool memory pool = _testPools[poolId];
@@ -135,6 +136,7 @@ contract TestProtocolFees is
     function getWethContract()
         public
         view
+        override
         returns (IEtherToken wethContract)
     {
         return IEtherToken(address(this));

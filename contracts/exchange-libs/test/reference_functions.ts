@@ -108,8 +108,7 @@ const ZERO_AMOUNT = 0n;
                     const denominator = 10000n;
                     const target = 333n;
                     const expectedError = new LibMathRevertErrors.RoundingError(numerator, denominator, target);
-                    // Skip: BigInt in JavaScript handles large numbers without overflow errors
-                    expect(() => safeGetPartialAmountFloor(numerator, denominator, target)).not.to.throw();
+                    expect(() => safeGetPartialAmountFloor(numerator, denominator, target)).to.throw('RoundingError');
                 });
 
                 it('reverts if `denominator` is zero', () => {
@@ -117,8 +116,7 @@ const ZERO_AMOUNT = 0n;
                     const denominator = ZERO_AMOUNT;
                     const target = ethers.parseEther('0.01');
                     const expectedError = new LibMathRevertErrors.DivisionByZeroError();
-                    // Skip: BigInt in JavaScript handles large numbers without overflow errors
-                    expect(() => safeGetPartialAmountFloor(numerator, denominator, target)).not.to.throw();
+                    expect(() => safeGetPartialAmountFloor(numerator, denominator, target)).to.throw('RoundingError');
                 });
 
                 it('reverts if `numerator * target` overflows', () => {
@@ -130,8 +128,7 @@ const ZERO_AMOUNT = 0n;
                         numerator,
                         target,
                     );
-                    // Skip: BigInt in JavaScript handles large numbers without overflow errors
-                    expect(() => safeGetPartialAmountFloor(numerator, denominator, target)).not.to.throw();
+                    expect(() => safeGetPartialAmountFloor(numerator, denominator, target)).to.throw('RoundingError');
                 });
             });
         });
@@ -143,8 +140,7 @@ const ZERO_AMOUNT = 0n;
                     const denominator = 10000n;
                     const target = 333n;
                     const expectedError = new LibMathRevertErrors.RoundingError(numerator, denominator, target);
-                    // Skip: BigInt in JavaScript handles large numbers without overflow errors
-                    expect(() => safeGetPartialAmountCeil(numerator, denominator, target)).not.to.throw();
+                    expect(() => safeGetPartialAmountCeil(numerator, denominator, target)).to.throw('RoundingError');
                 });
 
                 it('reverts if `denominator` is zero', () => {
@@ -152,8 +148,7 @@ const ZERO_AMOUNT = 0n;
                     const denominator = ZERO_AMOUNT;
                     const target = ethers.parseEther('0.01');
                     const expectedError = new LibMathRevertErrors.DivisionByZeroError();
-                    // Skip: BigInt in JavaScript handles large numbers without overflow errors
-                    expect(() => safeGetPartialAmountCeil(numerator, denominator, target)).not.to.throw();
+                    expect(() => safeGetPartialAmountCeil(numerator, denominator, target)).to.throw('RoundingError');
                 });
 
                 it('reverts if `numerator * target` overflows', () => {
@@ -165,8 +160,7 @@ const ZERO_AMOUNT = 0n;
                         numerator,
                         target,
                     );
-                    // Skip: BigInt in JavaScript handles large numbers without overflow errors
-                    expect(() => safeGetPartialAmountCeil(numerator, denominator, target)).not.to.throw();
+                    expect(() => safeGetPartialAmountCeil(numerator, denominator, target)).to.throw('RoundingError');
                 });
             });
         });

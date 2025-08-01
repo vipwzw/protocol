@@ -78,6 +78,7 @@ contract MixinStakeStorage is
     function _loadCurrentBalance(IStructs.StoredBalance storage balancePtr)
         internal
         view
+        virtual
         returns (IStructs.StoredBalance memory balance)
     {
         balance = balancePtr;
@@ -124,6 +125,7 @@ contract MixinStakeStorage is
     /// @param amount to increment by.
     function _increaseNextBalance(IStructs.StoredBalance storage balancePtr, uint256 amount)
         internal
+        virtual
     {
         // Add stake to balance
         IStructs.StoredBalance memory balance = _loadCurrentBalance(balancePtr);
@@ -138,6 +140,7 @@ contract MixinStakeStorage is
     /// @param amount to decrement by.
     function _decreaseNextBalance(IStructs.StoredBalance storage balancePtr, uint256 amount)
         internal
+        virtual
     {
         // Remove stake from balance
         IStructs.StoredBalance memory balance = _loadCurrentBalance(balancePtr);

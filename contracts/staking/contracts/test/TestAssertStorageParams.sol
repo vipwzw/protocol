@@ -15,8 +15,7 @@
   limitations under the License.
 
 */
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
 
 import "../src/StakingProxy.sol";
 
@@ -51,5 +50,6 @@ contract TestAssertStorageParams is
 
     function _attachStakingContract(address)
         internal
+        override
     {}
 }

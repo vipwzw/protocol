@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
 
 import "@0x/contracts-asset-proxy/contracts/src/interfaces/IAssetData.sol";
 import "@0x/contracts-utils/contracts/src/LibBytes.sol";
@@ -31,7 +30,7 @@ contract TestStorageLayoutAndConstants is
 
     /// @dev Construction will fail if the storage layout or the deployment constants are incompatible
     ///      with the V1 staking proxy.
-    constructor() public {
+    constructor() {
         _assertDeploymentConstants();
         _assertStorageLayout();
     }
@@ -43,12 +42,12 @@ contract TestStorageLayoutAndConstants is
         view
     {
         require(
-            address(getWethContract()) != address(0),
+            address(_getWethContract()) != address(0),
             "WETH_MUST_BE_SET"
         );
 
         require(
-            address(getZrxVault()) != address(0),
+            address(_getZrxVault()) != address(0),
             "ZRX_VAULT_MUST_BE_SET"
         );
     }
@@ -67,8 +66,8 @@ contract TestStorageLayoutAndConstants is
             /// Ownable
 
             assertSlotAndOffset(
-                owner_slot,
-                owner_offset,
+                owner.slot,
+                owner.offset,
                 slot,
                 offset
             )
@@ -77,16 +76,16 @@ contract TestStorageLayoutAndConstants is
             /// Authorizable
 
             assertSlotAndOffset(
-                authorized_slot,
-                authorized_offset,
+                authorized.slot,
+                authorized.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                authorities_slot,
-                authorities_offset,
+                authorities.slot,
+                authorities.offset,
                 slot,
                 offset
             )
@@ -95,144 +94,144 @@ contract TestStorageLayoutAndConstants is
             /// MixinStorage
 
             assertSlotAndOffset(
-                stakingContract_slot,
-                stakingContract_offset,
+                stakingContract.slot,
+                stakingContract.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                _globalStakeByStatus_slot,
-                _globalStakeByStatus_offset,
+                _globalStakeByStatus.slot,
+                _globalStakeByStatus.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                _ownerStakeByStatus_slot,
-                _ownerStakeByStatus_offset,
+                _ownerStakeByStatus.slot,
+                _ownerStakeByStatus.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                _delegatedStakeToPoolByOwner_slot,
-                _delegatedStakeToPoolByOwner_offset,
+                _delegatedStakeToPoolByOwner.slot,
+                _delegatedStakeToPoolByOwner.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                _delegatedStakeByPoolId_slot,
-                _delegatedStakeByPoolId_offset,
+                _delegatedStakeByPoolId.slot,
+                _delegatedStakeByPoolId.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                lastPoolId_slot,
-                lastPoolId_offset,
+                lastPoolId.slot,
+                lastPoolId.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                poolIdByMaker_slot,
-                poolIdByMaker_offset,
+                poolIdByMaker.slot,
+                poolIdByMaker.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                _poolById_slot,
-                _poolById_offset,
+                _poolById.slot,
+                _poolById.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                rewardsByPoolId_slot,
-                rewardsByPoolId_offset,
+                rewardsByPoolId.slot,
+                rewardsByPoolId.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                currentEpoch_slot,
-                currentEpoch_offset,
+                currentEpoch.slot,
+                currentEpoch.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                currentEpochStartTimeInSeconds_slot,
-                currentEpochStartTimeInSeconds_offset,
+                currentEpochStartTimeInSeconds.slot,
+                currentEpochStartTimeInSeconds.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                _cumulativeRewardsByPool_slot,
-                _cumulativeRewardsByPool_offset,
+                _cumulativeRewardsByPool.slot,
+                _cumulativeRewardsByPool.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                _cumulativeRewardsByPoolLastStored_slot,
-                _cumulativeRewardsByPoolLastStored_offset,
+                _cumulativeRewardsByPoolLastStored.slot,
+                _cumulativeRewardsByPoolLastStored.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                validExchanges_slot,
-                validExchanges_offset,
+                validExchanges.slot,
+                validExchanges.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                epochDurationInSeconds_slot,
-                epochDurationInSeconds_offset,
+                epochDurationInSeconds.slot,
+                epochDurationInSeconds.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                rewardDelegatedStakeWeight_slot,
-                rewardDelegatedStakeWeight_offset,
+                rewardDelegatedStakeWeight.slot,
+                rewardDelegatedStakeWeight.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                minimumPoolStake_slot,
-                minimumPoolStake_offset,
+                minimumPoolStake.slot,
+                minimumPoolStake.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                cobbDouglasAlphaNumerator_slot,
-                cobbDouglasAlphaNumerator_offset,
+                cobbDouglasAlphaNumerator.slot,
+                cobbDouglasAlphaNumerator.offset,
                 slot,
                 offset
             )
@@ -242,8 +241,8 @@ contract TestStorageLayoutAndConstants is
             // they are both `uint32`. Because of this tight packing, the offset of this value
             // must be 4, since the previous value is a 4 byte number.
             assertSlotAndOffset(
-                cobbDouglasAlphaDenominator_slot,
-                cobbDouglasAlphaDenominator_offset,
+                cobbDouglasAlphaDenominator.slot,
+                cobbDouglasAlphaDenominator.offset,
                 slot,
                 offset
             )
@@ -251,29 +250,29 @@ contract TestStorageLayoutAndConstants is
             offset := 0x0
 
             assertSlotAndOffset(
-                poolStatsByEpoch_slot,
-                poolStatsByEpoch_offset,
+                poolStatsByEpoch.slot,
+                poolStatsByEpoch.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                aggregatedStatsByEpoch_slot,
-                aggregatedStatsByEpoch_offset,
+                aggregatedStatsByEpoch.slot,
+                aggregatedStatsByEpoch.offset,
                 slot,
                 offset
             )
             slot := add(slot, 0x1)
 
             assertSlotAndOffset(
-                wethReservedForPoolRewards_slot,
-                wethReservedForPoolRewards_offset,
+                wethReservedForPoolRewards.slot,
+                wethReservedForPoolRewards.offset,
                 slot,
                 offset
             )
 
-            // This assembly function will assert that the actual values for `_slot` and `_offset` are
+            // This assembly function will assert that the actual values for `.slot` and `.offset` are
             // correct and will revert with a rich error if they are different than the expected values.
             function assertSlotAndOffset(
                 actual_slot,
@@ -281,21 +280,21 @@ contract TestStorageLayoutAndConstants is
                 expected_slot,
                 expected_offset
             ) {
-                // If expected_slot is not equal to actual_slot, revert with a rich error.
-                if iszero(eq(expected_slot, actual_slot)) {
+                // If expected.slot is not equal to actual.slot, revert with a rich error.
+                if iszero(eq(expected.slot, actual.slot)) {
                     mstore(0x0, 0x213eb13400000000000000000000000000000000000000000000000000000000) // Rich error selector
                     mstore(0x4, 0x0)                                                                // Unexpected slot error code
-                    mstore(0x24, expected_slot)                                                     // Expected slot
-                    mstore(0x44, actual_slot)                                                       // Actual slot
+                    mstore(0x24, expected.slot)                                                     // Expected slot
+                    mstore(0x44, actual.slot)                                                       // Actual slot
                     revert(0x0, 0x64)
                 }
 
-                // If expected_offset is not equal to actual_offset, revert with a rich error.
-                if iszero(eq(expected_offset, actual_offset)) {
+                // If expected.offset is not equal to actual.offset, revert with a rich error.
+                if iszero(eq(expected.offset, actual.offset)) {
                     mstore(0x0, 0x213eb13400000000000000000000000000000000000000000000000000000000) // Rich error selector
                     mstore(0x4, 0x1)                                                                // Unexpected offset error code
-                    mstore(0x24, expected_offset)                                                   // Expected offset
-                    mstore(0x44, actual_offset)                                                     // Actual offset
+                    mstore(0x24, expected.offset)                                                   // Expected offset
+                    mstore(0x44, actual.offset)                                                     // Actual offset
                     revert(0x0, 0x64)
                 }
             }

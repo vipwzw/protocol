@@ -23,8 +23,5 @@
         "./src/erc20_wrapper.ts",
         "./src/erc721_wrapper.ts"
     ],
-    "references": [
-        { "path": "../utils" },
-        { "path": "../erc1155" }
-    ]
+    "references": []
 }

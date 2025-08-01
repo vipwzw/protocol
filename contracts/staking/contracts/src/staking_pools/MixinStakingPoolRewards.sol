@@ -106,6 +106,7 @@ abstract contract MixinStakingPoolRewards is
         address member
     )
         internal
+        virtual
     {
         // Ensure the pool is finalized.
         _assertPoolFinalizedLastEpoch(poolId);

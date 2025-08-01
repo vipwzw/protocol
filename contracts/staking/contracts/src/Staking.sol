@@ -191,6 +191,7 @@ contract Staking is
     function getStakeDelegatedToPoolByOwner(address staker, bytes32 poolId) 
         external 
         view 
+        virtual
         override(IStaking, MixinStakeBalances) 
         returns (IStructs.StoredBalance memory) 
     {
@@ -218,6 +219,7 @@ contract Staking is
     function getTotalStakeDelegatedToPool(bytes32 poolId) 
         external 
         view 
+        virtual
         override(IStaking, MixinStakeBalances) 
         returns (IStructs.StoredBalance memory) 
     {
@@ -236,6 +238,7 @@ contract Staking is
     function getZrxVault() 
         external 
         view 
+        virtual
         override(IStaking, MixinDeploymentConstants) 
         returns (IZrxVault) 
     {

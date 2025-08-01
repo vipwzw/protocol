@@ -15,7 +15,7 @@ import * as _ from 'lodash';
 import { addFillResults, calculateFillResults, getPartialAmountFloor } from '../src/reference_functions';
 
 import { artifacts } from './artifacts';
-import { TestLibFillResults__factory } from '../src/typechain-types/factories';
+import { TestLibFillResults__factory } from '../src/typechain-types';
 import { TestLibFillResults } from '../src/typechain-types';
 
 blockchainTests('LibFillResults', env => {

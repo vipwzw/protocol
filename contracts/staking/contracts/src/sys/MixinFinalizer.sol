@@ -165,6 +165,7 @@ contract MixinFinalizer is
     function _getUnfinalizedPoolRewards(bytes32 poolId)
         internal
         view
+        virtual
         override
         returns (
             uint256 reward,
@@ -205,6 +206,7 @@ contract MixinFinalizer is
     function _assertPoolFinalizedLastEpoch(bytes32 poolId)
         internal
         view
+        virtual
         override
     {
         uint256 prevEpoch = currentEpoch - 1;

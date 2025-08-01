@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
 
 import "../src/interfaces/IStructs.sol";
 import "./TestStakingNoWETH.sol";
@@ -105,6 +104,7 @@ contract TestMixinStakeBalances is
     function getZrxVault()
         public
         view
+        override
         returns (IZrxVault zrxVault)
     {
         return IZrxVault(address(this));
@@ -114,6 +114,7 @@ contract TestMixinStakeBalances is
     function _loadCurrentBalance(IStructs.StoredBalance storage balancePtr)
         internal
         view
+        override
         returns (IStructs.StoredBalance memory balance)
     {
         balance = balancePtr;

@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
 
 import "@0x/contracts-asset-proxy/contracts/src/interfaces/IAssetData.sol";
 import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
@@ -36,7 +35,6 @@ contract TestStaking is
         address wethAddress,
         address zrxVaultAddress
     )
-        public
     {
         testWethAddress = wethAddress;
         testZrxVaultAddress = zrxVaultAddress;
@@ -72,6 +70,7 @@ contract TestStaking is
     function getWethContract()
         public
         view
+        override
         returns (IEtherToken)
     {
         // `testWethAddress` will not be set on the proxy this contract is
@@ -84,6 +83,7 @@ contract TestStaking is
     function getZrxVault()
         public
         view
+        override
         returns (IZrxVault zrxVault)
     {
         address zrxVaultAddress = TestStaking(address(uint160(stakingContract))).testZrxVaultAddress();

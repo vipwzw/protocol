@@ -6,6 +6,9 @@ import '@nomicfoundation/hardhat-chai-matchers';
 const config: HardhatUserConfig = {
     solidity: '0.8.28',
     paths: {
+        sources: './contracts',
+        tests: './test',
+        cache: './cache/hardhat',
         artifacts: './artifacts',
     },
     typechain: {

@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
 
 import "../src/interfaces/IStructs.sol";
 import "./TestStakingNoWETH.sol";
@@ -39,7 +38,7 @@ contract TestDelegatorRewards is
         uint256 membersStake;
     }
 
-    constructor() public {
+    constructor() {
         _addAuthorizedAddress(msg.sender);
         init();
         _removeAuthorizedAddressAtIndex(msg.sender, 0);

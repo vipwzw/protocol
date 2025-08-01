@@ -1,5 +1,6 @@
 import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
-import { artifacts as erc20Artifacts, DummyERC20TokenContract, WETH9Contract } from '@0x/contracts-erc20';
+import { artifacts as erc20Artifacts, DummyERC20TokenContract } from '@0x/contracts-erc20';
+import { WETH9__factory, WETH9 } from '../../../erc20/src/typechain-types';
 import { BlockchainTestsEnvironment, constants, filterLogsToArguments, txDefaults } from '@0x/test-utils';
 import { BigNumber } from '@0x/utils';
 import { Web3Wrapper } from '@0x/web3-wrapper';
@@ -16,6 +17,7 @@ import {
     TestStakingEvents,
     ZrxVaultContract,
 } from '../wrappers';
+import { ZrxVault__factory, ZrxVault } from '../../src/typechain-types';
 
 import { constants as stakingConstants } from '../../src/constants';
 import { DecodedLogs, EndOfEpochInfo, StakingParams } from '../../src/types';
@@ -27,9 +29,9 @@ export class StakingApiWrapper {
     public stakingContract: TestStakingContract;
     // The StakingProxy.sol contract as a StakingProxyContract
     public stakingProxyContract: StakingProxyContract;
-    public zrxVaultContract: ZrxVaultContract;
+    public zrxVaultContract: ZrxVault;
     public zrxTokenContract: DummyERC20TokenContract;
-    public wethContract: WETH9Contract;
+    public wethContract: WETH9;
     public cobbDouglasContract: TestCobbDouglasContract;
     public utils = {
         // Epoch Utils
@@ -171,9 +173,9 @@ export class StakingApiWrapper {
         ownerAddress: string,
         stakingProxyContract: StakingProxyContract,
         stakingContract: TestStakingContract,
-        zrxVaultContract: ZrxVaultContract,
+        zrxVaultContract: ZrxVault,
         zrxTokenContract: DummyERC20TokenContract,
-        wethContract: WETH9Contract,
+        wethContract: WETH9,
         cobbDouglasContract: TestCobbDouglasContract,
     ) {
         this._web3Wrapper = env.web3Wrapper;
@@ -217,24 +219,20 @@ export async function deployAndConfigureContractsAsync(
     await erc20Wrapper.setBalancesAndAllowancesAsync();
 
     // deploy WETH
-    const wethContract = await WETH9Contract.deployFrom0xArtifactAsync(
-        erc20Artifacts.WETH9,
-        env.provider,
-        txDefaults,
-        artifacts,
-    );
+    const { ethers } = require('hardhat');
+    const [signer] = await ethers.getSigners();
+    const wethFactory = new WETH9__factory(signer);
+    const wethContract = await wethFactory.deploy();
 
     // deploy zrx vault
-    const zrxVaultContract = await ZrxVaultContract.deployFrom0xArtifactAsync(
-        artifacts.ZrxVault,
-        env.provider,
-        env.txDefaults,
-        artifacts,
-        erc20ProxyContract.address,
-        zrxTokenContract.address,
+    const zrxVaultFactory = new ZrxVault__factory(signer);
+    const zrxVaultContract = await zrxVaultFactory.deploy(
+        await erc20ProxyContract.getAddress(),
+        await zrxTokenContract.getAddress(),
     );
 
-    await zrxVaultContract.addAuthorizedAddress(ownerAddress).awaitTransactionSuccessAsync();
+    const tx1 = await zrxVaultContract.addAuthorizedAddress(ownerAddress);
+    await tx1.wait();
 
     // deploy staking contract
     const stakingContract = await TestStakingContract.deployFrom0xArtifactAsync(

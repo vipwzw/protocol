@@ -16,8 +16,7 @@
 
 */
 
-pragma solidity ^0.5.9;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.28;
 
 import "../src/interfaces/IStructs.sol";
 import "./TestStakingNoWETH.sol";
@@ -41,7 +40,7 @@ contract TestMixinStakingPoolRewards is
         uint256 membersStake;
     }
 
-    constructor() public {
+    constructor() {
         _addAuthorizedAddress(msg.sender);
         init();
         _removeAuthorizedAddressAtIndex(msg.sender, 0);
@@ -188,6 +187,7 @@ contract TestMixinStakingPoolRewards is
         address member
     )
         internal
+        override
     {
         emit WithdrawAndSyncDelegatorRewards(poolId, member);
         return MixinStakingPoolRewards._withdrawAndSyncDelegatorRewards(
@@ -205,6 +205,7 @@ contract TestMixinStakingPoolRewards is
     )
         internal
         view
+        override
         returns (uint256 reward)
     {
         bytes32 rewardHash = _getMemberRewardOverIntervalHash(
@@ -222,6 +223,7 @@ contract TestMixinStakingPoolRewards is
     )
         internal
         view
+        override(MixinAbstract, MixinFinalizer)
         returns (uint256 reward, uint256 membersStake)
     {
         (reward, membersStake) = (
@@ -234,6 +236,7 @@ contract TestMixinStakingPoolRewards is
     function _loadCurrentBalance(IStructs.StoredBalance storage balancePtr)
         internal
         view
+        override
         returns (IStructs.StoredBalance memory balance)
     {
         balance = balancePtr;
@@ -244,6 +247,7 @@ contract TestMixinStakingPoolRewards is
     function _assertPoolFinalizedLastEpoch(bytes32 poolId)
         internal
         view
+        override(MixinAbstract, MixinFinalizer)
     {
         require(
             _unfinalizedPoolRewards[poolId].membersStake == 0,
@@ -254,6 +258,7 @@ contract TestMixinStakingPoolRewards is
     // Overridden to just emit an event.
     function _updateCumulativeReward(bytes32 poolId)
         internal
+        override
     {
         emit UpdateCumulativeReward(poolId);
     }

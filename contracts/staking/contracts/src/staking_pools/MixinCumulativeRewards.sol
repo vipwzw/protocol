@@ -102,6 +102,7 @@ contract MixinCumulativeRewards is
     /// @param poolId The pool ID.
     function _updateCumulativeReward(bytes32 poolId)
         internal
+        virtual
     {
         // Just add empty rewards for this epoch, which will be added to
         // the previous CR, so we end up with the previous CR being set for
@@ -123,6 +124,7 @@ contract MixinCumulativeRewards is
         uint256 endEpoch
     )
         internal
+        virtual
         view
         returns (uint256 reward)
     {
