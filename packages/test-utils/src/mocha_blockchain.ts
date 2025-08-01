@@ -10,6 +10,8 @@ export interface BlockchainTestsEnvironment {
     accounts: string[];
     txDefaults: any;
     web3Wrapper: typeof web3Wrapper;
+    provider: any;
+    getAccountAddressesAsync(): Promise<string[]>;
 }
 
 /**
@@ -20,12 +22,20 @@ class BlockchainTestsEnvironmentBase implements BlockchainTestsEnvironment {
     public accounts!: string[];
     public txDefaults!: any;
     public web3Wrapper!: typeof web3Wrapper;
+    public provider!: any;
 
     /**
      * 获取带默认值的交易数据
      */
     public async getTxDataWithDefaults(txData: any = {}): Promise<any> {
         return { ...this.txDefaults, ...txData };
+    }
+
+    /**
+     * 获取账户地址列表
+     */
+    public async getAccountAddressesAsync(): Promise<string[]> {
+        return this.accounts;
     }
 
     /**
@@ -61,6 +71,9 @@ class StandardBlockchainTestsEnvironmentSingleton extends BlockchainTestsEnviron
         // 获取测试账户
         const signers = await ethers.getSigners();
         this.accounts = signers.map((signer: any) => signer.address);
+        
+        // 设置 provider
+        this.provider = ethers.provider;
         
         // 设置默认交易参数
         this.txDefaults = {
@@ -146,7 +159,14 @@ export namespace blockchainTests {
         // 在实际使用中，这里可以配置 Hardhat 网络分叉
         describe(`${description} (Fork)`, function() {
             console.warn('Fork testing requires Hardhat network configuration');
-            testCallback({} as BlockchainTestsEnvironment);
+            
+            const singleton = StandardBlockchainTestsEnvironmentSingleton.getInstance();
+            
+            before(async function() {
+                await singleton.initializeAsync();
+            });
+
+            testCallback(singleton);
         });
     }
 
@@ -187,6 +207,18 @@ export namespace blockchainTests {
     export function configure(config: any): void {
         // 简化的配置实现，可以根据需要扩展
         console.log('Test configuration:', config);
+    }
+
+    /**
+     * 可选测试方法（向后兼容）
+     */
+    export function optional(title: string, fn?: (this: Mocha.Suite) => void): Mocha.Suite | void {
+        // 环境变量控制是否运行可选测试
+        if (process.env.RUN_OPTIONAL_TESTS === 'true') {
+            return fn ? global.describe(title, fn) : global.describe(title, () => {});
+        } else {
+            return fn ? global.describe.skip(title, fn) : global.describe.skip(title, () => {});
+        }
     }
 }
 

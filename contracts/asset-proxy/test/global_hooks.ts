@@ -1,19 +1,12 @@
-import { env, EnvVars } from '@0x/dev-utils';
+// Global hooks for asset-proxy tests
+// Note: Provider management is handled automatically by Hardhat
 
-import { coverage, profiler, provider } from '@0x/test-utils';
-import { providerUtils } from '@0x/utils';
-
-before('start web3 provider', () => {
-    providerUtils.startProviderEngine(provider);
+before('setup test environment', () => {
+    // Hardhat automatically manages the provider
+    console.log('Test environment setup');
 });
-after('generate coverage report', async () => {
-    if (env.parseBoolean(EnvVars.SolidityCoverage)) {
-        const coverageSubprovider = coverage.getCoverageSubproviderSingleton();
-        await coverageSubprovider.writeCoverageAsync();
-    }
-    if (env.parseBoolean(EnvVars.SolidityProfiler)) {
-        const profilerSubprovider = profiler.getProfilerSubproviderSingleton();
-        await profilerSubprovider.writeProfilerOutputAsync();
-    }
-    provider.stop();
+
+after('cleanup test environment', async () => {
+    // Cleanup if needed
+    console.log('Test environment cleanup');
 });

@@ -504,8 +504,7 @@ blockchainTests('LibFillResults', env => {
                     protocolFeeMultiplier,
                     gasPrice,
                     false,
-                )
-                .callAsync({ from });
+                );
             expect(actualMatchedFillResults).to.be.deep.eq(expectedMatchedFillResults);
         }
 
@@ -1176,8 +1175,7 @@ blockchainTests('LibFillResults', env => {
                     protocolFeeMultiplier,
                     gasPrice,
                     true,
-                )
-                .callAsync({ from });
+                );
             expect(actualMatchedFillResults).to.be.deep.eq(expectedMatchedFillResults);
         }
 

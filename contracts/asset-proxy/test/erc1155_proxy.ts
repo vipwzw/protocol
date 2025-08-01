@@ -17,7 +17,7 @@ import {
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { BlockchainLifecycle } from '@0x/dev-utils';
 import { AssetProxyId, RevertReason } from '@0x/utils';
-import { BigNumber } from '@0x/utils';
+
 import * as chai from 'chai';
 import { LogWithDecodedArgs } from 'ethereum-types';
 import * as ethUtil from 'ethereumjs-util';
@@ -30,20 +30,21 @@ import { artifacts } from './artifacts';
 
 chaiSetup.configure();
 const expect = chai.expect;
-const blockchainLifecycle = new BlockchainLifecycle(web3Wrapper);
+const blockchainLifecycle = new BlockchainLifecycle(provider);
 
 // tslint:disable:no-unnecessary-type-assertion
 describe('ERC1155Proxy', () => {
     // constant values used in transfer tests
-    const nftOwnerBalance = new BigNumber(1);
-    const nftNotOwnerBalance = new BigNumber(0);
-    const spenderInitialFungibleBalance = constants.INITIAL_ERC1155_FUNGIBLE_BALANCE;
-    const receiverInitialFungibleBalance = constants.INITIAL_ERC1155_FUNGIBLE_BALANCE;
-    const receiverContractInitialFungibleBalance = new BigNumber(0);
+    const nftOwnerBalance = 1n;
+    const nftNotOwnerBalance = 0n;
+    const INITIAL_ERC1155_FUNGIBLE_BALANCE = 1000n; // Define local constant since it's missing from test-utils
+    const spenderInitialFungibleBalance = INITIAL_ERC1155_FUNGIBLE_BALANCE;
+    const receiverInitialFungibleBalance = INITIAL_ERC1155_FUNGIBLE_BALANCE;
+    const receiverContractInitialFungibleBalance = 0n;
     const fungibleValueToTransferSmall = spenderInitialFungibleBalance / 100n;
     const fungibleValueToTransferLarge = spenderInitialFungibleBalance / 4n;
-    const valueMultiplierSmall = new BigNumber(2);
-    const valueMultiplierNft = new BigNumber(1);
+    const valueMultiplierSmall = 2n;
+    const valueMultiplierNft = 1n;
     const nonFungibleValueToTransfer = nftOwnerBalance;
     const receiverCallbackData = '0x01020304';
     // addresses
@@ -60,8 +61,8 @@ describe('ERC1155Proxy', () => {
     let erc1155Contract: ERC1155MintableContract;
     let erc1155Wrapper: Erc1155Wrapper;
     // tokens
-    let fungibleTokens: BigNumber[];
-    let nonFungibleTokensOwnedBySpender: BigNumber[];
+    let fungibleTokens: bigint[];
+    let nonFungibleTokensOwnedBySpender: bigint[];
     // IAssetData for encoding and decoding assetData
     let assetDataContract: IAssetDataContract;
     // tests

@@ -44,7 +44,7 @@ import { IAssetProxy, IAssetProxy__factory, MultiAssetProxyContract } from './wr
 
 chaiSetup.configure();
 const expect = chai.expect;
-const blockchainLifecycle = new BlockchainLifecycle(web3Wrapper);
+const blockchainLifecycle = new BlockchainLifecycle(provider);
 const assetProxyInterface = IAssetProxy__factory.connect(constants.NULL_ADDRESS, provider);
 
 // tslint:disable:no-unnecessary-type-assertion

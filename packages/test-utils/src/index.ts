@@ -3,7 +3,7 @@
 // 核心模块
 export { constants } from './constants';
 export { chaiSetup, expect } from './chai_setup';
-export { provider, txDefaults, web3Wrapper } from './web3_wrapper';
+export { provider, txDefaults, web3Wrapper, providerUtils } from './web3_wrapper';
 export { BlockchainLifecycle } from './blockchain_lifecycle';
 
 // 测试环境

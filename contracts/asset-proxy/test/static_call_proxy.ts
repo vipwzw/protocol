@@ -25,7 +25,7 @@ import {
 
 chaiSetup.configure();
 const expect = chai.expect;
-const blockchainLifecycle = new BlockchainLifecycle(web3Wrapper);
+const blockchainLifecycle = new BlockchainLifecycle(provider);
 
 describe('StaticCallProxy', () => {
     const amount = constants.ZERO_AMOUNT;

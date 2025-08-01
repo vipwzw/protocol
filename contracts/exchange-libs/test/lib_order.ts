@@ -117,7 +117,7 @@ blockchainTests('LibOrder', env => {
     async function testGetStructHashAsync(order: Order): Promise<void> {
         const typedData = eip712Utils.createOrderTypedData(order);
         const expectedHash = ethUtil.bufferToHex(signTypedDataUtils.generateTypedDataHashWithoutDomain(typedData));
-        const actualHash = await libOrderContract.getStructHash(order)();
+        const actualHash = await libOrderContract.getStructHash(order);
         expect(actualHash).to.be.eq(expectedHash);
     }
 

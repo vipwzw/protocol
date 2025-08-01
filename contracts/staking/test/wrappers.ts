@@ -4,17 +4,22 @@
  * -----------------------------------------------------------------------------
  */
 
-// TODO: Uncomment these exports once TypeChain compilation generates the required types
-// Currently all exports are commented out until Solidity compilation issues are resolved
+// Import all available types from TypeChain
+export * from '../src/typechain-types';
 
-// Interface types
-// export * from '../typechain-types/IStaking';
-// export * from '../typechain-types/IStakingEvents';
-// export * from '../typechain-types/IStakingProxy';
-// export * from '../typechain-types/IStorage';
-// export * from '../typechain-types/IStorageInit';
-// export * from '../typechain-types/IStructs';
-// export * from '../typechain-types/IZrxVault';
+// Additional type aliases for backwards compatibility
+export type {
+    IStaking,
+    IStakingEvents,
+    IStakingProxy,
+    IStorage,
+    IStorageInit,
+    IZrxVault,
+    Staking,
+    StakingPatch,
+    StakingProxy,
+    ZrxVault,
+} from '../src/typechain-types';
 
 // Library types
 // export * from '../typechain-types/LibCobbDouglas';

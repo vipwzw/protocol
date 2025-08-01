@@ -17,7 +17,7 @@ import { artifacts } from './artifacts';
 import { TestKyberBridgeContract, TestKyberBridgeEvents } from './wrappers';
 
 // TODO(dorothy-zbornak): Tests need to be updated.
-blockchainTests.resets.skip('KyberBridge unit tests', env => {
+describe.skip('KyberBridge unit tests', () => {
     const KYBER_ETH_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
     const FROM_TOKEN_DECIMALS = 6;
     const TO_TOKEN_DECIMALS = 18;

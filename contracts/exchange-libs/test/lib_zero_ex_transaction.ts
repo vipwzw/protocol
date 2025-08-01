@@ -107,7 +107,7 @@ blockchainTests('LibZeroExTransaction', env => {
     async function testGetStructHashAsync(transaction: ZeroExTransaction): Promise<void> {
         const typedData = eip712Utils.createZeroExTransactionTypedData(transaction);
         const expectedHash = ethUtil.bufferToHex(signTypedDataUtils.generateTypedDataHashWithoutDomain(typedData));
-        const actualHash = await libZeroExTransactionContract.getStructHash(transaction)();
+        const actualHash = await libZeroExTransactionContract.getStructHash(transaction);
         expect(actualHash).to.be.eq(expectedHash);
     }
 
