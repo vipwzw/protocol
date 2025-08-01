@@ -1,10 +1,10 @@
 [profile.default]
-src = 'contracts/src'
+src = 'contracts'
 out = 'out'
 test = 'tests'
 # Include test contracts for ABI generation
 extra_output_files = ["abi"]
-libs = ['lib', '../utils/contracts/src/', '../erc20/contracts/src/', '../erc1155/contracts/src/', '../erc721/contracts/src/', '../exchange-libs/contracts/src/']
+libs = ['lib', '../utils/contracts/', '../erc20/contracts/', '../erc1155/contracts/', '../erc721/contracts/', '../exchange-libs/contracts/']
 remappings = [
     '@0x/contracts-utils/=../utils/',
     '@0x/contracts-erc20/=../erc20/',

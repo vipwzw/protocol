@@ -1,7 +1,7 @@
 [profile.default]
-src = 'contracts/src'
+src = 'contracts'
 out = 'out'
-test = 'contracts/test'
+test = 'tests'
 libs = ["lib/", "../utils/", "../erc20/"]
 remappings = [
     '@0x/contracts-erc20/=../erc20/',
