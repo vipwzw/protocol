@@ -61,7 +61,7 @@ contract TestERC20Bridge is
         bytes bridgeData
     );
 
-    constructor() public {
+    constructor() {
         testToken = new TestERC20BridgeToken();
     }
 
@@ -79,6 +79,7 @@ contract TestERC20Bridge is
         bytes calldata bridgeData
     )
         external
+        override
         returns (bytes4)
     {
         emit BridgeWithdrawTo(

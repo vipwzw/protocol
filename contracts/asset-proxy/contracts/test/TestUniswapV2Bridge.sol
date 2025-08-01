@@ -111,11 +111,11 @@ contract TestToken {
     }
 
     /// @dev Just emits a TokenApprove event on the caller
-    function approve(address spender, uint256 allowance)
+    function approve(address spender, uint256 amount)
         external
         returns (bool)
     {
-        TestEventsRaiser(msg.sender).raiseTokenApprove(spender, allowance);
+        TestEventsRaiser(msg.sender).raiseTokenApprove(spender, amount);
         return true;
     }
 
@@ -198,7 +198,7 @@ contract TestUniswapV2Bridge is
     // TestRouter instance.
     TestRouter private _testRouter;
 
-    constructor() public {
+    constructor() {
         _testRouter = new TestRouter();
     }
 
@@ -245,6 +245,7 @@ contract TestUniswapV2Bridge is
     function _getUniswapV2Router01Address()
         internal
         view
+        override
         returns (address)
     {
         return address(_testRouter);

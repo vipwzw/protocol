@@ -229,6 +229,7 @@ contract TestDydxBridge is
     function _getDydxAddress()
         internal
         view
+        override
         returns (address)
     {
         return address(this);
@@ -238,6 +239,7 @@ contract TestDydxBridge is
     function _getERC20BridgeProxyAddress()
         internal
         view
+        override
         returns (address)
     {
         return msg.sender == ALWAYS_REVERT_ADDRESS ? address(0) : msg.sender;

@@ -114,11 +114,11 @@ contract TestToken {
     }
 
     /// @dev Just emits a TokenApprove event on the caller
-    function approve(address spender, uint256 allowance)
+    function approve(address spender, uint256 amount)
         external
         returns (bool)
     {
-        TestEventsRaiser(msg.sender).raiseTokenApprove(spender, allowance);
+        TestEventsRaiser(msg.sender).raiseTokenApprove(spender, amount);
         return true;
     }
 
@@ -157,7 +157,7 @@ contract TestBancorNetwork is
         address _beneficiary,
         address _affiliateAccount,
         uint256 _affiliateFee
-    ) external payable returns (uint256)
+    ) external payable override returns (uint256)
     {
         _revertIfReasonExists();
 
@@ -200,7 +200,7 @@ contract TestBancorBridge is
     // TestRouter instance.
     TestBancorNetwork private _testNetwork;
 
-    constructor() public {
+    constructor() {
         _testNetwork = new TestBancorNetwork();
     }
 

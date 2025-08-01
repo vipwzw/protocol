@@ -69,19 +69,19 @@ contract TestToken {
     uint8 public decimals;
     ITestContract private _testContract;
 
-    constructor(uint8 decimals_) public {
+    constructor(uint8 decimals_) {
         decimals = decimals_;
         _testContract = ITestContract(msg.sender);
     }
 
-    function approve(address spender, uint256 allowance)
+    function approve(address spender, uint256 amount)
         external
         returns (bool)
     {
         return _testContract.tokenApprove(
             msg.sender,
             spender,
-            allowance
+            amount
         );
     }
 
@@ -99,14 +99,14 @@ contract TestToken {
     function withdraw(uint256 amount)
         external
     {
-        return _testContract.wethWithdraw(msg.sender, amount);
+        return _testContract.wethWithdraw(payable(msg.sender), amount);
     }
 
     function deposit()
         external
         payable
     {
-        return _testContract.wethDeposit.value(msg.value)(msg.sender);
+        return _testContract.wethDeposit{value: msg.value}(msg.sender);
     }
 
     function allowance(address, address) external view returns (uint256) {
@@ -169,7 +169,7 @@ contract TestKyberBridge is
     mapping (address => mapping (address => uint256)) private _tokenBalances;
     uint256 private _nextFillAmount;
 
-    constructor() public {
+    constructor() {
         weth = IEtherToken(address(new TestToken(18)));
     }
 
@@ -328,7 +328,7 @@ contract TestKyberBridge is
         _tokenBalances[tokenAddress][ownerAddress] += amount;
         if (tokenAddress != address(weth)) {
             // Send back ether if not WETH.
-            msg.sender.transfer(msg.value);
+            payable(msg.sender).transfer(msg.value);
         } else {
             require(msg.value == amount, "VALUE_AMOUNT_MISMATCH");
         }
@@ -338,6 +338,7 @@ contract TestKyberBridge is
     function _getKyberNetworkProxyAddress()
         internal
         view
+        override
         returns (address)
     {
         return address(this);
@@ -347,6 +348,7 @@ contract TestKyberBridge is
     function _getWethAddress()
         internal
         view
+        override
         returns (address)
     {
         return address(weth);

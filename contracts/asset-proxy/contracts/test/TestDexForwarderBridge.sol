@@ -77,7 +77,7 @@ contract TestDexForwarderBridgeTestBridge {
     uint256 private _transferAmount;
     ITestDexForwarderBridge private _testContract;
 
-    constructor(bytes4 returnCode, string memory revertError) public {
+    constructor(bytes4 returnCode, string memory revertError) {
         _testContract = ITestDexForwarderBridge(msg.sender);
         _returnCode = returnCode;
         _revertError = revertError;
@@ -123,7 +123,7 @@ contract TestDexForwarderBridgeTestToken {
     mapping(address => uint256) public balanceOf;
     ITestDexForwarderBridge private _testContract;
 
-    constructor() public {
+    constructor() {
         _testContract = ITestDexForwarderBridge(msg.sender);
     }
 
@@ -131,8 +131,8 @@ contract TestDexForwarderBridgeTestToken {
         external
         returns (bool)
     {
-        balanceOf[msg.sender] = balanceOf[msg.sender].safeSub(amount);
-        balanceOf[to] = balanceOf[to].safeAdd(amount);
+        balanceOf[msg.sender] = balanceOf[msg.sender] - amount;
+        balanceOf[to] = balanceOf[to] + amount;
         _testContract.emitTokenTransferCalled(msg.sender, to, amount);
         return true;
     }
@@ -140,7 +140,7 @@ contract TestDexForwarderBridgeTestToken {
     function mint(address owner, uint256 amount)
         external
     {
-        balanceOf[owner] = balanceOf[owner].safeAdd(amount);
+        balanceOf[owner] = balanceOf[owner] + amount;
     }
 
     function setBalance(address owner, uint256 amount)
@@ -228,6 +228,7 @@ contract TestDexForwarderBridge is
     function _getGstAddress()
         internal
         view
+        override
         returns (address gst)
     {
         return address(0);
@@ -236,6 +237,7 @@ contract TestDexForwarderBridge is
     function _getERC20BridgeProxyAddress()
         internal
         view
+        override
         returns (address erc20BridgeProxyAddress)
     {
         return AUTHORIZED_ADDRESS;

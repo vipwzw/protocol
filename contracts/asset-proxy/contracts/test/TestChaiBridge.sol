@@ -48,7 +48,6 @@ contract TestChaiBridge is
     address private constant ALWAYS_REVERT_ADDRESS = address(1);
 
     constructor()
-        public
     {
         testChaiDai = address(new TestChaiDai());
     }
@@ -56,6 +55,7 @@ contract TestChaiBridge is
     function _getDaiAddress()
         internal
         view
+        override
         returns (address)
     {
         return testChaiDai;
@@ -64,6 +64,7 @@ contract TestChaiBridge is
     function _getChaiAddress()
         internal
         view
+        override
         returns (address)
     {
         return testChaiDai;
@@ -72,6 +73,7 @@ contract TestChaiBridge is
     function _getERC20BridgeProxyAddress()
         internal
         view
+        override
         returns (address)
     {
         return msg.sender == ALWAYS_REVERT_ADDRESS ? address(0) : msg.sender;

@@ -101,11 +101,11 @@ contract TestToken {
     }
 
     /// @dev Just calls `raiseTokenApprove()` on the caller.
-    function approve(address spender, uint256 allowance)
+    function approve(address spender, uint256 amount)
         external
         returns (bool)
     {
-        TestEvents(msg.sender).raiseTokenApprove(spender, allowance);
+        TestEvents(msg.sender).raiseTokenApprove(spender, amount);
         return true;
     }
 
@@ -198,6 +198,7 @@ contract TestEth2DaiBridge is
     function _getEth2DaiAddress()
         internal
         view
+        override
         returns (address)
     {
         return address(this);

@@ -193,11 +193,11 @@ contract TestToken {
     }
 
     /// @dev Just calls `raiseTokenApprove()` on the caller.
-    function approve(address spender, uint256 allowance)
+    function approve(address spender, uint256 amount)
         external
         returns (bool)
     {
-        TestEventsRaiser(msg.sender).raiseTokenApprove(spender, allowance);
+        TestEventsRaiser(msg.sender).raiseTokenApprove(spender, amount);
         return true;
     }
 
@@ -219,7 +219,7 @@ contract TestToken {
     {
         _revertIfReasonExists();
         balances[msg.sender] = balances[msg.sender] - amount;
-        msg.sender.transfer(amount);
+        payable(msg.sender).transfer(amount);
         TestEventsRaiser(msg.sender).raiseWethWithdraw(amount);
     }
 
@@ -253,7 +253,7 @@ contract TestExchange is
     address public tokenAddress;
     string private _nextRevertReason;
 
-    constructor(address _tokenAddress) public {
+    constructor(address _tokenAddress) {
         tokenAddress = _tokenAddress;
     }
 
@@ -299,7 +299,7 @@ contract TestExchange is
         );
         _revertIfReasonExists();
         uint256 fillAmount = address(this).balance;
-        msg.sender.transfer(fillAmount);
+        payable(msg.sender).transfer(fillAmount);
         return fillAmount;
     }
 
@@ -309,7 +309,7 @@ contract TestExchange is
         uint256 minEthBought,
         uint256 deadline,
         address recipient,
-        address toTokenAddress
+        address targetTokenAddress
     )
         external
         returns (uint256 tokensBought)
@@ -320,7 +320,7 @@ contract TestExchange is
             minEthBought,
             deadline,
             recipient,
-            toTokenAddress
+            targetTokenAddress
         );
         _revertIfReasonExists();
         return address(this).balance;
@@ -357,7 +357,7 @@ contract TestUniswapBridge is
     // Token address to TestExchange instance.
     mapping (address => TestExchange) private _testExchanges;
 
-    constructor() public {
+    constructor() {
         wethToken = new TestToken();
         _testTokens[address(wethToken)] = wethToken;
     }
@@ -369,7 +369,7 @@ contract TestUniswapBridge is
         payable
     {
         TestToken token = _testTokens[tokenAddress];
-        token.deposit.value(msg.value)();
+        token.deposit{value: msg.value}();
     }
 
     /// @dev Sets the revert reason for an existing token.
@@ -402,7 +402,7 @@ contract TestUniswapBridge is
         if (address(exchange) == address(0)) {
             _testExchanges[address(token)] = exchange = new TestExchange(address(token));
         }
-        exchange.setFillBehavior.value(msg.value)(revertReason);
+        exchange.setFillBehavior{value: msg.value}(revertReason);
         return (token, exchange);
     }
 
@@ -419,6 +419,7 @@ contract TestUniswapBridge is
     function _getWethAddress()
         internal
         view
+        override
         returns (address)
     {
         return address(wethToken);
@@ -428,6 +429,7 @@ contract TestUniswapBridge is
     function _getUniswapExchangeFactoryAddress()
         internal
         view
+        override
         returns (address)
     {
         return address(this);
