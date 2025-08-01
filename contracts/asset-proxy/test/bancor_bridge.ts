@@ -7,7 +7,7 @@ import {
     randomAddress,
 } from '@0x/test-utils';
 import { AssetProxyId } from '@0x/utils';
-import { AbiEncoder, BigNumber, hexUtils } from '@0x/utils';
+import { AbiEncoder, hexUtils } from '@0x/utils';
 import { DecodedLogs } from 'ethereum-types';
 import { ethers } from 'hardhat';
 import * as _ from 'lodash';
@@ -23,8 +23,8 @@ import {
 blockchainTests.resets('Bancor unit tests', env => {
     const FROM_TOKEN_DECIMALS = 6;
     const TO_TOKEN_DECIMALS = 18;
-    const FROM_TOKEN_BASE = new BigNumber(10).pow(FROM_TOKEN_DECIMALS);
-    const TO_TOKEN_BASE = new BigNumber(10).pow(TO_TOKEN_DECIMALS);
+    const FROM_TOKEN_BASE = 10n ** BigInt(FROM_TOKEN_DECIMALS);
+    const TO_TOKEN_BASE = 10n ** BigInt(TO_TOKEN_DECIMALS);
     let testContract: BancorBridge;
 
     before(async () => {
@@ -39,7 +39,7 @@ blockchainTests.resets('Bancor unit tests', env => {
             const LEGACY_WALLET_MAGIC_VALUE = '0xb0671381';
             const result = await testContract
                 .isValidSignature(hexUtils.random(), hexUtils.random(_.random(0, 32)))
-                .callAsync();
+                ;
             expect(result).to.eq(LEGACY_WALLET_MAGIC_VALUE);
         });
     });
@@ -82,7 +82,7 @@ blockchainTests.resets('Bancor unit tests', env => {
 
             for (let i = 0; i < _opts.tokenAddressesPath.length; i++) {
                 const createFromTokenFn = testContract.createToken(_opts.tokenAddressesPath[i]);
-                _opts.tokenAddressesPath[i] = await createFromTokenFn.callAsync();
+                _opts.tokenAddressesPath[i] = await createFromTokenFn;
                 await createFromTokenFn.awaitTransactionSuccessAsync();
             }
 
@@ -107,10 +107,10 @@ blockchainTests.resets('Bancor unit tests', env => {
                 // ABI-encode the input token address as the bridge data.
                 bridgeDataEncoder.encode([
                     _opts.tokenAddressesPath,
-                    await testContract.getNetworkAddress().callAsync(),
+                    await testContract.getNetworkAddress(),
                 ]),
             );
-            const result = await bridgeTransferFromFn.callAsync();
+            const result = await bridgeTransferFromFn;
             const receipt = await bridgeTransferFromFn.awaitTransactionSuccessAsync();
             return {
                 opts: _opts,
@@ -140,13 +140,13 @@ blockchainTests.resets('Bancor unit tests', env => {
                 expect(transfers[0].amountIn).to.bignumber.eq(opts.fromTokenBalance, 'input token amount');
                 expect(transfers[0].amountOutMin).to.bignumber.eq(opts.amount, 'output token amount');
                 expect(transfers[0].feeRecipient).to.eq(constants.NULL_ADDRESS);
-                expect(transfers[0].feeAmount).to.bignumber.eq(new BigNumber(0));
+                expect(transfers[0].feeAmount).to.bignumber.eq(0n);
             });
 
             it('sets allowance for "from" token', async () => {
                 const { logs } = await transferFromAsync();
                 const approvals = filterLogsToArguments<TokenApproveArgs>(logs, ContractEvents.TokenApprove);
-                const networkAddress = await testContract.getNetworkAddress().callAsync();
+                const networkAddress = await testContract.getNetworkAddress();
                 expect(approvals.length).to.eq(1);
                 expect(approvals[0].spender).to.eq(networkAddress);
                 expect(approvals[0].allowance).to.bignumber.eq(constants.MAX_UINT256);
@@ -177,7 +177,7 @@ blockchainTests.resets('Bancor unit tests', env => {
                 expect(transfers[0].amountIn).to.bignumber.eq(opts.fromTokenBalance, 'input token amount');
                 expect(transfers[0].amountOutMin).to.bignumber.eq(opts.amount, 'output token amount');
                 expect(transfers[0].feeRecipient).to.eq(constants.NULL_ADDRESS);
-                expect(transfers[0].feeAmount).to.bignumber.eq(new BigNumber(0));
+                expect(transfers[0].feeAmount).to.bignumber.eq(0n);
             });
         });
     });

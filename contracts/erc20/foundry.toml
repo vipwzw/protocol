@@ -1,7 +1,9 @@
 [profile.default]
-src = 'contracts'
+src = 'contracts/src'
 out = 'out'
 test = 'tests'
+# 排除 Hardhat 测试辅助合约，避免被 Foundry 识别为测试
+no_match_path = "contracts/test/*"
 extra_output_files = ["abi"]
 libs = ['lib', '../utils/contracts/src/']
 remappings = [

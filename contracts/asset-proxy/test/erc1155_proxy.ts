@@ -127,7 +127,7 @@ describe('ERC1155Proxy', () => {
             );
         });
         it('should have an id of 0xa7cb5fb7', async () => {
-            const proxyId = await erc1155Proxy.getProxyId().callAsync();
+            const proxyId = await erc1155Proxy.getProxyId();
             const expectedProxyId = AssetProxyId.ERC1155;
             expect(proxyId).to.equal(expectedProxyId);
         });
@@ -685,9 +685,9 @@ describe('ERC1155Proxy', () => {
              */
             ///// Step 1/5 /////
             // Create tokens with ids [1, 2, 3, 4] and mint a balance of 4 for the `spender`
-            const tokensToCreate = [new BigNumber(1), new BigNumber(2), new BigNumber(3), new BigNumber(4)];
-            const spenderInitialBalance = new BigNumber(4);
-            const receiverInitialBalance = new BigNumber(0);
+            const tokensToCreate = [1n, 2n, 3n, 4n];
+            const spenderInitialBalance = 4n;
+            const receiverInitialBalance = 0n;
             const tokenUri = '';
             for (const tokenToCreate of tokensToCreate) {
                 // create token
@@ -734,9 +734,9 @@ describe('ERC1155Proxy', () => {
             // 0xE0       0000000000000000000000000000000000000000000000000000000000000004      // Length of callback data
             // 0x100      0102030400000000000000000000000000000000000000000000000000000000      // Callback data
             const erc1155ContractAddress = erc1155Wrapper.getContract().address;
-            const tokensToTransfer = [new BigNumber(1), new BigNumber(2)];
+            const tokensToTransfer = [1n, 2n];
             const valuesToTransfer = tokensToTransfer;
-            const valueMultiplier = new BigNumber(2);
+            const valueMultiplier = 2n;
 
             // hand encode optimized assetData because our tooling (based on LibAssetData.sol/ERC1155Assets) does not use optimized encoding
             const selector = assetDataContract.getSelector('ERC1155Assets');
@@ -786,9 +786,9 @@ describe('ERC1155Proxy', () => {
              */
             ///// Step 1/5 /////
             // Create tokens with ids [1, 2, 3, 4] and mint a balance of 4 for the `spender`
-            const tokensToCreate = [new BigNumber(1), new BigNumber(2), new BigNumber(3), new BigNumber(4)];
-            const spenderInitialBalance = new BigNumber(4);
-            const receiverInitialBalance = new BigNumber(0);
+            const tokensToCreate = [1n, 2n, 3n, 4n];
+            const spenderInitialBalance = 4n;
+            const receiverInitialBalance = 0n;
             const tokenUri = '';
             for (const tokenToCreate of tokensToCreate) {
                 // create token
@@ -845,9 +845,9 @@ describe('ERC1155Proxy', () => {
             // 0x100      0000000000000000000000000000000000000000000000000000000000000002      // First Value
             // 0x120      0000000000000000000000000000000000000000000000000000000000000002      // Second Value
             const erc1155ContractAddress = erc1155Wrapper.getContract().address;
-            const tokensToTransfer = [new BigNumber(1), new BigNumber(2)];
-            const valuesToTransfer = [new BigNumber(2), new BigNumber(2)];
-            const valueMultiplier = new BigNumber(2);
+            const tokensToTransfer = [1n, 2n];
+            const valuesToTransfer = [2n, 2n];
+            const valueMultiplier = 2n;
             // create callback data that is the encoded version of `valuesToTransfer`
             const generatedAssetData = assetDataContract
                 .ERC1155Assets(erc1155ContractAddress, tokensToTransfer, valuesToTransfer, receiverCallbackData)
@@ -909,9 +909,9 @@ describe('ERC1155Proxy', () => {
              */
             ///// Step 1/5 /////
             // Create tokens with ids [1, 2, 3, 4] and mint a balance of 4 for the `spender`
-            const tokensToCreate = [new BigNumber(1), new BigNumber(2), new BigNumber(3), new BigNumber(4)];
-            const spenderInitialBalance = new BigNumber(4);
-            const receiverInitialBalance = new BigNumber(0);
+            const tokensToCreate = [1n, 2n, 3n, 4n];
+            const spenderInitialBalance = 4n;
+            const receiverInitialBalance = 0n;
             const tokenUri = '';
             for (const tokenToCreate of tokensToCreate) {
                 // create token
@@ -965,9 +965,9 @@ describe('ERC1155Proxy', () => {
             // 0xA0       0000000000000000000000000000000000000000000000000000000000000001      // First Token ID (First Value)
             // 0xC0       0000000000000000000000000000000000000000000000000000000000000002      // Second Token ID (Second Value)
             const erc1155ContractAddress = erc1155Wrapper.getContract().address;
-            const tokensToTransfer = [new BigNumber(1), new BigNumber(2)];
-            const valuesToTransfer = [new BigNumber(1), new BigNumber(2)];
-            const valueMultiplier = new BigNumber(2);
+            const tokensToTransfer = [1n, 2n];
+            const valuesToTransfer = [1n, 2n];
+            const valueMultiplier = 2n;
             // create callback data that is the encoded version of `valuesToTransfer`
             const generatedAssetData = assetDataContract
                 .ERC1155Assets(erc1155ContractAddress, tokensToTransfer, valuesToTransfer, receiverCallbackData)
@@ -1532,7 +1532,7 @@ describe('ERC1155Proxy', () => {
             // setup test parameters
             const tokenHolders = [spender, receiver];
             const tokensToTransfer = fungibleTokens.slice(0, 1);
-            const valuesToTransfer = [new BigNumber(0)];
+            const valuesToTransfer = [0n];
             const valueMultiplier = valueMultiplierSmall;
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverInitialFungibleBalance];
@@ -1557,7 +1557,7 @@ describe('ERC1155Proxy', () => {
             const tokenHolders = [spender, receiver];
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
-            const valueMultiplier = new BigNumber(0);
+            const valueMultiplier = 0n;
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverInitialFungibleBalance];
             await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
@@ -1665,9 +1665,9 @@ describe('ERC1155Proxy', () => {
             // setup test parameters
             const tokenHolders = [spender, receiver];
             const tokensToTransfer = nonFungibleTokensOwnedBySpender.slice(0, 3);
-            const maxUintValue = new BigNumber(2).pow(256).minus(1);
+            const maxUintValue = 2n ** 256n - 1n;
             const valuesToTransfer = [nonFungibleValueToTransfer, maxUintValue, nonFungibleValueToTransfer];
-            const valueMultiplier = new BigNumber(2);
+            const valueMultiplier = 2n;
             // check balances before transfer
             const expectedInitialBalances = [
                 // spender
@@ -1698,14 +1698,14 @@ describe('ERC1155Proxy', () => {
                     receiverCallbackData,
                     authorized,
                 ),
-            ).to.revertWith(expectedError);
+            ).to.be.revertedWith(expectedError);
         });
         it('should revert if transferring > 1 instances of a non-fungible token (valueMultiplier field >1)', async () => {
             // setup test parameters
             const tokenHolders = [spender, receiver];
             const tokensToTransfer = nonFungibleTokensOwnedBySpender.slice(0, 1);
             const valuesToTransfer = [nonFungibleValueToTransfer];
-            const valueMultiplier = new BigNumber(2);
+            const valueMultiplier = 2n;
             // check balances before transfer
             const expectedInitialBalances = [
                 // spender
@@ -1733,7 +1733,7 @@ describe('ERC1155Proxy', () => {
             // setup test parameters
             const tokenHolders = [spender, receiver];
             const tokensToTransfer = nonFungibleTokensOwnedBySpender.slice(0, 1);
-            const valuesToTransfer = [new BigNumber(2)];
+            const valuesToTransfer = [2n];
             const valueMultiplier = valueMultiplierNft;
             // check balances before transfer
             const expectedInitialBalances = [
@@ -1784,7 +1784,7 @@ describe('ERC1155Proxy', () => {
                 receiverCallbackData,
                 authorized,
             );
-            return expect(tx).to.revertWith(expectedError);
+            return expect(tx).to.be.revertedWith(expectedError);
         });
         it('should revert if sender allowance is insufficient', async () => {
             // dremove allowance for ERC1155 proxy

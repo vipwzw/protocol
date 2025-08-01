@@ -163,7 +163,7 @@ describe('ERC20BridgeProxy unit tests', () => {
 
         it('fails if not called by an authorized address', async () => {
             const tx = transferFromAsync({}, badCaller);
-            return expect(tx).to.revertWith(new AuthorizableRevertErrors.SenderNotAuthorizedError(badCaller));
+            return expect(tx).to.be.revertedWith(new AuthorizableRevertErrors.SenderNotAuthorizedError(badCaller));
         });
 
         it('fails if asset data is truncated', async () => {
@@ -209,7 +209,7 @@ describe('ERC20BridgeProxy unit tests', () => {
                     }),
                 }),
             });
-            return expect(tx).to.revertWith('BRIDGE_FAILED');
+            return expect(tx).to.be.revertedWith('BRIDGE_FAILED');
         });
 
         it('fails if bridge is an EOA', async () => {
@@ -232,7 +232,7 @@ describe('ERC20BridgeProxy unit tests', () => {
                     }),
                 }),
             });
-            return expect(tx).to.revertWith(revertError);
+            return expect(tx).to.be.revertedWith(revertError);
         });
 
         it('fails if balance of `to` increases by less than `amount`', async () => {
@@ -245,7 +245,7 @@ describe('ERC20BridgeProxy unit tests', () => {
                     }),
                 }),
             });
-            return expect(tx).to.revertWith('BRIDGE_UNDERPAY');
+            return expect(tx).to.be.revertedWith('BRIDGE_UNDERPAY');
         });
 
         it('fails if balance of `to` decreases', async () => {
@@ -259,7 +259,7 @@ describe('ERC20BridgeProxy unit tests', () => {
                     }),
                 }),
             });
-            return expect(tx).to.revertWith('BRIDGE_UNDERPAY');
+            return expect(tx).to.be.revertedWith('BRIDGE_UNDERPAY');
         });
     });
 
@@ -271,14 +271,14 @@ describe('ERC20BridgeProxy unit tests', () => {
             const assetData = createAssetData({
                 tokenAddress: testTokenAddress,
             });
-            const actualBalance = await assetProxy.balanceOf(encodeAssetData(assetData), _owner).callAsync();
+            const actualBalance = await assetProxy.balanceOf(encodeAssetData(assetData), _owner);
             expect(actualBalance).to.bignumber.eq(balance);
         });
     });
 
     describe('getProxyId()', () => {
         it('returns the correct proxy ID', async () => {
-            const proxyId = await assetProxy.getProxyId().callAsync();
+            const proxyId = await assetProxy.getProxyId();
             expect(proxyId).to.eq(PROXY_ID);
         });
     });

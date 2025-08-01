@@ -8,7 +8,7 @@ import {
 } from '@0x/test-utils';
 import { BlockchainLifecycle } from '@0x/dev-utils';
 import { AssetProxyId, RevertReason } from '@0x/utils';
-import { AbiEncoder, BigNumber } from '@0x/utils';
+import { AbiEncoder } from '@0x/utils';
 import * as chai from 'chai';
 import * as ethUtil from 'ethereumjs-util';
 import { ethers } from 'hardhat';
@@ -78,7 +78,7 @@ describe('StaticCallProxy', () => {
             );
         });
         it('should have an id of 0xc339d10a', async () => {
-            const proxyId = await staticCallProxy.getProxyId().callAsync();
+            const proxyId = await staticCallProxy.getProxyId();
             const expectedProxyId = AssetProxyId.StaticCall;
             expect(proxyId).to.equal(expectedProxyId);
         });
@@ -150,17 +150,17 @@ describe('StaticCallProxy', () => {
             );
         });
         it('should revert with data provided by the callTarget if the staticcall reverts', async () => {
-            const staticCallData = staticCallTarget.assertEvenNumber(new BigNumber(1)).getABIEncodedTransactionData();
+            const staticCallData = staticCallTarget.assertEvenNumber(1n).getABIEncodedTransactionData();
             const expectedResultHash = constants.KECCAK256_NULL;
             const assetData = assetDataInterface
                 .StaticCall(staticCallTarget.address, staticCallData, expectedResultHash)
                 .getABIEncodedTransactionData();
             return expect(
                 staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount).awaitTransactionSuccessAsync(),
-            ).to.revertWith(RevertReason.TargetNotEven);
+            ).to.be.revertedWith(RevertReason.TargetNotEven);
         });
         it('should revert if the hash of the output is different than expected expected', async () => {
-            const staticCallData = staticCallTarget.isOddNumber(new BigNumber(0)).getABIEncodedTransactionData();
+            const staticCallData = staticCallTarget.isOddNumber(0n).getABIEncodedTransactionData();
             const trueAsBuffer = ethUtil.toBuffer('0x0000000000000000000000000000000000000000000000000000000000000001');
             const expectedResultHash = ethUtil.bufferToHex(ethUtil.keccak256(trueAsBuffer));
             const assetData = assetDataInterface
@@ -168,7 +168,7 @@ describe('StaticCallProxy', () => {
                 .getABIEncodedTransactionData();
             return expect(
                 staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount).awaitTransactionSuccessAsync(),
-            ).to.revertWith(RevertReason.UnexpectedStaticCallResult);
+            ).to.be.revertedWith(RevertReason.UnexpectedStaticCallResult);
         });
         it('should be successful if a function call with no inputs and no outputs is successful', async () => {
             const staticCallData = staticCallTarget.noInputFunction().getABIEncodedTransactionData();
@@ -191,7 +191,7 @@ describe('StaticCallProxy', () => {
                 .awaitTransactionSuccessAsync();
         });
         it('should be successful if a function call with one static input returns the correct value', async () => {
-            const staticCallData = staticCallTarget.isOddNumber(new BigNumber(1)).getABIEncodedTransactionData();
+            const staticCallData = staticCallTarget.isOddNumber(1n).getABIEncodedTransactionData();
             const trueAsBuffer = ethUtil.toBuffer('0x0000000000000000000000000000000000000000000000000000000000000001');
             const expectedResultHash = ethUtil.bufferToHex(ethUtil.keccak256(trueAsBuffer));
             const assetData = assetDataInterface
@@ -213,8 +213,8 @@ describe('StaticCallProxy', () => {
                 .awaitTransactionSuccessAsync();
         });
         it('should be successful if a function call returns a complex type', async () => {
-            const a = new BigNumber(1);
-            const b = new BigNumber(2);
+            const a = 1n;
+            const b = 2n;
             const staticCallData = staticCallTarget.returnComplexType(a, b).getABIEncodedTransactionData();
             const abiEncoder = new AbiEncoder.DynamicBytes({
                 name: '',

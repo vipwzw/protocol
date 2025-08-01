@@ -7,7 +7,7 @@ import {
     randomAddress,
 } from '@0x/test-utils';
 import { AssetProxyId } from '@0x/utils';
-import { AbiEncoder, BigNumber, hexUtils } from '@0x/utils';
+import { AbiEncoder, hexUtils } from '@0x/utils';
 import { DecodedLogs } from 'ethereum-types';
 import { ethers } from 'hardhat';
 import * as _ from 'lodash';
@@ -25,8 +25,8 @@ import {
 describe('UniswapV2 unit tests', () => {
     const FROM_TOKEN_DECIMALS = 6;
     const TO_TOKEN_DECIMALS = 18;
-    const FROM_TOKEN_BASE = new BigNumber(10).pow(FROM_TOKEN_DECIMALS);
-    const TO_TOKEN_BASE = new BigNumber(10).pow(TO_TOKEN_DECIMALS);
+    const FROM_TOKEN_BASE = 10n ** BigInt(FROM_TOKEN_DECIMALS);
+    const TO_TOKEN_BASE = 10n ** BigInt(TO_TOKEN_DECIMALS);
     let testContract: TestUniswapV2BridgeContract;
 
     before(async () => {
@@ -40,7 +40,7 @@ describe('UniswapV2 unit tests', () => {
             const LEGACY_WALLET_MAGIC_VALUE = '0xb0671381';
             const result = await testContract
                 .isValidSignature(hexUtils.random(), hexUtils.random(_.random(0, 32)))
-                .callAsync();
+                ;
             expect(result).to.eq(LEGACY_WALLET_MAGIC_VALUE);
         });
     });
@@ -83,7 +83,7 @@ describe('UniswapV2 unit tests', () => {
 
             for (let i = 0; i < _opts.tokenAddressesPath.length; i++) {
                 const createFromTokenFn = testContract.createToken(_opts.tokenAddressesPath[i]);
-                _opts.tokenAddressesPath[i] = await createFromTokenFn.callAsync();
+                _opts.tokenAddressesPath[i] = await createFromTokenFn;
                 await createFromTokenFn.awaitTransactionSuccessAsync();
             }
 
@@ -108,7 +108,7 @@ describe('UniswapV2 unit tests', () => {
                 // ABI-encode the input token address as the bridge data. // FIXME
                 bridgeDataEncoder.encode([_opts.tokenAddressesPath]),
             );
-            const result = await bridgeTransferFromFn.callAsync();
+            const result = await bridgeTransferFromFn;
             const receipt = await bridgeTransferFromFn.awaitTransactionSuccessAsync();
             return {
                 opts: _opts,
@@ -125,7 +125,7 @@ describe('UniswapV2 unit tests', () => {
 
         it('performs transfer when both tokens are the same', async () => {
             const createTokenFn = testContract.createToken(constants.NULL_ADDRESS);
-            const tokenAddress = await createTokenFn.callAsync();
+            const tokenAddress = await createTokenFn;
             await createTokenFn.awaitTransactionSuccessAsync();
 
             const { opts, result, logs } = await transferFromAsync({
@@ -164,7 +164,7 @@ describe('UniswapV2 unit tests', () => {
             it('sets allowance for "from" token', async () => {
                 const { logs } = await transferFromAsync();
                 const approvals = filterLogsToArguments<TokenApproveArgs>(logs, ContractEvents.TokenApprove);
-                const routerAddress = await testContract.getRouterAddress().callAsync();
+                const routerAddress = await testContract.getRouterAddress();
                 expect(approvals.length).to.eq(1);
                 expect(approvals[0].spender).to.eq(routerAddress);
                 expect(approvals[0].allowance).to.bignumber.eq(constants.MAX_UINT256);
@@ -174,7 +174,7 @@ describe('UniswapV2 unit tests', () => {
                 const { opts } = await transferFromAsync();
                 const { logs } = await transferFromAsync(opts);
                 const approvals = filterLogsToArguments<TokenApproveArgs>(logs, ContractEvents.TokenApprove);
-                const routerAddress = await testContract.getRouterAddress().callAsync();
+                const routerAddress = await testContract.getRouterAddress();
                 expect(approvals.length).to.eq(1);
                 expect(approvals[0].spender).to.eq(routerAddress);
                 expect(approvals[0].allowance).to.bignumber.eq(constants.MAX_UINT256);

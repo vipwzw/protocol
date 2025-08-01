@@ -1,7 +1,7 @@
 import { LibMathRevertErrors } from '@0x/contracts-exchange-libs';
 import { constants, expect, verifyEventsFromLogs } from '@0x/test-utils';
 import { AssetProxyId, RevertReason } from '@0x/utils';
-import { BigNumber } from '@0x/utils';
+
 import * as _ from 'lodash';
 
 import { DydxBridgeActionType, DydxBridgeData, dydxBridgeDataEncoder } from '../src/dydx_bridge_encoder';
@@ -11,9 +11,9 @@ import { artifacts } from './artifacts';
 import { TestDydxBridgeContract, TestDydxBridgeEvents } from './wrappers';
 
 describe.skip('DydxBridge unit tests', () => {
-    const defaultAccountNumber = new BigNumber(1);
-    const marketId = new BigNumber(2);
-    const defaultAmount = new BigNumber(4);
+    const defaultAccountNumber = 1n;
+    const marketId = 2n;
+    const defaultAmount = 4n;
     const notAuthorized = '0x0000000000000000000000000000000000000001';
     const defaultDepositAction = {
         actionType: DydxBridgeActionType.Deposit,
@@ -254,8 +254,8 @@ describe.skip('DydxBridge unit tests', () => {
             );
         });
         it('succeeds when scaling the `amount` to deposit', async () => {
-            const conversionRateNumerator = new BigNumber(1);
-            const conversionRateDenominator = new BigNumber(2);
+            const conversionRateNumerator = 1n;
+            const conversionRateDenominator = 2n;
             const bridgeData = {
                 accountNumbers: [defaultAccountNumber],
                 actions: [
@@ -276,8 +276,8 @@ describe.skip('DydxBridge unit tests', () => {
             );
         });
         it('succeeds when scaling the `amount` to withdraw', async () => {
-            const conversionRateNumerator = new BigNumber(1);
-            const conversionRateDenominator = new BigNumber(2);
+            const conversionRateNumerator = 1n;
+            const conversionRateDenominator = 2n;
             const bridgeData = {
                 accountNumbers: [defaultAccountNumber],
                 actions: [
@@ -310,7 +310,7 @@ describe.skip('DydxBridge unit tests', () => {
                 notAuthorized,
             );
             const expectedError = RevertReason.DydxBridgeOnlyCallableByErc20BridgeProxy;
-            return expect(callBridgeTransferFromPromise).to.revertWith(expectedError);
+            return expect(callBridgeTransferFromPromise).to.be.revertedWith(expectedError);
         });
         it('should return magic bytes if call succeeds', async () => {
             const bridgeData = {
@@ -337,13 +337,13 @@ describe.skip('DydxBridge unit tests', () => {
             };
             const tx = callBridgeTransferFrom(accountOwner, receiver, defaultAmount, bridgeData, authorized);
             const expectedError = 'TestDydxBridge/SHOULD_REVERT_ON_OPERATE';
-            return expect(tx).to.revertWith(expectedError);
+            return expect(tx).to.be.revertedWith(expectedError);
         });
         it('should revert when there is a rounding error', async () => {
             // Setup a rounding error
-            const conversionRateNumerator = new BigNumber(5318);
-            const conversionRateDenominator = new BigNumber(47958);
-            const amount = new BigNumber(9000);
+            const conversionRateNumerator = 5318n;
+            const conversionRateDenominator = 47958n;
+            const amount = 9000n;
             const bridgeData = {
                 accountNumbers: [defaultAccountNumber],
                 actions: [
@@ -363,7 +363,7 @@ describe.skip('DydxBridge unit tests', () => {
                 conversionRateDenominator,
                 amount,
             );
-            return expect(tx).to.revertWith(expectedError);
+            return expect(tx).to.be.revertedWith(expectedError);
         });
     });
 
@@ -375,7 +375,7 @@ describe.skip('DydxBridge unit tests', () => {
         let assetData: string;
 
         before(async () => {
-            const testTokenAddress = await testContract.getTestToken().callAsync();
+            const testTokenAddress = await testContract.getTestToken();
             assetData = assetDataEncoder
                 .ERC20Bridge(testTokenAddress, testContract.address, dydxBridgeDataEncoder.encode({ bridgeData }))
                 .getABIEncodedTransactionData();
@@ -393,7 +393,7 @@ describe.skip('DydxBridge unit tests', () => {
                 .transferFrom(assetData, accountOwner, receiver, defaultAmount)
                 .awaitTransactionSuccessAsync({ from: authorized });
             const expectedError = 'TestDydxBridge/SHOULD_REVERT_ON_OPERATE';
-            return expect(tx).to.revertWith(expectedError);
+            return expect(tx).to.be.revertedWith(expectedError);
         });
     });
 });

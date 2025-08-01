@@ -36,7 +36,7 @@ describe('UniswapBridge unit tests', () => {
         const signers = await ethers.getSigners();
         const deployer = signers[0];
         testContract = await new UniswapBridge__factory(deployer).deploy();
-        wethTokenAddress = await testContract.wethToken().callAsync();
+        wethTokenAddress = await testContract.wethToken();
     });
 
     describe('isValidSignature()', () => {
@@ -44,7 +44,7 @@ describe('UniswapBridge unit tests', () => {
             const LEGACY_WALLET_MAGIC_VALUE = '0xb0671381';
             const result = await testContract
                 .isValidSignature(hexUtils.random(), hexUtils.random(_.random(0, 32)))
-                .callAsync();
+                ;
             expect(result).to.eq(LEGACY_WALLET_MAGIC_VALUE);
         });
     });
@@ -126,7 +126,7 @@ describe('UniswapBridge unit tests', () => {
                 // ABI-encoded "from" token address.
                 hexUtils.leftPad(_opts.fromTokenAddress),
             );
-            const result = await bridgeTransferFromFn.callAsync();
+            const result = await bridgeTransferFromFn;
             const receipt = await bridgeTransferFromFn.awaitTransactionSuccessAsync();
             return {
                 opts: _opts,
@@ -137,7 +137,7 @@ describe('UniswapBridge unit tests', () => {
         }
 
         async function getExchangeForTokenAsync(tokenAddress: string): Promise<string> {
-            return testContract.getExchange(tokenAddress).callAsync();
+            return testContract.getExchange(tokenAddress);
         }
 
         it('returns magic bytes on success', async () => {
@@ -147,7 +147,7 @@ describe('UniswapBridge unit tests', () => {
 
         it('just transfers tokens to `to` if the same tokens are in play', async () => {
             const createTokenFn = await testContract.createTokenAndExchange(constants.NULL_ADDRESS, '');
-            const [tokenAddress] = await createTokenFn.callAsync();
+            const [tokenAddress] = await createTokenFn;
             await createTokenFn.awaitTransactionSuccessAsync();
             const { opts, result, logs } = await withdrawToAsync({
                 fromTokenAddress: tokenAddress,

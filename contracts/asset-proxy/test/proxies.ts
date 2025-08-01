@@ -23,7 +23,7 @@ import {
 } from '@0x/test-utils';
 import { BlockchainLifecycle } from '@0x/dev-utils';
 import { AssetProxyId, RevertReason } from '@0x/utils';
-import { BigNumber } from '@0x/utils';
+
 import * as chai from 'chai';
 import { LogWithDecodedArgs } from 'ethereum-types';
 import { ethers } from 'hardhat';
@@ -218,7 +218,7 @@ describe('Asset Transfer Proxies', () => {
             );
         });
         it('should have an id of 0xf47261b0', async () => {
-            const proxyId = await erc20Proxy.getProxyId().callAsync();
+            const proxyId = await erc20Proxy.getProxyId();
             const expectedProxyId = '0xf47261b0';
             expect(proxyId).to.equal(expectedProxyId);
         });
@@ -228,7 +228,7 @@ describe('Asset Transfer Proxies', () => {
                 const encodedAssetData = encodeERC20AssetData(erc20TokenA.address);
                 // Perform a transfer from fromAddress to toAddress
                 const erc20Balances = await erc20Wrapper.getBalancesAsync();
-                const amount = new BigNumber(10);
+                const amount = 10n;
                 const data = assetProxyInterface
                     .transferFrom(encodedAssetData, fromAddress, toAddress, amount)
                     .getABIEncodedTransactionData();
@@ -254,9 +254,9 @@ describe('Asset Transfer Proxies', () => {
                 // Construct ERC20 asset data
                 const encodedAssetData = encodeERC20AssetData(noReturnErc20Token.address);
                 // Perform a transfer from fromAddress to toAddress
-                const initialFromBalance = await noReturnErc20Token.balanceOf(fromAddress).callAsync();
-                const initialToBalance = await noReturnErc20Token.balanceOf(toAddress).callAsync();
-                const amount = new BigNumber(10);
+                const initialFromBalance = await noReturnErc20Token.balanceOf(fromAddress);
+                const initialToBalance = await noReturnErc20Token.balanceOf(toAddress);
+                const amount = 10n;
                 const data = assetProxyInterface
                     .transferFrom(encodedAssetData, fromAddress, toAddress, amount)
                     .getABIEncodedTransactionData();
@@ -269,8 +269,8 @@ describe('Asset Transfer Proxies', () => {
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
                 // Verify transfer was successful
-                const newFromBalance = await noReturnErc20Token.balanceOf(fromAddress).callAsync();
-                const newToBalance = await noReturnErc20Token.balanceOf(toAddress).callAsync();
+                const newFromBalance = await noReturnErc20Token.balanceOf(fromAddress);
+                const newToBalance = await noReturnErc20Token.balanceOf(toAddress);
                 expect(newFromBalance).to.be.bignumber.equal(initialFromBalance.minus(amount));
                 expect(newToBalance).to.be.bignumber.equal(initialToBalance.plus(amount));
             });
@@ -281,7 +281,7 @@ describe('Asset Transfer Proxies', () => {
                 const encodedAssetData = `${encodeERC20AssetData(erc20TokenA.address)}${extraData}`;
                 // Perform a transfer from fromAddress to toAddress
                 const erc20Balances = await erc20Wrapper.getBalancesAsync();
-                const amount = new BigNumber(10);
+                const amount = 10n;
                 const data = assetProxyInterface
                     .transferFrom(encodedAssetData, fromAddress, toAddress, amount)
                     .getABIEncodedTransactionData();
@@ -308,7 +308,7 @@ describe('Asset Transfer Proxies', () => {
                 const encodedAssetData = encodeERC20AssetData(erc20TokenA.address);
                 // Perform a transfer from fromAddress to toAddress
                 const erc20Balances = await erc20Wrapper.getBalancesAsync();
-                const amount = new BigNumber(0);
+                const amount = 0n;
                 const data = assetProxyInterface
                     .transferFrom(encodedAssetData, fromAddress, toAddress, amount)
                     .getABIEncodedTransactionData();
@@ -334,8 +334,8 @@ describe('Asset Transfer Proxies', () => {
                 // Construct ERC20 asset data
                 const encodedAssetData = encodeERC20AssetData(erc20TokenA.address);
                 // Create allowance less than transfer amount. Set allowance on proxy.
-                const allowance = new BigNumber(0);
-                const amount = new BigNumber(10);
+                const allowance = 0n;
+                const amount = 10n;
                 const data = assetProxyInterface
                     .transferFrom(encodedAssetData, fromAddress, toAddress, amount)
                     .getABIEncodedTransactionData();
@@ -360,16 +360,16 @@ describe('Asset Transfer Proxies', () => {
                 // Construct ERC20 asset data
                 const encodedAssetData = encodeERC20AssetData(noReturnErc20Token.address);
                 // Create allowance less than transfer amount. Set allowance on proxy.
-                const allowance = new BigNumber(0);
-                const amount = new BigNumber(10);
+                const allowance = 0n;
+                const amount = 10n;
                 const data = assetProxyInterface
                     .transferFrom(encodedAssetData, fromAddress, toAddress, amount)
                     .getABIEncodedTransactionData();
                 await noReturnErc20Token.approve(erc20Proxy.address, allowance).awaitTransactionSuccessAsync({
                     from: fromAddress,
                 });
-                const initialFromBalance = await noReturnErc20Token.balanceOf(fromAddress).callAsync();
-                const initialToBalance = await noReturnErc20Token.balanceOf(toAddress).callAsync();
+                const initialFromBalance = await noReturnErc20Token.balanceOf(fromAddress);
+                const initialToBalance = await noReturnErc20Token.balanceOf(toAddress);
                 // Perform a transfer; expect this to fail.
                 await expectTransactionFailedAsync(
                     web3Wrapper.sendTransactionAsync({
@@ -379,8 +379,8 @@ describe('Asset Transfer Proxies', () => {
                     }),
                     RevertReason.TransferFailed,
                 );
-                const newFromBalance = await noReturnErc20Token.balanceOf(fromAddress).callAsync();
-                const newToBalance = await noReturnErc20Token.balanceOf(toAddress).callAsync();
+                const newFromBalance = await noReturnErc20Token.balanceOf(fromAddress);
+                const newToBalance = await noReturnErc20Token.balanceOf(toAddress);
                 expect(newFromBalance).to.be.bignumber.equal(initialFromBalance);
                 expect(newToBalance).to.be.bignumber.equal(initialToBalance);
             });
@@ -389,7 +389,7 @@ describe('Asset Transfer Proxies', () => {
                 // Construct ERC20 asset data
                 const encodedAssetData = encodeERC20AssetData(erc20TokenA.address);
                 // Perform a transfer from fromAddress to toAddress
-                const amount = new BigNumber(10);
+                const amount = 10n;
                 const data = assetProxyInterface
                     .transferFrom(encodedAssetData, fromAddress, toAddress, amount)
                     .getABIEncodedTransactionData();
@@ -409,12 +409,12 @@ describe('Asset Transfer Proxies', () => {
             it('should revert if token returns more than 32 bytes', async () => {
                 // Construct ERC20 asset data
                 const encodedAssetData = encodeERC20AssetData(multipleReturnErc20Token.address);
-                const amount = new BigNumber(10);
+                const amount = 10n;
                 const data = assetProxyInterface
                     .transferFrom(encodedAssetData, fromAddress, toAddress, amount)
                     .getABIEncodedTransactionData();
-                const initialFromBalance = await multipleReturnErc20Token.balanceOf(fromAddress).callAsync();
-                const initialToBalance = await multipleReturnErc20Token.balanceOf(toAddress).callAsync();
+                const initialFromBalance = await multipleReturnErc20Token.balanceOf(fromAddress);
+                const initialToBalance = await multipleReturnErc20Token.balanceOf(toAddress);
                 // Perform a transfer; expect this to fail.
                 await expectTransactionFailedAsync(
                     web3Wrapper.sendTransactionAsync({
@@ -424,8 +424,8 @@ describe('Asset Transfer Proxies', () => {
                     }),
                     RevertReason.TransferFailed,
                 );
-                const newFromBalance = await multipleReturnErc20Token.balanceOf(fromAddress).callAsync();
-                const newToBalance = await multipleReturnErc20Token.balanceOf(toAddress).callAsync();
+                const newFromBalance = await multipleReturnErc20Token.balanceOf(fromAddress);
+                const newToBalance = await multipleReturnErc20Token.balanceOf(toAddress);
                 expect(newFromBalance).to.be.bignumber.equal(initialFromBalance);
                 expect(newToBalance).to.be.bignumber.equal(initialToBalance);
             });
@@ -445,7 +445,7 @@ describe('Asset Transfer Proxies', () => {
             );
         });
         it('should have an id of 0x02571792', async () => {
-            const proxyId = await erc721Proxy.getProxyId().callAsync();
+            const proxyId = await erc721Proxy.getProxyId();
             const expectedProxyId = '0x02571792';
             expect(proxyId).to.equal(expectedProxyId);
         });
@@ -454,10 +454,10 @@ describe('Asset Transfer Proxies', () => {
                 // Construct ERC721 asset data
                 const encodedAssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 // Verify pre-condition
-                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
                 // Perform a transfer from fromAddress to toAddress
-                const amount = new BigNumber(1);
+                const amount = 1n;
                 const data = assetProxyInterface
                     .transferFrom(encodedAssetData, fromAddress, toAddress, amount)
                     .getABIEncodedTransactionData();
@@ -470,7 +470,7 @@ describe('Asset Transfer Proxies', () => {
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
                 // Verify transfer was successful
-                const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwnerFromAsset).to.be.bignumber.equal(toAddress);
             });
 
@@ -482,10 +482,10 @@ describe('Asset Transfer Proxies', () => {
                     erc721AFromTokenId,
                 )}${extraData}`;
                 // Verify pre-condition
-                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
                 // Perform a transfer from fromAddress to toAddress
-                const amount = new BigNumber(1);
+                const amount = 1n;
                 const data = assetProxyInterface
                     .transferFrom(encodedAssetData, fromAddress, toAddress, amount)
                     .getABIEncodedTransactionData();
@@ -498,7 +498,7 @@ describe('Asset Transfer Proxies', () => {
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
                 // Verify transfer was successful
-                const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwnerFromAsset).to.be.bignumber.equal(toAddress);
             });
 
@@ -506,10 +506,10 @@ describe('Asset Transfer Proxies', () => {
                 // Construct ERC721 asset data
                 const encodedAssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 // Verify pre-condition
-                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
                 // Perform a transfer from fromAddress to toAddress
-                const amount = new BigNumber(1);
+                const amount = 1n;
                 const data = assetProxyInterface
                     .transferFrom(encodedAssetData, fromAddress, erc721Receiver.address, amount)
                     .getABIEncodedTransactionData();
@@ -525,7 +525,7 @@ describe('Asset Transfer Proxies', () => {
                 // Verify that no log was emitted by erc721 receiver
                 expect(tx.logs.length).to.be.equal(1);
                 // Verify transfer was successful
-                const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwnerFromAsset).to.be.bignumber.equal(erc721Receiver.address);
             });
 
@@ -533,10 +533,10 @@ describe('Asset Transfer Proxies', () => {
                 // Construct ERC721 asset data
                 const encodedAssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 // Verify pre-condition
-                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
                 // Perform a transfer from fromAddress to toAddress
-                const amount = new BigNumber(0);
+                const amount = 0n;
                 const data = assetProxyInterface
                     .transferFrom(encodedAssetData, fromAddress, toAddress, amount)
                     .getABIEncodedTransactionData();
@@ -548,7 +548,7 @@ describe('Asset Transfer Proxies', () => {
                     }),
                     RevertReason.InvalidAmount,
                 );
-                const newOwner = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const newOwner = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwner).to.be.equal(ownerFromAsset);
             });
 
@@ -556,10 +556,10 @@ describe('Asset Transfer Proxies', () => {
                 // Construct ERC721 asset data
                 const encodedAssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 // Verify pre-condition
-                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
                 // Perform a transfer from fromAddress to toAddress
-                const amount = new BigNumber(500);
+                const amount = 500n;
                 const data = assetProxyInterface
                     .transferFrom(encodedAssetData, fromAddress, toAddress, amount)
                     .getABIEncodedTransactionData();
@@ -571,7 +571,7 @@ describe('Asset Transfer Proxies', () => {
                     }),
                     RevertReason.InvalidAmount,
                 );
-                const newOwner = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const newOwner = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwner).to.be.equal(ownerFromAsset);
             });
 
@@ -579,7 +579,7 @@ describe('Asset Transfer Proxies', () => {
                 // Construct ERC721 asset data
                 const encodedAssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 // Verify pre-condition
-                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
                 // Remove blanket transfer approval for fromAddress.
                 await erc721TokenA.setApprovalForAll(erc721Proxy.address, false).awaitTransactionSuccessAsync({
@@ -590,7 +590,7 @@ describe('Asset Transfer Proxies', () => {
                     from: fromAddress,
                 });
                 // Perform a transfer; expect this to fail.
-                const amount = new BigNumber(1);
+                const amount = 1n;
                 const data = assetProxyInterface
                     .transferFrom(encodedAssetData, fromAddress, toAddress, amount)
                     .getABIEncodedTransactionData();
@@ -602,7 +602,7 @@ describe('Asset Transfer Proxies', () => {
                     }),
                     RevertReason.TransferFailed,
                 );
-                const newOwner = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const newOwner = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwner).to.be.equal(ownerFromAsset);
             });
 
@@ -610,10 +610,10 @@ describe('Asset Transfer Proxies', () => {
                 // Construct ERC721 asset data
                 const encodedAssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 // Verify pre-condition
-                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
                 // Perform a transfer from fromAddress to toAddress
-                const amount = new BigNumber(1);
+                const amount = 1n;
                 const data = assetProxyInterface
                     .transferFrom(encodedAssetData, fromAddress, toAddress, amount)
                     .getABIEncodedTransactionData();
@@ -625,7 +625,7 @@ describe('Asset Transfer Proxies', () => {
                     }),
                     RevertReason.SenderNotAuthorized,
                 );
-                const newOwner = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const newOwner = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwner).to.be.equal(ownerFromAsset);
             });
         });
@@ -643,15 +643,15 @@ describe('Asset Transfer Proxies', () => {
             );
         });
         it('should have an id of 0x94cfcdd7', async () => {
-            const proxyId = await multiAssetProxy.getProxyId().callAsync();
+            const proxyId = await multiAssetProxy.getProxyId();
             // first 4 bytes of `keccak256('MultiAsset(uint256[],bytes[])')`
             const expectedProxyId = '0x94cfcdd7';
             expect(proxyId).to.equal(expectedProxyId);
         });
         describe('transferFrom', () => {
             it('should transfer a single ERC20 token', async () => {
-                const inputAmount = new BigNumber(1);
-                const erc20Amount = new BigNumber(10);
+                const inputAmount = 1n;
+                const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(erc20TokenA.address);
                 const amounts = [erc20Amount];
                 const nestedAssetData = [erc20AssetData];
@@ -679,7 +679,7 @@ describe('Asset Transfer Proxies', () => {
             });
             it('should dispatch an ERC20 transfer when input amount is 0', async () => {
                 const inputAmount = constants.ZERO_AMOUNT;
-                const erc20Amount = new BigNumber(10);
+                const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(erc20TokenA.address);
                 const amounts = [erc20Amount];
                 const nestedAssetData = [erc20AssetData];
@@ -705,9 +705,9 @@ describe('Asset Transfer Proxies', () => {
                 expect(newBalances).to.deep.equal(erc20Balances);
             });
             it('should successfully transfer multiple of the same ERC20 token', async () => {
-                const inputAmount = new BigNumber(1);
-                const erc20Amount1 = new BigNumber(10);
-                const erc20Amount2 = new BigNumber(20);
+                const inputAmount = 1n;
+                const erc20Amount1 = 10n;
+                const erc20Amount2 = 20n;
                 const erc20AssetData1 = encodeERC20AssetData(erc20TokenA.address);
                 const erc20AssetData2 = encodeERC20AssetData(erc20TokenA.address);
                 const amounts = [erc20Amount1, erc20Amount2];
@@ -735,9 +735,9 @@ describe('Asset Transfer Proxies', () => {
                 );
             });
             it('should successfully transfer multiple different ERC20 tokens', async () => {
-                const inputAmount = new BigNumber(1);
-                const erc20Amount1 = new BigNumber(10);
-                const erc20Amount2 = new BigNumber(20);
+                const inputAmount = 1n;
+                const erc20Amount1 = 10n;
+                const erc20Amount2 = 20n;
                 const erc20AssetData1 = encodeERC20AssetData(erc20TokenA.address);
                 const erc20AssetData2 = encodeERC20AssetData(erc20TokenB.address);
                 const amounts = [erc20Amount1, erc20Amount2];
@@ -772,8 +772,8 @@ describe('Asset Transfer Proxies', () => {
                 );
             });
             it('should transfer a single ERC721 token', async () => {
-                const inputAmount = new BigNumber(1);
-                const erc721Amount = new BigNumber(1);
+                const inputAmount = 1n;
+                const erc721Amount = 1n;
                 const erc721AssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 const amounts = [erc721Amount];
                 const nestedAssetData = [erc721AssetData];
@@ -781,7 +781,7 @@ describe('Asset Transfer Proxies', () => {
                 const data = assetProxyInterface
                     .transferFrom(assetData, fromAddress, toAddress, inputAmount)
                     .getABIEncodedTransactionData();
-                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
                 await web3Wrapper.awaitTransactionSuccessAsync(
                     await web3Wrapper.sendTransactionAsync({
@@ -791,7 +791,7 @@ describe('Asset Transfer Proxies', () => {
                     }),
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
-                const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwnerFromAsset).to.be.equal(toAddress);
             });
             it('should successfully transfer multiple of the same ERC721 token', async () => {
@@ -799,17 +799,17 @@ describe('Asset Transfer Proxies', () => {
                 const erc721AFromTokenId2 = erc721Balances[fromAddress][erc721TokenA.address][1];
                 const erc721AssetData1 = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 const erc721AssetData2 = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId2);
-                const inputAmount = new BigNumber(1);
-                const erc721Amount = new BigNumber(1);
+                const inputAmount = 1n;
+                const erc721Amount = 1n;
                 const amounts = [erc721Amount, erc721Amount];
                 const nestedAssetData = [erc721AssetData1, erc721AssetData2];
                 const assetData = encodeMultiAssetData(amounts, nestedAssetData);
                 const data = assetProxyInterface
                     .transferFrom(assetData, fromAddress, toAddress, inputAmount)
                     .getABIEncodedTransactionData();
-                const ownerFromAsset1 = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const ownerFromAsset1 = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset1).to.be.equal(fromAddress);
-                const ownerFromAsset2 = await erc721TokenA.ownerOf(erc721AFromTokenId2).callAsync();
+                const ownerFromAsset2 = await erc721TokenA.ownerOf(erc721AFromTokenId2);
                 expect(ownerFromAsset2).to.be.equal(fromAddress);
                 await web3Wrapper.awaitTransactionSuccessAsync(
                     await web3Wrapper.sendTransactionAsync({
@@ -820,25 +820,25 @@ describe('Asset Transfer Proxies', () => {
                     }),
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
-                const newOwnerFromAsset1 = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
-                const newOwnerFromAsset2 = await erc721TokenA.ownerOf(erc721AFromTokenId2).callAsync();
+                const newOwnerFromAsset1 = await erc721TokenA.ownerOf(erc721AFromTokenId);
+                const newOwnerFromAsset2 = await erc721TokenA.ownerOf(erc721AFromTokenId2);
                 expect(newOwnerFromAsset1).to.be.equal(toAddress);
                 expect(newOwnerFromAsset2).to.be.equal(toAddress);
             });
             it('should successfully transfer multiple different ERC721 tokens', async () => {
                 const erc721AssetData1 = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 const erc721AssetData2 = encodeERC721AssetData(erc721TokenB.address, erc721BFromTokenId);
-                const inputAmount = new BigNumber(1);
-                const erc721Amount = new BigNumber(1);
+                const inputAmount = 1n;
+                const erc721Amount = 1n;
                 const amounts = [erc721Amount, erc721Amount];
                 const nestedAssetData = [erc721AssetData1, erc721AssetData2];
                 const assetData = encodeMultiAssetData(amounts, nestedAssetData);
                 const data = assetProxyInterface
                     .transferFrom(assetData, fromAddress, toAddress, inputAmount)
                     .getABIEncodedTransactionData();
-                const ownerFromAsset1 = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const ownerFromAsset1 = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset1).to.be.equal(fromAddress);
-                const ownerFromAsset2 = await erc721TokenB.ownerOf(erc721BFromTokenId).callAsync();
+                const ownerFromAsset2 = await erc721TokenB.ownerOf(erc721BFromTokenId);
                 expect(ownerFromAsset2).to.be.equal(fromAddress);
                 await web3Wrapper.awaitTransactionSuccessAsync(
                     await web3Wrapper.sendTransactionAsync({
@@ -849,8 +849,8 @@ describe('Asset Transfer Proxies', () => {
                     }),
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
-                const newOwnerFromAsset1 = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
-                const newOwnerFromAsset2 = await erc721TokenB.ownerOf(erc721BFromTokenId).callAsync();
+                const newOwnerFromAsset1 = await erc721TokenA.ownerOf(erc721AFromTokenId);
+                const newOwnerFromAsset2 = await erc721TokenB.ownerOf(erc721BFromTokenId);
                 expect(newOwnerFromAsset1).to.be.equal(toAddress);
                 expect(newOwnerFromAsset2).to.be.equal(toAddress);
             });
@@ -968,12 +968,12 @@ describe('Asset Transfer Proxies', () => {
                 const fungibleTokensToTransfer = erc1155FungibleTokens.slice(0, 1);
                 const nonFungibleTokensToTransfer = erc1155NonFungibleTokensOwnedBySpender.slice(0, 1);
                 const tokensToTransfer = fungibleTokensToTransfer.concat(nonFungibleTokensToTransfer);
-                const valuesToTransfer = [new BigNumber(25), new BigNumber(1)];
-                const valueMultiplier = new BigNumber(1);
+                const valuesToTransfer = [new BigNumber(25), 1n];
+                const valueMultiplier = 1n;
                 const receiverCallbackData = '0x0102030405';
                 // check balances before transfer
-                const nftOwnerBalance = new BigNumber(1);
-                const nftNotOwnerBalance = new BigNumber(0);
+                const nftOwnerBalance = 1n;
+                const nftNotOwnerBalance = 0n;
                 const expectedInitialBalances = [
                     // from
                     constants.INITIAL_ERC1155_FUNGIBLE_BALANCE,
@@ -991,7 +991,7 @@ describe('Asset Transfer Proxies', () => {
                     receiverCallbackData,
                 );
                 // encode multi-asset data
-                const multiAssetAmount = new BigNumber(1);
+                const multiAssetAmount = 1n;
                 const amounts = [valueMultiplier];
                 const nestedAssetData = [erc1155AssetData];
                 const assetData = encodeMultiAssetData(amounts, nestedAssetData);
@@ -1081,10 +1081,10 @@ describe('Asset Transfer Proxies', () => {
             });
             it('should successfully transfer a combination of ERC20, ERC721, and ERC1155 tokens', async () => {
                 // setup test parameters
-                const inputAmount = new BigNumber(1);
-                const erc20Amount = new BigNumber(10);
+                const inputAmount = 1n;
+                const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(erc20TokenA.address);
-                const erc721Amount = new BigNumber(1);
+                const erc721Amount = 1n;
                 const erc721AssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 const erc1155TokenHolders = [fromAddress, toAddress];
                 const erc1155TokensToTransfer = erc1155FungibleTokens.slice(0, 1);
@@ -1105,7 +1105,7 @@ describe('Asset Transfer Proxies', () => {
                     .getABIEncodedTransactionData();
                 // check balances before transfer
                 const erc20Balances = await erc20Wrapper.getBalancesAsync();
-                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
                 const erc1155ExpectedInitialBalances = [
                     constants.INITIAL_ERC1155_FUNGIBLE_BALANCE,
@@ -1135,7 +1135,7 @@ describe('Asset Transfer Proxies', () => {
                 expect(newBalances[toAddress][erc20TokenA.address]).to.be.bignumber.equal(
                     erc20Balances[toAddress][erc20TokenA.address].plus(totalAmount),
                 );
-                const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwnerFromAsset).to.be.equal(toAddress);
                 const erc1155TotalValueTransferred = erc1155ValuesToTransfer[0].times(erc1155Amount).times(inputAmount);
                 const expectedFinalBalances = [
@@ -1149,10 +1149,10 @@ describe('Asset Transfer Proxies', () => {
                 );
             });
             it('should successfully transfer a combination of ERC20 and ERC721 tokens', async () => {
-                const inputAmount = new BigNumber(1);
-                const erc20Amount = new BigNumber(10);
+                const inputAmount = 1n;
+                const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(erc20TokenA.address);
-                const erc721Amount = new BigNumber(1);
+                const erc721Amount = 1n;
                 const erc721AssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 const amounts = [erc20Amount, erc721Amount];
                 const nestedAssetData = [erc20AssetData, erc721AssetData];
@@ -1161,7 +1161,7 @@ describe('Asset Transfer Proxies', () => {
                     .transferFrom(assetData, fromAddress, toAddress, inputAmount)
                     .getABIEncodedTransactionData();
                 const erc20Balances = await erc20Wrapper.getBalancesAsync();
-                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
                 await web3Wrapper.awaitTransactionSuccessAsync(
                     await web3Wrapper.sendTransactionAsync({
@@ -1179,15 +1179,15 @@ describe('Asset Transfer Proxies', () => {
                 expect(newBalances[toAddress][erc20TokenA.address]).to.be.bignumber.equal(
                     erc20Balances[toAddress][erc20TokenA.address].plus(totalAmount),
                 );
-                const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwnerFromAsset).to.be.equal(toAddress);
             });
             // TODO(dorothy-zbornak): Figure out why this test fails.
             it.skip('should successfully transfer tokens and ignore extra assetData', async () => {
-                const inputAmount = new BigNumber(1);
-                const erc20Amount = new BigNumber(10);
+                const inputAmount = 1n;
+                const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(erc20TokenA.address);
-                const erc721Amount = new BigNumber(1);
+                const erc721Amount = 1n;
                 const erc721AssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 const amounts = [erc20Amount, erc721Amount];
                 const nestedAssetData = [erc20AssetData, erc721AssetData];
@@ -1197,7 +1197,7 @@ describe('Asset Transfer Proxies', () => {
                     .transferFrom(assetData, fromAddress, toAddress, inputAmount)
                     .getABIEncodedTransactionData();
                 const erc20Balances = await erc20Wrapper.getBalancesAsync();
-                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
                 await web3Wrapper.awaitTransactionSuccessAsync(
                     await web3Wrapper.sendTransactionAsync({
@@ -1215,13 +1215,13 @@ describe('Asset Transfer Proxies', () => {
                 expect(newBalances[toAddress][erc20TokenA.address]).to.be.bignumber.equal(
                     erc20Balances[toAddress][erc20TokenA.address].plus(totalAmount),
                 );
-                const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwnerFromAsset).to.be.equal(toAddress);
             });
             it('should successfully transfer correct amounts when the `amount` > 1', async () => {
                 const inputAmount = new BigNumber(100);
-                const erc20Amount1 = new BigNumber(10);
-                const erc20Amount2 = new BigNumber(20);
+                const erc20Amount1 = 10n;
+                const erc20Amount2 = 20n;
                 const erc20AssetData1 = encodeERC20AssetData(erc20TokenA.address);
                 const erc20AssetData2 = encodeERC20AssetData(erc20TokenB.address);
                 const amounts = [erc20Amount1, erc20Amount2];
@@ -1256,12 +1256,12 @@ describe('Asset Transfer Proxies', () => {
                 );
             });
             it('should successfully transfer a large amount of tokens', async () => {
-                const inputAmount = new BigNumber(1);
-                const erc20Amount1 = new BigNumber(10);
-                const erc20Amount2 = new BigNumber(20);
+                const inputAmount = 1n;
+                const erc20Amount1 = 10n;
+                const erc20Amount2 = 20n;
                 const erc20AssetData1 = encodeERC20AssetData(erc20TokenA.address);
                 const erc20AssetData2 = encodeERC20AssetData(erc20TokenB.address);
-                const erc721Amount = new BigNumber(1);
+                const erc721Amount = 1n;
                 const erc721Balances = await erc721Wrapper.getBalancesAsync();
                 const erc721AFromTokenId2 = erc721Balances[fromAddress][erc721TokenA.address][1];
                 const erc721BFromTokenId2 = erc721Balances[fromAddress][erc721TokenB.address][1];
@@ -1282,13 +1282,13 @@ describe('Asset Transfer Proxies', () => {
                 const data = assetProxyInterface
                     .transferFrom(assetData, fromAddress, toAddress, inputAmount)
                     .getABIEncodedTransactionData();
-                const ownerFromAsset1 = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
+                const ownerFromAsset1 = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset1).to.be.equal(fromAddress);
-                const ownerFromAsset2 = await erc721TokenA.ownerOf(erc721AFromTokenId2).callAsync();
+                const ownerFromAsset2 = await erc721TokenA.ownerOf(erc721AFromTokenId2);
                 expect(ownerFromAsset2).to.be.equal(fromAddress);
-                const ownerFromAsset3 = await erc721TokenB.ownerOf(erc721BFromTokenId).callAsync();
+                const ownerFromAsset3 = await erc721TokenB.ownerOf(erc721BFromTokenId);
                 expect(ownerFromAsset3).to.be.equal(fromAddress);
-                const ownerFromAsset4 = await erc721TokenB.ownerOf(erc721BFromTokenId2).callAsync();
+                const ownerFromAsset4 = await erc721TokenB.ownerOf(erc721BFromTokenId2);
                 expect(ownerFromAsset4).to.be.equal(fromAddress);
                 const erc20Balances = await erc20Wrapper.getBalancesAsync();
                 await web3Wrapper.awaitTransactionSuccessAsync(
@@ -1300,10 +1300,10 @@ describe('Asset Transfer Proxies', () => {
                     }),
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
-                const newOwnerFromAsset1 = await erc721TokenA.ownerOf(erc721AFromTokenId).callAsync();
-                const newOwnerFromAsset2 = await erc721TokenA.ownerOf(erc721AFromTokenId2).callAsync();
-                const newOwnerFromAsset3 = await erc721TokenB.ownerOf(erc721BFromTokenId).callAsync();
-                const newOwnerFromAsset4 = await erc721TokenB.ownerOf(erc721BFromTokenId2).callAsync();
+                const newOwnerFromAsset1 = await erc721TokenA.ownerOf(erc721AFromTokenId);
+                const newOwnerFromAsset2 = await erc721TokenA.ownerOf(erc721AFromTokenId2);
+                const newOwnerFromAsset3 = await erc721TokenB.ownerOf(erc721BFromTokenId);
+                const newOwnerFromAsset4 = await erc721TokenB.ownerOf(erc721BFromTokenId2);
                 expect(newOwnerFromAsset1).to.be.equal(toAddress);
                 expect(newOwnerFromAsset2).to.be.equal(toAddress);
                 expect(newOwnerFromAsset3).to.be.equal(toAddress);
@@ -1325,8 +1325,8 @@ describe('Asset Transfer Proxies', () => {
                 );
             });
             it('should revert if a single transfer fails', async () => {
-                const inputAmount = new BigNumber(1);
-                const erc20Amount = new BigNumber(10);
+                const inputAmount = 1n;
+                const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(erc20TokenA.address);
                 // 2 is an invalid erc721 amount
                 const erc721Amount = new BigNumber(2);
@@ -1347,10 +1347,10 @@ describe('Asset Transfer Proxies', () => {
                 );
             });
             it('should revert if an AssetProxy is not registered', async () => {
-                const inputAmount = new BigNumber(1);
-                const erc20Amount = new BigNumber(10);
+                const inputAmount = 1n;
+                const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(erc20TokenA.address);
-                const erc721Amount = new BigNumber(1);
+                const erc721Amount = 1n;
                 const erc721AssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 const invalidProxyId = '0x12345678';
                 const invalidErc721AssetData = `${invalidProxyId}${erc721AssetData.slice(10)}`;
@@ -1370,8 +1370,8 @@ describe('Asset Transfer Proxies', () => {
                 );
             });
             it('should revert if the length of `amounts` does not match the length of `nestedAssetData`', async () => {
-                const inputAmount = new BigNumber(1);
-                const erc20Amount = new BigNumber(10);
+                const inputAmount = 1n;
+                const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(erc20TokenA.address);
                 const erc721AssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 const amounts = [erc20Amount];
@@ -1409,10 +1409,10 @@ describe('Asset Transfer Proxies', () => {
                 );
             });
             it('should revert if an element of `nestedAssetData` is < 4 bytes long', async () => {
-                const inputAmount = new BigNumber(1);
-                const erc20Amount = new BigNumber(10);
+                const inputAmount = 1n;
+                const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(erc20TokenA.address);
-                const erc721Amount = new BigNumber(1);
+                const erc721Amount = 1n;
                 const erc721AssetData = '0x123456';
                 const amounts = [erc20Amount, erc721Amount];
                 const nestedAssetData = [erc20AssetData, erc721AssetData];
@@ -1430,10 +1430,10 @@ describe('Asset Transfer Proxies', () => {
                 );
             });
             it('should revert if caller is not authorized', async () => {
-                const inputAmount = new BigNumber(1);
-                const erc20Amount = new BigNumber(10);
+                const inputAmount = 1n;
+                const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(erc20TokenA.address);
-                const erc721Amount = new BigNumber(1);
+                const erc721Amount = 1n;
                 const erc721AssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 const amounts = [erc20Amount, erc721Amount];
                 const nestedAssetData = [erc20AssetData, erc721AssetData];
@@ -1451,10 +1451,10 @@ describe('Asset Transfer Proxies', () => {
                 );
             });
             it('should revert if asset data overflows beyond the bounds of calldata', async () => {
-                const inputAmount = new BigNumber(1);
-                const erc20Amount = new BigNumber(10);
+                const inputAmount = 1n;
+                const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(erc20TokenA.address);
-                const erc721Amount = new BigNumber(1);
+                const erc721Amount = 1n;
                 const erc721AssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 const amounts = [erc20Amount, erc721Amount];
                 const nestedAssetData = [erc20AssetData, erc721AssetData];
@@ -1478,10 +1478,10 @@ describe('Asset Transfer Proxies', () => {
                 );
             });
             it('should revert if asset data resolves to a location beyond the bounds of calldata', async () => {
-                const inputAmount = new BigNumber(1);
-                const erc20Amount = new BigNumber(10);
+                const inputAmount = 1n;
+                const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(erc20TokenA.address);
-                const erc721Amount = new BigNumber(1);
+                const erc721Amount = 1n;
                 const erc721AssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 const amounts = [erc20Amount, erc721Amount];
                 const nestedAssetData = [erc20AssetData, erc721AssetData];
@@ -1506,10 +1506,10 @@ describe('Asset Transfer Proxies', () => {
             });
             it('should revert if length of assetData, excluding the selector, is not a multiple of 32', async () => {
                 // setup test parameters
-                const inputAmount = new BigNumber(1);
-                const erc20Amount = new BigNumber(10);
+                const inputAmount = 1n;
+                const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(erc20TokenA.address);
-                const erc721Amount = new BigNumber(1);
+                const erc721Amount = 1n;
                 const erc721AssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 const amounts = [erc20Amount, erc721Amount];
                 const nestedAssetData = [erc20AssetData, erc721AssetData];
@@ -1531,7 +1531,7 @@ describe('Asset Transfer Proxies', () => {
             });
             it('should revert if length of assetData is less than 68 bytes', async () => {
                 // setup test parameters
-                const inputAmount = new BigNumber(1);
+                const inputAmount = 1n;
                 // we'll construct asset data that has a 4 byte selector plus
                 // 32 byte payload. This results in asset data that is 36 bytes
                 // long and will trigger the `invalid length` error.

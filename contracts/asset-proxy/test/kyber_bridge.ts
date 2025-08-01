@@ -8,7 +8,7 @@ import {
     verifyEventsFromLogs,
 } from '@0x/test-utils';
 import { AssetProxyId } from '@0x/utils';
-import { BigNumber, hexUtils } from '@0x/utils';
+import { hexUtils } from '@0x/utils';
 import { DecodedLogs } from 'ethereum-types';
 import { ethers } from 'hardhat';
 import * as _ from 'lodash';
@@ -22,9 +22,9 @@ describe('KyberBridge unit tests', () => {
     const KYBER_ETH_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
     const FROM_TOKEN_DECIMALS = 6;
     const TO_TOKEN_DECIMALS = 18;
-    const FROM_TOKEN_BASE = new BigNumber(10).pow(FROM_TOKEN_DECIMALS);
-    const TO_TOKEN_BASE = new BigNumber(10).pow(TO_TOKEN_DECIMALS);
-    const WETH_BASE = new BigNumber(10).pow(18);
+    const FROM_TOKEN_BASE = 10n ** BigInt(FROM_TOKEN_DECIMALS);
+    const TO_TOKEN_BASE = 10n ** BigInt(TO_TOKEN_DECIMALS);
+    const WETH_BASE = 10n ** 18n;
     const KYBER_RATE_BASE = WETH_BASE;
     let testContract: TestKyberBridgeContract;
 
@@ -52,7 +52,7 @@ describe('KyberBridge unit tests', () => {
             wethAddress = await testContract.weth();
             fromTokenAddress = await testContract.createToken(FROM_TOKEN_DECIMALS);
             await testContract.createToken(FROM_TOKEN_DECIMALS).awaitTransactionSuccessAsync();
-            toTokenAddress = await testContract.createToken(TO_TOKEN_DECIMALS).callAsync();
+            toTokenAddress = await testContract.createToken(TO_TOKEN_DECIMALS);
             await testContract.createToken(TO_TOKEN_DECIMALS).awaitTransactionSuccessAsync();
         });
 
@@ -115,7 +115,7 @@ describe('KyberBridge unit tests', () => {
                 // ABI-encode the input token address as the bridge data.
                 hexUtils.concat(hexUtils.leftPad(_opts.fromTokenAddress), hexUtils.leftPad(32), hexUtils.leftPad(0)),
             );
-            const result = await bridgeTransferFromFn.callAsync();
+            const result = await bridgeTransferFromFn;
             const { logs } = await bridgeTransferFromFn.awaitTransactionSuccessAsync();
             return {
                 opts: _opts,

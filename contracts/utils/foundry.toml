@@ -1,5 +1,5 @@
 [profile.default]
-src = 'contracts'
+src = 'contracts/src'
 out = 'out'
 test = 'tests'
 # Include test contracts for ABI generation

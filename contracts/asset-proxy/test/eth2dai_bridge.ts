@@ -38,7 +38,7 @@ describe('Eth2DaiBridge unit tests', () => {
             const LEGACY_WALLET_MAGIC_VALUE = '0xb0671381';
             const result = await testContract
                 .isValidSignature(hexUtils.random(), hexUtils.random(_.random(0, 32)))
-                .callAsync();
+                ;
             expect(result).to.eq(LEGACY_WALLET_MAGIC_VALUE);
         });
     });
@@ -84,12 +84,12 @@ describe('Eth2DaiBridge unit tests', () => {
             // Create tokens and balances.
             if (_opts.fromTokenAddress === undefined) {
                 const createTokenFn = testContract.createToken(new BigNumber(_opts.fromTokenBalance));
-                _opts.fromTokenAddress = await createTokenFn.callAsync();
+                _opts.fromTokenAddress = await createTokenFn;
                 await createTokenFn.awaitTransactionSuccessAsync();
             }
             if (_opts.toTokenAddress === undefined) {
                 const createTokenFn = testContract.createToken(constants.ZERO_AMOUNT);
-                _opts.toTokenAddress = await createTokenFn.callAsync();
+                _opts.toTokenAddress = await createTokenFn;
                 await createTokenFn.awaitTransactionSuccessAsync();
             }
             // Set the transfer behavior of `toTokenAddress`.
@@ -112,7 +112,7 @@ describe('Eth2DaiBridge unit tests', () => {
                 // ABI-encode the "from" token address as the bridge data.
                 hexUtils.leftPad(_opts.fromTokenAddress as string),
             );
-            const result = await bridgeTransferFromFn.callAsync();
+            const result = await bridgeTransferFromFn;
             const { logs } = await bridgeTransferFromFn.awaitTransactionSuccessAsync();
             return {
                 opts: _opts,
@@ -168,19 +168,19 @@ describe('Eth2DaiBridge unit tests', () => {
         it('fails if `Eth2Dai.sellAllAmount()` reverts', async () => {
             const opts = createWithdrawToOpts({ revertReason: 'FOOBAR' });
             const tx = withdrawToAsync(opts);
-            return expect(tx).to.revertWith(opts.revertReason);
+            return expect(tx).to.be.revertedWith(opts.revertReason);
         });
 
         it('fails if `toTokenAddress.transfer()` reverts', async () => {
             const opts = createWithdrawToOpts({ toTokentransferRevertReason: 'FOOBAR' });
             const tx = withdrawToAsync(opts);
-            return expect(tx).to.revertWith(opts.toTokentransferRevertReason);
+            return expect(tx).to.be.revertedWith(opts.toTokentransferRevertReason);
         });
 
         it('fails if `toTokenAddress.transfer()` returns false', async () => {
             const opts = createWithdrawToOpts({ toTokenTransferReturnData: hexUtils.leftPad(0) });
             const tx = withdrawToAsync(opts);
-            return expect(tx).to.revertWith(new RawRevertError(hexUtils.leftPad(0)));
+            return expect(tx).to.be.revertedWith(new RawRevertError(hexUtils.leftPad(0)));
         });
 
         it('succeeds if `toTokenAddress.transfer()` returns true', async () => {
