@@ -145,19 +145,20 @@ export function expectEventInReceipt(
             if (actualValue === undefined && event.args) {
                 // 常见事件参数的索引映射
                 const paramIndexMap: { [eventParam: string]: number } = {
-                    // Transfer 事件
+                    // Transfer 事件 (ERC20/ERC721)
                     'from': 0,
                     'to': 1,
-                    'value': 2,
+                    'value': 2,      // ERC20 Transfer
+                    'tokenId': 2,    // ERC721 Transfer
                     // Approval 事件
                     'owner': 0,
                     'spender': 1,
+                    'approved': 2,
                     // ERC1155 事件
                     'operator': 0,
                     'id': 3,
                     'ids': 3,
-                    'values': 4,
-                    'approved': 2
+                    'values': 4
                 };
                 
                 const index = paramIndexMap[key];
