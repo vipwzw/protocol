@@ -16,23 +16,20 @@
 
 */
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "@0x/contracts-utils/contracts/src/Authorizable.sol";
+import "./MixinAssetProxyDispatcher.sol";
+import "./MixinAuthorizable.sol";
 import "./interfaces/IAssetProxy.sol";
 import "./interfaces/IAssetProxyDispatcher.sol";
 
 
-abstract contract MultiAssetProxy is
-    IAssetProxy,
-    IAssetProxyDispatcher,
-    Authorizable
+contract MultiAssetProxy is
+    MixinAssetProxyDispatcher,
+    MixinAuthorizable
 {
     // Id of this proxy.
     bytes4 constant internal PROXY_ID = bytes4(keccak256("MultiAsset(uint256[],bytes[])"));
-
-    // Mapping from Asset Proxy Id's to their respective Asset Proxy
-    mapping (bytes4 => address) public assetProxies;
 
     // solhint-disable-next-line payable-fallback
     fallback() external {
@@ -331,7 +328,6 @@ abstract contract MultiAssetProxy is
     function getProxyId()
         external
         pure
-        override
         returns (bytes4)
     {
         return PROXY_ID;

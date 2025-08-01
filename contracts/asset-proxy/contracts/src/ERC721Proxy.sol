@@ -16,15 +16,15 @@
 
 */
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "@0x/contracts-utils/contracts/src/Authorizable.sol";
+import "./MixinAuthorizable.sol";
 import "./interfaces/IAssetProxy.sol";
 
 
-abstract contract ERC721Proxy is
+contract ERC721Proxy is
     IAssetProxy,
-    Authorizable
+    MixinAuthorizable
 {
     // Id of this proxy.
     bytes4 constant internal PROXY_ID = bytes4(keccak256("ERC721Token(address,uint256)"));
@@ -156,6 +156,38 @@ abstract contract ERC721Proxy is
 
             // Revert if undefined function is called
             revert(0, 0)
+        }
+    }
+
+    /// @dev Transfers assets. Implemented in fallback function.
+    /// @param assetData Byte array encoded for the respective asset proxy.
+    /// @param from Address to transfer asset from.
+    /// @param to Address to transfer asset to.
+    /// @param amount Amount of asset to transfer.
+    function transferFrom(
+        bytes calldata assetData,
+        address from,
+        address to,
+        uint256 amount
+    )
+        external
+        override
+    {
+        // This is implemented in the fallback function
+        // We delegate to the fallback by reverting with specific data
+        assembly {
+            // Copy the entire calldata to memory
+            let dataStart := mload(0x40)
+            calldatacopy(dataStart, 0, calldatasize())
+            
+            // Call the fallback function by making a call to self
+            let success := call(gas(), address(), 0, dataStart, calldatasize(), 0, 0)
+            
+            // Forward any revert reason
+            if iszero(success) {
+                returndatacopy(0, 0, returndatasize())
+                revert(0, returndatasize())
+            }
         }
     }
 

@@ -16,17 +16,17 @@
 
 */
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
 import "@0x/contracts-utils/contracts/src/LibBytes.sol";
 import "@0x/contracts-erc1155/contracts/src/interfaces/IERC1155.sol";
-import "@0x/contracts-utils/contracts/src/Authorizable.sol";
+import "./MixinAuthorizable.sol";
 import "./interfaces/IAssetProxy.sol";
 
 
 contract ERC1155Proxy is
     IAssetProxy,
-    Authorizable
+    MixinAuthorizable
 {
     using LibBytes for bytes;
 

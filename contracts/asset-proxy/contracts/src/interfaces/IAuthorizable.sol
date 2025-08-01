@@ -16,9 +16,9 @@
 
 */
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "@0x/contracts-utils/contracts/src/interfaces/IOwnable.sol";
+import "./IOwnable.sol";
 
 
 abstract contract IAuthorizable is

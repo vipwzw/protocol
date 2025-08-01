@@ -16,15 +16,15 @@
 
 */
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "@0x/contracts-utils/contracts/src/Authorizable.sol";
+import "./MixinAuthorizable.sol";
 import "./interfaces/IAssetProxy.sol";
 
 
 contract ERC20Proxy is
     IAssetProxy,
-    Authorizable
+    MixinAuthorizable
 {
     // Id of this proxy.
     bytes4 constant internal PROXY_ID = bytes4(keccak256("ERC20Token(address)"));
