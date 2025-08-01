@@ -24,7 +24,7 @@ import * as ethUtil from 'ethereumjs-util';
 import * as _ from 'lodash';
 
 import { ERC1155ProxyWrapper } from '../src/erc1155_proxy_wrapper';
-import { ERC1155ProxyContract, IAssetDataContract } from '../src/wrappers';
+import { ERC1155ProxyContract, IAssetDataContract } from './wrappers';
 
 import { artifacts } from './artifacts';
 

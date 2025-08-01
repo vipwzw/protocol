@@ -277,7 +277,7 @@ blockchainTests('LibFillResults', env => {
                     order.makerAssetAmount,
                     order.makerFee,
                 );
-                return expect(
+                await expect(
                     libsContract
                         .calculateFillResults(
                             order,
@@ -285,8 +285,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_PROTOCOL_FEE_MULTIPLIER,
                             DEFAULT_GAS_PRICE,
                         )
-                        ,
-                ).to.be.revertedWith(expectedError.message);
+                ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
             });
 
             it('reverts if there is a rounding error computing `takerFeePaid`', async () => {
@@ -306,7 +305,7 @@ blockchainTests('LibFillResults', env => {
                     order.makerAssetAmount,
                     order.takerFee,
                 );
-                return expect(
+                await expect(
                     libsContract
                         .calculateFillResults(
                             order,
@@ -314,8 +313,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_PROTOCOL_FEE_MULTIPLIER,
                             DEFAULT_GAS_PRICE,
                         )
-                        ,
-                ).to.be.revertedWith(expectedError.message);
+                ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
             });
 
             it('reverts if computing `fillResults.protocolFeePaid` overflows', async () => {
@@ -349,7 +347,7 @@ blockchainTests('LibFillResults', env => {
                     order.makerAssetAmount,
                     order.makerFee,
                 );
-                return expect(
+                await expect(
                     libsContract
                         .calculateFillResults(
                             order,
@@ -357,8 +355,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_PROTOCOL_FEE_MULTIPLIER,
                             DEFAULT_GAS_PRICE,
                         )
-                        ,
-                ).to.be.revertedWith(expectedError.message);
+                ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
             });
         });
     });
@@ -463,7 +460,7 @@ blockchainTests('LibFillResults', env => {
             gasPrice: BigNumber,
             from?: string,
         ): Promise<void> {
-            const actualMatchedFillResults = await libsContract
+            const rawResult = await libsContract
                 .calculateMatchedFillResults(
                     leftOrder,
                     rightOrder,
@@ -473,6 +470,27 @@ blockchainTests('LibFillResults', env => {
                     gasPrice,
                     false,
                 );
+            
+            // Convert Result objects to plain objects for comparison
+            const actualMatchedFillResults = {
+                left: {
+                    makerAssetFilledAmount: BigInt(rawResult[0][0].toString()),
+                    takerAssetFilledAmount: BigInt(rawResult[0][1].toString()),
+                    makerFeePaid: BigInt(rawResult[0][2].toString()),
+                    takerFeePaid: BigInt(rawResult[0][3].toString()),
+                    protocolFeePaid: BigInt(rawResult[0][4].toString()),
+                },
+                right: {
+                    makerAssetFilledAmount: BigInt(rawResult[1][0].toString()),
+                    takerAssetFilledAmount: BigInt(rawResult[1][1].toString()),
+                    makerFeePaid: BigInt(rawResult[1][2].toString()),
+                    takerFeePaid: BigInt(rawResult[1][3].toString()),
+                    protocolFeePaid: BigInt(rawResult[1][4].toString()),
+                },
+                profitInLeftMakerAsset: BigInt(rawResult[2].toString()),
+                profitInRightMakerAsset: BigInt(rawResult[3].toString()),
+            };
+            
             expect(actualMatchedFillResults).to.be.deep.eq(expectedMatchedFillResults);
         }
 
@@ -1134,7 +1152,7 @@ blockchainTests('LibFillResults', env => {
             gasPrice: BigNumber,
             from?: string,
         ): Promise<void> {
-            const actualMatchedFillResults = await libsContract
+            const rawResult = await libsContract
                 .calculateMatchedFillResults(
                     leftOrder,
                     rightOrder,
@@ -1144,6 +1162,27 @@ blockchainTests('LibFillResults', env => {
                     gasPrice,
                     true,
                 );
+            
+            // Convert Result objects to plain objects for comparison
+            const actualMatchedFillResults = {
+                left: {
+                    makerAssetFilledAmount: BigInt(rawResult[0][0].toString()),
+                    takerAssetFilledAmount: BigInt(rawResult[0][1].toString()),
+                    makerFeePaid: BigInt(rawResult[0][2].toString()),
+                    takerFeePaid: BigInt(rawResult[0][3].toString()),
+                    protocolFeePaid: BigInt(rawResult[0][4].toString()),
+                },
+                right: {
+                    makerAssetFilledAmount: BigInt(rawResult[1][0].toString()),
+                    takerAssetFilledAmount: BigInt(rawResult[1][1].toString()),
+                    makerFeePaid: BigInt(rawResult[1][2].toString()),
+                    takerFeePaid: BigInt(rawResult[1][3].toString()),
+                    protocolFeePaid: BigInt(rawResult[1][4].toString()),
+                },
+                profitInLeftMakerAsset: BigInt(rawResult[2].toString()),
+                profitInRightMakerAsset: BigInt(rawResult[3].toString()),
+            };
+            
             expect(actualMatchedFillResults).to.be.deep.eq(expectedMatchedFillResults);
         }
 

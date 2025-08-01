@@ -1,4 +1,5 @@
 import { artifacts as erc20Artifacts, DummyERC20TokenContract } from '../../erc20/src';
+import { DummyERC20Token__factory, DummyERC20Token } from '../../erc20/src/typechain-types';
 import { constants, ERC20BalancesByOwner, txDefaults } from '@0x/test-utils';
 import { BigNumber } from '@0x/utils';
 import { ZeroExProvider } from 'ethereum-types';
@@ -6,15 +7,15 @@ import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
 
-import { ERC20ProxyContract, IAssetDataContract } from './wrappers';
+import { IAssetData__factory, ERC20Proxy__factory, ERC20Proxy } from './typechain-types';
 
 export class ERC20Wrapper {
     private readonly _tokenOwnerAddresses: string[];
     private readonly _contractOwnerAddress: string;
     private readonly _provider: ZeroExProvider;
     private readonly _dummyTokenContracts: DummyERC20TokenContract[];
-    private readonly _assetDataInterface: IAssetDataContract;
-    private _proxyContract?: ERC20ProxyContract;
+    private readonly _assetDataInterface: any;
+    private _proxyContract?: ERC20Proxy;
     private _proxyIdIfExists?: string;
     /**
      * Instanitates an ERC20Wrapper
@@ -28,36 +29,34 @@ export class ERC20Wrapper {
         this._provider = provider;
         this._tokenOwnerAddresses = tokenOwnerAddresses;
         this._contractOwnerAddress = contractOwnerAddress;
-        this._assetDataInterface = new IAssetDataContract(constants.NULL_ADDRESS, provider);
+        this._assetDataInterface = IAssetData__factory.connect(constants.NULL_ADDRESS, provider);
     }
     public async deployDummyTokensAsync(
         numberToDeploy: number,
         decimals: BigNumber,
     ): Promise<DummyERC20TokenContract[]> {
+        const { ethers } = require('hardhat');
+        const [signer] = await ethers.getSigners();
+        
         for (let i = 0; i < numberToDeploy; i++) {
-            this._dummyTokenContracts.push(
-                await DummyERC20TokenContract.deployFrom0xArtifactAsync(
-                    erc20Artifacts.DummyERC20Token,
-                    this._provider,
-                    txDefaults,
-                    artifacts,
-                    constants.DUMMY_TOKEN_NAME,
-                    constants.DUMMY_TOKEN_SYMBOL,
-                    decimals,
-                    constants.DUMMY_TOKEN_TOTAL_SUPPLY,
-                ),
+            const factory = new DummyERC20Token__factory(signer);
+            const contract = await factory.deploy(
+                constants.DUMMY_TOKEN_NAME,
+                constants.DUMMY_TOKEN_SYMBOL,
+                decimals,
+                constants.DUMMY_TOKEN_TOTAL_SUPPLY,
             );
+            this._dummyTokenContracts.push(contract as any);
         }
         return this._dummyTokenContracts;
     }
-    public async deployProxyAsync(): Promise<ERC20ProxyContract> {
-        this._proxyContract = await ERC20ProxyContract.deployFrom0xArtifactAsync(
-            artifacts.ERC20Proxy,
-            this._provider,
-            txDefaults,
-            artifacts,
-        );
-        this._proxyIdIfExists = await this._proxyContract.getProxyId().callAsync();
+    public async deployProxyAsync(): Promise<ERC20Proxy> {
+        // Get signer from provider for deployment
+        const { ethers } = require('hardhat');
+        const [signer] = await ethers.getSigners();
+        const factory = new ERC20Proxy__factory(signer);
+        this._proxyContract = await factory.deploy() as ERC20Proxy;
+        this._proxyIdIfExists = await this._proxyContract.getProxyId();
         return this._proxyContract;
     }
     public getProxyId(): string {
@@ -69,12 +68,11 @@ export class ERC20Wrapper {
         this._validateProxyContractExistsOrThrow();
         for (const dummyTokenContract of this._dummyTokenContracts) {
             for (const tokenOwnerAddress of this._tokenOwnerAddresses) {
-                await dummyTokenContract
-                    .setBalance(tokenOwnerAddress, constants.INITIAL_ERC20_BALANCE)
-                    .awaitTransactionSuccessAsync({ from: this._contractOwnerAddress });
-                await dummyTokenContract
-                    .approve((this._proxyContract as ERC20ProxyContract).address, constants.INITIAL_ERC20_ALLOWANCE)
-                    .awaitTransactionSuccessAsync({ from: tokenOwnerAddress });
+                const tx1 = await dummyTokenContract.setBalance(tokenOwnerAddress, constants.INITIAL_ERC20_BALANCE);
+                await tx1.wait();
+                
+                const tx2 = await dummyTokenContract.approve(await this._proxyContract!.getAddress(), constants.INITIAL_ERC20_ALLOWANCE);
+                await tx2.wait();
             }
         }
     }

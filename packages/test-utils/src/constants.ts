@@ -62,8 +62,8 @@ export const constants = {
         senderAddress: '0x0000000000000000000000000000000000000000',
         makerAssetAmount: ethers.parseEther('0'),
         takerAssetAmount: ethers.parseEther('0'),
-        makerFee: ethers.parseEther('0'),
-        takerFee: ethers.parseEther('0'),
+        makerFee: ethers.parseEther('1'), // Default 1 ETH fee for testing
+        takerFee: ethers.parseEther('1'), // Default 1 ETH fee for testing
         expirationTimeSeconds: 0n,
         salt: 0n,
         makerAssetData: '0x',

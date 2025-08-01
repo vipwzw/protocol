@@ -5,7 +5,7 @@ import { BigNumber } from '@0x/utils';
 import * as _ from 'lodash';
 
 import { DydxBridgeActionType, DydxBridgeData, dydxBridgeDataEncoder } from '../src/dydx_bridge_encoder';
-import { ERC20BridgeProxyContract, IAssetDataContract } from '../src/wrappers';
+import { ERC20BridgeProxyContract, IAssetDataContract } from './wrappers';
 
 import { artifacts } from './artifacts';
 import { TestDydxBridgeContract, TestDydxBridgeEvents } from './wrappers';

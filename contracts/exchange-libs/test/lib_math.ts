@@ -375,10 +375,9 @@ blockchainTests('LibMath', env => {
                 const numerator = ONE_ETHER;
                 const denominator = ZERO_AMOUNT;
                 const target = ethers.parseEther('0.01');
-                const expectedError = new LibMathRevertErrors.DivisionByZeroError();
-                return expect(
-                    libsContract.isRoundingErrorCeil(numerator, denominator, target)(),
-                ).to.be.revertedWith(expectedError.message);
+                await expect(
+                    libsContract.isRoundingErrorCeil(numerator, denominator, target)
+                ).to.be.revertedWithPanic(0x12); // Division by zero
             });
 
             it('reverts if `numerator * target` overflows', async () => {
@@ -386,9 +385,9 @@ blockchainTests('LibMath', env => {
                 const denominator = ONE_ETHER / 2n;
                 const target = MAX_UINT256_ROOT * 2n;
                 // In Solidity 0.8.28, multiplication overflow results in panic code 0x11
-                return expect(
-                    libsContract.isRoundingErrorCeil(numerator, denominator, target)(),
-                ).to.be.revertedWith(expectedError.message);
+                await expect(
+                    libsContract.isRoundingErrorCeil(numerator, denominator, target)
+                ).to.be.revertedWithPanic(0x11); // Arithmetic operation overflowed
             });
         });
     });

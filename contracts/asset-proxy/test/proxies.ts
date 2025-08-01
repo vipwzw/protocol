@@ -38,7 +38,7 @@ import {
 import { ERC1155ProxyWrapper } from '../src/erc1155_proxy_wrapper';
 import { ERC20Wrapper } from '../src/erc20_wrapper';
 import { ERC721Wrapper } from '../src/erc721_wrapper';
-import { ERC1155ProxyContract, ERC20ProxyContract, ERC721ProxyContract } from '../src/wrappers';
+import { ERC1155ProxyContract, ERC20ProxyContract, ERC721ProxyContract } from './wrappers';
 
 import { artifacts } from './artifacts';
 import { IAssetProxy, IAssetProxy__factory, MultiAssetProxyContract, MultiAssetProxy__factory } from './wrappers';
@@ -102,28 +102,28 @@ describe('Asset Transfer Proxies', () => {
         multiAssetProxy = await new MultiAssetProxy__factory(deployer).deploy();
 
         // Configure ERC20Proxy
-        await erc20Proxy.addAuthorizedAddress(authorized).awaitTransactionSuccessAsync({ from: owner });
+        await erc20Proxy.addAuthorizedAddress(authorized);
         const multiAssetProxyAddress = await multiAssetProxy.getAddress();
-        await erc20Proxy.addAuthorizedAddress(multiAssetProxyAddress).awaitTransactionSuccessAsync({ from: owner });
+        await erc20Proxy.addAuthorizedAddress(multiAssetProxyAddress);
 
         // Configure ERC721Proxy
-        await erc721Proxy.addAuthorizedAddress(authorized).awaitTransactionSuccessAsync({ from: owner });
-        await erc721Proxy.addAuthorizedAddress(multiAssetProxyAddress).awaitTransactionSuccessAsync({ from: owner });
+        await erc721Proxy.addAuthorizedAddress(authorized);
+        await erc721Proxy.addAuthorizedAddress(multiAssetProxyAddress);
 
         // Configure ERC115Proxy
         erc1155ProxyWrapper = new ERC1155ProxyWrapper(provider, usedAddresses, owner);
         erc1155Proxy = await erc1155ProxyWrapper.deployProxyAsync();
-        await erc1155Proxy.addAuthorizedAddress(authorized).awaitTransactionSuccessAsync({ from: owner });
-        await erc1155Proxy.addAuthorizedAddress(multiAssetProxyAddress).awaitTransactionSuccessAsync({ from: owner });
+        await erc1155Proxy.addAuthorizedAddress(authorized);
+        await erc1155Proxy.addAuthorizedAddress(multiAssetProxyAddress);
 
         // Configure MultiAssetProxy
-        await multiAssetProxy.addAuthorizedAddress(authorized).awaitTransactionSuccessAsync({ from: owner });
+        await multiAssetProxy.addAuthorizedAddress(authorized);
         const erc20ProxyAddress = await erc20Proxy.getAddress();
         const erc721ProxyAddress = await erc721Proxy.getAddress();
         const erc1155ProxyAddress = await erc1155Proxy.getAddress();
-        await multiAssetProxy.registerAssetProxy(erc20ProxyAddress).awaitTransactionSuccessAsync({ from: owner });
-        await multiAssetProxy.registerAssetProxy(erc721ProxyAddress).awaitTransactionSuccessAsync({ from: owner });
-        await multiAssetProxy.registerAssetProxy(erc1155ProxyAddress).awaitTransactionSuccessAsync({ from: owner });
+        await multiAssetProxy.registerAssetProxy(erc20ProxyAddress);
+        await multiAssetProxy.registerAssetProxy(erc721ProxyAddress);
+        await multiAssetProxy.registerAssetProxy(erc1155ProxyAddress);
 
         // Deploy and configure ERC20 tokens
         const numDummyErc20ToDeploy = 2;

@@ -6,3 +6,17 @@
 
 // Export all typechain types from the main index file
 export * from './typechain-types';
+
+// Re-export specific types with aliases for backwards compatibility
+export { IAssetData as IAssetDataContract } from './typechain-types/contracts/src/interfaces/IAssetData';
+export { IAssetProxy } from './typechain-types/contracts/src/interfaces/IAssetProxy';
+export { IAssetData__factory, IAssetProxy__factory } from './typechain-types/factories/contracts/src/interfaces';
+
+// Re-export contract types
+export { ERC1155Proxy as ERC1155ProxyContract } from './typechain-types/contracts/src/ERC1155Proxy';
+export { ERC20Proxy as ERC20ProxyContract } from './typechain-types/contracts/src/ERC20Proxy';
+export { ERC721Proxy as ERC721ProxyContract } from './typechain-types/contracts/src/ERC721Proxy';
+export { MultiAssetProxy as MultiAssetProxyContract } from './typechain-types/contracts/src/MultiAssetProxy';
+
+// Re-export factories
+export { ERC1155Proxy__factory, ERC20Proxy__factory, ERC721Proxy__factory, MultiAssetProxy__factory } from './typechain-types/factories/contracts/src';
