@@ -10,6 +10,7 @@ import {
 import { AssetProxyId } from '@0x/utils';
 import { BigNumber, hexUtils, RawRevertError } from '@0x/utils';
 import { DecodedLogs } from 'ethereum-types';
+import { ethers } from 'hardhat';
 import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
@@ -20,18 +21,16 @@ import {
     TestEth2DaiBridgeSellAllAmountEventArgs,
     TestEth2DaiBridgeTokenApproveEventArgs,
     TestEth2DaiBridgeTokenTransferEventArgs,
+    Eth2DaiBridge__factory,
 } from './wrappers';
 
-blockchainTests.resets('Eth2DaiBridge unit tests', env => {
+describe('Eth2DaiBridge unit tests', () => {
     let testContract: TestEth2DaiBridgeContract;
 
     before(async () => {
-        testContract = await TestEth2DaiBridgeContract.deployFrom0xArtifactAsync(
-            artifacts.TestEth2DaiBridge,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
+        const signers = await ethers.getSigners();
+        const deployer = signers[0];
+        testContract = await new Eth2DaiBridge__factory(deployer).deploy();
     });
 
     describe('isValidSignature()', () => {

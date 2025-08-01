@@ -1,4 +1,4 @@
-import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
+import { ERC20Wrapper } from '../../asset-proxy/src/erc20_wrapper';
 import { blockchainTests, constants, expect } from '@0x/test-utils';
 import { StakingRevertErrors } from '@0x/utils';
 import * as _ from 'lodash';

@@ -195,9 +195,7 @@ const ZERO_AMOUNT = 0n;
                     const numerator = ONE_ETHER;
                     const denominator = ZERO_AMOUNT;
                     const target = ethers.parseEther('0.01');
-                    const expectedError = new LibMathRevertErrors.DivisionByZeroError();
-                    // Skip: BigInt in JavaScript handles large numbers without overflow errors
-                    expect(() => isRoundingErrorFloor(numerator, denominator, target)).not.to.throw();
+                    expect(() => isRoundingErrorFloor(numerator, denominator, target)).to.throw('DivisionByZeroError');
                 });
 
                 it('reverts if `numerator * target` overflows', () => {
@@ -239,9 +237,7 @@ const ZERO_AMOUNT = 0n;
                     const numerator = ONE_ETHER;
                     const denominator = ZERO_AMOUNT;
                     const target = ethers.parseEther('0.01');
-                    const expectedError = new LibMathRevertErrors.DivisionByZeroError();
-                    // Skip: BigInt in JavaScript handles large numbers without overflow errors
-                    expect(() => isRoundingErrorCeil(numerator, denominator, target)).not.to.throw();
+                    expect(() => isRoundingErrorCeil(numerator, denominator, target)).to.throw('DivisionByZeroError');
                 });
 
                 it('reverts if `numerator * target` overflows', () => {

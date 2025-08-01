@@ -1,6 +1,11 @@
 export { artifacts } from './artifacts';
 export * from './wrappers';
 
+// Export wrapper classes
+export { ERC20Wrapper } from './erc20_wrapper';
+export { ERC721Wrapper } from './erc721_wrapper';
+export { ERC1155ProxyWrapper } from './erc1155_proxy_wrapper';
+
 // Re-export utility functions that don't depend on contracts
 export * from './asset_data';
 export * from './dex_forwarder_bridge';

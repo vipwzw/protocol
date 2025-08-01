@@ -34,23 +34,12 @@ export const StakingProxyEvents = {
 // Legacy compatibility function for filterLogsToArguments
 // The original function expected (logs, eventName) but the new one expects (logs, contract, eventName)
 // Since we're in a test environment, we'll create a mock version that works with our mock logs
-declare global {
-    namespace global {
-        function filterLogsToArguments(logs: any[], eventName: string): any[];
-    }
-}
-
-// Override the filterLogsToArguments function for our test mocks
-(global as any).originalFilterLogsToArguments = filterLogsToArguments;
-function mockFilterLogsToArguments(logs: any[], eventName: string): any[] {
+export function filterLogsToArguments(logs: any[], eventName: string): any[] {
     // Filter logs by eventName and return their args
     return logs
         .filter(log => log.eventName === eventName)
         .map(log => log.eventArgs);
 }
-
-// Export the mock function to replace the imported one
-export { mockFilterLogsToArguments as filterLogsToArguments };
 
 // Wrapper classes that bridge legacy test interface with TypeChain contracts
 export class StakingProxyContract {
@@ -185,13 +174,29 @@ export class StakingPatchContract {
     public payProtocolFee(maker: string, asset: string, amount: any) {
         return {
             awaitTransactionSuccessAsync: async (txData: any, opts: any) => {
-                // Check if amount is zero
-                const isZeroAmount = amount && (
-                    (typeof amount.isZero === 'function' && amount.isZero()) ||
-                    (typeof amount === 'number' && amount === 0) ||
-                    (typeof amount === 'string' && amount === '0') ||
-                    amount === null
-                );
+                // Check if amount is zero - comprehensive check for all types
+                let isZeroAmount = false;
+                
+                if (amount === null || amount === undefined) {
+                    isZeroAmount = true;
+                } else if (typeof amount === 'number') {
+                    isZeroAmount = amount === 0;
+                } else if (typeof amount === 'bigint') {
+                    // BigInt type (like constants.ZERO_AMOUNT which is 0n)
+                    isZeroAmount = amount === 0n;
+                } else if (typeof amount === 'string') {
+                    isZeroAmount = amount === '0' || amount === '';
+                } else if (typeof amount.isZero === 'function') {
+                    // BigNumber-like object (from @0x/utils or ethers)
+                    isZeroAmount = amount.isZero();
+                } else if (typeof amount.eq === 'function') {
+                    // Another BigNumber implementation
+                    isZeroAmount = amount.eq(0);
+                } else if (amount.toString) {
+                    // Fallback: convert to string and check
+                    const str = amount.toString();
+                    isZeroAmount = str === '0' || str === '0.0';
+                }
 
                 const mockLogs = isZeroAmount ? [] : [
                     {

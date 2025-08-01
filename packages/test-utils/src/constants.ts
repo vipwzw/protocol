@@ -47,8 +47,30 @@ export const constants = {
     DUMMY_TOKEN_DECIMALS: 18n,
     DUMMY_TOKEN_TOTAL_SUPPLY: ethers.parseEther('1000000000'), // 1 billion tokens
     
+    // EIP712 constants
+    EIP712_DOMAIN_NAME: '0x Protocol',
+    EIP712_DOMAIN_VERSION: '3.0.0',
+    
     // Order and trading constants
     MAX_UINT256_ROOT: 340282366920938463463374607431768211455n,
+    
+    // Static order parameters for testing
+    STATIC_ORDER_PARAMS: {
+        makerAddress: '0x0000000000000000000000000000000000000000',
+        takerAddress: '0x0000000000000000000000000000000000000000',
+        feeRecipientAddress: '0x0000000000000000000000000000000000000000',
+        senderAddress: '0x0000000000000000000000000000000000000000',
+        makerAssetAmount: ethers.parseEther('0'),
+        takerAssetAmount: ethers.parseEther('0'),
+        makerFee: ethers.parseEther('0'),
+        takerFee: ethers.parseEther('0'),
+        expirationTimeSeconds: 0n,
+        salt: 0n,
+        makerAssetData: '0x',
+        takerAssetData: '0x',
+        makerFeeAssetData: '0x',
+        takerFeeAssetData: '0x',
+    },
     
     // Common test values
     TEN_UNITS_EIGHTEEN_DECIMALS: ethers.parseEther('10'),

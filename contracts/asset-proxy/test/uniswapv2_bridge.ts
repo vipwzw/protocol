@@ -9,6 +9,7 @@ import {
 import { AssetProxyId } from '@0x/utils';
 import { AbiEncoder, BigNumber, hexUtils } from '@0x/utils';
 import { DecodedLogs } from 'ethereum-types';
+import { ethers } from 'hardhat';
 import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
@@ -21,7 +22,7 @@ import {
     TestUniswapV2BridgeTokenTransferEventArgs as TokenTransferArgs,
 } from './wrappers';
 
-blockchainTests.resets('UniswapV2 unit tests', env => {
+describe('UniswapV2 unit tests', () => {
     const FROM_TOKEN_DECIMALS = 6;
     const TO_TOKEN_DECIMALS = 18;
     const FROM_TOKEN_BASE = new BigNumber(10).pow(FROM_TOKEN_DECIMALS);
@@ -29,12 +30,9 @@ blockchainTests.resets('UniswapV2 unit tests', env => {
     let testContract: TestUniswapV2BridgeContract;
 
     before(async () => {
-        testContract = await TestUniswapV2BridgeContract.deployFrom0xArtifactAsync(
-            artifacts.TestUniswapV2Bridge,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
+        const signers = await ethers.getSigners();
+        const deployer = signers[0];
+        testContract = await new UniswapV2Bridge__factory(deployer).deploy();
     });
 
     describe('isValidSignature()', () => {

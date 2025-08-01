@@ -25,19 +25,17 @@ import {
     TestUniswapBridgeTokenTransferEventArgs as TokenTransferArgs,
     TestUniswapBridgeWethDepositEventArgs as WethDepositArgs,
     TestUniswapBridgeWethWithdrawEventArgs as WethWithdrawArgs,
+    UniswapBridge__factory,
 } from './wrappers';
 
-blockchainTests.resets('UniswapBridge unit tests', env => {
+describe('UniswapBridge unit tests', () => {
     let testContract: TestUniswapBridgeContract;
     let wethTokenAddress: string;
 
     before(async () => {
-        testContract = await TestUniswapBridgeContract.deployFrom0xArtifactAsync(
-            artifacts.TestUniswapBridge,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
+        const signers = await ethers.getSigners();
+        const deployer = signers[0];
+        testContract = await new UniswapBridge__factory(deployer).deploy();
         wethTokenAddress = await testContract.wethToken().callAsync();
     });
 

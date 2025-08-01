@@ -10,14 +10,15 @@ import {
 import { AssetProxyId } from '@0x/utils';
 import { BigNumber, hexUtils } from '@0x/utils';
 import { DecodedLogs } from 'ethereum-types';
+import { ethers } from 'hardhat';
 import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
 
-import { TestKyberBridgeContract, TestKyberBridgeEvents } from './wrappers';
+import { TestKyberBridgeContract, TestKyberBridgeEvents, KyberBridge__factory } from './wrappers';
 
 // TODO(dorothy-zbornak): Tests need to be updated.
-describe.skip('KyberBridge unit tests', () => {
+describe('KyberBridge unit tests', () => {
     const KYBER_ETH_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
     const FROM_TOKEN_DECIMALS = 6;
     const TO_TOKEN_DECIMALS = 18;
@@ -28,20 +29,16 @@ describe.skip('KyberBridge unit tests', () => {
     let testContract: TestKyberBridgeContract;
 
     before(async () => {
-        testContract = await TestKyberBridgeContract.deployFrom0xArtifactAsync(
-            artifacts.TestKyberBridge,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
+        const signers = await ethers.getSigners();
+        const deployer = signers[0];
+        testContract = await new KyberBridge__factory(deployer).deploy();
     });
 
     describe('isValidSignature()', () => {
         it('returns success bytes', async () => {
             const LEGACY_WALLET_MAGIC_VALUE = '0xb0671381';
             const result = await testContract
-                .isValidSignature(hexUtils.random(), hexUtils.random(_.random(0, 32)))
-                .callAsync();
+                .isValidSignature(hexUtils.random(), hexUtils.random(_.random(0, 32)));
             expect(result).to.eq(LEGACY_WALLET_MAGIC_VALUE);
         });
     });
@@ -52,8 +49,8 @@ describe.skip('KyberBridge unit tests', () => {
         let wethAddress: string;
 
         before(async () => {
-            wethAddress = await testContract.weth().callAsync();
-            fromTokenAddress = await testContract.createToken(FROM_TOKEN_DECIMALS).callAsync();
+            wethAddress = await testContract.weth();
+            fromTokenAddress = await testContract.createToken(FROM_TOKEN_DECIMALS);
             await testContract.createToken(FROM_TOKEN_DECIMALS).awaitTransactionSuccessAsync();
             toTokenAddress = await testContract.createToken(TO_TOKEN_DECIMALS).callAsync();
             await testContract.createToken(TO_TOKEN_DECIMALS).awaitTransactionSuccessAsync();
