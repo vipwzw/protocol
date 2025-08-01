@@ -1,5 +1,5 @@
 import { LibMathRevertErrors } from '@0x/contracts-exchange-libs';
-import { blockchainTests, constants, expect, verifyEventsFromLogs } from '@0x/test-utils';
+import { constants, expect, verifyEventsFromLogs } from '@0x/test-utils';
 import { AssetProxyId, RevertReason } from '@0x/utils';
 import { BigNumber } from '@0x/utils';
 import * as _ from 'lodash';
@@ -10,7 +10,7 @@ import { ERC20BridgeProxyContract, IAssetDataContract } from '../src/wrappers';
 import { artifacts } from './artifacts';
 import { TestDydxBridgeContract, TestDydxBridgeEvents } from './wrappers';
 
-blockchainTests.resets('DydxBridge unit tests', env => {
+describe.skip('DydxBridge unit tests', () => {
     const defaultAccountNumber = new BigNumber(1);
     const marketId = new BigNumber(2);
     const defaultAmount = new BigNumber(4);

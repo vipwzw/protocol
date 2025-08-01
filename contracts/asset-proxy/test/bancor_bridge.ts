@@ -9,6 +9,7 @@ import {
 import { AssetProxyId } from '@0x/utils';
 import { AbiEncoder, BigNumber, hexUtils } from '@0x/utils';
 import { DecodedLogs } from 'ethereum-types';
+import { ethers } from 'hardhat';
 import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
@@ -27,7 +28,9 @@ blockchainTests.resets('Bancor unit tests', env => {
     let testContract: BancorBridge;
 
     before(async () => {
-        const factory = new BancorBridge__factory(env.accounts[0]);
+        const signers = await ethers.getSigners();
+        const deployer = signers[0];
+        const factory = new BancorBridge__factory(deployer);
         testContract = await factory.deploy();
     });
 

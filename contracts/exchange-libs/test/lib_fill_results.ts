@@ -172,12 +172,7 @@ blockchainTests('LibFillResults', env => {
                     takerAssetAmount: MAX_UINT256_ROOT,
                 });
                 const takerAssetFilledAmount = MAX_UINT256_ROOT;
-                const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
-                    SafeMathRevertErrors.BinOpErrorCodes.MultiplicationOverflow,
-                    takerAssetFilledAmount,
-                    order.makerAssetAmount,
-                );
-                return expect(
+                await expect(
                     libsContract
                         .calculateFillResults(
                             order,
@@ -185,8 +180,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_PROTOCOL_FEE_MULTIPLIER,
                             DEFAULT_GAS_PRICE,
                         )
-                        ,
-                ).to.be.revertedWith(expectedError.message);
+                ).to.be.revertedWithPanic(0x11); // Arithmetic operation overflowed
             });
 
             it('reverts if computing `fillResults.makerFeePaid` overflows', async () => {
@@ -202,12 +196,7 @@ blockchainTests('LibFillResults', env => {
                     order.takerAssetAmount,
                     order.makerAssetAmount,
                 );
-                const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
-                    SafeMathRevertErrors.BinOpErrorCodes.MultiplicationOverflow,
-                    makerAssetFilledAmount,
-                    order.makerFee,
-                );
-                return expect(
+                await expect(
                     libsContract
                         .calculateFillResults(
                             order,
@@ -215,8 +204,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_PROTOCOL_FEE_MULTIPLIER,
                             DEFAULT_GAS_PRICE,
                         )
-                        ,
-                ).to.be.revertedWith(expectedError.message);
+                ).to.be.revertedWithPanic(0x11); // Arithmetic operation overflowed
             });
 
             it('reverts if computing `fillResults.takerFeePaid` overflows', async () => {
@@ -227,12 +215,7 @@ blockchainTests('LibFillResults', env => {
                     takerFee: MAX_UINT256_ROOT * 11n,
                 });
                 const takerAssetFilledAmount = MAX_UINT256_ROOT/ 10n;
-                const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
-                    SafeMathRevertErrors.BinOpErrorCodes.MultiplicationOverflow,
-                    takerAssetFilledAmount,
-                    order.takerFee,
-                );
-                return expect(
+                await expect(
                     libsContract
                         .calculateFillResults(
                             order,
@@ -240,8 +223,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_PROTOCOL_FEE_MULTIPLIER,
                             DEFAULT_GAS_PRICE,
                         )
-                        ,
-                ).to.be.revertedWith(expectedError.message);
+                ).to.be.revertedWithPanic(0x11); // Arithmetic operation overflowed
             });
 
             it('reverts if `order.takerAssetAmount` is 0', async () => {
@@ -250,8 +232,7 @@ blockchainTests('LibFillResults', env => {
                     takerAssetAmount: constants.ZERO_AMOUNT,
                 });
                 const takerAssetFilledAmount = ONE_ETHER;
-                const expectedError = new LibMathRevertErrors.DivisionByZeroError();
-                return expect(
+                await expect(
                     libsContract
                         .calculateFillResults(
                             order,
@@ -259,8 +240,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_PROTOCOL_FEE_MULTIPLIER,
                             DEFAULT_GAS_PRICE,
                         )
-                        ,
-                ).to.be.revertedWith(expectedError.message);
+                ).to.be.revertedWithPanic(0x12); // Division by zero
             });
 
             it('reverts if there is a rounding error computing `makerAsssetFilledAmount`', async () => {
@@ -269,12 +249,7 @@ blockchainTests('LibFillResults', env => {
                     takerAssetAmount: ONE_ETHER,
                 });
                 const takerAssetFilledAmount = order.takerAssetAmount/ 3n;
-                const expectedError = new LibMathRevertErrors.RoundingError(
-                    takerAssetFilledAmount,
-                    order.takerAssetAmount,
-                    order.makerAssetAmount,
-                );
-                return expect(
+                await expect(
                     libsContract
                         .calculateFillResults(
                             order,
@@ -282,8 +257,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_PROTOCOL_FEE_MULTIPLIER,
                             DEFAULT_GAS_PRICE,
                         )
-                        ,
-                ).to.be.revertedWith(expectedError.message);
+                ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
             });
 
             it('reverts if there is a rounding error computing `makerFeePaid`', async () => {

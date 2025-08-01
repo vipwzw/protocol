@@ -1,9 +1,9 @@
-import { blockchainTests, constants, expect, filterLogsToArguments } from '@0x/test-utils';
+import { blockchainTests, constants, expect } from '@0x/test-utils';
 import { BigNumber, logUtils } from '@0x/utils';
 import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
-import { StakingEvents, StakingPatchContract, StakingProxyContract, StakingProxyEvents } from './wrappers';
+import { StakingEvents, StakingPatchContract, StakingProxyContract, StakingProxyEvents, filterLogsToArguments } from './wrappers';
 
 const abis = _.mapValues(_.pickBy(artifacts, v => v && v.compilerOutput), v => v.compilerOutput.abi);
 const STAKING_PROXY = '0xa26e80e7dea86279c6d778d702cc413e6cffa777';

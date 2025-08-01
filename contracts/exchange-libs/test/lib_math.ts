@@ -181,10 +181,9 @@ blockchainTests('LibMath', env => {
             });
 
             it('reverts for a rounding error', async () => {
-                const numerator = new BigNumber(1e3);
-                const denominator = new BigNumber(1e4);
-                const target = new BigNumber(333);
-                const expectedError = new LibMathRevertErrors.RoundingError(numerator, denominator, target);
+                const numerator = 1000n;
+                const denominator = 10000n;
+                const target = 333n;
                 await expect(
                     libsContract.safeGetPartialAmountFloor(numerator, denominator, target)
                 ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
@@ -194,10 +193,9 @@ blockchainTests('LibMath', env => {
                 const numerator = ONE_ETHER;
                 const denominator = ZERO_AMOUNT;
                 const target = ethers.parseEther('0.01');
-                const expectedError = new LibMathRevertErrors.DivisionByZeroError();
                 await expect(
                     libsContract.safeGetPartialAmountFloor(numerator, denominator, target)
-                ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
+                ).to.be.revertedWithPanic(0x12); // Division by zero
             });
 
             it('reverts if `numerator * target` overflows', async () => {
@@ -242,10 +240,9 @@ blockchainTests('LibMath', env => {
             });
 
             it('reverts for a rounding error', async () => {
-                const numerator = new BigNumber(1e3);
-                const denominator = new BigNumber(1e4);
-                const target = new BigNumber(333);
-                const expectedError = new LibMathRevertErrors.RoundingError(numerator, denominator, target);
+                const numerator = 1000n;
+                const denominator = 10000n;
+                const target = 333n;
                 await expect(
                     libsContract.safeGetPartialAmountCeil(numerator, denominator, target)
                 ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
@@ -255,10 +252,9 @@ blockchainTests('LibMath', env => {
                 const numerator = ONE_ETHER;
                 const denominator = ZERO_AMOUNT;
                 const target = ethers.parseEther('0.01');
-                const expectedError = new LibMathRevertErrors.DivisionByZeroError();
                 await expect(
                     libsContract.safeGetPartialAmountCeil(numerator, denominator, target)
-                ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
+                ).to.be.revertedWithPanic(0x12); // Division by zero
             });
 
             it('reverts if `numerator * target` overflows', async () => {
