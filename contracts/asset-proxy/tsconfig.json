@@ -15,8 +15,7 @@
         "./node_modules/**/*",
         "./lib/**/*",
         "./cache/**/*",
-        "./out/**/*",
-        "./src/erc1155_proxy_wrapper.ts"
+        "./out/**/*"
     ],
     "references": [
         { "path": "../erc20" },
