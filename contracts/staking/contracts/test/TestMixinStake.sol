@@ -128,6 +128,7 @@ contract TestMixinStake is
     function getZrxVault()
         public
         view
+        override
         returns (IZrxVault zrxVault)
     {
         return IZrxVault(address(this));
@@ -139,6 +140,7 @@ contract TestMixinStake is
         address member
     )
         internal
+        override
     {
         emit WithdrawAndSyncDelegatorRewards(poolId, member);
     }
@@ -150,6 +152,7 @@ contract TestMixinStake is
         uint256 amount
     )
         internal
+        override
     {
         emit MoveStakeStorage(
             _getPtrSlot(fromPtr),
@@ -164,6 +167,7 @@ contract TestMixinStake is
         uint256 amount
     )
         internal
+        override
     {
         emit IncreaseCurrentAndNextBalance(
             _getPtrSlot(balancePtr),
@@ -177,6 +181,7 @@ contract TestMixinStake is
         uint256 amount
     )
         internal
+        override
     {
         emit DecreaseCurrentAndNextBalance(
             _getPtrSlot(balancePtr),

@@ -3,7 +3,7 @@ import { LogWithDecodedArgs, TransactionReceiptWithDecodedLogs } from 'ethereum-
 import * as _ from 'lodash';
 
 import { ERC1155Mintable } from './wrappers';
-import type { TypedEventLog } from '../typechain-types/common';
+import type { TypedEventLog } from './typechain-types/common';
 
 export class Erc1155Wrapper {
     private readonly _erc1155Contract: ERC1155Mintable;

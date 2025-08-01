@@ -43,6 +43,7 @@ contract MixinStakeStorage is
         uint256 amount
     )
         internal
+        virtual
     {
         // do nothing if pointers are equal
         if (_arePointersEqual(fromPtr, toPtr)) {
@@ -95,6 +96,7 @@ contract MixinStakeStorage is
     /// @param amount to mint.
     function _increaseCurrentAndNextBalance(IStructs.StoredBalance storage balancePtr, uint256 amount)
         internal
+        virtual
     {
         // Remove stake from balance
         IStructs.StoredBalance memory balance = _loadCurrentBalance(balancePtr);
@@ -110,6 +112,7 @@ contract MixinStakeStorage is
     /// @param amount to mint.
     function _decreaseCurrentAndNextBalance(IStructs.StoredBalance storage balancePtr, uint256 amount)
         internal
+        virtual
     {
         // Remove stake from balance
         IStructs.StoredBalance memory balance = _loadCurrentBalance(balancePtr);

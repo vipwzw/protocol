@@ -84,7 +84,7 @@ contract Staking is
         return 0; // TODO: Implement using proper mixin delegation
     }
 
-    function finalizePool(bytes32 poolId) external override(IStaking, MixinFinalizer) {
+    function finalizePool(bytes32 poolId) external virtual override(IStaking, MixinFinalizer) {
         // TODO: Implement using proper mixin delegation
     }
 
@@ -229,6 +229,7 @@ contract Staking is
     function getWethContract() 
         external 
         view 
+        virtual
         override(IStaking, MixinDeploymentConstants) 
         returns (IEtherToken) 
     {

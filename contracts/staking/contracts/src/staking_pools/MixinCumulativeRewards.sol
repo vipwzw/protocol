@@ -58,6 +58,7 @@ contract MixinCumulativeRewards is
         uint256 stake
     )
         internal
+        virtual
     {
         // Fetch the last epoch at which we stored an entry for this pool;
         // this is the most up-to-date cumulative rewards for this pool.

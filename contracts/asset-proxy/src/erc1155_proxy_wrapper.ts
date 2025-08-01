@@ -1,45 +1,65 @@
-import { artifacts as erc1155Artifacts, ERC1155MintableContract, Erc1155Wrapper } from '../../erc1155/src';
+import { artifacts as erc1155Artifacts, ERC1155Mintable, ERC1155Mintable__factory } from '@0x/contracts-erc1155';
 import {
     constants,
-    ERC1155FungibleHoldingsByOwner,
-    ERC1155HoldingsByOwner,
-    ERC1155NonFungibleHoldingsByOwner,
     LogDecoder,
     txDefaults,
 } from '@0x/test-utils';
 import { BigNumber } from '@0x/utils';
-import { Provider, TransactionReceiptWithDecodedLogs } from 'ethereum-types';
+import { Provider, TransactionReceiptWithDecodedLogs, ZeroExProvider } from 'ethereum-types';
 import { ethers } from 'hardhat';
 import * as _ from 'lodash';
 
+// 定义 ERC1155 相关类型
+export interface ERC1155HoldingsByOwner {
+    [ownerAddress: string]: {
+        [tokenAddress: string]: {
+            [tokenId: string]: bigint;
+        };
+    };
+}
+
+export interface ERC1155FungibleHoldingsByOwner {
+    [ownerAddress: string]: {
+        [tokenAddress: string]: {
+            [tokenId: string]: bigint;
+        };
+    };
+}
+
+export interface ERC1155NonFungibleHoldingsByOwner {
+    [ownerAddress: string]: {
+        [tokenAddress: string]: bigint[];
+    };
+}
+
 import { artifacts } from './artifacts';
 
-import { ERC1155ProxyContract, IAssetData, IAssetData__factory, IAssetProxy, IAssetProxy__factory, ERC1155Proxy__factory } from './wrappers';
+import { ERC1155Proxy, IAssetData, IAssetData__factory, IAssetProxy, IAssetProxy__factory, ERC1155Proxy__factory } from './wrappers';
 
 export class ERC1155ProxyWrapper {
     private readonly _tokenOwnerAddresses: string[];
     private readonly _fungibleTokenIds: string[];
     private readonly _nonFungibleTokenIds: string[];
-    private readonly _nfts: Array<{ id: BigNumber; tokenId: BigNumber }>;
+    private readonly _nfts: Array<{ id: bigint; tokenId: bigint }>;
     private readonly _contractOwnerAddress: string;
-    private readonly _provider: Provider;
+    private readonly _provider: ZeroExProvider;
     private readonly _logDecoder: LogDecoder;
-    private readonly _dummyTokenWrappers: Erc1155Wrapper[];
+    private readonly _dummyTokenWrappers: ERC1155Mintable[];
     private readonly _assetProxyInterface: IAssetProxy;
     private readonly _assetDataInterface: IAssetData;
-    private _proxyContract?: ERC1155ProxyContract;
+    private _proxyContract?: ERC1155Proxy;
     private _proxyIdIfExists?: string;
     private _initialTokenIdsByOwner: ERC1155HoldingsByOwner = { fungible: {}, nonFungible: {} };
 
-    constructor(provider: Provider, tokenOwnerAddresses: string[], contractOwnerAddress: string) {
+    constructor(provider: ZeroExProvider, tokenOwnerAddresses: string[], contractOwnerAddress: string) {
         this._provider = provider;
         const allArtifacts = _.merge(artifacts, erc1155Artifacts);
         // Extract ABIs from artifacts for LogDecoder
         const abis = Object.values(allArtifacts).map((artifact: any) => artifact.abi);
         this._logDecoder = new LogDecoder(abis);
         this._dummyTokenWrappers = [];
-        this._assetProxyInterface = IAssetProxy__factory.connect(constants.NULL_ADDRESS, provider);
-        this._assetDataInterface = IAssetData__factory.connect(constants.NULL_ADDRESS, provider);
+        this._assetProxyInterface = IAssetProxy__factory.connect(constants.NULL_ADDRESS, provider as any);
+        this._assetDataInterface = IAssetData__factory.connect(constants.NULL_ADDRESS, provider as any);
         this._tokenOwnerAddresses = tokenOwnerAddresses;
         this._contractOwnerAddress = contractOwnerAddress;
         this._fungibleTokenIds = [];

@@ -9,5 +9,7 @@
     "files": ["./src/artifacts.ts", "./src/index.ts", "./src/wrappers.ts"],
     "include": ["./src/**/*", "./src/typechain-types/**/*", "./artifacts/**/*.json"],
     "exclude": ["./node_modules/**/*", "./lib/**/*", "./test/**/*"],
-    "references": []
+    "references": [
+        { "path": "../utils" }
+    ]
 }

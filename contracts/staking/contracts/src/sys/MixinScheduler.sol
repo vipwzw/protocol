@@ -73,6 +73,7 @@ contract MixinScheduler is
     ///      their periods have ended.
     function _goToNextEpoch()
         internal
+        virtual
     {
         // get current timestamp
         // solhint-disable-next-line not-rely-on-time

@@ -76,6 +76,19 @@ export const constants = {
     TEN_UNITS_EIGHTEEN_DECIMALS: ethers.parseEther('10'),
     ONE_THOUSAND_UNITS_EIGHTEEN_DECIMALS: ethers.parseEther('1000'),
     ONE_MILLION_UNITS_EIGHTEEN_DECIMALS: ethers.parseEther('1000000'),
+    
+    // ERC1155 test constants
+    NUM_DUMMY_ERC1155_CONTRACTS_TO_DEPLOY: 3,
+    NUM_ERC1155_FUNGIBLE_TOKENS_MINT: 10,
+    NUM_ERC1155_NONFUNGIBLE_TOKENS_MINT: 5,
+    INITIAL_ERC1155_FUNGIBLE_BALANCE: 100n,
+    
+    // ERC721 test constants  
+    NUM_DUMMY_ERC721_TO_DEPLOY: 3,
+    NUM_ERC721_TOKENS_TO_MINT: 10,
+    
+    // Transaction constants
+    AWAIT_TRANSACTION_MINED_MS: 100,
 };
 
 // Export individual constants for backward compatibility

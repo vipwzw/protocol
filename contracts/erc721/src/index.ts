@@ -6,6 +6,8 @@ export {
     ERC721Token__factory,
     MintableERC721Token,
     MintableERC721Token__factory,
+    DummyERC721Token,
+    DummyERC721Token__factory,
     IERC721Token,
     IERC721Token__factory,
     IERC721Receiver,

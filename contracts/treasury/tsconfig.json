@@ -8,5 +8,10 @@
     },
     "include": ["./src/**/*", "./src/typechain-types/**/*", "./test/**/*", "./artifacts/**/*.json"],
     "exclude": ["./deploy/solc/solc_bin", "./out/**/*", "./lib/**/*"],
-    "references": []
+    "references": [
+        { "path": "../../packages/contract-addresses" },
+        { "path": "../asset-proxy" },
+        { "path": "../staking" },
+        { "path": "../../packages/protocol-utils" }
+    ]
 }

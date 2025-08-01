@@ -16,5 +16,10 @@
         "./generated-wrappers/**/*",
         "./test/**/*"
     ],
-    "references": []
+    "references": [
+        { "path": "../asset-proxy" },
+        { "path": "../erc20" },
+        { "path": "../exchange-libs" },
+        { "path": "../utils" }
+    ]
 }

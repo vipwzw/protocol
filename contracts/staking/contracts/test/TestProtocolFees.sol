@@ -109,10 +109,10 @@ contract TestProtocolFees is
         override
         returns (IStructs.StoredBalance memory balance)
     {
-        TestPool memory pool = _testPools[poolId];
+        TestPool storage pool = _testPools[poolId];
         uint96 stake = pool.operatorStake + pool.membersStake;
         return IStructs.StoredBalance({
-            currentEpoch: currentEpoch.downcastToUint64(),
+            currentEpoch: uint64(currentEpoch),
             currentEpochBalance: stake,
             nextEpochBalance: stake
         });
@@ -125,9 +125,9 @@ contract TestProtocolFees is
         override
         returns (IStructs.StoredBalance memory balance)
     {
-        TestPool memory pool = _testPools[poolId];
+        TestPool storage pool = _testPools[poolId];
         return IStructs.StoredBalance({
-            currentEpoch: currentEpoch.downcastToUint64(),
+            currentEpoch: uint64(currentEpoch),
             currentEpochBalance: pool.operatorStake,
             nextEpochBalance: pool.operatorStake
         });

@@ -181,6 +181,7 @@ contract MixinFinalizer is
     /// @dev Converts the entire ETH balance of this contract into WETH.
     function _wrapEth()
         internal
+        virtual
     {
         uint256 ethBalance = address(this).balance;
         if (ethBalance != 0) {
@@ -193,6 +194,7 @@ contract MixinFinalizer is
     function _getAvailableWethBalance()
         internal
         view
+        virtual
         returns (uint256 wethBalance)
     {
         wethBalance = _getWethContract().balanceOf(address(this))

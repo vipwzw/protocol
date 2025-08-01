@@ -191,6 +191,7 @@ contract StakingProxy is
     /// @param _stakingContract Address of staking contract.
     function _attachStakingContract(address _stakingContract)
         internal
+        virtual
     {
         // Attach the staking contract
         stakingContract = _stakingContract;

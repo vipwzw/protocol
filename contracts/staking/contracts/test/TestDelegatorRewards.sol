@@ -166,6 +166,7 @@ contract TestDelegatorRewards is
     ///      the current epoch and emit a event,
     function finalizePool(bytes32 poolId)
         external
+        override
     {
         UnfinalizedPoolReward memory reward = unfinalizedPoolRewardsByEpoch[currentEpoch][poolId];
         delete unfinalizedPoolRewardsByEpoch[currentEpoch][poolId];
@@ -183,6 +184,7 @@ contract TestDelegatorRewards is
     function _getUnfinalizedPoolRewards(bytes32 poolId)
         internal
         view
+        override(MixinAbstract, MixinFinalizer)
         returns (
             uint256 totalReward,
             uint256 membersStake

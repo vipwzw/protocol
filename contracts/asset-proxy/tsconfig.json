@@ -16,12 +16,11 @@
         "./lib/**/*",
         "./cache/**/*",
         "./out/**/*",
-        "./generated-artifacts/**/*",
-        "./generated-wrappers/**/*",
-        "./test/**/*",
-        "./src/erc1155_proxy_wrapper.ts",
-        "./src/erc20_wrapper.ts",
-        "./src/erc721_wrapper.ts"
+        "./src/erc1155_proxy_wrapper.ts"
     ],
-    "references": []
+    "references": [
+        { "path": "../erc20" },
+        { "path": "../erc721" },
+        { "path": "../utils" }
+    ]
 }

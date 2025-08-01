@@ -158,6 +158,7 @@ abstract contract MixinStakingPoolRewards is
         uint256 membersStake
     )
         internal
+        virtual
         returns (uint256 operatorReward, uint256 membersReward)
     {
         IStructs.Pool memory pool = _poolById[poolId];
