@@ -17,7 +17,6 @@
 */
 
 pragma solidity ^0.8.28;
-pragma experimental ABIEncoderV2;
 
 
 interface IERC1155Receiver {

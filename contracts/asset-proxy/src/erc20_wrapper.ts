@@ -67,28 +67,37 @@ export class ERC20Wrapper {
         this._validateDummyTokenContractsExistOrThrow();
         this._validateProxyContractExistsOrThrow();
         
-        // TODO: 暂时跳过余额和权限设置，避免算术溢出错误
-        console.log('Skipping balance and allowance setup for now');
-        return;
+        const { ethers } = require('hardhat');
+        const signers = await ethers.getSigners();
+        const proxyAddress = await this._proxyContract!.getAddress();
         
-        // const { ethers } = require('hardhat');
-        // const signers = await ethers.getSigners();
+        // 使用默认的初始余额和权限额度
+        const initialBalance = 1000000000000000000n; // 1 token with 18 decimals
+        const allowanceAmount = 1000000000000000000n; // 1 token allowance
         
-        // for (const dummyTokenContract of this._dummyTokenContracts) {
-        //     for (let i = 0; i < this._tokenOwnerAddresses.length; i++) {
-        //         const tokenOwnerAddress = this._tokenOwnerAddresses[i];
-        //         const signer = signers[i];
+        for (const dummyTokenContract of this._dummyTokenContracts) {
+            for (let i = 0; i < this._tokenOwnerAddresses.length; i++) {
+                const tokenOwnerAddress = this._tokenOwnerAddresses[i];
                 
-        //         // Connect contract with appropriate signer
-        //         const contractWithSigner = dummyTokenContract.connect(signer);
-                
-        //         const tx1 = await contractWithSigner.setBalance(tokenOwnerAddress, '1000000000000000000'); // 1 token with 18 decimals
-        //         await tx1.wait();
-                
-        //         const tx2 = await contractWithSigner.approve(await this._proxyContract!.getAddress(), '1000000000000000000'); // 1 token allowance
-        //         await tx2.wait();
-        //     }
-        // }
+                try {
+                    // 设置余额 - 直接调用 setBalance (DummyERC20Token 特有方法)
+                    const setBalanceTx = await dummyTokenContract.setBalance(tokenOwnerAddress, initialBalance);
+                    await setBalanceTx.wait();
+                    
+                    // 获取对应的 signer 来执行 approve
+                    const ownerSigner = signers.find((s: any) => s.address.toLowerCase() === tokenOwnerAddress.toLowerCase()) || signers[i % signers.length];
+                    const contractWithSigner = dummyTokenContract.connect(ownerSigner);
+                    
+                    // 设置代理合约的 allowance
+                    const approveTx = await contractWithSigner.approve(proxyAddress, allowanceAmount);
+                    await approveTx.wait();
+                    
+                } catch (error) {
+                    console.warn(`Failed to set balance/allowance for ${tokenOwnerAddress} on token ${await dummyTokenContract.getAddress()}:`, error);
+                    // 继续处理下一个，不要因为单个失败就停止整个过程
+                }
+            }
+        }
     }
     public async getBalanceAsync(userAddress: string, assetData: string): Promise<bigint> {
         const tokenContract = await this._getTokenContractFromAssetDataAsync(assetData);

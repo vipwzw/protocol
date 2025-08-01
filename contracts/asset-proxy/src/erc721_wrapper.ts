@@ -45,9 +45,23 @@ export class ERC721Wrapper {
         return this._dummyTokenContracts;
     }
     public async deployProxyAsync(): Promise<ERC721Proxy> {
-        // TODO: ERC721Proxy部署需要使用特定的部署方式
-        // 暂时抛出错误提示需要实现
-        throw new Error('ERC721Proxy deployment not yet implemented. Use existing deployed proxy address.');
+        const { ethers } = require('hardhat');
+        const [signer] = await ethers.getSigners();
+        
+        // ERC721Proxy 是抽象合约，无法直接部署
+        // 在实际使用中应该使用具体的实现合约或已部署的代理地址
+        throw new Error('ERC721Proxy is an abstract contract and cannot be deployed directly. Use connectToProxyAsync() with a pre-deployed proxy address instead.');
+    }
+    
+    /**
+     * 连接到现有的 ERC721Proxy 合约
+     * @param proxyAddress 已部署的代理合约地址
+     */
+    public async connectToProxyAsync(proxyAddress: string): Promise<ERC721Proxy> {
+        const proxyContract = ERC721Proxy__factory.connect(proxyAddress, this._provider as any);
+        this._proxyContract = proxyContract;
+        this._proxyIdIfExists = await proxyContract.getProxyId();
+        return proxyContract;
     }
     public getProxyId(): string {
         this._validateProxyContractExistsOrThrow();

@@ -17,7 +17,6 @@
 */
 
 pragma solidity ^0.8.28;
-pragma experimental ABIEncoderV2;
 
 // LibSafeMath removed in Solidity 0.8.28 - using built-in overflow checks
 import "./ERC1155.sol";

@@ -17,7 +17,6 @@
 */
 
 pragma solidity ^0.8.28;
-pragma experimental ABIEncoderV2;
 
 
 /// @title ERC-1155 Multi Token Standard
