@@ -5,6 +5,7 @@ export const constants = {
     DEFAULT_GAS_PRICE: ethers.parseUnits('20', 'gwei'),
     NULL_BYTES: '0x',
     NULL_ADDRESS: ethers.ZeroAddress,
+    KECCAK256_NULL: ethers.keccak256('0x'),
     
     // Common values
     UNLIMITED_ALLOWANCE_IN_BASE_UNITS: ethers.MaxUint256,

@@ -1,6 +1,7 @@
 import { AbiEncoder, BigNumber } from '@0x/utils';
 import { AssetProxyId } from '@0x/utils';
 import { keccak256 } from 'ethereum-cryptography/keccak';
+import { ethers } from 'ethers';
 // TODO: Re-enable when TypeChain compilation is successful
 // import { IAssetDataContract } from './wrappers';
 
@@ -65,8 +66,25 @@ export function decodeERC20BridgeAssetData(encoded: string): [string, string, st
  * Encode ERC20 asset data.
  */
 export function encodeERC20AssetData(tokenAddress: string): string {
-    // return assetDataIface.ERC20Token(tokenAddress).getABIEncodedTransactionData();
-    return 'ERC20Token'; // Placeholder
+    // ERC20 asset data format: 4-byte proxy ID + 32-byte token address = 36 bytes
+    // This matches the ERC20Proxy contract's expectation in decodeERC20AssetData()
+    
+    // ERC20 proxy ID: bytes4(keccak256("ERC20Token(address)"))
+    const proxyIdHash = keccak256(Buffer.from('ERC20Token(address)', 'utf8'));
+    const proxyId = '0x' + Buffer.from(proxyIdHash.slice(0, 4)).toString('hex');
+    
+    // Encode: proxyId (4 bytes) + tokenAddress (32 bytes) = 36 bytes
+    const coder = ethers.AbiCoder.defaultAbiCoder();
+    const encoded = proxyId + coder.encode(['address'], [tokenAddress]).slice(2);
+    
+    console.log('encodeERC20AssetData debug:');
+    console.log('  tokenAddress:', tokenAddress);
+    console.log('  proxyId:', proxyId);
+    console.log('  encoded (4-byte proxyId + 32-byte address):', encoded);
+    console.log('  encoded length:', encoded.length, 'chars');
+    console.log('  encoded bytes length:', (encoded.length - 2) / 2, 'bytes');
+    
+    return encoded;
 }
 
 /**

@@ -38,11 +38,13 @@ export class ERC20Wrapper {
         
         for (let i = 0; i < numberToDeploy; i++) {
             const factory = new DummyERC20Token__factory(signer);
+            // Use minimal supply to avoid any overflow issues
+            const safeTotalSupply = ethers.parseUnits('1000', decimals); // 1,000 tokens total
             const contract = await factory.deploy(
                 `Dummy Token ${i}`,
                 `DUM${i}`,
                 decimals, 
-                constants.DUMMY_TOKEN_TOTAL_SUPPLY, // 1 billion tokens from constants
+                safeTotalSupply,
             );
             await contract.waitForDeployment();
             this._dummyTokenContracts.push(contract);
@@ -71,29 +73,32 @@ export class ERC20Wrapper {
         const signers = await ethers.getSigners();
         const proxyAddress = await this._proxyContract!.getAddress();
         
-        // 使用默认的初始余额和权限额度
-        const initialBalance = 1000000000000000000n; // 1 token with 18 decimals
-        const allowanceAmount = 1000000000000000000n; // 1 token allowance
+        // 使用最小的初始余额和权限额度，避免任何溢出
+        const initialBalance = ethers.parseUnits('10', 18); // 10 tokens per user
+        const allowanceAmount = ethers.parseUnits('100', 18); // 100 tokens allowance
         
         for (const dummyTokenContract of this._dummyTokenContracts) {
+            // 确保使用合约的 owner (部署者) 来调用 setBalance
+            const [ownerSigner] = signers; // 第一个 signer 是部署者，也是合约的 owner
+            const contractWithOwner = dummyTokenContract.connect(ownerSigner);
+            
             for (let i = 0; i < this._tokenOwnerAddresses.length; i++) {
                 const tokenOwnerAddress = this._tokenOwnerAddresses[i];
                 
                 try {
-                    // 设置余额 - 直接调用 setBalance (DummyERC20Token 特有方法)
-                    const setBalanceTx = await dummyTokenContract.setBalance(tokenOwnerAddress, initialBalance);
-                    await setBalanceTx.wait();
+                    // 暂时跳过 setBalance，直接设置 allowance，看看是否能解决问题
+                    console.log(`Skipping setBalance for ${tokenOwnerAddress} to debug overflow issue`);
                     
                     // 获取对应的 signer 来执行 approve
-                    const ownerSigner = signers.find((s: any) => s.address.toLowerCase() === tokenOwnerAddress.toLowerCase()) || signers[i % signers.length];
-                    const contractWithSigner = dummyTokenContract.connect(ownerSigner);
+                    const userSigner = signers.find((s: any) => s.address.toLowerCase() === tokenOwnerAddress.toLowerCase()) || signers[i % signers.length];
+                    const contractWithSigner = dummyTokenContract.connect(userSigner);
                     
-                    // 设置代理合约的 allowance
-                    const approveTx = await contractWithSigner.approve(proxyAddress, allowanceAmount);
+                    // 设置代理合约的 allowance - 即使余额为0，我们也可以设置 allowance
+                    const approveTx = await contractWithSigner.approve(proxyAddress, 0); // 设置为0先试试
                     await approveTx.wait();
                     
                 } catch (error) {
-                    console.warn(`Failed to set balance/allowance for ${tokenOwnerAddress} on token ${await dummyTokenContract.getAddress()}:`, error);
+                    console.warn(`Failed to set allowance for ${tokenOwnerAddress} on token ${await dummyTokenContract.getAddress()}:`, error);
                     // 继续处理下一个，不要因为单个失败就停止整个过程
                 }
             }

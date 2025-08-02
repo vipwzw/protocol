@@ -12,6 +12,8 @@
     "scripts": {
         "build": "forge build && npx hardhat compile && npx hardhat typechain && tsc -b",
         "build:ts": "tsc -b",
+        "build:forge": "forge build",
+        "build:ci": "yarn build",
         "compile": "forge build && npx hardhat compile",
         "typechain": "npx hardhat typechain",
         "generate_contract_wrappers": "npx hardhat typechain",

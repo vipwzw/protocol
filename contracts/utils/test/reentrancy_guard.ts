@@ -1,5 +1,5 @@
-import { expect } from '@0x/test-utils';
-const { ethers } = require('hardhat');
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
 
 describe('ReentrancyGuard', () => {
     let reentrancyGuard: any;

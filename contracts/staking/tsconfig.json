@@ -13,8 +13,7 @@
         "./cache/**/*",
         "./out/**/*",
         "./generated-artifacts/**/*",
-        "./generated-wrappers/**/*",
-        "./test/**/*"
+        "./generated-wrappers/**/*"
     ],
     "references": [
         { "path": "../asset-proxy" },

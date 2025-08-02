@@ -7,12 +7,18 @@ import {
     Numberish,
     randomAddress,
     verifyEventsFromLogs,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { ETH_TOKEN_ADDRESS } from '@0x/protocol-utils';
 import { AbiEncoder, hexUtils, OwnableRevertErrors, ZeroExRevertErrors } from '@0x/utils';
 import * as ethjs from 'ethereumjs-util';
 
-import { IZeroExContract, TransformERC20FeatureContract } from '../../src/wrappers';
+import { 
+    IZeroExContract, 
+    TransformERC20FeatureContract,
+    TestTransformERC20__factory,
+    TestMintableERC20Token__factory,
+    TestMintTokenERC20Transformer__factory
+} from '../../src/wrappers';
 import { artifacts } from '../artifacts';
 import { abis } from '../utils/abis';
 import { fullMigrateAsync } from '../utils/migration';
@@ -25,7 +31,7 @@ import {
     TransformERC20FeatureEvents,
 } from '../wrappers';
 
-blockchainTests.resets('TransformERC20 feature', env => {
+blockchainTests('TransformERC20 feature', env => {
     const callDataSignerKey = hexUtils.random();
     const callDataSigner = ethjs.bufferToHex(ethjs.privateToAddress(ethjs.toBuffer(callDataSignerKey)));
     let owner: string;
@@ -38,52 +44,51 @@ blockchainTests.resets('TransformERC20 feature', env => {
 
     before(async () => {
         [owner, taker, sender, transformerDeployer] = await env.getAccountAddressesAsync();
+        const signer = await env.provider.getSigner(owner);
+        const testTransformFactory = new TestTransformERC20__factory(signer);
+        const testTransformContract = await testTransformFactory.deploy();
+        await testTransformContract.waitForDeployment();
+        
         zeroEx = await fullMigrateAsync(
             owner,
             env.provider,
             env.txDefaults,
             {
-                transformERC20: (
-                    await TestTransformERC20Contract.deployFrom0xArtifactAsync(
-                        artifacts.TestTransformERC20,
-                        env.provider,
-                        env.txDefaults,
-                        artifacts,
-                    )
-                ).address,
+                transformERC20: await testTransformContract.getAddress(),
             },
             { transformerDeployer },
         );
         feature = new TransformERC20FeatureContract(
-            zeroEx.address,
+            await zeroEx.getAddress(),
             env.provider,
             { ...env.txDefaults, from: sender },
             abis,
         );
-        wallet = new FlashWalletContract(await feature.getTransformWallet().callAsync(), env.provider, env.txDefaults);
-        await feature.setQuoteSigner(callDataSigner).awaitTransactionSuccessAsync({ from: owner });
+        wallet = new FlashWalletContract(await feature.getTransformWallet(), env.provider, env.txDefaults);
+        const ownerSigner = await env.provider.getSigner(owner);
+        await feature.connect(ownerSigner).setQuoteSigner(callDataSigner);
     });
 
     const { MAX_UINT256, ZERO_AMOUNT } = constants;
 
     describe('wallets', () => {
         it('createTransformWallet() replaces the current wallet', async () => {
-            const newWalletAddress = await feature.createTransformWallet().callAsync({ from: owner });
+            const newWalletAddress = await feature.createTransformWallet()({ from: owner });
             expect(newWalletAddress).to.not.eq(wallet.address);
-            await feature.createTransformWallet().awaitTransactionSuccessAsync({ from: owner });
-            return expect(feature.getTransformWallet().callAsync()).to.eventually.eq(newWalletAddress);
+            await feature.createTransformWallet()({ from: owner });
+            return expect(feature.getTransformWallet()()).to.eventually.eq(newWalletAddress);
         });
 
         it('createTransformWallet() cannot be called by non-owner', async () => {
             const notOwner = randomAddress();
-            const tx = feature.createTransformWallet().callAsync({ from: notOwner });
-            return expect(tx).to.revertWith(new OwnableRevertErrors.OnlyOwnerError(notOwner, owner));
+            const tx = feature.createTransformWallet()({ from: notOwner });
+            return expect(tx).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(notOwner, owner));
         });
     });
 
     describe('transformer deployer', () => {
         it('`getTransformerDeployer()` returns the transformer deployer', async () => {
-            const actualDeployer = await feature.getTransformerDeployer().callAsync();
+            const actualDeployer = await feature.getTransformerDeployer()();
             expect(actualDeployer).to.eq(transformerDeployer);
         });
 
@@ -91,47 +96,47 @@ blockchainTests.resets('TransformERC20 feature', env => {
             const newDeployer = randomAddress();
             const receipt = await feature
                 .setTransformerDeployer(newDeployer)
-                .awaitTransactionSuccessAsync({ from: owner });
+                ({ from: owner });
             verifyEventsFromLogs(
                 receipt.logs,
                 [{ transformerDeployer: newDeployer }],
                 TransformERC20FeatureEvents.TransformerDeployerUpdated,
             );
-            const actualDeployer = await feature.getTransformerDeployer().callAsync();
+            const actualDeployer = await feature.getTransformerDeployer()();
             expect(actualDeployer).to.eq(newDeployer);
         });
 
         it('non-owner cannot set the transformer deployer with `setTransformerDeployer()`', async () => {
             const newDeployer = randomAddress();
             const notOwner = randomAddress();
-            const tx = feature.setTransformerDeployer(newDeployer).callAsync({ from: notOwner });
-            return expect(tx).to.revertWith(new OwnableRevertErrors.OnlyOwnerError(notOwner, owner));
+            const tx = feature.setTransformerDeployer(newDeployer)({ from: notOwner });
+            return expect(tx).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(notOwner, owner));
         });
     });
 
     describe('quote signer', () => {
         it('`getQuoteSigner()` returns the quote signer', async () => {
-            const actualSigner = await feature.getQuoteSigner().callAsync();
+            const actualSigner = await feature.getQuoteSigner()();
             expect(actualSigner).to.eq(callDataSigner);
         });
 
         it('owner can set the quote signer with `setQuoteSigner()`', async () => {
             const newSigner = randomAddress();
-            const receipt = await feature.setQuoteSigner(newSigner).awaitTransactionSuccessAsync({ from: owner });
+            const receipt = await feature.setQuoteSigner(newSigner)({ from: owner });
             verifyEventsFromLogs(
                 receipt.logs,
                 [{ quoteSigner: newSigner }],
                 TransformERC20FeatureEvents.QuoteSignerUpdated,
             );
-            const actualSigner = await feature.getQuoteSigner().callAsync();
+            const actualSigner = await feature.getQuoteSigner()();
             expect(actualSigner).to.eq(newSigner);
         });
 
         it('non-owner cannot set the quote signer with `setQuoteSigner()`', async () => {
             const newSigner = randomAddress();
             const notOwner = randomAddress();
-            const tx = feature.setQuoteSigner(newSigner).callAsync({ from: notOwner });
-            return expect(tx).to.revertWith(new OwnableRevertErrors.OnlyOwnerError(notOwner, owner));
+            const tx = feature.setQuoteSigner(newSigner)({ from: notOwner });
+            return expect(tx).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(notOwner, owner));
         });
     });
 
@@ -142,29 +147,25 @@ blockchainTests.resets('TransformERC20 feature', env => {
         let transformerNonce: number;
 
         before(async () => {
-            inputToken = await TestMintableERC20TokenContract.deployFrom0xArtifactAsync(
-                artifacts.TestMintableERC20Token,
-                env.provider,
-                env.txDefaults,
-                artifacts,
-            );
-            outputToken = await TestMintableERC20TokenContract.deployFrom0xArtifactAsync(
-                artifacts.TestMintableERC20Token,
-                env.provider,
-                env.txDefaults,
-                artifacts,
-            );
+            const signer = await env.provider.getSigner(owner);
+            
+            const inputTokenFactory = new TestMintableERC20Token__factory(signer);
+            inputToken = await inputTokenFactory.deploy();
+            await inputToken.waitForDeployment();
+
+            const outputTokenFactory = new TestMintableERC20Token__factory(signer);
+            outputToken = await outputTokenFactory.deploy();
+            await outputToken.waitForDeployment();
+
             transformerNonce = await env.web3Wrapper.getAccountNonceAsync(transformerDeployer);
-            mintTransformer = await TestMintTokenERC20TransformerContract.deployFrom0xArtifactAsync(
-                artifacts.TestMintTokenERC20Transformer,
-                env.provider,
-                {
-                    ...env.txDefaults,
-                    from: transformerDeployer,
-                },
-                artifacts,
-            );
-            await inputToken.approve(zeroEx.address, MAX_UINT256).awaitTransactionSuccessAsync({ from: taker });
+            
+            const transformerDeployerSigner = await env.provider.getSigner(transformerDeployer);
+            const mintTransformerFactory = new TestMintTokenERC20Transformer__factory(transformerDeployerSigner);
+            mintTransformer = await mintTransformerFactory.deploy();
+            await mintTransformer.waitForDeployment();
+
+            const takerSigner = await env.provider.getSigner(taker);
+            await inputToken.connect(takerSigner).approve(await zeroEx.getAddress(), MAX_UINT256);
         });
 
         interface Transformation {
@@ -198,12 +199,12 @@ blockchainTests.resets('TransformERC20 feature', env => {
             }> = {},
         ): Transformation {
             const _opts = {
-                outputTokenAddress: outputToken.address,
-                inputTokenAddress: inputToken.address,
+                outputTokenAddress: await outputToken.getAddress(),
+                inputTokenAddress: await inputToken.getAddress(),
                 inputTokenBurnAmunt: ZERO_AMOUNT,
                 outputTokenMintAmount: ZERO_AMOUNT,
                 outputTokenFeeAmount: ZERO_AMOUNT,
-                transformer: mintTransformer.address,
+                transformer: await mintTransformer.getAddress(),
                 deploymentNonce: transformerNonce,
                 ...opts,
             };
@@ -225,8 +226,8 @@ blockchainTests.resets('TransformERC20 feature', env => {
             it("succeeds if taker's output token balance increases by exactly minOutputTokenAmount", async () => {
                 const startingOutputTokenBalance = getRandomInteger(0, '100e18');
                 const startingInputTokenBalance = getRandomInteger(0, '100e18');
-                await outputToken.mint(taker, startingOutputTokenBalance).awaitTransactionSuccessAsync();
-                await inputToken.mint(taker, startingInputTokenBalance).awaitTransactionSuccessAsync();
+                await outputToken.mint(taker, startingOutputTokenBalance)();
+                await inputToken.mint(taker, startingInputTokenBalance)();
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
@@ -238,15 +239,15 @@ blockchainTests.resets('TransformERC20 feature', env => {
                 const receipt = await feature
                     ._transformERC20({
                         taker,
-                        inputToken: inputToken.address,
-                        outputToken: outputToken.address,
+                        inputToken: await inputToken.getAddress(),
+                        outputToken: await outputToken.getAddress(),
                         inputTokenAmount,
                         minOutputTokenAmount,
                         transformations: [transformation],
                         useSelfBalance: false,
                         recipient: taker,
                     })
-                    .awaitTransactionSuccessAsync({ value: callValue });
+                    ({ value: callValue });
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
@@ -254,8 +255,8 @@ blockchainTests.resets('TransformERC20 feature', env => {
                             taker,
                             inputTokenAmount,
                             outputTokenAmount: outputTokenMintAmount,
-                            inputToken: inputToken.address,
-                            outputToken: outputToken.address,
+                            inputToken: await inputToken.getAddress(),
+                            outputToken: await outputToken.getAddress(),
                         },
                     ],
                     TransformERC20FeatureEvents.TransformedERC20,
@@ -279,7 +280,7 @@ blockchainTests.resets('TransformERC20 feature', env => {
 
             it("succeeds if taker's output token balance increases by exactly minOutputTokenAmount, with ETH", async () => {
                 const startingInputTokenBalance = getRandomInteger(0, '100e18');
-                await inputToken.mint(taker, startingInputTokenBalance).awaitTransactionSuccessAsync();
+                await inputToken.mint(taker, startingInputTokenBalance)();
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
@@ -293,7 +294,7 @@ blockchainTests.resets('TransformERC20 feature', env => {
                 const receipt = await feature
                     ._transformERC20({
                         taker,
-                        inputToken: inputToken.address,
+                        inputToken: await inputToken.getAddress(),
                         outputToken: ETH_TOKEN_ADDRESS,
                         inputTokenAmount,
                         minOutputTokenAmount,
@@ -301,7 +302,7 @@ blockchainTests.resets('TransformERC20 feature', env => {
                         useSelfBalance: false,
                         recipient: taker,
                     })
-                    .awaitTransactionSuccessAsync({ value: callValue });
+                    ({ value: callValue });
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
@@ -309,7 +310,7 @@ blockchainTests.resets('TransformERC20 feature', env => {
                             taker,
                             inputTokenAmount,
                             outputTokenAmount: outputTokenMintAmount,
-                            inputToken: inputToken.address,
+                            inputToken: await inputToken.getAddress(),
                             outputToken: ETH_TOKEN_ADDRESS,
                         },
                     ],
@@ -330,19 +331,19 @@ blockchainTests.resets('TransformERC20 feature', env => {
                     ],
                     TestMintTokenERC20TransformerEvents.MintTransform,
                 );
-                expect(await env.web3Wrapper.getBalanceInWeiAsync(taker)).to.bignumber.eq(
-                    startingOutputTokenBalance.plus(outputTokenMintAmount),
+                expect(await env.web3Wrapper.getBalanceInWeiAsync(taker)).to.eq(
+                    startingOutputTokenBalance + outputTokenMintAmount,
                 );
             });
 
             it("succeeds if taker's output token balance increases by more than minOutputTokenAmount", async () => {
                 const startingOutputTokenBalance = getRandomInteger(0, '100e18');
                 const startingInputTokenBalance = getRandomInteger(0, '100e18');
-                await outputToken.mint(taker, startingOutputTokenBalance).awaitTransactionSuccessAsync();
-                await inputToken.mint(taker, startingInputTokenBalance).awaitTransactionSuccessAsync();
+                await outputToken.mint(taker, startingOutputTokenBalance)();
+                await inputToken.mint(taker, startingInputTokenBalance)();
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
-                const outputTokenMintAmount = minOutputTokenAmount.plus(1);
+                const outputTokenMintAmount = minOutputTokenAmount + 1;
                 const callValue = getRandomInteger(1, '1e18');
                 const transformation = createMintTokenTransformation({
                     outputTokenMintAmount,
@@ -351,15 +352,15 @@ blockchainTests.resets('TransformERC20 feature', env => {
                 const receipt = await feature
                     ._transformERC20({
                         taker,
-                        inputToken: inputToken.address,
-                        outputToken: outputToken.address,
+                        inputToken: await inputToken.getAddress(),
+                        outputToken: await outputToken.getAddress(),
                         inputTokenAmount,
                         minOutputTokenAmount,
                         transformations: [transformation],
                         useSelfBalance: false,
                         recipient: taker,
                     })
-                    .awaitTransactionSuccessAsync({ value: callValue });
+                    ({ value: callValue });
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
@@ -367,8 +368,8 @@ blockchainTests.resets('TransformERC20 feature', env => {
                             taker,
                             inputTokenAmount,
                             outputTokenAmount: outputTokenMintAmount,
-                            inputToken: inputToken.address,
-                            outputToken: outputToken.address,
+                            inputToken: await inputToken.getAddress(),
+                            outputToken: await outputToken.getAddress(),
                         },
                     ],
                     TransformERC20FeatureEvents.TransformedERC20,
@@ -393,17 +394,17 @@ blockchainTests.resets('TransformERC20 feature', env => {
             it("throws if taker's output token balance increases by less than minOutputTokenAmount", async () => {
                 const startingOutputTokenBalance = getRandomInteger(0, '100e18');
                 const startingInputTokenBalance = getRandomInteger(0, '100e18');
-                await outputToken.mint(taker, startingOutputTokenBalance).awaitTransactionSuccessAsync();
-                await inputToken.mint(taker, startingInputTokenBalance).awaitTransactionSuccessAsync();
+                await outputToken.mint(taker, startingOutputTokenBalance)();
+                await inputToken.mint(taker, startingInputTokenBalance)();
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
-                const outputTokenMintAmount = minOutputTokenAmount.minus(1);
+                const outputTokenMintAmount = minOutputTokenAmount - 1;
                 const callValue = getRandomInteger(1, '1e18');
                 const tx = feature
                     ._transformERC20({
                         taker,
-                        inputToken: inputToken.address,
-                        outputToken: outputToken.address,
+                        inputToken: await inputToken.getAddress(),
+                        outputToken: await outputToken.getAddress(),
                         inputTokenAmount,
                         minOutputTokenAmount,
                         transformations: [
@@ -415,20 +416,20 @@ blockchainTests.resets('TransformERC20 feature', env => {
                         useSelfBalance: false,
                         recipient: taker,
                     })
-                    .awaitTransactionSuccessAsync({ value: callValue });
+                    ({ value: callValue });
                 const expectedError = new ZeroExRevertErrors.TransformERC20.IncompleteTransformERC20Error(
-                    outputToken.address,
+                    await outputToken.getAddress(),
                     outputTokenMintAmount,
                     minOutputTokenAmount,
                 );
-                return expect(tx).to.revertWith(expectedError);
+                return expect(tx).to.be.revertedWith(expectedError);
             });
 
             it("throws if taker's output token balance decreases", async () => {
                 const startingOutputTokenBalance = getRandomInteger(0, '100e18');
                 const startingInputTokenBalance = getRandomInteger(0, '100e18');
-                await outputToken.mint(taker, startingOutputTokenBalance).awaitTransactionSuccessAsync();
-                await inputToken.mint(taker, startingInputTokenBalance).awaitTransactionSuccessAsync();
+                await outputToken.mint(taker, startingOutputTokenBalance)();
+                await inputToken.mint(taker, startingInputTokenBalance)();
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = ZERO_AMOUNT;
                 const outputTokenFeeAmount = 1;
@@ -436,8 +437,8 @@ blockchainTests.resets('TransformERC20 feature', env => {
                 const tx = feature
                     ._transformERC20({
                         taker,
-                        inputToken: inputToken.address,
-                        outputToken: outputToken.address,
+                        inputToken: await inputToken.getAddress(),
+                        outputToken: await outputToken.getAddress(),
                         inputTokenAmount,
                         minOutputTokenAmount,
                         transformations: [
@@ -449,19 +450,19 @@ blockchainTests.resets('TransformERC20 feature', env => {
                         useSelfBalance: false,
                         recipient: taker,
                     })
-                    .awaitTransactionSuccessAsync({ value: callValue });
+                    ({ value: callValue });
                 const expectedError = new ZeroExRevertErrors.TransformERC20.NegativeTransformERC20OutputError(
-                    outputToken.address,
+                    await outputToken.getAddress(),
                     outputTokenFeeAmount,
                 );
-                return expect(tx).to.revertWith(expectedError);
+                return expect(tx).to.be.revertedWith(expectedError);
             });
 
             it('can call multiple transformers', async () => {
                 const startingOutputTokenBalance = getRandomInteger(0, '100e18');
                 const startingInputTokenBalance = getRandomInteger(2, '100e18');
-                await outputToken.mint(taker, startingOutputTokenBalance).awaitTransactionSuccessAsync();
-                await inputToken.mint(taker, startingInputTokenBalance).awaitTransactionSuccessAsync();
+                await outputToken.mint(taker, startingOutputTokenBalance)();
+                await inputToken.mint(taker, startingInputTokenBalance)();
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(2, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
@@ -473,22 +474,22 @@ blockchainTests.resets('TransformERC20 feature', env => {
                         outputTokenMintAmount: 1,
                     }),
                     createMintTokenTransformation({
-                        inputTokenBurnAmunt: inputTokenAmount.minus(1),
-                        outputTokenMintAmount: outputTokenMintAmount.minus(1),
+                        inputTokenBurnAmunt: inputTokenAmount - 1,
+                        outputTokenMintAmount: outputTokenMintAmount - 1,
                     }),
                 ];
                 const receipt = await feature
                     ._transformERC20({
                         taker,
-                        inputToken: inputToken.address,
-                        outputToken: outputToken.address,
+                        inputToken: await inputToken.getAddress(),
+                        outputToken: await outputToken.getAddress(),
                         inputTokenAmount,
                         minOutputTokenAmount,
                         transformations,
                         useSelfBalance: false,
                         recipient: taker,
                     })
-                    .awaitTransactionSuccessAsync({ value: callValue });
+                    ({ value: callValue });
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
@@ -507,7 +508,7 @@ blockchainTests.resets('TransformERC20 feature', env => {
                             context: wallet.address,
                             caller: zeroEx.address,
                             data: transformations[1].data,
-                            inputTokenBalance: inputTokenAmount.minus(1),
+                            inputTokenBalance: inputTokenAmount - 1,
                             ethBalance: callValue,
                         },
                     ],
@@ -518,8 +519,8 @@ blockchainTests.resets('TransformERC20 feature', env => {
             it('fails with invalid transformer nonce', async () => {
                 const startingOutputTokenBalance = getRandomInteger(0, '100e18');
                 const startingInputTokenBalance = getRandomInteger(2, '100e18');
-                await outputToken.mint(taker, startingOutputTokenBalance).awaitTransactionSuccessAsync();
-                await inputToken.mint(taker, startingInputTokenBalance).awaitTransactionSuccessAsync();
+                await outputToken.mint(taker, startingOutputTokenBalance)();
+                await inputToken.mint(taker, startingInputTokenBalance)();
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(2, '1e18');
                 const callValue = getRandomInteger(1, '1e18');
@@ -527,16 +528,16 @@ blockchainTests.resets('TransformERC20 feature', env => {
                 const tx = feature
                     ._transformERC20({
                         taker,
-                        inputToken: inputToken.address,
-                        outputToken: outputToken.address,
+                        inputToken: await inputToken.getAddress(),
+                        outputToken: await outputToken.getAddress(),
                         inputTokenAmount,
                         minOutputTokenAmount,
                         transformations,
                         useSelfBalance: false,
                         recipient: taker,
                     })
-                    .awaitTransactionSuccessAsync({ value: callValue });
-                return expect(tx).to.revertWith(
+                    ({ value: callValue });
+                return expect(tx).to.be.revertedWith(
                     new ZeroExRevertErrors.TransformERC20.TransformerFailedError(
                         undefined,
                         transformations[0].data,
@@ -547,7 +548,7 @@ blockchainTests.resets('TransformERC20 feature', env => {
 
             it('can sell entire taker balance', async () => {
                 const startingInputTokenBalance = getRandomInteger(0, '100e18');
-                await inputToken.mint(taker, startingInputTokenBalance).awaitTransactionSuccessAsync();
+                await inputToken.mint(taker, startingInputTokenBalance)();
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
                 const callValue = getRandomInteger(1, '1e18');
@@ -558,15 +559,15 @@ blockchainTests.resets('TransformERC20 feature', env => {
                 const receipt = await feature
                     ._transformERC20({
                         taker,
-                        inputToken: inputToken.address,
-                        outputToken: outputToken.address,
+                        inputToken: await inputToken.getAddress(),
+                        outputToken: await outputToken.getAddress(),
                         inputTokenAmount: MAX_UINT256,
                         minOutputTokenAmount,
                         transformations: [transformation],
                         useSelfBalance: false,
                         recipient: taker,
                     })
-                    .awaitTransactionSuccessAsync({ value: callValue });
+                    ({ value: callValue });
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
@@ -574,8 +575,8 @@ blockchainTests.resets('TransformERC20 feature', env => {
                             taker,
                             inputTokenAmount: startingInputTokenBalance,
                             outputTokenAmount: outputTokenMintAmount,
-                            inputToken: inputToken.address,
-                            outputToken: outputToken.address,
+                            inputToken: await inputToken.getAddress(),
+                            outputToken: await outputToken.getAddress(),
                         },
                     ],
                     TransformERC20FeatureEvents.TransformedERC20,
@@ -584,7 +585,7 @@ blockchainTests.resets('TransformERC20 feature', env => {
 
             it('can sell entire taker balance with ETH (but not really)', async () => {
                 const ethAttchedAmount = getRandomInteger(0, '100e18');
-                await inputToken.mint(taker, ethAttchedAmount).awaitTransactionSuccessAsync();
+                await inputToken.mint(taker, ethAttchedAmount)();
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
                 const transformation = createMintTokenTransformation({
@@ -596,14 +597,14 @@ blockchainTests.resets('TransformERC20 feature', env => {
                     ._transformERC20({
                         taker,
                         inputToken: ETH_TOKEN_ADDRESS,
-                        outputToken: outputToken.address,
+                        outputToken: await outputToken.getAddress(),
                         inputTokenAmount: MAX_UINT256,
                         minOutputTokenAmount,
                         transformations: [transformation],
                         useSelfBalance: false,
                         recipient: taker,
                     })
-                    .awaitTransactionSuccessAsync({ value: ethAttchedAmount });
+                    ({ value: ethAttchedAmount });
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
@@ -612,7 +613,7 @@ blockchainTests.resets('TransformERC20 feature', env => {
                             inputTokenAmount: ethAttchedAmount,
                             outputTokenAmount: outputTokenMintAmount,
                             inputToken: ETH_TOKEN_ADDRESS,
-                            outputToken: outputToken.address,
+                            outputToken: await outputToken.getAddress(),
                         },
                     ],
                     TransformERC20FeatureEvents.TransformedERC20,

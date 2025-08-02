@@ -1,6 +1,7 @@
-import { blockchainTests, constants, expect, getRandomInteger, randomAddress } from '@0x/contracts-test-utils';
+import { ethers } from "ethers";
+import { blockchainTests, constants, expect, getRandomInteger, randomAddress } from '@0x/test-utils';
 import { encodePayTakerTransformerData, ETH_TOKEN_ADDRESS } from '@0x/protocol-utils';
-import { BigNumber } from '@0x/utils';
+import { } from '@0x/utils';
 import * as _ from 'lodash';
 
 import { artifacts } from '../artifacts';

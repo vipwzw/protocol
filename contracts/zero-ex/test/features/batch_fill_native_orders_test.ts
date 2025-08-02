@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import {
     blockchainTests,
     constants,
@@ -5,13 +6,18 @@ import {
     expect,
     getRandomPortion,
     verifyEventsFromLogs,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { LimitOrder, LimitOrderFields, OrderStatus, RevertErrors, RfqOrder, RfqOrderFields } from '@0x/protocol-utils';
-import { BigNumber } from '@0x/utils';
+import { } from '@0x/utils';
 import { TransactionReceiptWithDecodedLogs } from 'ethereum-types';
 import * as _ from 'lodash';
 
-import { BatchFillNativeOrdersFeatureContract, IZeroExContract, IZeroExEvents } from '../../src/wrappers';
+import { 
+    BatchFillNativeOrdersFeatureContract, 
+    IZeroExContract, 
+    IZeroExEvents,
+    BatchFillNativeOrdersFeature__factory
+} from '../../src/wrappers';
 import { artifacts } from '../artifacts';
 import { abis } from '../utils/abis';
 import {
@@ -25,7 +31,7 @@ import {
 } from '../utils/orders';
 import { TestMintableERC20TokenContract } from '../wrappers';
 
-blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
+blockchainTests('BatchFillNativeOrdersFeature', env => {
     const { NULL_ADDRESS, ZERO_AMOUNT } = constants;
     let maker: string;
     let taker: string;
@@ -44,45 +50,46 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
         makerToken = testUtils.makerToken;
         takerToken = testUtils.takerToken;
 
-        verifyingContract = zeroEx.address;
-        const featureImpl = await BatchFillNativeOrdersFeatureContract.deployFrom0xArtifactAsync(
-            artifacts.BatchFillNativeOrdersFeature,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-            zeroEx.address,
-        );
+        verifyingContract = await zeroEx.getAddress();
         const [owner] = await env.getAccountAddressesAsync();
+        const signer = await env.provider.getSigner(owner);
+        
+        const featureFactory = new BatchFillNativeOrdersFeature__factory(signer);
+        const featureImpl = await featureFactory.deploy(await zeroEx.getAddress());
+        await featureImpl.waitForDeployment();
+        
+        const ownerSigner = await env.provider.getSigner(owner);
         await zeroEx
-            .migrate(featureImpl.address, featureImpl.migrate().getABIEncodedTransactionData(), owner)
-            .awaitTransactionSuccessAsync();
+            .connect(ownerSigner)
+            .migrate(await featureImpl.getAddress(), featureImpl.migrate().getABIEncodedTransactionData(), owner);
+            
         feature = new BatchFillNativeOrdersFeatureContract(
-            zeroEx.address,
+            await zeroEx.getAddress(),
             env.provider,
             { ...env.txDefaults, gasPrice: testUtils.gasPrice },
             abis,
         );
     });
 
-    function getTestLimitOrder(fields: Partial<LimitOrderFields> = {}): LimitOrder {
+    async function getTestLimitOrder(fields: Partial<LimitOrderFields> = {}): Promise<LimitOrder> {
         return getRandomLimitOrder({
             maker,
             verifyingContract,
             chainId: 1337,
-            takerToken: takerToken.address,
-            makerToken: makerToken.address,
+            takerToken: await takerToken.getAddress(),
+            makerToken: await makerToken.getAddress(),
             taker: NULL_ADDRESS,
             sender: NULL_ADDRESS,
             ...fields,
         });
     }
-    function getTestRfqOrder(fields: Partial<RfqOrderFields> = {}): RfqOrder {
+    async function getTestRfqOrder(fields: Partial<RfqOrderFields> = {}): Promise<RfqOrder> {
         return getRandomRfqOrder({
             maker,
             verifyingContract,
             chainId: 1337,
-            takerToken: takerToken.address,
-            makerToken: makerToken.address,
+            takerToken: await takerToken.getAddress(),
+            makerToken: await makerToken.getAddress(),
             txOrigin: taker,
             ...fields,
         });
@@ -91,11 +98,11 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
     describe('batchFillLimitOrders', () => {
         async function assertExpectedFinalBalancesAsync(
             orders: LimitOrder[],
-            takerTokenFillAmounts: BigNumber[] = orders.map(order => order.takerAmount),
-            takerTokenAlreadyFilledAmounts: BigNumber[] = orders.map(() => ZERO_AMOUNT),
+            takerTokenFillAmounts: bigint[] = orders.map(order => order.takerAmount),
+            takerTokenAlreadyFilledAmounts: bigint[] = orders.map(() => ZERO_AMOUNT),
             receipt?: TransactionReceiptWithDecodedLogs,
         ): Promise<void> {
-            const expectedFeeRecipientBalances: { [feeRecipient: string]: BigNumber } = {};
+            const expectedFeeRecipientBalances: { [feeRecipient: string]: bigint } = {};
             const { makerTokenFilledAmount, takerTokenFilledAmount } = orders
                 .map((order, i) =>
                     computeLimitOrderFilledAmounts(order, takerTokenFillAmounts[i], takerTokenAlreadyFilledAmounts[i]),
@@ -103,7 +110,7 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
                 .reduce(
                     (previous, current, i) => {
                         _.update(expectedFeeRecipientBalances, orders[i].feeRecipient, balance =>
-                            (balance || ZERO_AMOUNT).plus(current.takerTokenFeeFilledAmount),
+                            (balance || ZERO_AMOUNT) + current.takerTokenFeeFilledAmount,
                         );
                         return {
                             makerTokenFilledAmount: previous.makerTokenFilledAmount.plus(
@@ -116,30 +123,30 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
                     },
                     { makerTokenFilledAmount: ZERO_AMOUNT, takerTokenFilledAmount: ZERO_AMOUNT },
                 );
-            const makerBalance = await takerToken.balanceOf(maker).callAsync();
-            const takerBalance = await makerToken.balanceOf(taker).callAsync();
-            expect(makerBalance, 'maker token balance').to.bignumber.eq(takerTokenFilledAmount);
-            expect(takerBalance, 'taker token balance').to.bignumber.eq(makerTokenFilledAmount);
+            const makerBalance = await takerToken.balanceOf(maker)();
+            const takerBalance = await makerToken.balanceOf(taker)();
+            expect(makerBalance, 'maker token balance').to.eq(takerTokenFilledAmount);
+            expect(takerBalance, 'taker token balance').to.eq(makerTokenFilledAmount);
             for (const [feeRecipient, expectedFeeRecipientBalance] of Object.entries(expectedFeeRecipientBalances)) {
-                const feeRecipientBalance = await takerToken.balanceOf(feeRecipient).callAsync();
-                expect(feeRecipientBalance, `fee recipient balance`).to.bignumber.eq(expectedFeeRecipientBalance);
+                const feeRecipientBalance = await takerToken.balanceOf(feeRecipient)();
+                expect(feeRecipientBalance, `fee recipient balance`).to.eq(expectedFeeRecipientBalance);
             }
             if (receipt) {
                 const balanceOfTakerNow = await env.web3Wrapper.getBalanceInWeiAsync(taker);
                 const balanceOfTakerBefore = await env.web3Wrapper.getBalanceInWeiAsync(taker, receipt.blockNumber - 1);
-                const protocolFees = testUtils.protocolFee.times(orders.length);
-                const totalCost = testUtils.gasPrice.times(receipt.gasUsed).plus(protocolFees);
-                expect(balanceOfTakerBefore.minus(totalCost), 'taker ETH balance').to.bignumber.eq(balanceOfTakerNow);
+                const protocolFees = testUtils.protocolFee * orders.length;
+                const totalCost = testUtils.gasPrice * receipt.gasUsed + protocolFees;
+                expect(balanceOfTakerBefore - totalCost, 'taker ETH balance').to.eq(balanceOfTakerNow);
             }
         }
 
         it('Fully fills multiple orders', async () => {
-            const orders = [...new Array(3)].map(() => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT }));
+            const orders = await Promise.all([...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
             await testUtils.prepareBalancesForOrdersAsync(orders);
-            const value = testUtils.protocolFee.times(orders.length);
+            const value = testUtils.protocolFee * orders.length;
             const tx = await feature
                 .batchFillLimitOrders(
                     orders,
@@ -147,8 +154,8 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
                     orders.map(order => order.takerAmount),
                     false,
                 )
-                .awaitTransactionSuccessAsync({ from: taker, value });
-            const [orderInfos] = await zeroEx.batchGetLimitOrderRelevantStates(orders, signatures).callAsync();
+                ({ from: taker, value });
+            const [orderInfos] = await zeroEx.batchGetLimitOrderRelevantStates(orders, signatures)();
             orderInfos.map((orderInfo, i) =>
                 assertOrderInfoEquals(orderInfo, {
                     status: OrderStatus.Filled,
@@ -164,17 +171,17 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
             return assertExpectedFinalBalancesAsync(orders);
         });
         it('Partially fills multiple orders', async () => {
-            const orders = [...new Array(3)].map(getTestLimitOrder);
+            const orders = await Promise.all([...new Array(3)].map(() => getTestLimitOrder()));
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
             await testUtils.prepareBalancesForOrdersAsync(orders);
-            const value = testUtils.protocolFee.times(orders.length);
+            const value = testUtils.protocolFee * orders.length;
             const fillAmounts = orders.map(order => getRandomPortion(order.takerAmount));
             const tx = await feature
                 .batchFillLimitOrders(orders, signatures, fillAmounts, false)
-                .awaitTransactionSuccessAsync({ from: taker, value });
-            const [orderInfos] = await zeroEx.batchGetLimitOrderRelevantStates(orders, signatures).callAsync();
+                ({ from: taker, value });
+            const [orderInfos] = await zeroEx.batchGetLimitOrderRelevantStates(orders, signatures)();
             orderInfos.map((orderInfo, i) =>
                 assertOrderInfoEquals(orderInfo, {
                     status: OrderStatus.Fillable,
@@ -190,12 +197,12 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
             return assertExpectedFinalBalancesAsync(orders, fillAmounts);
         });
         it('Fills multiple orders and refunds excess ETH', async () => {
-            const orders = [...new Array(3)].map(() => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT }));
+            const orders = await Promise.all([...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
             await testUtils.prepareBalancesForOrdersAsync(orders);
-            const value = testUtils.protocolFee.times(orders.length).plus(420);
+            const value = testUtils.protocolFee * orders.length + 420;
             const tx = await feature
                 .batchFillLimitOrders(
                     orders,
@@ -203,8 +210,8 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
                     orders.map(order => order.takerAmount),
                     false,
                 )
-                .awaitTransactionSuccessAsync({ from: taker, value });
-            const [orderInfos] = await zeroEx.batchGetLimitOrderRelevantStates(orders, signatures).callAsync();
+                ({ from: taker, value });
+            const [orderInfos] = await zeroEx.batchGetLimitOrderRelevantStates(orders, signatures)();
             orderInfos.map((orderInfo, i) =>
                 assertOrderInfoEquals(orderInfo, {
                     status: OrderStatus.Filled,
@@ -220,14 +227,14 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
             return assertExpectedFinalBalancesAsync(orders);
         });
         it('Skips over unfillable orders and refunds excess ETH', async () => {
-            const fillableOrders = [...new Array(3)].map(() => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT }));
-            const expiredOrder = getTestLimitOrder({ expiry: createExpiry(-1), takerTokenFeeAmount: ZERO_AMOUNT });
+            const fillableOrders = await Promise.all([...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
+            const expiredOrder = await getTestLimitOrder({ expiry: createExpiry(-1), takerTokenFeeAmount: ZERO_AMOUNT });
             const orders = [expiredOrder, ...fillableOrders];
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
             await testUtils.prepareBalancesForOrdersAsync(orders);
-            const value = testUtils.protocolFee.times(orders.length);
+            const value = testUtils.protocolFee * orders.length;
             const tx = await feature
                 .batchFillLimitOrders(
                     orders,
@@ -235,8 +242,8 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
                     orders.map(order => order.takerAmount),
                     false,
                 )
-                .awaitTransactionSuccessAsync({ from: taker, value });
-            const [orderInfos] = await zeroEx.batchGetLimitOrderRelevantStates(orders, signatures).callAsync();
+                ({ from: taker, value });
+            const [orderInfos] = await zeroEx.batchGetLimitOrderRelevantStates(orders, signatures)();
             const [expiredOrderInfo, ...filledOrderInfos] = orderInfos;
             assertOrderInfoEquals(expiredOrderInfo, {
                 status: OrderStatus.Expired,
@@ -258,12 +265,12 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
             return assertExpectedFinalBalancesAsync(fillableOrders);
         });
         it('Fills multiple orders with revertIfIncomplete=true', async () => {
-            const orders = [...new Array(3)].map(() => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT }));
+            const orders = await Promise.all([...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
             await testUtils.prepareBalancesForOrdersAsync(orders);
-            const value = testUtils.protocolFee.times(orders.length);
+            const value = testUtils.protocolFee * orders.length;
             const tx = await feature
                 .batchFillLimitOrders(
                     orders,
@@ -271,8 +278,8 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
                     orders.map(order => order.takerAmount),
                     true,
                 )
-                .awaitTransactionSuccessAsync({ from: taker, value });
-            const [orderInfos] = await zeroEx.batchGetLimitOrderRelevantStates(orders, signatures).callAsync();
+                ({ from: taker, value });
+            const [orderInfos] = await zeroEx.batchGetLimitOrderRelevantStates(orders, signatures)();
             orderInfos.map((orderInfo, i) =>
                 assertOrderInfoEquals(orderInfo, {
                     status: OrderStatus.Filled,
@@ -288,14 +295,14 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
             return assertExpectedFinalBalancesAsync(orders);
         });
         it('If revertIfIncomplete==true, reverts on an unfillable order', async () => {
-            const fillableOrders = [...new Array(3)].map(() => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT }));
-            const expiredOrder = getTestLimitOrder({ expiry: createExpiry(-1), takerTokenFeeAmount: ZERO_AMOUNT });
+            const fillableOrders = await Promise.all([...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
+            const expiredOrder = await getTestLimitOrder({ expiry: createExpiry(-1), takerTokenFeeAmount: ZERO_AMOUNT });
             const orders = [expiredOrder, ...fillableOrders];
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
             await testUtils.prepareBalancesForOrdersAsync(orders);
-            const value = testUtils.protocolFee.times(orders.length);
+            const value = testUtils.protocolFee * orders.length;
             const tx = feature
                 .batchFillLimitOrders(
                     orders,
@@ -303,8 +310,8 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
                     orders.map(order => order.takerAmount),
                     true,
                 )
-                .awaitTransactionSuccessAsync({ from: taker, value });
-            return expect(tx).to.revertWith(
+                ({ from: taker, value });
+            return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.BatchFillIncompleteError(
                     expiredOrder.getHash(),
                     ZERO_AMOUNT,
@@ -313,8 +320,8 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
             );
         });
         it('If revertIfIncomplete==true, reverts on an incomplete fill ', async () => {
-            const fillableOrders = [...new Array(3)].map(() => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT }));
-            const partiallyFilledOrder = getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT });
+            const fillableOrders = await Promise.all([...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
+            const partiallyFilledOrder = await getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
             const partialFillAmount = getRandomPortion(partiallyFilledOrder.takerAmount);
             await testUtils.fillLimitOrderAsync(partiallyFilledOrder, { fillAmount: partialFillAmount });
             const orders = [partiallyFilledOrder, ...fillableOrders];
@@ -322,7 +329,7 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
             await testUtils.prepareBalancesForOrdersAsync(orders);
-            const value = testUtils.protocolFee.times(orders.length);
+            const value = testUtils.protocolFee * orders.length;
             const tx = feature
                 .batchFillLimitOrders(
                     orders,
@@ -330,11 +337,11 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
                     orders.map(order => order.takerAmount),
                     true,
                 )
-                .awaitTransactionSuccessAsync({ from: taker, value });
-            return expect(tx).to.revertWith(
+                ({ from: taker, value });
+            return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.BatchFillIncompleteError(
                     partiallyFilledOrder.getHash(),
-                    partiallyFilledOrder.takerAmount.minus(partialFillAmount),
+                    partiallyFilledOrder.takerAmount - partialFillAmount,
                     partiallyFilledOrder.takerAmount,
                 ),
             );
@@ -343,25 +350,25 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
     describe('batchFillRfqOrders', () => {
         async function assertExpectedFinalBalancesAsync(
             orders: RfqOrder[],
-            takerTokenFillAmounts: BigNumber[] = orders.map(order => order.takerAmount),
-            takerTokenAlreadyFilledAmounts: BigNumber[] = orders.map(() => ZERO_AMOUNT),
+            takerTokenFillAmounts: bigint[] = orders.map(order => order.takerAmount),
+            takerTokenAlreadyFilledAmounts: bigint[] = orders.map(() => ZERO_AMOUNT),
         ): Promise<void> {
             const { makerTokenFilledAmount, takerTokenFilledAmount } = orders
                 .map((order, i) =>
                     computeRfqOrderFilledAmounts(order, takerTokenFillAmounts[i], takerTokenAlreadyFilledAmounts[i]),
                 )
                 .reduce((previous, current) => ({
-                    makerTokenFilledAmount: previous.makerTokenFilledAmount.plus(current.makerTokenFilledAmount),
-                    takerTokenFilledAmount: previous.takerTokenFilledAmount.plus(current.takerTokenFilledAmount),
+                    makerTokenFilledAmount: previous.makerTokenFilledAmount + current.makerTokenFilledAmount,
+                    takerTokenFilledAmount: previous.takerTokenFilledAmount + current.takerTokenFilledAmount,
                 }));
-            const makerBalance = await takerToken.balanceOf(maker).callAsync();
-            const takerBalance = await makerToken.balanceOf(taker).callAsync();
-            expect(makerBalance).to.bignumber.eq(takerTokenFilledAmount);
-            expect(takerBalance).to.bignumber.eq(makerTokenFilledAmount);
+            const makerBalance = await takerToken.balanceOf(maker)();
+            const takerBalance = await makerToken.balanceOf(taker)();
+            expect(makerBalance).to.eq(takerTokenFilledAmount);
+            expect(takerBalance).to.eq(makerTokenFilledAmount);
         }
 
         it('Fully fills multiple orders', async () => {
-            const orders = [...new Array(3)].map(() => getTestRfqOrder());
+            const orders = await Promise.all([...new Array(3)].map(async () => getTestRfqOrder()));
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
@@ -373,8 +380,8 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
                     orders.map(order => order.takerAmount),
                     false,
                 )
-                .awaitTransactionSuccessAsync({ from: taker });
-            const [orderInfos] = await zeroEx.batchGetRfqOrderRelevantStates(orders, signatures).callAsync();
+                ({ from: taker });
+            const [orderInfos] = await zeroEx.batchGetRfqOrderRelevantStates(orders, signatures)();
             orderInfos.map((orderInfo, i) =>
                 assertOrderInfoEquals(orderInfo, {
                     status: OrderStatus.Filled,
@@ -390,7 +397,7 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
             return assertExpectedFinalBalancesAsync(orders);
         });
         it('Partially fills multiple orders', async () => {
-            const orders = [...new Array(3)].map(() => getTestRfqOrder());
+            const orders = await Promise.all([...new Array(3)].map(async () => getTestRfqOrder()));
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
@@ -398,8 +405,8 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
             await testUtils.prepareBalancesForOrdersAsync(orders);
             const tx = await feature
                 .batchFillRfqOrders(orders, signatures, fillAmounts, false)
-                .awaitTransactionSuccessAsync({ from: taker });
-            const [orderInfos] = await zeroEx.batchGetRfqOrderRelevantStates(orders, signatures).callAsync();
+                ({ from: taker });
+            const [orderInfos] = await zeroEx.batchGetRfqOrderRelevantStates(orders, signatures)();
             orderInfos.map((orderInfo, i) =>
                 assertOrderInfoEquals(orderInfo, {
                     status: OrderStatus.Fillable,
@@ -415,8 +422,8 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
             return assertExpectedFinalBalancesAsync(orders, fillAmounts);
         });
         it('Skips over unfillable orders', async () => {
-            const fillableOrders = [...new Array(3)].map(() => getTestRfqOrder());
-            const expiredOrder = getTestRfqOrder({ expiry: createExpiry(-1) });
+            const fillableOrders = await Promise.all([...new Array(3)].map(async () => getTestRfqOrder()));
+            const expiredOrder = await getTestRfqOrder({ expiry: createExpiry(-1) });
             const orders = [expiredOrder, ...fillableOrders];
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
@@ -429,8 +436,8 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
                     orders.map(order => order.takerAmount),
                     false,
                 )
-                .awaitTransactionSuccessAsync({ from: taker });
-            const [orderInfos] = await zeroEx.batchGetRfqOrderRelevantStates(orders, signatures).callAsync();
+                ({ from: taker });
+            const [orderInfos] = await zeroEx.batchGetRfqOrderRelevantStates(orders, signatures)();
             const [expiredOrderInfo, ...filledOrderInfos] = orderInfos;
             assertOrderInfoEquals(expiredOrderInfo, {
                 status: OrderStatus.Expired,
@@ -452,7 +459,7 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
             return assertExpectedFinalBalancesAsync(fillableOrders);
         });
         it('Fills multiple orders with revertIfIncomplete=true', async () => {
-            const orders = [...new Array(3)].map(() => getTestRfqOrder());
+            const orders = await Promise.all([...new Array(3)].map(async () => getTestRfqOrder()));
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
@@ -464,8 +471,8 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
                     orders.map(order => order.takerAmount),
                     true,
                 )
-                .awaitTransactionSuccessAsync({ from: taker });
-            const [orderInfos] = await zeroEx.batchGetRfqOrderRelevantStates(orders, signatures).callAsync();
+                ({ from: taker });
+            const [orderInfos] = await zeroEx.batchGetRfqOrderRelevantStates(orders, signatures)();
             orderInfos.map((orderInfo, i) =>
                 assertOrderInfoEquals(orderInfo, {
                     status: OrderStatus.Filled,
@@ -481,8 +488,8 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
             return assertExpectedFinalBalancesAsync(orders);
         });
         it('If revertIfIncomplete==true, reverts on an unfillable order', async () => {
-            const fillableOrders = [...new Array(3)].map(() => getTestRfqOrder());
-            const expiredOrder = getTestRfqOrder({ expiry: createExpiry(-1) });
+            const fillableOrders = await Promise.all([...new Array(3)].map(async () => getTestRfqOrder()));
+            const expiredOrder = await getTestRfqOrder({ expiry: createExpiry(-1) });
             const orders = [expiredOrder, ...fillableOrders];
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
@@ -495,8 +502,8 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
                     orders.map(order => order.takerAmount),
                     true,
                 )
-                .awaitTransactionSuccessAsync({ from: taker });
-            return expect(tx).to.revertWith(
+                ({ from: taker });
+            return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.BatchFillIncompleteError(
                     expiredOrder.getHash(),
                     ZERO_AMOUNT,
@@ -505,8 +512,8 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
             );
         });
         it('If revertIfIncomplete==true, reverts on an incomplete fill ', async () => {
-            const fillableOrders = [...new Array(3)].map(() => getTestRfqOrder());
-            const partiallyFilledOrder = getTestRfqOrder();
+            const fillableOrders = await Promise.all([...new Array(3)].map(async () => getTestRfqOrder()));
+            const partiallyFilledOrder = await getTestRfqOrder()));
             const partialFillAmount = getRandomPortion(partiallyFilledOrder.takerAmount);
             await testUtils.fillRfqOrderAsync(partiallyFilledOrder, partialFillAmount);
             const orders = [partiallyFilledOrder, ...fillableOrders];
@@ -521,11 +528,11 @@ blockchainTests.resets('BatchFillNativeOrdersFeature', env => {
                     orders.map(order => order.takerAmount),
                     true,
                 )
-                .awaitTransactionSuccessAsync({ from: taker });
-            return expect(tx).to.revertWith(
+                ({ from: taker });
+            return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.BatchFillIncompleteError(
                     partiallyFilledOrder.getHash(),
-                    partiallyFilledOrder.takerAmount.minus(partialFillAmount),
+                    partiallyFilledOrder.takerAmount - partialFillAmount,
                     partiallyFilledOrder.takerAmount,
                 ),
             );

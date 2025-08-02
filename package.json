@@ -28,6 +28,7 @@
         "build:ci": "yarn build",
         "build:contracts": "wsrun -p ${npm_package_config_contractsPackages} --fast-exit -r --stages --exclude-missing -c build:ts",
         "build:packages": "wsrun -p ${npm_package_config_nonContractPackages} --fast-exit -r --stages --exclude-missing -c build",
+        "build:forge": "wsrun -p ${npm_package_config_contractsPackages} --fast-exit --parallel --exclude-missing -c build:forge",
         "build:ts": "yarn build:packages && yarn build:contracts",
         "watch:ts": "yarn tsc -b -w",
         "clean": "yarn clean:all",

@@ -1,69 +1,73 @@
 import { BaseContract } from '@0x/base-contract';
-import { blockchainTests, constants, expect, randomAddress } from '@0x/contracts-test-utils';
-import { BigNumber, hexUtils, ZeroExRevertErrors } from '@0x/utils';
+import { blockchainTests, constants, expect, randomAddress } from '@0x/test-utils';
+import { hexUtils, ZeroExRevertErrors } from '@0x/utils';
 import { DataItem, MethodAbi } from 'ethereum-types';
 import * as _ from 'lodash';
+import { ethers } from 'ethers';
 
 import { artifacts } from './artifacts';
 import { abis } from './utils/abis';
-import { deployFullFeaturesAsync, FullFeatures } from './utils/migration';
-import {
+import { deployAllFeaturesAsync, FullFeatures } from './utils/migration';
+import { TestFullMigration__factory } from '../src/typechain-types/factories/contracts/test';
+import { ZeroEx__factory } from '../src/typechain-types/factories/contracts/src';
+import type { TestFullMigration } from '../src/typechain-types/contracts/test/TestFullMigration';
+import type { ZeroEx } from '../src/typechain-types/contracts/src/ZeroEx';
+import { 
+    ITransformERC20FeatureContract,
     IMetaTransactionsFeatureContract,
     INativeOrdersFeatureContract,
     IOwnableFeatureContract,
-    ITransformERC20FeatureContract,
-    TestFullMigrationContract,
-    ZeroExContract,
+    ISimpleFunctionRegistryFeatureContract,
+    IUniswapFeatureContract,
+    IBootstrapFeatureContract,
+    TestFullMigrationContract
 } from './wrappers';
 
 const { NULL_ADDRESS } = constants;
 
-blockchainTests.resets('Full migration', env => {
+blockchainTests('Full migration', env => {
     let owner: string;
-    let zeroEx: ZeroExContract;
+    let zeroEx: ZeroEx;
     let features: FullFeatures;
-    let migrator: TestFullMigrationContract;
+    let migrator: TestFullMigration;
     const transformerDeployer = randomAddress();
 
     before(async () => {
         [owner] = await env.getAccountAddressesAsync();
-        migrator = await TestFullMigrationContract.deployFrom0xArtifactAsync(
-            artifacts.TestFullMigration,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-            env.txDefaults.from as string,
+        const signer = await env.provider.getSigner(owner);
+        const migratorFactory = new TestFullMigration__factory(signer);
+        migrator = await migratorFactory.deploy(
+            env.txDefaults.from as string
         );
-        zeroEx = await ZeroExContract.deployFrom0xArtifactAsync(
-            artifacts.ZeroEx,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-            await migrator.getBootstrapper().callAsync(),
-        );
-        features = await deployFullFeaturesAsync(env.provider, env.txDefaults, { zeroExAddress: zeroEx.address });
+        await migrator.waitForDeployment();
+        const bootstrapper = await migrator.getBootstrapper();
+        const zeroExFactory = new ZeroEx__factory(signer);
+        zeroEx = await zeroExFactory.deploy(bootstrapper);
+        await zeroEx.waitForDeployment();
+        features = await deployAllFeaturesAsync(env.provider, env.txDefaults, {}, { zeroExAddress: await zeroEx.getAddress() });
         await migrator
-            .migrateZeroEx(owner, zeroEx.address, features, { transformerDeployer })
-            .awaitTransactionSuccessAsync();
+            .migrateZeroEx(owner, await zeroEx.getAddress(), features, { transformerDeployer });
     });
 
     it('ZeroEx has the correct owner', async () => {
-        const ownable = new IOwnableFeatureContract(zeroEx.address, env.provider, env.txDefaults);
-        const actualOwner = await ownable.owner().callAsync();
+        const ownable = new IOwnableFeatureContract(await zeroEx.getAddress(), env.provider, env.txDefaults);
+        const actualOwner = await ownable.owner();
         expect(actualOwner).to.eq(owner);
     });
 
     it('FullMigration contract self-destructs', async () => {
-        const dieRecipient = await migrator.dieRecipient().callAsync();
+        const dieRecipient = await migrator.dieRecipient();
         expect(dieRecipient).to.eq(owner);
     });
 
     it('Non-deployer cannot call migrateZeroEx()', async () => {
         const notDeployer = randomAddress();
-        const tx = migrator
-            .migrateZeroEx(owner, zeroEx.address, features, { transformerDeployer })
-            .callAsync({ from: notDeployer });
-        return expect(tx).to.revertWith('FullMigration/INVALID_SENDER');
+        const notDeployerSigner = await env.provider.getSigner(notDeployer);
+        return expect(
+            migrator
+                .connect(notDeployerSigner)
+                .migrateZeroEx(owner, await zeroEx.getAddress(), features, { transformerDeployer })
+        ).to.be.revertedWith('FullMigration/INVALID_SENDER');
     });
 
     const FEATURE_FNS = {
@@ -163,12 +167,11 @@ blockchainTests.resets('Full migration', env => {
                 // play it safe and pick zero.
                 return 0;
             }
-            return new BigNumber(hexUtils.random(parseInt(/\d+$/.exec(item.type)![0], 10) / 8));
+            return BigInt(hexUtils.random(parseInt(/\d+$/.exec(item.type)![0], 10) / 8));
         }
         if (/^int\d+$/.test(item.type)) {
-            return new BigNumber(hexUtils.random(parseInt(/\d+$/.exec(item.type)![0], 10) / 8))
-                .div(2)
-                .times(_.sample([-1, 1])!);
+            const randomValue = BigInt(hexUtils.random(parseInt(/\d+$/.exec(item.type)![0], 10) / 8));
+            return (randomValue / 2n) * BigInt(_.sample([-1, 1])!);
         }
         throw new Error(`Unhandled input type: '${item.type}'`);
     }
@@ -184,7 +187,7 @@ blockchainTests.resets('Full migration', env => {
             for (const fn of featureInfo.fns) {
                 it(`${fn} is registered`, async () => {
                     const selector = contract.getSelector(fn);
-                    const impl = await zeroEx.getFunctionImplementation(selector).callAsync();
+                    const impl = await zeroEx.getFunctionImplementation(selector)();
                     expect(impl).to.not.eq(NULL_ADDRESS);
                 });
 
@@ -194,8 +197,7 @@ blockchainTests.resets('Full migration', env => {
                             d => d.type === 'function' && (d as MethodAbi).name === fn,
                         ) as MethodAbi;
                         const inputs = createFakeInputs(method.inputs);
-                        const tx = (contract as any)[fn](...inputs).callAsync();
-                        return expect(tx).to.revertWith(
+                        return expect((contract as any)[fn](...inputs)).to.be.revertedWith(
                             new ZeroExRevertErrors.Common.OnlyCallableBySelfError(env.txDefaults.from),
                         );
                     });
@@ -212,7 +214,7 @@ blockchainTests.resets('Full migration', env => {
         });
 
         it('has the correct transformer deployer', async () => {
-            return expect(feature.getTransformerDeployer().callAsync()).to.become(transformerDeployer);
+            return expect(feature.getTransformerDeployer()()).to.become(transformerDeployer);
         });
     });
 });

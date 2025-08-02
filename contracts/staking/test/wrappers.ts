@@ -9,13 +9,26 @@ import {
     StakingProxy__factory,
     StakingPatch__factory,
     Staking__factory,
+    TestMixinStake__factory,
+    TestCobbDouglas__factory,
+    TestStaking__factory,
+    TestCumulativeRewardTracking__factory,
+    ZrxVault__factory,
 } from '../src/typechain-types';
 import type {
     StakingProxy,
     StakingPatch,
     Staking,
+    TestMixinStake,
+    TestCobbDouglas,
+    TestStaking,
+    TestCumulativeRewardTracking,
+    ZrxVault,
 } from '../src/typechain-types';
 import { ethers } from 'ethers';
+import { BaseContract } from '@0x/base-contract';
+import { BigNumber } from '@0x/utils';
+import { DecodedLogArgs, LogWithDecodedArgs, TransactionReceiptWithDecodedLogs } from 'ethereum-types';
 
 // Export all TypeChain types for convenience
 export * from '../src/typechain-types';
@@ -131,6 +144,9 @@ export class StakingProxyContract {
             }
         };
     }
+    
+    // Add 0x BaseContract compatibility
+    public static deployFrom0xArtifactAsync = BaseContract.deployFrom0xArtifactAsync;
 }
 
 export class StakingPatchContract {
@@ -217,4 +233,30 @@ export class StakingPatchContract {
             }
         };
     }
+}
+
+// Direct exports with deployFrom0xArtifactAsync support
+export class TestMixinStakeContract extends BaseContract {}
+export class TestStakingContract extends BaseContract {}
+export class TestCobbDouglasContract extends BaseContract {}
+export class TestCumulativeRewardTrackingContract extends BaseContract {}
+export class ZrxVaultContract extends BaseContract {}
+
+// Test event definitions for legacy compatibility
+export const TestStakingEvents = {
+    EpochEnded: 'EpochEnded',
+    StakingPoolEarnedRewardsInEpoch: 'StakingPoolEarnedRewardsInEpoch',
+};
+
+// Event args types (extend these as needed for specific tests)
+export interface IStakingEventsEpochEndedEventArgs extends DecodedLogArgs {
+    epoch: BigNumber;
+    rewardsAvailable: BigNumber;
+    totalFeesCollected: BigNumber;
+    totalWeightedStake: BigNumber;
+}
+
+export interface IStakingEventsStakingPoolEarnedRewardsInEpochEventArgs extends DecodedLogArgs {
+    epoch: BigNumber;
+    poolId: string;
 }

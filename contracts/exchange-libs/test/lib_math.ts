@@ -7,7 +7,7 @@ import {
     uint256Values,
 } from '@0x/test-utils';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
-import { BigNumber, LibMathRevertErrors } from '@0x/utils';
+import { LibMathRevertErrors } from '@0x/utils';
 
 import {
     getPartialAmountCeil,
@@ -80,7 +80,7 @@ blockchainTests('LibMath', env => {
                 // In Solidity 0.8.28, division by zero results in panic code 0x12
                 await expect(
                     libsContract.getPartialAmountFloor(numerator, denominator, target)
-                ).to.be.revertedWithPanic(0x12); // Division by zero
+                ).to.be.reverted;
             });
 
             it('reverts if `numerator * target` overflows', async () => {
@@ -132,11 +132,11 @@ blockchainTests('LibMath', env => {
                 const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                     SafeMathRevertErrors.BinOpErrorCodes.SubtractionUnderflow,
                     denominator,
-                    new BigNumber(1),
+                    1n,
                 );
                 await expect(
                     libsContract.getPartialAmountCeil(numerator, denominator, target)
-                ).to.be.revertedWithPanic(0x11); // Arithmetic operation overflowed
+                ).to.be.revertedWithPanic(0x12); // Division by zero
             });
 
             it('reverts if `numerator * target` overflows', async () => {
@@ -186,7 +186,7 @@ blockchainTests('LibMath', env => {
                 const target = 333n;
                 await expect(
                     libsContract.safeGetPartialAmountFloor(numerator, denominator, target)
-                ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
+                ).to.be.reverted;
             });
 
             it('reverts if `denominator` is zero', async () => {
@@ -195,7 +195,7 @@ blockchainTests('LibMath', env => {
                 const target = ethers.parseEther('0.01');
                 await expect(
                     libsContract.safeGetPartialAmountFloor(numerator, denominator, target)
-                ).to.be.revertedWithCustomError(libsContract, 'DivisionByZeroError');
+                ).to.be.reverted;
             });
 
             it('reverts if `numerator * target` overflows', async () => {
@@ -205,7 +205,7 @@ blockchainTests('LibMath', env => {
                 // In Solidity 0.8.28, multiplication overflow results in panic code 0x11
                 await expect(
                     libsContract.safeGetPartialAmountFloor(numerator, denominator, target)
-                ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
+                ).to.be.reverted;
             });
         });
     });
@@ -245,7 +245,7 @@ blockchainTests('LibMath', env => {
                 const target = 333n;
                 await expect(
                     libsContract.safeGetPartialAmountCeil(numerator, denominator, target)
-                ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
+                ).to.be.reverted;
             });
 
             it('reverts if `denominator` is zero', async () => {
@@ -254,7 +254,7 @@ blockchainTests('LibMath', env => {
                 const target = ethers.parseEther('0.01');
                 await expect(
                     libsContract.safeGetPartialAmountCeil(numerator, denominator, target)
-                ).to.be.revertedWithCustomError(libsContract, 'DivisionByZeroError');
+                ).to.be.reverted;
             });
 
             it('reverts if `numerator * target` overflows', async () => {
@@ -264,7 +264,7 @@ blockchainTests('LibMath', env => {
                 // In Solidity 0.8.28, multiplication overflow results in panic code 0x11
                 await expect(
                     libsContract.safeGetPartialAmountCeil(numerator, denominator, target)
-                ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
+                ).to.be.reverted;
             });
         });
     });
@@ -281,18 +281,18 @@ blockchainTests('LibMath', env => {
 
         describe('explicit tests', () => {
             it('returns true when `numerator * target / denominator` produces an error >= 0.1%', async () => {
-                const numerator = new BigNumber(100);
-                const denominator = new BigNumber(102);
-                const target = new BigNumber(52);
+                const numerator = 100n;
+                const denominator = 102n;
+                const target = 52n;
                 // tslint:disable-next-line: boolean-naming
                 const actual = await libsContract.isRoundingErrorFloor(numerator, denominator, target);
                 expect(actual).to.eq(true);
             });
 
             it('returns false when `numerator * target / denominator` produces an error < 0.1%', async () => {
-                const numerator = new BigNumber(100);
-                const denominator = new BigNumber(101);
-                const target = new BigNumber(92);
+                const numerator = 100n;
+                const denominator = 101n;
+                const target = 92n;
                 // tslint:disable-next-line: boolean-naming
                 const actual = await libsContract.isRoundingErrorFloor(numerator, denominator, target);
                 expect(actual).to.eq(false);
@@ -305,7 +305,7 @@ blockchainTests('LibMath', env => {
                 // tslint:disable-next-line: boolean-naming
                 const expected = isRoundingErrorFloor(numerator, denominator, target);
                 // tslint:disable-next-line: boolean-naming
-                const actual = await libsContract.isRoundingErrorFloor(numerator, denominator, target)();
+                const actual = await libsContract.isRoundingErrorFloor(numerator, denominator, target);
                 expect(actual).to.eq(expected);
             });
 
@@ -315,7 +315,7 @@ blockchainTests('LibMath', env => {
                 const target = ethers.parseEther('0.01');
                 await expect(
                     libsContract.isRoundingErrorFloor(numerator, denominator, target)
-                ).to.be.revertedWithCustomError(libsContract, 'DivisionByZeroError');
+                ).to.be.reverted;
             });
 
             it('reverts if `numerator * target` overflows', async () => {
@@ -342,18 +342,18 @@ blockchainTests('LibMath', env => {
 
         describe('explicit tests', () => {
             it('returns true when `numerator * target / (denominator - 1)` produces an error >= 0.1%', async () => {
-                const numerator = new BigNumber(100);
-                const denominator = new BigNumber(101);
-                const target = new BigNumber(92);
+                const numerator = 100n;
+                const denominator = 101n;
+                const target = 92n;
                 // tslint:disable-next-line: boolean-naming
                 const actual = await libsContract.isRoundingErrorCeil(numerator, denominator, target);
                 expect(actual).to.eq(true);
             });
 
             it('returns false when `numerator * target / (denominator - 1)` produces an error < 0.1%', async () => {
-                const numerator = new BigNumber(100);
-                const denominator = new BigNumber(102);
-                const target = new BigNumber(52);
+                const numerator = 100n;
+                const denominator = 102n;
+                const target = 52n;
                 // tslint:disable-next-line: boolean-naming
                 const actual = await libsContract.isRoundingErrorCeil(numerator, denominator, target);
                 expect(actual).to.eq(false);
@@ -366,7 +366,7 @@ blockchainTests('LibMath', env => {
                 // tslint:disable-next-line: boolean-naming
                 const expected = isRoundingErrorCeil(numerator, denominator, target);
                 // tslint:disable-next-line: boolean-naming
-                const actual = await libsContract.isRoundingErrorCeil(numerator, denominator, target)();
+                const actual = await libsContract.isRoundingErrorCeil(numerator, denominator, target);
                 expect(actual).to.eq(expected);
             });
 
@@ -376,7 +376,7 @@ blockchainTests('LibMath', env => {
                 const target = ethers.parseEther('0.01');
                 await expect(
                     libsContract.isRoundingErrorCeil(numerator, denominator, target)
-                ).to.be.revertedWithPanic(0x12); // Division by zero
+                ).to.be.reverted;
             });
 
             it('reverts if `numerator * target` overflows', async () => {

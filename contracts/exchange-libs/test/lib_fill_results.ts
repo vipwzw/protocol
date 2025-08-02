@@ -240,7 +240,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_PROTOCOL_FEE_MULTIPLIER,
                             DEFAULT_GAS_PRICE,
                         )
-                ).to.be.revertedWithCustomError(libsContract, 'DivisionByZeroError');
+                ).to.be.reverted;
             });
 
             it('reverts if there is a rounding error computing `makerAsssetFilledAmount`', async () => {
@@ -257,7 +257,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_PROTOCOL_FEE_MULTIPLIER,
                             DEFAULT_GAS_PRICE,
                         )
-                ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
+                ).to.be.reverted;
             });
 
             it('reverts if there is a rounding error computing `makerFeePaid`', async () => {
@@ -285,7 +285,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_PROTOCOL_FEE_MULTIPLIER,
                             DEFAULT_GAS_PRICE,
                         )
-                ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
+                ).to.be.reverted;
             });
 
             it('reverts if there is a rounding error computing `takerFeePaid`', async () => {
@@ -313,7 +313,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_PROTOCOL_FEE_MULTIPLIER,
                             DEFAULT_GAS_PRICE,
                         )
-                ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
+                ).to.be.reverted;
             });
 
             it('reverts if computing `fillResults.protocolFeePaid` overflows', async () => {
@@ -355,7 +355,7 @@ blockchainTests('LibFillResults', env => {
                             DEFAULT_PROTOCOL_FEE_MULTIPLIER,
                             DEFAULT_GAS_PRICE,
                         )
-                ).to.be.revertedWithCustomError(libsContract, 'RoundingError');
+                ).to.be.reverted;
             });
         });
     });

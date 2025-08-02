@@ -18,4 +18,11 @@ export {
     IEtherToken__factory,
     DummyERC20Token,
     DummyERC20Token__factory,
+    // Test contracts
+    DummyNoReturnERC20Token,
+    DummyNoReturnERC20Token__factory,
+    DummyMultipleReturnERC20Token,
+    DummyMultipleReturnERC20Token__factory,
+    UntransferrableDummyERC20Token,
+    UntransferrableDummyERC20Token__factory,
 } from './typechain-types';

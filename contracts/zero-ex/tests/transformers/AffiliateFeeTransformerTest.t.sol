@@ -14,9 +14,9 @@
 
 pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/WETH9.sol";
+import "@0x/contracts-erc20/contracts/src/WETH9.sol";
 
-import "utils/BaseTest.sol";
+import "../utils/BaseTest.sol";
 import "../../contracts/src/transformers/AffiliateFeeTransformer.sol";
 import "../../contracts/src/transformers/IERC20Transformer.sol";
 

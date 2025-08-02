@@ -4,18 +4,6 @@ import '@nomicfoundation/hardhat-chai-matchers';
 import '@typechain/hardhat';
 import '@typechain/ethers-v6';
 
-// Extend HardhatUserConfig to include typechain
-declare module 'hardhat/config' {
-    interface HardhatUserConfig {
-        typechain?: {
-            outDir?: string;
-            target?: string;
-            alwaysGenerateOverloads?: boolean;
-            discriminateTypes?: boolean;
-        };
-    }
-}
-
 const config: HardhatUserConfig = {
     solidity: {
         version: '0.8.28',
@@ -24,7 +12,7 @@ const config: HardhatUserConfig = {
                 enabled: true,
                 runs: 1000000,
             },
-            evmVersion: 'cancun',
+            evmVersion: 'shanghai',
         },
     },
     networks: {

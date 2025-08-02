@@ -6,36 +6,32 @@ import {
     verifyEventsFromLogs,
 } from '@0x/test-utils';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
-import { BigNumber, hexUtils } from '@0x/utils';
+import { hexUtils } from '@0x/utils';
 import * as _ from 'lodash';
 
 import { StakingRevertErrors } from '../../src';
-
-import { artifacts } from '../artifacts';
+import { TestMixinStakingPool__factory, TestMixinStakingPool } from '../../src/typechain-types';
+import { ethers } from 'hardhat';
 import {
-    TestMixinStakingPoolContract,
     TestMixinStakingPoolEvents,
     TestMixinStakingPoolStakingPoolCreatedEventArgs as StakingPoolCreated,
 } from '../wrappers';
 
 blockchainTests.resets('MixinStakingPool unit tests', env => {
-    let testContract: TestMixinStakingPoolContract;
+    let testContract: TestMixinStakingPool;
     let operator: string;
     let maker: string;
     let notOperatorOrMaker: string;
 
     before(async () => {
         [operator, maker, notOperatorOrMaker] = await env.getAccountAddressesAsync();
-        testContract = await TestMixinStakingPoolContract.deployFrom0xArtifactAsync(
-            artifacts.TestMixinStakingPool,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
+        const [deployer] = await ethers.getSigners();
+        const factory = new TestMixinStakingPool__factory(deployer);
+        testContract = await factory.deploy();
     });
 
     function toNextPoolId(lastPoolId: string): string {
-        return hexUtils.leftPad(new BigNumber(lastPoolId.slice(2), 16).plus(1));
+        return hexUtils.leftPad((BigInt(lastPoolId.slice(2), 16) + 1n).toString(16));
     }
 
     function randomOperatorShare(): number {
@@ -92,7 +88,7 @@ blockchainTests.resets('MixinStakingPool unit tests', env => {
         let nextPoolId: string;
 
         before(async () => {
-            nextPoolId = toNextPoolId(await testContract.lastPoolId().callAsync());
+            nextPoolId = toNextPoolId(await testContract.lastPoolId()());
         });
 
         it('fails if the next pool ID overflows', async () => {
@@ -130,7 +126,7 @@ blockchainTests.resets('MixinStakingPool unit tests', env => {
             const poolIds = createEvents.map(e => e.poolId);
             expect(poolIds[0]).to.not.eq(poolIds[1]);
             const pools = await Promise.all(
-                poolIds.map(async poolId => testContract.getStakingPool(poolId).callAsync()),
+                poolIds.map(async poolId => testContract.getStakingPool(poolId)()),
             );
             expect(pools[0].operator).to.eq(pools[1].operator);
         });
@@ -143,7 +139,7 @@ blockchainTests.resets('MixinStakingPool unit tests', env => {
                 logs,
                 TestMixinStakingPoolEvents.StakingPoolCreated,
             );
-            const makerPool = await testContract.poolIdByMaker(operator).callAsync();
+            const makerPool = await testContract.poolIdByMaker(operator)();
             expect(makerPool).to.eq(createEvents[0].poolId);
         });
         it('computes correct next pool ID', async () => {
@@ -159,27 +155,27 @@ blockchainTests.resets('MixinStakingPool unit tests', env => {
         });
         it('increments last pool ID counter', async () => {
             await testContract.createStakingPool(randomOperatorShare(), false).awaitTransactionSuccessAsync();
-            const lastPoolIdAfter = await testContract.lastPoolId().callAsync();
+            const lastPoolIdAfter = await testContract.lastPoolId()();
             expect(lastPoolIdAfter).to.eq(nextPoolId);
         });
         it('records pool details', async () => {
             const operatorShare = randomOperatorShare();
             await testContract.createStakingPool(operatorShare, false).awaitTransactionSuccessAsync({ from: operator });
-            const pool = await testContract.getStakingPool(nextPoolId).callAsync();
+            const pool = await testContract.getStakingPool(nextPoolId)();
             expect(pool.operator).to.eq(operator);
             expect(pool.operatorShare).to.bignumber.eq(operatorShare);
         });
         it('records pool details when operator share is 100%', async () => {
             const operatorShare = constants.PPM_100_PERCENT;
             await testContract.createStakingPool(operatorShare, false).awaitTransactionSuccessAsync({ from: operator });
-            const pool = await testContract.getStakingPool(nextPoolId).callAsync();
+            const pool = await testContract.getStakingPool(nextPoolId)();
             expect(pool.operator).to.eq(operator);
             expect(pool.operatorShare).to.bignumber.eq(operatorShare);
         });
         it('records pool details when operator share is 0%', async () => {
             const operatorShare = constants.ZERO_AMOUNT;
             await testContract.createStakingPool(operatorShare, false).awaitTransactionSuccessAsync({ from: operator });
-            const pool = await testContract.getStakingPool(nextPoolId).callAsync();
+            const pool = await testContract.getStakingPool(nextPoolId)();
             expect(pool.operator).to.eq(operator);
             expect(pool.operatorShare).to.bignumber.eq(operatorShare);
         });
@@ -192,7 +188,7 @@ blockchainTests.resets('MixinStakingPool unit tests', env => {
         it('can add operator as a maker', async () => {
             const operatorShare = randomOperatorShare();
             await testContract.createStakingPool(operatorShare, true).awaitTransactionSuccessAsync({ from: operator });
-            const makerPoolId = await testContract.poolIdByMaker(operator).callAsync();
+            const makerPoolId = await testContract.poolIdByMaker(operator)();
             expect(makerPoolId).to.eq(nextPoolId);
         });
         it('emits a `StakingPoolCreated` event', async () => {
@@ -277,7 +273,7 @@ blockchainTests.resets('MixinStakingPool unit tests', env => {
             await testContract
                 .decreaseStakingPoolOperatorShare(poolId, operatorShare - 1)
                 .awaitTransactionSuccessAsync({ from: operator });
-            const pool = await testContract.getStakingPool(poolId).callAsync();
+            const pool = await testContract.getStakingPool(poolId)();
             expect(pool.operatorShare).to.bignumber.eq(operatorShare - 1);
         });
         it('does not modify operator share if equal to current', async () => {
@@ -285,7 +281,7 @@ blockchainTests.resets('MixinStakingPool unit tests', env => {
             await testContract.decreaseStakingPoolOperatorShare(poolId, operatorShare).awaitTransactionSuccessAsync({
                 from: operator,
             });
-            const pool = await testContract.getStakingPool(poolId).callAsync();
+            const pool = await testContract.getStakingPool(poolId)();
             expect(pool.operatorShare).to.bignumber.eq(operatorShare);
         });
         it('does not modify operator', async () => {
@@ -293,7 +289,7 @@ blockchainTests.resets('MixinStakingPool unit tests', env => {
             await testContract
                 .decreaseStakingPoolOperatorShare(poolId, operatorShare - 1)
                 .awaitTransactionSuccessAsync({ from: operator });
-            const pool = await testContract.getStakingPool(poolId).callAsync();
+            const pool = await testContract.getStakingPool(poolId)();
             expect(pool.operator).to.eq(operator);
         });
         it('emits an `OperatorShareDecreased` event', async () => {
@@ -319,30 +315,30 @@ blockchainTests.resets('MixinStakingPool unit tests', env => {
         it('records sender as maker for the pool', async () => {
             const { poolId } = await createPoolAsync();
             await testContract.joinStakingPoolAsMaker(poolId).awaitTransactionSuccessAsync({ from: maker });
-            const makerPoolId = await testContract.poolIdByMaker(maker).callAsync();
+            const makerPoolId = await testContract.poolIdByMaker(maker)();
             expect(makerPoolId).to.eq(poolId);
         });
         it('operator can join as maker for the pool', async () => {
             const { poolId } = await createPoolAsync();
             await testContract.joinStakingPoolAsMaker(poolId).awaitTransactionSuccessAsync({ from: operator });
-            const makerPoolId = await testContract.poolIdByMaker(operator).callAsync();
+            const makerPoolId = await testContract.poolIdByMaker(operator)();
             expect(makerPoolId).to.eq(poolId);
         });
         it('can join the same pool as a maker twice', async () => {
             const { poolId } = await createPoolAsync();
             await testContract.joinStakingPoolAsMaker(poolId).awaitTransactionSuccessAsync({ from: maker });
             await testContract.joinStakingPoolAsMaker(poolId).awaitTransactionSuccessAsync({ from: maker });
-            const makerPoolId = await testContract.poolIdByMaker(maker).callAsync();
+            const makerPoolId = await testContract.poolIdByMaker(maker)();
             expect(makerPoolId).to.eq(poolId);
         });
         it('can only be a maker in one pool at a time', async () => {
             const { poolId: poolId1 } = await createPoolAsync();
             const { poolId: poolId2 } = await createPoolAsync();
             await testContract.joinStakingPoolAsMaker(poolId1).awaitTransactionSuccessAsync({ from: maker });
-            let makerPoolId = await testContract.poolIdByMaker(maker).callAsync();
+            let makerPoolId = await testContract.poolIdByMaker(maker)();
             expect(makerPoolId).to.eq(poolId1);
             await testContract.joinStakingPoolAsMaker(poolId2).awaitTransactionSuccessAsync({ from: maker });
-            makerPoolId = await testContract.poolIdByMaker(maker).callAsync();
+            makerPoolId = await testContract.poolIdByMaker(maker)();
             expect(makerPoolId).to.eq(poolId2);
         });
         it('emits a `MakerStakingPoolSet` event', async () => {

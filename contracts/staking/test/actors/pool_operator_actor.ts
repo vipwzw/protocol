@@ -38,16 +38,15 @@ export class PoolOperatorActor extends BaseActor {
         revertError?: RevertError,
     ): Promise<void> {
         // decrease operator share
-        const txReceiptPromise = this._stakingApiWrapper.stakingContract
-            .decreaseStakingPoolOperatorShare(poolId, newOperatorShare)
-            .awaitTransactionSuccessAsync({ from: this._owner });
+        const tx = await this._stakingApiWrapper.stakingContract.decreaseStakingPoolOperatorShare(poolId, newOperatorShare);
+        const txReceiptPromise = tx.wait();
         if (revertError !== undefined) {
             await expect(txReceiptPromise).to.revertWith(revertError);
             return;
         }
         await txReceiptPromise;
         // Check operator share
-        const pool = await this._stakingApiWrapper.stakingContract.getStakingPool(poolId).callAsync();
+        const pool = await this._stakingApiWrapper.stakingContract.getStakingPool(poolId);
         expect(pool.operatorShare, 'updated operator share').to.be.bignumber.equal(newOperatorShare);
     }
 }

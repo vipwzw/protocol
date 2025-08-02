@@ -11,12 +11,36 @@ function toBigInt(x: Numberish): bigint {
         return x;
     }
     if (typeof x === 'number') {
-        return BigInt(Math.floor(x));
+        // 处理科学记数法等，先转换为整数再转 BigInt
+        const intValue = Math.floor(x);
+        return BigInt(intValue);
     }
     if (typeof x === 'string') {
-        return BigInt(x);
+        // 处理字符串中的科学记数法
+        try {
+            const numValue = parseFloat(x);
+            if (Number.isFinite(numValue)) {
+                return BigInt(Math.floor(numValue));
+            }
+        } catch (e) {
+            // 如果 parseFloat 失败，尝试直接转换
+        }
+        try {
+            return BigInt(x);
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            throw new Error(`Cannot convert string "${x}" to bigint: ${errorMsg}`);
+        }
     }
-    throw new Error(`Cannot convert ${typeof x} to bigint`);
+    // 处理可能的 BigNumber 对象（来自 @0x/utils 或其他库）
+    if (x && typeof x === 'object' && 'toString' in x && typeof (x as any).toString === 'function') {
+        try {
+            return BigInt((x as any).toString());
+        } catch (e) {
+            // 如果转换失败，继续抛出原始错误
+        }
+    }
+    throw new Error(`Cannot convert ${typeof x} (${Object.prototype.toString.call(x)}) to bigint`);
 }
 
 /**
@@ -146,13 +170,19 @@ export function assertRoughlyEquals(
     const actualBig = toBigInt(actual);
     const expectedBig = toBigInt(expected);
     
+    // 如果值完全相同，直接通过
+    if (actualBig === expectedBig) {
+        return;
+    }
+    
     if (expectedBig === 0n) {
         if (actualBig === 0n) return;
         throw new Error(`Expected ${actualBig} to equal ${expectedBig}`);
     }
     
     const diff = actualBig > expectedBig ? actualBig - expectedBig : expectedBig - actualBig;
-    const toleranceAmount = (expectedBig * BigInt(Math.floor(tolerancePercentage * 10000))) / 10000n;
+    // 修复负数容差计算：使用绝对值
+    const toleranceAmount = (expectedBig < 0n ? -expectedBig : expectedBig) * BigInt(Math.floor(tolerancePercentage * 10000)) / 10000n;
     
     if (diff > toleranceAmount) {
         throw new Error(`Expected ${actualBig} to be roughly equal to ${expectedBig} (tolerance: ${tolerancePercentage * 100}%), but difference was ${diff}`);

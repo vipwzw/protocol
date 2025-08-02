@@ -12,6 +12,7 @@
     "scripts": {
         "build": "forge build && npx hardhat compile && npx hardhat typechain && tsc -b",
         "build:ts": "tsc -b",
+        "build:forge": "forge build",
         "build:ci": "yarn build",
         "pre_build": "run-s compile typechain",
         "test": "run-s test:hardhat test:forge",

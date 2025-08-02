@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import {
     blockchainTests,
     constants,
@@ -5,12 +6,18 @@ import {
     getRandomInteger,
     randomAddress,
     verifyEventsFromLogs,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import { MetaTransaction, MetaTransactionFields } from '@0x/protocol-utils';
-import { BigNumber, hexUtils, StringRevertError, ZeroExRevertErrors } from '@0x/utils';
+import { hexUtils, StringRevertError, ZeroExRevertErrors } from '@0x/utils';
 import * as _ from 'lodash';
 
-import { IZeroExContract, MetaTransactionsFeatureContract } from '../../src/wrappers';
+import { 
+    IZeroExContract, 
+    MetaTransactionsFeatureContract,
+    TestMetaTransactionsTransformERC20Feature__factory,
+    TestMetaTransactionsNativeOrdersFeature__factory,
+    TestMintableERC20Token__factory
+} from '../../src/wrappers';
 import { artifacts } from '../artifacts';
 import { abis } from '../utils/abis';
 import { fullMigrateAsync } from '../utils/migration';
@@ -25,7 +32,7 @@ import {
 
 const { NULL_ADDRESS, ZERO_AMOUNT } = constants;
 
-blockchainTests.resets('MetaTransactions feature', env => {
+blockchainTests('MetaTransactions feature', env => {
     let owner: string;
     let maker: string;
     let sender: string;
@@ -37,44 +44,41 @@ blockchainTests.resets('MetaTransactions feature', env => {
     let transformERC20Feature: TestMetaTransactionsTransformERC20FeatureContract;
     let nativeOrdersFeature: TestMetaTransactionsNativeOrdersFeatureContract;
 
-    const MAX_FEE_AMOUNT = new BigNumber('1e18');
-    const TRANSFORM_ERC20_ONE_WEI_VALUE = new BigNumber(555);
-    const TRANSFORM_ERC20_FAILING_VALUE = new BigNumber(666);
-    const TRANSFORM_ERC20_REENTER_VALUE = new BigNumber(777);
-    const TRANSFORM_ERC20_BATCH_REENTER_VALUE = new BigNumber(888);
+    const MAX_FEE_AMOUNT = ethers.parseEther('1');
+    const TRANSFORM_ERC20_ONE_WEI_VALUE = 555n;
+    const TRANSFORM_ERC20_FAILING_VALUE = 666n;
+    const TRANSFORM_ERC20_REENTER_VALUE = 777n;
+    const TRANSFORM_ERC20_BATCH_REENTER_VALUE = 888n;
     const REENTRANCY_FLAG_MTX = 0x1;
 
     before(async () => {
         let possibleSigners: string[];
         [owner, maker, sender, notSigner, ...possibleSigners] = await env.getAccountAddressesAsync();
-        transformERC20Feature = await TestMetaTransactionsTransformERC20FeatureContract.deployFrom0xArtifactAsync(
-            artifacts.TestMetaTransactionsTransformERC20Feature,
-            env.provider,
-            env.txDefaults,
-            {},
-        );
-        nativeOrdersFeature = await TestMetaTransactionsNativeOrdersFeatureContract.deployFrom0xArtifactAsync(
-            artifacts.TestMetaTransactionsNativeOrdersFeature,
-            env.provider,
-            env.txDefaults,
-            {},
-        );
+        
+        const signer = await env.provider.getSigner(owner);
+        
+        const transformERC20FeatureFactory = new TestMetaTransactionsTransformERC20Feature__factory(signer);
+        transformERC20Feature = await transformERC20FeatureFactory.deploy();
+        await transformERC20Feature.waitForDeployment();
+        
+        const nativeOrdersFeatureFactory = new TestMetaTransactionsNativeOrdersFeature__factory(signer);
+        nativeOrdersFeature = await nativeOrdersFeatureFactory.deploy();
+        await nativeOrdersFeature.waitForDeployment();
+        
         zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {
-            transformERC20: transformERC20Feature.address,
-            nativeOrders: nativeOrdersFeature.address,
+            transformERC20: await transformERC20Feature.getAddress(),
+            nativeOrders: await nativeOrdersFeature.getAddress(),
         });
         feature = new MetaTransactionsFeatureContract(
-            zeroEx.address,
+            await zeroEx.getAddress(),
             env.provider,
             { ...env.txDefaults, from: sender },
             abis,
         );
-        feeToken = await TestMintableERC20TokenContract.deployFrom0xArtifactAsync(
-            artifacts.TestMintableERC20Token,
-            env.provider,
-            env.txDefaults,
-            {},
-        );
+        
+        const feeTokenFactory = new TestMintableERC20Token__factory(signer);
+        feeToken = await feeTokenFactory.deploy();
+        await feeToken.waitForDeployment();
 
         // some accounts returned can be unfunded
         for (const possibleSigner of possibleSigners) {
@@ -82,37 +86,37 @@ blockchainTests.resets('MetaTransactions feature', env => {
             if (balance.isGreaterThan(0)) {
                 signers.push(possibleSigner);
                 await feeToken
-                    .approve(zeroEx.address, MAX_FEE_AMOUNT)
-                    .awaitTransactionSuccessAsync({ from: possibleSigner });
-                await feeToken.mint(possibleSigner, MAX_FEE_AMOUNT).awaitTransactionSuccessAsync();
+                    .approve(await zeroEx.getAddress(), MAX_FEE_AMOUNT)
+                    ({ from: possibleSigner });
+                await feeToken.mint(possibleSigner, MAX_FEE_AMOUNT)();
             }
         }
     });
 
-    function getRandomMetaTransaction(fields: Partial<MetaTransactionFields> = {}): MetaTransaction {
+    async function getRandomMetaTransaction(fields: Partial<MetaTransactionFields> = {}): Promise<MetaTransaction> {
         return new MetaTransaction({
             signer: _.sampleSize(signers)[0],
             sender,
             // TODO: dekz Ganache gasPrice opcode is returning 0, cannot influence it up to test this case
             minGasPrice: ZERO_AMOUNT,
             maxGasPrice: getRandomInteger('1e9', '100e9'),
-            expirationTimeSeconds: new BigNumber(Math.floor(_.now() / 1000) + 360),
-            salt: new BigNumber(hexUtils.random()),
+            expirationTimeSeconds: ethers.parseUnits(Math.floor(_.now() / 1000) + 360),
+            salt: ethers.parseUnits(hexUtils.random()),
             callData: hexUtils.random(4),
             value: getRandomInteger(1, '1e18'),
-            feeToken: feeToken.address,
+            feeToken: await feeToken.getAddress(),
             feeAmount: getRandomInteger(1, MAX_FEE_AMOUNT),
             chainId: 1337,
-            verifyingContract: zeroEx.address,
+            verifyingContract: await zeroEx.getAddress(),
             ...fields,
         });
     }
 
     describe('getMetaTransactionHash()', () => {
         it('generates the correct hash', async () => {
-            const mtx = getRandomMetaTransaction();
+            const mtx = await getRandomMetaTransaction();
             const expected = mtx.getHash();
-            const actual = await feature.getMetaTransactionHash(mtx).callAsync();
+            const actual = await feature.getMetaTransactionHash(mtx)();
             expect(actual).to.eq(expected);
         });
     });
@@ -120,9 +124,9 @@ blockchainTests.resets('MetaTransactions feature', env => {
     interface TransformERC20Args {
         inputToken: string;
         outputToken: string;
-        inputTokenAmount: BigNumber;
-        minOutputTokenAmount: BigNumber;
-        transformations: Array<{ deploymentNonce: BigNumber; data: string }>;
+        inputTokenAmount: bigint;
+        minOutputTokenAmount: bigint;
+        transformations: Array<{ deploymentNonce: bigint; data: string }>;
     }
 
     function getRandomTransformERC20Args(fields: Partial<TransformERC20Args> = {}): TransformERC20Args {
@@ -131,7 +135,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
             outputToken: randomAddress(),
             inputTokenAmount: getRandomInteger(1, '1e18'),
             minOutputTokenAmount: getRandomInteger(1, '1e18'),
-            transformations: [{ deploymentNonce: new BigNumber(123), data: hexUtils.random() }],
+            transformations: [{ deploymentNonce: ethers.parseUnits(123), data: hexUtils.random() }],
             ...fields,
         };
     }
@@ -142,9 +146,9 @@ blockchainTests.resets('MetaTransactions feature', env => {
     describe('executeMetaTransaction()', () => {
         it('can call NativeOrders.fillLimitOrder()', async () => {
             const order = getRandomLimitOrder({ maker });
-            const fillAmount = new BigNumber(23456);
+            const fillAmount = ethers.parseUnits(23456);
             const sig = await order.getSignatureWithProviderAsync(env.provider);
-            const mtx = getRandomMetaTransaction({
+            const mtx = await getRandomMetaTransaction({
                 callData: nativeOrdersFeature.fillLimitOrder(order, sig, fillAmount).getABIEncodedTransactionData(),
             });
             const signature = await mtx.getSignatureWithProviderAsync(env.provider);
@@ -153,9 +157,9 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 value: mtx.value,
             };
 
-            const rawResult = await feature.executeMetaTransaction(mtx, signature).callAsync(callOpts);
+            const rawResult = await feature.executeMetaTransaction(mtx, signature)(callOpts);
             expect(rawResult).to.eq(RAW_ORDER_SUCCESS_RESULT);
-            const receipt = await feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
+            const receipt = await feature.executeMetaTransaction(mtx, signature)(callOpts);
 
             verifyEventsFromLogs(
                 receipt.logs,
@@ -178,8 +182,8 @@ blockchainTests.resets('MetaTransactions feature', env => {
         it('can call NativeOrders.fillRfqOrder()', async () => {
             const order = getRandomRfqOrder({ maker });
             const sig = await order.getSignatureWithProviderAsync(env.provider);
-            const fillAmount = new BigNumber(23456);
-            const mtx = getRandomMetaTransaction({
+            const fillAmount = ethers.parseUnits(23456);
+            const mtx = await getRandomMetaTransaction({
                 callData: nativeOrdersFeature.fillRfqOrder(order, sig, fillAmount).getABIEncodedTransactionData(),
                 value: ZERO_AMOUNT,
             });
@@ -188,9 +192,9 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 gasPrice: mtx.minGasPrice,
                 value: 0,
             };
-            const rawResult = await feature.executeMetaTransaction(mtx, signature).callAsync(callOpts);
+            const rawResult = await feature.executeMetaTransaction(mtx, signature)(callOpts);
             expect(rawResult).to.eq(RAW_ORDER_SUCCESS_RESULT);
-            const receipt = await feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
+            const receipt = await feature.executeMetaTransaction(mtx, signature)(callOpts);
 
             verifyEventsFromLogs(
                 receipt.logs,
@@ -211,7 +215,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
 
         it('can call `TransformERC20.transformERC20()`', async () => {
             const args = getRandomTransformERC20Args();
-            const mtx = getRandomMetaTransaction({
+            const mtx = await getRandomMetaTransaction({
                 callData: transformERC20Feature
                     .transformERC20(
                         args.inputToken,
@@ -227,9 +231,9 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 gasPrice: mtx.minGasPrice,
                 value: mtx.value,
             };
-            const rawResult = await feature.executeMetaTransaction(mtx, signature).callAsync(callOpts);
+            const rawResult = await feature.executeMetaTransaction(mtx, signature)(callOpts);
             expect(rawResult).to.eq(RAW_TRANSFORM_SUCCESS_RESULT);
-            const receipt = await feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
+            const receipt = await feature.executeMetaTransaction(mtx, signature)(callOpts);
             verifyEventsFromLogs(
                 receipt.logs,
                 [
@@ -239,7 +243,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
                         inputTokenAmount: args.inputTokenAmount,
                         minOutputTokenAmount: args.minOutputTokenAmount,
                         transformations: args.transformations,
-                        sender: zeroEx.address,
+                        sender: await zeroEx.getAddress(),
                         value: mtx.value,
                         taker: mtx.signer,
                     },
@@ -259,15 +263,15 @@ blockchainTests.resets('MetaTransactions feature', env => {
                     args.transformations,
                 )
                 .getABIEncodedTransactionData();
-            const mtx = getRandomMetaTransaction({ callData });
+            const mtx = await getRandomMetaTransaction({ callData });
             const signature = await mtx.getSignatureWithProviderAsync(env.provider);
             const callOpts = {
                 gasPrice: mtx.minGasPrice,
                 value: mtx.value,
             };
-            const rawResult = await feature.executeMetaTransaction(mtx, signature).callAsync(callOpts);
+            const rawResult = await feature.executeMetaTransaction(mtx, signature)(callOpts);
             expect(rawResult).to.eq(RAW_TRANSFORM_SUCCESS_RESULT);
-            const receipt = await feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
+            const receipt = await feature.executeMetaTransaction(mtx, signature)(callOpts);
             verifyEventsFromLogs(
                 receipt.logs,
                 [
@@ -277,7 +281,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
                         inputTokenAmount: args.inputTokenAmount,
                         minOutputTokenAmount: args.minOutputTokenAmount,
                         transformations: args.transformations,
-                        sender: zeroEx.address,
+                        sender: await zeroEx.getAddress(),
                         value: mtx.value,
                         taker: mtx.signer,
                     },
@@ -288,7 +292,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
 
         it('can call with any sender if `sender == 0`', async () => {
             const args = getRandomTransformERC20Args();
-            const mtx = getRandomMetaTransaction({
+            const mtx = await getRandomMetaTransaction({
                 sender: NULL_ADDRESS,
                 value: ZERO_AMOUNT, // 设置为 0 避免余额不足问题
                 callData: transformERC20Feature
@@ -307,13 +311,13 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 value: mtx.value,
                 from: randomAddress(),
             };
-            const rawResult = await feature.executeMetaTransaction(mtx, signature).callAsync(callOpts);
+            const rawResult = await feature.executeMetaTransaction(mtx, signature)(callOpts);
             expect(rawResult).to.eq(RAW_TRANSFORM_SUCCESS_RESULT);
         });
 
         it('works without fee', async () => {
             const args = getRandomTransformERC20Args();
-            const mtx = getRandomMetaTransaction({
+            const mtx = await getRandomMetaTransaction({
                 feeAmount: ZERO_AMOUNT,
                 feeToken: randomAddress(),
                 callData: transformERC20Feature
@@ -331,14 +335,14 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 gasPrice: mtx.minGasPrice,
                 value: mtx.value,
             };
-            const rawResult = await feature.executeMetaTransaction(mtx, signature).callAsync(callOpts);
+            const rawResult = await feature.executeMetaTransaction(mtx, signature)(callOpts);
             expect(rawResult).to.eq(RAW_TRANSFORM_SUCCESS_RESULT);
         });
 
         it('fails if the translated call fails', async () => {
             const args = getRandomTransformERC20Args();
-            const mtx = getRandomMetaTransaction({
-                value: new BigNumber(TRANSFORM_ERC20_FAILING_VALUE),
+            const mtx = await getRandomMetaTransaction({
+                value: ethers.parseUnits(TRANSFORM_ERC20_FAILING_VALUE),
                 callData: transformERC20Feature
                     .transformERC20(
                         args.inputToken,
@@ -355,7 +359,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 gasPrice: mtx.minGasPrice,
                 value: mtx.value,
             };
-            const tx = feature.executeMetaTransaction(mtx, signature).callAsync(callOpts);
+            const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
             const actualCallData = transformERC20Feature
                 ._transformERC20({
                     taker: mtx.signer,
@@ -368,7 +372,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
                     recipient: mtx.signer,
                 })
                 .getABIEncodedTransactionData();
-            return expect(tx).to.revertWith(
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.MetaTransactions.MetaTransactionCallFailedError(
                     mtxHash,
                     actualCallData,
@@ -378,7 +382,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
         });
 
         it('fails with unsupported function', async () => {
-            const mtx = getRandomMetaTransaction({
+            const mtx = await getRandomMetaTransaction({
                 callData: transformERC20Feature.createTransformWallet().getABIEncodedTransactionData(),
             });
             const mtxHash = mtx.getHash();
@@ -387,8 +391,8 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 gasPrice: mtx.minGasPrice,
                 value: mtx.value,
             };
-            const tx = feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
-            return expect(tx).to.revertWith(
+            const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.MetaTransactions.MetaTransactionUnsupportedFunctionError(
                     mtxHash,
                     hexUtils.slice(mtx.callData, 0, 4),
@@ -398,7 +402,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
 
         it('cannot execute the same mtx twice', async () => {
             const args = getRandomTransformERC20Args();
-            const mtx = getRandomMetaTransaction({
+            const mtx = await getRandomMetaTransaction({
                 callData: transformERC20Feature
                     .transformERC20(
                         args.inputToken,
@@ -415,9 +419,9 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 gasPrice: mtx.minGasPrice,
                 value: mtx.value,
             };
-            const receipt = await feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
-            const tx = feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
-            return expect(tx).to.revertWith(
+            const receipt = await feature.executeMetaTransaction(mtx, signature)(callOpts);
+            const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.MetaTransactions.MetaTransactionAlreadyExecutedError(
                     mtxHash,
                     receipt.blockNumber,
@@ -426,15 +430,15 @@ blockchainTests.resets('MetaTransactions feature', env => {
         });
 
         it('fails if not enough ETH provided', async () => {
-            const mtx = getRandomMetaTransaction();
+            const mtx = await getRandomMetaTransaction();
             const mtxHash = mtx.getHash();
             const signature = await mtx.getSignatureWithProviderAsync(env.provider);
             const callOpts = {
                 gasPrice: mtx.minGasPrice,
-                value: mtx.value.minus(1),
+                value: mtx.value - 1,
             };
-            const tx = feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
-            return expect(tx).to.revertWith(
+            const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.MetaTransactions.MetaTransactionInsufficientEthError(
                     mtxHash,
                     callOpts.value,
@@ -445,15 +449,15 @@ blockchainTests.resets('MetaTransactions feature', env => {
 
         // Ganache gasPrice opcode is returning 0, cannot influence it up to test this case
         it.skip('fails if gas price too low', async () => {
-            const mtx = getRandomMetaTransaction();
+            const mtx = await getRandomMetaTransaction();
             const mtxHash = mtx.getHash();
             const signature = await mtx.getSignatureWithProviderAsync(env.provider);
             const callOpts = {
-                gasPrice: mtx.minGasPrice.minus(1),
+                gasPrice: mtx.minGasPrice - 1,
                 value: mtx.value,
             };
-            const tx = feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
-            return expect(tx).to.revertWith(
+            const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.MetaTransactions.MetaTransactionGasPriceError(
                     mtxHash,
                     callOpts.gasPrice,
@@ -465,15 +469,15 @@ blockchainTests.resets('MetaTransactions feature', env => {
 
         // Ganache gasPrice opcode is returning 0, cannot influence it up to test this case
         it.skip('fails if gas price too high', async () => {
-            const mtx = getRandomMetaTransaction();
+            const mtx = await getRandomMetaTransaction();
             const mtxHash = mtx.getHash();
             const signature = await mtx.getSignatureWithProviderAsync(env.provider);
             const callOpts = {
-                gasPrice: mtx.maxGasPrice.plus(1),
+                gasPrice: mtx.maxGasPrice + 1,
                 value: mtx.value,
             };
-            const tx = feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
-            return expect(tx).to.revertWith(
+            const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.MetaTransactions.MetaTransactionGasPriceError(
                     mtxHash,
                     callOpts.gasPrice,
@@ -484,8 +488,8 @@ blockchainTests.resets('MetaTransactions feature', env => {
         });
 
         it('fails if expired', async () => {
-            const mtx = getRandomMetaTransaction({
-                expirationTimeSeconds: new BigNumber(Math.floor(_.now() / 1000 - 60)),
+            const mtx = await getRandomMetaTransaction({
+                expirationTimeSeconds: ethers.parseUnits(Math.floor(_.now() / 1000 - 60)),
             });
             const mtxHash = mtx.getHash();
             const signature = await mtx.getSignatureWithProviderAsync(env.provider);
@@ -493,8 +497,8 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 gasPrice: mtx.maxGasPrice,
                 value: mtx.value,
             };
-            const tx = feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
-            return expect(tx).to.revertWith(
+            const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.MetaTransactions.MetaTransactionExpiredError(
                     mtxHash,
                     undefined,
@@ -505,7 +509,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
 
         it('fails if wrong sender', async () => {
             const requiredSender = randomAddress();
-            const mtx = getRandomMetaTransaction({
+            const mtx = await getRandomMetaTransaction({
                 sender: requiredSender,
             });
             const mtxHash = mtx.getHash();
@@ -514,8 +518,8 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 gasPrice: mtx.maxGasPrice,
                 value: mtx.value,
             };
-            const tx = feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
-            return expect(tx).to.revertWith(
+            const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.MetaTransactions.MetaTransactionWrongSenderError(
                     mtxHash,
                     sender,
@@ -525,15 +529,15 @@ blockchainTests.resets('MetaTransactions feature', env => {
         });
 
         it('fails if signature is wrong', async () => {
-            const mtx = getRandomMetaTransaction({ signer: signers[0] });
+            const mtx = await getRandomMetaTransaction({ signer: signers[0] });
             const mtxHash = mtx.getHash();
             const signature = await mtx.clone({ signer: notSigner }).getSignatureWithProviderAsync(env.provider);
             const callOpts = {
                 gasPrice: mtx.maxGasPrice,
                 value: mtx.value,
             };
-            const tx = feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
-            return expect(tx).to.revertWith(
+            const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.SignatureValidator.SignatureValidationError(
                     ZeroExRevertErrors.SignatureValidator.SignatureValidationErrorCodes.WrongSigner,
                     mtxHash,
@@ -545,7 +549,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
 
         it('cannot reenter `executeMetaTransaction()`', async () => {
             const args = getRandomTransformERC20Args();
-            const mtx = getRandomMetaTransaction({
+            const mtx = await getRandomMetaTransaction({
                 callData: transformERC20Feature
                     .transformERC20(
                         args.inputToken,
@@ -563,8 +567,8 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 gasPrice: mtx.maxGasPrice,
                 value: mtx.value,
             };
-            const tx = feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
-            return expect(tx).to.revertWith(
+            const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.MetaTransactions.MetaTransactionCallFailedError(
                     mtxHash,
                     undefined,
@@ -578,7 +582,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
 
         it('cannot reenter `batchExecuteMetaTransactions()`', async () => {
             const args = getRandomTransformERC20Args();
-            const mtx = getRandomMetaTransaction({
+            const mtx = await getRandomMetaTransaction({
                 callData: transformERC20Feature
                     .transformERC20(
                         args.inputToken,
@@ -596,8 +600,8 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 gasPrice: mtx.maxGasPrice,
                 value: mtx.value,
             };
-            const tx = feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
-            return expect(tx).to.revertWith(
+            const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.MetaTransactions.MetaTransactionCallFailedError(
                     mtxHash,
                     undefined,
@@ -611,7 +615,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
 
         it('cannot reduce initial ETH balance', async () => {
             const args = getRandomTransformERC20Args();
-            const mtx = getRandomMetaTransaction({
+            const mtx = await getRandomMetaTransaction({
                 callData: transformERC20Feature
                     .transformERC20(
                         args.inputToken,
@@ -629,23 +633,23 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 value: mtx.value,
             };
             // Send pre-existing ETH to the EP.
-            await env.web3Wrapper.awaitTransactionSuccessAsync(
+            await env.web3Wrapper(
                 await env.web3Wrapper.sendTransactionAsync({
                     from: owner,
-                    to: zeroEx.address,
-                    value: new BigNumber(1),
+                    to: await zeroEx.getAddress(),
+                    value: ethers.parseUnits(1),
                 }),
             );
-            const tx = feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
-            return expect(tx).to.revertWith('MetaTransactionsFeature/ETH_LEAK');
+            const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
+            return expect(tx).to.be.revertedWith('MetaTransactionsFeature/ETH_LEAK');
         });
     });
 
     describe('batchExecuteMetaTransactions()', () => {
         it('can execute multiple transactions', async () => {
-            const mtxs = _.times(2, i => {
+            const mtxs = await Promise.all(_.times(2, async i => {
                 const args = getRandomTransformERC20Args();
-                return getRandomMetaTransaction({
+                return await getRandomMetaTransaction({
                     signer: signers[i],
                     callData: transformERC20Feature
                         .transformERC20(
@@ -657,22 +661,22 @@ blockchainTests.resets('MetaTransactions feature', env => {
                         )
                         .getABIEncodedTransactionData(),
                 });
-            });
+            }));
             const signatures = await Promise.all(
                 mtxs.map(async mtx => mtx.getSignatureWithProviderAsync(env.provider)),
             );
             const callOpts = {
-                gasPrice: BigNumber.max(...mtxs.map(mtx => mtx.minGasPrice)),
-                value: BigNumber.sum(...mtxs.map(mtx => mtx.value)),
+                gasPrice: Math.max(...mtxs.map(mtx => mtx.minGasPrice)),
+                value: mtxs.map(mtx => mtx.value).reduce((a, b) => a + b, 0n),
             };
-            const rawResults = await feature.batchExecuteMetaTransactions(mtxs, signatures).callAsync(callOpts);
+            const rawResults = await feature.batchExecuteMetaTransactions(mtxs, signatures)(callOpts);
             expect(rawResults).to.eql(mtxs.map(() => RAW_TRANSFORM_SUCCESS_RESULT));
         });
 
         it('cannot execute the same transaction twice', async () => {
-            const mtx = (() => {
+            const mtx = await (async () => {
                 const args = getRandomTransformERC20Args();
-                return getRandomMetaTransaction({
+                return await getRandomMetaTransaction({
                     signer: _.sampleSize(signers, 1)[0],
                     callData: transformERC20Feature
                         .transformERC20(
@@ -689,20 +693,20 @@ blockchainTests.resets('MetaTransactions feature', env => {
             const mtxs = _.times(2, () => mtx);
             const signatures = await Promise.all(mtxs.map(async m => m.getSignatureWithProviderAsync(env.provider)));
             const callOpts = {
-                gasPrice: BigNumber.max(...mtxs.map(m => m.minGasPrice)),
-                value: BigNumber.sum(...mtxs.map(m => m.value)),
+                gasPrice: Math.max(...mtxs.map(m => m.minGasPrice)),
+                value: mtxs.map(m => m.value).reduce((a, b) => a + b, 0n),
             };
             const block = await env.web3Wrapper.getBlockNumberAsync();
-            const tx = feature.batchExecuteMetaTransactions(mtxs, signatures).callAsync(callOpts);
-            return expect(tx).to.revertWith(
+            const tx = feature.batchExecuteMetaTransactions(mtxs, signatures)(callOpts);
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.MetaTransactions.MetaTransactionAlreadyExecutedError(mtxHash, block),
             );
         });
 
         it('fails if a meta-transaction fails', async () => {
             const args = getRandomTransformERC20Args();
-            const mtx = getRandomMetaTransaction({
-                value: new BigNumber(TRANSFORM_ERC20_FAILING_VALUE),
+            const mtx = await getRandomMetaTransaction({
+                value: ethers.parseUnits(TRANSFORM_ERC20_FAILING_VALUE),
                 callData: transformERC20Feature
                     .transformERC20(
                         args.inputToken,
@@ -719,8 +723,8 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 gasPrice: mtx.minGasPrice,
                 value: mtx.value,
             };
-            const tx = feature.batchExecuteMetaTransactions([mtx], [signature]).callAsync(callOpts);
-            return expect(tx).to.revertWith(
+            const tx = feature.batchExecuteMetaTransactions([mtx], [signature])(callOpts);
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.MetaTransactions.MetaTransactionCallFailedError(
                     mtxHash,
                     undefined,
@@ -731,7 +735,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
 
         it('cannot reenter `executeMetaTransaction()`', async () => {
             const args = getRandomTransformERC20Args();
-            const mtx = getRandomMetaTransaction({
+            const mtx = await getRandomMetaTransaction({
                 callData: transformERC20Feature
                     .transformERC20(
                         args.inputToken,
@@ -749,8 +753,8 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 gasPrice: mtx.maxGasPrice,
                 value: mtx.value,
             };
-            const tx = feature.batchExecuteMetaTransactions([mtx], [signature]).awaitTransactionSuccessAsync(callOpts);
-            return expect(tx).to.revertWith(
+            const tx = feature.batchExecuteMetaTransactions([mtx], [signature])(callOpts);
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.MetaTransactions.MetaTransactionCallFailedError(
                     mtxHash,
                     undefined,
@@ -764,7 +768,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
 
         it('cannot reenter `batchExecuteMetaTransactions()`', async () => {
             const args = getRandomTransformERC20Args();
-            const mtx = getRandomMetaTransaction({
+            const mtx = await getRandomMetaTransaction({
                 callData: transformERC20Feature
                     .transformERC20(
                         args.inputToken,
@@ -782,8 +786,8 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 gasPrice: mtx.maxGasPrice,
                 value: mtx.value,
             };
-            const tx = feature.batchExecuteMetaTransactions([mtx], [signature]).awaitTransactionSuccessAsync(callOpts);
-            return expect(tx).to.revertWith(
+            const tx = feature.batchExecuteMetaTransactions([mtx], [signature])(callOpts);
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.MetaTransactions.MetaTransactionCallFailedError(
                     mtxHash,
                     undefined,
@@ -797,7 +801,7 @@ blockchainTests.resets('MetaTransactions feature', env => {
 
         it('cannot reduce initial ETH balance', async () => {
             const args = getRandomTransformERC20Args();
-            const mtx = getRandomMetaTransaction({
+            const mtx = await getRandomMetaTransaction({
                 callData: transformERC20Feature
                     .transformERC20(
                         args.inputToken,
@@ -815,28 +819,28 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 value: mtx.value,
             };
             // Send pre-existing ETH to the EP.
-            await env.web3Wrapper.awaitTransactionSuccessAsync(
+            await env.web3Wrapper(
                 await env.web3Wrapper.sendTransactionAsync({
                     from: owner,
-                    to: zeroEx.address,
-                    value: new BigNumber(1),
+                    to: await zeroEx.getAddress(),
+                    value: ethers.parseUnits(1),
                 }),
             );
-            const tx = feature.batchExecuteMetaTransactions([mtx], [signature]).awaitTransactionSuccessAsync(callOpts);
-            return expect(tx).to.revertWith('MetaTransactionsFeature/ETH_LEAK');
+            const tx = feature.batchExecuteMetaTransactions([mtx], [signature])(callOpts);
+            return expect(tx).to.be.revertedWith('MetaTransactionsFeature/ETH_LEAK');
         });
     });
 
     describe('getMetaTransactionExecutedBlock()', () => {
         it('returns zero for an unexecuted mtx', async () => {
-            const mtx = getRandomMetaTransaction();
-            const block = await feature.getMetaTransactionExecutedBlock(mtx).callAsync();
-            expect(block).to.bignumber.eq(0);
+            const mtx = await getRandomMetaTransaction();
+            const block = await feature.getMetaTransactionExecutedBlock(mtx)();
+            expect(block).to.eq(0);
         });
 
         it('returns the block it was executed in', async () => {
             const args = getRandomTransformERC20Args();
-            const mtx = getRandomMetaTransaction({
+            const mtx = await getRandomMetaTransaction({
                 callData: transformERC20Feature
                     .transformERC20(
                         args.inputToken,
@@ -852,23 +856,23 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 gasPrice: mtx.minGasPrice,
                 value: mtx.value,
             };
-            const receipt = await feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
-            const block = await feature.getMetaTransactionExecutedBlock(mtx).callAsync();
-            expect(block).to.bignumber.eq(receipt.blockNumber);
+            const receipt = await feature.executeMetaTransaction(mtx, signature)(callOpts);
+            const block = await feature.getMetaTransactionExecutedBlock(mtx)();
+            expect(block).to.eq(receipt.blockNumber);
         });
     });
 
     describe('getMetaTransactionHashExecutedBlock()', () => {
         it('returns zero for an unexecuted mtx', async () => {
-            const mtx = getRandomMetaTransaction();
+            const mtx = await getRandomMetaTransaction();
             const mtxHash = mtx.getHash();
-            const block = await feature.getMetaTransactionHashExecutedBlock(mtxHash).callAsync();
-            expect(block).to.bignumber.eq(0);
+            const block = await feature.getMetaTransactionHashExecutedBlock(mtxHash)();
+            expect(block).to.eq(0);
         });
 
         it('returns the block it was executed in', async () => {
             const args = getRandomTransformERC20Args();
-            const mtx = getRandomMetaTransaction({
+            const mtx = await getRandomMetaTransaction({
                 callData: transformERC20Feature
                     .transformERC20(
                         args.inputToken,
@@ -884,10 +888,10 @@ blockchainTests.resets('MetaTransactions feature', env => {
                 gasPrice: mtx.minGasPrice,
                 value: mtx.value,
             };
-            const receipt = await feature.executeMetaTransaction(mtx, signature).awaitTransactionSuccessAsync(callOpts);
+            const receipt = await feature.executeMetaTransaction(mtx, signature)(callOpts);
             const mtxHash = mtx.getHash();
-            const block = await feature.getMetaTransactionHashExecutedBlock(mtxHash).callAsync();
-            expect(block).to.bignumber.eq(receipt.blockNumber);
+            const block = await feature.getMetaTransactionHashExecutedBlock(mtxHash)();
+            expect(block).to.eq(receipt.blockNumber);
         });
     });
 });

@@ -59,6 +59,14 @@ export {
     filterLogsToArguments,
     verifyEvents,
     verifyEventsFromLogs,
+    // 新增的日志检查工具
+    filterLogsSimple,
+    hasEvent,
+    getEventCount,
+    getFirstEventArgs,
+    expectEvent,
+    expectNoEvent,
+    expectEventCount,
     // 类型导出
     EventArgs,
     ParsedEvent,

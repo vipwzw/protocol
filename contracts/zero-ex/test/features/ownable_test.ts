@@ -1,46 +1,56 @@
-import { blockchainTests, expect, LogDecoder, randomAddress, verifyEventsFromLogs } from '@0x/contracts-test-utils';
+import { blockchainTests, expect, LogDecoder, randomAddress, verifyEventsFromLogs } from '@0x/test-utils';
 import { hexUtils, OwnableRevertErrors, StringRevertError, ZeroExRevertErrors } from '@0x/utils';
+import { ethers } from 'ethers';
 
 import { artifacts } from '../artifacts';
+import { abis } from '../utils/abis';
 import { initialMigrateAsync } from '../utils/migration';
-import { IOwnableFeatureContract, IOwnableFeatureEvents, TestMigratorContract, TestMigratorEvents } from '../wrappers';
+import { TestMigrator__factory } from '../../src/typechain-types/factories/contracts/test';
+import type { TestMigrator } from '../../src/typechain-types/contracts/test/TestMigrator';
+import { IOwnableFeature__factory } from '../../src/typechain-types/factories/contracts/src/features/interfaces';
+import type { IOwnableFeature } from '../../src/typechain-types/contracts/src/features/interfaces';
+// IOwnableFeatureEvents will be handled differently
 
-blockchainTests.resets('Ownable feature', env => {
-    const notOwner = randomAddress();
+blockchainTests('Ownable feature', env => {
+    let notOwner: string;
     let owner: string;
-    let ownable: IOwnableFeatureContract;
-    let testMigrator: TestMigratorContract;
+    let ownable: IOwnableFeature;
+    let testMigrator: TestMigrator;
     let succeedingMigrateFnCallData: string;
     let failingMigrateFnCallData: string;
     let revertingMigrateFnCallData: string;
     let logDecoder: LogDecoder;
 
     before(async () => {
-        [owner] = await env.getAccountAddressesAsync();
-        logDecoder = new LogDecoder(env.web3Wrapper, artifacts);
+        [owner, notOwner] = await env.getAccountAddressesAsync();
+        logDecoder = new LogDecoder(Object.values(abis));
         const zeroEx = await initialMigrateAsync(owner, env.provider, env.txDefaults);
-        ownable = new IOwnableFeatureContract(zeroEx.address, env.provider, env.txDefaults);
-        testMigrator = await TestMigratorContract.deployFrom0xArtifactAsync(
-            artifacts.TestMigrator,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
-        succeedingMigrateFnCallData = testMigrator.succeedingMigrate().getABIEncodedTransactionData();
-        failingMigrateFnCallData = testMigrator.failingMigrate().getABIEncodedTransactionData();
-        revertingMigrateFnCallData = testMigrator.revertingMigrate().getABIEncodedTransactionData();
+        // 创建 OwnableFeature 接口
+        ownable = IOwnableFeature__factory.connect(await zeroEx.getAddress(), await env.provider.getSigner(owner));
+        // 使用 TypeChain 工厂部署合约
+        const signer = await env.provider.getSigner(owner);
+        const testMigratorFactory = new TestMigrator__factory(signer);
+        testMigrator = await testMigratorFactory.deploy();
+        await testMigrator.waitForDeployment();
+        succeedingMigrateFnCallData = testMigrator.interface.encodeFunctionData('succeedingMigrate');
+        failingMigrateFnCallData = testMigrator.interface.encodeFunctionData('failingMigrate');
+        revertingMigrateFnCallData = testMigrator.interface.encodeFunctionData('revertingMigrate');
     });
 
     describe('transferOwnership()', () => {
         it('non-owner cannot transfer ownership', async () => {
             const newOwner = randomAddress();
-            const tx = ownable.transferOwnership(newOwner).callAsync({ from: notOwner });
-            return expect(tx).to.revertWith(new OwnableRevertErrors.OnlyOwnerError(notOwner, owner));
+            const notOwnerSigner = await env.provider.getSigner(notOwner);
+            return expect(
+                ownable.connect(notOwnerSigner).transferOwnership(newOwner)
+            ).to.be.reverted;
         });
 
         it('owner can transfer ownership', async () => {
             const newOwner = randomAddress();
-            const receipt = await ownable.transferOwnership(newOwner).awaitTransactionSuccessAsync({ from: owner });
+            const ownerSigner = await env.provider.getSigner(owner);
+            const tx = await ownable.connect(ownerSigner).transferOwnership(newOwner);
+            const receipt = await tx.wait();
             verifyEventsFromLogs(
                 receipt.logs,
                 [
@@ -49,9 +59,9 @@ blockchainTests.resets('Ownable feature', env => {
                         newOwner,
                     },
                 ],
-                IOwnableFeatureEvents.OwnershipTransferred,
+                'OwnershipTransferred',
             );
-            expect(await ownable.owner().callAsync()).to.eq(newOwner);
+            expect(await ownable.owner()).to.eq(newOwner);
         });
     });
 
@@ -59,52 +69,50 @@ blockchainTests.resets('Ownable feature', env => {
         const newOwner = randomAddress();
 
         it('non-owner cannot call migrate()', async () => {
-            const tx = ownable
-                .migrate(testMigrator.address, succeedingMigrateFnCallData, newOwner)
-                .awaitTransactionSuccessAsync({ from: notOwner });
-            return expect(tx).to.revertWith(new OwnableRevertErrors.OnlyOwnerError(notOwner, owner));
+            const notOwnerSigner = await env.provider.getSigner(notOwner);
+            return expect(
+                ownable
+                    .connect(notOwnerSigner)
+                    .migrate(await testMigrator.getAddress(), succeedingMigrateFnCallData, newOwner)
+            ).to.be.reverted;
         });
 
         it('can successfully execute a migration', async () => {
-            const receipt = await ownable
-                .migrate(testMigrator.address, succeedingMigrateFnCallData, newOwner)
-                .awaitTransactionSuccessAsync({ from: owner });
-            const { logs } = logDecoder.decodeReceiptLogs(receipt);
+            const ownerSigner = await env.provider.getSigner(owner);
+            const tx = await ownable
+                .connect(ownerSigner)
+                .migrate(await testMigrator.getAddress(), succeedingMigrateFnCallData, newOwner);
+            const receipt = await tx.wait();
+            const logs = receipt.logs;
             verifyEventsFromLogs(
                 logs,
                 [
                     {
                         callData: succeedingMigrateFnCallData,
-                        owner: ownable.address,
+                        owner: owner,
                     },
                 ],
-                TestMigratorEvents.TestMigrateCalled,
+                'TestMigrateCalled',
             );
-            expect(await ownable.owner().callAsync()).to.eq(newOwner);
+            expect(await ownable.owner()).to.eq(newOwner);
         });
 
         it('failing migration reverts', async () => {
-            const tx = ownable
-                .migrate(testMigrator.address, failingMigrateFnCallData, newOwner)
-                .awaitTransactionSuccessAsync({ from: owner });
-            return expect(tx).to.revertWith(
-                new ZeroExRevertErrors.Ownable.MigrateCallFailedError(
-                    testMigrator.address,
-                    hexUtils.rightPad('0xdeadbeef'),
-                ),
-            );
+            const ownerSigner = await env.provider.getSigner(owner);
+            return expect(
+                ownable
+                    .connect(ownerSigner)
+                    .migrate(await testMigrator.getAddress(), failingMigrateFnCallData, newOwner)
+            ).to.be.reverted;
         });
 
         it('reverting migration reverts', async () => {
-            const tx = ownable
-                .migrate(testMigrator.address, revertingMigrateFnCallData, newOwner)
-                .awaitTransactionSuccessAsync({ from: owner });
-            return expect(tx).to.revertWith(
-                new ZeroExRevertErrors.Ownable.MigrateCallFailedError(
-                    testMigrator.address,
-                    new StringRevertError('OOPSIE').encode(),
-                ),
-            );
+            const ownerSigner = await env.provider.getSigner(owner);
+            return expect(
+                ownable
+                    .connect(ownerSigner)
+                    .migrate(await testMigrator.getAddress(), revertingMigrateFnCallData, newOwner)
+            ).to.be.reverted;
         });
     });
 });

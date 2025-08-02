@@ -14,7 +14,7 @@
 
 pragma solidity ^0.8.0;
 
-import "utils/BaseTest.sol";
+import "./utils/BaseTest.sol";
 import "../contracts/src/ZeroEx.sol";
 import "./mocks/TestZeroExFeature.sol";
 

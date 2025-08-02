@@ -1,10 +1,10 @@
-import { describe } from '@0x/contracts-test-utils';
+import { describe } from '@0x/test-utils';
 import { readdir, readFile } from 'fs';
 import { basename, resolve } from 'path';
 import { promisify } from 'util';
 
 describe('Storage ID uniqueness test', () => {
-    const STORAGE_SOURCES_DIR = resolve(__dirname, '../../contracts/src/storage');
+    const STORAGE_SOURCES_DIR = resolve(__dirname, '../contracts/src/storage');
 
     async function findStorageIdFromSourceFileAsync(path: string): Promise<string | void> {
         const contents = await promisify(readFile)(path, { encoding: 'utf-8' });

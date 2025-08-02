@@ -35,12 +35,32 @@ import * as MixinStorage from '../artifacts/contracts/src/immutable/MixinStorage
 import * as Staking from '../artifacts/contracts/src/Staking.sol/Staking.json';
 import * as StakingPatch from '../artifacts/contracts/src/StakingPatch.sol/StakingPatch.json';
 import * as StakingProxy from '../artifacts/contracts/src/StakingProxy.sol/StakingProxy.json';
-// Note: Test contract artifacts are temporarily commented out as they are not available
-// These would be generated when test contracts are compiled
-// import * as TestAssertStorageParams from '../artifacts/contracts/test/TestAssertStorageParams.sol/TestAssertStorageParams.json';
-// import * as TestCobbDouglas from '../artifacts/contracts/test/TestCobbDouglas.sol/TestCobbDouglas.json';
-// ... (other test contracts)
-// import * as TestStorageLayoutAndConstants from '../artifacts/contracts/test/TestStorageLayoutAndConstants.sol/TestStorageLayoutAndConstants.json';
+// Test contract artifacts
+import * as TestAssertStorageParams from '../artifacts/contracts/test/TestAssertStorageParams.sol/TestAssertStorageParams.json';
+import * as TestCobbDouglas from '../artifacts/contracts/test/TestCobbDouglas.sol/TestCobbDouglas.json';
+import * as TestCumulativeRewardTracking from '../artifacts/contracts/test/TestCumulativeRewardTracking.sol/TestCumulativeRewardTracking.json';
+import * as TestDelegatorRewards from '../artifacts/contracts/test/TestDelegatorRewards.sol/TestDelegatorRewards.json';
+import * as TestERC20Token from '../artifacts/contracts/test/TestERC20Token.sol/TestERC20Token.json';
+import * as TestExchangeManager from '../artifacts/contracts/test/TestExchangeManager.sol/TestExchangeManager.json';
+import * as TestFinalizer from '../artifacts/contracts/test/TestFinalizer.sol/TestFinalizer.json';
+import * as TestInitTarget from '../artifacts/contracts/test/TestInitTarget.sol/TestInitTarget.json';
+import * as TestLibFixedMath from '../artifacts/contracts/test/TestLibFixedMath.sol/TestLibFixedMath.json';
+import * as TestLibSafeDowncast from '../artifacts/contracts/test/TestLibSafeDowncast.sol/TestLibSafeDowncast.json';
+import * as TestMixinCumulativeRewards from '../artifacts/contracts/test/TestMixinCumulativeRewards.sol/TestMixinCumulativeRewards.json';
+import * as TestMixinParams from '../artifacts/contracts/test/TestMixinParams.sol/TestMixinParams.json';
+import * as TestMixinScheduler from '../artifacts/contracts/test/TestMixinScheduler.sol/TestMixinScheduler.json';
+import * as TestMixinStake from '../artifacts/contracts/test/TestMixinStake.sol/TestMixinStake.json';
+import * as TestMixinStakeBalances from '../artifacts/contracts/test/TestMixinStakeBalances.sol/TestMixinStakeBalances.json';
+import * as TestMixinStakeStorage from '../artifacts/contracts/test/TestMixinStakeStorage.sol/TestMixinStakeStorage.json';
+import * as TestMixinStakingPool from '../artifacts/contracts/test/TestMixinStakingPool.sol/TestMixinStakingPool.json';
+import * as TestMixinStakingPoolRewards from '../artifacts/contracts/test/TestMixinStakingPoolRewards.sol/TestMixinStakingPoolRewards.json';
+import * as TestProtocolFees from '../artifacts/contracts/test/TestProtocolFees.sol/TestProtocolFees.json';
+import * as TestProxyDestination from '../artifacts/contracts/test/TestProxyDestination.sol/TestProxyDestination.json';
+import * as TestStaking from '../artifacts/contracts/test/TestStaking.sol/TestStaking.json';
+import * as TestStakingNoWETH from '../artifacts/contracts/test/TestStakingNoWETH.sol/TestStakingNoWETH.json';
+import * as TestStakingProxy from '../artifacts/contracts/test/TestStakingProxy.sol/TestStakingProxy.json';
+import * as TestStakingProxyUnit from '../artifacts/contracts/test/TestStakingProxyUnit.sol/TestStakingProxyUnit.json';
+import * as TestStorageLayoutAndConstants from '../artifacts/contracts/test/TestStorageLayoutAndConstants.sol/TestStorageLayoutAndConstants.json';
 import * as ZrxVault from '../artifacts/contracts/src/ZrxVault.sol/ZrxVault.json';
 export const artifacts = {
     Staking: Staking as ContractArtifact,
@@ -74,8 +94,30 @@ export const artifacts = {
     MixinFinalizer: MixinFinalizer as ContractArtifact,
     MixinParams: MixinParams as ContractArtifact,
     MixinScheduler: MixinScheduler as ContractArtifact,
-    // Test contracts temporarily commented out - will be enabled when test artifacts are generated
-    // TestAssertStorageParams: TestAssertStorageParams as ContractArtifact,
-    // TestCobbDouglas: TestCobbDouglas as ContractArtifact,
-    // ... (other test contracts)
+    // Test contracts
+    TestAssertStorageParams: TestAssertStorageParams as ContractArtifact,
+    TestCobbDouglas: TestCobbDouglas as ContractArtifact,
+    TestCumulativeRewardTracking: TestCumulativeRewardTracking as ContractArtifact,
+    TestDelegatorRewards: TestDelegatorRewards as ContractArtifact,
+    TestERC20Token: TestERC20Token as ContractArtifact,
+    TestExchangeManager: TestExchangeManager as ContractArtifact,
+    TestFinalizer: TestFinalizer as ContractArtifact,
+    TestInitTarget: TestInitTarget as ContractArtifact,
+    TestLibFixedMath: TestLibFixedMath as ContractArtifact,
+    TestLibSafeDowncast: TestLibSafeDowncast as ContractArtifact,
+    TestMixinCumulativeRewards: TestMixinCumulativeRewards as ContractArtifact,
+    TestMixinParams: TestMixinParams as ContractArtifact,
+    TestMixinScheduler: TestMixinScheduler as ContractArtifact,
+    TestMixinStake: TestMixinStake as ContractArtifact,
+    TestMixinStakeBalances: TestMixinStakeBalances as ContractArtifact,
+    TestMixinStakeStorage: TestMixinStakeStorage as ContractArtifact,
+    TestMixinStakingPool: TestMixinStakingPool as ContractArtifact,
+    TestMixinStakingPoolRewards: TestMixinStakingPoolRewards as ContractArtifact,
+    TestProtocolFees: TestProtocolFees as ContractArtifact,
+    TestProxyDestination: TestProxyDestination as ContractArtifact,
+    TestStaking: TestStaking as ContractArtifact,
+    TestStakingNoWETH: TestStakingNoWETH as ContractArtifact,
+    TestStakingProxy: TestStakingProxy as ContractArtifact,
+    TestStakingProxyUnit: TestStakingProxyUnit as ContractArtifact,
+    TestStorageLayoutAndConstants: TestStorageLayoutAndConstants as ContractArtifact,
 };

@@ -1,13 +1,18 @@
-import { BigNumber } from '@0x/utils';
-import { constants, describe, expect } from '@0x/test-utils';
-import { SafeMathRevertErrors } from '@0x/utils';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+import { BigNumber, SafeMathRevertErrors } from '@0x/utils';
 
 import { safeAdd, safeDiv, safeMul, safeSub } from '../src/reference_functions';
 
-// Helper function to create BigNumber for error comparison
+// Helper function to convert bigint to BigNumber for error reporting
 function toBigNumber(value: bigint): BigNumber {
     return new BigNumber(value.toString());
 }
+
+// 现代化常量定义
+const MAX_UINT256 = ethers.MaxUint256;
+const ZERO_AMOUNT = 0n;
+const ONE_ETHER = ethers.parseEther('1');
 
 // Helper function for bigint square root calculation
 function bigintSqrt(value: bigint): bigint {
@@ -26,7 +31,6 @@ function bigintSqrt(value: bigint): bigint {
 }
 
 describe('Reference Functions', () => {
-    const { ONE_ETHER, MAX_UINT256, ZERO_AMOUNT } = constants;
     const DEFAULT_VALUES = {
         a: ONE_ETHER * BigInt(2),
         b: ONE_ETHER,

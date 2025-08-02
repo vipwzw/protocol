@@ -5,7 +5,7 @@ test = 'tests'
 libs = ["lib/", "../utils/", "../erc20/"]
 remappings = [
     '@0x/contracts-erc20/=../erc20/',
-    '@0x/contracts-utils/=../utils/',
+    '@0x/contracts-utils/=../utils/'
 ]
 
 fs_permissions = [

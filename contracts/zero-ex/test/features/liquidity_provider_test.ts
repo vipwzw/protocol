@@ -1,8 +1,18 @@
+import { ethers } from "ethers";
 import { artifacts as erc20Artifacts, DummyERC20TokenContract } from '@0x/contracts-erc20';
-import { blockchainTests, constants, expect, verifyEventsFromLogs } from '@0x/contracts-test-utils';
-import { BigNumber, OwnableRevertErrors, ZeroExRevertErrors } from '@0x/utils';
+import { blockchainTests, constants, expect, verifyEventsFromLogs } from '@0x/test-utils';
+import { OwnableRevertErrors, ZeroExRevertErrors } from '@0x/utils';
 
-import { IOwnableFeatureContract, IZeroExContract, LiquidityProviderFeatureContract } from '../../src/wrappers';
+import { 
+    IOwnableFeatureContract, 
+    IZeroExContract, 
+    LiquidityProviderFeatureContract,
+    DummyERC20Token__factory,
+    TestWeth__factory,
+    LiquidityProviderSandbox__factory,
+    LiquidityProviderFeature__factory,
+    TestLiquidityProvider__factory
+} from '../../src/wrappers';
 import { artifacts } from '../artifacts';
 import { abis } from '../utils/abis';
 import { fullMigrateAsync } from '../utils/migration';
@@ -27,113 +37,108 @@ blockchainTests('LiquidityProvider feature', env => {
         [owner, taker] = await env.getAccountAddressesAsync();
         zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {});
 
-        token = await DummyERC20TokenContract.deployFrom0xArtifactAsync(
-            erc20Artifacts.DummyERC20Token,
-            env.provider,
-            env.txDefaults,
-            erc20Artifacts,
+        const signer = await env.provider.getSigner(owner);
+        const tokenFactory = new DummyERC20Token__factory(signer);
+        token = await tokenFactory.deploy(
             constants.DUMMY_TOKEN_NAME,
             constants.DUMMY_TOKEN_SYMBOL,
             constants.DUMMY_TOKEN_DECIMALS,
             constants.DUMMY_TOKEN_TOTAL_SUPPLY,
         );
-        await token.setBalance(taker, constants.INITIAL_ERC20_BALANCE).awaitTransactionSuccessAsync();
-        weth = await TestWethContract.deployFrom0xArtifactAsync(
-            artifacts.TestWeth,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
+        await token.waitForDeployment();
+        await token.setBalance(taker, constants.INITIAL_ERC20_BALANCE);
+        const wethFactory = new TestWeth__factory(signer);
+        weth = await wethFactory.deploy();
+        await weth.waitForDeployment();
+        const takerSigner = await env.provider.getSigner(taker);
         await token
-            .approve(zeroEx.address, constants.INITIAL_ERC20_ALLOWANCE)
-            .awaitTransactionSuccessAsync({ from: taker });
+            .connect(takerSigner)
+            .approve(await zeroEx.getAddress(), constants.INITIAL_ERC20_ALLOWANCE);
 
-        feature = new LiquidityProviderFeatureContract(zeroEx.address, env.provider, env.txDefaults, abis);
-        sandbox = await LiquidityProviderSandboxContract.deployFrom0xArtifactAsync(
-            artifacts.LiquidityProviderSandbox,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-            zeroEx.address,
-        );
-        const featureImpl = await LiquidityProviderFeatureContract.deployFrom0xArtifactAsync(
-            artifacts.LiquidityProviderFeature,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-            sandbox.address,
-        );
-        await new IOwnableFeatureContract(zeroEx.address, env.provider, env.txDefaults, abis)
-            .migrate(featureImpl.address, featureImpl.migrate().getABIEncodedTransactionData(), owner)
-            .awaitTransactionSuccessAsync();
+        feature = new LiquidityProviderFeatureContract(await zeroEx.getAddress(), env.provider, env.txDefaults, abis);
+        
+        const sandboxFactory = new LiquidityProviderSandbox__factory(signer);
+        sandbox = await sandboxFactory.deploy(await zeroEx.getAddress());
+        await sandbox.waitForDeployment();
 
-        liquidityProvider = await TestLiquidityProviderContract.deployFrom0xArtifactAsync(
-            artifacts.TestLiquidityProvider,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
+        const featureFactory = new LiquidityProviderFeature__factory(signer);
+        const featureImpl = await featureFactory.deploy(await sandbox.getAddress());
+        await featureImpl.waitForDeployment();
+
+        const ownableFeature = new IOwnableFeatureContract(await zeroEx.getAddress(), env.provider, env.txDefaults, abis);
+        const ownerSigner = await env.provider.getSigner(owner);
+        await ownableFeature
+            .connect(ownerSigner)
+            .migrate(await featureImpl.getAddress(), featureImpl.migrate().getABIEncodedTransactionData(), owner);
+
+        const liquidityProviderFactory = new TestLiquidityProvider__factory(signer);
+        liquidityProvider = await liquidityProviderFactory.deploy();
+        await liquidityProvider.waitForDeployment();
     });
-    blockchainTests.resets('Sandbox', () => {
+    blockchainTests('Sandbox', () => {
         it('Cannot call sandbox `executeSellTokenForToken` function directly', async () => {
-            const tx = sandbox
-                .executeSellTokenForToken(
-                    liquidityProvider.address,
-                    token.address,
-                    weth.address,
-                    taker,
-                    constants.ZERO_AMOUNT,
-                    constants.NULL_BYTES,
-                )
-                .awaitTransactionSuccessAsync({ from: taker });
-            return expect(tx).to.revertWith(new OwnableRevertErrors.OnlyOwnerError(taker));
+            const takerSigner = await env.provider.getSigner(taker);
+            return expect(
+                sandbox
+                    .connect(takerSigner)
+                    .executeSellTokenForToken(
+                        await liquidityProvider.getAddress(),
+                        await token.getAddress(),
+                        await weth.getAddress(),
+                        taker,
+                        constants.ZERO_AMOUNT,
+                        constants.NULL_BYTES,
+                    )
+            ).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(taker));
         });
         it('Cannot call sandbox `executeSellEthForToken` function directly', async () => {
-            const tx = sandbox
-                .executeSellEthForToken(
-                    liquidityProvider.address,
-                    token.address,
-                    taker,
-                    constants.ZERO_AMOUNT,
-                    constants.NULL_BYTES,
-                )
-                .awaitTransactionSuccessAsync({ from: taker });
-            return expect(tx).to.revertWith(new OwnableRevertErrors.OnlyOwnerError(taker));
+            const takerSigner = await env.provider.getSigner(taker);
+            return expect(
+                sandbox
+                    .connect(takerSigner)
+                    .executeSellEthForToken(
+                        await liquidityProvider.getAddress(),
+                        await token.getAddress(),
+                        taker,
+                        constants.ZERO_AMOUNT,
+                        constants.NULL_BYTES,
+                    )
+            ).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(taker));
         });
         it('Cannot call sandbox `executeSellTokenForEth` function directly', async () => {
             const tx = sandbox
                 .executeSellTokenForEth(
-                    liquidityProvider.address,
-                    token.address,
+                    await liquidityProvider.getAddress(),
+                    await token.getAddress(),
                     taker,
                     constants.ZERO_AMOUNT,
                     constants.NULL_BYTES,
                 )
-                .awaitTransactionSuccessAsync({ from: taker });
-            return expect(tx).to.revertWith(new OwnableRevertErrors.OnlyOwnerError(taker));
+                ({ from: taker });
+            return expect(tx).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(taker));
         });
     });
-    blockchainTests.resets('Swap', () => {
+    blockchainTests('Swap', () => {
         const ETH_TOKEN_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 
         it('Successfully executes an ERC20-ERC20 swap', async () => {
             const tx = await feature
                 .sellToLiquidityProvider(
-                    token.address,
-                    weth.address,
-                    liquidityProvider.address,
+                    await token.getAddress(),
+                    await weth.getAddress(),
+                    await liquidityProvider.getAddress(),
                     constants.NULL_ADDRESS,
                     constants.ONE_ETHER,
                     constants.ZERO_AMOUNT,
                     constants.NULL_BYTES,
                 )
-                .awaitTransactionSuccessAsync({ from: taker });
+                ({ from: taker });
             verifyEventsFromLogs(
                 tx.logs,
                 [
                     {
-                        inputToken: token.address,
-                        outputToken: weth.address,
+                        inputToken: await token.getAddress(),
+                        outputToken: await weth.getAddress(),
                         recipient: taker,
                         minBuyAmount: constants.ZERO_AMOUNT,
                         inputTokenBalance: constants.ONE_ETHER,
@@ -143,23 +148,23 @@ blockchainTests('LiquidityProvider feature', env => {
             );
         });
         it('Reverts if cannot fulfill the minimum buy amount', async () => {
-            const minBuyAmount = new BigNumber(1);
+            const minBuyAmount = 1n;
             const tx = feature
                 .sellToLiquidityProvider(
-                    token.address,
-                    weth.address,
-                    liquidityProvider.address,
+                    await token.getAddress(),
+                    await weth.getAddress(),
+                    await liquidityProvider.getAddress(),
                     constants.NULL_ADDRESS,
                     constants.ONE_ETHER,
                     minBuyAmount,
                     constants.NULL_BYTES,
                 )
-                .awaitTransactionSuccessAsync({ from: taker });
-            return expect(tx).to.revertWith(
+                ({ from: taker });
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.LiquidityProvider.LiquidityProviderIncompleteSellError(
-                    liquidityProvider.address,
-                    weth.address,
-                    token.address,
+                    await liquidityProvider.getAddress(),
+                    await weth.getAddress(),
+                    await token.getAddress(),
                     constants.ONE_ETHER,
                     constants.ZERO_AMOUNT,
                     minBuyAmount,
@@ -170,19 +175,19 @@ blockchainTests('LiquidityProvider feature', env => {
             const tx = await feature
                 .sellToLiquidityProvider(
                     ETH_TOKEN_ADDRESS,
-                    token.address,
-                    liquidityProvider.address,
+                    await token.getAddress(),
+                    await liquidityProvider.getAddress(),
                     constants.NULL_ADDRESS,
                     constants.ONE_ETHER,
                     constants.ZERO_AMOUNT,
                     constants.NULL_BYTES,
                 )
-                .awaitTransactionSuccessAsync({ from: taker, value: constants.ONE_ETHER });
+                ({ from: taker, value: constants.ONE_ETHER });
             verifyEventsFromLogs(
                 tx.logs,
                 [
                     {
-                        outputToken: token.address,
+                        outputToken: await token.getAddress(),
                         recipient: taker,
                         minBuyAmount: constants.ZERO_AMOUNT,
                         ethBalance: constants.ONE_ETHER,
@@ -194,20 +199,20 @@ blockchainTests('LiquidityProvider feature', env => {
         it('Successfully executes an ERC20-ETH swap', async () => {
             const tx = await feature
                 .sellToLiquidityProvider(
-                    token.address,
+                    await token.getAddress(),
                     ETH_TOKEN_ADDRESS,
-                    liquidityProvider.address,
+                    await liquidityProvider.getAddress(),
                     constants.NULL_ADDRESS,
                     constants.ONE_ETHER,
                     constants.ZERO_AMOUNT,
                     constants.NULL_BYTES,
                 )
-                .awaitTransactionSuccessAsync({ from: taker });
+                ({ from: taker });
             verifyEventsFromLogs(
                 tx.logs,
                 [
                     {
-                        inputToken: token.address,
+                        inputToken: await token.getAddress(),
                         recipient: taker,
                         minBuyAmount: constants.ZERO_AMOUNT,
                         inputTokenBalance: constants.ONE_ETHER,

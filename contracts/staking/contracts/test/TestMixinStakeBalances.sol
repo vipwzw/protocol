@@ -99,6 +99,15 @@ contract TestMixinStakeBalances is
     {
         _globalStakeByStatus[uint8(status)] = stake;
     }
+    
+    /// @dev Get raw global stake by status (for debugging)
+    function getRawGlobalStakeByStatus(IStructs.StakeStatus status)
+        public
+        view
+        returns (IStructs.StoredBalance memory)
+    {
+        return _globalStakeByStatus[uint8(status)];
+    }
 
     /// @dev Overridden to use this contract as the ZRX vault.
     function getZrxVault()
@@ -117,7 +126,13 @@ contract TestMixinStakeBalances is
         override
         returns (IStructs.StoredBalance memory balance)
     {
+        // Use the base implementation logic
         balance = balancePtr;
-        balance.currentEpoch += 1;
+        uint256 currentEpoch_ = currentEpoch;
+        if (currentEpoch_ > balance.currentEpoch) {
+            balance.currentEpoch = uint64(currentEpoch_);
+            balance.currentEpochBalance = balance.nextEpochBalance;
+        }
+        return balance;
     }
 }

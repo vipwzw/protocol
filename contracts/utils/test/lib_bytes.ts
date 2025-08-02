@@ -1,8 +1,7 @@
-import { expect } from '@0x/test-utils';
-import { BigNumber } from '@0x/utils';
-import * as ethUtil from 'ethereumjs-util';
-
-const { ethers } = require('hardhat');
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+// 注意：BigNumber 从 @0x/utils 迁移到使用 ethers 的 BigInt
+// ethUtil 保留，如有需要可替换为 ethers 的等价函数
 
 describe('LibBytes', () => {
     let libBytes: any;
@@ -14,8 +13,8 @@ describe('LibBytes', () => {
         '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
     const testBytes32 = '0x102030405060708090a0b0c0d0e0f0102030405060708090a0b0c0d0e0f01020';
     const testBytes32B = '0x534877abd8443578526845cdfef020047528759477af3cfd9329dae594179331';
-    const testUint256 = new BigNumber(testBytes32, 16);
-    const testUint256B = new BigNumber(testBytes32B, 16);
+    const testUint256 = BigInt(testBytes32);
+    const testUint256B = BigInt(testBytes32B);
     const testBytes4 = '0xabcdef12';
     const testByte = '0xab';
 

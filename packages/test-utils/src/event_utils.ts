@@ -402,3 +402,141 @@ export function verifyEventsFromLogs(
     const events = filterLogs(logs, contract);
     verifyEvents(events, expectedEvents);
 }
+
+/**
+ * 简单过滤日志，返回指定事件名的所有日志
+ */
+export function filterLogsSimple(
+    logs: ethers.Log[],
+    eventName: string
+): ethers.Log[] {
+    return logs.filter(log => {
+        try {
+            // 检查主题是否匹配事件签名
+            const eventSignature = ethers.id(eventName);
+            return log.topics[0] === eventSignature;
+        } catch {
+            return false;
+        }
+    });
+}
+
+/**
+ * 检查日志中是否包含指定事件
+ */
+export function hasEvent(
+    logs: ethers.Log[],
+    contract: ethers.Contract,
+    eventName: string
+): boolean {
+    const events = filterLogs(logs, contract, eventName);
+    return events.length > 0;
+}
+
+/**
+ * 获取指定事件的数量
+ */
+export function getEventCount(
+    logs: ethers.Log[],
+    contract: ethers.Contract,
+    eventName: string
+): number {
+    const events = filterLogs(logs, contract, eventName);
+    return events.length;
+}
+
+/**
+ * 获取第一个指定事件的参数
+ */
+export function getFirstEventArgs(
+    logs: ethers.Log[],
+    contract: ethers.Contract,
+    eventName: string
+): EventArgs | null {
+    const events = filterLogs(logs, contract, eventName);
+    return events.length > 0 ? events[0].args : null;
+}
+
+/**
+ * 验证事件存在
+ */
+export function expectEvent(
+    logs: ethers.Log[],
+    contract: ethers.Contract,
+    eventName: string,
+    expectedArgs?: Partial<EventArgs>
+): ParsedEvent {
+    const events = filterLogs(logs, contract, eventName);
+    
+    if (events.length === 0) {
+        throw new Error(`Expected event '${eventName}' not found in logs`);
+    }
+    
+    const event = events[0];
+    
+    if (expectedArgs) {
+        for (const [key, expectedValue] of Object.entries(expectedArgs)) {
+            let actualValue = event.args[key];
+            
+            // ethers v6 兼容性处理
+            if (actualValue === undefined && event.args) {
+                const paramIndexMap: { [eventParam: string]: number } = {
+                    'from': 0,
+                    'to': 1,
+                    'value': 2,
+                    'tokenId': 2,
+                    'owner': 0,
+                    'spender': 1,
+                    'approved': 2,
+                    'operator': 0,
+                    'id': 3,
+                    'ids': 3,
+                    'values': 4
+                };
+                
+                const index = paramIndexMap[key];
+                if (index !== undefined && event.args[index] !== undefined) {
+                    actualValue = event.args[index];
+                }
+            }
+            
+            expect(actualValue).to.equal(expectedValue, 
+                `Event '${eventName}' argument '${key}' mismatch`);
+        }
+    }
+    
+    return event;
+}
+
+/**
+ * 验证事件不存在
+ */
+export function expectNoEvent(
+    logs: ethers.Log[],
+    contract: ethers.Contract,
+    eventName: string
+): void {
+    const events = filterLogs(logs, contract, eventName);
+    
+    if (events.length > 0) {
+        throw new Error(`Expected no event '${eventName}' but found ${events.length}`);
+    }
+}
+
+/**
+ * 验证事件数量
+ */
+export function expectEventCount(
+    logs: ethers.Log[],
+    contract: ethers.Contract,
+    eventName: string,
+    expectedCount: number
+): void {
+    const events = filterLogs(logs, contract, eventName);
+    
+    if (events.length !== expectedCount) {
+        throw new Error(
+            `Expected ${expectedCount} '${eventName}' events but found ${events.length}`
+        );
+    }
+}

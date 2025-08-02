@@ -1,4 +1,4 @@
-import { blockchainTests, constants, expect } from '@0x/contracts-test-utils';
+import { blockchainTests, constants, expect } from '@0x/test-utils';
 import { MethodAbi } from 'ethereum-types';
 
 import * as wrappers from '../../src/wrappers';

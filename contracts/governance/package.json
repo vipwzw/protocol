@@ -14,6 +14,7 @@
     "test:ci": "yarn test",
     "build": "forge build && npx hardhat compile",
     "build:ts": "npx hardhat compile",
+    "build:forge": "forge build",
     "build:smt": "FOUNDRY_PROFILE=smt forge build",
     "compile": "forge build && npx hardhat compile",
     "typechain": "npx hardhat typechain",

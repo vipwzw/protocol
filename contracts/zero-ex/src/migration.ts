@@ -1,5 +1,6 @@
 import { NULL_ADDRESS } from '@0x/utils';
 import { TxData, SupportedProvider } from 'ethereum-types';
+import { ethers } from 'ethers';
 import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
@@ -14,23 +15,26 @@ import {
 
 import { FullMigration__factory, InitialMigration__factory } from './typechain-types/factories/contracts/src/migrations';
 import { ZeroEx__factory } from './typechain-types/factories/contracts/src';
+import { SimpleFunctionRegistryFeature__factory, OwnableFeature__factory } from './typechain-types/factories/contracts/src/features';
 
 /**
  * 从 Hardhat artifact 部署合约
  */
 async function deployFromHardhatArtifactAsync<T>(
-    ContractClass: any,
+    ContractFactory: any,
     artifact: HardhatArtifact,
     provider: SupportedProvider,
     txDefaults: Partial<TxData>,
     logDecodeDependencies: HardhatArtifacts,
     ...constructorArgs: any[]
 ): Promise<T> {
-    // 使用 ContractClass 来实例化合约
-    const factory = new ContractClass(provider, artifact.abi, artifact.bytecode);
-    const contract = await factory.deploy(...constructorArgs, { ...txDefaults });
+    // 获取 signer - provider 在测试环境中应该有 getSigner 方法
+    const signer = await (provider as any).getSigner(txDefaults.from as string);
+    // 使用 TypeChain 工厂部署合约
+    const factory = new ContractFactory(signer);
+    const contract = await factory.deploy(...constructorArgs);
     await contract.waitForDeployment();
-    return contract;
+    return contract as T;
 }
 
 /**
@@ -63,11 +67,27 @@ export async function deployBootstrapFeaturesAsync(
         ...featureArtifacts,
     };
 
-    // TODO: 实现实际的合约部署逻辑，等待 typechain 生成完整的类型
-    // 目前使用 NULL_ADDRESS 作为占位符
+    // 部署 SimpleFunctionRegistryFeature
+    const registry = features.registry || await (async () => {
+        const signer = await (provider as any).getSigner(txDefaults.from as string);
+        const factory = new SimpleFunctionRegistryFeature__factory(signer);
+        const contract = await factory.deploy();
+        await contract.waitForDeployment();
+        return await contract.getAddress();
+    })();
+
+    // 部署 OwnableFeature
+    const ownable = features.ownable || await (async () => {
+        const signer = await (provider as any).getSigner(txDefaults.from as string);
+        const factory = new OwnableFeature__factory(signer);
+        const contract = await factory.deploy();
+        await contract.waitForDeployment();
+        return await contract.getAddress();
+    })();
+
     return {
-        registry: features.registry || NULL_ADDRESS,
-        ownable: features.ownable || NULL_ADDRESS,
+        registry,
+        ownable,
     };
 }
 
@@ -94,11 +114,11 @@ export async function initialMigrateAsync(
         provider,
         txDefaults,
         artifacts,
-        migrator.target as string,
+        await migrator.getAddress(),
     );
     await migrator.initializeZeroEx(
         owner,
-        zeroEx.target as string,
+        await zeroEx.getAddress(),
         await deployBootstrapFeaturesAsync(provider, txDefaults, features),
     );
     return zeroEx;
@@ -192,11 +212,11 @@ export async function fullMigrateAsync(
         provider,
         txDefaults,
         artifacts,
-        migrator.target as string,
+        await migrator.getAddress(),
     );
 
     const allFeatures = await deployAllFeaturesAsync(provider, txDefaults, features, config, featureArtifacts);
-    await migrator.migrateZeroEx(owner, zeroEx.target as string, allFeatures, {
+    await migrator.migrateZeroEx(owner, await zeroEx.getAddress(), allFeatures, {
         transformerDeployer: config.transformerDeployer || NULL_ADDRESS,
     });
     return zeroEx;

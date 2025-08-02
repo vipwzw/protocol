@@ -1,14 +1,27 @@
-import { ERC20TokenContract } from '../../erc20/src';
-import { blockchainTests, constants, expect, randomAddress } from '@0x/test-utils';
-import { AssetProxyId, RevertReason } from '@0x/utils';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+import { Signer } from 'ethers';
+import { TestChaiBridge__factory } from '../src/typechain-types';
 
+// 本地 RevertReason 定义，替代 @0x/utils
+const RevertReason = {
+    ChaiBridgeOnlyCallableByErc20BridgeProxy: 'only callable by ERC20BridgeProxy',
+    ChaiBridgeDrawDaiFailed: 'draw DAI failed'
+};
 
-import { artifacts } from './artifacts';
-import { TestChaiBridgeContract } from './wrappers';
+// 本地 AssetProxyId 定义  
+const AssetProxyId = {
+    ERC20Bridge: '0xdc1600f3'
+};
 
-describe.skip('ChaiBridge unit tests', () => {
+// 使用测试合约类型
+type TestChaiBridgeContract = any;
+
+describe('ChaiBridge unit tests', () => {
     let chaiBridgeContract: TestChaiBridgeContract;
-    let testDaiContract: ERC20TokenContract;
+    let testDaiContract: any;
+    let fromSigner: Signer;
+    let toSigner: Signer;
     let fromAddress: string;
     let toAddress: string;
 
@@ -16,41 +29,68 @@ describe.skip('ChaiBridge unit tests', () => {
     const amount = 1n;
 
     before(async () => {
-        [fromAddress, toAddress] = await env.getAccountAddressesAsync();
+        const signers = await ethers.getSigners();
+        [fromSigner, toSigner] = signers;
+        fromAddress = await fromSigner.getAddress();
+        toAddress = await toSigner.getAddress();
+        
         // Skip TestChaiBridge deployment for now - needs modern contract factory
-        console.log('Skipping ChaiBridge tests - needs modern factory');
+        console.log('⏭️ Skipping ChaiBridge tests - needs modern factory and contract compilation');
         return;
-        const testChaiDaiAddress = await chaiBridgeContract.testChaiDai();
-        testDaiContract = new ERC20TokenContract(testChaiDaiAddress, env.provider, env.txDefaults);
+        
+        // 当合约编译完成后，使用现代化的部署方式：
+        // const factory = new TestChaiBridge__factory(fromSigner);
+        // chaiBridgeContract = await factory.deploy();
+        // await chaiBridgeContract.waitForDeployment();
     });
 
     describe('bridgeTransferFrom()', () => {
-        it('fails if not called by ERC20BridgeProxy', async () => {
-            return expect(
-                chaiBridgeContract
-                    .bridgeTransferFrom(randomAddress(), fromAddress, toAddress, amount, constants.NULL_BYTES)
-                    .awaitTransactionSuccessAsync({ from: alwaysRevertAddress }),
-            ).to.be.revertedWith(RevertReason.ChaiBridgeOnlyCallableByErc20BridgeProxy);
+        it.skip('fails if not called by ERC20BridgeProxy', async () => {
+            const tx = chaiBridgeContract.bridgeTransferFrom(
+                ethers.ZeroAddress, // randomAddress() 
+                fromAddress, 
+                toAddress, 
+                amount, 
+                '0x', // constants.NULL_BYTES
+                { from: alwaysRevertAddress }
+            );
+            await expect(tx).to.be.revertedWith(RevertReason.ChaiBridgeOnlyCallableByErc20BridgeProxy);
         });
-        it('returns magic bytes upon success', async () => {
-            const magicBytes = await chaiBridgeContract
-                .bridgeTransferFrom(randomAddress(), fromAddress, toAddress, amount, constants.NULL_BYTES);
+        
+        it.skip('returns magic bytes upon success', async () => {
+            const magicBytes = await chaiBridgeContract.bridgeTransferFrom(
+                ethers.ZeroAddress, // randomAddress()
+                fromAddress, 
+                toAddress, 
+                amount, 
+                '0x' // constants.NULL_BYTES
+            );
             expect(magicBytes).to.eq(AssetProxyId.ERC20Bridge);
         });
-        it('should increase the Dai balance of `toAddress` by `amount` if successful', async () => {
+        
+        it.skip('should increase the Dai balance of `toAddress` by `amount` if successful', async () => {
             const initialBalance = await testDaiContract.balanceOf(toAddress);
-            await chaiBridgeContract
-                .bridgeTransferFrom(randomAddress(), fromAddress, toAddress, amount, constants.NULL_BYTES)
-                .awaitTransactionSuccessAsync();
+            const tx = await chaiBridgeContract.bridgeTransferFrom(
+                ethers.ZeroAddress, // randomAddress()
+                fromAddress, 
+                toAddress, 
+                amount, 
+                '0x' // constants.NULL_BYTES
+            );
+            await tx.wait();
             const endBalance = await testDaiContract.balanceOf(toAddress);
             expect(endBalance).to.equal(initialBalance + amount);
         });
-        it('fails if the `chai.draw` call fails', async () => {
-            return expect(
-                chaiBridgeContract
-                    .bridgeTransferFrom(randomAddress(), alwaysRevertAddress, toAddress, amount, constants.NULL_BYTES)
-                    .awaitTransactionSuccessAsync(),
-            ).to.be.revertedWith(RevertReason.ChaiBridgeDrawDaiFailed);
+        
+        it.skip('fails if the `chai.draw` call fails', async () => {
+            const tx = chaiBridgeContract.bridgeTransferFrom(
+                ethers.ZeroAddress, // randomAddress()
+                alwaysRevertAddress, 
+                toAddress, 
+                amount, 
+                '0x' // constants.NULL_BYTES
+            );
+            await expect(tx).to.be.revertedWith(RevertReason.ChaiBridgeDrawDaiFailed);
         });
     });
 });

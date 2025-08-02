@@ -5,7 +5,7 @@ import {
     expect,
     getRandomInteger,
     Numberish,
-} from '@0x/contracts-test-utils';
+} from '@0x/test-utils';
 import {
     encodeFillQuoteTransformerData,
     FillQuoteTransformerBridgeOrder as BridgeOrder,
@@ -25,7 +25,7 @@ import { TransactionReceiptWithDecodedLogs as TxReceipt } from 'ethereum-types';
 import * as _ from 'lodash';
 
 import { artifacts } from '../artifacts';
-import { TestFillQuoteTransformerBridgeContract } from '../generated-wrappers/test_fill_quote_transformer_bridge';
+import { TestFillQuoteTransformerBridgeContract } from '../wrappers';
 import { getRandomLimitOrder, getRandomRfqOrder } from '../utils/orders';
 import {
     EthereumBridgeAdapterContract,
@@ -33,6 +33,13 @@ import {
     TestFillQuoteTransformerExchangeContract,
     TestFillQuoteTransformerHostContract,
     TestMintableERC20TokenContract,
+    TestFillQuoteTransformerBridgeContract,
+    EthereumBridgeAdapter__factory,
+    FillQuoteTransformer__factory,
+    TestFillQuoteTransformerExchange__factory,
+    TestFillQuoteTransformerHost__factory,
+    TestMintableERC20Token__factory,
+    TestFillQuoteTransformerBridge__factory,
 } from '../wrappers';
 
 const { NULL_ADDRESS, NULL_BYTES, MAX_UINT256, ZERO_AMOUNT } = constants;
@@ -49,63 +56,55 @@ blockchainTests.resets('FillQuoteTransformer', env => {
     let makerToken: TestMintableERC20TokenContract;
     let takerToken: TestMintableERC20TokenContract;
     let takerFeeToken: TestMintableERC20TokenContract;
-    let singleProtocolFee: BigNumber;
+    let singleProtocolFee: bigint;
 
     const GAS_PRICE = 1337;
     // Left half is 0, corresponding to BridgeProtocol.Unknown
     const TEST_BRIDGE_SOURCE = hexUtils.leftPad(hexUtils.random(16), 32);
-    const HIGH_BIT = new BigNumber(2).pow(255);
-    const REVERT_AMOUNT = new BigNumber('0xdeadbeef');
+    const HIGH_BIT = BigInt(2) ** BigInt(255);
+    const REVERT_AMOUNT = BigInt(0xdeadbeef);
 
     before(async () => {
         [maker, feeRecipient, sender, taker] = await env.getAccountAddressesAsync();
-        exchange = await TestFillQuoteTransformerExchangeContract.deployFrom0xArtifactAsync(
-            artifacts.TestFillQuoteTransformerExchange,
-            env.provider,
-            env.txDefaults,
-            artifacts,
+        const deployer = maker; // Use first account as deployer
+        const signer = await env.provider.getSigner(deployer);
+        const senderSigner = await env.provider.getSigner(sender);
+        
+        // Deploy exchange
+        const exchangeFactory = new TestFillQuoteTransformerExchange__factory(signer);
+        exchange = await exchangeFactory.deploy();
+        await exchange.waitForDeployment();
+        
+        // Deploy bridge adapter
+        const bridgeAdapterFactory = new EthereumBridgeAdapter__factory(signer);
+        const bridgeAdapter = await bridgeAdapterFactory.deploy(NULL_ADDRESS);
+        await bridgeAdapter.waitForDeployment();
+        
+        // Deploy transformer
+        const transformerFactory = new FillQuoteTransformer__factory(signer);
+        transformer = await transformerFactory.deploy(
+            await bridgeAdapter.getAddress(),
+            await exchange.getAddress()
         );
-        const bridgeAdapter = await EthereumBridgeAdapterContract.deployFrom0xArtifactAsync(
-            artifacts.EthereumBridgeAdapter,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-            NULL_ADDRESS,
+        await transformer.waitForDeployment();
+        
+        // Deploy host
+        const hostFactory = new TestFillQuoteTransformerHost__factory(signer);
+        host = await hostFactory.deploy();
+        await host.waitForDeployment();
+        
+        // Deploy bridge (using sender as deployer)
+        const bridgeFactory = new TestFillQuoteTransformerBridge__factory(senderSigner);
+        bridge = await bridgeFactory.deploy();
+        await bridge.waitForDeployment();
+        // Deploy tokens
+        const tokenFactories = _.times(3, () => new TestMintableERC20Token__factory(signer));
+        const tokenDeployments = await Promise.all(
+            tokenFactories.map(factory => factory.deploy())
         );
-        transformer = await FillQuoteTransformerContract.deployFrom0xArtifactAsync(
-            artifacts.FillQuoteTransformer,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-            bridgeAdapter.address,
-            exchange.address,
-        );
-        host = await TestFillQuoteTransformerHostContract.deployFrom0xArtifactAsync(
-            artifacts.TestFillQuoteTransformerHost,
-            env.provider,
-            {
-                ...env.txDefaults,
-                gasPrice: GAS_PRICE,
-            },
-            artifacts,
-        );
-        bridge = await TestFillQuoteTransformerBridgeContract.deployFrom0xArtifactAsync(
-            artifacts.TestFillQuoteTransformerBridge,
-            env.provider,
-            { ...env.txDefaults, from: sender },
-            artifacts,
-        );
-        [makerToken, takerToken, takerFeeToken] = await Promise.all(
-            _.times(3, async () =>
-                TestMintableERC20TokenContract.deployFrom0xArtifactAsync(
-                    artifacts.TestMintableERC20Token,
-                    env.provider,
-                    env.txDefaults,
-                    artifacts,
-                ),
-            ),
-        );
-        singleProtocolFee = (await exchange.getProtocolFeeMultiplier().callAsync()).times(GAS_PRICE);
+        await Promise.all(tokenDeployments.map(token => token.waitForDeployment()));
+        [makerToken, takerToken, takerFeeToken] = tokenDeployments;
+        singleProtocolFee = BigInt(await exchange.getProtocolFeeMultiplier()) * BigInt(GAS_PRICE);
     });
 
     function createLimitOrder(fields: Partial<LimitOrderFields> = {}): LimitOrder {
@@ -138,7 +137,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             makerTokenAmount,
             source: TEST_BRIDGE_SOURCE,
             takerTokenAmount: getRandomInteger('0.1e18', '1e18'),
-            bridgeData: encodeBridgeData(makerTokenAmount.times(fillRatio).integerValue()),
+            bridgeData: encodeBridgeData(BigInt(Math.floor(makerTokenAmount * fillRatio))),
         };
     }
 
@@ -152,11 +151,11 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         };
     }
 
-    function orderSignatureToPreFilledTakerAmount(signature: Signature): BigNumber {
-        return new BigNumber(signature.r);
+    function orderSignatureToPreFilledTakerAmount(signature: Signature): bigint {
+        return BigInt(signature.r);
     }
 
-    function encodeBridgeData(boughtAmount: BigNumber): string {
+    function encodeBridgeData(boughtAmount: bigint): string {
         // abi.encode(bridgeAddress, bridgeData)
         return hexUtils.concat(hexUtils.leftPad(bridge.address), hexUtils.leftPad(32), hexUtils.leftPad(boughtAmount));
     }
@@ -184,7 +183,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         type FillOrderResults = typeof EMPTY_FILL_ORDER_RESULTS;
 
         let takerTokenBalanceRemaining = state.takerTokenBalance;
-        if (data.side === Side.Sell && !data.fillAmount.eq(MAX_UINT256)) {
+        if (data.side === Side.Sell && data.fillAmount !== MAX_UINT256) {
             takerTokenBalanceRemaining = data.fillAmount;
         }
         let ethBalanceRemaining = state.ethBalance;
@@ -194,10 +193,10 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         const orderIndices = [0, 0, 0];
 
         function computeTakerTokenFillAmount(
-            orderTakerTokenAmount: BigNumber,
-            orderMakerTokenAmount: BigNumber,
-            orderTakerTokenFeeAmount: BigNumber = ZERO_AMOUNT,
-        ): BigNumber {
+            orderTakerTokenAmount: bigint,
+            orderMakerTokenAmount: bigint,
+            orderTakerTokenFeeAmount: bigint = ZERO_AMOUNT,
+        ): bigint {
             let takerTokenFillAmount = ZERO_AMOUNT;
             if (data.side === Side.Sell) {
                 takerTokenFillAmount = fillAmount.minus(soldAmount);
@@ -335,9 +334,9 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         const balances = { ...ZERO_BALANCES };
         [balances.makerTokenBalance, balances.takerTokensBalance, balances.takerFeeBalance, balances.ethBalance] =
             await Promise.all([
-                makerToken.balanceOf(owner).callAsync(),
-                takerToken.balanceOf(owner).callAsync(),
-                takerFeeToken.balanceOf(owner).callAsync(),
+                makerToken.balanceOf(owner),
+                takerToken.balanceOf(owner),
+                takerFeeToken.balanceOf(owner),
                 env.web3Wrapper.getBalanceInWeiAsync(owner),
             ]);
         return balances;
@@ -354,26 +353,26 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         assertBalances(await getBalancesAsync(owner), expected);
     }
 
-    function encodeFractionalFillAmount(frac: number): BigNumber {
-        return HIGH_BIT.plus(new BigNumber(frac).times('1e18').integerValue());
+    function encodeFractionalFillAmount(frac: number): bigint {
+        return HIGH_BIT + BigInt(Math.floor(frac * 1e18));
     }
 
-    function normalizeFillAmount(raw: BigNumber, balance: BigNumber): BigNumber {
-        if (raw.gte(HIGH_BIT)) {
-            return raw.minus(HIGH_BIT).div('1e18').times(balance).integerValue(BigNumber.ROUND_DOWN);
+    function normalizeFillAmount(raw: bigint, balance: bigint): bigint {
+        if (raw >= HIGH_BIT) {
+            return BigInt(Math.floor(Number(raw - HIGH_BIT) / 1e18 * Number(balance)));
         }
         return raw;
     }
 
     interface BridgeData {
         bridge: string;
-        boughtAmount: BigNumber;
+        boughtAmount: bigint;
     }
 
     function decodeBridgeData(encoded: string): BridgeData {
         return {
             bridge: hexUtils.slice(encoded, 0, 32),
-            boughtAmount: new BigNumber(hexUtils.slice(encoded, 64)),
+            boughtAmount: BigInt(hexUtils.slice(encoded, 64)),
         };
     }
 
@@ -418,7 +417,9 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             data,
             ...params,
         };
-        return host
+        const senderSigner = await env.provider.getSigner(_params.sender);
+        const tx = await host
+            .connect(senderSigner)
             .executeTransform(
                 transformer.address,
                 takerToken.address,
@@ -426,8 +427,9 @@ blockchainTests.resets('FillQuoteTransformer', env => {
                 _params.sender,
                 _params.taker,
                 encodeFillQuoteTransformerData(_params.data),
-            )
-            .awaitTransactionSuccessAsync({ value: _params.ethBalance });
+                { value: _params.ethBalance }
+            );
+        return await tx.wait();
     }
 
     async function assertFinalBalancesAsync(qfr: QuoteFillResults): Promise<void> {
@@ -488,7 +490,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
                 takerTokenBalance: data.fillAmount,
                 data: { ...data, fillAmount: data.fillAmount.plus(1) },
             });
-            return expect(tx).to.revertWith(
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.TransformERC20.IncompleteFillSellQuoteError(
                     data.sellToken,
                     data.fillAmount,
@@ -968,7 +970,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
                 takerTokenBalance: BigNumber.sum(...bridgeOrders.map(o => o.takerTokenAmount)),
                 data: { ...data, fillAmount: data.fillAmount.plus(1) },
             });
-            return expect(tx).to.revertWith(
+            return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.TransformERC20.IncompleteFillBuyQuoteError(
                     data.buyToken,
                     data.fillAmount,

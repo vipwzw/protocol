@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import {
     blockchainTests,
     constants,
@@ -5,8 +6,8 @@ import {
     expect,
     getRandomPortion,
     randomAddress,
-} from '@0x/contracts-test-utils';
-import { BigNumber, hexUtils } from '@0x/utils';
+} from '@0x/test-utils';
+import { hexUtils } from '@0x/utils';
 import { LogWithDecodedArgs } from 'ethereum-types';
 
 import { artifacts } from '../artifacts';
@@ -18,12 +19,17 @@ import {
     TestUniswapV3PoolContract,
     TestWethContract,
     UniswapV3FeatureContract,
+    TestWeth__factory,
+    TestMintableERC20Token__factory,
+    TestNoEthRecipient__factory,
+    TestUniswapV3Factory__factory,
+    UniswapV3Feature__factory,
 } from '../wrappers';
 
-blockchainTests.resets('UniswapV3Feature', env => {
+blockchainTests('UniswapV3Feature', env => {
     const { MAX_UINT256, NULL_ADDRESS, ZERO_AMOUNT } = constants;
     const POOL_FEE = 1234;
-    const MAX_SUPPLY = new BigNumber('10e18');
+    const MAX_SUPPLY = BigInt('10000000000000000000'); // 10e18 as BigInt
     let uniFactory: TestUniswapV3FactoryContract;
     let feature: UniswapV3FeatureContract;
     let weth: TestWethContract;
@@ -36,46 +42,39 @@ blockchainTests.resets('UniswapV3Feature', env => {
 
     before(async () => {
         [, taker] = await env.getAccountAddressesAsync();
-        weth = await TestWethContract.deployFrom0xArtifactAsync(
-            artifacts.TestWeth,
-            env.provider,
-            env.txDefaults,
-            artifacts,
+        const signer = await env.provider.getSigner(taker);
+        
+        const wethFactory = new TestWeth__factory(signer);
+        weth = await wethFactory.deploy();
+        await weth.waitForDeployment();
+
+        const tokenFactories = [...new Array(3)].map(() => new TestMintableERC20Token__factory(signer));
+        const tokenDeployments = await Promise.all(
+            tokenFactories.map(factory => factory.deploy())
         );
-        tokens = await Promise.all(
-            [...new Array(3)].map(async () =>
-                TestMintableERC20TokenContract.deployFrom0xArtifactAsync(
-                    artifacts.TestMintableERC20Token,
-                    env.provider,
-                    env.txDefaults,
-                    artifacts,
-                ),
-            ),
+        await Promise.all(tokenDeployments.map(token => token.waitForDeployment()));
+        tokens = tokenDeployments;
+
+        const noEthRecipientFactory = new TestNoEthRecipient__factory(signer);
+        noEthRecipient = await noEthRecipientFactory.deploy();
+        await noEthRecipient.waitForDeployment();
+
+        const uniFactoryFactory = new TestUniswapV3Factory__factory(signer);
+        uniFactory = await uniFactoryFactory.deploy();
+        await uniFactory.waitForDeployment();
+
+        const featureFactory = new UniswapV3Feature__factory(signer);
+        feature = await featureFactory.deploy(
+            await weth.getAddress(),
+            await uniFactory.getAddress(),
+            await uniFactory.POOL_INIT_CODE_HASH(),
         );
-        noEthRecipient = await TestNoEthRecipientContract.deployFrom0xArtifactAsync(
-            artifacts.TestNoEthRecipient,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
-        uniFactory = await TestUniswapV3FactoryContract.deployFrom0xArtifactAsync(
-            artifacts.TestUniswapV3Factory,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
-        feature = await UniswapV3FeatureContract.deployFrom0xArtifactAsync(
-            artifacts.TestUniswapV3Feature,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-            weth.address,
-            uniFactory.address,
-            await uniFactory.POOL_INIT_CODE_HASH().callAsync(),
-        );
+        await feature.waitForDeployment();
+        
+        const takerSigner = await env.provider.getSigner(taker);
         await Promise.all(
             [...tokens, weth].map(t =>
-                t.approve(feature.address, MAX_UINT256).awaitTransactionSuccessAsync({ from: taker }),
+                t.connect(takerSigner).approve(await feature.getAddress(), MAX_UINT256)
             ),
         );
     });
@@ -90,9 +89,9 @@ blockchainTests.resets('UniswapV3Feature', env => {
         amount: BigNumber,
     ): Promise<void> {
         if (isWethContract(token)) {
-            await token.depositTo(owner).awaitTransactionSuccessAsync({ value: amount });
+            await token.depositTo(owner)({ value: amount });
         } else {
-            await token.mint(owner, amount).awaitTransactionSuccessAsync();
+            await token.mint(owner, amount)();
         }
     }
 
@@ -103,8 +102,8 @@ blockchainTests.resets('UniswapV3Feature', env => {
         balance1: BigNumber,
     ): Promise<TestUniswapV3PoolContract> {
         const r = await uniFactory
-            .createPool(token0.address, token1.address, new BigNumber(POOL_FEE))
-            .awaitTransactionSuccessAsync();
+            .createPool(token0.address, token1.address, BigInt(POOL_FEE))
+            ();
         const pool = new TestUniswapV3PoolContract(
             (r.logs[0] as LogWithDecodedArgs<TestUniswapV3FactoryPoolCreatedEventArgs>).args.pool,
             env.provider,
@@ -133,11 +132,11 @@ blockchainTests.resets('UniswapV3Feature', env => {
             await mintToAsync(sellToken, taker, sellAmount);
             await feature
                 .sellTokenForTokenToUniswapV3(encodePath([sellToken, buyToken]), sellAmount, buyAmount, recipient)
-                .awaitTransactionSuccessAsync({ from: taker });
+                ({ from: taker });
             // Test pools always ask for full sell amount and pay entire balance.
-            expect(await sellToken.balanceOf(taker).callAsync()).to.bignumber.eq(0);
-            expect(await buyToken.balanceOf(recipient).callAsync()).to.bignumber.eq(buyAmount);
-            expect(await sellToken.balanceOf(pool.address).callAsync()).to.bignumber.eq(sellAmount);
+            expect(await sellToken.balanceOf(taker)()).to.eq(0);
+            expect(await buyToken.balanceOf(recipient)()).to.eq(buyAmount);
+            expect(await sellToken.balanceOf(pool.address)()).to.eq(sellAmount);
         });
 
         it('2-hop swap', async () => {
@@ -148,32 +147,32 @@ blockchainTests.resets('UniswapV3Feature', env => {
             await mintToAsync(tokens[0], taker, sellAmount);
             await feature
                 .sellTokenForTokenToUniswapV3(encodePath(tokens), sellAmount, buyAmount, recipient)
-                .awaitTransactionSuccessAsync({ from: taker });
+                ({ from: taker });
             // Test pools always ask for full sell amount and pay entire balance.
-            expect(await tokens[0].balanceOf(taker).callAsync()).to.bignumber.eq(0);
-            expect(await tokens[2].balanceOf(recipient).callAsync()).to.bignumber.eq(buyAmount);
-            expect(await tokens[0].balanceOf(pools[0].address).callAsync()).to.bignumber.eq(sellAmount);
-            expect(await tokens[1].balanceOf(pools[1].address).callAsync()).to.bignumber.eq(buyAmount);
+            expect(await tokens[0].balanceOf(taker)()).to.eq(0);
+            expect(await tokens[2].balanceOf(recipient)()).to.eq(buyAmount);
+            expect(await tokens[0].balanceOf(pools[0].address)()).to.eq(sellAmount);
+            expect(await tokens[1].balanceOf(pools[1].address)()).to.eq(buyAmount);
         });
 
         it('1-hop underbuy fails', async () => {
             const [sellToken, buyToken] = tokens;
-            await createPoolAsync(sellToken, buyToken, ZERO_AMOUNT, buyAmount.minus(1));
+            await createPoolAsync(sellToken, buyToken, ZERO_AMOUNT, buyAmount - 1);
             await mintToAsync(sellToken, taker, sellAmount);
             const tx = feature
                 .sellTokenForTokenToUniswapV3(encodePath([sellToken, buyToken]), sellAmount, buyAmount, recipient)
-                .awaitTransactionSuccessAsync({ from: taker });
-            return expect(tx).to.revertWith('UniswapV3Feature/UNDERBOUGHT');
+                ({ from: taker });
+            return expect(tx).to.be.revertedWith('UniswapV3Feature/UNDERBOUGHT');
         });
 
         it('2-hop underbuy fails', async () => {
             await createPoolAsync(tokens[0], tokens[1], ZERO_AMOUNT, buyAmount);
-            await createPoolAsync(tokens[1], tokens[2], ZERO_AMOUNT, buyAmount.minus(1));
+            await createPoolAsync(tokens[1], tokens[2], ZERO_AMOUNT, buyAmount - 1);
             await mintToAsync(tokens[0], taker, sellAmount);
             const tx = feature
                 .sellTokenForTokenToUniswapV3(encodePath(tokens), sellAmount, buyAmount, recipient)
-                .awaitTransactionSuccessAsync({ from: taker });
-            return expect(tx).to.revertWith('UniswapV3Feature/UNDERBOUGHT');
+                ({ from: taker });
+            return expect(tx).to.be.revertedWith('UniswapV3Feature/UNDERBOUGHT');
         });
 
         it('null recipient is sender', async () => {
@@ -182,9 +181,9 @@ blockchainTests.resets('UniswapV3Feature', env => {
             await mintToAsync(sellToken, taker, sellAmount);
             await feature
                 .sellTokenForTokenToUniswapV3(encodePath([sellToken, buyToken]), sellAmount, buyAmount, NULL_ADDRESS)
-                .awaitTransactionSuccessAsync({ from: taker });
+                ({ from: taker });
             // Test pools always ask for full sell amount and pay entire balance.
-            expect(await buyToken.balanceOf(taker).callAsync()).to.bignumber.eq(buyAmount);
+            expect(await buyToken.balanceOf(taker)()).to.eq(buyAmount);
         });
     });
 
@@ -194,10 +193,10 @@ blockchainTests.resets('UniswapV3Feature', env => {
             const pool = await createPoolAsync(weth, buyToken, ZERO_AMOUNT, buyAmount);
             await feature
                 .sellEthForTokenToUniswapV3(encodePath([weth, buyToken]), buyAmount, recipient)
-                .awaitTransactionSuccessAsync({ from: taker, value: sellAmount });
+                ({ from: taker, value: sellAmount });
             // Test pools always ask for full sell amount and pay entire balance.
-            expect(await buyToken.balanceOf(recipient).callAsync()).to.bignumber.eq(buyAmount);
-            expect(await weth.balanceOf(pool.address).callAsync()).to.bignumber.eq(sellAmount);
+            expect(await buyToken.balanceOf(recipient)()).to.eq(buyAmount);
+            expect(await weth.balanceOf(pool.address)()).to.eq(sellAmount);
         });
 
         it('null recipient is sender', async () => {
@@ -205,10 +204,10 @@ blockchainTests.resets('UniswapV3Feature', env => {
             const pool = await createPoolAsync(weth, buyToken, ZERO_AMOUNT, buyAmount);
             await feature
                 .sellEthForTokenToUniswapV3(encodePath([weth, buyToken]), buyAmount, NULL_ADDRESS)
-                .awaitTransactionSuccessAsync({ from: taker, value: sellAmount });
+                ({ from: taker, value: sellAmount });
             // Test pools always ask for full sell amount and pay entire balance.
-            expect(await buyToken.balanceOf(taker).callAsync()).to.bignumber.eq(buyAmount);
-            expect(await weth.balanceOf(pool.address).callAsync()).to.bignumber.eq(sellAmount);
+            expect(await buyToken.balanceOf(taker)()).to.eq(buyAmount);
+            expect(await weth.balanceOf(pool.address)()).to.eq(sellAmount);
         });
     });
 
@@ -219,11 +218,11 @@ blockchainTests.resets('UniswapV3Feature', env => {
             await mintToAsync(sellToken, taker, sellAmount);
             await feature
                 .sellTokenForEthToUniswapV3(encodePath([sellToken, weth]), sellAmount, buyAmount, recipient)
-                .awaitTransactionSuccessAsync({ from: taker });
+                ({ from: taker });
             // Test pools always ask for full sell amount and pay entire balance.
-            expect(await sellToken.balanceOf(taker).callAsync()).to.bignumber.eq(0);
-            expect(await env.web3Wrapper.getBalanceInWeiAsync(recipient)).to.bignumber.eq(buyAmount);
-            expect(await sellToken.balanceOf(pool.address).callAsync()).to.bignumber.eq(sellAmount);
+            expect(await sellToken.balanceOf(taker)()).to.eq(0);
+            expect(await env.web3Wrapper.getBalanceInWeiAsync(recipient)).to.eq(buyAmount);
+            expect(await sellToken.balanceOf(pool.address)()).to.eq(sellAmount);
         });
 
         it('null recipient is sender', async () => {
@@ -233,12 +232,12 @@ blockchainTests.resets('UniswapV3Feature', env => {
             const takerBalanceBefore = await env.web3Wrapper.getBalanceInWeiAsync(taker);
             await feature
                 .sellTokenForEthToUniswapV3(encodePath([sellToken, weth]), sellAmount, buyAmount, NULL_ADDRESS)
-                .awaitTransactionSuccessAsync({ from: taker, gasPrice: ZERO_AMOUNT });
+                ({ from: taker, gasPrice: ZERO_AMOUNT });
             // Test pools always ask for full sell amount and pay entire balance.
-            expect((await env.web3Wrapper.getBalanceInWeiAsync(taker)).minus(takerBalanceBefore)).to.bignumber.eq(
+            expect((await env.web3Wrapper.getBalanceInWeiAsync(taker)) - takerBalanceBefore).to.eq(
                 buyAmount,
             );
-            expect(await sellToken.balanceOf(pool.address).callAsync()).to.bignumber.eq(sellAmount);
+            expect(await sellToken.balanceOf(pool.address)()).to.eq(sellAmount);
         });
 
         it('fails if receipient cannot receive ETH', async () => {
@@ -251,7 +250,7 @@ blockchainTests.resets('UniswapV3Feature', env => {
                     buyAmount,
                     noEthRecipient.address,
                 )
-                .awaitTransactionSuccessAsync({ from: taker });
+                ({ from: taker });
             return expect(tx).to.be.rejectedWith('revert');
         });
     });
