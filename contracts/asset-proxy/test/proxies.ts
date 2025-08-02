@@ -72,8 +72,8 @@ describe('Asset Transfer Proxies', () => {
 
     let erc20Wrapper: ERC20Wrapper;
     let erc721Wrapper: ERC721Wrapper;
-    let erc721AFromTokenId: BigNumber;
-    let erc721BFromTokenId: BigNumber;
+    let erc721AFromTokenId: bigint;
+    let erc721BFromTokenId: bigint;
 
     let erc1155Proxy: ERC1155ProxyContract;
     let erc1155ProxyWrapper: ERC1155ProxyWrapper;
@@ -88,8 +88,8 @@ describe('Asset Transfer Proxies', () => {
     let toSigner: any;
     let erc1155Wrapper: Erc1155Wrapper;
     let erc1155Wrapper2: Erc1155Wrapper;
-    let erc1155FungibleTokens: BigNumber[];
-    let erc1155NonFungibleTokensOwnedBySpender: BigNumber[];
+    let erc1155FungibleTokens: bigint[];
+    let erc1155NonFungibleTokensOwnedBySpender: bigint[];
 
     before(async () => {
         await blockchainLifecycle.startAsync();
@@ -201,7 +201,7 @@ describe('Asset Transfer Proxies', () => {
         const nonFungibleTokens = erc1155ProxyWrapper.getNonFungibleTokenIds();
         const tokenBalances = await erc1155ProxyWrapper.getBalancesAsync();
         erc1155NonFungibleTokensOwnedBySpender = [];
-        _.each(nonFungibleTokens, (nonFungibleToken: BigNumber) => {
+        _.each(nonFungibleTokens, (nonFungibleToken: bigint) => {
             const nonFungibleTokenAsString = nonFungibleToken.toString();
             const contractAddress = erc1155Contract.address;
             
@@ -345,11 +345,11 @@ describe('Asset Transfer Proxies', () => {
                 console.log('  ✅ ERC20 transfer successful!');
                 // Verify transfer was successful
                 const newBalances = await erc20Wrapper.getBalancesAsync();
-                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[fromAddress][await erc20TokenA.getAddress()].minus(amount),
+                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[fromAddress][await erc20TokenA.getAddress()] - amount,
                 );
-                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[toAddress][await erc20TokenA.getAddress()].plus(amount),
+                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[toAddress][await erc20TokenA.getAddress()] + amount,
                 );
             });
 
@@ -375,8 +375,8 @@ describe('Asset Transfer Proxies', () => {
                 // Verify transfer was successful
                 const newFromBalance = await noReturnErc20Token.balanceOf(fromAddress);
                 const newToBalance = await noReturnErc20Token.balanceOf(toAddress);
-                expect(newFromBalance).to.be.bignumber.equal(initialFromBalance.minus(amount));
-                expect(newToBalance).to.be.bignumber.equal(initialToBalance.plus(amount));
+                expect(newFromBalance).to.equal(initialFromBalance - amount);
+                expect(newToBalance).to.equal(initialToBalance + amount);
             });
 
             it('should successfully transfer tokens and ignore extra assetData', async () => {
@@ -400,11 +400,11 @@ describe('Asset Transfer Proxies', () => {
                 await tx.wait();
                 // Verify transfer was successful
                 const newBalances = await erc20Wrapper.getBalancesAsync();
-                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[fromAddress][await erc20TokenA.getAddress()].minus(amount),
+                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[fromAddress][await erc20TokenA.getAddress()] - amount,
                 );
-                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[toAddress][await erc20TokenA.getAddress()].plus(amount),
+                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[toAddress][await erc20TokenA.getAddress()] + amount,
                 );
             });
 
@@ -428,10 +428,10 @@ describe('Asset Transfer Proxies', () => {
                 await tx.wait();
                 // Verify transfer was successful
                 const newBalances = await erc20Wrapper.getBalancesAsync();
-                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
+                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.equal(
                     erc20Balances[fromAddress][await erc20TokenA.getAddress()],
                 );
-                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
+                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.equal(
                     erc20Balances[toAddress][await erc20TokenA.getAddress()],
                 );
             });
@@ -493,8 +493,8 @@ describe('Asset Transfer Proxies', () => {
                 );
                 const newFromBalance = await noReturnErc20Token.balanceOf(fromAddress);
                 const newToBalance = await noReturnErc20Token.balanceOf(toAddress);
-                expect(newFromBalance).to.be.bignumber.equal(initialFromBalance);
-                expect(newToBalance).to.be.bignumber.equal(initialToBalance);
+                expect(newFromBalance).to.equal(initialFromBalance);
+                expect(newToBalance).to.equal(initialToBalance);
             });
 
             it('should revert if caller is not authorized', async () => {
@@ -544,8 +544,8 @@ describe('Asset Transfer Proxies', () => {
                 );
                 const newFromBalance = await multipleReturnErc20Token.balanceOf(fromAddress);
                 const newToBalance = await multipleReturnErc20Token.balanceOf(toAddress);
-                expect(newFromBalance).to.be.bignumber.equal(initialFromBalance);
-                expect(newToBalance).to.be.bignumber.equal(initialToBalance);
+                expect(newFromBalance).to.equal(initialFromBalance);
+                expect(newToBalance).to.equal(initialToBalance);
             });
         });
     });
@@ -592,7 +592,7 @@ describe('Asset Transfer Proxies', () => {
                 );
                 // Verify transfer was successful
                 const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
-                expect(newOwnerFromAsset).to.be.bignumber.equal(toAddress);
+                expect(newOwnerFromAsset).to.equal(toAddress);
             });
 
             it('should successfully transfer tokens and ignore extra assetData', async () => {
@@ -623,7 +623,7 @@ describe('Asset Transfer Proxies', () => {
                 );
                 // Verify transfer was successful
                 const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
-                expect(newOwnerFromAsset).to.be.bignumber.equal(toAddress);
+                expect(newOwnerFromAsset).to.equal(toAddress);
             });
 
             it('should not call onERC721Received when transferring to a smart contract', async () => {
@@ -650,7 +650,7 @@ describe('Asset Transfer Proxies', () => {
                 expect(tx.logs.length).to.be.equal(1);
                 // Verify transfer was successful
                 const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
-                expect(newOwnerFromAsset).to.be.bignumber.equal(erc721Receiver.address);
+                expect(newOwnerFromAsset).to.equal(erc721Receiver.address);
             });
 
             it('should revert if transferring 0 amount of a token', async () => {
@@ -805,12 +805,12 @@ describe('Asset Transfer Proxies', () => {
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
                 const newBalances = await erc20Wrapper.getBalancesAsync();
-                const totalAmount = inputAmount.times(erc20Amount);
-                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[fromAddress][await erc20TokenA.getAddress()].minus(totalAmount),
+                const totalAmount = inputAmount * erc20Amount);
+                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[fromAddress][await erc20TokenA.getAddress()] - totalAmount),
                 );
-                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[toAddress][await erc20TokenA.getAddress()].plus(totalAmount),
+                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[toAddress][await erc20TokenA.getAddress()] + totalAmount),
                 );
             });
             it('should dispatch an ERC20 transfer when input amount is 0', async () => {
@@ -836,7 +836,7 @@ describe('Asset Transfer Proxies', () => {
                 const log = tx.logs[0] as LogWithDecodedArgs<DummyERC20TokenTransferEventArgs>;
                 const transferEventName = 'Transfer';
                 expect(log.event).to.equal(transferEventName);
-                expect(log.args._value).to.be.bignumber.equal(constants.ZERO_AMOUNT);
+                expect(log.args._value).to.equal(constants.ZERO_AMOUNT);
                 const newBalances = await erc20Wrapper.getBalancesAsync();
                 expect(newBalances).to.deep.equal(erc20Balances);
             });
@@ -862,12 +862,12 @@ describe('Asset Transfer Proxies', () => {
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
                 const newBalances = await erc20Wrapper.getBalancesAsync();
-                const totalAmount = inputAmount.times(erc20Amount1).plus(inputAmount.times(erc20Amount2));
-                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[fromAddress][await erc20TokenA.getAddress()].minus(totalAmount),
+                const totalAmount = inputAmount * erc20Amount1) + inputAmount * erc20Amount2));
+                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[fromAddress][await erc20TokenA.getAddress()] - totalAmount),
                 );
-                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[toAddress][await erc20TokenA.getAddress()].plus(totalAmount),
+                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[toAddress][await erc20TokenA.getAddress()] + totalAmount),
                 );
             });
             it('should successfully transfer multiple different ERC20 tokens', async () => {
@@ -892,19 +892,19 @@ describe('Asset Transfer Proxies', () => {
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
                 const newBalances = await erc20Wrapper.getBalancesAsync();
-                const totalErc20AAmount = inputAmount.times(erc20Amount1);
-                const totalErc20BAmount = inputAmount.times(erc20Amount2);
-                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[fromAddress][await erc20TokenA.getAddress()].minus(totalErc20AAmount),
+                const totalErc20AAmount = inputAmount * erc20Amount1);
+                const totalErc20BAmount = inputAmount * erc20Amount2);
+                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[fromAddress][await erc20TokenA.getAddress()] - totalErc20AAmount),
                 );
-                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[toAddress][await erc20TokenA.getAddress()].plus(totalErc20AAmount),
+                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[toAddress][await erc20TokenA.getAddress()] + totalErc20AAmount),
                 );
-                expect(newBalances[fromAddress][await erc20TokenB.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[fromAddress][await erc20TokenB.getAddress()].minus(totalErc20BAmount),
+                expect(newBalances[fromAddress][await erc20TokenB.getAddress()]).to.equal(
+                    erc20Balances[fromAddress][await erc20TokenB.getAddress()] - totalErc20BAmount),
                 );
-                expect(newBalances[toAddress][await erc20TokenB.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[toAddress][await erc20TokenB.getAddress()].plus(totalErc20BAmount),
+                expect(newBalances[toAddress][await erc20TokenB.getAddress()]).to.equal(
+                    erc20Balances[toAddress][await erc20TokenB.getAddress()] + totalErc20BAmount),
                 );
             });
             it('should transfer a single ERC721 token', async () => {
@@ -994,8 +994,8 @@ describe('Asset Transfer Proxies', () => {
                 // setup test parameters
                 const tokenHolders = [fromAddress, toAddress];
                 const tokensToTransfer = erc1155FungibleTokens.slice(0, 1);
-                const valuesToTransfer = [new BigNumber(25)];
-                const valueMultiplier = new BigNumber(23);
+                const valuesToTransfer = [25n];
+                const valueMultiplier = 23n;
                 const receiverCallbackData = '0x0102030405';
                 // check balances before transfer
                 const expectedInitialBalances = [
@@ -1013,7 +1013,7 @@ describe('Asset Transfer Proxies', () => {
                     receiverCallbackData,
                 );
                 // encode multi-asset data
-                const multiAssetAmount = new BigNumber(5);
+                const multiAssetAmount = 5n;
                 const amounts = [valueMultiplier];
                 const nestedAssetData = [erc1155AssetData];
                 const assetData = encodeMultiAssetData(amounts, nestedAssetData);
@@ -1030,12 +1030,12 @@ describe('Asset Transfer Proxies', () => {
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
                 // check balances
-                const totalValueTransferred = valuesToTransfer[0].times(valueMultiplier).times(multiAssetAmount);
+                const totalValueTransferred = valuesToTransfer[0] * valueMultiplier * multiAssetAmount;
                 const expectedFinalBalances = [
                     // from
-                    expectedInitialBalances[0].minus(totalValueTransferred),
+                    expectedInitialBalances[0] - totalValueTransferred,
                     // to
-                    expectedInitialBalances[1].plus(totalValueTransferred),
+                    expectedInitialBalances[1] + totalValueTransferred,
                 ];
                 await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
             });
@@ -1043,8 +1043,8 @@ describe('Asset Transfer Proxies', () => {
                 // setup test parameters
                 const tokenHolders = [fromAddress, toAddress];
                 const tokensToTransfer = erc1155FungibleTokens.slice(0, 3);
-                const valuesToTransfer = [new BigNumber(25), new BigNumber(35), new BigNumber(45)];
-                const valueMultiplier = new BigNumber(23);
+                const valuesToTransfer = [25n, 35n, 45n];
+                const valueMultiplier = 23n;
                 const receiverCallbackData = '0x0102030405';
                 // check balances before transfer
                 const expectedInitialBalances = [
@@ -1066,7 +1066,7 @@ describe('Asset Transfer Proxies', () => {
                     receiverCallbackData,
                 );
                 // encode multi-asset data
-                const multiAssetAmount = new BigNumber(5);
+                const multiAssetAmount = 5n;
                 const amounts = [valueMultiplier];
                 const nestedAssetData = [erc1155AssetData];
                 const assetData = encodeMultiAssetData(amounts, nestedAssetData);
@@ -1083,18 +1083,18 @@ describe('Asset Transfer Proxies', () => {
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
                 // check balances
-                const totalValuesTransferred = _.map(valuesToTransfer, (value: BigNumber) => {
-                    return value.times(valueMultiplier).times(multiAssetAmount);
+                const totalValuesTransferred = _.map(valuesToTransfer, (value: bigint) => {
+                    return value * valueMultiplier * multiAssetAmount;
                 });
                 const expectedFinalBalances = [
                     // from
-                    expectedInitialBalances[0].minus(totalValuesTransferred[0]),
-                    expectedInitialBalances[1].minus(totalValuesTransferred[1]),
-                    expectedInitialBalances[2].minus(totalValuesTransferred[2]),
+                    expectedInitialBalances[0] - totalValuesTransferred[0]),
+                    expectedInitialBalances[1] - totalValuesTransferred[1]),
+                    expectedInitialBalances[2] - totalValuesTransferred[2]),
                     // to
-                    expectedInitialBalances[3].plus(totalValuesTransferred[0]),
-                    expectedInitialBalances[4].plus(totalValuesTransferred[1]),
-                    expectedInitialBalances[5].plus(totalValuesTransferred[2]),
+                    expectedInitialBalances[3] + totalValuesTransferred[0]),
+                    expectedInitialBalances[4] + totalValuesTransferred[1]),
+                    expectedInitialBalances[5] + totalValuesTransferred[2]),
                 ];
                 await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
             });
@@ -1104,7 +1104,7 @@ describe('Asset Transfer Proxies', () => {
                 const fungibleTokensToTransfer = erc1155FungibleTokens.slice(0, 1);
                 const nonFungibleTokensToTransfer = erc1155NonFungibleTokensOwnedBySpender.slice(0, 1);
                 const tokensToTransfer = fungibleTokensToTransfer.concat(nonFungibleTokensToTransfer);
-                const valuesToTransfer = [new BigNumber(25), 1n];
+                const valuesToTransfer = [25n, 1n];
                 const valueMultiplier = 1n;
                 const receiverCallbackData = '0x0102030405';
                 // check balances before transfer
@@ -1144,16 +1144,16 @@ describe('Asset Transfer Proxies', () => {
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
                 // check balances
-                const totalValuesTransferred = _.map(valuesToTransfer, (value: BigNumber) => {
-                    return value.times(valueMultiplier).times(multiAssetAmount);
+                const totalValuesTransferred = _.map(valuesToTransfer, (value: bigint) => {
+                    return value * valueMultiplier * multiAssetAmount;
                 });
                 const expectedFinalBalances = [
                     // from
-                    expectedInitialBalances[0].minus(totalValuesTransferred[0]),
-                    expectedInitialBalances[1].minus(totalValuesTransferred[1]),
+                    expectedInitialBalances[0] - totalValuesTransferred[0]),
+                    expectedInitialBalances[1] - totalValuesTransferred[1]),
                     // to
-                    expectedInitialBalances[2].plus(totalValuesTransferred[0]),
-                    expectedInitialBalances[3].plus(totalValuesTransferred[1]),
+                    expectedInitialBalances[2] + totalValuesTransferred[0]),
+                    expectedInitialBalances[3] + totalValuesTransferred[1]),
                 ];
                 await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
             });
@@ -1162,8 +1162,8 @@ describe('Asset Transfer Proxies', () => {
                 // setup test parameters
                 const tokenHolders = [fromAddress, toAddress];
                 const tokensToTransfer = erc1155FungibleTokens.slice(0, 1);
-                const valuesToTransfer = [new BigNumber(25)];
-                const valueMultiplier = new BigNumber(23);
+                const valuesToTransfer = [25n];
+                const valueMultiplier = 23n;
                 const receiverCallbackData = '0x0102030405';
                 // check balances before transfer
                 const expectedInitialBalances = [
@@ -1188,7 +1188,7 @@ describe('Asset Transfer Proxies', () => {
                     receiverCallbackData,
                 );
                 // encode multi-asset data
-                const multiAssetAmount = new BigNumber(5);
+                const multiAssetAmount = 5n;
                 const amounts = [valueMultiplier, valueMultiplier];
                 const nestedAssetData = [erc1155AssetData1, erc1155AssetData2];
                 const assetData = encodeMultiAssetData(amounts, nestedAssetData);
@@ -1205,12 +1205,12 @@ describe('Asset Transfer Proxies', () => {
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
                 // check balances
-                const totalValueTransferred = valuesToTransfer[0].times(valueMultiplier).times(multiAssetAmount);
+                const totalValueTransferred = valuesToTransfer[0] * valueMultiplier * multiAssetAmount;
                 const expectedFinalBalances = [
                     // from
-                    expectedInitialBalances[0].minus(totalValueTransferred),
+                    expectedInitialBalances[0] - totalValueTransferred,
                     // to
-                    expectedInitialBalances[1].plus(totalValueTransferred),
+                    expectedInitialBalances[1] + totalValueTransferred,
                 ];
                 await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
                 await erc1155Wrapper2.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
@@ -1224,8 +1224,8 @@ describe('Asset Transfer Proxies', () => {
                 const erc721AssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 const erc1155TokenHolders = [fromAddress, toAddress];
                 const erc1155TokensToTransfer = erc1155FungibleTokens.slice(0, 1);
-                const erc1155ValuesToTransfer = [new BigNumber(25)];
-                const erc1155Amount = new BigNumber(23);
+                const erc1155ValuesToTransfer = [25n];
+                const erc1155Amount = 23n;
                 const erc1155ReceiverCallbackData = '0x0102030405';
                 const erc1155AssetData = encodeERC1155AssetData(
                     erc1155Contract.address,
@@ -1264,19 +1264,19 @@ describe('Asset Transfer Proxies', () => {
                 );
                 // check balances after transfer
                 const newBalances = await erc20Wrapper.getBalancesAsync();
-                const totalAmount = inputAmount.times(erc20Amount);
-                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[fromAddress][await erc20TokenA.getAddress()].minus(totalAmount),
+                const totalAmount = inputAmount * erc20Amount);
+                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[fromAddress][await erc20TokenA.getAddress()] - totalAmount),
                 );
-                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[toAddress][await erc20TokenA.getAddress()].plus(totalAmount),
+                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[toAddress][await erc20TokenA.getAddress()] + totalAmount),
                 );
                 const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwnerFromAsset).to.be.equal(toAddress);
-                const erc1155TotalValueTransferred = erc1155ValuesToTransfer[0].times(erc1155Amount).times(inputAmount);
+                const erc1155TotalValueTransferred = erc1155ValuesToTransfer[0] * erc1155Amount) * inputAmount);
                 const expectedFinalBalances = [
-                    erc1155ExpectedInitialBalances[0].minus(erc1155TotalValueTransferred),
-                    erc1155ExpectedInitialBalances[1].plus(erc1155TotalValueTransferred),
+                    erc1155ExpectedInitialBalances[0] - erc1155TotalValueTransferred),
+                    erc1155ExpectedInitialBalances[1] + erc1155TotalValueTransferred),
                 ];
                 await erc1155Wrapper.assertBalancesAsync(
                     erc1155TokenHolders,
@@ -1308,12 +1308,12 @@ describe('Asset Transfer Proxies', () => {
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
                 const newBalances = await erc20Wrapper.getBalancesAsync();
-                const totalAmount = inputAmount.times(erc20Amount);
-                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[fromAddress][await erc20TokenA.getAddress()].minus(totalAmount),
+                const totalAmount = inputAmount * erc20Amount);
+                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[fromAddress][await erc20TokenA.getAddress()] - totalAmount),
                 );
-                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[toAddress][await erc20TokenA.getAddress()].plus(totalAmount),
+                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[toAddress][await erc20TokenA.getAddress()] + totalAmount),
                 );
                 const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwnerFromAsset).to.be.equal(toAddress);
@@ -1344,18 +1344,18 @@ describe('Asset Transfer Proxies', () => {
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
                 const newBalances = await erc20Wrapper.getBalancesAsync();
-                const totalAmount = inputAmount.times(erc20Amount);
-                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[fromAddress][await erc20TokenA.getAddress()].minus(totalAmount),
+                const totalAmount = inputAmount * erc20Amount);
+                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[fromAddress][await erc20TokenA.getAddress()] - totalAmount),
                 );
-                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[toAddress][await erc20TokenA.getAddress()].plus(totalAmount),
+                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[toAddress][await erc20TokenA.getAddress()] + totalAmount),
                 );
                 const newOwnerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwnerFromAsset).to.be.equal(toAddress);
             });
             it('should successfully transfer correct amounts when the `amount` > 1', async () => {
-                const inputAmount = new BigNumber(100);
+                const inputAmount = 100n;
                 const erc20Amount1 = 10n;
                 const erc20Amount2 = 20n;
                 const erc20AssetData1 = encodeERC20AssetData(await erc20TokenA.getAddress());
@@ -1376,19 +1376,19 @@ describe('Asset Transfer Proxies', () => {
                     constants.AWAIT_TRANSACTION_MINED_MS,
                 );
                 const newBalances = await erc20Wrapper.getBalancesAsync();
-                const totalErc20AAmount = inputAmount.times(erc20Amount1);
-                const totalErc20BAmount = inputAmount.times(erc20Amount2);
-                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[fromAddress][await erc20TokenA.getAddress()].minus(totalErc20AAmount),
+                const totalErc20AAmount = inputAmount * erc20Amount1);
+                const totalErc20BAmount = inputAmount * erc20Amount2);
+                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[fromAddress][await erc20TokenA.getAddress()] - totalErc20AAmount),
                 );
-                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[toAddress][await erc20TokenA.getAddress()].plus(totalErc20AAmount),
+                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[toAddress][await erc20TokenA.getAddress()] + totalErc20AAmount),
                 );
-                expect(newBalances[fromAddress][await erc20TokenB.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[fromAddress][await erc20TokenB.getAddress()].minus(totalErc20BAmount),
+                expect(newBalances[fromAddress][await erc20TokenB.getAddress()]).to.equal(
+                    erc20Balances[fromAddress][await erc20TokenB.getAddress()] - totalErc20BAmount),
                 );
-                expect(newBalances[toAddress][await erc20TokenB.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[toAddress][await erc20TokenB.getAddress()].plus(totalErc20BAmount),
+                expect(newBalances[toAddress][await erc20TokenB.getAddress()]).to.equal(
+                    erc20Balances[toAddress][await erc20TokenB.getAddress()] + totalErc20BAmount),
                 );
             });
             it('should successfully transfer a large amount of tokens', async () => {
@@ -1445,19 +1445,19 @@ describe('Asset Transfer Proxies', () => {
                 expect(newOwnerFromAsset3).to.be.equal(toAddress);
                 expect(newOwnerFromAsset4).to.be.equal(toAddress);
                 const newBalances = await erc20Wrapper.getBalancesAsync();
-                const totalErc20AAmount = inputAmount.times(erc20Amount1);
-                const totalErc20BAmount = inputAmount.times(erc20Amount2);
-                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[fromAddress][await erc20TokenA.getAddress()].minus(totalErc20AAmount),
+                const totalErc20AAmount = inputAmount * erc20Amount1);
+                const totalErc20BAmount = inputAmount * erc20Amount2);
+                expect(newBalances[fromAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[fromAddress][await erc20TokenA.getAddress()] - totalErc20AAmount),
                 );
-                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[toAddress][await erc20TokenA.getAddress()].plus(totalErc20AAmount),
+                expect(newBalances[toAddress][await erc20TokenA.getAddress()]).to.equal(
+                    erc20Balances[toAddress][await erc20TokenA.getAddress()] + totalErc20AAmount),
                 );
-                expect(newBalances[fromAddress][await erc20TokenB.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[fromAddress][await erc20TokenB.getAddress()].minus(totalErc20BAmount),
+                expect(newBalances[fromAddress][await erc20TokenB.getAddress()]).to.equal(
+                    erc20Balances[fromAddress][await erc20TokenB.getAddress()] - totalErc20BAmount),
                 );
-                expect(newBalances[toAddress][await erc20TokenB.getAddress()]).to.be.bignumber.equal(
-                    erc20Balances[toAddress][await erc20TokenB.getAddress()].plus(totalErc20BAmount),
+                expect(newBalances[toAddress][await erc20TokenB.getAddress()]).to.equal(
+                    erc20Balances[toAddress][await erc20TokenB.getAddress()] + totalErc20BAmount),
                 );
             });
             it('should revert if a single transfer fails', async () => {
@@ -1465,7 +1465,7 @@ describe('Asset Transfer Proxies', () => {
                 const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(await erc20TokenA.getAddress());
                 // 2 is an invalid erc721 amount
-                const erc721Amount = new BigNumber(2);
+                const erc721Amount = 2n;
                 const erc721AssetData = encodeERC721AssetData(erc721TokenA.address, erc721AFromTokenId);
                 const amounts = [erc20Amount, erc721Amount];
                 const nestedAssetData = [erc20AssetData, erc721AssetData];
@@ -1526,8 +1526,8 @@ describe('Asset Transfer Proxies', () => {
                 );
             });
             it('should revert if amounts multiplication results in an overflow', async () => {
-                const inputAmount = new BigNumber(2).pow(128);
-                const erc20Amount = new BigNumber(2).pow(128);
+                const inputAmount = 2n ** 128n;
+                const erc20Amount = 2n ** 128n;
                 const erc20AssetData = encodeERC20AssetData(await erc20TokenA.getAddress());
                 const amounts = [erc20Amount];
                 const nestedAssetData = [erc20AssetData];

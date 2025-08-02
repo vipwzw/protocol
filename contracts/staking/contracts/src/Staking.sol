@@ -163,14 +163,19 @@ contract Staking is
         override(IStaking, MixinStakeBalances) 
         returns (IStructs.StoredBalance memory balance) 
     {
-        // 调用 MixinStakeBalances 的实现
-        balance = _loadCurrentBalance(
-            _globalStakeByStatus[uint8(IStructs.StakeStatus.DELEGATED)]
-        );
-        if (stakeStatus == IStructs.StakeStatus.UNDELEGATED) {
+        if (stakeStatus == IStructs.StakeStatus.DELEGATED) {
+            balance = _loadCurrentBalance(
+                _globalStakeByStatus[uint8(IStructs.StakeStatus.DELEGATED)]
+            );
+        } else if (stakeStatus == IStructs.StakeStatus.UNDELEGATED) {
+            balance = _loadCurrentBalance(
+                _globalStakeByStatus[uint8(IStructs.StakeStatus.DELEGATED)]
+            );
             uint256 totalStake = _getZrxVault().balanceOfZrxVault();
             balance.currentEpochBalance = uint96(totalStake - balance.currentEpochBalance);
             balance.nextEpochBalance = uint96(totalStake - balance.nextEpochBalance);
+        } else {
+            revert("UNKNOWN_STAKE_STATUS");
         }
         return balance;
     }
@@ -242,6 +247,15 @@ contract Staking is
             _delegatedStakeByPoolId[poolId]
         );
         return balance;
+    }
+
+    function getTotalStake(address staker)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        return _getZrxVault().balanceOf(staker);
     }
 
     function getWethContract() 

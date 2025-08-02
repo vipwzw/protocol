@@ -22,11 +22,26 @@ import "../src/interfaces/IStructs.sol";
 import "./TestStakingNoWETH.sol";
 
 
+// Mock ZrxVault contract for testing
+contract MockZrxVault {
+    mapping(address => uint256) public balances;
+    uint256 public vaultBalance;
+    
+    function balanceOf(address account) external view returns (uint256) {
+        return balances[account];
+    }
+    
+    function balanceOfZrxVault() external view returns (uint256) {
+        return vaultBalance;
+    }
+}
+
 contract TestMixinStakeBalances is
     TestStakingNoWETH
 {
     uint256 private _balanceOfZrxVault;
     mapping (address => uint256) private _zrxBalanceOf;
+    MockZrxVault private mockVault;
 
     function setBalanceOfZrxVault(uint256 balance)
         external
@@ -135,4 +150,6 @@ contract TestMixinStakeBalances is
         }
         return balance;
     }
+    
+
 }
