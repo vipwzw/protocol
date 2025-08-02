@@ -78,7 +78,7 @@ blockchainTests('CurveLiquidityProvider feature', env => {
         }
     }
 
-    function encodeCurveData(fields: Partial<CurveDataFields> = {}): string {
+    async function encodeCurveData(fields: Partial<CurveDataFields> = {}): Promise<string> {
         const _fields = {
             curveAddress: await testCurve.getAddress(),
             exchangeFunctionSelector: SWAP_SELECTOR,
@@ -101,7 +101,7 @@ blockchainTests('CurveLiquidityProvider feature', env => {
             await buyToken.getAddress(),
             RECIPIENT,
             BUY_AMOUNT,
-            encodeCurveData(),
+            await encodeCurveData(),
         );
         const receipt = await tx.wait();
         const { logs } = receipt;
@@ -130,7 +130,7 @@ blockchainTests('CurveLiquidityProvider feature', env => {
             await sellToken.getAddress(),
             RECIPIENT,
             BUY_AMOUNT,
-            encodeCurveData({ toCoinIdx: ETH_COIN_IDX }),
+            await encodeCurveData({ toCoinIdx: ETH_COIN_IDX }),
         );
         const receipt = await tx.wait();
         const { logs } = receipt;
@@ -159,7 +159,7 @@ blockchainTests('CurveLiquidityProvider feature', env => {
             await buyToken.getAddress(),
             RECIPIENT,
             BUY_AMOUNT,
-            encodeCurveData({ fromCoinIdx: ETH_COIN_IDX }),
+            await encodeCurveData({ fromCoinIdx: ETH_COIN_IDX }),
         );
         const receipt = await tx.wait();
         const { logs } = receipt;
@@ -187,7 +187,7 @@ blockchainTests('CurveLiquidityProvider feature', env => {
             await buyToken.getAddress(),
             RECIPIENT,
             BUY_AMOUNT,
-            encodeCurveData({ fromCoinIdx: ETH_COIN_IDX }),
+            await encodeCurveData({ fromCoinIdx: ETH_COIN_IDX }),
             { value: SELL_AMOUNT }
         );
         const receipt = await tx.wait();
@@ -218,7 +218,7 @@ blockchainTests('CurveLiquidityProvider feature', env => {
             await buyToken.getAddress(),
             RECIPIENT,
             BUY_AMOUNT,
-            encodeCurveData({ exchangeFunctionSelector: SWAP_WITH_RETURN_SELECTOR }),
+            await encodeCurveData({ exchangeFunctionSelector: SWAP_WITH_RETURN_SELECTOR }),
         );
         const receipt = await tx.wait();
         const { logs } = receipt;
@@ -248,7 +248,7 @@ blockchainTests('CurveLiquidityProvider feature', env => {
             await buyToken.getAddress(),
             RECIPIENT,
             BUY_AMOUNT,
-            encodeCurveData({ exchangeFunctionSelector: REVERTING_SELECTOR }),
+            await encodeCurveData({ exchangeFunctionSelector: REVERTING_SELECTOR }),
         );
         return expect(call()).to.be.revertedWith('TestCurve/REVERT');
     });
@@ -260,7 +260,7 @@ blockchainTests('CurveLiquidityProvider feature', env => {
             await buyToken.getAddress(),
             RECIPIENT,
             BUY_AMOUNT + 1,
-            encodeCurveData(),
+            await encodeCurveData(),
         );
         return expect(call()).to.be.revertedWith('CurveLiquidityProvider/UNDERBOUGHT');
     });
@@ -272,7 +272,7 @@ blockchainTests('CurveLiquidityProvider feature', env => {
             await buyToken.getAddress(),
             RECIPIENT,
             BUY_AMOUNT,
-            encodeCurveData(),
+            await encodeCurveData(),
         );
         return expect(call()).to.be.revertedWith('CurveLiquidityProvider/INVALID_ARGS');
     });
@@ -284,20 +284,20 @@ blockchainTests('CurveLiquidityProvider feature', env => {
             ETH_TOKEN_ADDRESS,
             RECIPIENT,
             BUY_AMOUNT,
-            encodeCurveData(),
+            await encodeCurveData(),
         );
         return expect(call()).to.be.revertedWith('CurveLiquidityProvider/INVALID_ARGS');
     });
 
     it('reverts if ERC20->ETH receives an ETH input token', async () => {
         await fundProviderContractAsync(SELL_TOKEN_COIN_IDX);
-        const call = lp.sellTokenForEth(ETH_TOKEN_ADDRESS, RECIPIENT, BUY_AMOUNT, encodeCurveData());
+        const call = lp.sellTokenForEth(ETH_TOKEN_ADDRESS, RECIPIENT, BUY_AMOUNT, await encodeCurveData());
         return expect(call()).to.be.revertedWith('CurveLiquidityProvider/INVALID_ARGS');
     });
 
     it('reverts if ETH->ERC20 receives an ETH output token', async () => {
         await fundProviderContractAsync(ETH_COIN_IDX);
-        const call = lp.sellEthForToken(ETH_TOKEN_ADDRESS, RECIPIENT, BUY_AMOUNT, encodeCurveData());
+        const call = lp.sellEthForToken(ETH_TOKEN_ADDRESS, RECIPIENT, BUY_AMOUNT, await encodeCurveData());
         return expect(call()).to.be.revertedWith('CurveLiquidityProvider/INVALID_ARGS');
     });
 
@@ -308,7 +308,7 @@ blockchainTests('CurveLiquidityProvider feature', env => {
             await buyToken.getAddress(),
             RECIPIENT,
             BUY_AMOUNT,
-            encodeCurveData(),
+            await encodeCurveData(),
         );
         const receipt = await tx.wait();
         const { logs } = receipt;

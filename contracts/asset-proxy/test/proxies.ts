@@ -44,6 +44,7 @@ import { ERC1155ProxyContract, ERC20ProxyContract, ERC721ProxyContract } from '.
 
 import { artifacts } from './artifacts';
 import { IAssetProxy, IAssetProxy__factory, MultiAssetProxyContract, MultiAssetProxy__factory } from './wrappers';
+import { getProxyId, assertProxyId, transferFromViaFallback } from '../src/proxy_utils';
 
 chaiSetup.configure();
 const expect = chai.expect;
@@ -239,9 +240,9 @@ describe('Asset Transfer Proxies', () => {
             );
         });
         it('should have an id of 0xf47261b0', async () => {
-            const proxyId = await erc20Proxy.getProxyId();
+            const proxyAddress = await erc20Proxy.getAddress();
             const expectedProxyId = '0xf47261b0';
-            expect(proxyId).to.equal(expectedProxyId);
+            await assertProxyId(proxyAddress, expectedProxyId, provider);
         });
         describe('transferFrom', () => {
             it('should successfully transfer tokens', async () => {
@@ -562,9 +563,9 @@ describe('Asset Transfer Proxies', () => {
             );
         });
         it('should have an id of 0x02571792', async () => {
-            const proxyId = await erc721Proxy.getProxyId();
+            const proxyAddress = await erc721Proxy.getAddress();
             const expectedProxyId = '0x02571792';
-            expect(proxyId).to.equal(expectedProxyId);
+            await assertProxyId(proxyAddress, expectedProxyId, provider);
         });
         describe('transferFrom', () => {
             it('should successfully transfer tokens', async () => {
@@ -778,10 +779,10 @@ describe('Asset Transfer Proxies', () => {
             );
         });
         it('should have an id of 0x94cfcdd7', async () => {
-            const proxyId = await multiAssetProxy.getProxyId();
+            const proxyAddress = await multiAssetProxy.getAddress();
             // first 4 bytes of `keccak256('MultiAsset(uint256[],bytes[])')`
             const expectedProxyId = '0x94cfcdd7';
-            expect(proxyId).to.equal(expectedProxyId);
+            await assertProxyId(proxyAddress, expectedProxyId, provider);
         });
         describe('transferFrom', () => {
             it('should transfer a single ERC20 token', async () => {

@@ -304,7 +304,9 @@ describe('ERC20BridgeProxy unit tests', () => {
 
     describe('getProxyId()', () => {
         it('returns the correct proxy ID', async () => {
-            const proxyId = await assetProxy.getProxyId();
+            const { getProxyId } = await import('../src/proxy_utils');
+            const proxyAddress = await assetProxy.getAddress();
+            const proxyId = await getProxyId(proxyAddress, assetProxy.runner?.provider || assetProxy.provider);
             expect(proxyId).to.eq(PROXY_ID);
         });
     });

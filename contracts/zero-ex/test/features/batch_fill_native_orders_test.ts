@@ -321,7 +321,7 @@ blockchainTests('BatchFillNativeOrdersFeature', env => {
         });
         it('If revertIfIncomplete==true, reverts on an incomplete fill ', async () => {
             const fillableOrders = await Promise.all([...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
-            const partiallyFilledOrder = await getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
+            const partiallyFilledOrder = await getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT });
             const partialFillAmount = getRandomPortion(partiallyFilledOrder.takerAmount);
             await testUtils.fillLimitOrderAsync(partiallyFilledOrder, { fillAmount: partialFillAmount });
             const orders = [partiallyFilledOrder, ...fillableOrders];
@@ -513,7 +513,7 @@ blockchainTests('BatchFillNativeOrdersFeature', env => {
         });
         it('If revertIfIncomplete==true, reverts on an incomplete fill ', async () => {
             const fillableOrders = await Promise.all([...new Array(3)].map(async () => getTestRfqOrder()));
-            const partiallyFilledOrder = await getTestRfqOrder()));
+            const partiallyFilledOrder = await getTestRfqOrder();
             const partialFillAmount = getRandomPortion(partiallyFilledOrder.takerAmount);
             await testUtils.fillRfqOrderAsync(partiallyFilledOrder, partialFillAmount);
             const orders = [partiallyFilledOrder, ...fillableOrders];

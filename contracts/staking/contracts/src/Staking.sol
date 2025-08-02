@@ -161,16 +161,28 @@ contract Staking is
         external 
         view 
         override(IStaking, MixinStakeBalances) 
-        returns (IStructs.StoredBalance memory) 
+        returns (IStructs.StoredBalance memory balance) 
     {
-        return super.getGlobalStakeByStatus(stakeStatus);
+        // 调用 MixinStakeBalances 的实现
+        balance = _loadCurrentBalance(
+            _globalStakeByStatus[uint8(IStructs.StakeStatus.DELEGATED)]
+        );
+        if (stakeStatus == IStructs.StakeStatus.UNDELEGATED) {
+            uint256 totalStake = _getZrxVault().balanceOfZrxVault();
+            balance.currentEpochBalance = uint96(totalStake - balance.currentEpochBalance);
+            balance.nextEpochBalance = uint96(totalStake - balance.nextEpochBalance);
+        }
+        return balance;
     }
 
     function getOwnerStakeByStatus(
         address staker,
         IStructs.StakeStatus stakeStatus
-    ) external view override(IStaking, MixinStakeBalances) returns (IStructs.StoredBalance memory) {
-        return super.getOwnerStakeByStatus(staker, stakeStatus);
+    ) external view override(IStaking, MixinStakeBalances) returns (IStructs.StoredBalance memory balance) {
+        balance = _loadCurrentBalance(
+            _ownerStakeByStatus[uint8(stakeStatus)][staker]
+        );
+        return balance;
     }
 
     function getParams() 
@@ -193,9 +205,12 @@ contract Staking is
         view 
         virtual
         override(IStaking, MixinStakeBalances) 
-        returns (IStructs.StoredBalance memory) 
+        returns (IStructs.StoredBalance memory balance) 
     {
-        return super.getStakeDelegatedToPoolByOwner(staker, poolId);
+        balance = _loadCurrentBalance(
+            _delegatedStakeToPoolByOwner[staker][poolId]
+        );
+        return balance;
     }
 
     function getStakingPool(bytes32 poolId) 
@@ -221,9 +236,12 @@ contract Staking is
         view 
         virtual
         override(IStaking, MixinStakeBalances) 
-        returns (IStructs.StoredBalance memory) 
+        returns (IStructs.StoredBalance memory balance) 
     {
-        return super.getTotalStakeDelegatedToPool(poolId);
+        balance = _loadCurrentBalance(
+            _delegatedStakeByPoolId[poolId]
+        );
+        return balance;
     }
 
     function getWethContract() 

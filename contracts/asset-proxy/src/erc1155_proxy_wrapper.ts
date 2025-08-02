@@ -7,6 +7,7 @@ import {
 import { ZeroExProvider } from 'ethereum-types';
 import { ethers } from 'hardhat';
 import * as _ from 'lodash';
+import { getProxyId } from './proxy_utils';
 
 // 定义 ERC1155 相关类型
 export interface ERC1155FungibleHoldingsByOwner {
@@ -239,7 +240,8 @@ export class ERC1155ProxyWrapper {
         const deployer = signers[0];
         this._proxyContract = await new ERC1155Proxy__factory(deployer).deploy();
         await this._proxyContract.waitForDeployment();
-        this._proxyIdIfExists = await this._proxyContract.getProxyId();
+        const proxyAddress = await this._proxyContract.getAddress();
+        this._proxyIdIfExists = await getProxyId(proxyAddress, this._provider);
         return this._proxyContract;
     }
     /**
@@ -356,9 +358,15 @@ export class ERC1155ProxyWrapper {
                   ])
                 : assetData_;
         
-        // 连接代理合约并执行转账
-        const proxyWithSigner = this._proxyContract!.connect(signer);
-        const tx = await proxyWithSigner.transferFrom(assetData, from, to, valueMultiplier);
+        // Use low-level call to invoke transferFrom via fallback
+        const iface = new ethers.Interface([
+            'function transferFrom(bytes assetData, address from, address to, uint256 amount)'
+        ]);
+        const callData = iface.encodeFunctionData('transferFrom', [assetData, from, to, valueMultiplier]);
+        const tx = await signer.sendTransaction({
+            to: await this._proxyContract!.getAddress(),
+            data: callData,
+        });
         const receipt = await tx.wait();
         
         // 简化版本，直接返回 receipt（可能需要进一步适配 LogDecoder）

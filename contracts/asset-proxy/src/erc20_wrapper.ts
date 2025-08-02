@@ -4,7 +4,7 @@ import { ZeroExProvider } from 'ethereum-types';
 import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
-
+import { getProxyId } from './proxy_utils';
 import { IAssetData__factory, ERC20Proxy__factory, ERC20Proxy } from './typechain-types';
 
 export class ERC20Wrapper {
@@ -58,7 +58,8 @@ export class ERC20Wrapper {
         const factory = new ERC20Proxy__factory(signer);
         this._proxyContract = await factory.deploy() as ERC20Proxy;
         await this._proxyContract.waitForDeployment();
-        this._proxyIdIfExists = await this._proxyContract.getProxyId();
+        const proxyAddress = await this._proxyContract.getAddress();
+        this._proxyIdIfExists = await getProxyId(proxyAddress, this._provider);
         return this._proxyContract;
     }
     public getProxyId(): string {

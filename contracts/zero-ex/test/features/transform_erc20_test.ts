@@ -187,7 +187,7 @@ blockchainTests('TransformERC20 feature', env => {
             },
         ]);
 
-        function createMintTokenTransformation(
+        async function createMintTokenTransformation(
             opts: Partial<{
                 transformer: string;
                 outputTokenAddress: string;
@@ -197,7 +197,7 @@ blockchainTests('TransformERC20 feature', env => {
                 outputTokenFeeAmount: Numberish;
                 deploymentNonce: number;
             }> = {},
-        ): Transformation {
+        ): Promise<Transformation> {
             const _opts = {
                 outputTokenAddress: await outputToken.getAddress(),
                 inputTokenAddress: await inputToken.getAddress(),
@@ -232,7 +232,7 @@ blockchainTests('TransformERC20 feature', env => {
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
                 const callValue = getRandomInteger(1, '1e18');
-                const transformation = createMintTokenTransformation({
+                const transformation = await createMintTokenTransformation({
                     outputTokenMintAmount,
                     inputTokenBurnAmunt: inputTokenAmount,
                 });
@@ -285,7 +285,7 @@ blockchainTests('TransformERC20 feature', env => {
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
                 const callValue = outputTokenMintAmount;
-                const transformation = createMintTokenTransformation({
+                const transformation = await createMintTokenTransformation({
                     outputTokenMintAmount,
                     inputTokenBurnAmunt: inputTokenAmount,
                     outputTokenAddress: ETH_TOKEN_ADDRESS,
@@ -345,7 +345,7 @@ blockchainTests('TransformERC20 feature', env => {
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount + 1;
                 const callValue = getRandomInteger(1, '1e18');
-                const transformation = createMintTokenTransformation({
+                const transformation = await createMintTokenTransformation({
                     outputTokenMintAmount,
                     inputTokenBurnAmunt: inputTokenAmount,
                 });
@@ -408,7 +408,7 @@ blockchainTests('TransformERC20 feature', env => {
                         inputTokenAmount,
                         minOutputTokenAmount,
                         transformations: [
-                            createMintTokenTransformation({
+                            await createMintTokenTransformation({
                                 outputTokenMintAmount,
                                 inputTokenBurnAmunt: inputTokenAmount,
                             }),
@@ -442,7 +442,7 @@ blockchainTests('TransformERC20 feature', env => {
                         inputTokenAmount,
                         minOutputTokenAmount,
                         transformations: [
-                            createMintTokenTransformation({
+                            await createMintTokenTransformation({
                                 outputTokenFeeAmount,
                                 inputTokenBurnAmunt: inputTokenAmount,
                             }),
@@ -469,11 +469,11 @@ blockchainTests('TransformERC20 feature', env => {
                 const callValue = getRandomInteger(1, '1e18');
                 // Split the total minting between two transformers.
                 const transformations = [
-                    createMintTokenTransformation({
+                    await createMintTokenTransformation({
                         inputTokenBurnAmunt: 1,
                         outputTokenMintAmount: 1,
                     }),
-                    createMintTokenTransformation({
+                    await createMintTokenTransformation({
                         inputTokenBurnAmunt: inputTokenAmount - 1,
                         outputTokenMintAmount: outputTokenMintAmount - 1,
                     }),
@@ -524,7 +524,7 @@ blockchainTests('TransformERC20 feature', env => {
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(2, '1e18');
                 const callValue = getRandomInteger(1, '1e18');
-                const transformations = [createMintTokenTransformation({ deploymentNonce: 1337 })];
+                const transformations = [await createMintTokenTransformation({ deploymentNonce: 1337 })];
                 const tx = feature
                     ._transformERC20({
                         taker,
@@ -552,7 +552,7 @@ blockchainTests('TransformERC20 feature', env => {
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
                 const callValue = getRandomInteger(1, '1e18');
-                const transformation = createMintTokenTransformation({
+                const transformation = await createMintTokenTransformation({
                     outputTokenMintAmount,
                     inputTokenBurnAmunt: startingInputTokenBalance,
                 });
@@ -588,7 +588,7 @@ blockchainTests('TransformERC20 feature', env => {
                 await inputToken.mint(taker, ethAttchedAmount)();
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
-                const transformation = createMintTokenTransformation({
+                const transformation = await createMintTokenTransformation({
                     outputTokenMintAmount,
                     inputTokenAddress: ETH_TOKEN_ADDRESS,
                     inputTokenBurnAmunt: ethAttchedAmount,

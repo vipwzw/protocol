@@ -127,7 +127,9 @@ describe('ERC1155Proxy', () => {
             );
         });
         it('should have an id of 0xa7cb5fb7', async () => {
-            const proxyId = await erc1155Proxy.getProxyId();
+            const proxyAddress = await erc1155Proxy.getAddress();
+            const { getProxyId } = await import('../src/proxy_utils');
+            const proxyId = await getProxyId(proxyAddress, provider);
             const expectedProxyId = AssetProxyId.ERC1155;
             expect(proxyId).to.equal(expectedProxyId);
         });

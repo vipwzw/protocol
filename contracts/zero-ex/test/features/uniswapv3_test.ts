@@ -73,7 +73,7 @@ blockchainTests('UniswapV3Feature', env => {
         
         const takerSigner = await env.provider.getSigner(taker);
         await Promise.all(
-            [...tokens, weth].map(t =>
+            [...tokens, weth].map(async t =>
                 t.connect(takerSigner).approve(await feature.getAddress(), MAX_UINT256)
             ),
         );

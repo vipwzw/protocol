@@ -5,7 +5,7 @@ import { ZeroExProvider } from 'ethereum-types';
 import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
-
+import { getProxyId } from './proxy_utils';
 import { ERC721Proxy, ERC721Proxy__factory } from './typechain-types';
 
 // 定义 ERC721 相关类型
@@ -70,7 +70,8 @@ export class ERC721Wrapper {
             const factory = new ERC721Proxy__factory(signer);
             this._proxyContract = await factory.deploy();
             await this._proxyContract.waitForDeployment();
-            this._proxyIdIfExists = await this._proxyContract.getProxyId();
+            const proxyAddress = await this._proxyContract.getAddress();
+        this._proxyIdIfExists = await getProxyId(proxyAddress, this._provider);
             return this._proxyContract;
         } catch (error) {
             throw new Error(`Failed to deploy ERC721Proxy: ${error.message}`);
@@ -84,7 +85,8 @@ export class ERC721Wrapper {
     public async connectToProxyAsync(proxyAddress: string): Promise<ERC721Proxy> {
         const proxyContract = ERC721Proxy__factory.connect(proxyAddress, this._provider as any);
         this._proxyContract = proxyContract;
-        this._proxyIdIfExists = await proxyContract.getProxyId();
+        const address = await proxyContract.getAddress();
+        this._proxyIdIfExists = await getProxyId(address, this._provider);
         return proxyContract;
     }
     public getProxyId(): string {

@@ -79,7 +79,9 @@ describe('StaticCallProxy', () => {
             );
         });
         it('should have an id of 0xc339d10a', async () => {
-            const proxyId = await staticCallProxy.getProxyId();
+            const { getProxyId } = await import('../src/proxy_utils');
+            const proxyAddress = await staticCallProxy.getAddress();
+            const proxyId = await getProxyId(proxyAddress, provider);
             const expectedProxyId = AssetProxyId.StaticCall;
             expect(proxyId).to.equal(expectedProxyId);
         });
