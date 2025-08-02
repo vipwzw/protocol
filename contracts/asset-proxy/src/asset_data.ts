@@ -90,9 +90,18 @@ export function encodeERC20AssetData(tokenAddress: string): string {
 /**
  * Encode ERC721 asset data.
  */
-export function encodeERC721AssetData(tokenAddress: string, tokenId: BigNumber): string {
-    // return assetDataIface.ERC721Token(tokenAddress, tokenId).getABIEncodedTransactionData();
-    return 'ERC721Token'; // Placeholder
+export function encodeERC721AssetData(tokenAddress: string, tokenId: BigNumber | bigint): string {
+    // ERC721 asset data format: 4-byte proxy ID + 32-byte token address + 32-byte token ID = 68 bytes
+    
+    // ERC721 proxy ID: bytes4(keccak256("ERC721Token(address,uint256)"))
+    const proxyIdHash = keccak256(Buffer.from('ERC721Token(address,uint256)', 'utf8'));
+    const proxyId = '0x' + Buffer.from(proxyIdHash.slice(0, 4)).toString('hex');
+    
+    // Encode: proxyId (4 bytes) + tokenAddress (32 bytes) + tokenId (32 bytes) = 68 bytes
+    const coder = ethers.AbiCoder.defaultAbiCoder();
+    const encoded = proxyId + coder.encode(['address', 'uint256'], [tokenAddress, tokenId]).slice(2);
+    
+    return encoded;
 }
 
 /**
@@ -100,20 +109,40 @@ export function encodeERC721AssetData(tokenAddress: string, tokenId: BigNumber):
  */
 export function encodeERC1155AssetData(
     tokenAddress: string,
-    tokenIds: BigNumber[],
-    values: BigNumber[],
+    tokenIds: (BigNumber | bigint)[],
+    values: (BigNumber | bigint)[],
     callbackData: string,
 ): string {
-    // return assetDataIface.ERC1155Assets(tokenAddress, tokenIds, values, callbackData).getABIEncodedTransactionData();
-    return 'ERC1155Assets'; // Placeholder
+    // ERC1155 proxy ID: bytes4(keccak256("ERC1155Assets(address,uint256[],uint256[],bytes)"))
+    const proxyIdHash = keccak256(Buffer.from('ERC1155Assets(address,uint256[],uint256[],bytes)', 'utf8'));
+    const proxyId = '0x' + Buffer.from(proxyIdHash.slice(0, 4)).toString('hex');
+    
+    // Encode the data
+    const coder = ethers.AbiCoder.defaultAbiCoder();
+    const encoded = proxyId + coder.encode(
+        ['address', 'uint256[]', 'uint256[]', 'bytes'],
+        [tokenAddress, tokenIds, values, callbackData]
+    ).slice(2);
+    
+    return encoded;
 }
 
 /**
  * Encode MultiAsset asset data.
  */
-export function encodeMultiAssetData(values: BigNumber[], nestedAssetData: string[]): string {
-    // return assetDataIface.MultiAsset(values, nestedAssetData).getABIEncodedTransactionData();
-    return 'MultiAsset'; // Placeholder
+export function encodeMultiAssetData(values: (BigNumber | bigint)[], nestedAssetData: string[]): string {
+    // MultiAsset proxy ID: bytes4(keccak256("MultiAsset(uint256[],bytes[])"))
+    const proxyIdHash = keccak256(Buffer.from('MultiAsset(uint256[],bytes[])', 'utf8'));
+    const proxyId = '0x' + Buffer.from(proxyIdHash.slice(0, 4)).toString('hex');
+    
+    // Encode the data
+    const coder = ethers.AbiCoder.defaultAbiCoder();
+    const encoded = proxyId + coder.encode(
+        ['uint256[]', 'bytes[]'],
+        [values, nestedAssetData]
+    ).slice(2);
+    
+    return encoded;
 }
 
 /**
