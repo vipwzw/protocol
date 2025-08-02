@@ -163,14 +163,14 @@ contract Staking is
         override(IStaking, MixinStakeBalances) 
         returns (IStructs.StoredBalance memory) 
     {
-        return IStructs.StoredBalance(0, 0, 0); // TODO: Implement using proper mixin delegation
+        return super.getGlobalStakeByStatus(stakeStatus);
     }
 
     function getOwnerStakeByStatus(
         address staker,
         IStructs.StakeStatus stakeStatus
     ) external view override(IStaking, MixinStakeBalances) returns (IStructs.StoredBalance memory) {
-        return IStructs.StoredBalance(0, 0, 0); // TODO: Implement using proper mixin delegation
+        return super.getOwnerStakeByStatus(staker, stakeStatus);
     }
 
     function getParams() 
@@ -195,7 +195,7 @@ contract Staking is
         override(IStaking, MixinStakeBalances) 
         returns (IStructs.StoredBalance memory) 
     {
-        return IStructs.StoredBalance(0, 0, 0); // TODO: Implement using proper mixin delegation
+        return super.getStakeDelegatedToPoolByOwner(staker, poolId);
     }
 
     function getStakingPool(bytes32 poolId) 
@@ -223,7 +223,7 @@ contract Staking is
         override(IStaking, MixinStakeBalances) 
         returns (IStructs.StoredBalance memory) 
     {
-        return IStructs.StoredBalance(0, 0, 0); // TODO: Implement using proper mixin delegation
+        return super.getTotalStakeDelegatedToPool(poolId);
     }
 
     function getWethContract() 
