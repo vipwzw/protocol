@@ -155,8 +155,8 @@ describe('ERC1155Proxy', () => {
             // check balances after transfer
             const totalValueTransferred = valuesToTransfer[0] * valueMultiplier;
             const expectedFinalBalances = [
-                spenderInitialFungibleBalance.minus(totalValueTransferred),
-                receiverInitialFungibleBalance.plus(totalValueTransferred),
+                spenderInitialFungibleBalance - totalValueTransferred,
+                receiverInitialFungibleBalance + totalValueTransferred,
             ];
             await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
@@ -166,9 +166,9 @@ describe('ERC1155Proxy', () => {
             const tokenToTransfer = fungibleTokens[0];
             const tokensToTransfer = [tokenToTransfer, tokenToTransfer, tokenToTransfer];
             const valuesToTransfer = [
-                fungibleValueToTransferSmall.plus(10),
-                fungibleValueToTransferSmall.plus(20),
-                fungibleValueToTransferSmall.plus(30),
+                fungibleValueToTransferSmall + 10n,
+                fungibleValueToTransferSmall + 20n,
+                fungibleValueToTransferSmall + 30n,
             ];
             const valueMultiplier = valueMultiplierSmall;
             // check balances before transfer
@@ -191,15 +191,15 @@ describe('ERC1155Proxy', () => {
                 authorized,
             );
             // check balances after transfer
-            let totalValueTransferred = _.reduce(valuesToTransfer, (sum: BigNumber, value: BigNumber) => {
-                return sum.plus(value);
-            }) as BigNumber;
+            let totalValueTransferred = _.reduce(valuesToTransfer, (sum: bigint, value: bigint) => {
+                return sum + value;
+            }) as bigint;
             totalValueTransferred = totalValueTransferred * valueMultiplier;
             const expectedFinalBalances = [
                 // spender
-                spenderInitialFungibleBalance.minus(totalValueTransferred),
+                spenderInitialFungibleBalance - totalValueTransferred,
                 // receiver
-                receiverInitialFungibleBalance.plus(totalValueTransferred),
+                receiverInitialFungibleBalance + totalValueTransferred,
             ];
             await _assertBalancesAsync(erc1155Contract, tokenHolders, [tokenToTransfer], expectedFinalBalances);
         });
@@ -208,9 +208,9 @@ describe('ERC1155Proxy', () => {
             const tokenHolders = [spender, receiver];
             const tokensToTransfer = fungibleTokens.slice(0, 3);
             const valuesToTransfer = [
-                fungibleValueToTransferSmall.plus(10),
-                fungibleValueToTransferSmall.plus(20),
-                fungibleValueToTransferSmall.plus(30),
+                fungibleValueToTransferSmall + 10n,
+                fungibleValueToTransferSmall + 20n,
+                fungibleValueToTransferSmall + 30n,
             ];
             const valueMultiplier = valueMultiplierSmall;
             // check balances before transfer
@@ -242,13 +242,13 @@ describe('ERC1155Proxy', () => {
             });
             const expectedFinalBalances = [
                 // spender
-                spenderInitialFungibleBalance.minus(totalValuesTransferred[0]),
-                spenderInitialFungibleBalance.minus(totalValuesTransferred[1]),
-                spenderInitialFungibleBalance.minus(totalValuesTransferred[2]),
+                spenderInitialFungibleBalance - totalValuesTransferred[0],
+                spenderInitialFungibleBalance - totalValuesTransferred[1],
+                spenderInitialFungibleBalance - totalValuesTransferred[2],
                 // receiver
-                receiverInitialFungibleBalance.plus(totalValuesTransferred[0]),
-                receiverInitialFungibleBalance.plus(totalValuesTransferred[1]),
-                receiverInitialFungibleBalance.plus(totalValuesTransferred[2]),
+                receiverInitialFungibleBalance + totalValuesTransferred[0],
+                receiverInitialFungibleBalance + totalValuesTransferred[1],
+                receiverInitialFungibleBalance + totalValuesTransferred[2],
             ];
             await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
@@ -379,17 +379,17 @@ describe('ERC1155Proxy', () => {
             });
             const expectedFinalBalances = [
                 // spender
-                expectedInitialBalances[0].minus(totalValuesTransferred[0]),
-                expectedInitialBalances[1].minus(totalValuesTransferred[1]),
-                expectedInitialBalances[2].minus(totalValuesTransferred[2]),
-                expectedInitialBalances[3].minus(totalValuesTransferred[3]),
-                expectedInitialBalances[4].minus(totalValuesTransferred[4]),
+                expectedInitialBalances[0] - totalValuesTransferred[0],
+                expectedInitialBalances[1] - totalValuesTransferred[1],
+                expectedInitialBalances[2] - totalValuesTransferred[2],
+                expectedInitialBalances[3] - totalValuesTransferred[3],
+                expectedInitialBalances[4] - totalValuesTransferred[4],
                 // receiver
-                expectedInitialBalances[5].plus(totalValuesTransferred[0]),
-                expectedInitialBalances[6].plus(totalValuesTransferred[1]),
-                expectedInitialBalances[7].plus(totalValuesTransferred[2]),
-                expectedInitialBalances[8].plus(totalValuesTransferred[3]),
-                expectedInitialBalances[9].plus(totalValuesTransferred[4]),
+                expectedInitialBalances[5] + totalValuesTransferred[0],
+                expectedInitialBalances[6] + totalValuesTransferred[1],
+                expectedInitialBalances[7] + totalValuesTransferred[2],
+                expectedInitialBalances[8] + totalValuesTransferred[3],
+                expectedInitialBalances[9] + totalValuesTransferred[4],
             ];
             await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
@@ -423,15 +423,15 @@ describe('ERC1155Proxy', () => {
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenIds[0]).to.be.bignumber.equal(tokensToTransfer[0]);
+            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
             expect(receiverLog.args.tokenValues.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenValues[0]).to.be.bignumber.equal(totalValuesTransferred[0]);
+            expect(receiverLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
             // note - if the `extraData` is ignored then the receiver log should ignore it as well.
             expect(receiverLog.args.data).to.be.deep.equal(receiverCallbackData);
             // check balances after transfer
             const expectedFinalBalances = [
-                expectedInitialBalances[0].minus(totalValuesTransferred[0]),
-                expectedInitialBalances[1].plus(totalValuesTransferred[0]),
+                expectedInitialBalances[0] - totalValuesTransferred[0],
+                expectedInitialBalances[1] + totalValuesTransferred[0],
             ];
             await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
@@ -466,15 +466,15 @@ describe('ERC1155Proxy', () => {
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenIds[0]).to.be.bignumber.equal(tokensToTransfer[0]);
+            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
             expect(receiverLog.args.tokenValues.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenValues[0]).to.be.bignumber.equal(totalValuesTransferred[0]);
+            expect(receiverLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
             // note - if the `extraData` is ignored then the receiver log should ignore it as well.
             expect(receiverLog.args.data).to.be.deep.equal(nullReceiverCallbackData);
             // check balances after transfer
             const expectedFinalBalances = [
-                expectedInitialBalances[0].minus(totalValuesTransferred[0]),
-                expectedInitialBalances[1].plus(totalValuesTransferred[0]),
+                expectedInitialBalances[0] - totalValuesTransferred[0],
+                expectedInitialBalances[1] + totalValuesTransferred[0],
             ];
             await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
@@ -513,15 +513,15 @@ describe('ERC1155Proxy', () => {
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenIds[0]).to.be.bignumber.equal(tokensToTransfer[0]);
+            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
             expect(receiverLog.args.tokenValues.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenValues[0]).to.be.bignumber.equal(totalValuesTransferred[0]);
+            expect(receiverLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
             // note - if the `extraData` is ignored then the receiver log should ignore it as well.
             expect(receiverLog.args.data).to.be.deep.equal(customReceiverCallbackData);
             // check balances after transfer
             const expectedFinalBalances = [
-                expectedInitialBalances[0].minus(totalValuesTransferred[0]),
-                expectedInitialBalances[1].plus(totalValuesTransferred[0]),
+                expectedInitialBalances[0] - totalValuesTransferred[0],
+                expectedInitialBalances[1] + totalValuesTransferred[0],
             ];
             await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
@@ -563,15 +563,15 @@ describe('ERC1155Proxy', () => {
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenIds[0]).to.be.bignumber.equal(tokensToTransfer[0]);
+            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
             expect(receiverLog.args.tokenValues.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenValues[0]).to.be.bignumber.equal(totalValuesTransferred[0]);
+            expect(receiverLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
             // note - if the `extraData` is ignored then the receiver log should ignore it as well.
             expect(receiverLog.args.data).to.be.deep.equal(customReceiverCallbackData);
             // check balances after transfer
             const expectedFinalBalances = [
-                expectedInitialBalances[0].minus(totalValuesTransferred[0]),
-                expectedInitialBalances[1].plus(totalValuesTransferred[0]),
+                expectedInitialBalances[0] - totalValuesTransferred[0],
+                expectedInitialBalances[1] + totalValuesTransferred[0],
             ];
             await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
@@ -614,15 +614,15 @@ describe('ERC1155Proxy', () => {
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenIds[0]).to.be.bignumber.equal(tokensToTransfer[0]);
+            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
             expect(receiverLog.args.tokenValues.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenValues[0]).to.be.bignumber.equal(totalValuesTransferred[0]);
+            expect(receiverLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
             // note - if the `extraData` is ignored then the receiver log should ignore it as well.
             expect(receiverLog.args.data).to.be.deep.equal(customReceiverCallbackData);
             // check balances after transfer
             const expectedFinalBalances = [
-                expectedInitialBalances[0].minus(totalValuesTransferred[0]),
-                expectedInitialBalances[1].plus(totalValuesTransferred[0]),
+                expectedInitialBalances[0] - totalValuesTransferred[0],
+                expectedInitialBalances[1] + totalValuesTransferred[0],
             ];
             await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
@@ -664,15 +664,15 @@ describe('ERC1155Proxy', () => {
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenIds[0]).to.be.bignumber.equal(tokensToTransfer[0]);
+            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
             expect(receiverLog.args.tokenValues.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenValues[0]).to.be.bignumber.equal(totalValuesTransferred[0]);
+            expect(receiverLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
             // note - if the `extraData` is ignored then the receiver log should ignore it as well.
             expect(receiverLog.args.data).to.be.deep.equal(receiverCallbackData);
             // check balances after transfer
             const expectedFinalBalances = [
-                expectedInitialBalances[0].minus(totalValuesTransferred[0]),
-                expectedInitialBalances[1].plus(totalValuesTransferred[0]),
+                expectedInitialBalances[0] - totalValuesTransferred[0],
+                expectedInitialBalances[1] + totalValuesTransferred[0],
             ];
             await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
@@ -760,12 +760,12 @@ describe('ERC1155Proxy', () => {
                 return value * valueMultiplier;
             });
             const expectedFinalBalances = [
-                spenderInitialBalance.minus(expectedAmountsTransferred[0]), // Token ID 1 / Spender Balance
-                spenderInitialBalance.minus(expectedAmountsTransferred[1]), // Token ID 2 / Spender Balance
+                spenderInitialBalance - expectedAmountsTransferred[0], // Token ID 1 / Spender Balance
+                spenderInitialBalance - expectedAmountsTransferred[1], // Token ID 2 / Spender Balance
                 spenderInitialBalance, // Token ID 3 / Spender Balance
                 spenderInitialBalance, // Token ID 4 / Spender Balance
-                receiverInitialBalance.plus(expectedAmountsTransferred[0]), // Token ID 1 / Receiver Balance
-                receiverInitialBalance.plus(expectedAmountsTransferred[1]), // Token ID 2 / Receiver Balance
+                receiverInitialBalance + expectedAmountsTransferred[0], // Token ID 1 / Receiver Balance
+                receiverInitialBalance + expectedAmountsTransferred[1], // Token ID 2 / Receiver Balance
                 receiverInitialBalance, // Token ID 3 / Receiver Balance
                 receiverInitialBalance, // Token ID 4 / Receiver Balance
             ];
@@ -864,8 +864,8 @@ describe('ERC1155Proxy', () => {
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(2);
-            expect(receiverLog.args.tokenIds[0]).to.be.bignumber.equal(tokensToTransfer[0]);
-            expect(receiverLog.args.tokenIds[1]).to.be.bignumber.equal(tokensToTransfer[1]);
+            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
+            expect(receiverLog.args.tokenIds[1]).to.equal(tokensToTransfer[1]);
             expect(receiverLog.args.tokenValues.length).to.be.deep.equal(2);
             expect(receiverLog.args.tokenValues[0]).to.equal(valuesToTransfer[0] * valueMultiplier);
             expect(receiverLog.args.tokenValues[1]).to.equal(valuesToTransfer[1] * valueMultiplier);
@@ -877,12 +877,12 @@ describe('ERC1155Proxy', () => {
                 return value * valueMultiplier;
             });
             const expectedFinalBalances = [
-                spenderInitialBalance.minus(expectedAmountsTransferred[0]), // Token ID 1 / Spender Balance
-                spenderInitialBalance.minus(expectedAmountsTransferred[1]), // Token ID 2 / Spender Balance
+                spenderInitialBalance - expectedAmountsTransferred[0], // Token ID 1 / Spender Balance
+                spenderInitialBalance - expectedAmountsTransferred[1], // Token ID 2 / Spender Balance
                 spenderInitialBalance, // Token ID 3 / Spender Balance
                 spenderInitialBalance, // Token ID 4 / Spender Balance
-                receiverInitialBalance.plus(expectedAmountsTransferred[0]), // Token ID 1 / Receiver Balance
-                receiverInitialBalance.plus(expectedAmountsTransferred[1]), // Token ID 2 / Receiver Balance
+                receiverInitialBalance + expectedAmountsTransferred[0], // Token ID 1 / Receiver Balance
+                receiverInitialBalance + expectedAmountsTransferred[1], // Token ID 2 / Receiver Balance
                 receiverInitialBalance, // Token ID 3 / Receiver Balance
                 receiverInitialBalance, // Token ID 4 / Receiver Balance
             ];
@@ -977,8 +977,8 @@ describe('ERC1155Proxy', () => {
             expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
             expect(receiverLog.args.from).to.be.equal(spender);
             expect(receiverLog.args.tokenIds.length).to.be.deep.equal(2);
-            expect(receiverLog.args.tokenIds[0]).to.be.bignumber.equal(tokensToTransfer[0]);
-            expect(receiverLog.args.tokenIds[1]).to.be.bignumber.equal(tokensToTransfer[1]);
+            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
+            expect(receiverLog.args.tokenIds[1]).to.equal(tokensToTransfer[1]);
             expect(receiverLog.args.tokenValues.length).to.be.deep.equal(2);
             expect(receiverLog.args.tokenValues[0]).to.equal(valuesToTransfer[0] * valueMultiplier);
             expect(receiverLog.args.tokenValues[1]).to.equal(valuesToTransfer[1] * valueMultiplier);
@@ -990,12 +990,12 @@ describe('ERC1155Proxy', () => {
                 return value * valueMultiplier;
             });
             const expectedFinalBalances = [
-                spenderInitialBalance.minus(expectedAmountsTransferred[0]), // Token ID 1 / Spender Balance
-                spenderInitialBalance.minus(expectedAmountsTransferred[1]), // Token ID 2 / Spender Balance
+                spenderInitialBalance - expectedAmountsTransferred[0], // Token ID 1 / Spender Balance
+                spenderInitialBalance - expectedAmountsTransferred[1], // Token ID 2 / Spender Balance
                 spenderInitialBalance, // Token ID 3 / Spender Balance
                 spenderInitialBalance, // Token ID 4 / Spender Balance
-                receiverInitialBalance.plus(expectedAmountsTransferred[0]), // Token ID 1 / Receiver Balance
-                receiverInitialBalance.plus(expectedAmountsTransferred[1]), // Token ID 2 / Receiver Balance
+                receiverInitialBalance + expectedAmountsTransferred[0], // Token ID 1 / Receiver Balance
+                receiverInitialBalance + expectedAmountsTransferred[1], // Token ID 2 / Receiver Balance
                 receiverInitialBalance, // Token ID 3 / Receiver Balance
                 receiverInitialBalance, // Token ID 4 / Receiver Balance
             ];
@@ -1741,7 +1741,7 @@ describe('ERC1155Proxy', () => {
             // setup test parameters
             const tokenHolders = [spender, receiver];
             const tokensToTransfer = fungibleTokens.slice(0, 1);
-            const valueGreaterThanSpenderBalance = spenderInitialFungibleBalance.plus(1);
+            const valueGreaterThanSpenderBalance = spenderInitialFungibleBalance + 1n;
             const valuesToTransfer = [valueGreaterThanSpenderBalance];
             const valueMultiplier = valueMultiplierSmall;
             // check balances before transfer
