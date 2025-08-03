@@ -256,7 +256,7 @@ export class ERC1155ProxyWrapper {
             // 创建可同质化代币
             for (const i of _.times(constants.NUM_ERC1155_FUNGIBLE_TOKENS_MINT)) {
                 // 为每个地址创建等量的可同质化代币 - 使用测试期望的值
-                const amounts = this._tokenOwnerAddresses.map(() => new BigNumber(constants.INITIAL_ERC1155_FUNGIBLE_BALANCE));
+                const amounts = this._tokenOwnerAddresses.map(() => constants.INITIAL_ERC1155_FUNGIBLE_BALANCE);
                 const tokenId = await this._mintFungibleTokensAsync(
                     dummyContract,
                     this._tokenOwnerAddresses,
@@ -470,8 +470,8 @@ export class ERC1155ProxyWrapper {
     private async _mintFungibleTokensAsync(
         contract: ERC1155Mintable,
         beneficiaries: string[],
-        tokenAmounts: BigNumber[],
-    ): Promise<BigNumber> {
+        tokenAmounts: bigint[],
+    ): Promise<bigint> {
         const tokenUri = 'dummyFungibleToken';
         const tokenIsNonFungible = false;
         
@@ -485,13 +485,13 @@ export class ERC1155ProxyWrapper {
         const createReceipt = await createTx.wait();
         
         // 从事件中获取 tokenId
-        let tokenId = new BigNumber(1); // 默认值
+        let tokenId = 1n; // 默认值
         if (createReceipt && createReceipt.logs) {
             for (const log of createReceipt.logs) {
                 try {
                     const parsedLog = contract.interface.parseLog(log);
                     if (parsedLog && parsedLog.name === 'TransferSingle') {
-                        tokenId = new BigNumber(parsedLog.args.id.toString());
+                        tokenId = BigInt(parsedLog.args.id.toString());
                         break;
                     }
                 } catch (logError) {
@@ -509,7 +509,7 @@ export class ERC1155ProxyWrapper {
     private async _mintNonFungibleTokensAsync(
         contract: ERC1155Mintable,
         beneficiaries: string[],
-    ): Promise<[BigNumber, BigNumber[]]> {
+    ): Promise<[bigint, bigint[]]> {
         const tokenUri = 'dummyNonFungibleToken';
         const tokenIsNonFungible = true;
         
@@ -523,13 +523,13 @@ export class ERC1155ProxyWrapper {
         const createReceipt = await createTx.wait();
         
         // 从事件中获取 tokenId
-        let token = new BigNumber(1); // 默认值
+        let token = 1n; // 默认值
         if (createReceipt && createReceipt.logs) {
             for (const log of createReceipt.logs) {
                 try {
                     const parsedLog = contract.interface.parseLog(log);
                     if (parsedLog && parsedLog.name === 'TransferSingle') {
-                        token = new BigNumber(parsedLog.args.id.toString());
+                        token = BigInt(parsedLog.args.id.toString());
                         break;
                     }
                 } catch (logError) {
@@ -542,12 +542,12 @@ export class ERC1155ProxyWrapper {
         await contractWithSigner.mintNonFungible(token.toString(), beneficiaries);
         
         // 生成 NFT IDs
-        const encodedNftIds: BigNumber[] = [];
+        const encodedNftIds: bigint[] = [];
         const nftIdBegin = 1;
         const nftIdEnd = beneficiaries.length + 1;
         const nftIdRange = _.range(nftIdBegin, nftIdEnd);
         _.each(nftIdRange, (nftId: number) => {
-            const encodedNftId = token.plus(nftId);
+            const encodedNftId = token + BigInt(nftId);
             encodedNftIds.push(encodedNftId);
         });
         
@@ -557,10 +557,10 @@ export class ERC1155ProxyWrapper {
     private async _getBalancesAsync(
         contract: ERC1155Mintable,
         owners: string[],
-        tokens: BigNumber[],
-    ): Promise<BigNumber[]> {
+        tokens: bigint[],
+    ): Promise<bigint[]> {
         const balances = await contract.balanceOfBatch(owners, tokens.map(t => t.toString()));
-        return balances.map(balance => new BigNumber(balance.toString()));
+        return balances.map(balance => BigInt(balance.toString()));
     }
     
     private _validateDummyTokenContractsExistOrThrow(): void {

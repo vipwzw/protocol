@@ -36,9 +36,8 @@ describe('ERC1155Proxy', () => {
     // constant values used in transfer tests
     const nftOwnerBalance = 1n;
     const nftNotOwnerBalance = 0n;
-    const INITIAL_ERC1155_FUNGIBLE_BALANCE = 1000n; // Define local constant since it's missing from test-utils
-    const spenderInitialFungibleBalance = INITIAL_ERC1155_FUNGIBLE_BALANCE;
-    const receiverInitialFungibleBalance = INITIAL_ERC1155_FUNGIBLE_BALANCE;
+    const spenderInitialFungibleBalance = constants.INITIAL_ERC1155_FUNGIBLE_BALANCE;
+    const receiverInitialFungibleBalance = constants.INITIAL_ERC1155_FUNGIBLE_BALANCE;
     const receiverContractInitialFungibleBalance = 0n;
     const fungibleValueToTransferSmall = spenderInitialFungibleBalance / 100n;
     const fungibleValueToTransferLarge = spenderInitialFungibleBalance / 4n;
