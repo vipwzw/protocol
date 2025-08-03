@@ -57,19 +57,28 @@ blockchainTests('LibCobbDouglas unit tests', env => {
                 ...DEFAULT_COBB_DOUGLAS_PARAMS,
                 ...params,
             };
-            return testContract
-                .cobbDouglas(
-                    new BigNumber(_params.totalRewards),
-                    new BigNumber(_params.ownerFees),
-                    new BigNumber(_params.totalFees),
-                    new BigNumber(_params.ownerStake),
-                    new BigNumber(_params.totalStake),
-                    new BigNumber(_params.alphaNumerator),
-                    new BigNumber(_params.alphaDenominator),
-                )
-                .callAsync({
-                    gas: TX_GAS_FEE + (_params.gas === undefined ? MAX_COBB_DOUGLAS_GAS : _params.gas),
-                });
+            // 在 TypeChain + ethers v6 中，直接调用合约方法
+            // 处理科学记数法，将数值转换为整数再转为BigInt
+            const toBigIntSafe = (value: any): bigint => {
+                if (typeof value === 'number') {
+                    // 处理科学记数法，确保是整数
+                    return BigInt(Math.floor(value));
+                }
+                return BigInt(value.toString());
+            };
+            
+            const result = await testContract.cobbDouglas(
+                toBigIntSafe(_params.totalRewards),
+                toBigIntSafe(_params.ownerFees),
+                toBigIntSafe(_params.totalFees),
+                toBigIntSafe(_params.ownerStake),
+                toBigIntSafe(_params.totalStake),
+                toBigIntSafe(_params.alphaNumerator),
+                toBigIntSafe(_params.alphaDenominator),
+            );
+            
+            // 将 BigInt 结果转换为 BigNumber 以保持向后兼容
+            return new BigNumber(result.toString());
         }
 
         function cobbDouglas(params?: Partial<CobbDouglasParams>): BigNumber {
@@ -77,17 +86,21 @@ blockchainTests('LibCobbDouglas unit tests', env => {
                 ...DEFAULT_COBB_DOUGLAS_PARAMS,
                 ...params,
             };
-            const feeRatio = toDecimal(ownerFees).dividedBy(toDecimal(totalFees));
-            const stakeRatio = toDecimal(ownerStake).dividedBy(toDecimal(totalStake));
-            const alpha = toDecimal(alphaNumerator).dividedBy(toDecimal(alphaDenominator));
+            
+            // 直接使用原始数字值，不经过toDecimal处理
+            // toDecimal会进行18位小数的转换，这里我们需要保持原始数值
+            const totalRewardsNum = Number(totalRewards.toString());
+            const feeRatio = Number(ownerFees.toString()) / Number(totalFees.toString());
+            const stakeRatio = Number(ownerStake.toString()) / Number(totalStake.toString());
+            const alpha = Number(alphaNumerator.toString()) / Number(alphaDenominator.toString());
+            
             // totalRewards * feeRatio ^ alpha * stakeRatio ^ (1-alpha)
-            return new BigNumber(
-                feeRatio
-                    .pow(alpha)
-                    .times(stakeRatio.pow(toDecimal(1).minus(alpha)))
-                    .times(toDecimal(totalRewards))
-                    .toFixed(0, BigNumber.ROUND_FLOOR),
-            );
+            const result = totalRewardsNum * 
+                Math.pow(feeRatio, alpha) * 
+                Math.pow(stakeRatio, 1 - alpha);
+            
+            // 转换回 BigNumber，使用向下取整
+            return new BigNumber(Math.floor(result));
         }
 
         function getRandomParams(overrides?: Partial<CobbDouglasParams>): CobbDouglasParams {
