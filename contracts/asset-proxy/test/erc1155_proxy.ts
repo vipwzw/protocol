@@ -1,10 +1,7 @@
 import {
     artifacts as erc1155Artifacts,
-    DummyERC1155ReceiverBatchTokenReceivedEventArgs,
-    DummyERC1155ReceiverContract,
-    ERC1155MintableContract,
-    Erc1155Wrapper,
 } from '../../erc1155/src';
+import { ERC1155Mintable } from '@0x/contracts-erc1155';
 import {
     chaiSetup,
     constants,
@@ -22,9 +19,10 @@ import * as chai from 'chai';
 import { LogWithDecodedArgs } from 'ethereum-types';
 import * as ethUtil from 'ethereumjs-util';
 import * as _ from 'lodash';
+import { ethers } from 'hardhat';
 
 import { ERC1155ProxyWrapper } from '../src/erc1155_proxy_wrapper';
-import { ERC1155ProxyContract, IAssetDataContract } from './wrappers';
+import { ERC1155ProxyInterface, IAssetDataInterface, IAssetData__factory } from './wrappers';
 
 import { artifacts } from './artifacts';
 
@@ -55,16 +53,15 @@ describe('ERC1155Proxy', () => {
     let receiver: string;
     let receiverContract: string;
     // contracts & wrappers
-    let erc1155Proxy: ERC1155ProxyContract;
-    let erc1155Receiver: DummyERC1155ReceiverContract;
+    let erc1155Proxy: ERC1155ProxyInterface;
+    let erc1155Receiver: string;
     let erc1155ProxyWrapper: ERC1155ProxyWrapper;
-    let erc1155Contract: ERC1155MintableContract;
-    let erc1155Wrapper: Erc1155Wrapper;
+    let erc1155Contract: ERC1155Mintable;
     // tokens
     let fungibleTokens: bigint[];
     let nonFungibleTokensOwnedBySpender: bigint[];
     // IAssetData for encoding and decoding assetData
-    let assetDataContract: IAssetDataContract;
+    let assetDataContract: IAssetDataInterface;
     // tests
     before(async () => {
         await blockchainLifecycle.startAsync();
@@ -82,8 +79,7 @@ describe('ERC1155Proxy', () => {
         const erc1155ProxyAddress = await erc1155Proxy.getAddress();
         await erc1155Proxy.addAuthorizedAddress(erc1155ProxyAddress);
         // deploy & configure ERC1155 tokens and receiver
-        [erc1155Wrapper] = await erc1155ProxyWrapper.deployDummyContractsAsync();
-        erc1155Contract = erc1155Wrapper.getContract();
+        [erc1155Contract] = await erc1155ProxyWrapper.deployDummyContractsAsync();
         // Skip DummyERC1155Receiver deployment for now - needs modern contract factory
         // erc1155Receiver = await DummyERC1155ReceiverContract.deployFrom0xArtifactAsync(
         //     erc1155Artifacts.DummyERC1155Receiver,
@@ -99,14 +95,17 @@ describe('ERC1155Proxy', () => {
         const nonFungibleTokens = erc1155ProxyWrapper.getNonFungibleTokenIds();
         const tokenBalances = await erc1155ProxyWrapper.getBalancesAsync();
         nonFungibleTokensOwnedBySpender = [];
-        _.each(nonFungibleTokens, (nonFungibleToken: BigNumber) => {
+        const contractAddress = await erc1155Contract.getAddress();
+        _.each(nonFungibleTokens, (nonFungibleToken: bigint) => {
             const nonFungibleTokenAsString = nonFungibleToken.toString();
             const nonFungibleTokenHeldBySpender =
-                tokenBalances.nonFungible[spender][erc1155Contract.address][nonFungibleTokenAsString][0];
+                tokenBalances.nonFungible[spender][contractAddress][nonFungibleTokenAsString][0];
             nonFungibleTokensOwnedBySpender.push(nonFungibleTokenHeldBySpender);
         });
         // set up assetDataContract
-        assetDataContract = new IAssetDataContract(constants.NULL_ADDRESS, provider, { from: owner });
+        const signers = await ethers.getSigners();
+        const ownerSigner = signers.find(s => s.address.toLowerCase() === owner.toLowerCase()) || signers[0];
+        assetDataContract = IAssetData__factory.connect(constants.NULL_ADDRESS, ownerSigner);
     });
     beforeEach(async () => {
         await blockchainLifecycle.startAsync();
@@ -143,7 +142,7 @@ describe('ERC1155Proxy', () => {
             const valueMultiplier = valueMultiplierSmall;
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
@@ -156,12 +155,12 @@ describe('ERC1155Proxy', () => {
                 authorized,
             );
             // check balances after transfer
-            const totalValueTransferred = valuesToTransfer[0].times(valueMultiplier);
+            const totalValueTransferred = valuesToTransfer[0] * valueMultiplier;
             const expectedFinalBalances = [
                 spenderInitialFungibleBalance.minus(totalValueTransferred),
                 receiverInitialFungibleBalance.plus(totalValueTransferred),
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
         it('should successfully transfer value for the same fungible token several times', async () => {
             // setup test parameters
@@ -181,7 +180,7 @@ describe('ERC1155Proxy', () => {
                 // receiver
                 receiverInitialFungibleBalance,
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, [tokenToTransfer], expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, [tokenToTransfer], expectedInitialBalances);
             // execute transfer
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
@@ -197,14 +196,14 @@ describe('ERC1155Proxy', () => {
             let totalValueTransferred = _.reduce(valuesToTransfer, (sum: BigNumber, value: BigNumber) => {
                 return sum.plus(value);
             }) as BigNumber;
-            totalValueTransferred = totalValueTransferred.times(valueMultiplier);
+            totalValueTransferred = totalValueTransferred * valueMultiplier;
             const expectedFinalBalances = [
                 // spender
                 spenderInitialFungibleBalance.minus(totalValueTransferred),
                 // receiver
                 receiverInitialFungibleBalance.plus(totalValueTransferred),
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, [tokenToTransfer], expectedFinalBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, [tokenToTransfer], expectedFinalBalances);
         });
         it('should successfully transfer value for several fungible tokens', async () => {
             // setup test parameters
@@ -227,7 +226,7 @@ describe('ERC1155Proxy', () => {
                 receiverInitialFungibleBalance,
                 receiverInitialFungibleBalance,
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
@@ -240,8 +239,8 @@ describe('ERC1155Proxy', () => {
                 authorized,
             );
             // check balances after transfer
-            const totalValuesTransferred = _.map(valuesToTransfer, (value: BigNumber) => {
-                return value.times(valueMultiplier);
+            const totalValuesTransferred = _.map(valuesToTransfer, (value: bigint) => {
+                return value * valueMultiplier;
             });
             const expectedFinalBalances = [
                 // spender
@@ -253,7 +252,7 @@ describe('ERC1155Proxy', () => {
                 receiverInitialFungibleBalance.plus(totalValuesTransferred[1]),
                 receiverInitialFungibleBalance.plus(totalValuesTransferred[2]),
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
         it('should successfully transfer a non-fungible token', async () => {
             // setup test parameters
@@ -268,7 +267,7 @@ describe('ERC1155Proxy', () => {
                 // receiver
                 nftNotOwnerBalance,
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
@@ -287,7 +286,7 @@ describe('ERC1155Proxy', () => {
                 // receiver
                 nftOwnerBalance,
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
         it('should successfully transfer multiple non-fungible tokens', async () => {
             // setup test parameters
@@ -310,7 +309,7 @@ describe('ERC1155Proxy', () => {
                 nftNotOwnerBalance,
                 nftNotOwnerBalance,
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
@@ -333,7 +332,7 @@ describe('ERC1155Proxy', () => {
                 nftOwnerBalance,
                 nftOwnerBalance,
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
         it('should successfully transfer value for a combination of several fungible/non-fungible tokens', async () => {
             // setup test parameters
@@ -364,7 +363,7 @@ describe('ERC1155Proxy', () => {
                 nftNotOwnerBalance,
                 nftNotOwnerBalance,
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
@@ -377,8 +376,8 @@ describe('ERC1155Proxy', () => {
                 authorized,
             );
             // check balances after transfer
-            const totalValuesTransferred = _.map(valuesToTransfer, (value: BigNumber) => {
-                return value.times(valueMultiplier);
+            const totalValuesTransferred = _.map(valuesToTransfer, (value: bigint) => {
+                return value * valueMultiplier;
             });
             const expectedFinalBalances = [
                 // spender
@@ -394,7 +393,7 @@ describe('ERC1155Proxy', () => {
                 expectedInitialBalances[8].plus(totalValuesTransferred[3]),
                 expectedInitialBalances[9].plus(totalValuesTransferred[4]),
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
         it('should successfully transfer value to a smart contract and trigger its callback', async () => {
             // setup test parameters
@@ -402,12 +401,12 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const totalValuesTransferred = _.map(valuesToTransfer, (value: BigNumber) => {
-                return value.times(valueMultiplier);
+            const totalValuesTransferred = _.map(valuesToTransfer, (value: bigint) => {
+                return value * valueMultiplier;
             });
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverContractInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             const txReceipt = await erc1155ProxyWrapper.transferFromAsync(
                 spender,
@@ -436,7 +435,7 @@ describe('ERC1155Proxy', () => {
                 expectedInitialBalances[0].minus(totalValuesTransferred[0]),
                 expectedInitialBalances[1].plus(totalValuesTransferred[0]),
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
         it('should successfully transfer value to a smart contract and trigger its callback, when callback `data` is NULL', async () => {
             // setup test parameters
@@ -444,12 +443,12 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const totalValuesTransferred = _.map(valuesToTransfer, (value: BigNumber) => {
-                return value.times(valueMultiplier);
+            const totalValuesTransferred = _.map(valuesToTransfer, (value: bigint) => {
+                return value * valueMultiplier;
             });
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverContractInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             const nullReceiverCallbackData = '0x';
             const txReceipt = await erc1155ProxyWrapper.transferFromAsync(
@@ -479,7 +478,7 @@ describe('ERC1155Proxy', () => {
                 expectedInitialBalances[0].minus(totalValuesTransferred[0]),
                 expectedInitialBalances[1].plus(totalValuesTransferred[0]),
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
         it('should successfully transfer value to a smart contract and trigger its callback, when callback `data` is one word', async () => {
             // setup test parameters
@@ -487,12 +486,12 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const totalValuesTransferred = _.map(valuesToTransfer, (value: BigNumber) => {
-                return value.times(valueMultiplier);
+            const totalValuesTransferred = _.map(valuesToTransfer, (value: bigint) => {
+                return value * valueMultiplier;
             });
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverContractInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // create word of callback data
             const customReceiverCallbackData = '0x0102030405060708091001020304050607080910010203040506070809100102';
             const customReceiverCallbackDataAsBuffer = ethUtil.toBuffer(customReceiverCallbackData);
@@ -526,7 +525,7 @@ describe('ERC1155Proxy', () => {
                 expectedInitialBalances[0].minus(totalValuesTransferred[0]),
                 expectedInitialBalances[1].plus(totalValuesTransferred[0]),
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
         it('should successfully transfer value to a smart contract and trigger its callback, when callback `data` is multiple words', async () => {
             // setup test parameters
@@ -534,12 +533,12 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const totalValuesTransferred = _.map(valuesToTransfer, (value: BigNumber) => {
-                return value.times(valueMultiplier);
+            const totalValuesTransferred = _.map(valuesToTransfer, (value: bigint) => {
+                return value * valueMultiplier;
             });
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverContractInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // create word of callback data
             const scalar = 5;
             const customReceiverCallbackData = `0x${'0102030405060708091001020304050607080910010203040506070809100102'.repeat(
@@ -576,7 +575,7 @@ describe('ERC1155Proxy', () => {
                 expectedInitialBalances[0].minus(totalValuesTransferred[0]),
                 expectedInitialBalances[1].plus(totalValuesTransferred[0]),
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
         it('should successfully transfer value to a smart contract and trigger its callback, when callback `data` is multiple words but not word-aligned', async () => {
             // setup test parameters
@@ -584,12 +583,12 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const totalValuesTransferred = _.map(valuesToTransfer, (value: BigNumber) => {
-                return value.times(valueMultiplier);
+            const totalValuesTransferred = _.map(valuesToTransfer, (value: bigint) => {
+                return value * valueMultiplier;
             });
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverContractInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // create word of callback data
             const scalar = 5;
             const customReceiverCallbackData = `0x${'0102030405060708091001020304050607080910010203040506070809100102'.repeat(
@@ -627,7 +626,7 @@ describe('ERC1155Proxy', () => {
                 expectedInitialBalances[0].minus(totalValuesTransferred[0]),
                 expectedInitialBalances[1].plus(totalValuesTransferred[0]),
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
         it('should successfully transfer value and ignore extra assetData', async () => {
             // setup test parameters
@@ -635,18 +634,19 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const totalValuesTransferred = _.map(valuesToTransfer, (value: BigNumber) => {
-                return value.times(valueMultiplier);
+            const totalValuesTransferred = _.map(valuesToTransfer, (value: bigint) => {
+                return value * valueMultiplier;
             });
-            const erc1155ContractAddress = erc1155Wrapper.getContract().address;
-            const assetData = assetDataContract
-                .ERC1155Assets(erc1155ContractAddress, tokensToTransfer, valuesToTransfer, receiverCallbackData)
-                .getABIEncodedTransactionData();
+            const erc1155ContractAddress = await erc1155Contract.getAddress();
+            const assetData = assetDataContract.interface.encodeFunctionData(
+                'ERC1155Assets',
+                [erc1155ContractAddress, tokensToTransfer, valuesToTransfer, receiverCallbackData]
+            );
             const extraData = '0102030405060708091001020304050607080910010203040506070809100102';
             const assetDataWithExtraData = `${assetData}${extraData}`;
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverContractInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             const txReceipt = await erc1155ProxyWrapper.transferFromAsync(
                 spender,
@@ -676,7 +676,7 @@ describe('ERC1155Proxy', () => {
                 expectedInitialBalances[0].minus(totalValuesTransferred[0]),
                 expectedInitialBalances[1].plus(totalValuesTransferred[0]),
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
         it('should successfully transfer if token ids and values are abi encoded to same entry in calldata', async () => {
             /**
@@ -693,26 +693,19 @@ describe('ERC1155Proxy', () => {
             const tokenUri = '';
             for (const tokenToCreate of tokensToCreate) {
                 // create token
-                await erc1155Wrapper
-                    .getContract()
-                    .createWithType(tokenToCreate, tokenUri)
-                    .awaitTransactionSuccessAsync({
-                        from: owner,
-                    });
+                const signers = await ethers.getSigners();
+                const ownerSigner = signers.find(s => s.address.toLowerCase() === owner.toLowerCase()) || signers[0];
+                const contractWithSigner = erc1155Contract.connect(ownerSigner);
+                await contractWithSigner.createWithType(tokenToCreate, tokenUri);
 
                 // mint balance for spender
-                await erc1155Wrapper
-                    .getContract()
-                    .mintFungible(tokenToCreate, [spender], [spenderInitialBalance])
-                    .awaitTransactionSuccessAsync({
-                        from: owner,
-                    });
+                await contractWithSigner.mintFungible(tokenToCreate.toString(), [spender], [spenderInitialBalance.toString()]);
             }
             ///// Step 2/5 /////
             // Check balances before transfer
             const balanceHolders = [spender, spender, spender, spender, receiver, receiver, receiver, receiver];
             const balanceTokens = tokensToCreate.concat(tokensToCreate);
-            const initialBalances = await erc1155Wrapper.getBalancesAsync(balanceHolders, balanceTokens);
+            const initialBalances = await _getBalancesAsync(erc1155Contract, balanceHolders, balanceTokens);
             const expectedInitialBalances = [
                 spenderInitialBalance, // Token ID 1 / Spender Balance
                 spenderInitialBalance, // Token ID 2 / Spender Balance
@@ -735,7 +728,7 @@ describe('ERC1155Proxy', () => {
             // 0xC0       0000000000000000000000000000000000000000000000000000000000000002      // Second Token ID / Token value
             // 0xE0       0000000000000000000000000000000000000000000000000000000000000004      // Length of callback data
             // 0x100      0102030400000000000000000000000000000000000000000000000000000000      // Callback data
-            const erc1155ContractAddress = erc1155Wrapper.getContract().address;
+            const erc1155ContractAddress = await erc1155Contract.getAddress();
             const tokensToTransfer = [1n, 2n];
             const valuesToTransfer = tokensToTransfer;
             const valueMultiplier = 2n;
@@ -764,9 +757,9 @@ describe('ERC1155Proxy', () => {
             );
             ///// Step 5/5 /////
             // Validate final balances
-            const finalBalances = await erc1155Wrapper.getBalancesAsync(balanceHolders, balanceTokens);
+            const finalBalances = await _getBalancesAsync(erc1155Contract, balanceHolders, balanceTokens);
             const expectedAmountsTransferred = _.map(valuesToTransfer, value => {
-                return value.times(valueMultiplier);
+                return value * valueMultiplier;
             });
             const expectedFinalBalances = [
                 spenderInitialBalance.minus(expectedAmountsTransferred[0]), // Token ID 1 / Spender Balance
@@ -794,20 +787,13 @@ describe('ERC1155Proxy', () => {
             const tokenUri = '';
             for (const tokenToCreate of tokensToCreate) {
                 // create token
-                await erc1155Wrapper
-                    .getContract()
-                    .createWithType(tokenToCreate, tokenUri)
-                    .awaitTransactionSuccessAsync({
-                        from: owner,
-                    });
+                const signers = await ethers.getSigners();
+                const ownerSigner = signers.find(s => s.address.toLowerCase() === owner.toLowerCase()) || signers[0];
+                const contractWithSigner = erc1155Contract.connect(ownerSigner);
+                await contractWithSigner.createWithType(tokenToCreate, tokenUri);
 
                 // mint balance for spender
-                await erc1155Wrapper
-                    .getContract()
-                    .mintFungible(tokenToCreate, [spender], [spenderInitialBalance])
-                    .awaitTransactionSuccessAsync({
-                        from: owner,
-                    });
+                await contractWithSigner.mintFungible(tokenToCreate.toString(), [spender], [spenderInitialBalance.toString()]);
             }
             ///// Step 2/5 /////
             // Check balances before transfer
@@ -822,7 +808,7 @@ describe('ERC1155Proxy', () => {
                 receiverContract,
             ];
             const balanceTokens = tokensToCreate.concat(tokensToCreate);
-            const initialBalances = await erc1155Wrapper.getBalancesAsync(balanceHolders, balanceTokens);
+            const initialBalances = await _getBalancesAsync(erc1155Contract, balanceHolders, balanceTokens);
             const expectedInitialBalances = [
                 spenderInitialBalance, // Token ID 1 / Spender Balance
                 spenderInitialBalance, // Token ID 2 / Spender Balance
@@ -846,7 +832,7 @@ describe('ERC1155Proxy', () => {
             // 0xE0       0000000000000000000000000000000000000000000000000000000000000002      // Length of values (Length of data)
             // 0x100      0000000000000000000000000000000000000000000000000000000000000002      // First Value
             // 0x120      0000000000000000000000000000000000000000000000000000000000000002      // Second Value
-            const erc1155ContractAddress = erc1155Wrapper.getContract().address;
+            const erc1155ContractAddress = await erc1155Contract.getAddress();
             const tokensToTransfer = [1n, 2n];
             const valuesToTransfer = [2n, 2n];
             const valueMultiplier = 2n;
@@ -883,14 +869,14 @@ describe('ERC1155Proxy', () => {
             expect(receiverLog.args.tokenIds[0]).to.be.bignumber.equal(tokensToTransfer[0]);
             expect(receiverLog.args.tokenIds[1]).to.be.bignumber.equal(tokensToTransfer[1]);
             expect(receiverLog.args.tokenValues.length).to.be.deep.equal(2);
-            expect(receiverLog.args.tokenValues[0]).to.be.bignumber.equal(valuesToTransfer[0].times(valueMultiplier));
-            expect(receiverLog.args.tokenValues[1]).to.be.bignumber.equal(valuesToTransfer[1].times(valueMultiplier));
+            expect(receiverLog.args.tokenValues[0]).to.equal(valuesToTransfer[0] * valueMultiplier);
+            expect(receiverLog.args.tokenValues[1]).to.equal(valuesToTransfer[1] * valueMultiplier);
             expect(receiverLog.args.data).to.be.deep.equal('0x0000');
             ///// Step 5/5 /////
             // Validate final balances
-            const finalBalances = await erc1155Wrapper.getBalancesAsync(balanceHolders, balanceTokens);
+            const finalBalances = await _getBalancesAsync(erc1155Contract, balanceHolders, balanceTokens);
             const expectedAmountsTransferred = _.map(valuesToTransfer, value => {
-                return value.times(valueMultiplier);
+                return value * valueMultiplier;
             });
             const expectedFinalBalances = [
                 spenderInitialBalance.minus(expectedAmountsTransferred[0]), // Token ID 1 / Spender Balance
@@ -917,20 +903,13 @@ describe('ERC1155Proxy', () => {
             const tokenUri = '';
             for (const tokenToCreate of tokensToCreate) {
                 // create token
-                await erc1155Wrapper
-                    .getContract()
-                    .createWithType(tokenToCreate, tokenUri)
-                    .awaitTransactionSuccessAsync({
-                        from: owner,
-                    });
+                const signers = await ethers.getSigners();
+                const ownerSigner = signers.find(s => s.address.toLowerCase() === owner.toLowerCase()) || signers[0];
+                const contractWithSigner = erc1155Contract.connect(ownerSigner);
+                await contractWithSigner.createWithType(tokenToCreate, tokenUri);
 
                 // mint balance for spender
-                await erc1155Wrapper
-                    .getContract()
-                    .mintFungible(tokenToCreate, [spender], [spenderInitialBalance])
-                    .awaitTransactionSuccessAsync({
-                        from: owner,
-                    });
+                await contractWithSigner.mintFungible(tokenToCreate.toString(), [spender], [spenderInitialBalance.toString()]);
             }
             ///// Step 2/5 /////
             // Check balances before transfer
@@ -945,7 +924,7 @@ describe('ERC1155Proxy', () => {
                 receiverContract,
             ];
             const balanceTokens = tokensToCreate.concat(tokensToCreate);
-            const initialBalances = await erc1155Wrapper.getBalancesAsync(balanceHolders, balanceTokens);
+            const initialBalances = await _getBalancesAsync(erc1155Contract, balanceHolders, balanceTokens);
             const expectedInitialBalances = [
                 spenderInitialBalance, // Token ID 1 / Spender Balance
                 spenderInitialBalance, // Token ID 2 / Spender Balance
@@ -966,7 +945,7 @@ describe('ERC1155Proxy', () => {
             // 0x80       0000000000000000000000000000000000000000000000000000000000000002      // Length of token Ids (Length of values / data)
             // 0xA0       0000000000000000000000000000000000000000000000000000000000000001      // First Token ID (First Value)
             // 0xC0       0000000000000000000000000000000000000000000000000000000000000002      // Second Token ID (Second Value)
-            const erc1155ContractAddress = erc1155Wrapper.getContract().address;
+            const erc1155ContractAddress = await erc1155Contract.getAddress();
             const tokensToTransfer = [1n, 2n];
             const valuesToTransfer = [1n, 2n];
             const valueMultiplier = 2n;
@@ -1003,14 +982,14 @@ describe('ERC1155Proxy', () => {
             expect(receiverLog.args.tokenIds[0]).to.be.bignumber.equal(tokensToTransfer[0]);
             expect(receiverLog.args.tokenIds[1]).to.be.bignumber.equal(tokensToTransfer[1]);
             expect(receiverLog.args.tokenValues.length).to.be.deep.equal(2);
-            expect(receiverLog.args.tokenValues[0]).to.be.bignumber.equal(valuesToTransfer[0].times(valueMultiplier));
-            expect(receiverLog.args.tokenValues[1]).to.be.bignumber.equal(valuesToTransfer[1].times(valueMultiplier));
+            expect(receiverLog.args.tokenValues[0]).to.equal(valuesToTransfer[0] * valueMultiplier);
+            expect(receiverLog.args.tokenValues[1]).to.equal(valuesToTransfer[1] * valueMultiplier);
             expect(receiverLog.args.data).to.be.deep.equal('0x0000');
             ///// Step 5/5 /////
             // Validate final balances
-            const finalBalances = await erc1155Wrapper.getBalancesAsync(balanceHolders, balanceTokens);
+            const finalBalances = await _getBalancesAsync(erc1155Contract, balanceHolders, balanceTokens);
             const expectedAmountsTransferred = _.map(valuesToTransfer, value => {
-                return value.times(valueMultiplier);
+                return value * valueMultiplier;
             });
             const expectedFinalBalances = [
                 spenderInitialBalance.minus(expectedAmountsTransferred[0]), // Token ID 1 / Spender Balance
@@ -1029,7 +1008,7 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const erc1155ContractAddress = erc1155Wrapper.getContract().address;
+            const erc1155ContractAddress = await erc1155Contract.getAddress();
             const assetData = assetDataContract
                 .ERC1155Assets(erc1155ContractAddress, tokensToTransfer, valuesToTransfer, receiverCallbackData)
                 .getABIEncodedTransactionData();
@@ -1073,7 +1052,7 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const erc1155ContractAddress = erc1155Wrapper.getContract().address;
+            const erc1155ContractAddress = await erc1155Contract.getAddress();
             const assetData = assetDataContract
                 .ERC1155Assets(erc1155ContractAddress, tokensToTransfer, valuesToTransfer, receiverCallbackData)
                 .getABIEncodedTransactionData();
@@ -1121,7 +1100,7 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const erc1155ContractAddress = erc1155Wrapper.getContract().address;
+            const erc1155ContractAddress = await erc1155Contract.getAddress();
             const assetData = assetDataContract
                 .ERC1155Assets(erc1155ContractAddress, tokensToTransfer, valuesToTransfer, receiverCallbackData)
                 .getABIEncodedTransactionData();
@@ -1169,7 +1148,7 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const erc1155ContractAddress = erc1155Wrapper.getContract().address;
+            const erc1155ContractAddress = await erc1155Contract.getAddress();
             const assetData = assetDataContract
                 .ERC1155Assets(erc1155ContractAddress, tokensToTransfer, valuesToTransfer, receiverCallbackData)
                 .getABIEncodedTransactionData();
@@ -1217,7 +1196,7 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const erc1155ContractAddress = erc1155Wrapper.getContract().address;
+            const erc1155ContractAddress = await erc1155Contract.getAddress();
             const assetData = assetDataContract
                 .ERC1155Assets(erc1155ContractAddress, tokensToTransfer, valuesToTransfer, receiverCallbackData)
                 .getABIEncodedTransactionData();
@@ -1266,7 +1245,7 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const erc1155ContractAddress = erc1155Wrapper.getContract().address;
+            const erc1155ContractAddress = await erc1155Contract.getAddress();
             const assetData = assetDataContract
                 .ERC1155Assets(erc1155ContractAddress, tokensToTransfer, valuesToTransfer, receiverCallbackData)
                 .getABIEncodedTransactionData();
@@ -1310,7 +1289,7 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const erc1155ContractAddress = erc1155Wrapper.getContract().address;
+            const erc1155ContractAddress = await erc1155Contract.getAddress();
             const assetData = assetDataContract
                 .ERC1155Assets(erc1155ContractAddress, tokensToTransfer, valuesToTransfer, receiverCallbackData)
                 .getABIEncodedTransactionData();
@@ -1358,7 +1337,7 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const erc1155ContractAddress = erc1155Wrapper.getContract().address;
+            const erc1155ContractAddress = await erc1155Contract.getAddress();
             const assetData = assetDataContract
                 .ERC1155Assets(erc1155ContractAddress, tokensToTransfer, valuesToTransfer, receiverCallbackData)
                 .getABIEncodedTransactionData();
@@ -1402,7 +1381,7 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const erc1155ContractAddress = erc1155Wrapper.getContract().address;
+            const erc1155ContractAddress = await erc1155Contract.getAddress();
             const assetData = assetDataContract
                 .ERC1155Assets(erc1155ContractAddress, tokensToTransfer, valuesToTransfer, receiverCallbackData)
                 .getABIEncodedTransactionData();
@@ -1450,7 +1429,7 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const erc1155ContractAddress = erc1155Wrapper.getContract().address;
+            const erc1155ContractAddress = await erc1155Contract.getAddress();
             const assetData = assetDataContract
                 .ERC1155Assets(erc1155ContractAddress, tokensToTransfer, valuesToTransfer, receiverCallbackData)
                 .getABIEncodedTransactionData();
@@ -1478,7 +1457,7 @@ describe('ERC1155Proxy', () => {
             const tokensToTransfer = fungibleTokens.slice(0, 1);
             const valuesToTransfer = [fungibleValueToTransferLarge];
             const valueMultiplier = valueMultiplierSmall;
-            const erc1155ContractAddress = erc1155Wrapper.getContract().address;
+            const erc1155ContractAddress = await erc1155Contract.getAddress();
             const assetData = assetDataContract
                 .ERC1155Assets(erc1155ContractAddress, tokensToTransfer, valuesToTransfer, receiverCallbackData)
                 .getABIEncodedTransactionData();
@@ -1538,7 +1517,7 @@ describe('ERC1155Proxy', () => {
             const valueMultiplier = valueMultiplierSmall;
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
@@ -1552,7 +1531,7 @@ describe('ERC1155Proxy', () => {
             );
             // check balances after transfer
             const expectedFinalBalances = [spenderInitialFungibleBalance, receiverInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
         it('should transfer nothing if value multiplier is zero', async () => {
             // setup test parameters
@@ -1562,7 +1541,7 @@ describe('ERC1155Proxy', () => {
             const valueMultiplier = 0n;
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
@@ -1576,7 +1555,7 @@ describe('ERC1155Proxy', () => {
             );
             // check balances after transfer
             const expectedFinalBalances = [spenderInitialFungibleBalance, receiverInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
         it('should transfer nothing if there are no tokens in asset data', async () => {
             // setup test parameters
@@ -1586,7 +1565,7 @@ describe('ERC1155Proxy', () => {
             const valueMultiplier = valueMultiplierSmall;
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
@@ -1600,7 +1579,7 @@ describe('ERC1155Proxy', () => {
             );
             // check balances after transfer
             const expectedFinalBalances = [spenderInitialFungibleBalance, receiverInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedFinalBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
         });
         it('should propagate revert reason from erc1155 contract failure', async () => {
             // disable transfers
@@ -1615,7 +1594,7 @@ describe('ERC1155Proxy', () => {
             const valueMultiplier = valueMultiplierSmall;
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverContractInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             await expectTransactionFailedAsync(
                 erc1155ProxyWrapper.transferFromAsync(
@@ -1647,7 +1626,7 @@ describe('ERC1155Proxy', () => {
                 nftNotOwnerBalance,
                 nftNotOwnerBalance,
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             await expectTransactionFailedAsync(
                 erc1155ProxyWrapper.transferFromAsync(
@@ -1681,7 +1660,7 @@ describe('ERC1155Proxy', () => {
                 nftNotOwnerBalance,
                 nftNotOwnerBalance,
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                 SafeMathRevertErrors.BinOpErrorCodes.MultiplicationOverflow,
                 maxUintValue,
@@ -1715,7 +1694,7 @@ describe('ERC1155Proxy', () => {
                 // receiver
                 nftNotOwnerBalance,
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             await expectTransactionFailedAsync(
                 erc1155ProxyWrapper.transferFromAsync(
@@ -1744,7 +1723,7 @@ describe('ERC1155Proxy', () => {
                 // receiver
                 nftNotOwnerBalance,
             ];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             await expectTransactionFailedAsync(
                 erc1155ProxyWrapper.transferFromAsync(
@@ -1769,11 +1748,11 @@ describe('ERC1155Proxy', () => {
             const valueMultiplier = valueMultiplierSmall;
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                 SafeMathRevertErrors.BinOpErrorCodes.SubtractionUnderflow,
                 spenderInitialFungibleBalance,
-                valuesToTransfer[0].times(valueMultiplier),
+                valuesToTransfer[0] * valueMultiplier,
             );
             // execute transfer
             const tx = erc1155ProxyWrapper.transferFromAsync(
@@ -1802,7 +1781,7 @@ describe('ERC1155Proxy', () => {
             const valueMultiplier = valueMultiplierSmall;
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             await expectTransactionFailedAsync(
                 erc1155ProxyWrapper.transferFromAsync(
@@ -1826,7 +1805,7 @@ describe('ERC1155Proxy', () => {
             const valueMultiplier = valueMultiplierSmall;
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverInitialFungibleBalance];
-            await erc1155Wrapper.assertBalancesAsync(tokenHolders, tokensToTransfer, expectedInitialBalances);
+            await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
             // execute transfer
             await expectTransactionFailedAsync(
                 erc1155ProxyWrapper.transferFromAsync(
@@ -1843,6 +1822,45 @@ describe('ERC1155Proxy', () => {
             );
         });
     });
+    
+    // Helper functions for ERC1155 balance checks
+    async function _assertBalancesAsync(
+        contract: ERC1155Mintable,
+        owners: string[],
+        tokens: bigint[],
+        expectedBalances: bigint[],
+    ): Promise<void> {
+        const { expect } = await import('chai');
+        const actualBalances = await _getBalancesAsync(contract, owners, tokens);
+        
+        expect(actualBalances.length).to.equal(expectedBalances.length, 
+            `Expected ${expectedBalances.length} balances, but got ${actualBalances.length}`);
+        
+        for (let i = 0; i < actualBalances.length; i++) {
+            expect(actualBalances[i]).to.equal(expectedBalances[i], 
+                `Balance mismatch for owner ${owners[i]} and token ${tokens[i]}: expected ${expectedBalances[i]}, got ${actualBalances[i]}`);
+        }
+    }
+    
+    async function _getBalancesAsync(
+        contract: ERC1155Mintable,
+        owners: string[],
+        tokens: bigint[],
+    ): Promise<bigint[]> {
+        // Create parallel arrays for balanceOfBatch - each owner for each token
+        const batchOwners: string[] = [];
+        const batchTokens: string[] = [];
+        
+        for (const owner of owners) {
+            for (const token of tokens) {
+                batchOwners.push(owner);
+                batchTokens.push(token.toString());
+            }
+        }
+        
+        const balances = await contract.balanceOfBatch(batchOwners, batchTokens);
+        return balances.map(balance => BigInt(balance.toString()));
+    }
 });
 // tslint:enable:no-unnecessary-type-assertion
 // tslint:disable:max-file-line-count

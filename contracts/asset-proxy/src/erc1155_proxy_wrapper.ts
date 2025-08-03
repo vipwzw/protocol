@@ -1,4 +1,5 @@
 import { ERC1155Mintable, ERC1155Mintable__factory } from '@0x/contracts-erc1155';
+import { BigNumber } from '@0x/utils';
 import {
     constants,
     LogDecoder,
@@ -31,158 +32,6 @@ export interface ERC1155HoldingsByOwner {
     nonFungible: ERC1155NonFungibleHoldingsByOwner;
 }
 
-// ERC1155 Wrapper 类型 - 创建本地简单实现
-export class Erc1155Wrapper {
-    constructor(private contract: ERC1155Mintable, private ownerAddress: string) {}
-    
-    async getContract(): Promise<ERC1155Mintable> {
-        return this.contract;
-    }
-    
-    async mintFungibleTokensAsync(recipients: string[], tokenId: bigint, amounts: bigint[]): Promise<bigint> {
-        try {
-            // 首先创建代币类型 (如果还没有创建)
-            const createTx = await this.contract.create("", false); // 空 URI，可同质化代币
-            const createReceipt = await createTx.wait();
-            
-            // 从事件中获取实际的代币 ID
-            let actualTokenId = tokenId;
-            if (createReceipt && createReceipt.logs) {
-                // 尝试从 TransferSingle 事件中提取代币 ID
-                for (const log of createReceipt.logs) {
-                    try {
-                        const parsedLog = this.contract.interface.parseLog(log);
-                        if (parsedLog && parsedLog.name === 'TransferSingle') {
-                            actualTokenId = BigInt(parsedLog.args.id.toString());
-                            break;
-                        }
-                    } catch (e) {
-                        // 忽略解析错误
-                    }
-                }
-            }
-            
-            // 转换 amounts 为合约期望的格式
-            const contractAmounts = amounts.map(amount => BigInt(amount));
-            
-            // 调用 mintFungible 方法
-            const mintTx = await this.contract.mintFungible(actualTokenId, recipients, contractAmounts);
-            await mintTx.wait();
-            
-            console.log(`✅ Successfully minted fungible tokens (ID: ${actualTokenId}) for ${recipients.length} recipients`);
-            return actualTokenId;
-        } catch (error) {
-            console.warn(`❌ Failed to mint fungible tokens:`, error);
-            // 如果 mint 失败，返回原始的 tokenId 作为降级处理
-            return tokenId;
-        }
-    }
-    
-    async mintNonFungibleTokensAsync(recipients: string[]): Promise<[bigint, bigint[]]> {
-        // 简化实现 - 生成模拟的 NFT IDs
-        const tokenId = BigInt(Date.now()); // 简单的 tokenId 生成
-        const nftIds: bigint[] = [];
-        
-        for (let i = 0; i < recipients.length; i++) {
-            const nftId = BigInt(i + 1);
-            nftIds.push(nftId);
-        }
-        console.log(`Mock minting non-fungible tokens for ${recipients.length} recipients`);
-        return [tokenId, nftIds];
-    }
-    
-    async setApprovalForAll(operator: string, approved: boolean): Promise<void> {
-        await this.contract.setApprovalForAll(operator, approved);
-    }
-    
-    async getBalancesAsync(owners: string[], tokenIds: any[]): Promise<bigint[]> {
-        const balances: bigint[] = [];
-        
-        // 检查数组长度 - 支持两种模式：
-        // 1. 如果长度相等，按1:1映射处理 (owners[i] 拥有 tokenIds[i])
-        // 2. 如果长度不等，使用笛卡尔积 (每个owner拥有每个token)
-        
-        if (owners.length === tokenIds.length) {
-            // 1:1 mapping: owners[i] 对应 tokenIds[i]
-            for (let i = 0; i < owners.length; i++) {
-                if (tokenIds[i] === undefined || tokenIds[i] === null) {
-                    throw new Error(`TokenId at index ${i} is undefined or null. TokenIds length: ${tokenIds.length}, owners length: ${owners.length}`);
-                }
-                
-                const tokenId = this._convertToTokenId(tokenIds[i]);
-                const balance = await this.contract.balanceOf(owners[i], tokenId);
-                balances.push(BigInt(balance.toString()));
-            }
-        } else if (tokenIds.length === 1) {
-            // Special case: 一个代币ID，多个所有者
-            const tokenId = this._convertToTokenId(tokenIds[0]);
-            for (const owner of owners) {
-                const balance = await this.contract.balanceOf(owner, tokenId);
-                balances.push(BigInt(balance.toString()));
-            }
-        } else {
-            // Cartesian product: 每个owner与每个token的组合
-            for (const owner of owners) {
-                for (const tokenId of tokenIds) {
-                    const convertedTokenId = this._convertToTokenId(tokenId);
-                    const balance = await this.contract.balanceOf(owner, convertedTokenId);
-                    balances.push(BigInt(balance.toString()));
-                }
-            }
-        }
-        
-        return balances;
-    }
-    
-    private _convertToTokenId(tokenId: any): bigint {
-        if (typeof tokenId === 'object' && tokenId.toString) {
-            // BigNumber 类型
-            return BigInt(tokenId.toString());
-        } else if (typeof tokenId === 'bigint') {
-            return tokenId;
-        } else if (typeof tokenId === 'string' || typeof tokenId === 'number') {
-            return BigInt(tokenId);
-        } else {
-            throw new Error(`Invalid tokenId type: ${typeof tokenId}, value: ${tokenId}`);
-        }
-    }
-    
-    /**
-     * 断言余额是否与期望值匹配
-     * @param owners 代币持有者地址数组
-     * @param tokenIds 代币ID数组 (支持 BigNumber 或 bigint)
-     * @param expectedBalances 期望的余额数组 (支持 BigNumber 或 bigint)
-     */
-    async assertBalancesAsync(owners: string[], tokenIds: any[], expectedBalances: any[]): Promise<void> {
-        const { expect } = await import('chai');
-        
-        // 获取实际余额
-        const actualBalances = await this.getBalancesAsync(owners, tokenIds);
-        
-        // 转换期望余额为 bigint
-        const expectedBalancesBigInt: bigint[] = expectedBalances.map(balance => {
-            if (typeof balance === 'object' && balance.toString) {
-                // BigNumber 类型
-                return BigInt(balance.toString());
-            } else if (typeof balance === 'bigint') {
-                return balance;
-            } else {
-                return BigInt(balance);
-            }
-        });
-        
-        // 检查数组长度
-        expect(actualBalances.length).to.equal(expectedBalancesBigInt.length, 
-            `Expected ${expectedBalancesBigInt.length} balances, but got ${actualBalances.length}`);
-        
-        // 逐一比较余额
-        for (let i = 0; i < actualBalances.length; i++) {
-            expect(actualBalances[i]).to.equal(expectedBalancesBigInt[i], 
-                `Balance mismatch for owner ${owners[i]} and token ${tokenIds[i]}: expected ${expectedBalancesBigInt[i]}, got ${actualBalances[i]}`);
-        }
-    }
-}
-
 import { artifacts } from './artifacts';
 
 import { ERC1155Proxy, IAssetData, IAssetData__factory, IAssetProxy, IAssetProxy__factory, ERC1155Proxy__factory } from './wrappers';
@@ -195,7 +44,7 @@ export class ERC1155ProxyWrapper {
     private readonly _contractOwnerAddress: string;
     private readonly _provider: ZeroExProvider;
     private readonly _logDecoder: LogDecoder;
-    private readonly _dummyTokenWrappers: Erc1155Wrapper[];
+    private readonly _dummyTokenContracts: ERC1155Mintable[];
     private readonly _assetProxyInterface: IAssetProxy;
     private readonly _assetDataInterface: IAssetData;
     private _proxyContract?: ERC1155Proxy;
@@ -207,7 +56,7 @@ export class ERC1155ProxyWrapper {
         // Extract ABIs from artifacts for LogDecoder
         const abis = Object.values(artifacts).map((artifact: any) => artifact.abi);
         this._logDecoder = new LogDecoder(abis);
-        this._dummyTokenWrappers = [];
+        this._dummyTokenContracts = [];
         this._assetProxyInterface = IAssetProxy__factory.connect(constants.NULL_ADDRESS, provider as any);
         this._assetDataInterface = IAssetData__factory.connect(constants.NULL_ADDRESS, provider as any);
         this._tokenOwnerAddresses = tokenOwnerAddresses;
@@ -218,9 +67,9 @@ export class ERC1155ProxyWrapper {
     }
     /**
      * @dev Deploys dummy ERC1155 contracts
-     * @return An array of ERC1155 wrappers; one for each deployed contract.
+     * @return An array of ERC1155 contracts; one for each deployed contract.
      */
-    public async deployDummyContractsAsync(): Promise<Erc1155Wrapper[]> {
+    public async deployDummyContractsAsync(): Promise<ERC1155Mintable[]> {
         const signers = await ethers.getSigners();
         const deployer = signers[0];
         
@@ -231,19 +80,17 @@ export class ERC1155ProxyWrapper {
                 const erc1155Contract = await factory.deploy();
                 await erc1155Contract.waitForDeployment();
                 
-                const erc1155Wrapper = new Erc1155Wrapper(erc1155Contract, this._contractOwnerAddress);
-                this._dummyTokenWrappers.push(erc1155Wrapper);
+                this._dummyTokenContracts.push(erc1155Contract);
             } catch (error) {
                 console.warn(`Failed to deploy ERC1155Mintable contract ${i}:`, error);
                 // 创建一个模拟的合约实例以防部署失败
                 const mockContract = {
                     address: `0x${'0'.repeat(38)}${(i + 1).toString(16).padStart(2, '0')}`,
                 } as unknown as ERC1155Mintable;
-                const erc1155Wrapper = new Erc1155Wrapper(mockContract, this._contractOwnerAddress);
-                this._dummyTokenWrappers.push(erc1155Wrapper);
+                this._dummyTokenContracts.push(mockContract);
             }
         }
-        return this._dummyTokenWrappers;
+        return this._dummyTokenContracts;
     }
     /**
      * @dev Deploys the ERC1155 proxy
@@ -403,17 +250,16 @@ export class ERC1155ProxyWrapper {
         const proxyAddress = await this._proxyContract!.getAddress();
         
         // Set balances accordingly
-        for (const dummyWrapper of this._dummyTokenWrappers) {
-            const dummyContract = await dummyWrapper.getContract();
+        for (const dummyContract of this._dummyTokenContracts) {
             const dummyAddress = await dummyContract.getAddress();
             
             // 创建可同质化代币
             for (const i of _.times(constants.NUM_ERC1155_FUNGIBLE_TOKENS_MINT)) {
                 // 为每个地址创建等量的可同质化代币 - 使用测试期望的值
-                const amounts = this._tokenOwnerAddresses.map(() => constants.INITIAL_ERC1155_FUNGIBLE_BALANCE);
-                const tokenId = await dummyWrapper.mintFungibleTokensAsync(
+                const amounts = this._tokenOwnerAddresses.map(() => new BigNumber(constants.INITIAL_ERC1155_FUNGIBLE_BALANCE));
+                const tokenId = await this._mintFungibleTokensAsync(
+                    dummyContract,
                     this._tokenOwnerAddresses,
-                    BigInt(Date.now() + i), // 使用时间戳 + 索引作为 tokenId
                     amounts,
                 );
                 const tokenIdAsString = tokenId.toString();
@@ -452,7 +298,7 @@ export class ERC1155ProxyWrapper {
             
             // 创建非同质化代币
             for (const j of _.times(constants.NUM_ERC1155_NONFUNGIBLE_TOKENS_MINT)) {
-                const [tokenId, nftIds] = await dummyWrapper.mintNonFungibleTokensAsync(this._tokenOwnerAddresses);
+                const [tokenId, nftIds] = await this._mintNonFungibleTokensAsync(dummyContract, this._tokenOwnerAddresses);
                 const tokenIdAsString = tokenId.toString();
                 this._nonFungibleTokenIds.push(tokenIdAsString);
                 
@@ -468,8 +314,8 @@ export class ERC1155ProxyWrapper {
                     if (nonFungibleHoldingsByOwner[tokenOwnerAddress][dummyAddress][tokenIdAsString] === undefined) {
                         nonFungibleHoldingsByOwner[tokenOwnerAddress][dummyAddress][tokenIdAsString] = [];
                     }
-                    this._nfts.push({ id: nftIds[i], tokenId });
-                    nonFungibleHoldingsByOwner[tokenOwnerAddress][dummyAddress][tokenIdAsString].push(nftIds[i]);
+                    this._nfts.push({ id: BigInt(nftIds[i].toString()), tokenId: BigInt(tokenId.toString()) });
+                    nonFungibleHoldingsByOwner[tokenOwnerAddress][dummyAddress][tokenIdAsString].push(BigInt(nftIds[i].toString()));
                 }
             }
         }
@@ -490,25 +336,24 @@ export class ERC1155ProxyWrapper {
         const tokenHoldingsByOwner: ERC1155FungibleHoldingsByOwner = {};
         const nonFungibleHoldingsByOwner: ERC1155NonFungibleHoldingsByOwner = {};
         
-        for (const dummyTokenWrapper of this._dummyTokenWrappers) {
-            const tokenContract = await dummyTokenWrapper.getContract();
+        for (const tokenContract of this._dummyTokenContracts) {
             const tokenAddress = await tokenContract.getAddress();
             
             // 构建批量余额查询
             const tokenOwners: string[] = [];
-            const tokenIds: bigint[] = [];
+            const tokenIds: BigNumber[] = [];
             for (const tokenOwnerAddress of this._tokenOwnerAddresses) {
                 for (const tokenId of this._fungibleTokenIds) {
                     tokenOwners.push(tokenOwnerAddress);
-                    tokenIds.push(BigInt(tokenId));
+                    tokenIds.push(new BigNumber(tokenId));
                 }
                 for (const nft of this._nfts) {
                     tokenOwners.push(tokenOwnerAddress);
-                    tokenIds.push(nft.id);
+                    tokenIds.push(new BigNumber(nft.id.toString()));
                 }
             }
             
-            const balances = await dummyTokenWrapper.getBalancesAsync(tokenOwners, tokenIds);
+            const balances = await this._getBalancesAsync(tokenContract, tokenOwners, tokenIds);
             
             // 解析余额为可同质化/非同质化代币持有量
             let i = 0;
@@ -521,7 +366,7 @@ export class ERC1155ProxyWrapper {
                     if (tokenHoldingsByOwner[tokenOwnerAddress][tokenAddress] === undefined) {
                         tokenHoldingsByOwner[tokenOwnerAddress][tokenAddress] = {};
                     }
-                    tokenHoldingsByOwner[tokenOwnerAddress][tokenAddress][tokenId] = balances[i++];
+                    tokenHoldingsByOwner[tokenOwnerAddress][tokenAddress][tokenId] = BigInt(balances[i++].toString());
                 }
                 // 非同质化代币
                 for (const nft of this._nfts) {
@@ -538,7 +383,7 @@ export class ERC1155ProxyWrapper {
                         nonFungibleHoldingsByOwner[tokenOwnerAddress][tokenAddress][nft.tokenId.toString()] = [];
                     }
                     const isOwner = balances[i++];
-                    if (isOwner === 1n) { // 使用 bigint 比较
+                    if (isOwner.toString() === '1') { // 检查是否拥有
                         nonFungibleHoldingsByOwner[tokenOwnerAddress][tokenAddress][nft.tokenId.toString()].push(
                             nft.id,
                         );
@@ -564,9 +409,15 @@ export class ERC1155ProxyWrapper {
         isApproved: boolean,
     ): Promise<void> {
         this._validateProxyContractExistsOrThrow();
-        const tokenWrapper = await this.getContractWrapper(contractAddress);
+        const tokenContract = await this.getContract(contractAddress);
         const operator = await this._proxyContract!.getAddress();
-        await tokenWrapper.setApprovalForAll(operator, isApproved);
+        
+        // 获取用户的 signer
+        const signers = await ethers.getSigners();
+        const userSigner = signers.find(s => s.address.toLowerCase() === userAddress.toLowerCase()) || signers[0];
+        const contractWithSigner = tokenContract.connect(userSigner);
+        
+        await contractWithSigner.setApprovalForAll(operator, isApproved);
     }
     /**
      * @dev Checks if proxy is approved to transfer tokens on behalf of `userAddress`.
@@ -596,20 +447,18 @@ export class ERC1155ProxyWrapper {
     public getTokenOwnerAddresses(): string[] {
         return this._tokenOwnerAddresses;
     }
-    public async getContractWrapper(contractAddress: string): Promise<Erc1155Wrapper> {
-        for (const wrapper of this._dummyTokenWrappers) {
-            const contract = await wrapper.getContract();
+    public async getContract(contractAddress: string): Promise<ERC1155Mintable> {
+        for (const contract of this._dummyTokenContracts) {
             const address = await contract.getAddress();
             if (address.toLowerCase() === contractAddress.toLowerCase()) {
-                return wrapper;
+                return contract;
             }
         }
         throw new Error(`Contract: ${contractAddress} was not deployed through ERC1155ProxyWrapper`);
     }
     
     private async _getContractFromAddress(tokenAddress: string): Promise<ERC1155Mintable> {
-        for (const wrapper of this._dummyTokenWrappers) {
-            const contract = await wrapper.getContract();
+        for (const contract of this._dummyTokenContracts) {
             const address = await contract.getAddress();
             if (address.toLowerCase() === tokenAddress.toLowerCase()) {
                 return contract;
@@ -617,8 +466,105 @@ export class ERC1155ProxyWrapper {
         }
         throw new Error(`Token: ${tokenAddress} was not deployed through ERC1155ProxyWrapper`);
     }
+    
+    private async _mintFungibleTokensAsync(
+        contract: ERC1155Mintable,
+        beneficiaries: string[],
+        tokenAmounts: BigNumber[],
+    ): Promise<BigNumber> {
+        const tokenUri = 'dummyFungibleToken';
+        const tokenIsNonFungible = false;
+        
+        // 获取 signer
+        const signers = await ethers.getSigners();
+        const ownerSigner = signers.find(s => s.address.toLowerCase() === this._contractOwnerAddress.toLowerCase()) || signers[0];
+        const contractWithSigner = contract.connect(ownerSigner);
+        
+        // 创建代币类型
+        const createTx = await contractWithSigner.create(tokenUri, tokenIsNonFungible);
+        const createReceipt = await createTx.wait();
+        
+        // 从事件中获取 tokenId
+        let tokenId = new BigNumber(1); // 默认值
+        if (createReceipt && createReceipt.logs) {
+            for (const log of createReceipt.logs) {
+                try {
+                    const parsedLog = contract.interface.parseLog(log);
+                    if (parsedLog && parsedLog.name === 'TransferSingle') {
+                        tokenId = new BigNumber(parsedLog.args.id.toString());
+                        break;
+                    }
+                } catch (logError) {
+                    // 忽略解析错误，继续尝试下一个log
+                }
+            }
+        }
+        
+        // Mint 代币给受益者
+        await contractWithSigner.mintFungible(tokenId.toString(), beneficiaries, tokenAmounts.map(a => a.toString()));
+        
+        return tokenId;
+    }
+    
+    private async _mintNonFungibleTokensAsync(
+        contract: ERC1155Mintable,
+        beneficiaries: string[],
+    ): Promise<[BigNumber, BigNumber[]]> {
+        const tokenUri = 'dummyNonFungibleToken';
+        const tokenIsNonFungible = true;
+        
+        // 获取 signer
+        const signers = await ethers.getSigners();
+        const ownerSigner = signers.find(s => s.address.toLowerCase() === this._contractOwnerAddress.toLowerCase()) || signers[0];
+        const contractWithSigner = contract.connect(ownerSigner);
+        
+        // 创建非同质化代币类型
+        const createTx = await contractWithSigner.create(tokenUri, tokenIsNonFungible);
+        const createReceipt = await createTx.wait();
+        
+        // 从事件中获取 tokenId
+        let token = new BigNumber(1); // 默认值
+        if (createReceipt && createReceipt.logs) {
+            for (const log of createReceipt.logs) {
+                try {
+                    const parsedLog = contract.interface.parseLog(log);
+                    if (parsedLog && parsedLog.name === 'TransferSingle') {
+                        token = new BigNumber(parsedLog.args.id.toString());
+                        break;
+                    }
+                } catch (logError) {
+                    // 忽略解析错误，继续尝试下一个log
+                }
+            }
+        }
+        
+        // Mint NFT 给受益者
+        await contractWithSigner.mintNonFungible(token.toString(), beneficiaries);
+        
+        // 生成 NFT IDs
+        const encodedNftIds: BigNumber[] = [];
+        const nftIdBegin = 1;
+        const nftIdEnd = beneficiaries.length + 1;
+        const nftIdRange = _.range(nftIdBegin, nftIdEnd);
+        _.each(nftIdRange, (nftId: number) => {
+            const encodedNftId = token.plus(nftId);
+            encodedNftIds.push(encodedNftId);
+        });
+        
+        return [token, encodedNftIds];
+    }
+    
+    private async _getBalancesAsync(
+        contract: ERC1155Mintable,
+        owners: string[],
+        tokens: BigNumber[],
+    ): Promise<BigNumber[]> {
+        const balances = await contract.balanceOfBatch(owners, tokens.map(t => t.toString()));
+        return balances.map(balance => new BigNumber(balance.toString()));
+    }
+    
     private _validateDummyTokenContractsExistOrThrow(): void {
-        if (this._dummyTokenWrappers === undefined) {
+        if (this._dummyTokenContracts === undefined) {
             throw new Error('Dummy ERC1155 tokens not yet deployed, please call "deployDummyTokensAsync"');
         }
     }

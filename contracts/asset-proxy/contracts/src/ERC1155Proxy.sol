@@ -24,7 +24,6 @@ import "@0x/contracts-erc1155/contracts/src/interfaces/IERC1155.sol";
 import "./MixinAuthorizable.sol";
 import "./interfaces/IAssetProxy.sol";
 
-
 contract ERC1155Proxy is
     MixinAuthorizable,
     IAssetProxy
@@ -71,6 +70,8 @@ contract ERC1155Proxy is
             // to avoid copying over `ids` or `data`. This is possible if they are
             // identical to `values` and the offsets for each are pointing to the
             // same location in the ABI encoded calldata.
+            // Use checked math to prevent overflow - this ensures safety with large token IDs
+            require(amount == 0 || values[i] <= type(uint256).max / amount, "ERC1155Proxy: multiplication overflow");
             scaledValues[i] = values[i] * amount;
         }
 
