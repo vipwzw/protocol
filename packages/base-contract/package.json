@@ -4,7 +4,7 @@
     "engines": {
         "node": ">=6.12"
     },
-    "description": "0x Base TS contract",
+    "description": "Base contract wrapper for Ethers v6 compatibility",
     "main": "lib/src/index.js",
     "types": "lib/src/index.d.ts",
     "scripts": {
@@ -52,12 +52,7 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
-        "@ethereumjs/vm": "^5.9.3",
-        "ethereumjs-blockstream": "^7.0.0",
-        "ethereumjs-util": "^7.1.5",
-        "ethers": "^6.15.0",
-        "js-sha3": "^0.8.0",
-        "uuid": "^9.0.0"
+        "ethers": "^6.15.0"
     },
     "publishConfig": {
         "access": "public"

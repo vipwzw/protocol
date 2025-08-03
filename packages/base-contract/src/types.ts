@@ -1,3 +1,12 @@
+import type {
+    ContractTransactionResponse,
+    TransactionResponse,
+    TransactionRequest,
+    ContractRunner,
+    Provider
+} from 'ethers';
+
+// Legacy type mappings for backward compatibility
 import {
     BlockParam,
     CallData,
@@ -50,10 +59,14 @@ export interface AwaitTransactionSuccessOpts extends SendTransactionOpts {
     timeoutMs?: number;
 }
 
+// Updated contract function interfaces for Ethers v6 compatibility
 export interface ContractFunctionObj<T> {
     selector: string;
     callAsync(callData?: Partial<CallData>, defaultBlock?: BlockParam): Promise<T>;
     getABIEncodedTransactionData(): string;
+    // Ethers v6 compatibility methods
+    staticCall?(...args: any[]): Promise<T>;
+    staticCallResult?(...args: any[]): Promise<any>;
 }
 
 export interface ContractTxFunctionObj<T> extends ContractFunctionObj<T> {
@@ -68,4 +81,8 @@ export interface ContractTxFunctionObj<T> extends ContractFunctionObj<T> {
         defaultBlock?: BlockParam,
         shouldOptimize?: boolean,
     ): Promise<TxAccessListWithGas>;
+    // Ethers v6 compatibility methods
+    send?(...args: any[]): Promise<ContractTransactionResponse>;
+    estimateGas?(...args: any[]): Promise<bigint>;
+    populateTransaction?(...args: any[]): Promise<TransactionRequest>;
 }
