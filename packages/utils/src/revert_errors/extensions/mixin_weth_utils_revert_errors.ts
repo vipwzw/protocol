@@ -1,4 +1,4 @@
-import { BigNumber } from '../../configured_bignumber';
+// BigNumber removed - using bigint
 import { RevertError } from '../../revert_error';
 
 // tslint:disable:max-classes-per-file
@@ -10,7 +10,7 @@ export class UnregisteredAssetProxyError extends RevertError {
 }
 
 export class InsufficientEthForFeeError extends RevertError {
-    constructor(ethFeeRequired?: BigNumber | number | string, ethAvailable?: BigNumber | number | string) {
+    constructor(ethFeeRequired?: bigint | number | string, ethAvailable?: bigint | number | string) {
         super(
             'InsufficientEthForFeeError',
             'InsufficientEthForFeeError(uint256 ethFeeRequired, uint256 ethAvailable)',
@@ -28,7 +28,7 @@ export class DefaultFunctionWethContractOnlyError extends RevertError {
 }
 
 export class EthFeeLengthMismatchError extends RevertError {
-    constructor(ethFeesLength?: BigNumber | number | string, feeRecipientsLength?: BigNumber | number | string) {
+    constructor(ethFeesLength?: bigint | number | string, feeRecipientsLength?: bigint | number | string) {
         super(
             'EthFeeLengthMismatchError',
             'EthFeeLengthMismatchError(uint256 ethFeesLength, uint256 feeRecipientsLength)',

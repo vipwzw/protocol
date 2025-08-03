@@ -1,13 +1,13 @@
 import * as crypto from 'crypto';
 import * as ethUtil from 'ethereumjs-util';
 
-import { BigNumber } from './configured_bignumber';
+import { toBigInt, pow } from './configured_bigint';
 import { Numberish } from './types';
 
 // tslint:disable:custom-no-magic-numbers
 
 const WORD_LENGTH = 32;
-const WORD_CEIL = new BigNumber(2).pow(WORD_LENGTH * 8);
+const WORD_CEIL = pow(2n, BigInt(WORD_LENGTH * 8));
 
 export const hexUtils = {
     concat,
@@ -88,7 +88,7 @@ function size(hex: string): number {
 }
 
 /**
- * Convert a string, a number, a Buffer, or a BigNumber into a hex string.
+ * Convert a string, a number, a Buffer, or a bigint into a hex string.
  * Works with negative numbers, as well.
  */
 function toHex(n: Numberish | Buffer, _size: number = WORD_LENGTH): string {
@@ -99,17 +99,12 @@ function toHex(n: Numberish | Buffer, _size: number = WORD_LENGTH): string {
         // Already a hex.
         return n;
     }
-    let _n = new BigNumber(n);
-    if (_n.isNegative()) {
+    let _n = toBigInt(n);
+    if (_n < 0n) {
         // Perform two's-complement.
-        // prettier-ignore
-        _n = new BigNumber(
-            invert(
-                toHex(_n.abs()),
-                _size,
-            ).substr(2),
-            16,
-        ).plus(1).mod(WORD_CEIL);
+        const absHex = toHex(-_n, _size);
+        const inverted = invert(absHex, _size);
+        _n = (toBigInt(inverted) + 1n) % WORD_CEIL;
     }
     return `0x${_n.toString(16)}`;
 }

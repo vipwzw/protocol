@@ -1,4 +1,4 @@
-import { BigNumber } from '../../configured_bignumber';
+// BigNumber removed - using bigint
 import { RevertError } from '../../revert_error';
 
 export enum InvalidByteOperationErrorCodes {

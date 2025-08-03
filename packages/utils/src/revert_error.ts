@@ -5,21 +5,25 @@ import * as _ from 'lodash';
 import { inspect } from 'util';
 
 import * as AbiEncoder from './abi_encoder';
-import { BigNumber } from './configured_bignumber';
+import { toBigInt } from './configured_bigint';
+import { BigNumberLike } from './bignum_compat';
 
 // tslint:disable: max-classes-per-file no-unnecessary-type-assertion
 
 type ArgTypes =
     | string
-    | BigNumber
+    | bigint
     | number
     | boolean
+    | BigNumberLike
     | RevertError
-    | BigNumber[]
+    | any  // Allow legacy BigNumber instances
+    | bigint[]
     | string[]
     | number[]
     | boolean[]
-    | Array<BigNumber | number | string>;
+    | BigNumberLike[]
+    | Array<bigint | number | string | BigNumberLike | any>;
 type ValueMap = ObjectMap<ArgTypes | undefined>;
 type RevertErrorDecoder = (hex: string) => ValueMap;
 
@@ -524,7 +528,11 @@ function checkArgEquality(type: string, lhs: ArgTypes, rhs: ArgTypes): boolean {
         // tslint:enable: no-magic-numbers
     }
     // tslint:disable-next-line
-    return new BigNumber((lhs as any) || 0).eq(rhs as any);
+    try {
+        return toBigInt((lhs as any) || 0) === toBigInt(rhs as any);
+    } catch {
+        return false;
+    }
 }
 
 function normalizeAddress(addr: string): string {

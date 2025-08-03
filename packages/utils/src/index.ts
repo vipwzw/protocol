@@ -4,7 +4,12 @@ export { classUtils } from './class_utils';
 export { deleteNestedProperty } from './delete_nested_property';
 export { intervalUtils } from './interval_utils';
 export { providerUtils } from './provider_utils';
-export { BigNumber } from './configured_bignumber';
+// Legacy BigNumber export - DEPRECATED: Use native bigint instead
+// This provides a compatibility shim for existing code
+export { BigNumber } from './bignum_compat';
+
+// Export all bigint utilities
+export * from './configured_bigint';
 export { AbiDecoder } from './abi_decoder';
 export { logUtils } from './log_utils';
 export { abiUtils } from './abi_utils';

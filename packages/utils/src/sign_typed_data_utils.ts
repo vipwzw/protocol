@@ -3,7 +3,7 @@ import * as ethUtil from 'ethereumjs-util';
 import { ethers } from 'ethers';
 import * as _ from 'lodash';
 
-import { BigNumber } from './configured_bignumber';
+import { toBigInt, isBigInt } from './configured_bigint';
 
 export const signTypedDataUtils = {
     /**
@@ -108,12 +108,11 @@ export const signTypedDataUtils = {
         return coder.encode(encodedTypes, encodedValues);
     },
     _normalizeValue(type: string, value: any): EIP712ObjectValue {
-        const STRING_BASE = 10;
         if (type === 'uint256') {
-            if (BigNumber.isBigNumber(value)) {
-                return value.toString(STRING_BASE);
+            if (isBigInt(value)) {
+                return value.toString();
             }
-            return new BigNumber(value).toString(STRING_BASE);
+            return toBigInt(value).toString();
         }
         return value;
     },

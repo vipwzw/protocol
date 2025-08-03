@@ -1,4 +1,4 @@
-import { BigNumber } from '../../configured_bignumber';
+// BigNumber removed - using bigint
 import { RevertError } from '../../revert_error';
 
 // tslint:disable:max-classes-per-file
@@ -10,7 +10,7 @@ export class UnsupportedAssetProxyError extends RevertError {
 }
 
 export class Erc721AmountMustEqualOneError extends RevertError {
-    constructor(amount?: BigNumber | number | string) {
+    constructor(amount?: bigint | number | string) {
         super('Erc721AmountMustEqualOneError', 'Erc721AmountMustEqualOneError(uint256 amount)', {
             amount,
         });

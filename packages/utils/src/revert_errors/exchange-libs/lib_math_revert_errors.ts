@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 
-import { BigNumber } from '../../configured_bignumber';
+// BigNumber removed - using bigint
 import { RevertError } from '../../revert_error';
 
 // tslint:disable:max-classes-per-file
@@ -13,9 +13,9 @@ export class DivisionByZeroError extends RevertError {
 
 export class RoundingError extends RevertError {
     constructor(
-        numerator?: BigNumber | number | string,
-        denominator?: BigNumber | number | string,
-        target?: BigNumber | number | string,
+        numerator?: bigint | number | string,
+        denominator?: bigint | number | string,
+        target?: bigint | number | string,
     ) {
         super('RoundingError', 'RoundingError(uint256 numerator, uint256 denominator, uint256 target)', {
             numerator,

@@ -1,4 +1,4 @@
-import { BigNumber } from '../../configured_bignumber';
+// BigNumber removed - using bigint
 import { RevertError } from '../../revert_error';
 
 // tslint:disable:max-classes-per-file
@@ -11,8 +11,8 @@ export class UnregisteredAssetProxyError extends RevertError {
 
 export class CompleteBuyFailedError extends RevertError {
     constructor(
-        expectedAssetBuyAmount?: BigNumber | number | string,
-        actualAssetBuyAmount?: BigNumber | number | string,
+        expectedAssetBuyAmount?: bigint | number | string,
+        actualAssetBuyAmount?: bigint | number | string,
     ) {
         super(
             'CompleteBuyFailedError',
@@ -24,8 +24,8 @@ export class CompleteBuyFailedError extends RevertError {
 
 export class CompleteSellFailedError extends RevertError {
     constructor(
-        expectedAssetSellAmount?: BigNumber | number | string,
-        actualAssetSellAmount?: BigNumber | number | string,
+        expectedAssetSellAmount?: bigint | number | string,
+        actualAssetSellAmount?: bigint | number | string,
     ) {
         super(
             'CompleteSellFailedError',
@@ -42,7 +42,7 @@ export class UnsupportedFeeError extends RevertError {
 }
 
 export class OverspentWethError extends RevertError {
-    constructor(wethSpent?: BigNumber | number | string, msgValue?: BigNumber | number | string) {
+    constructor(wethSpent?: bigint | number | string, msgValue?: bigint | number | string) {
         super('OverspentWethError', 'OverspentWethError(uint256 wethSpent, uint256 msgValue)', {
             wethSpent,
             msgValue,

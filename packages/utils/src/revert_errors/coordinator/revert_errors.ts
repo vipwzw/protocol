@@ -1,4 +1,4 @@
-import { BigNumber } from '../../configured_bignumber';
+// BigNumber removed - using bigint
 import { RevertError } from '../../revert_error';
 
 // tslint:disable:max-classes-per-file
@@ -27,7 +27,7 @@ export class InvalidOriginError extends RevertError {
 }
 
 export class ApprovalExpiredError extends RevertError {
-    constructor(transactionHash?: string, approvalExpirationTime?: BigNumber | number | string) {
+    constructor(transactionHash?: string, approvalExpirationTime?: bigint | number | string) {
         super('ApprovalExpiredError', 'ApprovalExpiredError(bytes32 transactionHash, uint256 approvalExpirationTime)', {
             transactionHash,
             approvalExpirationTime,

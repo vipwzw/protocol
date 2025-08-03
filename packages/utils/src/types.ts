@@ -7,7 +7,7 @@ import {
     LogWithDecodedArgs,
 } from 'ethereum-types';
 import * as AbiEncoder from './abi_encoder';
-import { BigNumber } from './configured_bignumber';
+// Legacy BigNumber import removed - using native bigint instead
 
 // 从原 @0x/utils 迁移的类型定义
 export interface Order {
@@ -343,7 +343,7 @@ export interface DecodedCalldata {
     functionArguments: any;
 }
 
-export type Numberish = BigNumber | string | number;
+export type Numberish = bigint | string | number;
 
 // RevertReason 大型枚举
 export enum RevertReason {

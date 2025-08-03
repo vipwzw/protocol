@@ -1,7 +1,7 @@
 import { AbiDefinition, AbiType, ContractAbi, DataItem, MethodAbi } from 'ethereum-types';
 import * as _ from 'lodash';
 
-import { BigNumber } from './configured_bignumber';
+import { toBigInt } from './configured_bigint';
 
 type ParamName = null | string | NestedParamName;
 interface NestedParamName {
@@ -106,7 +106,7 @@ function isAbiDataEqual(name: ParamName, type: string, x: any, y: any): boolean 
         // we convert to lowercase before comparing.
         return _.isEqual(_.toLower(x), _.toLower(y));
     } else if (_.startsWith(type, 'uint') || _.startsWith(type, 'int')) {
-        return new BigNumber(x).eq(new BigNumber(y));
+        return toBigInt(x) === toBigInt(y);
     }
     return _.isEqual(x, y);
 }

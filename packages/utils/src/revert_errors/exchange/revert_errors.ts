@@ -1,7 +1,7 @@
 import { OrderStatus } from '../../types';
 import * as _ from 'lodash';
 
-import { BigNumber } from '../../configured_bignumber';
+// BigNumber removed - using bigint
 import { RevertError } from '../../revert_error';
 
 // tslint:disable:max-classes-per-file

@@ -1,4 +1,4 @@
-import { BigNumber } from '../../configured_bignumber';
+// BigNumber removed - using bigint
 import { RevertError } from '../../revert_error';
 
 // tslint:disable:max-classes-per-file
@@ -16,7 +16,7 @@ export enum BinOpErrorCodes {
 }
 
 export class SignedValueError extends RevertError {
-    constructor(error?: ValueErrorCodes, n?: BigNumber | number | string) {
+    constructor(error?: ValueErrorCodes, n?: bigint | number | string) {
         super('SignedValueError', 'SignedValueError(uint8 error, int256 n)', {
             error,
             n,
@@ -25,7 +25,7 @@ export class SignedValueError extends RevertError {
 }
 
 export class UnsignedValueError extends RevertError {
-    constructor(error?: ValueErrorCodes, n?: BigNumber | number | string) {
+    constructor(error?: ValueErrorCodes, n?: bigint | number | string) {
         super('UnsignedValueError', 'UnsignedValueError(uint8 error, uint256 n)', {
             error,
             n,
@@ -34,7 +34,7 @@ export class UnsignedValueError extends RevertError {
 }
 
 export class BinOpError extends RevertError {
-    constructor(error?: BinOpErrorCodes, a?: BigNumber | number | string, b?: BigNumber | number | string) {
+    constructor(error?: BinOpErrorCodes, a?: bigint | number | string, b?: bigint | number | string) {
         super('BinOpError', 'BinOpError(uint8 error, int256 a, int256 b)', {
             error,
             a,

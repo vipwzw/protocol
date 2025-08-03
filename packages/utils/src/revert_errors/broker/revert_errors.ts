@@ -1,4 +1,4 @@
-import { BigNumber } from '../../configured_bignumber';
+// BigNumber removed - using bigint
 import { RevertError } from '../../revert_error';
 
 // tslint:disable:max-classes-per-file
@@ -10,7 +10,7 @@ export class InvalidFromAddressError extends RevertError {
 }
 
 export class AmountsLengthMustEqualOneError extends RevertError {
-    constructor(amountsLength?: BigNumber | number | string) {
+    constructor(amountsLength?: bigint | number | string) {
         super('AmountsLengthMustEqualOneError', 'AmountsLengthMustEqualOneError(uint256 amountsLength)', {
             amountsLength,
         });
@@ -18,7 +18,7 @@ export class AmountsLengthMustEqualOneError extends RevertError {
 }
 
 export class TooFewBrokerAssetsProvidedError extends RevertError {
-    constructor(numBrokeredAssets?: BigNumber | number | string) {
+    constructor(numBrokeredAssets?: bigint | number | string) {
         super('TooFewBrokerAssetsProvidedError', 'TooFewBrokerAssetsProvidedError(uint256 numBrokeredAssets)', {
             numBrokeredAssets,
         });

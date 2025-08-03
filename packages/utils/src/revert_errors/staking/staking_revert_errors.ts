@@ -1,4 +1,4 @@
-import { BigNumber } from '../../configured_bignumber';
+// BigNumber removed - using bigint
 import { RevertError } from '../../revert_error';
 
 // tslint:disable:max-classes-per-file
@@ -49,7 +49,7 @@ export class ExchangeManagerError extends RevertError {
 }
 
 export class InsufficientBalanceError extends RevertError {
-    constructor(amount?: BigNumber | number | string, balance?: BigNumber | number | string) {
+    constructor(amount?: bigint | number | string, balance?: bigint | number | string) {
         super('InsufficientBalanceError', 'InsufficientBalanceError(uint256 amount, uint256 balance)', {
             amount,
             balance,
@@ -82,7 +82,7 @@ export class MakerPoolAssignmentError extends RevertError {
 }
 
 export class BlockTimestampTooLowError extends RevertError {
-    constructor(epochEndTime?: BigNumber | number | string, currentBlockTimestamp?: BigNumber | number | string) {
+    constructor(epochEndTime?: bigint | number | string, currentBlockTimestamp?: bigint | number | string) {
         super(
             'BlockTimestampTooLowError',
             'BlockTimestampTooLowError(uint256 epochEndTime, uint256 currentBlockTimestamp)',
@@ -112,7 +112,7 @@ export class OnlyCallableIfNotInCatastrophicFailureError extends RevertError {
 }
 
 export class OperatorShareError extends RevertError {
-    constructor(error?: OperatorShareErrorCodes, poolId?: string, operatorShare?: BigNumber | number | string) {
+    constructor(error?: OperatorShareErrorCodes, poolId?: string, operatorShare?: bigint | number | string) {
         super('OperatorShareError', 'OperatorShareError(uint8 error, bytes32 poolId, uint32 operatorShare)', {
             error,
             poolId,
@@ -140,8 +140,8 @@ export class InvalidParamValueError extends RevertError {
 
 export class InvalidProtocolFeePaymentError extends RevertError {
     constructor(
-        expectedProtocolFeePaid?: BigNumber | number | string,
-        actualProtocolFeePaid?: BigNumber | number | string,
+        expectedProtocolFeePaid?: bigint | number | string,
+        actualProtocolFeePaid?: bigint | number | string,
     ) {
         super(
             'InvalidProtocolFeePaymentError',
@@ -164,7 +164,7 @@ export class ProxyDestinationCannotBeNilError extends RevertError {
 }
 
 export class PreviousEpochNotFinalizedError extends RevertError {
-    constructor(closingEpoch?: BigNumber | number | string, unfinalizedPoolsRemaining?: BigNumber | number | string) {
+    constructor(closingEpoch?: bigint | number | string, unfinalizedPoolsRemaining?: bigint | number | string) {
         super(
             'PreviousEpochNotFinalizedError',
             'PreviousEpochNotFinalizedError(uint256 closingEpoch, uint256 unfinalizedPoolsRemaining)',
@@ -174,7 +174,7 @@ export class PreviousEpochNotFinalizedError extends RevertError {
 }
 
 export class PoolNotFinalizedError extends RevertError {
-    constructor(poolId: string, epoch: BigNumber | number | string) {
+    constructor(poolId: string, epoch: bigint | number | string) {
         super('PoolNotFinalizedError', 'PoolNotFinalizedError(bytes32 poolId, uint256 epoch)', { poolId, epoch });
     }
 }
