@@ -2,7 +2,7 @@ import {
     artifacts as erc1155Artifacts,
 } from '../../erc1155/src';
 import { ERC1155Mintable } from '@0x/contracts-erc1155';
-import { DummyERC1155Receiver, DummyERC1155Receiver__factory } from '../../erc1155/test/wrappers';
+import { DummyERC1155Receiver, DummyERC1155Receiver__factory } from '@0x/contracts-erc1155/test/wrappers';
 import {
     chaiSetup,
     constants,
@@ -23,7 +23,7 @@ import * as _ from 'lodash';
 import { ethers } from 'hardhat';
 
 import { ERC1155ProxyWrapper } from '../src/erc1155_proxy_wrapper';
-import { ERC1155ProxyInterface, IAssetDataInterface, IAssetData__factory } from './wrappers';
+import { ERC1155Proxy, IAssetData, IAssetData__factory } from './wrappers';
 
 import { artifacts } from './artifacts';
 
@@ -55,14 +55,14 @@ describe('ERC1155Proxy', () => {
     let receiverContract: string;
     let erc1155Receiver: DummyERC1155Receiver;
     // contracts & wrappers
-    let erc1155Proxy: ERC1155ProxyInterface;
+    let erc1155Proxy: ERC1155Proxy;
     let erc1155ProxyWrapper: ERC1155ProxyWrapper;
     let erc1155Contract: ERC1155Mintable;
     // tokens
     let fungibleTokens: bigint[];
     let nonFungibleTokensOwnedBySpender: bigint[];
     // IAssetData for encoding and decoding assetData
-    let assetDataContract: IAssetDataInterface;
+    let assetDataContract: IAssetData;
     // tests
     before(async () => {
         await blockchainLifecycle.startAsync();
@@ -117,7 +117,7 @@ describe('ERC1155Proxy', () => {
             await expectTransactionFailedWithoutReasonAsync(
                 web3Wrapper.sendTransactionAsync({
                     from: owner,
-                    to: erc1155Proxy.address,
+                    to: await erc1155Proxy.getAddress(),
                     value: constants.ZERO_AMOUNT,
                     data: undefinedSelector,
                 }),
@@ -145,7 +145,7 @@ describe('ERC1155Proxy', () => {
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiver,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -183,7 +183,7 @@ describe('ERC1155Proxy', () => {
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiver,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -229,7 +229,7 @@ describe('ERC1155Proxy', () => {
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiver,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -270,7 +270,7 @@ describe('ERC1155Proxy', () => {
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiver,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -312,7 +312,7 @@ describe('ERC1155Proxy', () => {
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiver,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -366,7 +366,7 @@ describe('ERC1155Proxy', () => {
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiver,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -409,7 +409,7 @@ describe('ERC1155Proxy', () => {
             const txReceipt = await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiverContract,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -419,15 +419,16 @@ describe('ERC1155Proxy', () => {
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
             const receiverLog = txReceipt
-                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
-            expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
-            expect(receiverLog.args.from).to.be.equal(spender);
-            expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
-            expect(receiverLog.args.tokenValues.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
+                .logs[1];
+            const parsedLog = erc1155Receiver.interface.parseLog(receiverLog)!;
+            expect(parsedLog.args.operator).to.be.equal(await erc1155Proxy.getAddress());
+            expect(parsedLog.args.from).to.be.equal(spender);
+            expect(parsedLog.args.tokenIds.length).to.be.deep.equal(1);
+            expect(parsedLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
+            expect(parsedLog.args.tokenValues.length).to.be.deep.equal(1);
+            expect(parsedLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
             // note - if the `extraData` is ignored then the receiver log should ignore it as well.
-            expect(receiverLog.args.data).to.be.deep.equal(receiverCallbackData);
+            expect(parsedLog.args.data).to.be.deep.equal(receiverCallbackData);
             // check balances after transfer
             const expectedFinalBalances = [
                 expectedInitialBalances[0] - totalValuesTransferred[0],
@@ -452,7 +453,7 @@ describe('ERC1155Proxy', () => {
             const txReceipt = await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiverContract,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -462,15 +463,16 @@ describe('ERC1155Proxy', () => {
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
             const receiverLog = txReceipt
-                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
-            expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
-            expect(receiverLog.args.from).to.be.equal(spender);
-            expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
-            expect(receiverLog.args.tokenValues.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
+                .logs[1];
+            const parsedLog = erc1155Receiver.interface.parseLog(receiverLog)!;
+            expect(parsedLog.args.operator).to.be.equal(await erc1155Proxy.getAddress());
+            expect(parsedLog.args.from).to.be.equal(spender);
+            expect(parsedLog.args.tokenIds.length).to.be.deep.equal(1);
+            expect(parsedLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
+            expect(parsedLog.args.tokenValues.length).to.be.deep.equal(1);
+            expect(parsedLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
             // note - if the `extraData` is ignored then the receiver log should ignore it as well.
-            expect(receiverLog.args.data).to.be.deep.equal(nullReceiverCallbackData);
+            expect(parsedLog.args.data).to.be.deep.equal(nullReceiverCallbackData);
             // check balances after transfer
             const expectedFinalBalances = [
                 expectedInitialBalances[0] - totalValuesTransferred[0],
@@ -499,7 +501,7 @@ describe('ERC1155Proxy', () => {
             const txReceipt = await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiverContract,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -509,15 +511,16 @@ describe('ERC1155Proxy', () => {
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
             const receiverLog = txReceipt
-                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
-            expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
-            expect(receiverLog.args.from).to.be.equal(spender);
-            expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
-            expect(receiverLog.args.tokenValues.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
+                .logs[1];
+            const parsedLog = erc1155Receiver.interface.parseLog(receiverLog)!;
+            expect(parsedLog.args.operator).to.be.equal(await erc1155Proxy.getAddress());
+            expect(parsedLog.args.from).to.be.equal(spender);
+            expect(parsedLog.args.tokenIds.length).to.be.deep.equal(1);
+            expect(parsedLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
+            expect(parsedLog.args.tokenValues.length).to.be.deep.equal(1);
+            expect(parsedLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
             // note - if the `extraData` is ignored then the receiver log should ignore it as well.
-            expect(receiverLog.args.data).to.be.deep.equal(customReceiverCallbackData);
+            expect(parsedLog.args.data).to.be.deep.equal(customReceiverCallbackData);
             // check balances after transfer
             const expectedFinalBalances = [
                 expectedInitialBalances[0] - totalValuesTransferred[0],
@@ -549,7 +552,7 @@ describe('ERC1155Proxy', () => {
             const txReceipt = await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiverContract,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -559,15 +562,16 @@ describe('ERC1155Proxy', () => {
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
             const receiverLog = txReceipt
-                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
-            expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
-            expect(receiverLog.args.from).to.be.equal(spender);
-            expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
-            expect(receiverLog.args.tokenValues.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
+                .logs[1];
+            const parsedLog = erc1155Receiver.interface.parseLog(receiverLog)!;
+            expect(parsedLog.args.operator).to.be.equal(await erc1155Proxy.getAddress());
+            expect(parsedLog.args.from).to.be.equal(spender);
+            expect(parsedLog.args.tokenIds.length).to.be.deep.equal(1);
+            expect(parsedLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
+            expect(parsedLog.args.tokenValues.length).to.be.deep.equal(1);
+            expect(parsedLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
             // note - if the `extraData` is ignored then the receiver log should ignore it as well.
-            expect(receiverLog.args.data).to.be.deep.equal(customReceiverCallbackData);
+            expect(parsedLog.args.data).to.be.deep.equal(customReceiverCallbackData);
             // check balances after transfer
             const expectedFinalBalances = [
                 expectedInitialBalances[0] - totalValuesTransferred[0],
@@ -600,7 +604,7 @@ describe('ERC1155Proxy', () => {
             const txReceipt = await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiverContract,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -610,15 +614,16 @@ describe('ERC1155Proxy', () => {
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
             const receiverLog = txReceipt
-                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
-            expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
-            expect(receiverLog.args.from).to.be.equal(spender);
-            expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
-            expect(receiverLog.args.tokenValues.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
+                .logs[1];
+            const parsedLog = erc1155Receiver.interface.parseLog(receiverLog)!;
+            expect(parsedLog.args.operator).to.be.equal(await erc1155Proxy.getAddress());
+            expect(parsedLog.args.from).to.be.equal(spender);
+            expect(parsedLog.args.tokenIds.length).to.be.deep.equal(1);
+            expect(parsedLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
+            expect(parsedLog.args.tokenValues.length).to.be.deep.equal(1);
+            expect(parsedLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
             // note - if the `extraData` is ignored then the receiver log should ignore it as well.
-            expect(receiverLog.args.data).to.be.deep.equal(customReceiverCallbackData);
+            expect(parsedLog.args.data).to.be.deep.equal(customReceiverCallbackData);
             // check balances after transfer
             const expectedFinalBalances = [
                 expectedInitialBalances[0] - totalValuesTransferred[0],
@@ -649,7 +654,7 @@ describe('ERC1155Proxy', () => {
             const txReceipt = await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiverContract,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -660,15 +665,16 @@ describe('ERC1155Proxy', () => {
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
             const receiverLog = txReceipt
-                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
-            expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
-            expect(receiverLog.args.from).to.be.equal(spender);
-            expect(receiverLog.args.tokenIds.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
-            expect(receiverLog.args.tokenValues.length).to.be.deep.equal(1);
-            expect(receiverLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
+                .logs[1];
+            const parsedLog = erc1155Receiver.interface.parseLog(receiverLog)!;
+            expect(parsedLog.args.operator).to.be.equal(await erc1155Proxy.getAddress());
+            expect(parsedLog.args.from).to.be.equal(spender);
+            expect(parsedLog.args.tokenIds.length).to.be.deep.equal(1);
+            expect(parsedLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
+            expect(parsedLog.args.tokenValues.length).to.be.deep.equal(1);
+            expect(parsedLog.args.tokenValues[0]).to.equal(totalValuesTransferred[0]);
             // note - if the `extraData` is ignored then the receiver log should ignore it as well.
-            expect(receiverLog.args.data).to.be.deep.equal(receiverCallbackData);
+            expect(parsedLog.args.data).to.be.deep.equal(receiverCallbackData);
             // check balances after transfer
             const expectedFinalBalances = [
                 expectedInitialBalances[0] - totalValuesTransferred[0],
@@ -745,7 +751,7 @@ describe('ERC1155Proxy', () => {
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiver,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -849,7 +855,7 @@ describe('ERC1155Proxy', () => {
             const txReceipt = await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiverContract,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -860,16 +866,17 @@ describe('ERC1155Proxy', () => {
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
             const receiverLog = txReceipt
-                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
-            expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
-            expect(receiverLog.args.from).to.be.equal(spender);
-            expect(receiverLog.args.tokenIds.length).to.be.deep.equal(2);
-            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
-            expect(receiverLog.args.tokenIds[1]).to.equal(tokensToTransfer[1]);
-            expect(receiverLog.args.tokenValues.length).to.be.deep.equal(2);
-            expect(receiverLog.args.tokenValues[0]).to.equal(valuesToTransfer[0] * valueMultiplier);
-            expect(receiverLog.args.tokenValues[1]).to.equal(valuesToTransfer[1] * valueMultiplier);
-            expect(receiverLog.args.data).to.be.deep.equal('0x0000');
+                .logs[1];
+            const parsedLog = erc1155Receiver.interface.parseLog(receiverLog)!;
+            expect(parsedLog.args.operator).to.be.equal(await erc1155Proxy.getAddress());
+            expect(parsedLog.args.from).to.be.equal(spender);
+            expect(parsedLog.args.tokenIds.length).to.be.deep.equal(2);
+            expect(parsedLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
+            expect(parsedLog.args.tokenIds[1]).to.equal(tokensToTransfer[1]);
+            expect(parsedLog.args.tokenValues.length).to.be.deep.equal(2);
+            expect(parsedLog.args.tokenValues[0]).to.equal(valuesToTransfer[0] * valueMultiplier);
+            expect(parsedLog.args.tokenValues[1]).to.equal(valuesToTransfer[1] * valueMultiplier);
+            expect(parsedLog.args.data).to.be.deep.equal('0x0000');
             ///// Step 5/5 /////
             // Validate final balances
             const finalBalances = await _getBalancesAsync(erc1155Contract, balanceHolders, balanceTokens);
@@ -962,7 +969,7 @@ describe('ERC1155Proxy', () => {
             const txReceipt = await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiverContract,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -973,16 +980,17 @@ describe('ERC1155Proxy', () => {
             // check receiver log ignored extra asset data
             expect(txReceipt.logs.length).to.be.equal(2);
             const receiverLog = txReceipt
-                .logs[1] as LogWithDecodedArgs<DummyERC1155ReceiverBatchTokenReceivedEventArgs>;
-            expect(receiverLog.args.operator).to.be.equal(erc1155Proxy.address);
-            expect(receiverLog.args.from).to.be.equal(spender);
-            expect(receiverLog.args.tokenIds.length).to.be.deep.equal(2);
-            expect(receiverLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
-            expect(receiverLog.args.tokenIds[1]).to.equal(tokensToTransfer[1]);
-            expect(receiverLog.args.tokenValues.length).to.be.deep.equal(2);
-            expect(receiverLog.args.tokenValues[0]).to.equal(valuesToTransfer[0] * valueMultiplier);
-            expect(receiverLog.args.tokenValues[1]).to.equal(valuesToTransfer[1] * valueMultiplier);
-            expect(receiverLog.args.data).to.be.deep.equal('0x0000');
+                .logs[1];
+            const parsedLog = erc1155Receiver.interface.parseLog(receiverLog)!;
+            expect(parsedLog.args.operator).to.be.equal(await erc1155Proxy.getAddress());
+            expect(parsedLog.args.from).to.be.equal(spender);
+            expect(parsedLog.args.tokenIds.length).to.be.deep.equal(2);
+            expect(parsedLog.args.tokenIds[0]).to.equal(tokensToTransfer[0]);
+            expect(parsedLog.args.tokenIds[1]).to.equal(tokensToTransfer[1]);
+            expect(parsedLog.args.tokenValues.length).to.be.deep.equal(2);
+            expect(parsedLog.args.tokenValues[0]).to.equal(valuesToTransfer[0] * valueMultiplier);
+            expect(parsedLog.args.tokenValues[1]).to.equal(valuesToTransfer[1] * valueMultiplier);
+            expect(parsedLog.args.data).to.be.deep.equal('0x0000');
             ///// Step 5/5 /////
             // Validate final balances
             const finalBalances = await _getBalancesAsync(erc1155Contract, balanceHolders, balanceTokens);
@@ -1035,7 +1043,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiverContract,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1083,7 +1091,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiverContract,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1131,7 +1139,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiverContract,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1179,7 +1187,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiverContract,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1228,7 +1236,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiverContract,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1272,7 +1280,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiverContract,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1320,7 +1328,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiverContract,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1364,7 +1372,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiverContract,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1412,7 +1420,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiverContract,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1434,7 +1442,7 @@ describe('ERC1155Proxy', () => {
             const txData = await erc1155ProxyWrapper.getTransferFromAbiEncodedTxDataAsync(
                 spender,
                 receiverContract,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -1462,7 +1470,7 @@ describe('ERC1155Proxy', () => {
             const txData = await erc1155ProxyWrapper.getTransferFromAbiEncodedTxDataAsync(
                 spender,
                 receiverContract,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -1497,7 +1505,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiverContract,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1520,7 +1528,7 @@ describe('ERC1155Proxy', () => {
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiver,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -1544,7 +1552,7 @@ describe('ERC1155Proxy', () => {
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiver,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -1558,8 +1566,8 @@ describe('ERC1155Proxy', () => {
         it('should transfer nothing if there are no tokens in asset data', async () => {
             // setup test parameters
             const tokenHolders = [spender, receiver];
-            const tokensToTransfer: BigNumber[] = [];
-            const valuesToTransfer: BigNumber[] = [];
+            const tokensToTransfer: bigint[] = [];
+            const valuesToTransfer: bigint[] = [];
             const valueMultiplier = valueMultiplierSmall;
             // check balances before transfer
             const expectedInitialBalances = [spenderInitialFungibleBalance, receiverInitialFungibleBalance];
@@ -1568,7 +1576,7 @@ describe('ERC1155Proxy', () => {
             await erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiver,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -1598,7 +1606,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiverContract,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1630,7 +1638,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiver,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1670,7 +1678,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiver,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1698,7 +1706,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiver,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1727,7 +1735,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiver,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1756,7 +1764,7 @@ describe('ERC1155Proxy', () => {
             const tx = erc1155ProxyWrapper.transferFromAsync(
                 spender,
                 receiver,
-                erc1155Contract.address,
+                await erc1155Contract.getAddress(),
                 tokensToTransfer,
                 valuesToTransfer,
                 valueMultiplier,
@@ -1767,10 +1775,10 @@ describe('ERC1155Proxy', () => {
         });
         it('should revert if sender allowance is insufficient', async () => {
             // dremove allowance for ERC1155 proxy
-            const wrapper = erc1155ProxyWrapper.getContractWrapper(erc1155Contract.address);
+            const wrapper = erc1155ProxyWrapper.getContractWrapper(await erc1155Contract.getAddress());
             const isApproved = false;
-            await wrapper.setApprovalForAllAsync(spender, erc1155Proxy.address, isApproved);
-            const isApprovedActualValue = await wrapper.isApprovedForAllAsync(spender, erc1155Proxy.address);
+            await wrapper.setApprovalForAllAsync(spender, await erc1155Proxy.getAddress(), isApproved);
+            const isApprovedActualValue = await wrapper.isApprovedForAllAsync(spender, await erc1155Proxy.getAddress());
             expect(isApprovedActualValue).to.be.equal(isApproved);
             // setup test parameters
             const tokenHolders = [spender, receiver];
@@ -1785,7 +1793,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiver,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
@@ -1809,7 +1817,7 @@ describe('ERC1155Proxy', () => {
                 erc1155ProxyWrapper.transferFromAsync(
                     spender,
                     receiver,
-                    erc1155Contract.address,
+                    await erc1155Contract.getAddress(),
                     tokensToTransfer,
                     valuesToTransfer,
                     valueMultiplier,
