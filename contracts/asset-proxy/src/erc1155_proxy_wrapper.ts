@@ -98,15 +98,12 @@ export class Erc1155Wrapper {
     async getBalancesAsync(owners: string[], tokenIds: any[]): Promise<bigint[]> {
         const balances: bigint[] = [];
         
-        // 如果只有一个 tokenId，对所有 owners 使用同一个 tokenId
-        if (tokenIds.length === 1 && owners.length > 1) {
-            const tokenId = this._convertToTokenId(tokenIds[0]);
-            for (const owner of owners) {
-                const balance = await this.contract.balanceOf(owner, tokenId);
-                balances.push(BigInt(balance.toString()));
-            }
-        } else {
-            // 每个 owner 对应一个 tokenId
+        // 检查数组长度 - 支持两种模式：
+        // 1. 如果长度相等，按1:1映射处理 (owners[i] 拥有 tokenIds[i])
+        // 2. 如果长度不等，使用笛卡尔积 (每个owner拥有每个token)
+        
+        if (owners.length === tokenIds.length) {
+            // 1:1 mapping: owners[i] 对应 tokenIds[i]
             for (let i = 0; i < owners.length; i++) {
                 if (tokenIds[i] === undefined || tokenIds[i] === null) {
                     throw new Error(`TokenId at index ${i} is undefined or null. TokenIds length: ${tokenIds.length}, owners length: ${owners.length}`);
@@ -116,7 +113,24 @@ export class Erc1155Wrapper {
                 const balance = await this.contract.balanceOf(owners[i], tokenId);
                 balances.push(BigInt(balance.toString()));
             }
+        } else if (tokenIds.length === 1) {
+            // Special case: 一个代币ID，多个所有者
+            const tokenId = this._convertToTokenId(tokenIds[0]);
+            for (const owner of owners) {
+                const balance = await this.contract.balanceOf(owner, tokenId);
+                balances.push(BigInt(balance.toString()));
+            }
+        } else {
+            // Cartesian product: 每个owner与每个token的组合
+            for (const owner of owners) {
+                for (const tokenId of tokenIds) {
+                    const convertedTokenId = this._convertToTokenId(tokenId);
+                    const balance = await this.contract.balanceOf(owner, convertedTokenId);
+                    balances.push(BigInt(balance.toString()));
+                }
+            }
         }
+        
         return balances;
     }
     
@@ -395,9 +409,8 @@ export class ERC1155ProxyWrapper {
             
             // 创建可同质化代币
             for (const i of _.times(constants.NUM_ERC1155_FUNGIBLE_TOKENS_MINT)) {
-                // 为每个地址创建等量的可同质化代币 - 使用与测试一致的值
-                const INITIAL_ERC1155_FUNGIBLE_BALANCE = 1000n; // 与测试文件保持一致
-                const amounts = this._tokenOwnerAddresses.map(() => INITIAL_ERC1155_FUNGIBLE_BALANCE);
+                // 为每个地址创建等量的可同质化代币 - 使用测试期望的值
+                const amounts = this._tokenOwnerAddresses.map(() => constants.INITIAL_ERC1155_FUNGIBLE_BALANCE);
                 const tokenId = await dummyWrapper.mintFungibleTokensAsync(
                     this._tokenOwnerAddresses,
                     BigInt(Date.now() + i), // 使用时间戳 + 索引作为 tokenId
@@ -415,7 +428,7 @@ export class ERC1155ProxyWrapper {
                         fungibleHoldingsByOwner[tokenOwnerAddress][dummyAddress] = {};
                     }
                     fungibleHoldingsByOwner[tokenOwnerAddress][dummyAddress][tokenIdAsString] =
-                        INITIAL_ERC1155_FUNGIBLE_BALANCE;
+                        constants.INITIAL_ERC1155_FUNGIBLE_BALANCE;
                 }
                 
                 // 为每个代币持有者设置代理合约的授权

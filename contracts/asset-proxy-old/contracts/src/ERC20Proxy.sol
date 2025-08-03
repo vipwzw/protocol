@@ -28,8 +28,7 @@ contract ERC20Proxy is
     bytes4 constant internal PROXY_ID = bytes4(keccak256("ERC20Token(address)"));
 
     // solhint-disable-next-line payable-fallback
-    function ()
-        external
+    function () external
     {
         assembly {
             // The first 4 bytes of calldata holds the function selector

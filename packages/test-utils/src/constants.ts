@@ -78,6 +78,10 @@ export const constants = {
     ONE_THOUSAND_UNITS_EIGHTEEN_DECIMALS: ethers.parseEther('1000'),
     ONE_MILLION_UNITS_EIGHTEEN_DECIMALS: ethers.parseEther('1000000'),
     
+    // ERC20 test constants
+    INITIAL_ERC20_BALANCE: ethers.parseEther('1000000'), // 1 million tokens for testing
+    INITIAL_ERC20_ALLOWANCE: ethers.parseEther('1000000'), // 1 million tokens allowance for testing
+    
     // ERC1155 test constants
     NUM_DUMMY_ERC1155_CONTRACTS_TO_DEPLOY: 3,
     NUM_ERC1155_FUNGIBLE_TOKENS_MINT: 10,
@@ -109,4 +113,6 @@ export const {
     DUMMY_TOKEN_SYMBOL,
     DUMMY_TOKEN_DECIMALS,
     DUMMY_TOKEN_TOTAL_SUPPLY,
+    INITIAL_ERC20_BALANCE,
+    INITIAL_ERC20_ALLOWANCE,
 } = constants;
