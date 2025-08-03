@@ -170,6 +170,8 @@ describe('ERC1155Proxy', () => {
                 fungibleValueToTransferSmall + 30n,
             ];
             const valueMultiplier = valueMultiplierSmall;
+            
+
             // check balances before transfer
             const expectedInitialBalances = [
                 // spender
