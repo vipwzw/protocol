@@ -2,6 +2,7 @@ import {
     artifacts as erc1155Artifacts,
 } from '../../erc1155/src';
 import { ERC1155Mintable } from '@0x/contracts-erc1155';
+import { DummyERC1155Receiver, DummyERC1155Receiver__factory } from '../../erc1155/test/wrappers';
 import {
     chaiSetup,
     constants,
@@ -52,9 +53,9 @@ describe('ERC1155Proxy', () => {
     let spender: string;
     let receiver: string;
     let receiverContract: string;
+    let erc1155Receiver: DummyERC1155Receiver;
     // contracts & wrappers
     let erc1155Proxy: ERC1155ProxyInterface;
-    let erc1155Receiver: string;
     let erc1155ProxyWrapper: ERC1155ProxyWrapper;
     let erc1155Contract: ERC1155Mintable;
     // tokens
@@ -80,16 +81,14 @@ describe('ERC1155Proxy', () => {
         await erc1155Proxy.addAuthorizedAddress(erc1155ProxyAddress);
         // deploy & configure ERC1155 tokens and receiver
         [erc1155Contract] = await erc1155ProxyWrapper.deployDummyContractsAsync();
-        // Skip DummyERC1155Receiver deployment for now - needs modern contract factory
-        // erc1155Receiver = await DummyERC1155ReceiverContract.deployFrom0xArtifactAsync(
-        //     erc1155Artifacts.DummyERC1155Receiver,
-        //     provider,
-        //     txDefaults,
-        //     artifacts,
-        // );
-        console.log('Skipping ERC1155Receiver deployment - needs modern factory');
-        // Use a dummy address for now since we're skipping the receiver deployment
-        receiverContract = '0x0000000000000000000000000000000000000001';
+        
+        // Deploy DummyERC1155Receiver using TypeChain factory
+        const signers = await ethers.getSigners();
+        const deployer = signers[0];
+        erc1155Receiver = await new DummyERC1155Receiver__factory(deployer).deploy();
+        await erc1155Receiver.waitForDeployment();
+        receiverContract = await erc1155Receiver.getAddress();
+        console.log('✅ Deployed ERC1155Receiver at:', receiverContract);
         await erc1155ProxyWrapper.setBalancesAndAllowancesAsync();
         fungibleTokens = erc1155ProxyWrapper.getFungibleTokenIds();
         const nonFungibleTokens = erc1155ProxyWrapper.getNonFungibleTokenIds();
@@ -103,7 +102,6 @@ describe('ERC1155Proxy', () => {
             nonFungibleTokensOwnedBySpender.push(nonFungibleTokenHeldBySpender);
         });
         // set up assetDataContract
-        const signers = await ethers.getSigners();
         const ownerSigner = signers.find(s => s.address.toLowerCase() === owner.toLowerCase()) || signers[0];
         assetDataContract = IAssetData__factory.connect(constants.NULL_ADDRESS, ownerSigner);
     });
