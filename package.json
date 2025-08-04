@@ -77,8 +77,7 @@
         "lint": "yarn lint:eslint && yarn lint:contracts",
         "verdaccio": "docker run --rm -i -p 4873:4873 0xorg/verdaccio",
         "setup-hooks": "cp .githooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit && echo '✅ Git hooks 安装成功!'",
-        "install:foundry-deps": "cd contracts/governance && forge install OpenZeppelin/openzeppelin-contracts@v4.8.2 OpenZeppelin/openzeppelin-contracts-upgradeable@v4.8.2",
-        "postinstall": "yarn setup-hooks && yarn install:foundry-deps || true"
+        "postinstall": "yarn setup-hooks || true"
     },
     "lint-staged": {
         "**/*.{ts,tsx,json}": [
