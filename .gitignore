@@ -96,6 +96,10 @@ generated-wrappers/
 # forge std-lib
 contracts/zero-ex/contracts/deps/forge-std
 
+# lib directories in contracts and packages (use root lib/ instead)
+contracts/*/lib/
+packages/*/lib/
+
 # foundry artifacts
 foundry-artifacts/
 
