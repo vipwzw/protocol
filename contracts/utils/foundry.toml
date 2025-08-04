@@ -4,7 +4,7 @@ out = 'out'
 test = 'tests'
 # Include test contracts for ABI generation
 extra_output_files = ["abi"]
-libs = ['lib', "../erc20/contracts/", "../governance/contracts/"]
+libs = ['../../lib', "../erc20/contracts/", "../governance/contracts/"]
 remappings = [
     '@0x/contracts-erc20/=../erc20/',
     '@0x/contracts-governance/=../governance/',

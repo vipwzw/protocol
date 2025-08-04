@@ -3,14 +3,14 @@ src = 'contracts/*/src'
 out = 'out'
 test = 'contracts/*/tests'
 script = 'contracts/*/script'
-libs = ['contracts/*/lib']
+libs = ['lib']
 remappings = [
     '@0x/contracts-utils/=contracts/utils/',
     '@0x/contracts-erc20/=contracts/erc20/',
     '@0x/contracts-governance/=contracts/governance/',
     '@0x/contracts-exchange-libs/=contracts/exchange-libs/',
-    '@openzeppelin/contracts/=contracts/governance/lib/openzeppelin-contracts/contracts/',
-    '@openzeppelin/contracts-upgradeable/=contracts/governance/lib/openzeppelin-contracts-upgradeable/contracts/'
+    '@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/',
+    '@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/'
 ]
 solc_version = "0.8.28"
 optimizer = true

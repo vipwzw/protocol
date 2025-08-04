@@ -3,7 +3,7 @@ src = 'contracts'
 out = 'out'
 test = 'tests'
 extra_output_files = ["abi"]
-libs = ['lib', '../utils/contracts/src/']
+libs = ['../../lib', '../utils/contracts/src/']
 remappings = [
     '@0x/contracts-utils/=../utils/',
 ]

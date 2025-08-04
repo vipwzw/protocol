@@ -2,10 +2,10 @@
 src = 'contracts/src'
 out = 'out'
 test = 'tests'
-libs = ['lib']
+libs = ['../../lib']
 remappings = [
-    '@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/',
-    '@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/',
+    '@openzeppelin/contracts-upgradeable/=../../lib/openzeppelin-contracts-upgradeable/contracts/',
+    '@openzeppelin/contracts/=../../lib/openzeppelin-contracts/contracts/',
     '@0x/contracts-utils/=../utils/',
 ]
 solc_version = "0.8.28"
