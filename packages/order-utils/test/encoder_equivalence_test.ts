@@ -25,6 +25,8 @@ describe('Encoder Equivalence Tests', () => {
                 buyToken: '0x0987654321098765432109876543210987654321',
                 orders: [
                     {
+                        chainId: 1,
+                        exchangeAddress: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
                         makerAddress: '0x1111111111111111111111111111111111111111',
                         takerAddress: '0x2222222222222222222222222222222222222222',
                         feeRecipientAddress: '0x3333333333333333333333333333333333333333',
@@ -194,6 +196,8 @@ describe('Encoder Equivalence Tests', () => {
                 buyToken: '0xB1c86b33E6417c5e8d1c20f0C6d6C6B0AfB1b1c1',
                 orders: [
                     {
+                        chainId: 1,
+                        exchangeAddress: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
                         makerAddress: '0xC2d86c33E6417c5e8d1c20f0C6d6C6B0AfB1c2c2',
                         takerAddress: '0xD3e86d33E6417c5e8d1c20f0C6d6C6B0AfB1d3d3',
                         feeRecipientAddress: '0xE4f86e33E6417c5e8d1c20f0C6d6C6B0AfB1e4e4',

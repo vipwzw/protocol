@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ethers } from 'ethers';
+import { ethers, ParamType } from 'ethers';
 import {
     FillQuoteTransformerData,
     FillQuoteTransformerSide,
@@ -76,6 +76,8 @@ describe('编码器等价性验证测试', () => {
                 buyToken: '0x0987654321098765432109876543210987654321',
                 orders: [
                     {
+                        chainId: 1,
+                        exchangeAddress: '0x61935cbdd02287b511119ddb11aeb42f1593b7ef',
                         makerAddress: '0x1111111111111111111111111111111111111111',
                         takerAddress: '0x2222222222222222222222222222222222222222',
                         feeRecipientAddress: '0x3333333333333333333333333333333333333333',
@@ -125,7 +127,8 @@ describe('编码器等价性验证测试', () => {
                 ]
             };
 
-            const newEncoded = abiCoder.encode([FILL_QUOTE_ABI], [fillQuoteToArray(testData)]);
+            const fillQuoteParamType = ParamType.from(FILL_QUOTE_ABI);
+            const newEncoded = abiCoder.encode([fillQuoteParamType], [fillQuoteToArray(testData)]);
 
             console.log('🔍 FillQuote 编码对比:');
             console.log('旧方式:', oldEncoded);
@@ -136,7 +139,7 @@ describe('编码器等价性验证测试', () => {
 
             // 验证解码结果一致
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
-            const newDecoded = abiCoder.decode([FILL_QUOTE_ABI], newEncoded);
+            const newDecoded = abiCoder.decode([fillQuoteParamType], newEncoded);
             
             expect(JSON.stringify(newDecoded, bigintReplacer)).to.equal(JSON.stringify(oldDecoded, bigintReplacer));
         });
@@ -159,7 +162,8 @@ describe('编码器等价性验证测试', () => {
                     { name: 'amount', type: 'uint256' }
                 ]
             };
-            const newEncoded = abiCoder.encode([WETH_ABI], [[testData.token, testData.amount]]);
+            const wethParamType = ParamType.from(WETH_ABI);
+            const newEncoded = abiCoder.encode([wethParamType], [[testData.token, testData.amount]]);
 
             console.log('🔍 WETH 编码对比:');
             console.log('旧方式:', oldEncoded);
@@ -169,7 +173,7 @@ describe('编码器等价性验证测试', () => {
             expect(newEncoded).to.equal(oldEncoded);
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
-            const newDecoded = abiCoder.decode([WETH_ABI], newEncoded);
+            const newDecoded = abiCoder.decode([wethParamType], newEncoded);
             expect(JSON.stringify(newDecoded, bigintReplacer)).to.equal(JSON.stringify(oldDecoded, bigintReplacer));
         });
 
@@ -194,7 +198,8 @@ describe('编码器等价性验证测试', () => {
                     { name: 'amounts', type: 'uint256[]' }
                 ]
             };
-            const newEncoded = abiCoder.encode([PAY_TAKER_ABI], [[testData.tokens, testData.amounts]]);
+            const payTakerParamType = ParamType.from(PAY_TAKER_ABI);
+            const newEncoded = abiCoder.encode([payTakerParamType], [[testData.tokens, testData.amounts]]);
 
             console.log('🔍 PayTaker 编码对比:');
             console.log('旧方式:', oldEncoded);
@@ -204,7 +209,7 @@ describe('编码器等价性验证测试', () => {
             expect(newEncoded).to.equal(oldEncoded);
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
-            const newDecoded = abiCoder.decode([PAY_TAKER_ABI], newEncoded);
+            const newDecoded = abiCoder.decode([payTakerParamType], newEncoded);
             expect(JSON.stringify(newDecoded, bigintReplacer)).to.equal(JSON.stringify(oldDecoded, bigintReplacer));
         });
 
@@ -246,7 +251,8 @@ describe('编码器等价性验证测试', () => {
                     }
                 ]
             };
-            const newEncoded = abiCoder.encode([AFFILIATE_FEE_ABI], [[feesArray]]);
+            const affiliateFeeParamType = ParamType.from(AFFILIATE_FEE_ABI);
+            const newEncoded = abiCoder.encode([affiliateFeeParamType], [[feesArray]]);
 
             console.log('🔍 AffiliateFee 编码对比:');
             console.log('旧方式:', oldEncoded);
@@ -256,7 +262,7 @@ describe('编码器等价性验证测试', () => {
             expect(newEncoded).to.equal(oldEncoded);
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
-            const newDecoded = abiCoder.decode([AFFILIATE_FEE_ABI], newEncoded);
+            const newDecoded = abiCoder.decode([affiliateFeeParamType], newEncoded);
             expect(JSON.stringify(newDecoded, bigintReplacer)).to.equal(JSON.stringify(oldDecoded, bigintReplacer));
         });
 
@@ -280,7 +286,8 @@ describe('编码器等价性验证测试', () => {
                     { name: 'recipient', type: 'address' }
                 ]
             };
-            const newEncoded = abiCoder.encode([POSITIVE_SLIPPAGE_ABI], [[testData.token, testData.bestCaseAmount, testData.recipient]]);
+            const positiveSlippageParamType = ParamType.from(POSITIVE_SLIPPAGE_ABI);
+            const newEncoded = abiCoder.encode([positiveSlippageParamType], [[testData.token, testData.bestCaseAmount, testData.recipient]]);
 
             console.log('🔍 PositiveSlippageFee 编码对比:');
             console.log('旧方式:', oldEncoded);
@@ -290,7 +297,7 @@ describe('编码器等价性验证测试', () => {
             expect(newEncoded).to.equal(oldEncoded);
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
-            const newDecoded = abiCoder.decode([POSITIVE_SLIPPAGE_ABI], newEncoded);
+            const newDecoded = abiCoder.decode([positiveSlippageParamType], newEncoded);
             expect(JSON.stringify(newDecoded, bigintReplacer)).to.equal(JSON.stringify(oldDecoded, bigintReplacer));
         });
     });
