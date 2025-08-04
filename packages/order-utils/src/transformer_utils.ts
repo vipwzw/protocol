@@ -6,6 +6,31 @@ import { constants } from './constants';
 
 const { NULL_ADDRESS } = constants;
 
+/**
+ * 将对象格式的数据转换为数组格式（用于 ethers.js v6 兼容性）
+ */
+function convertToArrayFormat(obj: any, components: any[]): any {
+    if (Array.isArray(obj)) {
+        return obj.map(item => convertToArrayFormat(item, components));
+    }
+    
+    if (typeof obj === 'object' && obj !== null) {
+        return components.map(component => {
+            const value = obj[component.name];
+            if (component.components && Array.isArray(value)) {
+                // 处理嵌套的 tuple 数组
+                return value.map(item => convertToArrayFormat(item, component.components));
+            } else if (component.components && typeof value === 'object') {
+                // 处理嵌套的 tuple 对象
+                return convertToArrayFormat(value, component.components);
+            }
+            return value;
+        });
+    }
+    
+    return obj;
+}
+
 const ORDER_ABI_COMPONENTS = [
     { name: 'makerAddress', type: 'address' },
     { name: 'takerAddress', type: 'address' },
@@ -61,13 +86,16 @@ const fillQuoteInterface = new ethers.Interface([
 
 export const fillQuoteTransformerDataEncoder = {
     encode: (data: [FillQuoteTransformerData]): string => {
+        // 转换为数组格式以兼容 ethers.js v6
+        const arrayData = convertToArrayFormat(data[0], FILL_QUOTE_TRANSFORMER_DATA_ABI.components);
         // 使用 ethers Interface 编码，去掉函数选择器（前4字节）
-        const encoded = fillQuoteInterface.encodeFunctionData('encodeFillQuoteData', [data]);
+        const encoded = fillQuoteInterface.encodeFunctionData('encodeFillQuoteData', [arrayData]);
         return '0x' + encoded.slice(10); // 去掉 '0x' + 4字节函数选择器
     },
     decode: (encoded: string): [FillQuoteTransformerData] => {
-        // 添加虚拟函数选择器进行解码
-        const withSelector = '0x00000000' + encoded.slice(2);
+        // 添加正确的函数选择器进行解码
+        const funcSelector = fillQuoteInterface.getFunction('encodeFillQuoteData').selector;
+        const withSelector = funcSelector + encoded.slice(2);
         const decoded = fillQuoteInterface.decodeFunctionData('encodeFillQuoteData', withSelector);
         return [decoded[0] as FillQuoteTransformerData];
     }
@@ -132,11 +160,15 @@ const wethInterface = new ethers.Interface([
 
 export const wethTransformerDataEncoder = {
     encode: (data: [WethTransformerData]): string => {
-        const encoded = wethInterface.encodeFunctionData('encodeWethData', [data]);
+        // 转换为数组格式以兼容 ethers.js v6
+        const arrayData = convertToArrayFormat(data[0], WETH_TRANSFORMER_DATA_ABI.components);
+        const encoded = wethInterface.encodeFunctionData('encodeWethData', [arrayData]);
         return '0x' + encoded.slice(10);
     },
     decode: (encoded: string): { data: WethTransformerData } => {
-        const withSelector = '0x00000000' + encoded.slice(2);
+        // 添加正确的函数选择器进行解码
+        const funcSelector = wethInterface.getFunction('encodeWethData').selector;
+        const withSelector = funcSelector + encoded.slice(2);
         const decoded = wethInterface.decodeFunctionData('encodeWethData', withSelector);
         return { data: decoded[0] as WethTransformerData };
     }
@@ -186,11 +218,15 @@ const payTakerInterface = new ethers.Interface([
 
 export const payTakerTransformerDataEncoder = {
     encode: (data: [PayTakerTransformerData]): string => {
-        const encoded = payTakerInterface.encodeFunctionData('encodePayTakerData', [data]);
+        // 转换为数组格式以兼容 ethers.js v6
+        const arrayData = convertToArrayFormat(data[0], PAY_TAKER_TRANSFORMER_DATA_ABI.components);
+        const encoded = payTakerInterface.encodeFunctionData('encodePayTakerData', [arrayData]);
         return '0x' + encoded.slice(10);
     },
     decode: (encoded: string): { data: PayTakerTransformerData } => {
-        const withSelector = '0x00000000' + encoded.slice(2);
+        // 添加正确的函数选择器进行解码
+        const funcSelector = payTakerInterface.getFunction('encodePayTakerData').selector;
+        const withSelector = funcSelector + encoded.slice(2);
         const decoded = payTakerInterface.decodeFunctionData('encodePayTakerData', withSelector);
         return { data: decoded[0] as PayTakerTransformerData };
     }
@@ -247,11 +283,15 @@ const affiliateFeeInterface = new ethers.Interface([
 
 export const affiliateFeeTransformerDataEncoder = {
     encode: (data: AffiliateFeeTransformerData): string => {
-        const encoded = affiliateFeeInterface.encodeFunctionData('encodeAffiliateFeeData', [data]);
+        // 转换为数组格式以兼容 ethers.js v6
+        const arrayData = convertToArrayFormat(data, AFFILIATE_FEE_TRANSFORMER_DATA_ABI.components);
+        const encoded = affiliateFeeInterface.encodeFunctionData('encodeAffiliateFeeData', [arrayData]);
         return '0x' + encoded.slice(10);
     },
     decode: (encoded: string): AffiliateFeeTransformerData => {
-        const withSelector = '0x00000000' + encoded.slice(2);
+        // 添加正确的函数选择器进行解码
+        const funcSelector = affiliateFeeInterface.getFunction('encodeAffiliateFeeData').selector;
+        const withSelector = funcSelector + encoded.slice(2);
         const decoded = affiliateFeeInterface.decodeFunctionData('encodeAffiliateFeeData', withSelector);
         return decoded[0] as AffiliateFeeTransformerData;
     }
@@ -305,11 +345,15 @@ const positiveSlippageFeeInterface = new ethers.Interface([
 
 export const positiveSlippageFeeTransformerDataEncoder = {
     encode: (data: PositiveSlippageFeeTransformerData): string => {
-        const encoded = positiveSlippageFeeInterface.encodeFunctionData('encodePositiveSlippageFeeData', [data]);
+        // 转换为数组格式以兼容 ethers.js v6
+        const arrayData = convertToArrayFormat(data, POSITIVE_SLIPPAGE_FEE_TRANSFORMER_DATA_ABI.components);
+        const encoded = positiveSlippageFeeInterface.encodeFunctionData('encodePositiveSlippageFeeData', [arrayData]);
         return '0x' + encoded.slice(10);
     },
     decode: (encoded: string): PositiveSlippageFeeTransformerData => {
-        const withSelector = '0x00000000' + encoded.slice(2);
+        // 添加正确的函数选择器进行解码
+        const funcSelector = positiveSlippageFeeInterface.getFunction('encodePositiveSlippageFeeData').selector;
+        const withSelector = funcSelector + encoded.slice(2);
         const decoded = positiveSlippageFeeInterface.decodeFunctionData('encodePositiveSlippageFeeData', withSelector);
         return decoded[0] as PositiveSlippageFeeTransformerData;
     }

@@ -82,6 +82,12 @@ export {
     decodePositiveSlippageFeeTransformerData,
     findTransformerNonce,
     getTransformerAddress,
+    // 编码器对象
+    fillQuoteTransformerDataEncoder,
+    wethTransformerDataEncoder,
+    payTakerTransformerDataEncoder,
+    affiliateFeeTransformerDataEncoder,
+    positiveSlippageFeeTransformerDataEncoder,
 } from './transformer_utils';
 
 export { getOrderHash, getExchangeMetaTransactionHash, getExchangeProxyMetaTransactionHash } from './hash_utils';
