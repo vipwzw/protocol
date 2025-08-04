@@ -2,7 +2,7 @@
 import { RevertError } from '../../revert_error';
 
 export class MismanagedMemoryError extends RevertError {
-    constructor(freeMemPtr?: BigNumber, addressArrayEndPtr?: BigNumber) {
+    constructor(freeMemPtr?: bigint, addressArrayEndPtr?: bigint) {
         super('MismanagedMemoryError', 'MismanagedMemoryError(uint256 freeMemPtr, uint256 addressArrayEndPtr)', {
             freeMemPtr,
             addressArrayEndPtr,

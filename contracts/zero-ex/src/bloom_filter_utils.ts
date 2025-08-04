@@ -1,4 +1,4 @@
-import { BigNumber, hexUtils } from '@0x/utils';
+import { hexUtils } from '@0x/utils';
 
 /**
  * Compute the bloom filter for a list of tokens.
@@ -8,8 +8,8 @@ export function getTokenListBloomFilter(tokens: string[]): string {
     let filter = hexUtils.leftPad(0);
     for (const token of tokens) {
         // (1 << (keccak256(token) % 256)) | (1 << (token % 256))
-        const a = hexUtils.toHex(new BigNumber(2).pow(new BigNumber(hexUtils.hash(hexUtils.leftPad(token))).mod(256)));
-        const b = hexUtils.toHex(new BigNumber(2).pow(new BigNumber(token).mod(256)));
+        const a = hexUtils.toHex(2n ** (BigInt(hexUtils.hash(hexUtils.leftPad(token))) % 256n));
+        const b = hexUtils.toHex(2n ** (BigInt(token) % 256n));
         filter = bitwiseOrWords(filter, bitwiseOrWords(a, b));
     }
     return filter;
@@ -28,13 +28,13 @@ function bitwiseOrWords(a: string, b: string): string {
 
 function hexWordToBitArray(hexWord: string): number[] {
     // Covnert to a binary string.
-    const bin = new BigNumber(hexWord).toString(2);
+    const bin = BigInt(hexWord).toString(2);
     // Convert to integers.
-    const bits = bin.split('').map(s => parseInt(s, 10));
+    const bits = bin.split('').map((s: string) => parseInt(s, 10));
     // Left the binary string pad with zeroes.
     return new Array(256 - bits.length).fill(0).concat(bits);
 }
 
 function bitArrayToHexWord(bits: number[]): string {
-    return hexUtils.leftPad(new BigNumber(`0b${bits.map(b => b.toString()).join('')}`));
+    return hexUtils.leftPad(BigInt(`0b${bits.map(b => b.toString()).join('')}`));
 }

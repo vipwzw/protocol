@@ -4,9 +4,8 @@ import * as ethUtil from 'ethereumjs-util';
 import * as _ from 'lodash';
 import { inspect } from 'util';
 
-import * as AbiEncoder from './abi_encoder';
+import { ethers, Interface } from 'ethers';
 import { toBigInt } from './configured_bigint';
-import { BigNumberLike } from './bignum_compat';
 
 // tslint:disable: max-classes-per-file no-unnecessary-type-assertion
 
@@ -15,15 +14,13 @@ type ArgTypes =
     | bigint
     | number
     | boolean
-    | BigNumberLike
     | RevertError
-    | any  // Allow legacy BigNumber instances
+    | any  // Allow legacy values for compatibility
     | bigint[]
     | string[]
     | number[]
     | boolean[]
-    | BigNumberLike[]
-    | Array<bigint | number | string | BigNumberLike | any>;
+    | Array<bigint | number | string | any>;
 type ValueMap = ObjectMap<ArgTypes | undefined>;
 type RevertErrorDecoder = (hex: string) => ValueMap;
 
@@ -545,17 +542,36 @@ function normalizeBytes(bytes: string): string {
 }
 
 function createEncoder(abi: RevertErrorAbi): (values: ObjectMap<any>) => string {
-    const encoder = AbiEncoder.createMethod(abi.name, abi.arguments || []);
+    const methodAbi = {
+        type: 'function',
+        name: abi.name,
+        inputs: abi.arguments || [],
+        outputs: [],
+        stateMutability: 'pure'
+    };
+    const ethersInterface = new Interface([methodAbi]);
     return (values: ObjectMap<any>): string => {
         const valuesArray = _.map(abi.arguments, (arg: DataItem) => values[arg.name]);
-        return encoder.encode(valuesArray);
+        return ethersInterface.encodeFunctionData(abi.name, valuesArray);
     };
 }
 
 function createDecoder(abi: RevertErrorAbi): (hex: string) => ValueMap {
-    const encoder = AbiEncoder.createMethod(abi.name, abi.arguments || []);
+    const methodAbi = {
+        type: 'function',
+        name: abi.name,
+        inputs: abi.arguments || [],
+        outputs: [],
+        stateMutability: 'pure'
+    };
+    const ethersInterface = new Interface([methodAbi]);
     return (hex: string): ValueMap => {
-        return encoder.decode(hex) as ValueMap;
+        const decoded = ethersInterface.decodeFunctionData(abi.name, hex);
+        const result: ValueMap = {};
+        _.forEach(abi.arguments, (arg: DataItem, index: number) => {
+            result[arg.name] = decoded[index];
+        });
+        return result;
     };
 }
 

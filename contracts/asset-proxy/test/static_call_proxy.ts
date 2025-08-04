@@ -8,7 +8,7 @@ import {
 } from '@0x/test-utils';
 import { BlockchainLifecycle } from '@0x/dev-utils';
 import { AssetProxyId, RevertReason } from '@0x/utils';
-import { AbiEncoder } from '@0x/utils';
+// AbiEncoder 已移除，使用 ethers AbiCoder
 import * as chai from 'chai';
 import * as ethUtil from 'ethereumjs-util';
 import { ethers } from 'hardhat';
@@ -200,16 +200,14 @@ describe('StaticCallProxy', () => {
             const a = 1n;
             const b = 2n;
             const staticCallData = staticCallTarget.interface.encodeFunctionData('returnComplexType', [a, b]);
-            const abiEncoder = new AbiEncoder.DynamicBytes({
-                name: '',
-                type: 'bytes',
-            });
+            // 使用 ethers AbiCoder 替代 AbiEncoder
+            const abiCoder = ethers.AbiCoder.defaultAbiCoder();
             const aHex = '0000000000000000000000000000000000000000000000000000000000000001';
             const bHex = '0000000000000000000000000000000000000000000000000000000000000002';
             const staticCallTargetAddress = await staticCallTarget.getAddress();
             const expectedResults = `${staticCallTargetAddress}${aHex}${bHex}`;
             const offset = '0000000000000000000000000000000000000000000000000000000000000020';
-            const encodedExpectedResultWithOffset = `0x${offset}${abiEncoder.encode(expectedResults).slice(2)}`;
+            const encodedExpectedResultWithOffset = `0x${offset}${abiCoder.encode(['bytes'], [`0x${expectedResults}`]).slice(2)}`;
             const expectedResultHash = ethUtil.bufferToHex(
                 ethUtil.keccak256(ethUtil.toBuffer(encodedExpectedResultWithOffset)),
             );

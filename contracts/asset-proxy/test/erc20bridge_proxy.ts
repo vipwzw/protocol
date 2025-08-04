@@ -9,7 +9,7 @@ import {
 } from '@0x/test-utils';
 import { AuthorizableRevertErrors } from '@0x/contracts-utils';
 import { AssetProxyId } from '@0x/utils';
-import { AbiEncoder, BigNumber, hexUtils, StringRevertError } from '@0x/utils';
+import { hexUtils, StringRevertError } from '@0x/utils';
 import { DecodedLogs } from 'ethereum-types';
 import { ethers } from 'hardhat';
 import * as _ from 'lodash';
@@ -78,23 +78,23 @@ describe('ERC20BridgeProxy unit tests', () => {
     }
 
     function encodeAssetData(opts: AssetDataOpts): string {
-        const encoder = AbiEncoder.createMethod('ERC20BridgeProxy', [
-            { name: 'tokenAddress', type: 'address' },
-            { name: 'bridgeAddress', type: 'address' },
-            { name: 'bridgeData', type: 'bytes' },
-        ]);
-        return encoder.encode([opts.tokenAddress, opts.bridgeAddress, encodeBridgeData(opts.bridgeData)]);
+        // 使用 ethers AbiCoder 替代 AbiEncoder
+        const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+        return abiCoder.encode(
+            ['address', 'address', 'bytes'],
+            [opts.tokenAddress, opts.bridgeAddress, encodeBridgeData(opts.bridgeData)]
+        );
     }
 
     function encodeBridgeData(opts: BridgeDataOpts): string {
-        const encoder = AbiEncoder.create([
-            { name: 'transferAmount', type: 'int256' },
-            { name: 'revertData', type: 'bytes' },
-            { name: 'returnData', type: 'bytes' },
-        ]);
+        // 使用 ethers AbiCoder 替代 AbiEncoder
+        const abiCoder = ethers.AbiCoder.defaultAbiCoder();
         const revertErrorBytes =
             opts.revertError !== undefined ? new StringRevertError(opts.revertError).encode() : '0x';
-        return encoder.encode([new BigNumber(opts.transferAmount.toString()), revertErrorBytes, opts.returnData]);
+        return abiCoder.encode(
+            ['int256', 'bytes', 'bytes'],
+            [BigInt(opts.transferAmount.toString()), revertErrorBytes, opts.returnData]
+        );
     }
 
     async function setTestTokenBalanceAsync(_owner: string, balance: Numberish): Promise<void> {

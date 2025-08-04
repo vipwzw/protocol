@@ -7,7 +7,7 @@ import {
     randomAddress,
 } from '@0x/test-utils';
 import { AssetProxyId } from '@0x/utils';
-import { AbiEncoder, hexUtils } from '@0x/utils';
+import { hexUtils } from '@0x/utils';
 import { DecodedLogs } from 'ethereum-types';
 import { ethers } from 'hardhat';
 import * as _ from 'lodash';
@@ -92,7 +92,12 @@ blockchainTests.resets('Bancor unit tests', env => {
             };
         }
 
-        const bridgeDataEncoder = AbiEncoder.create('(address[], address)');
+        // 使用 ethers AbiCoder 替代 AbiEncoder
+        const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+        const bridgeDataEncoder = {
+            encode: (path: string[], affiliateAccount: string): string => 
+                abiCoder.encode(['address[]', 'address'], [path, affiliateAccount])
+        };
 
         async function transferFromAsync(opts?: Partial<TransferFromOpts>): Promise<TransferFromResult> {
             const _opts = createTransferFromOpts(opts);

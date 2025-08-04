@@ -89,6 +89,10 @@ contract ERC1155 is
             // balances[baseType][_from] = balances[baseType][_from].safeSub(_value);
             // balances[baseType][_to]   = balances[baseType][_to]+(_value);
         } else {
+            require(
+                balances[id][from] >= value,
+                "ERC1155_INSUFFICIENT_BALANCE"
+            );
             balances[id][from] = balances[id][from] - value;
             balances[id][to] = balances[id][to] + value;
         }
@@ -139,6 +143,7 @@ contract ERC1155 is
             to != address(0x0),
             "CANNOT_TRANSFER_TO_ADDRESS_ZERO"
         );
+        
         require(
             ids.length == values.length,
             "TOKEN_AND_VALUES_LENGTH_MISMATCH"
@@ -153,7 +158,6 @@ contract ERC1155 is
 
         // perform transfers
         for (uint256 i = 0; i < ids.length; ++i) {
-            // Cache value to local variable to reduce read costs.
             uint256 id = ids[i];
             uint256 value = values[i];
 
@@ -168,10 +172,15 @@ contract ERC1155 is
                 );
                 nfOwners[id] = to;
             } else {
+                require(
+                    balances[id][from] >= value,
+                    "ERC1155_INSUFFICIENT_BALANCE"
+                );
                 balances[id][from] = balances[id][from] - value;
                 balances[id][to] = balances[id][to] + value;
             }
         }
+        
         emit TransferBatch(msg.sender, from, to, ids, values);
 
         // if `to` is a contract then trigger its callback

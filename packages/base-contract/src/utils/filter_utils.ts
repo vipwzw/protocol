@@ -1,5 +1,4 @@
-import type { IndexedFilterValues } from '@0x/utils';
-import { BigNumber } from '@0x/utils';
+import type { IndexedFilterValues } from '../types';
 import { BlockRange, ContractAbi, EventAbi, FilterObject, LogEntry } from 'ethereum-types';
 import * as ethUtil from 'ethereumjs-util';
 import * as jsSHA3 from 'js-sha3';
@@ -53,7 +52,7 @@ export const filterUtils = {
             } else {
                 // tslint:disable: no-unnecessary-type-assertion
                 let value = indexFilterValues[eventInput.name] as any;
-                if (BigNumber.isBigNumber(value)) {
+                if (typeof value === 'bigint') {
                     // tslint:disable-next-line custom-no-magic-numbers
                     value = ethUtil.fromSigned(value.toString(10) as any);
                 }

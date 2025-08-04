@@ -12,7 +12,7 @@ import {
 import { ethers, Interface } from 'ethers';
 import * as _ from 'lodash';
 
-import { AbiEncoder } from '.';
+// AbiEncoder 已移除，直接使用 ethers Interface
 import { DecodedCalldata, SelectorToFunctionInfo } from './types';
 
 /**
@@ -61,22 +61,21 @@ export class AbiDecoder {
         }
         const event = this._eventIds[eventId][numIndexedArgs];
 
-        // Create decoders for indexed data
-        const indexedDataDecoders = _.mapValues(_.filter(event.inputs, { indexed: true }), input =>
-            // tslint:disable:next-line no-unnecessary-type-assertion
-            AbiEncoder.create(input as DataItem),
-        );
-
-        // Decode indexed data
-        const decodedIndexedData = _.map(
-            log.topics.slice(1), // ignore first topic, which is the event id.
-            (input, i) => indexedDataDecoders[i].decode(input),
-        );
-
-        // Decode non-indexed data
-        const decodedNonIndexedData = AbiEncoder.create(_.filter(event.inputs, { indexed: false })).decodeAsArray(
-            log.data,
-        );
+        // Decode using ethers Interface
+        const ethersInterface = new Interface([event]);
+        const decodedEvent = ethersInterface.decodeEventLog(event.name, log.data, log.topics);
+        
+        // Split into indexed and non-indexed data for compatibility
+        const decodedIndexedData: any[] = [];
+        const decodedNonIndexedData: any[] = [];
+        
+        event.inputs.forEach((input, index) => {
+            if (input.indexed) {
+                decodedIndexedData.push(decodedEvent[index]);
+            } else {
+                decodedNonIndexedData.push(decodedEvent[index]);
+            }
+        });
 
         // Construct DecodedLogArgs struct by mapping event parameters to their respective decoded argument.
         const decodedArgs: DecodedLogArgs = {};
@@ -122,14 +121,14 @@ export class AbiDecoder {
             throw new Error(
                 `No function registered with selector ${functionSelector} and contract name ${contractName}.`,
             );
-        } else if (functionInfo.abiEncoder === undefined) {
+        } else if (functionInfo.ethersInterface === undefined) {
             throw new Error(
-                `Function ABI Encoder is not defined, for function registered with selector ${functionSelector} and contract name ${contractName}.`,
+                `Function Interface is not defined, for function registered with selector ${functionSelector} and contract name ${contractName}.`,
             );
         }
-        const functionName = functionInfo.abiEncoder.getDataItem().name;
-        const functionSignature = functionInfo.abiEncoder.getSignatureType();
-        const functionArguments = functionInfo.abiEncoder.decode(calldata);
+        const functionName = functionInfo.methodAbi.name;
+        const functionSignature = functionInfo.functionSignature;
+        const functionArguments = functionInfo.ethersInterface.decodeFunctionData(functionInfo.methodAbi.name, calldata);
         const decodedCalldata = {
             functionName,
             functionSignature,
@@ -183,16 +182,21 @@ export class AbiDecoder {
         };
     }
     private _addMethodABI(methodAbi: MethodAbi, contractName?: string): void {
-        const abiEncoder = new AbiEncoder.Method(methodAbi);
-        const functionSelector = abiEncoder.getSelector();
+        const ethersInterface = new Interface([methodAbi]);
+        const functionFragment = ethersInterface.getFunction(methodAbi.name);
+        if (!functionFragment) {
+            throw new Error(`Function ${methodAbi.name} not found in interface`);
+        }
+        const functionSelector = functionFragment.selector;
         if (!(functionSelector in this._selectorToFunctionInfo)) {
             this._selectorToFunctionInfo[functionSelector] = [];
         }
-        // Recored a copy of this ABI for each deployment
-        const functionSignature = abiEncoder.getSignature();
+        // Record a copy of this ABI for each deployment
+        const functionSignature = functionFragment.format('full');
         this._selectorToFunctionInfo[functionSelector].push({
             functionSignature,
-            abiEncoder,
+            methodAbi,
+            ethersInterface,
             contractName,
         });
     }

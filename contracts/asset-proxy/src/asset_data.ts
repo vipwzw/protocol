@@ -1,4 +1,4 @@
-import { AbiEncoder, BigNumber } from '@0x/utils';
+// AbiEncoder 已移除，使用 ethers AbiCoder
 import { AssetProxyId } from '@0x/utils';
 import { keccak256 } from 'ethereum-cryptography/keccak';
 import { ethers } from 'ethers';
@@ -22,16 +22,16 @@ export function decodeERC20AssetData(encoded: string): string {
 /**
  * Decode ERC721 asset data.
  */
-export function decodeERC721AssetData(encoded: string): [string, BigNumber] {
-    // return assetDataIface.getABIDecodedTransactionData<[string, BigNumber]>('ERC721Token', encoded);
-    return ['ERC721Token', new BigNumber(0)]; // Placeholder
+export function decodeERC721AssetData(encoded: string): [string, bigint] {
+    // return assetDataIface.getABIDecodedTransactionData<[string, bigint]>('ERC721Token', encoded);
+    return ['ERC721Token', 0n]; // Placeholder
 }
 
 /**
  * Decode ERC1155 asset data.
  */
-export function decodeERC1155AssetData(encoded: string): [string, BigNumber[], BigNumber[], string] {
-    // return assetDataIface.getABIDecodedTransactionData<[string, BigNumber[], BigNumber[], string]>(
+export function decodeERC1155AssetData(encoded: string): [string, bigint[], bigint[], string] {
+    // return assetDataIface.getABIDecodedTransactionData<[string, bigint[], bigint[], string]>(
     //     'ERC1155Assets',
     //     encoded,
     // );
@@ -41,8 +41,8 @@ export function decodeERC1155AssetData(encoded: string): [string, BigNumber[], B
 /**
  * Decode MultiAsset asset data.
  */
-export function decodeMultiAssetData(encoded: string): [BigNumber[], string[]] {
-    // return assetDataIface.getABIDecodedTransactionData<[BigNumber[], string[]]>('MultiAsset', encoded);
+export function decodeMultiAssetData(encoded: string): [bigint[], string[]] {
+    // return assetDataIface.getABIDecodedTransactionData<[bigint[], string[]]>('MultiAsset', encoded);
     return [[], []]; // Placeholder
 }
 
@@ -76,13 +76,6 @@ export function encodeERC20AssetData(tokenAddress: string): string {
     // Encode: proxyId (4 bytes) + tokenAddress (32 bytes) = 36 bytes
     const coder = ethers.AbiCoder.defaultAbiCoder();
     const encoded = proxyId + coder.encode(['address'], [tokenAddress]).slice(2);
-    
-    console.log('encodeERC20AssetData debug:');
-    console.log('  tokenAddress:', tokenAddress);
-    console.log('  proxyId:', proxyId);
-    console.log('  encoded (4-byte proxyId + 32-byte address):', encoded);
-    console.log('  encoded length:', encoded.length, 'chars');
-    console.log('  encoded bytes length:', (encoded.length - 2) / 2, 'bytes');
     
     return encoded;
 }

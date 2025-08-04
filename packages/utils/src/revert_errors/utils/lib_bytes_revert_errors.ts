@@ -13,7 +13,7 @@ export enum InvalidByteOperationErrorCodes {
 }
 
 export class InvalidByteOperationError extends RevertError {
-    constructor(error?: InvalidByteOperationErrorCodes, offset?: BigNumber, required?: BigNumber) {
+    constructor(error?: InvalidByteOperationErrorCodes, offset?: bigint, required?: bigint) {
         super('InvalidByteOperationError', 'InvalidByteOperationError(uint8 error, uint256 offset, uint256 required)', {
             error,
             offset,

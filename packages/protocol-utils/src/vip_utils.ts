@@ -1,4 +1,4 @@
-import { AbiEncoder } from '@0x/utils';
+import { ethers } from 'ethers';
 
 export interface CurveLiquidityProviderData {
     curveAddress: string;
@@ -7,12 +7,19 @@ export interface CurveLiquidityProviderData {
     toCoinIdx: bigint;
 }
 
-export const curveLiquidityProviderDataEncoder = AbiEncoder.create([
-    { name: 'curveAddress', type: 'address' },
-    { name: 'exchangeFunctionSelector', type: 'bytes4' },
-    { name: 'fromCoinIdx', type: 'int128' },
-    { name: 'toCoinIdx', type: 'int128' },
-]);
+// 使用 ethers AbiCoder 替代 AbiEncoder
+const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+const curveLiquidityProviderDataTypes = ['address', 'bytes4', 'int128', 'int128'];
+
+export const curveLiquidityProviderDataEncoder = {
+    encode: (data: [string, string, bigint, bigint]): string => {
+        return abiCoder.encode(curveLiquidityProviderDataTypes, data);
+    },
+    decode: (encoded: string): [string, string, bigint, bigint] => {
+        const decoded = abiCoder.decode(curveLiquidityProviderDataTypes, encoded);
+        return [decoded[0], decoded[1], decoded[2], decoded[3]];
+    }
+};
 
 /**
  * Encode data for the curve liquidity provider contract.

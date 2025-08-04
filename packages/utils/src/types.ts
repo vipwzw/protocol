@@ -5,8 +5,10 @@ import {
     DecodedLogArgs,
     DevdocOutput,
     LogWithDecodedArgs,
+    MethodAbi,
 } from 'ethereum-types';
-import * as AbiEncoder from './abi_encoder';
+import { Interface } from 'ethers';
+// AbiEncoder 已移除，使用 ethers.AbiCoder 替代
 // Legacy BigNumber import removed - using native bigint instead
 
 // 从原 @0x/utils 迁移的类型定义
@@ -330,7 +332,8 @@ export interface FunctionInfo {
     contractName?: string;
     contractAddress?: string;
     chainId?: number;
-    abiEncoder?: AbiEncoder.Method;
+    methodAbi: MethodAbi;
+    ethersInterface: Interface;
 }
 
 export interface SelectorToFunctionInfo {

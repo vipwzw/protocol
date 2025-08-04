@@ -72,10 +72,10 @@ export type { TestERC20Bridge } from '../src/typechain-types/contracts/test/Test
 export { TestERC20Bridge__factory } from '../src/typechain-types/factories/contracts/test/TestERC20Bridge.sol/TestERC20Bridge__factory';
 
 // ERC20 Test contracts (locally generated from copied artifacts)
-export type { DummyNoReturnERC20Token } from '../src/typechain-types/contracts/DummyNoReturnERC20Token';
-export { DummyNoReturnERC20Token__factory } from '../src/typechain-types/factories/contracts/DummyNoReturnERC20Token__factory';
-export type { DummyMultipleReturnERC20Token } from '../src/typechain-types/contracts/DummyMultipleReturnERC20Token';
-export { DummyMultipleReturnERC20Token__factory } from '../src/typechain-types/factories/contracts/DummyMultipleReturnERC20Token__factory';
+// export type { DummyNoReturnERC20Token } from '../src/typechain-types/contracts/DummyNoReturnERC20Token';
+// export { DummyNoReturnERC20Token__factory } from '../src/typechain-types/factories/contracts/DummyNoReturnERC20Token__factory';
+// export type { DummyMultipleReturnERC20Token } from '../src/typechain-types/contracts/DummyMultipleReturnERC20Token';
+// export { DummyMultipleReturnERC20Token__factory } from '../src/typechain-types/factories/contracts/DummyMultipleReturnERC20Token__factory';
 
 // Note: Once Solidity compilation is fixed and TypeChain generates the types,
 // uncomment the relevant exports above and remove this empty export.

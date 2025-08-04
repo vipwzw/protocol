@@ -3,21 +3,17 @@ export {
     ContractEvent,
     ContractFunctionObj,
     ContractTxFunctionObj,
-    EncoderOverrides,
     SendTransactionOpts,
     SubscriptionErrors,
 } from '@0x/base-contract';
 export { ContractAddresses } from '@0x/contract-addresses';
 export {
-    DecodedLogEvent,
-    EventCallback,
-    IndexedFilterValues,
     SimpleContractArtifact,
     SimpleEvmBytecodeOutput,
     SimpleEvmOutput,
     SimpleStandardContractOutput,
 } from '@0x/utils';
-export { AbiDecoder, AbiEncoder, DecodedCalldata, EncodingRules } from '@0x/utils';
+export { AbiDecoder, DecodedCalldata } from '@0x/utils';
 export {
     AbiDefinition,
     BlockParam,

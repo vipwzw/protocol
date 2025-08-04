@@ -125,7 +125,7 @@ export class FillError extends RevertError {
 }
 
 export class OrderEpochError extends RevertError {
-    constructor(maker?: string, sender?: string, currentEpoch?: BigNumber) {
+    constructor(maker?: string, sender?: string, currentEpoch?: bigint) {
         super('OrderEpochError', 'OrderEpochError(address maker, address sender, uint256 currentEpoch)', {
             maker,
             sender,
@@ -192,7 +192,7 @@ export class TransactionExecutionError extends RevertError {
 }
 
 export class TransactionGasPriceError extends RevertError {
-    constructor(transactionHash?: string, actualGasPrice?: BigNumber, requiredGasPrice?: BigNumber) {
+    constructor(transactionHash?: string, actualGasPrice?: bigint, requiredGasPrice?: bigint) {
         super(
             'TransactionGasPriceError',
             'TransactionGasPriceError(bytes32 transactionHash, uint256 actualGasPrice, uint256 requiredGasPrice)',
@@ -221,8 +221,8 @@ export class TransactionInvalidContextError extends RevertError {
 export class IncompleteFillError extends RevertError {
     constructor(
         error?: IncompleteFillErrorCode,
-        expectedAssetFillAmount?: BigNumber,
-        actualAssetFillAmount?: BigNumber,
+        expectedAssetFillAmount?: bigint,
+        actualAssetFillAmount?: bigint,
     ) {
         super(
             'IncompleteFillError',
@@ -248,7 +248,7 @@ export class ExchangeInvalidContextError extends RevertError {
 export class PayProtocolFeeError extends RevertError {
     constructor(
         orderHash?: string,
-        protocolFee?: BigNumber,
+        protocolFee?: bigint,
         makerAddress?: string,
         takerAddress?: string,
         errorData?: string,

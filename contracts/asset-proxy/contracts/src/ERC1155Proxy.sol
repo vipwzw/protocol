@@ -19,6 +19,7 @@
 
 pragma solidity ^0.8.28;
 
+
 import "@0x/contracts-utils/contracts/src/LibBytes.sol";
 import "@0x/contracts-erc1155/contracts/src/interfaces/IERC1155.sol";
 import "./MixinAuthorizable.sol";
@@ -63,9 +64,15 @@ contract ERC1155Proxy is
         // solhint-enable indent
 
         // Scale values up by `amount`
+
+
         uint256 length = values.length;
+
         uint256[] memory scaledValues = new uint256[](length);
         for (uint256 i = 0; i != length; i++) {
+
+
+
             // We write the scaled values to an unused location in memory in order
             // to avoid copying over `ids` or `data`. This is possible if they are
             // identical to `values` and the offsets for each are pointing to the
@@ -73,6 +80,7 @@ contract ERC1155Proxy is
             // Use checked math to prevent overflow - this ensures safety with large token IDs
             require(amount == 0 || values[i] <= type(uint256).max / amount, "ERC1155Proxy: multiplication overflow");
             scaledValues[i] = values[i] * amount;
+
         }
 
         // Execute `safeBatchTransferFrom` call

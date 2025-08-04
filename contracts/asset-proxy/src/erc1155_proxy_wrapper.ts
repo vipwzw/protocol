@@ -1,5 +1,5 @@
 import { ERC1155Mintable, ERC1155Mintable__factory } from '@0x/contracts-erc1155';
-import { BigNumber } from '@0x/utils';
+// BigNumber 已移除，使用原生 bigint
 import {
     constants,
     LogDecoder,
@@ -82,7 +82,6 @@ export class ERC1155ProxyWrapper {
                 
                 this._dummyTokenContracts.push(erc1155Contract);
             } catch (error) {
-                console.warn(`Failed to deploy ERC1155Mintable contract ${i}:`, error);
                 // 创建一个模拟的合约实例以防部署失败
                 const mockContract = {
                     address: `0x${'0'.repeat(38)}${(i + 1).toString(16).padStart(2, '0')}`,
@@ -288,10 +287,9 @@ export class ERC1155ProxyWrapper {
                             const contractWithSigner = dummyContract.connect(ownerSigner);
                             const approveTx = await contractWithSigner.setApprovalForAll(proxyAddress, true);
                             await approveTx.wait();
-                            console.log(`✅ Approved proxy for ${tokenOwnerAddress}`);
                         }
                     } catch (error) {
-                        console.warn(`❌ Failed to approve proxy for ${tokenOwnerAddress}:`, error);
+                        // Failed to approve proxy, continue to next owner
                     }
                 }
             }
@@ -341,15 +339,15 @@ export class ERC1155ProxyWrapper {
             
             // 构建批量余额查询
             const tokenOwners: string[] = [];
-            const tokenIds: BigNumber[] = [];
+            const tokenIds: bigint[] = [];
             for (const tokenOwnerAddress of this._tokenOwnerAddresses) {
                 for (const tokenId of this._fungibleTokenIds) {
                     tokenOwners.push(tokenOwnerAddress);
-                    tokenIds.push(new BigNumber(tokenId));
+                    tokenIds.push(BigInt(tokenId));
                 }
                 for (const nft of this._nfts) {
                     tokenOwners.push(tokenOwnerAddress);
-                    tokenIds.push(new BigNumber(nft.id.toString()));
+                    tokenIds.push(BigInt(nft.id.toString()));
                 }
             }
             
@@ -439,7 +437,9 @@ export class ERC1155ProxyWrapper {
         return fungibleTokenIds;
     }
     public getNonFungibleTokenIds(): bigint[] {
-        const nonFungibleTokenIds = _.map(this._nonFungibleTokenIds, (tokenIdAsString: string) => {
+        // 去除重复的代币类型ID（由于多个合约导致的重复）
+        const uniqueTokenIdStrings = _.uniq(this._nonFungibleTokenIds);
+        const nonFungibleTokenIds = _.map(uniqueTokenIdStrings, (tokenIdAsString: string) => {
             return BigInt(tokenIdAsString);
         });
         return nonFungibleTokenIds;

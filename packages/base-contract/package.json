@@ -42,7 +42,6 @@
         "@types/mocha": "^10.0.0",
         "@types/uuid": "^9.0.0",
         "chai": "^4.5.0",
-        "ethereum-types": "^3.7.1",
         "hardhat": "^2.26.0",
         "make-promises-safe": "^1.1.0",
         "mocha": "^10.2.0",
@@ -52,7 +51,13 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
-        "ethers": "^6.15.0"
+        "ethers": "^6.15.0",
+        "@0x/utils": "^7.0.0",
+        "ethereum-types": "^3.7.1",
+        "ethereumjs-util": "^7.1.5",
+        "ethereumjs-blockstream": "^7.0.0",
+        "js-sha3": "^0.8.0",
+        "uuid": "^9.0.0"
     },
     "publishConfig": {
         "access": "public"

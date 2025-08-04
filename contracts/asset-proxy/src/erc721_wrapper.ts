@@ -43,15 +43,12 @@ export class ERC721Wrapper {
             );
             await contract.waitForDeployment();
             const contractAddress = await contract.getAddress();
-            console.log(`Deployed ERC721 contract ${i}: ${contractAddress} with name "${constants.DUMMY_TOKEN_NAME} ${i}"`);
             
             // 验证合约基本功能
             try {
                 const name = await contract.name();
                 const symbol = await contract.symbol();
-                console.log(`Contract ${i} verification: name="${name}", symbol="${symbol}"`);
             } catch (error) {
-                console.error(`Failed to verify contract ${i}:`, error.message);
                 throw error;
             }
             
@@ -107,7 +104,6 @@ export class ERC721Wrapper {
                     const tokenId = baseTokenId + BigInt(contractIndex * 1000000);
                     try {
                         const contractAddress = await dummyTokenContract.getAddress();
-                        console.log(`Attempting to mint token ${tokenId} on contract ${contractIndex} (${contractAddress}) to ${tokenOwnerAddress}`);
                         
                         await this.mintAsync(contractAddress, tokenId, tokenOwnerAddress);
                         
@@ -117,13 +113,10 @@ export class ERC721Wrapper {
                             if (actualOwner.toLowerCase() !== tokenOwnerAddress.toLowerCase()) {
                                 throw new Error(`Token owner mismatch: expected ${tokenOwnerAddress}, got ${actualOwner}`);
                             }
-                            console.log(`Successfully minted and verified token ${tokenId} on contract ${contractIndex} to ${tokenOwnerAddress}`);
                         } catch (verifyError) {
-                            console.error(`Mint appeared successful but verification failed for token ${tokenId} on contract ${contractIndex}:`, verifyError.message);
                             throw verifyError;
                         }
                     } catch (error) {
-                        console.error(`Failed to mint token ${tokenId} on contract ${contractIndex}:`, error.message);
                         throw error;
                     }
                     const contractAddress = await dummyTokenContract.getAddress();
@@ -228,19 +221,15 @@ export class ERC721Wrapper {
             for (const tokenOwnerAddress of this._tokenOwnerAddresses) {
                 const contractAddress = await dummyTokenContract.getAddress();
                 const initialTokenOwnerIds = this._initialTokenIdsByOwner[tokenOwnerAddress][contractAddress];
-                console.log(`Checking tokens for owner ${tokenOwnerAddress} on contract ${contractAddress}`);
-                console.log(`Token IDs to check:`, initialTokenOwnerIds);
                 for (const tokenId of initialTokenOwnerIds) {
                     try {
                         const owner = await dummyTokenContract.ownerOf(tokenId);
-                        console.log(`Token ${tokenId} owned by ${owner}`);
                         tokenOwnerAddresses.push(owner);
                         tokenInfo.push({
                             tokenId,
                             tokenAddress: contractAddress,
                         });
                     } catch (error) {
-                        console.error(`Failed to get owner of token ${tokenId}:`, error.message);
                         throw error;
                     }
                 }

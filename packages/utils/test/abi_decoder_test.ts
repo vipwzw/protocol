@@ -2,7 +2,8 @@ import * as chai from 'chai';
 import { MethodAbi } from 'ethereum-types';
 import 'mocha';
 
-import { AbiDecoder, AbiEncoder } from '../src';
+import { AbiDecoder } from '../src';
+import { Interface } from 'ethers';
 
 import { chaiSetup } from './utils/chai_setup';
 
@@ -35,10 +36,10 @@ describe('AbiDecoder', () => {
         const testAddress = '0x0001020304050607080900010203040506070809';
         const abiDecoder = new AbiDecoder([]);
         abiDecoder.addABI([abi], contractName);
-        // Create some tx data
-        const foobarEncoder = new AbiEncoder.Method(abi);
-        const foobarSignature = foobarEncoder.getSignature();
-        const foobarTxData = foobarEncoder.encode([testAddress]);
+        // Create some tx data using ethers Interface
+        const ethersInterface = new Interface([abi]);
+        const foobarSignature = ethersInterface.getFunction(abi.name)!.format('full');
+        const foobarTxData = ethersInterface.encodeFunctionData(abi.name, [testAddress]);
         // Decode tx data using contract name
         const decodedTxData = abiDecoder.decodeCalldataOrThrow(foobarTxData, contractName);
         const expectedFunctionName = abi.name;

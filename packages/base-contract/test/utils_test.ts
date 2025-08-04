@@ -1,4 +1,4 @@
-import { BigNumber } from '@0x/utils';
+// BigNumber 已移除，使用原生 bigint
 import * as chai from 'chai';
 import 'mocha';
 
@@ -43,7 +43,7 @@ describe('Utils tests', () => {
                 type: 'tuple',
             };
             const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-            const val = { to: ZERO_ADDRESS, amount: new BigNumber(1) };
+            const val = { to: ZERO_ADDRESS, amount: 1n };
             const formatted = formatABIDataItem(abi, val, (type: string, value: any) => {
                 calls.push({ type, value });
                 return value; // no-op
@@ -79,8 +79,8 @@ describe('Utils tests', () => {
             const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
             const val = [
                 [
-                    { to: ZERO_ADDRESS, amount: new BigNumber(1) },
-                    { to: ZERO_ADDRESS, amount: new BigNumber(2) },
+                    { to: ZERO_ADDRESS, amount: 1n },
+                    { to: ZERO_ADDRESS, amount: 2n },
                 ],
             ];
             const formatted = formatABIDataItem(abi, val, (type: string, value: any) => {

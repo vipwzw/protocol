@@ -1,5 +1,4 @@
-import { AbiEncoder 
-} from '@0x/utils';
+import { Interface } from 'ethers';
 import { ContractArtifact, DataItem, MethodAbi } from 'ethereum-types';
 
 // tslint:disable-next-line:completed-docs
@@ -36,8 +35,12 @@ export function formatABIDataItem(abi: DataItem, value: any, formatter: (type: s
  * @return a function signature as a string, e.g. 'functionName(uint256, bytes[])'
  */
 export function methodAbiToFunctionSignature(methodAbi: MethodAbi): string {
-    const method = AbiEncoder.createMethod(methodAbi.name, methodAbi.inputs);
-    return method.getSignature();
+    const ethersInterface = new Interface([methodAbi]);
+    const functionFragment = ethersInterface.getFunction(methodAbi.name);
+    if (!functionFragment) {
+        throw new Error(`Function ${methodAbi.name} not found in interface`);
+    }
+    return functionFragment.format('full');
 }
 
 /**

@@ -88,7 +88,6 @@ export class ERC20Wrapper {
                 
                 try {
                     // 暂时跳过 setBalance，直接设置 allowance，看看是否能解决问题
-                    console.log(`Skipping setBalance for ${tokenOwnerAddress} to debug overflow issue`);
                     
                     // 获取对应的 signer 来执行 approve
                     const userSigner = signers.find((s: any) => s.address.toLowerCase() === tokenOwnerAddress.toLowerCase()) || signers[i % signers.length];
@@ -99,7 +98,6 @@ export class ERC20Wrapper {
                     await approveTx.wait();
                     
                 } catch (error) {
-                    console.warn(`Failed to set allowance for ${tokenOwnerAddress} on token ${await dummyTokenContract.getAddress()}:`, error);
                     // 继续处理下一个，不要因为单个失败就停止整个过程
                 }
             }

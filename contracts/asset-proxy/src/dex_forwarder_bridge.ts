@@ -1,9 +1,9 @@
-import { AbiEncoder, BigNumber } from '@0x/utils';
+import { ethers } from 'ethers';
 
 export interface DexForwarderBridgeCall {
     target: string;
-    inputTokenAmount: BigNumber;
-    outputTokenAmount: BigNumber;
+    inputTokenAmount: bigint;
+    outputTokenAmount: bigint;
     bridgeData: string;
 }
 
@@ -12,16 +12,19 @@ export interface DexForwaderBridgeData {
     calls: DexForwarderBridgeCall[];
 }
 
-export const dexForwarderBridgeDataEncoder = AbiEncoder.create([
-    { name: 'inputToken', type: 'address' },
-    {
-        name: 'calls',
-        type: 'tuple[]',
-        components: [
-            { name: 'target', type: 'address' },
-            { name: 'inputTokenAmount', type: 'uint256' },
-            { name: 'outputTokenAmount', type: 'uint256' },
-            { name: 'bridgeData', type: 'bytes' },
-        ],
+// 使用 ethers AbiCoder 替代 AbiEncoder
+const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+const dexForwarderBridgeDataTypes = [
+    'address', // inputToken
+    'tuple[]' // calls
+];
+
+export const dexForwarderBridgeDataEncoder = {
+    encode: (data: DexForwaderBridgeData): string => {
+        return abiCoder.encode(dexForwarderBridgeDataTypes, [data.inputToken, data.calls]);
     },
-]);
+    decode: (encoded: string): DexForwaderBridgeData => {
+        const [inputToken, calls] = abiCoder.decode(dexForwarderBridgeDataTypes, encoded);
+        return { inputToken, calls };
+    }
+};

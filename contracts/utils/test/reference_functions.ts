@@ -1,13 +1,8 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { BigNumber, SafeMathRevertErrors } from '@0x/utils';
+import { SafeMathRevertErrors } from '@0x/utils';
 
 import { safeAdd, safeDiv, safeMul, safeSub } from '../src/reference_functions';
-
-// Helper function to convert bigint to BigNumber for error reporting
-function toBigNumber(value: bigint): BigNumber {
-    return new BigNumber(value.toString());
-}
 
 // 现代化常量定义
 const MAX_UINT256 = ethers.MaxUint256;
@@ -50,8 +45,8 @@ describe('Reference Functions', () => {
                 const b = MAX_UINT256 / BigInt(2) + BigInt(2);
                 const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                     SafeMathRevertErrors.BinOpErrorCodes.AdditionOverflow,
-                    toBigNumber(a),
-                    toBigNumber(b),
+                    a,
+                    b,
                 );
                 expect(() => safeAdd(a, b)).to.throw(expectedError.message);
             });
@@ -70,8 +65,8 @@ describe('Reference Functions', () => {
                 const { a, b } = DEFAULT_VALUES;
                 const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                     SafeMathRevertErrors.BinOpErrorCodes.SubtractionUnderflow,
-                    toBigNumber(b),
-                    toBigNumber(a),
+                    b,
+                    a,
                 );
                 expect(() => safeSub(b, a)).to.throw(expectedError.message);
             });
@@ -91,8 +86,8 @@ describe('Reference Functions', () => {
                 const b = a;
                 const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                     SafeMathRevertErrors.BinOpErrorCodes.MultiplicationOverflow,
-                    toBigNumber(a),
-                    toBigNumber(b),
+                    a,
+                    b,
                 );
                 expect(() => safeMul(a, b)).to.throw(expectedError.message);
             });
@@ -111,8 +106,8 @@ describe('Reference Functions', () => {
                 const { a } = DEFAULT_VALUES;
                 const expectedError = new SafeMathRevertErrors.Uint256BinOpError(
                     SafeMathRevertErrors.BinOpErrorCodes.DivisionByZero,
-                    toBigNumber(a),
-                    toBigNumber(ZERO_AMOUNT),
+                    a,
+                    ZERO_AMOUNT,
                 );
                 expect(() => safeDiv(a, ZERO_AMOUNT)).to.throw(expectedError.message);
             });

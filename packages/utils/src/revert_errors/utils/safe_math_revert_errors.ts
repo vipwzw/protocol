@@ -18,7 +18,7 @@ export enum DowncastErrorCodes {
 }
 
 export class Uint256BinOpError extends RevertError {
-    constructor(error?: BinOpErrorCodes, a?: BigNumber, b?: BigNumber) {
+    constructor(error?: BinOpErrorCodes, a?: bigint, b?: bigint) {
         super('Uint256BinOpError', 'Uint256BinOpError(uint8 error, uint256 a, uint256 b)', {
             error,
             a,
@@ -28,7 +28,7 @@ export class Uint256BinOpError extends RevertError {
 }
 
 export class Uint96BinOpError extends RevertError {
-    constructor(error?: BinOpErrorCodes, a?: BigNumber, b?: BigNumber) {
+    constructor(error?: BinOpErrorCodes, a?: bigint, b?: bigint) {
         super('Uint96BinOpError', 'Uint96BinOpError(uint8 error, uint96 a, uint96 b)', {
             error,
             a,
@@ -38,7 +38,7 @@ export class Uint96BinOpError extends RevertError {
 }
 
 export class Uint64BinOpError extends RevertError {
-    constructor(error?: BinOpErrorCodes, a?: BigNumber, b?: BigNumber) {
+    constructor(error?: BinOpErrorCodes, a?: bigint, b?: bigint) {
         super('Uint64BinOpError', 'Uint64BinOpError(uint8 error, uint64 a, uint64 b)', {
             error,
             a,
@@ -48,7 +48,7 @@ export class Uint64BinOpError extends RevertError {
 }
 
 export class Uint256DowncastError extends RevertError {
-    constructor(error?: DowncastErrorCodes, a?: BigNumber) {
+    constructor(error?: DowncastErrorCodes, a?: bigint) {
         super('Uint256DowncastError', 'Uint256DowncastError(uint8 error, uint256 a)', {
             error,
             a,

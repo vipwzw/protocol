@@ -1,4 +1,4 @@
-import { AbiEncoder, BigNumber } from '@0x/utils';
+import { ethers } from 'ethers';
 
 export enum DydxBridgeActionType {
     Deposit,
@@ -7,34 +7,29 @@ export enum DydxBridgeActionType {
 
 export interface DydxBridgeAction {
     actionType: DydxBridgeActionType;
-    accountIdx: BigNumber;
-    marketId: BigNumber;
-    conversionRateNumerator: BigNumber;
-    conversionRateDenominator: BigNumber;
+    accountIdx: bigint;
+    marketId: bigint;
+    conversionRateNumerator: bigint;
+    conversionRateDenominator: bigint;
 }
 
 export interface DydxBridgeData {
-    accountNumbers: BigNumber[];
+    accountNumbers: bigint[];
     actions: DydxBridgeAction[];
 }
 
-export const dydxBridgeDataEncoder = AbiEncoder.create([
-    {
-        name: 'bridgeData',
-        type: 'tuple',
-        components: [
-            { name: 'accountNumbers', type: 'uint256[]' },
-            {
-                name: 'actions',
-                type: 'tuple[]',
-                components: [
-                    { name: 'actionType', type: 'uint8' },
-                    { name: 'accountIdx', type: 'uint256' },
-                    { name: 'marketId', type: 'uint256' },
-                    { name: 'conversionRateNumerator', type: 'uint256' },
-                    { name: 'conversionRateDenominator', type: 'uint256' },
-                ],
-            },
-        ],
+// 使用 ethers AbiCoder 替代 AbiEncoder
+const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+const dydxBridgeDataTypes = [
+    'tuple(uint256[],tuple(uint8,uint256,uint256,uint256,uint256)[])'
+];
+
+export const dydxBridgeDataEncoder = {
+    encode: (data: DydxBridgeData): string => {
+        return abiCoder.encode(dydxBridgeDataTypes, [data]);
     },
-]);
+    decode: (encoded: string): DydxBridgeData => {
+        const [decoded] = abiCoder.decode(dydxBridgeDataTypes, encoded);
+        return decoded as DydxBridgeData;
+    }
+};

@@ -10,7 +10,10 @@ import type {
 import {
     BlockParam,
     CallData,
+    ContractEventArg,
+    DecodedLogArgs,
     LogEntryEvent,
+    LogWithDecodedArgs,
     TransactionReceiptWithDecodedLogs,
     TxAccessListWithGas,
     TxData,
@@ -86,3 +89,18 @@ export interface ContractTxFunctionObj<T> extends ContractFunctionObj<T> {
     estimateGas?(...args: any[]): Promise<bigint>;
     populateTransaction?(...args: any[]): Promise<TransactionRequest>;
 }
+
+// Additional types needed for subscription manager
+export interface IndexedFilterValues {
+    [index: string]: ContractEventArg;
+}
+
+export interface DecodedLogEvent<ArgsType extends DecodedLogArgs> {
+    isRemoved: boolean;
+    log: LogWithDecodedArgs<ArgsType>;
+}
+
+export type EventCallback<ArgsType extends DecodedLogArgs> = (
+    err: null | Error,
+    log?: DecodedLogEvent<ArgsType>,
+) => void;
