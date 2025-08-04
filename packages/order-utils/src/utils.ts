@@ -92,3 +92,26 @@ export const utils = {
         return fillMakerTokenAmount;
     },
 };
+
+// JSON 序列化工具
+export const jsonUtils = {
+    /**
+     * BigInt 安全的 JSON 序列化 replacer 函数
+     * 用于 JSON.stringify() 的第二个参数，将 BigInt 转换为字符串
+     * 
+     * @example
+     * JSON.stringify(data, jsonUtils.bigIntReplacer)
+     */
+    bigIntReplacer: (key: string, value: any): any => 
+        typeof value === 'bigint' ? value.toString() : value,
+
+    /**
+     * 比较两个可能包含 BigInt 的对象是否相等（序列化比较）
+     * 
+     * @param obj1 第一个对象
+     * @param obj2 第二个对象
+     * @returns 是否相等
+     */
+    isEqual: (obj1: any, obj2: any): boolean => 
+        JSON.stringify(obj1, jsonUtils.bigIntReplacer) === JSON.stringify(obj2, jsonUtils.bigIntReplacer)
+};

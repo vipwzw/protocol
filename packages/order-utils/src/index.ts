@@ -92,3 +92,6 @@ export const NULL_BYTES = constants.NULL_BYTES;
 export const ZERO_AMOUNT = constants.ZERO_AMOUNT;
 export const NULL_ERC20_ASSET_DATA = constants.NULL_ERC20_ASSET_DATA;
 export const ETH_TOKEN_ADDRESS = constants.ETH_TOKEN_ADDRESS;
+
+// JSON 工具函数
+export { jsonUtils } from './utils';

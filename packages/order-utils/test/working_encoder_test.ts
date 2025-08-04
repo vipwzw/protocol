@@ -6,8 +6,9 @@ import {
     WethTransformerData,
     PayTakerTransformerData,
     AffiliateFeeTransformerData,
-    PositiveSlippageFeeTransformerData
-} from '../src/transformer_utils';
+    PositiveSlippageFeeTransformerData,
+    jsonUtils
+} from '../src';
 
 describe('编码器等价性验证测试', () => {
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
@@ -64,9 +65,7 @@ describe('编码器等价性验证测试', () => {
         ];
     }
 
-    function bigintReplacer(key: string, value: any) {
-        return typeof value === 'bigint' ? value.toString() : value;
-    }
+    
 
     describe('数据结构编码验证', () => {
         it('FillQuoteTransformerData - 验证新旧编码方式一致', () => {
@@ -141,7 +140,7 @@ describe('编码器等价性验证测试', () => {
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([fillQuoteParamType], newEncoded);
             
-            expect(JSON.stringify(newDecoded, bigintReplacer)).to.equal(JSON.stringify(oldDecoded, bigintReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
         });
 
         it('WethTransformerData - 验证新旧编码方式一致', () => {
@@ -174,7 +173,7 @@ describe('编码器等价性验证测试', () => {
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([wethParamType], newEncoded);
-            expect(JSON.stringify(newDecoded, bigintReplacer)).to.equal(JSON.stringify(oldDecoded, bigintReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
         });
 
         it('PayTakerTransformerData - 验证新旧编码方式一致', () => {
@@ -210,7 +209,7 @@ describe('编码器等价性验证测试', () => {
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([payTakerParamType], newEncoded);
-            expect(JSON.stringify(newDecoded, bigintReplacer)).to.equal(JSON.stringify(oldDecoded, bigintReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
         });
 
         it('AffiliateFeeTransformerData - 验证新旧编码方式一致', () => {
@@ -263,7 +262,7 @@ describe('编码器等价性验证测试', () => {
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([affiliateFeeParamType], newEncoded);
-            expect(JSON.stringify(newDecoded, bigintReplacer)).to.equal(JSON.stringify(oldDecoded, bigintReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
         });
 
         it('PositiveSlippageFeeTransformerData - 验证新旧编码方式一致', () => {
@@ -298,7 +297,7 @@ describe('编码器等价性验证测试', () => {
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([positiveSlippageParamType], newEncoded);
-            expect(JSON.stringify(newDecoded, bigintReplacer)).to.equal(JSON.stringify(oldDecoded, bigintReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
         });
     });
 

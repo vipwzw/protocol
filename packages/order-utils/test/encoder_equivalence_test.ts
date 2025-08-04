@@ -11,8 +11,28 @@ import {
     WethTransformerData,
     PayTakerTransformerData,
     AffiliateFeeTransformerData,
-    PositiveSlippageFeeTransformerData
-} from '../src/transformer_utils';
+    PositiveSlippageFeeTransformerData,
+    jsonUtils
+} from '../src';
+
+// 将对象按照 ABI 组件顺序转换为数组
+function convertToArrayFormat(data: any, components: any[]): any[] {
+    if (Array.isArray(data)) {
+        return data;
+    }
+    return components.map(component => {
+        const value = data[component.name];
+        if (component.type.startsWith('tuple') && component.components) {
+            // 递归处理嵌套的 tuple
+            if (Array.isArray(value)) {
+                return value.map(item => convertToArrayFormat(item, component.components));
+            } else {
+                return convertToArrayFormat(value, component.components);
+            }
+        }
+        return value;
+    });
+}
 
 describe('Encoder Equivalence Tests', () => {
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
@@ -53,9 +73,36 @@ describe('Encoder Equivalence Tests', () => {
             // 新的 JSON ABI 方式 (当前实现)
             const newEncoded = fillQuoteTransformerDataEncoder.encode([testData]);
 
-            // 旧的硬编码字符串方式 - 直接传递数据结构而不是数组包装
+            // 旧的硬编码字符串方式 - 需要转换为数组格式
             const oldTypeString = 'tuple(uint8,address,address,tuple(address,address,address,address,uint256,uint256,uint256,uint256,uint256,uint256,bytes,bytes,bytes,bytes)[],bytes[],uint256[],uint256,address,address)';
-            const oldEncoded = abiCoder.encode([oldTypeString], [testData]);
+            const fillQuoteComponents = [
+                { name: 'side', type: 'uint8' },
+                { name: 'sellToken', type: 'address' },
+                { name: 'buyToken', type: 'address' },
+                { name: 'orders', type: 'tuple[]', components: [
+                    { name: 'makerAddress', type: 'address' },
+                    { name: 'takerAddress', type: 'address' },
+                    { name: 'feeRecipientAddress', type: 'address' },
+                    { name: 'senderAddress', type: 'address' },
+                    { name: 'makerAssetAmount', type: 'uint256' },
+                    { name: 'takerAssetAmount', type: 'uint256' },
+                    { name: 'makerFee', type: 'uint256' },
+                    { name: 'takerFee', type: 'uint256' },
+                    { name: 'expirationTimeSeconds', type: 'uint256' },
+                    { name: 'salt', type: 'uint256' },
+                    { name: 'makerAssetData', type: 'bytes' },
+                    { name: 'takerAssetData', type: 'bytes' },
+                    { name: 'makerFeeAssetData', type: 'bytes' },
+                    { name: 'takerFeeAssetData', type: 'bytes' }
+                ]},
+                { name: 'signatures', type: 'bytes[]' },
+                { name: 'maxOrderFillAmounts', type: 'uint256[]' },
+                { name: 'fillAmount', type: 'uint256' },
+                { name: 'refundReceiver', type: 'address' },
+                { name: 'rfqtTakerAddress', type: 'address' }
+            ];
+            const arrayData = convertToArrayFormat(testData, fillQuoteComponents);
+            const oldEncoded = abiCoder.encode([oldTypeString], [arrayData]);
 
             console.log('New encoding:', newEncoded);
             console.log('Old encoding:', oldEncoded);
@@ -65,7 +112,8 @@ describe('Encoder Equivalence Tests', () => {
             const newDecoded = fillQuoteTransformerDataEncoder.decode(newEncoded);
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
 
-            expect(JSON.stringify(newDecoded)).to.equal(JSON.stringify([oldDecoded[0]]));
+            // 使用 BigInt 安全的序列化方法
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify([oldDecoded[0]], jsonUtils.bigIntReplacer));
         });
     });
 
@@ -81,7 +129,12 @@ describe('Encoder Equivalence Tests', () => {
 
             // 旧的硬编码字符串方式
             const oldTypeString = 'tuple(address,uint256)';
-            const oldEncoded = abiCoder.encode([oldTypeString], [testData]);
+            const wethComponents = [
+                { name: 'token', type: 'address' },
+                { name: 'amount', type: 'uint256' }
+            ];
+            const arrayData = convertToArrayFormat(testData, wethComponents);
+            const oldEncoded = abiCoder.encode([oldTypeString], [arrayData]);
 
             console.log('WETH New encoding:', newEncoded);
             console.log('WETH Old encoding:', oldEncoded);
@@ -91,7 +144,8 @@ describe('Encoder Equivalence Tests', () => {
             const newDecoded = wethTransformerDataEncoder.decode(newEncoded);
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
 
-            expect(JSON.stringify(newDecoded.data)).to.equal(JSON.stringify(oldDecoded[0]));
+            // 使用 BigInt 安全的序列化方法
+            expect(JSON.stringify(newDecoded.data, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded[0], jsonUtils.bigIntReplacer));
         });
     });
 
@@ -110,7 +164,12 @@ describe('Encoder Equivalence Tests', () => {
 
             // 旧的硬编码字符串方式
             const oldTypeString = 'tuple(address[],uint256[])';
-            const oldEncoded = abiCoder.encode([oldTypeString], [testData]);
+            const payTakerComponents = [
+                { name: 'tokens', type: 'address[]' },
+                { name: 'amounts', type: 'uint256[]' }
+            ];
+            const arrayData = convertToArrayFormat(testData, payTakerComponents);
+            const oldEncoded = abiCoder.encode([oldTypeString], [arrayData]);
 
             console.log('PayTaker New encoding:', newEncoded);
             console.log('PayTaker Old encoding:', oldEncoded);
@@ -120,7 +179,8 @@ describe('Encoder Equivalence Tests', () => {
             const newDecoded = payTakerTransformerDataEncoder.decode(newEncoded);
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
 
-            expect(JSON.stringify(newDecoded.data)).to.equal(JSON.stringify(oldDecoded[0]));
+            // 使用 BigInt 安全的序列化方法
+            expect(JSON.stringify(newDecoded.data, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded[0], jsonUtils.bigIntReplacer));
         });
     });
 
@@ -156,7 +216,8 @@ describe('Encoder Equivalence Tests', () => {
             const newDecoded = affiliateFeeTransformerDataEncoder.decode(newEncoded);
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
 
-            expect(JSON.stringify(newDecoded)).to.equal(JSON.stringify(oldDecoded[0]));
+            // 使用 BigInt 安全的序列化方法
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded[0], jsonUtils.bigIntReplacer));
         });
     });
 
@@ -183,7 +244,8 @@ describe('Encoder Equivalence Tests', () => {
             const newDecoded = positiveSlippageFeeTransformerDataEncoder.decode(newEncoded);
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
 
-            expect(JSON.stringify(newDecoded)).to.equal(JSON.stringify(oldDecoded[0]));
+            // 使用 BigInt 安全的序列化方法
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded[0], jsonUtils.bigIntReplacer));
         });
     });
 

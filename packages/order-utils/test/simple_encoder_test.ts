@@ -6,8 +6,28 @@ import {
     WethTransformerData,
     PayTakerTransformerData,
     AffiliateFeeTransformerData,
-    PositiveSlippageFeeTransformerData
-} from '../src/transformer_utils';
+    PositiveSlippageFeeTransformerData,
+    jsonUtils
+} from '../src';
+
+// 将对象按照 ABI 组件顺序转换为数组
+function convertToArrayFormat(data: any, components: any[]): any[] {
+    if (Array.isArray(data)) {
+        return data;
+    }
+    return components.map(component => {
+        const value = data[component.name];
+        if (component.type.startsWith('tuple') && component.components) {
+            // 递归处理嵌套的 tuple
+            if (Array.isArray(value)) {
+                return value.map(item => convertToArrayFormat(item, component.components));
+            } else {
+                return convertToArrayFormat(value, component.components);
+            }
+        }
+        return value;
+    });
+}
 
 describe('简化编码器等价性测试', () => {
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
@@ -125,7 +145,8 @@ describe('简化编码器等价性测试', () => {
                 ]
             };
             const wethParamType = ParamType.from(WETH_ABI);
-            const newEncoded = abiCoder.encode([wethParamType], [testData]);
+            const arrayData = convertToArrayFormat(testData, WETH_ABI.components);
+            const newEncoded = abiCoder.encode([wethParamType], [arrayData]);
             console.log('WETH 新方式编码:', newEncoded);
 
             expect(newEncoded).to.equal(oldEncoded);
@@ -158,7 +179,8 @@ describe('简化编码器等价性测试', () => {
                 ]
             };
             const payTakerParamType = ParamType.from(PAY_TAKER_ABI);
-            const newEncoded = abiCoder.encode([payTakerParamType], [testData]);
+            const arrayData = convertToArrayFormat(testData, PAY_TAKER_ABI.components);
+            const newEncoded = abiCoder.encode([payTakerParamType], [arrayData]);
             console.log('PayTaker 新方式编码:', newEncoded);
 
             expect(newEncoded).to.equal(oldEncoded);
@@ -205,7 +227,8 @@ describe('简化编码器等价性测试', () => {
                 ]
             };
             const affiliateFeeParamType = ParamType.from(AFFILIATE_FEE_ABI);
-            const newEncoded = abiCoder.encode([affiliateFeeParamType], [testData]);
+            const arrayData = convertToArrayFormat(testData, AFFILIATE_FEE_ABI.components);
+            const newEncoded = abiCoder.encode([affiliateFeeParamType], [arrayData]);
             console.log('AffiliateFee 新方式编码:', newEncoded);
 
             expect(newEncoded).to.equal(oldEncoded);
@@ -237,14 +260,17 @@ describe('简化编码器等价性测试', () => {
                 ]
             };
             const positiveSlippageParamType = ParamType.from(POSITIVE_SLIPPAGE_ABI);
-            const newEncoded = abiCoder.encode([positiveSlippageParamType], [testData]);
+            const arrayData = convertToArrayFormat(testData, POSITIVE_SLIPPAGE_ABI.components);
+            const newEncoded = abiCoder.encode([positiveSlippageParamType], [arrayData]);
             console.log('PositiveSlippageFee 新方式编码:', newEncoded);
 
             expect(newEncoded).to.equal(oldEncoded);
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([positiveSlippageParamType], newEncoded);
-            expect(JSON.stringify(newDecoded)).to.equal(JSON.stringify(oldDecoded));
+            
+            // 使用 BigInt 安全的序列化方法
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
         });
     });
 
