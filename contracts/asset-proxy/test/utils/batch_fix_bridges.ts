@@ -194,7 +194,7 @@ async function main(): Promise<void> {
     console.log('🔧 应用的修复:');
     console.log('  • 添加通用日志解析工具导入');
     console.log('  • 修复 Chai 断言语法');
-    console.log('  • 修复 BigNumber 方法调用');
+    console.log('  • 修复数值比较断言');
     console.log('  • 统一日志解析逻辑');
     console.log('  • 添加缺失的事件常量');
     

@@ -1,5 +1,5 @@
 import { ERC1155Mintable, ERC1155Mintable__factory } from '@0x/contracts-erc1155';
-// BigNumber 已移除，使用原生 bigint
+// 使用原生 bigint 类型
 import {
     constants,
     LogDecoder,

@@ -189,7 +189,7 @@ export class AssertionHelper {
 }
 
 /**
- * BigNumber 到 BigInt 迁移助手
+ * BigInt 数学运算助手
  */
 export class BigIntHelper {
     /**
@@ -219,28 +219,28 @@ export class BigIntHelper {
     }
 
     /**
-     * BigInt 乘法（替代 BigNumber.times）
+     * BigInt 乘法操作
      */
     static multiply(a: bigint, b: bigint): bigint {
         return a * b;
     }
 
     /**
-     * BigInt 除法（替代 BigNumber.div）
+     * BigInt 除法操作
      */
     static divide(a: bigint, b: bigint): bigint {
         return a / b;
     }
 
     /**
-     * BigInt 加法（替代 BigNumber.plus）
+     * BigInt 加法操作
      */
     static add(a: bigint, b: bigint): bigint {
         return a + b;
     }
 
     /**
-     * BigInt 减法（替代 BigNumber.minus）
+     * BigInt 减法操作
      */
     static subtract(a: bigint, b: bigint): bigint {
         return a - b;

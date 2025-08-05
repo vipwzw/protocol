@@ -66,11 +66,11 @@ describe('KyberBridge unit tests', () => {
             fromTokenAddress: string;
             toAddress: string;
             // Amount to pass into `bridgeTransferFrom()`
-            amount: BigNumber;
+            amount: bigint;
             // Amount to convert in `trade()`.
-            fillAmount: BigNumber;
+            fillAmount: bigint;
             // Token balance of the bridge.
-            fromTokenBalance: BigNumber;
+            fromTokenBalance: bigint;
         }
 
         interface TransferFromResult {
@@ -80,14 +80,14 @@ describe('KyberBridge unit tests', () => {
         }
 
         function createTransferFromOpts(opts?: Partial<TransferFromOpts>): TransferFromOpts {
-            const amount = getRandomInteger(1, TO_TOKEN_BASE.times(100));
+            const amount = BigInt(getRandomInteger(1, Number(TO_TOKEN_BASE * 100n)));
             return {
                 fromTokenAddress,
                 toTokenAddress,
                 amount,
                 toAddress: randomAddress(),
-                fillAmount: getRandomPortion(amount),
-                fromTokenBalance: getRandomInteger(1, FROM_TOKEN_BASE.times(100)),
+                fillAmount: BigInt(getRandomPortion(amount)),
+                fromTokenBalance: BigInt(getRandomInteger(1, Number(FROM_TOKEN_BASE * 100n))),
                 ...opts,
             };
         }
@@ -124,14 +124,12 @@ describe('KyberBridge unit tests', () => {
             };
         }
 
-        function getMinimumConversionRate(opts: TransferFromOpts): BigNumber {
+        function getMinimumConversionRate(opts: TransferFromOpts): bigint {
             const fromBase = opts.fromTokenAddress === wethAddress ? WETH_BASE : FROM_TOKEN_BASE;
             const toBase = opts.toTokenAddress === wethAddress ? WETH_BASE : TO_TOKEN_BASE;
-            return opts.amount
-                .div(toBase)
-                .div(opts.fromTokenBalance.div(fromBase))
-                .times(KYBER_RATE_BASE)
-                .integerValue(BigNumber.ROUND_DOWN);
+            // 使用 bigint 算术操作
+            const ratio = (opts.amount * KYBER_RATE_BASE * fromBase) / (toBase * opts.fromTokenBalance);
+            return ratio; // bigint 默认是整数，不需要 integerValue
         }
 
         it('returns magic bytes on success', async () => {
@@ -259,7 +257,7 @@ describe('KyberBridge unit tests', () => {
                 amount: opts.fromTokenBalance,
             });
             expect(logs[1].event).to.eq(TestKyberBridgeEvents.KyberBridgeTrade);
-            expect(logs[1].args.msgValue).to.bignumber.eq(opts.fromTokenBalance);
+            expect(logs[1].args.msgValue).to.eq(opts.fromTokenBalance);
         });
 
         it('wraps WETH and transfers it to the recipient when buyng WETH', async () => {

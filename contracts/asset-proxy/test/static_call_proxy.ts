@@ -207,9 +207,9 @@ describe('StaticCallProxy', () => {
             const aHex = '0000000000000000000000000000000000000000000000000000000000000001';
             const bHex = '0000000000000000000000000000000000000000000000000000000000000002';
             const staticCallTargetAddress = await staticCallTarget.getAddress();
-            const expectedResults = `${staticCallTargetAddress}${aHex}${bHex}`;
+            const expectedResults = `0x${staticCallTargetAddress.slice(2)}${aHex}${bHex}`;
             const offset = '0000000000000000000000000000000000000000000000000000000000000020';
-            const encodedExpectedResultWithOffset = `0x${offset}${abiCoder.encode(['bytes'], [`0x${expectedResults}`]).slice(2)}`;
+            const encodedExpectedResultWithOffset = `0x${offset}${abiCoder.encode(['bytes'], [expectedResults]).slice(2)}`;
             const expectedResultHash = ethUtil.bufferToHex(
                 ethUtil.keccak256(ethUtil.toBuffer(encodedExpectedResultWithOffset)),
             );

@@ -66,9 +66,9 @@ blockchainTests.resets('Bancor unit tests', env => {
             tokenAddressesPath: string[];
             toAddress: string;
             // Amount to pass into `bridgeTransferFrom()`
-            amount: BigNumber;
+            amount: bigint;
             // Token balance of the bridge.
-            fromTokenBalance: BigNumber;
+            fromTokenBalance: bigint;
             // Router reverts with this reason
             routerRevertReason: string;
         }

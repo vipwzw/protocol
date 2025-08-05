@@ -87,9 +87,9 @@ describe('UniswapV2 unit tests', () => {
             tokenAddressesPath: string[];
             toAddress: string;
             // Amount to pass into `bridgeTransferFrom()`
-            amount: BigNumber;
+            amount: bigint;
             // Token balance of the bridge.
-            fromTokenBalance: BigNumber;
+            fromTokenBalance: bigint;
             // Router reverts with this reason
             routerRevertReason: string;
         }
@@ -102,12 +102,12 @@ describe('UniswapV2 unit tests', () => {
         }
 
         function createTransferFromOpts(opts?: Partial<TransferFromOpts>): TransferFromOpts {
-            const amount = getRandomInteger(1, Number(TO_TOKEN_BASE * 100n));
+            const amount = BigInt(getRandomInteger(1, Number(TO_TOKEN_BASE * 100n)));
             return {
                 tokenAddressesPath: Array(2).fill(constants.NULL_ADDRESS),
                 amount,
                 toAddress: randomAddress(),
-                fromTokenBalance: getRandomInteger(1, Number(FROM_TOKEN_BASE * 100n)),
+                fromTokenBalance: BigInt(getRandomInteger(1, Number(FROM_TOKEN_BASE * 100n))),
                 routerRevertReason: '',
                 ...opts,
             };
@@ -152,7 +152,7 @@ describe('UniswapV2 unit tests', () => {
                 // Transfer amount.
                 _opts.amount,
                 // ABI-encode the input token address as the bridge data.
-                bridgeDataEncoder.encode([_opts.tokenAddressesPath]),
+                bridgeDataEncoder.encode(_opts.tokenAddressesPath),
             );
             const receipt = await bridgeTransferFromTx.wait();
             
