@@ -6,7 +6,7 @@ import {
     txDefaults,
     web3Wrapper,
 } from '@0x/test-utils';
-import { BlockchainLifecycle } from '@0x/dev-utils';
+// BlockchainLifecycle 已移除，使用 Hardhat 原生快照功能
 import { AssetProxyId, RevertReason } from '@0x/utils';
 // AbiEncoder 已移除，使用 ethers AbiCoder
 import * as chai from 'chai';
@@ -27,7 +27,9 @@ import {
 
 chaiSetup.configure();
 const expect = chai.expect;
-const blockchainLifecycle = new BlockchainLifecycle(provider);
+
+// 使用 Hardhat 快照功能替代 BlockchainLifecycle
+let snapshotId: string;
 
 describe('StaticCallProxy', () => {
     const amount = constants.ZERO_AMOUNT;
@@ -39,10 +41,10 @@ describe('StaticCallProxy', () => {
     let staticCallTarget: TestStaticCallTarget;
 
     before(async () => {
-        await blockchainLifecycle.startAsync();
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
     after(async () => {
-        await blockchainLifecycle.revertAsync();
+        await ethers.provider.send('evm_revert', [snapshotId]);
     });
     before(async () => {
         const accounts = await web3Wrapper.getAvailableAddressesAsync();
@@ -60,10 +62,10 @@ describe('StaticCallProxy', () => {
         await staticCallTarget.waitForDeployment();
     });
     beforeEach(async () => {
-        await blockchainLifecycle.startAsync();
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
     afterEach(async () => {
-        await blockchainLifecycle.revertAsync();
+        await ethers.provider.send('evm_revert', [snapshotId]);
     });
 
     describe('general', () => {

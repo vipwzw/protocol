@@ -135,10 +135,10 @@ blockchainTests.resets('Bancor unit tests', env => {
                 // Transfer amount.
                 _opts.amount,
                 // ABI-encode the input token address as the bridge data.
-                bridgeDataEncoder.encode([
+                bridgeDataEncoder.encode(
                     _opts.tokenAddressesPath,
-                    await testContract.getNetworkAddress(),
-                ]),
+                    await testContract.getNetworkAddress()
+                ),
             );
             const receipt = await bridgeTransferFromTx.wait();
             

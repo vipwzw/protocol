@@ -13,7 +13,7 @@ import {
     web3Wrapper,
 } from '@0x/test-utils';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
-import { BlockchainLifecycle } from '@0x/dev-utils';
+// BlockchainLifecycle 已移除，使用 Hardhat 原生快照功能
 import { AssetProxyId, RevertReason } from '@0x/utils';
 
 import * as chai from 'chai';
@@ -29,7 +29,8 @@ import { artifacts } from './artifacts';
 
 chaiSetup.configure();
 const expect = chai.expect;
-const blockchainLifecycle = new BlockchainLifecycle(provider);
+// 使用 Hardhat 快照功能替代 BlockchainLifecycle
+let snapshotId: string;
 
 // tslint:disable:no-unnecessary-type-assertion
 describe('ERC1155Proxy', () => {
@@ -64,10 +65,10 @@ describe('ERC1155Proxy', () => {
     let assetDataContract: IAssetData;
     // tests
     before(async () => {
-        await blockchainLifecycle.startAsync();
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
     after(async () => {
-        await blockchainLifecycle.revertAsync();
+        await ethers.provider.send('evm_revert', [snapshotId]);
     });
     before(async () => {
         /// deploy & configure ERC1155Proxy
@@ -115,10 +116,10 @@ describe('ERC1155Proxy', () => {
         assetDataContract = IAssetData__factory.connect(constants.NULL_ADDRESS, ownerSigner);
     });
     beforeEach(async () => {
-        await blockchainLifecycle.startAsync();
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
     afterEach(async () => {
-        await blockchainLifecycle.revertAsync();
+        await ethers.provider.send('evm_revert', [snapshotId]);
     });
     describe('general', () => {
         it('should revert if undefined function is called', async () => {

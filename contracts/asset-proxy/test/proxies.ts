@@ -25,7 +25,7 @@ import {
     txDefaults,
     web3Wrapper,
 } from '@0x/test-utils';
-import { BlockchainLifecycle } from '@0x/dev-utils';
+// BlockchainLifecycle 已移除，使用 Hardhat 原生快照功能
 import { AssetProxyId, RevertReason } from '@0x/utils';
 
 import * as chai from 'chai';
@@ -50,7 +50,9 @@ import { getProxyId, assertProxyId, transferFromViaFallback } from '../src/proxy
 
 chaiSetup.configure();
 const expect = chai.expect;
-const blockchainLifecycle = new BlockchainLifecycle(provider);
+
+// 使用 Hardhat 快照功能替代 BlockchainLifecycle
+let snapshotId: string;
 const assetProxyInterface = IAssetProxy__factory.connect(constants.NULL_ADDRESS, provider);
 
 // tslint:disable:no-unnecessary-type-assertion
@@ -92,10 +94,10 @@ describe('Asset Transfer Proxies', () => {
     let erc1155NonFungibleTokensOwnedBySpender: bigint[];
 
     before(async () => {
-        await blockchainLifecycle.startAsync();
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
     after(async () => {
-        await blockchainLifecycle.revertAsync();
+        await ethers.provider.send('evm_revert', [snapshotId]);
     });
     before(async () => {
         const signers = await ethers.getSigners();
@@ -271,10 +273,10 @@ describe('Asset Transfer Proxies', () => {
         });
     });
     beforeEach(async () => {
-        await blockchainLifecycle.startAsync();
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
     afterEach(async () => {
-        await blockchainLifecycle.revertAsync();
+        await ethers.provider.send('evm_revert', [snapshotId]);
     });
 
     // Helper function to setup proper balances and authorizations for tests

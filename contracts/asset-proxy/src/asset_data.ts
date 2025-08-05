@@ -83,7 +83,7 @@ export function encodeERC20AssetData(tokenAddress: string): string {
 /**
  * Encode ERC721 asset data.
  */
-export function encodeERC721AssetData(tokenAddress: string, tokenId: BigNumber | bigint): string {
+export function encodeERC721AssetData(tokenAddress: string, tokenId: bigint): string {
     // ERC721 asset data format: 4-byte proxy ID + 32-byte token address + 32-byte token ID = 68 bytes
     
     // ERC721 proxy ID: bytes4(keccak256("ERC721Token(address,uint256)"))
@@ -102,8 +102,8 @@ export function encodeERC721AssetData(tokenAddress: string, tokenId: BigNumber |
  */
 export function encodeERC1155AssetData(
     tokenAddress: string,
-    tokenIds: (BigNumber | bigint)[],
-    values: (BigNumber | bigint)[],
+    tokenIds: bigint[],
+    values: bigint[],
     callbackData: string,
 ): string {
     // ERC1155 proxy ID: bytes4(keccak256("ERC1155Assets(address,uint256[],uint256[],bytes)"))
@@ -123,7 +123,7 @@ export function encodeERC1155AssetData(
 /**
  * Encode MultiAsset asset data.
  */
-export function encodeMultiAssetData(values: (BigNumber | bigint)[], nestedAssetData: string[]): string {
+export function encodeMultiAssetData(values: bigint[], nestedAssetData: string[]): string {
     // MultiAsset proxy ID: bytes4(keccak256("MultiAsset(uint256[],bytes[])"))
     const proxyIdHash = keccak256(Buffer.from('MultiAsset(uint256[],bytes[])', 'utf8'));
     const proxyId = '0x' + Buffer.from(proxyIdHash.slice(0, 4)).toString('hex');
@@ -146,16 +146,34 @@ export function encodeStaticCallAssetData(
     staticCallData: string,
     expectedReturnDataHash: string,
 ): string {
-    // return assetDataIface
-    //     .StaticCall(staticCallTargetAddress, staticCallData, expectedReturnDataHash)
-    //     .getABIEncodedTransactionData();
-    return 'StaticCall'; // Placeholder
+    // StaticCall proxy ID: bytes4(keccak256("StaticCall(address,bytes,bytes32)"))
+    const proxyIdHash = keccak256(Buffer.from('StaticCall(address,bytes,bytes32)', 'utf8'));
+    const proxyId = '0x' + Buffer.from(proxyIdHash.slice(0, 4)).toString('hex');
+    
+    // Encode the data
+    const coder = ethers.AbiCoder.defaultAbiCoder();
+    const encoded = proxyId + coder.encode(
+        ['address', 'bytes', 'bytes32'],
+        [staticCallTargetAddress, staticCallData, expectedReturnDataHash]
+    ).slice(2);
+    
+    return encoded;
 }
 
 /**
  * Encode ERC20Bridge asset data.
  */
 export function encodeERC20BridgeAssetData(tokenAddress: string, bridgeAddress: string, bridgeData: string): string {
-    // return assetDataIface.ERC20Bridge(tokenAddress, bridgeAddress, bridgeData).getABIEncodedTransactionData();
-    return 'ERC20Bridge'; // Placeholder
+    // ERC20Bridge proxy ID: bytes4(keccak256("ERC20Bridge(address,address,bytes)"))
+    const proxyIdHash = keccak256(Buffer.from('ERC20Bridge(address,address,bytes)', 'utf8'));
+    const proxyId = '0x' + Buffer.from(proxyIdHash.slice(0, 4)).toString('hex');
+    
+    // Encode the data
+    const coder = ethers.AbiCoder.defaultAbiCoder();
+    const encoded = proxyId + coder.encode(
+        ['address', 'address', 'bytes'],
+        [tokenAddress, bridgeAddress, bridgeData]
+    ).slice(2);
+    
+    return encoded;
 }
