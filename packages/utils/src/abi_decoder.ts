@@ -128,7 +128,16 @@ export class AbiDecoder {
         }
         const functionName = functionInfo.methodAbi.name;
         const functionSignature = functionInfo.functionSignature;
-        const functionArguments = functionInfo.ethersInterface.decodeFunctionData(functionInfo.methodAbi.name, calldata);
+        const decodedData = functionInfo.ethersInterface.decodeFunctionData(functionInfo.methodAbi.name, calldata);
+        
+        // 将 ethers.js v6 的 Result 对象转换为带参数名称的普通对象
+        const functionArguments: { [key: string]: any } = {};
+        functionInfo.methodAbi.inputs?.forEach((input, index) => {
+            if (input.name && index < decodedData.length) {
+                functionArguments[input.name] = decodedData[index];
+            }
+        });
+        
         const decodedCalldata = {
             functionName,
             functionSignature,
