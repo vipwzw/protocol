@@ -1,7 +1,7 @@
-import { DecodedLogs } from 'ethereum-types';
 import { ethers } from 'hardhat';
 import * as _ from 'lodash';
-import { filterLogsToArguments as universalFilterLogsToArguments } from '@0x/test-utils';
+
+type DecodedLogs = any[];
 
 // 通用事件参数类型定义
 export interface TokenTransferArgs {
@@ -73,13 +73,40 @@ export function filterLogs<T>(logs: DecodedLogs, eventName: string): T[] {
 }
 
 /**
+ * 本地实现的事件过滤函数，替代 @0x/test-utils
+ * @param logs 解码后的日志数组  
+ * @param eventName 事件名称
+ * @returns 事件参数数组
+ */
+function universalFilterLogsToArguments<T>(logs: DecodedLogs, eventName: string): T[] {
+    return logs
+        .filter((log: any) => {
+            // 支持多种日志格式
+            return log.event === eventName || 
+                   log.eventName === eventName ||
+                   (log.fragment && log.fragment.name === eventName) ||
+                   (log.args && log.name === eventName);
+        })
+        .map((log: any) => {
+            // 提取事件参数
+            if (log.args) {
+                return log.args as T;
+            }
+            if (log.arguments) {
+                return log.arguments as T;
+            }
+            // 如果是原始日志格式，返回整个对象
+            return log as T;
+        });
+}
+
+/**
  * 从日志中过滤指定事件并提取参数
  * @param logs 解码后的日志数组  
  * @param eventName 事件名称
  * @returns 事件参数数组
  */
 export function filterLogsToArguments<T>(logs: DecodedLogs, eventName: string): T[] {
-    // 使用通用版本
     return universalFilterLogsToArguments<T>(logs, eventName);
 }
 
