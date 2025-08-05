@@ -29,6 +29,23 @@ function convertToArrayFormat(obj: any, components: any[]): any {
     if (typeof obj === 'object' && obj !== null) {
         return components.map(component => {
             const value = obj[component.name];
+            
+            // 处理 null 或 undefined 值
+            if (value === null || value === undefined) {
+                // 根据组件类型返回默认值
+                if (component.type.endsWith('[]')) {
+                    return []; // 数组类型默认为空数组
+                } else if (component.type.startsWith('uint') || component.type.startsWith('int')) {
+                    return 0; // 整数类型默认为 0
+                } else if (component.type === 'address') {
+                    return '0x0000000000000000000000000000000000000000'; // 地址类型默认为零地址
+                } else if (component.type === 'bytes' || component.type.startsWith('bytes')) {
+                    return '0x'; // bytes 类型默认为空字节
+                } else {
+                    return 0; // 其他类型默认为 0
+                }
+            }
+            
             if (component.components && Array.isArray(value)) {
                 // 处理嵌套的 tuple 数组
                 return value.map(item => convertToArrayFormat(item, component.components));

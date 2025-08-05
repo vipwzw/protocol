@@ -99,7 +99,7 @@ describe('DydxBridge unit tests', () => {
                     from,
                     to,
                     amount,
-                    dydxBridgeDataEncoder.encode({ bridgeData }),
+                    dydxBridgeDataEncoder.encode(bridgeData),
                 );
             return returnValue;
         };
@@ -117,7 +117,7 @@ describe('DydxBridge unit tests', () => {
                     from,
                     to,
                     amount,
-                    dydxBridgeDataEncoder.encode({ bridgeData }),
+                    dydxBridgeDataEncoder.encode(bridgeData),
                 );
             const txReceipt = await tx.wait();
             
@@ -409,7 +409,7 @@ describe('DydxBridge unit tests', () => {
         before(async () => {
             const testTokenAddress = await testContract.getTestToken();
             assetData = assetDataEncoder
-                .ERC20Bridge(testTokenAddress, testContract.address, dydxBridgeDataEncoder.encode({ bridgeData }))
+                .ERC20Bridge(testTokenAddress, testContract.address, dydxBridgeDataEncoder.encode(bridgeData))
                 .getABIEncodedTransactionData();
         });
 
