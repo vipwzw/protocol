@@ -1,0 +1,762 @@
+yarn run v1.22.22
+$ run-s test:hardhat test:forge
+$ npx hardhat test
+npm warn Unknown env config "version-git-tag". This will stop working in the next major version of npm.
+npm warn Unknown env config "network-timeout". This will stop working in the next major version of npm.
+npm warn Unknown env config "argv". This will stop working in the next major version of npm.
+npm warn Unknown env config "version-commit-hooks". This will stop working in the next major version of npm.
+npm warn Unknown env config "version-git-message". This will stop working in the next major version of npm.
+npm warn Unknown env config "version-tag-prefix". This will stop working in the next major version of npm.
+
+
+✅ Test environment setup with modern chai matchers
+  Asset Proxy Contracts - Modern ethers v6 Tests
+🚀 Blockchain lifecycle started
+✅ Modern test environment initialized
+    ERC20Proxy
+🎯 ERC20Proxy deployed at: 0x1dC4c1cEFEF38a777b15aA20260a54E584b16C48
+      ✔ should deploy and have correct proxy ID
+    MultiAssetProxy
+🎯 MultiAssetProxy deployed at: 0x1D7022f5B17d2F8B695918FB48fa1089C9f85401
+      ✔ should deploy and handle multiple asset types
+    StaticCallProxy
+🎯 StaticCallProxy deployed at: 0x871DD7C2B4b25E1Aa18728e9D5f2Af4C4e431f5c
+      ✔ should deploy and be ready for static calls
+    Modern Testing Patterns
+🎯 Owner: 0x5409ED021D9299bf6814279A6A1411A7e866A631
+🎯 User: 0x6Ecbe1DB9EF729CBe972C83Fb886247691Fb6beb
+      ✔ should demonstrate ethers v6 best practices
+      ✔ should demonstrate modern revert assertions
+⏪ Blockchain state reverted
+
+  Authorizable
+    addAuthorizedAddress
+      - should revert if not called by owner
+      - should allow owner to add an authorized address
+      - should revert if owner attempts to authorize a duplicate address
+    removeAuthorizedAddress
+      - should revert if not called by owner
+      - should allow owner to remove an authorized address
+      - should revert if owner attempts to remove an address that is not authorized
+    removeAuthorizedAddressAtIndex
+      - should revert if not called by owner
+      - should revert if index is >= authorities.length
+      - should revert if owner attempts to remove an address that is not authorized
+      - should revert if address at index does not match target
+      - should allow owner to remove an authorized address
+    getAuthorizedAddresses
+      - should return all authorized addresses
+
+  Bancor unit tests
+    isValidSignature()
+      ✔ returns success bytes
+    bridgeTransferFrom()
+      ✔ returns magic bytes on success
+      token -> token
+        1) calls BancorNetwork.convertByPath()
+        2) sets allowance for "from" token
+        ✔ fails if the router fails
+      token -> token -> token
+        3) calls BancorNetwork.convertByPath()
+
+  ChaiBridge unit tests
+⏭️ Skipping ChaiBridge tests - needs modern factory and contract compilation
+    bridgeTransferFrom()
+      - fails if not called by ERC20BridgeProxy
+      - returns magic bytes upon success
+      - should increase the Dai balance of `toAddress` by `amount` if successful
+      - fails if the `chai.draw` call fails
+
+  DydxBridge unit tests
+    bridgeTransferFrom()
+      ✔ succeeds when calling with zero amount
+      ✔ succeeds when calling with no accounts
+      ✔ succeeds when calling with no actions
+      ✔ succeeds when calling `operate` with the `deposit` action and a single account
+      ✔ succeeds when calling `operate` with the `deposit` action and multiple accounts
+      ✔ succeeds when calling `operate` with the `withdraw` action and a single account
+      ✔ succeeds when calling `operate` with the `withdraw` action and multiple accounts
+      ✔ succeeds when calling `operate` with the `deposit` action and multiple accounts
+      ✔ succeeds when calling `operate` with multiple actions under a single account
+      ✔ succeeds when scaling the `amount` to deposit
+      ✔ succeeds when scaling the `amount` to withdraw
+✅ 权限检查机制验证:
+   - 正常调用（非 address(1)）: 应该成功 ✅
+   - address(1) 调用: 应该失败（由于 Hardhat 限制无法直接测试）
+      ✔ reverts if not called by the ERC20 Bridge Proxy
+      ✔ should return magic bytes if call succeeds
+      ✔ should revert when `Operate` reverts
+      ✔ should revert when there is a rounding error
+    ERC20BridgeProxy.transferFrom()
+      - should succeed if `bridgeTransferFrom` succeeds
+      - should revert if `bridgeTransferFrom` reverts
+
+  ERC1155Proxy
+✅ Deployed ERC1155Receiver at: 0x4112f5fc3f737e813ca8cC1A48D1da3dc8719435
+    general
+      ✔ should revert if undefined function is called
+      ✔ should have an id of 0xa7cb5fb7
+    transferFrom
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=500, actual=500
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1500, actual=1500
+      ✔ should successfully transfer value for a single, fungible token
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=820, actual=820
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1180, actual=1180
+      ✔ should successfully transfer value for the same fungible token several times
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=680564733841876926926749214863536422912, expected=1000, actual=1000
+Balance 2: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=1020847100762815390390123822295304634368, expected=1000, actual=1000
+Balance 3: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 4: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=680564733841876926926749214863536422912, expected=1000, actual=1000
+Balance 5: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=1020847100762815390390123822295304634368, expected=1000, actual=1000
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=960, actual=960
+Balance 1: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=680564733841876926926749214863536422912, expected=940, actual=940
+Balance 2: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=1020847100762815390390123822295304634368, expected=920, actual=920
+Balance 3: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1040, actual=1040
+Balance 4: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=680564733841876926926749214863536422912, expected=1060, actual=1060
+Balance 5: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=1020847100762815390390123822295304634368, expected=1080, actual=1080
+      ✔ should successfully transfer value for several fungible tokens
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=1, actual=1
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=0, actual=0
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=0, actual=0
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=1, actual=1
+      ✔ should successfully transfer a non-fungible token
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=1, actual=1
+Balance 1: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953930718380735871543581289287293137783357444, expected=1, actual=1
+Balance 2: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953931058663102792482044752661900569551568900, expected=1, actual=1
+Balance 3: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=0, actual=0
+Balance 4: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953930718380735871543581289287293137783357444, expected=0, actual=0
+Balance 5: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953931058663102792482044752661900569551568900, expected=0, actual=0
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=0, actual=0
+Balance 1: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953930718380735871543581289287293137783357444, expected=0, actual=0
+Balance 2: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953931058663102792482044752661900569551568900, expected=0, actual=0
+Balance 3: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=1, actual=1
+Balance 4: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953930718380735871543581289287293137783357444, expected=1, actual=1
+Balance 5: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953931058663102792482044752661900569551568900, expected=1, actual=1
+      ✔ should successfully transfer multiple non-fungible tokens
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=680564733841876926926749214863536422912, expected=1000, actual=1000
+Balance 2: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=1020847100762815390390123822295304634368, expected=1000, actual=1000
+Balance 3: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=1, actual=1
+Balance 4: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953930718380735871543581289287293137783357444, expected=1, actual=1
+Balance 5: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 6: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=680564733841876926926749214863536422912, expected=1000, actual=1000
+Balance 7: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=1020847100762815390390123822295304634368, expected=1000, actual=1000
+Balance 8: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=0, actual=0
+Balance 9: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953930718380735871543581289287293137783357444, expected=0, actual=0
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=750, actual=750
+Balance 1: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=680564733841876926926749214863536422912, expected=990, actual=990
+Balance 2: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=1020847100762815390390123822295304634368, expected=990, actual=990
+Balance 3: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=0, actual=0
+Balance 4: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953930718380735871543581289287293137783357444, expected=0, actual=0
+Balance 5: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1250, actual=1250
+Balance 6: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=680564733841876926926749214863536422912, expected=1010, actual=1010
+Balance 7: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=1020847100762815390390123822295304634368, expected=1010, actual=1010
+Balance 8: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=1, actual=1
+Balance 9: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953930718380735871543581289287293137783357444, expected=1, actual=1
+      ✔ should successfully transfer value for a combination of several fungible/non-fungible tokens
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x4112f5fc3f737e813ca8cC1A48D1da3dc8719435, token=340282366920938463463374607431768211456, expected=0, actual=0
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=500, actual=500
+Balance 1: owner=0x4112f5fc3f737e813ca8cC1A48D1da3dc8719435, token=340282366920938463463374607431768211456, expected=500, actual=500
+      ✔ should successfully transfer value to a smart contract and trigger its callback
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x4112f5fc3f737e813ca8cC1A48D1da3dc8719435, token=340282366920938463463374607431768211456, expected=0, actual=0
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=500, actual=500
+Balance 1: owner=0x4112f5fc3f737e813ca8cC1A48D1da3dc8719435, token=340282366920938463463374607431768211456, expected=500, actual=500
+      ✔ should successfully transfer value to a smart contract and trigger its callback, when callback `data` is NULL
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x4112f5fc3f737e813ca8cC1A48D1da3dc8719435, token=340282366920938463463374607431768211456, expected=0, actual=0
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=500, actual=500
+Balance 1: owner=0x4112f5fc3f737e813ca8cC1A48D1da3dc8719435, token=340282366920938463463374607431768211456, expected=500, actual=500
+      ✔ should successfully transfer value to a smart contract and trigger its callback, when callback `data` is one word
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x4112f5fc3f737e813ca8cC1A48D1da3dc8719435, token=340282366920938463463374607431768211456, expected=0, actual=0
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=500, actual=500
+Balance 1: owner=0x4112f5fc3f737e813ca8cC1A48D1da3dc8719435, token=340282366920938463463374607431768211456, expected=500, actual=500
+      ✔ should successfully transfer value to a smart contract and trigger its callback, when callback `data` is multiple words
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x4112f5fc3f737e813ca8cC1A48D1da3dc8719435, token=340282366920938463463374607431768211456, expected=0, actual=0
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=500, actual=500
+Balance 1: owner=0x4112f5fc3f737e813ca8cC1A48D1da3dc8719435, token=340282366920938463463374607431768211456, expected=500, actual=500
+      ✔ should successfully transfer value to a smart contract and trigger its callback, when callback `data` is multiple words but not word-aligned
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x4112f5fc3f737e813ca8cC1A48D1da3dc8719435, token=340282366920938463463374607431768211456, expected=0, actual=0
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=500, actual=500
+Balance 1: owner=0x4112f5fc3f737e813ca8cC1A48D1da3dc8719435, token=340282366920938463463374607431768211456, expected=500, actual=500
+      ✔ should successfully transfer value and ignore extra assetData
+      ✔ should successfully transfer if token ids and values are abi encoded to same entry in calldata
+      ✔ should successfully transfer if token values and data are abi encoded to same entry in calldata
+      ✔ should successfully transfer if token ids, values and data are abi encoded to same entry in calldata
+      ✔ should revert if token ids resolves to outside the bounds of calldata
+      ✔ should revert if an element of token ids lies to outside the bounds of calldata
+      ✔ should revert token ids length overflows
+      ✔ should revert token values length overflows
+      ✔ should revert token data length overflows
+      ✔ should revert if token values resolves to outside the bounds of calldata
+      ✔ should revert if an element of token values lies to outside the bounds of calldata
+      ✔ should revert if token data resolves to outside the bounds of calldata
+      ✔ should revert if an element of token data lies to outside the bounds of calldata
+      ✔ should revert if asset data lies outside the bounds of calldata
+      ✔ should revert if asset data lies outside the bounds of calldata
+      ✔ should revert if length of assetData is less than 132 bytes
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+      ✔ should transfer nothing if value is zero
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+      ✔ should transfer nothing if value multiplier is zero
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+      ✔ should transfer nothing if there are no tokens in asset data
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x4112f5fc3f737e813ca8cC1A48D1da3dc8719435, token=340282366920938463463374607431768211456, expected=0, actual=0
+      ✔ should propagate revert reason from erc1155 contract failure
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=1, actual=1
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=1, actual=1
+Balance 2: owner=undefined, token=undefined, expected=0, actual=0
+Balance 3: owner=undefined, token=undefined, expected=0, actual=0
+      ✔ should revert if transferring the same non-fungible token more than once
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=1, actual=1
+Balance 1: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953930718380735871543581289287293137783357444, expected=1, actual=1
+Balance 2: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953931058663102792482044752661900569551568900, expected=1, actual=1
+Balance 3: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=0, actual=0
+Balance 4: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953930718380735871543581289287293137783357444, expected=0, actual=0
+Balance 5: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953931058663102792482044752661900569551568900, expected=0, actual=0
+      ✔ should revert if there is a multiplication overflow
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=1, actual=1
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=0, actual=0
+      ✔ should revert if transferring > 1 instances of a non-fungible token (valueMultiplier field >1)
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=1, actual=1
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=57896044618658097711785492504343953930378098368950605117825912685706015145988, expected=0, actual=0
+      ✔ should revert if transferring > 1 instances of a non-fungible token (`valuesToTransfer` field >1)
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+      ✔ should revert if sender balance is insufficient
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+      ✔ should revert if sender allowance is insufficient
+Balance 0: owner=0xE834EC434DABA538cd1b9Fe1582052B880BD7e63, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+Balance 1: owner=0x78dc5D2D739606d31509C31d654056A45185ECb6, token=340282366920938463463374607431768211456, expected=1000, actual=1000
+      ✔ should revert if caller is not authorized
+
+  ERC20BridgeProxy unit tests
+    transferFrom()
+      4) succeeds if the bridge succeeds and balance increases by `amount`
+      5) succeeds if balance increases more than `amount`
+      6) passes the correct arguments to the bridge contract
+      ✔ fails if not called by an authorized address
+      ✔ fails if asset data is truncated
+      ✔ fails if bridge returns nothing
+      ✔ fails if bridge returns true
+      7) fails if bridge returns 0x1
+      ✔ fails if bridge is an EOA
+      8) fails if bridge reverts
+      9) fails if balance of `to` increases by less than `amount`
+      10) fails if balance of `to` decreases
+    balanceOf()
+      11) retrieves the balance of the encoded token
+    getProxyId()
+      ✔ returns the correct proxy ID
+
+  Eth2DaiBridge unit tests
+    isValidSignature()
+      ✔ returns success bytes
+    bridgeTransferFrom()
+      ✔ returns magic bytes on success
+      12) calls `Eth2Dai.sellAllAmount()`
+      13) sets an unlimited allowance on the `fromTokenAddress` token
+      14) transfers filled amount to `to`
+      ✔ fails if `Eth2Dai.sellAllAmount()` reverts
+      ✔ fails if `toTokenAddress.transfer()` reverts
+      15) fails if `toTokenAddress.transfer()` returns false
+      ✔ succeeds if `toTokenAddress.transfer()` returns true
+
+  KyberBridge unit tests
+    isValidSignature()
+      ✔ returns success bytes
+    bridgeTransferFrom()
+      16) "before all" hook for "returns magic bytes on success"
+
+  Asset Transfer Proxies
+    ERC20Proxy
+      ✔ should revert if undefined function is called
+      ✔ should have an id of 0xf47261b0
+      transferFrom
+        ✔ should successfully transfer tokens
+        ✔ should successfully transfer tokens that do not return a value
+        ✔ should successfully transfer tokens and ignore extra assetData
+        ✔ should do nothing if transferring 0 amount of a token
+        ✔ should revert if allowances are too low
+        ✔ should revert if allowances are too low and token does not return a value
+        ✔ should revert if caller is not authorized
+        ✔ should revert if token returns more than 32 bytes
+    ERC721Proxy
+      ✔ should revert if undefined function is called
+      ✔ should have an id of 0x02571792
+      transferFrom
+        ✔ should successfully transfer tokens
+        ✔ should successfully transfer tokens and ignore extra assetData
+        ✔ should not call onERC721Received when transferring to a smart contract
+        ✔ should revert if transferring 0 amount of a token
+        ✔ should revert if transferring > 1 amount of a token
+        ✔ should revert if allowances are too low
+        ✔ should revert if caller is not authorized
+    MultiAssetProxy
+      ✔ should revert if undefined function is called
+      ✔ should have an id of 0x94cfcdd7
+      transferFrom
+        ✔ should transfer a single ERC20 token
+        ✔ should dispatch an ERC20 transfer when input amount is 0
+        ✔ should successfully transfer multiple of the same ERC20 token
+        ✔ should successfully transfer multiple different ERC20 tokens
+        ✔ should transfer a single ERC721 token
+        ✔ should successfully transfer multiple of the same ERC721 token
+        ✔ should successfully transfer multiple different ERC721 tokens
+        ✔ should transfer a fungible ERC1155 token
+        ✔ should revert with ERC1155_INSUFFICIENT_BALANCE when balance is insufficient
+        - should successfully transfer multiple fungible tokens of the same ERC1155 contract
+        - should successfully transfer multiple fungible/non-fungible tokens of the same ERC1155 contract
+        - should successfully transfer multiple different ERC1155 tokens
+        - should successfully transfer a combination of ERC20, ERC721, and ERC1155 tokens
+        ✔ should successfully transfer a combination of ERC20 and ERC721 tokens
+        - should successfully transfer tokens and ignore extra assetData
+        ✔ should successfully transfer correct amounts when the `amount` > 1
+        ✔ should successfully transfer a large amount of tokens
+        ✔ should revert if a single transfer fails
+        ✔ should revert if an AssetProxy is not registered
+        ✔ should revert if the length of `amounts` does not match the length of `nestedAssetData`
+        ✔ should revert if amounts multiplication results in an overflow
+        ✔ should revert if an element of `nestedAssetData` is < 4 bytes long
+        ✔ should revert if caller is not authorized
+        ✔ should revert if asset data overflows beyond the bounds of calldata
+        ✔ should revert if asset data resolves to a location beyond the bounds of calldata
+        ✔ should revert if length of assetData, excluding the selector, is not a multiple of 32
+        ✔ should revert if length of assetData is less than 68 bytes
+
+  StaticCallProxy
+    general
+      ✔ should revert if undefined function is called
+      ✔ should have an id of 0xc339d10a
+    transferFrom
+      ✔ should revert if assetData lies outside the bounds of calldata
+      ✔ should revert if the length of assetData is less than 100 bytes
+      ✔ should revert if the offset to `staticCallData` points to outside of assetData
+      ✔ should revert if the callTarget attempts to write to state
+      ✔ should revert with data provided by the callTarget if the staticcall reverts
+      ✔ should revert if the hash of the output is different than expected expected
+      ✔ should be successful if a function call with no inputs and no outputs is successful
+      ✔ should be successful if the staticCallTarget is not a contract and no return value is expected
+      ✔ should be successful if a function call with one static input returns the correct value
+      ✔ should be successful if a function with one dynamic input is successful
+      17) should be successful if a function call returns a complex type
+
+  UniswapBridge unit tests
+    isValidSignature()
+      ✔ returns success bytes
+    bridgeTransferFrom()
+      ✔ returns magic bytes on success
+      18) just transfers tokens to `to` if the same tokens are in play
+      token -> token
+        19) calls `IUniswapExchange.tokenToTokenTransferInput()
+        20) sets allowance for "from" token
+        21) sets allowance for "from" token on subsequent calls
+        ✔ fails if "from" token does not exist
+        ✔ fails if the exchange fails
+      token -> ETH
+        22) calls `IUniswapExchange.tokenToEthSwapInput()`, `WETH.deposit()`, then `transfer()`
+        23) sets allowance for "from" token
+        24) sets allowance for "from" token on subsequent calls
+        ✔ fails if "from" token does not exist
+        ✔ fails if `WETH.deposit()` fails
+        ✔ fails if the exchange fails
+      ETH -> token
+        25) calls  `WETH.withdraw()`, then `IUniswapExchange.ethToTokenTransferInput()`
+        26) does not set any allowance
+        ✔ fails if "to" token does not exist
+        ✔ fails if the `WETH.withdraw()` fails
+        27) fails if the exchange fails
+
+  UniswapV2 unit tests
+    isValidSignature()
+      ✔ returns success bytes
+    bridgeTransferFrom()
+      ✔ returns magic bytes on success
+      28) performs transfer when both tokens are the same
+      token -> token
+        29) calls UniswapV2Router01.swapExactTokensForTokens()
+        30) sets allowance for "from" token
+        31) sets allowance for "from" token on subsequent calls
+        ✔ fails if the router fails
+      token -> token -> token
+        32) calls UniswapV2Router01.swapExactTokensForTokens()
+
+🧹 Test environment cleanup
+
+  142 passing (2s)
+  23 pending
+  32 failing
+
+  1) Bancor unit tests
+       bridgeTransferFrom()
+         token -> token
+           calls BancorNetwork.convertByPath():
+
+      AssertionError: expected +0 to equal 1
+      + expected - actual
+
+      -0
+      +1
+      
+      at Context.<anonymous> (test/bancor_bridge.ts:164:45)
+
+  2) Bancor unit tests
+       bridgeTransferFrom()
+         token -> token
+           sets allowance for "from" token:
+
+      AssertionError: expected +0 to equal 1
+      + expected - actual
+
+      -0
+      +1
+      
+      at Context.<anonymous> (test/bancor_bridge.ts:180:45)
+
+  3) Bancor unit tests
+       bridgeTransferFrom()
+         token -> token -> token
+           calls BancorNetwork.convertByPath():
+
+      AssertionError: expected +0 to equal 1
+      + expected - actual
+
+      -0
+      +1
+      
+      at Context.<anonymous> (test/bancor_bridge.ts:201:45)
+
+  4) ERC20BridgeProxy unit tests
+       transferFrom()
+         succeeds if the bridge succeeds and balance increases by `amount`:
+     Error: Transaction reverted and Hardhat couldn't infer the reason.
+    at ERC20BridgeProxy.transferFrom (contracts/src/ERC20BridgeProxy.sol:65)
+    at ERC20BridgeProxy.transferFrom (contracts/src/ERC20BridgeProxy.sol:65)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.transferFrom (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async transferFromAsync (test/erc20bridge_proxy.ts:144:24)
+    at async Context.<anonymous> (test/erc20bridge_proxy.ts:161:13)
+  
+
+  5) ERC20BridgeProxy unit tests
+       transferFrom()
+         succeeds if balance increases more than `amount`:
+     Error: Transaction reverted and Hardhat couldn't infer the reason.
+    at ERC20BridgeProxy.transferFrom (contracts/src/ERC20BridgeProxy.sol:65)
+    at ERC20BridgeProxy.transferFrom (contracts/src/ERC20BridgeProxy.sol:65)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.transferFrom (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async transferFromAsync (test/erc20bridge_proxy.ts:144:24)
+    at async Context.<anonymous> (test/erc20bridge_proxy.ts:174:13)
+  
+
+  6) ERC20BridgeProxy unit tests
+       transferFrom()
+         passes the correct arguments to the bridge contract:
+     Error: Transaction reverted and Hardhat couldn't infer the reason.
+    at ERC20BridgeProxy.transferFrom (contracts/src/ERC20BridgeProxy.sol:65)
+    at ERC20BridgeProxy.transferFrom (contracts/src/ERC20BridgeProxy.sol:65)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.transferFrom (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async transferFromAsync (test/erc20bridge_proxy.ts:144:24)
+    at async Context.<anonymous> (test/erc20bridge_proxy.ts:179:26)
+  
+
+  7) ERC20BridgeProxy unit tests
+       transferFrom()
+         fails if bridge returns 0x1:
+     AssertionError: Expected transaction to be reverted with reason 'BRIDGE_FAILED', but it reverted without a reason
+  
+
+  8) ERC20BridgeProxy unit tests
+       transferFrom()
+         fails if bridge reverts:
+     AssertionError: Expected transaction to be reverted with reason 'FOOBAR', but it reverted without a reason
+  
+
+  9) ERC20BridgeProxy unit tests
+       transferFrom()
+         fails if balance of `to` increases by less than `amount`:
+     AssertionError: Expected transaction to be reverted with reason 'BRIDGE_UNDERPAY', but it reverted without a reason
+  
+
+  10) ERC20BridgeProxy unit tests
+       transferFrom()
+         fails if balance of `to` decreases:
+     AssertionError: Expected transaction to be reverted with reason 'BRIDGE_UNDERPAY', but it reverted without a reason
+  
+
+  11) ERC20BridgeProxy unit tests
+       balanceOf()
+         retrieves the balance of the encoded token:
+     Error: Transaction reverted and Hardhat couldn't infer the reason.
+    at ERC20BridgeProxy.balanceOf (contracts/src/ERC20BridgeProxy.sol:109)
+    at ERC20BridgeProxy.balanceOf (contracts/src/ERC20BridgeProxy.sol:109)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async staticCallResult (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:337:22)
+    at async staticCall (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:303:24)
+    at async Proxy.balanceOf (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:351:41)
+    at async Context.<anonymous> (test/erc20bridge_proxy.ts:300:35)
+  
+
+  12) Eth2DaiBridge unit tests
+       bridgeTransferFrom()
+         calls `Eth2Dai.sellAllAmount()`:
+
+      AssertionError: expected +0 to equal 1
+      + expected - actual
+
+      -0
+      +1
+      
+      at Context.<anonymous> (test/eth2dai_bridge.ts:169:41)
+
+  13) Eth2DaiBridge unit tests
+       bridgeTransferFrom()
+         sets an unlimited allowance on the `fromTokenAddress` token:
+
+      AssertionError: expected +0 to equal 1
+      + expected - actual
+
+      -0
+      +1
+      
+      at Context.<anonymous> (test/eth2dai_bridge.ts:182:41)
+
+  14) Eth2DaiBridge unit tests
+       bridgeTransferFrom()
+         transfers filled amount to `to`:
+
+      AssertionError: expected +0 to equal 1
+      + expected - actual
+
+      -0
+      +1
+      
+      at Context.<anonymous> (test/eth2dai_bridge.ts:194:41)
+
+  15) Eth2DaiBridge unit tests
+       bridgeTransferFrom()
+         fails if `toTokenAddress.transfer()` returns false:
+     TypeError: Expected the revert reason to be a string or a regular expression
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-chai-matchers/src/internal/reverted/revertedWith.ts:26:15)
+      at Proxy.methodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/addMethod.js:57:25)
+      at doAsserterAsyncAndAddThen (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:289:22)
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:255:20)
+      at Proxy.overwritingMethodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/overwriteMethod.js:78:33)
+      at Context.<anonymous> (test/eth2dai_bridge.ts:216:37)
+
+  16) KyberBridge unit tests
+       bridgeTransferFrom()
+         "before all" hook for "returns magic bytes on success":
+     TypeError: testContract.weth is not a function
+      at Context.<anonymous> (test/kyber_bridge.ts:52:46)
+      at processImmediate (node:internal/timers:505:21)
+
+  17) StaticCallProxy
+       transferFrom
+         should be successful if a function call returns a complex type:
+     Error: VM Exception while processing transaction: reverted with reason string 'UNEXPECTED_STATIC_CALL_RESULT'
+    at StaticCallProxy.transferFrom (contracts/src/StaticCallProxy.sol:68)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.transferFrom (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/static_call_proxy.ts:217:24)
+  
+
+  18) UniswapBridge unit tests
+       bridgeTransferFrom()
+         just transfers tokens to `to` if the same tokens are in play:
+     Error: No TokenTransfer events found
+      at verifyTokenTransfer (test/utils/bridge_event_helpers.ts:98:15)
+      at Context.<anonymous> (test/uniswap_bridge.ts:192:32)
+
+  19) UniswapBridge unit tests
+       bridgeTransferFrom()
+         token -> token
+           calls `IUniswapExchange.tokenToTokenTransferInput():
+     Error: No TokenToTokenTransferInput events found
+      at verifyTokenToTokenTransferInput (test/utils/bridge_event_helpers.ts:158:15)
+      at Context.<anonymous> (test/uniswap_bridge.ts:206:48)
+
+  20) UniswapBridge unit tests
+       bridgeTransferFrom()
+         token -> token
+           sets allowance for "from" token:
+     Error: No TokenApprove events found
+      at verifyTokenApprove (test/utils/bridge_event_helpers.ts:132:15)
+      at Context.<anonymous> (test/uniswap_bridge.ts:222:35)
+
+  21) UniswapBridge unit tests
+       bridgeTransferFrom()
+         token -> token
+           sets allowance for "from" token on subsequent calls:
+     Error: No TokenApprove events found
+      at verifyTokenApprove (test/utils/bridge_event_helpers.ts:132:15)
+      at Context.<anonymous> (test/uniswap_bridge.ts:234:35)
+
+  22) UniswapBridge unit tests
+       bridgeTransferFrom()
+         token -> ETH
+           calls `IUniswapExchange.tokenToEthSwapInput()`, `WETH.deposit()`, then `transfer()`:
+     Error: No TokenToEthSwapInput events found
+      at verifyEvent (test/utils/bridge_event_helpers.ts:194:15)
+      at Context.<anonymous> (test/uniswap_bridge.ts:268:28)
+
+  23) UniswapBridge unit tests
+       bridgeTransferFrom()
+         token -> ETH
+           sets allowance for "from" token:
+     Error: No TokenApprove events found
+      at verifyTokenApprove (test/utils/bridge_event_helpers.ts:132:15)
+      at Context.<anonymous> (test/uniswap_bridge.ts:296:35)
+
+  24) UniswapBridge unit tests
+       bridgeTransferFrom()
+         token -> ETH
+           sets allowance for "from" token on subsequent calls:
+     Error: No TokenApprove events found
+      at verifyTokenApprove (test/utils/bridge_event_helpers.ts:132:15)
+      at Context.<anonymous> (test/uniswap_bridge.ts:310:35)
+
+  25) UniswapBridge unit tests
+       bridgeTransferFrom()
+         ETH -> token
+           calls  `WETH.withdraw()`, then `IUniswapExchange.ethToTokenTransferInput()`:
+     Error: Transaction reverted: function call failed to execute
+    at TestToken.withdraw (contracts/test/TestUniswapBridge.sol:222)
+    at TestUniswapBridge.bridgeTransferFrom (contracts/src/bridges/UniswapBridge.sol:98)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.bridgeTransferFrom (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async withdrawToAsync (test/uniswap_bridge.ts:147:42)
+    at async Context.<anonymous> (test/uniswap_bridge.ts:348:51)
+  
+
+  26) UniswapBridge unit tests
+       bridgeTransferFrom()
+         ETH -> token
+           does not set any allowance:
+     Error: Transaction reverted: function call failed to execute
+    at TestToken.withdraw (contracts/test/TestUniswapBridge.sol:222)
+    at TestUniswapBridge.bridgeTransferFrom (contracts/src/bridges/UniswapBridge.sol:98)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.bridgeTransferFrom (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async withdrawToAsync (test/uniswap_bridge.ts:147:42)
+    at async Context.<anonymous> (test/uniswap_bridge.ts:368:34)
+  
+
+  27) UniswapBridge unit tests
+       bridgeTransferFrom()
+         ETH -> token
+           fails if the exchange fails:
+
+      AssertionError: expected promise to be rejected with an error including 'FOOBAR' but got 'Transaction reverted: function call f…'
+      + expected - actual
+
+      -Transaction reverted: function call failed to execute
+      +FOOBAR
+      
+  
+
+  28) UniswapV2 unit tests
+       bridgeTransferFrom()
+         performs transfer when both tokens are the same:
+
+      AssertionError: expected +0 to equal 1
+      + expected - actual
+
+      -0
+      +1
+      
+      at Context.<anonymous> (test/uniswapv2_bridge.ts:182:41)
+
+  29) UniswapV2 unit tests
+       bridgeTransferFrom()
+         token -> token
+           calls UniswapV2Router01.swapExactTokensForTokens():
+
+      AssertionError: expected +0 to equal 1
+      + expected - actual
+
+      -0
+      +1
+      
+      at Context.<anonymous> (test/uniswapv2_bridge.ts:198:45)
+
+  30) UniswapV2 unit tests
+       bridgeTransferFrom()
+         token -> token
+           sets allowance for "from" token:
+
+      AssertionError: expected +0 to equal 1
+      + expected - actual
+
+      -0
+      +1
+      
+      at Context.<anonymous> (test/uniswapv2_bridge.ts:213:45)
+
+  31) UniswapV2 unit tests
+       bridgeTransferFrom()
+         token -> token
+           sets allowance for "from" token on subsequent calls:
+
+      AssertionError: expected +0 to equal 1
+      + expected - actual
+
+      -0
+      +1
+      
+      at Context.<anonymous> (test/uniswapv2_bridge.ts:223:45)
+
+  32) UniswapV2 unit tests
+       bridgeTransferFrom()
+         token -> token -> token
+           calls UniswapV2Router01.swapExactTokensForTokens():
+
+      AssertionError: expected +0 to equal 1
+      + expected - actual
+
+      -0
+      +1
+      
+      at Context.<anonymous> (test/uniswapv2_bridge.ts:247:45)
+
+
+
+error Command failed with exit code 32.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+ERROR: "test:hardhat" exited with 32.
+error Command failed with exit code 1.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.

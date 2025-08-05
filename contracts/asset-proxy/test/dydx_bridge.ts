@@ -90,18 +90,37 @@ describe('DydxBridge unit tests', () => {
             to: string,
             amount: bigint,
             bridgeData: DydxBridgeData,
-            sender: string,
+            sender?: string, // 可选参数，默认使用当前 signer
         ): Promise<string> => {
-            // 使用 ethers.js v6 的 staticCall 方法
-            const returnValue = await testContract
-                .bridgeTransferFrom.staticCall(
-                    constants.NULL_ADDRESS,
-                    from,
-                    to,
-                    amount,
-                    dydxBridgeDataEncoder.encode(bridgeData),
-                );
-            return returnValue;
+            let contractToUse = testContract;
+            
+            // 如果指定了 sender，则从该地址调用
+            if (sender) {
+                // 使用 Hardhat 的 impersonateAccount 功能
+                await ethers.provider.send('hardhat_impersonateAccount', [sender]);
+                await ethers.provider.send('hardhat_setBalance', [sender, '0x1000000000000000000']); // 给账户一些 ETH
+                
+                const impersonatedSigner = await ethers.getSigner(sender);
+                contractToUse = testContract.connect(impersonatedSigner);
+            }
+            
+            try {
+                // 使用 staticCall 进行只读调用（不改变状态）
+                const returnValue = await contractToUse
+                    .bridgeTransferFrom.staticCall(
+                        constants.NULL_ADDRESS,
+                        from,
+                        to,
+                        amount,
+                        dydxBridgeDataEncoder.encode(bridgeData),
+                    );
+                return returnValue;
+            } finally {
+                // 清理：停止 impersonation
+                if (sender) {
+                    await ethers.provider.send('hardhat_stopImpersonatingAccount', [sender]);
+                }
+            }
         };
         const executeBridgeTransferFromAndVerifyEvents = async (
             from: string,
@@ -334,37 +353,34 @@ describe('DydxBridge unit tests', () => {
                 authorized,
             );
         });
-        it.skip('reverts if not called by the ERC20 Bridge Proxy', async () => {
+        it('reverts if not called by the ERC20 Bridge Proxy', async () => {
             const bridgeData = {
                 accountNumbers: [defaultAccountNumber],
                 actions: [defaultDepositAction],
             };
             
-            // 给 notAuthorized 地址 (address(1)) 一些 ETH 用于交易
-            await ethers.provider.send('hardhat_setBalance', [notAuthorized, '0x1000000000000000000']);
+            // 首先验证正常调用（非 address(1)）应该成功
+            const normalCallResult = await callBridgeTransferFrom(
+                accountOwner,
+                receiver,
+                defaultAmount,
+                bridgeData,
+                // 不传入 sender，使用默认的测试账户
+            );
+            // 正常调用应该返回魔术字节，说明权限检查通过
+            expect(normalCallResult).to.not.be.undefined;
             
-            // 使用 Hardhat 的 impersonateAccount 功能模拟从 address(1) 调用
-            await ethers.provider.send('hardhat_impersonateAccount', [notAuthorized]);
+            // 然后验证从 address(1) 调用应该失败
+            const callBridgeTransferFromPromise = callBridgeTransferFrom(
+                accountOwner,
+                receiver,
+                defaultAmount,
+                bridgeData,
+                notAuthorized,  // 从 address(1) 调用
+            );
             
-            try {
-                const impersonatedSigner = await ethers.getSigner(notAuthorized);
-                const testContractFromUnauthorized = testContract.connect(impersonatedSigner);
-                
-                // 从未授权地址 (address(1)) 调用应该失败
-                const txPromise = testContractFromUnauthorized.bridgeTransferFrom(
-                    constants.NULL_ADDRESS,
-                    accountOwner,
-                    receiver,
-                    defaultAmount,
-                    dydxBridgeDataEncoder.encode(bridgeData),
-                );
-                
-                const expectedError = RevertReason.DydxBridgeOnlyCallableByErc20BridgeProxy;
-                return expect(txPromise).to.be.revertedWith(expectedError);
-            } finally {
-                // 确保清理：停止 impersonation
-                await ethers.provider.send('hardhat_stopImpersonatingAccount', [notAuthorized]);
-            }
+            const expectedError = RevertReason.DydxBridgeOnlyCallableByErc20BridgeProxy;
+            return expect(callBridgeTransferFromPromise).to.be.revertedWith(expectedError);
         });
         it('should return magic bytes if call succeeds', async () => {
             const bridgeData = {
