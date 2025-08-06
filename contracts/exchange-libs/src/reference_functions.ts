@@ -1,11 +1,11 @@
 import { orderHashUtils } from '@0x/test-utils';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { FillResults, MatchedFillResults, Order } from '@0x/utils';
-import { BigNumber, ExchangeRevertErrors, LibMathRevertErrors } from '@0x/utils';
+import { ExchangeRevertErrors, LibMathRevertErrors } from '@0x/utils';
 
-// Helper function to convert bigint to BigNumber for error messages
-function toBigNumber(value: bigint): BigNumber {
-    return new BigNumber(value.toString());
+// 直接使用 bigint，避免 BigNumber 转换
+function createRoundingError(numerator: bigint, denominator: bigint, target: bigint): Error {
+    return new Error(`RoundingError(${numerator}, ${denominator}, ${target})`);
 }
 
 // 在 Solidity 0.8+ 中，原生支持溢出检查，不再需要 SafeMath
@@ -16,7 +16,7 @@ function toBigNumber(value: bigint): BigNumber {
  */
 export function isRoundingErrorFloor(numerator: bigint, denominator: bigint, target: bigint): boolean {
     if (denominator === 0n) {
-        throw new LibMathRevertErrors.DivisionByZeroError();
+        throw new Error('DivisionByZeroError');
     }
     if (numerator === 0n || target === 0n) {
         return false;
@@ -33,7 +33,7 @@ export function isRoundingErrorFloor(numerator: bigint, denominator: bigint, tar
  */
 export function isRoundingErrorCeil(numerator: bigint, denominator: bigint, target: bigint): boolean {
     if (denominator === 0n) {
-        throw new LibMathRevertErrors.DivisionByZeroError();
+        throw new Error('DivisionByZeroError');
     }
     if (numerator === 0n || target === 0n) {
         return false;
@@ -54,7 +54,7 @@ export function isRoundingErrorCeil(numerator: bigint, denominator: bigint, targ
  */
 export function safeGetPartialAmountFloor(numerator: bigint, denominator: bigint, target: bigint): bigint {
     if (isRoundingErrorFloor(numerator, denominator, target)) {
-        throw new LibMathRevertErrors.RoundingError(toBigNumber(numerator), toBigNumber(denominator), toBigNumber(target));
+        throw createRoundingError(numerator, denominator, target);
     }
     return (numerator * target) / denominator;
 }
@@ -65,7 +65,7 @@ export function safeGetPartialAmountFloor(numerator: bigint, denominator: bigint
  */
 export function safeGetPartialAmountCeil(numerator: bigint, denominator: bigint, target: bigint): bigint {
     if (isRoundingErrorCeil(numerator, denominator, target)) {
-        throw new LibMathRevertErrors.RoundingError(toBigNumber(numerator), toBigNumber(denominator), toBigNumber(target));
+        throw createRoundingError(numerator, denominator, target);
     }
     return (numerator * target + denominator - 1n) / denominator;
 }

@@ -105,13 +105,12 @@ const ZERO_AMOUNT = 0n;
 
         describe('safeGetPartialAmountFloor', () => {
             describe('explicit tests', () => {
-                it.skip('reverts for a rounding error', () => {
-                    // 跳过这个测试，因为 LibMathRevertErrors 仍然使用 BigNumber
+                it('reverts for a rounding error', () => {
+                    // 不创建错误对象，直接测试函数是否抛出包含 'RoundingError' 的错误
                     const numerator = 1000n;
                     const denominator = 10000n;
                     const target = 333n;
-                    const expectedError = new LibMathRevertErrors.RoundingError(numerator, denominator, target);
-                    expect(() => safeGetPartialAmountFloor(numerator, denominator, target)).to.throw('RoundingError');
+                    expect(() => safeGetPartialAmountFloor(numerator, denominator, target)).to.throw(/RoundingError/);
                 });
 
                 it('reverts if `denominator` is zero', () => {
@@ -139,13 +138,12 @@ const ZERO_AMOUNT = 0n;
 
         describe('safeGetPartialAmountCeil', () => {
             describe('explicit tests', () => {
-                it.skip('reverts for a rounding error', () => {
-                    // 跳过这个测试，因为 LibMathRevertErrors 仍然使用 BigNumber
+                it('reverts for a rounding error', () => {
+                    // 不创建错误对象，直接测试函数是否抛出包含 'RoundingError' 的错误
                     const numerator = 1000n;
                     const denominator = 10000n;
                     const target = 333n;
-                    const expectedError = new LibMathRevertErrors.RoundingError(numerator, denominator, target);
-                    expect(() => safeGetPartialAmountCeil(numerator, denominator, target)).to.throw('RoundingError');
+                    expect(() => safeGetPartialAmountCeil(numerator, denominator, target)).to.throw(/RoundingError/);
                 });
 
                 it('reverts if `denominator` is zero', () => {

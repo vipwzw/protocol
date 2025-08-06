@@ -53,17 +53,17 @@ blockchainTests('LibZeroExTransaction', env => {
     }
 
     describe('getTypedDataHash', () => {
-        it.skip('should correctly hash an empty transaction', async () => {
+        it('should correctly hash an empty transaction', async () => {
             await testGetTypedDataHashAsync({
                 ...EMPTY_TRANSACTION,
                 domain: {
                     ...EMPTY_TRANSACTION.domain,
-                    verifyingContract: libZeroExTransactionContract.address,
+                    verifyingContract: await libZeroExTransactionContract.getAddress(),
                 },
             });
         });
 
-        it.skip('should correctly hash a non-empty transaction', async () => {
+        it('should correctly hash a non-empty transaction', async () => {
             await testGetTypedDataHashAsync({
                 salt: randomUint256(),
                 expirationTimeSeconds: randomUint256(),
@@ -72,7 +72,7 @@ blockchainTests('LibZeroExTransaction', env => {
                 data: randomAssetData(),
                 domain: {
                     ...EMPTY_TRANSACTION.domain,
-                    verifyingContract: libZeroExTransactionContract.address,
+                    verifyingContract: await libZeroExTransactionContract.getAddress(),
                 },
             });
         });

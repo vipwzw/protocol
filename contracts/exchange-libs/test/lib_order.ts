@@ -61,16 +61,16 @@ blockchainTests('LibOrder', env => {
     }
 
     describe('getTypedDataHash', () => {
-        it.skip('should correctly hash an empty order', async () => {
+        it('should correctly hash an empty order', async () => {
             await testGetTypedDataHashAsync({
                 ...EMPTY_ORDER,
-                exchangeAddress: libOrderContract.address,
+                exchangeAddress: await libOrderContract.getAddress(),
             });
         });
 
-        it.skip('should correctly hash a non-empty order', async () => {
+        it('should correctly hash a non-empty order', async () => {
             await testGetTypedDataHashAsync({
-                exchangeAddress: libOrderContract.address,
+                exchangeAddress: await libOrderContract.getAddress(),
                 chainId: 1337,
                 senderAddress: randomAddress(),
                 makerAddress: randomAddress(),
