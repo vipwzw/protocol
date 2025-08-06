@@ -17,6 +17,7 @@ pragma solidity ^0.8.0;
 import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
 import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "./MixinUniswapV2.sol";
+import "../../../vendor/IUniswapV2Router02.sol";
 
 contract MixinCryptoCom {
     using LibERC20Token for IERC20Token;
@@ -27,20 +28,13 @@ contract MixinCryptoCom {
         bytes memory bridgeData
     ) internal returns (uint256 boughtAmount) {
         IUniswapV2Router02 router;
-        IERC20Token[] memory path;
-        {
-            address[] memory _path;
-            (router, _path) = abi.decode(bridgeData, (IUniswapV2Router02, address[]));
-            // To get around `abi.decode()` not supporting interface array types.
-            assembly {
-                path := _path
-            }
-        }
+        address[] memory path;
+        (router, path) = abi.decode(bridgeData, (IUniswapV2Router02, address[]));
 
         require(path.length >= 2, "MixinCryptoCom/PATH_LENGTH_MUST_BE_AT_LEAST_TWO");
-        require(path[path.length - 1] == buyToken, "MixinCryptoCom/LAST_ELEMENT_OF_PATH_MUST_MATCH_OUTPUT_TOKEN");
+        require(path[path.length - 1] == address(buyToken), "MixinCryptoCom/LAST_ELEMENT_OF_PATH_MUST_MATCH_OUTPUT_TOKEN");
         // Grant the CryptoCom router an allowance to sell the first token.
-        path[0].approve(address(router), sellAmount);
+        IERC20Token(path[0]).approve(address(router), sellAmount);
 
         uint256[] memory amounts = router.swapExactTokensForTokens(
             // Sell all tokens we hold.

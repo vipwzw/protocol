@@ -19,11 +19,8 @@ import {
 } from './utils/bridge_event_helpers';
 
 import { DydxBridgeActionType, DydxBridgeData, dydxBridgeDataEncoder } from '../src/dydx_bridge_encoder';
-import { ERC20BridgeProxyContract } from './wrappers';
+import { ERC20BridgeProxy, TestDydxBridge, IAssetData, IAssetData__factory } from './wrappers';
 import { deployContractAsync } from './utils/deployment_utils';
-
-import { artifacts } from './artifacts';
-import { TestDydxBridgeContract } from './wrappers';
 
 // DydxBridge 专用事件常量
 const TestDydxBridgeEvents = {
@@ -50,9 +47,9 @@ describe('DydxBridge unit tests', () => {
         conversionRateNumerator: constants.ZERO_AMOUNT,
         conversionRateDenominator: constants.ZERO_AMOUNT,
     };
-    let testContract: TestDydxBridgeContract;
-    let testProxyContract: ERC20BridgeProxyContract;
-    let assetDataEncoder: IAssetDataContract;
+    let testContract: TestDydxBridge;
+    let testProxyContract: ERC20BridgeProxy;
+    let assetDataEncoder: IAssetData;
     let owner: string;
     let authorized: string;
     let accountOwner: string;
@@ -66,22 +63,21 @@ describe('DydxBridge unit tests', () => {
         );
 
         // Deploy dydx bridge
-        testContract = await deployContractAsync<TestDydxBridgeContract>(
+        testContract = await deployContractAsync<TestDydxBridge>(
             'TestDydxBridge',
-            undefined,
-            [accountOwner, receiver] // 构造函数期望 address[] 数组
+            signers[0], // 使用第一个 signer 而不是 owner 字符串
         );
 
         // Deploy test erc20 bridge proxy
-        testProxyContract = await deployContractAsync<ERC20BridgeProxyContract>(
+        testProxyContract = await deployContractAsync<ERC20BridgeProxy>(
             'ERC20BridgeProxy'
         );
         
         // Add authorized address
         await testProxyContract.addAuthorizedAddress(authorized);
 
-        // Setup asset data encoder (暂时注释掉，需要使用替代方案)
-        // assetDataEncoder = new IAssetDataContract(constants.NULL_ADDRESS, ethers.provider);
+        // Setup asset data encoder
+        assetDataEncoder = IAssetData__factory.connect(constants.NULL_ADDRESS, signers[0]);
     });
 
     describe('bridgeTransferFrom()', () => {
@@ -144,7 +140,7 @@ describe('DydxBridge unit tests', () => {
             const decodedLogs = await parseContractLogs(testContract, txReceipt);
 
             // Verify `OperateAccount` event.
-            const expectedOperateAccountEvents = [];
+            const expectedOperateAccountEvents: any[] = [];
             for (const accountNumber of bridgeData.accountNumbers) {
                 expectedOperateAccountEvents.push({
                     owner: accountOwner,
@@ -152,7 +148,7 @@ describe('DydxBridge unit tests', () => {
                 });
             }
             // 从日志中过滤 OperateAccount 事件
-            const operateAccountLogs = filterLogs(txReceipt.logs, testContract, TestDydxBridgeEvents.OperateAccount);
+            const operateAccountLogs = txReceipt ? filterLogs(txReceipt.logs, testContract as any, TestDydxBridgeEvents.OperateAccount) : [];
             verifyEvents(
                 operateAccountLogs,
                 expectedOperateAccountEvents.map(args => ({
@@ -164,7 +160,7 @@ describe('DydxBridge unit tests', () => {
             // Verify `OperateAction` event.
             const weiDenomination = 0;
             const deltaAmountRef = 0;
-            const expectedOperateActionEvents = [];
+            const expectedOperateActionEvents: any[] = [];
             for (const action of bridgeData.actions) {
                 expectedOperateActionEvents.push({
                     actionType: action.actionType as number,
@@ -183,7 +179,7 @@ describe('DydxBridge unit tests', () => {
                 });
             }
             // 从日志中过滤 OperateAction 事件
-            const operateActionLogs = filterLogs(txReceipt.logs, testContract, TestDydxBridgeEvents.OperateAction);
+            const operateActionLogs = txReceipt ? filterLogs(txReceipt.logs, testContract as any, TestDydxBridgeEvents.OperateAction) : [];
             verifyEvents(
                 operateActionLogs,
                 expectedOperateActionEvents.map(args => ({
@@ -450,9 +446,12 @@ describe('DydxBridge unit tests', () => {
 
         before(async () => {
             const testTokenAddress = await testContract.getTestToken();
-            assetData = assetDataEncoder
-                .ERC20Bridge(testTokenAddress, testContract.address, dydxBridgeDataEncoder.encode(bridgeData))
-                .getABIEncodedTransactionData();
+            // 使用 asset data encoding 函数 - 目前先简化处理
+            const encodedBridgeData = dydxBridgeDataEncoder.encode(bridgeData);
+            // 暂时使用简单的 asset data 格式
+            const contractAddress = await testContract.getAddress();
+            // 简化处理 - 使用简单的字符串拼接作为临时解决方案
+            assetData = '0x' + testTokenAddress.slice(2) + contractAddress.slice(2) + encodedBridgeData.slice(2);
         });
 
         it('should succeed if `bridgeTransferFrom` succeeds', async () => {

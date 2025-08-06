@@ -71,6 +71,9 @@ export { TestStaticCallTarget__factory } from '../src/typechain-types/factories/
 export type { TestERC20Bridge } from '../src/typechain-types/contracts/test/TestERC20Bridge.sol/TestERC20Bridge';
 export { TestERC20Bridge__factory } from '../src/typechain-types/factories/contracts/test/TestERC20Bridge.sol/TestERC20Bridge__factory';
 
+export type { TestDydxBridge } from '../src/typechain-types/contracts/test/TestDydxBridge.sol/TestDydxBridge';
+export { TestDydxBridge__factory } from '../src/typechain-types/factories/contracts/test/TestDydxBridge.sol/TestDydxBridge__factory';
+
 // ERC20 Test contracts (locally generated from copied artifacts)
 // export type { DummyNoReturnERC20Token } from '../src/typechain-types/contracts/DummyNoReturnERC20Token';
 // export { DummyNoReturnERC20Token__factory } from '../src/typechain-types/factories/contracts/DummyNoReturnERC20Token__factory';
