@@ -6,6 +6,8 @@ import {
     getRandomInteger,
     Numberish,
     randomAddress,
+    expectBigIntEqual,
+    toBigInt,
 } from '../test_utils';
 import { hexUtils } from '../test_utils';
 
@@ -159,7 +161,7 @@ blockchainTests('Protocol Fees unit tests', env => {
 
                 assertNoWETHTransferLogs(receipt.logs);
                 const poolFees = await getProtocolFeesAsync(poolId);
-                expect(poolFees).to.bignumber.eq(DEFAULT_PROTOCOL_FEE_PAID);
+                expectBigIntEqual(toBigInt(poolFees), toBigInt(DEFAULT_PROTOCOL_FEE_PAID));
             });
 
             it('should not credit the pool if maker is not in a pool', async () => {
@@ -169,7 +171,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                     .awaitTransactionSuccessAsync({ from: exchangeAddress, value: DEFAULT_PROTOCOL_FEE_PAID });
                 assertNoWETHTransferLogs(receipt.logs);
                 const poolFees = await getProtocolFeesAsync(poolId);
-                expect(poolFees).to.bignumber.eq(ZERO_AMOUNT);
+                expectBigIntEqual(toBigInt(poolFees), toBigInt(ZERO_AMOUNT));
             });
 
             it('fees paid to the same maker should go to the same pool', async () => {
@@ -217,7 +219,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                     .awaitTransactionSuccessAsync({ from: exchangeAddress, value: ZERO_AMOUNT });
                 assertWETHTransferLogs(receipt.logs, payerAddress, DEFAULT_PROTOCOL_FEE_PAID);
                 const poolFees = await getProtocolFeesAsync(poolId);
-                expect(poolFees).to.bignumber.eq(DEFAULT_PROTOCOL_FEE_PAID);
+                expectBigIntEqual(toBigInt(poolFees), toBigInt(DEFAULT_PROTOCOL_FEE_PAID));
             });
 
             it('should not update `protocolFeesThisEpochByPool` if maker is not in a pool', async () => {
@@ -227,7 +229,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                     .awaitTransactionSuccessAsync({ from: exchangeAddress, value: ZERO_AMOUNT });
                 assertWETHTransferLogs(receipt.logs, payerAddress, DEFAULT_PROTOCOL_FEE_PAID);
                 const poolFees = await getProtocolFeesAsync(poolId);
-                expect(poolFees).to.bignumber.eq(ZERO_AMOUNT);
+                expectBigIntEqual(toBigInt(poolFees), toBigInt(ZERO_AMOUNT));
             });
 
             it('fees paid to the same maker should go to the same pool', async () => {
@@ -355,9 +357,9 @@ blockchainTests('Protocol Fees unit tests', env => {
 
             it('no pools to finalize to start', async () => {
                 const state = await getFinalizationStateAsync();
-                expect(state.numPoolsToFinalize).to.bignumber.eq(0);
-                expect(state.totalFeesCollected).to.bignumber.eq(0);
-                expect(state.totalWeightedStake).to.bignumber.eq(0);
+                            expectBigIntEqual(toBigInt(state.numPoolsToFinalize), 0n);
+            expectBigIntEqual(toBigInt(state.totalFeesCollected), 0n);
+            expectBigIntEqual(toBigInt(state.totalWeightedStake), 0n);
             });
 
             it('pool is not registered to start', async () => {

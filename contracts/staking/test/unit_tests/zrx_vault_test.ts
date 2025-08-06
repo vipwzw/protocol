@@ -1,5 +1,12 @@
 import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
 import { blockchainTests, constants, expect, filterLogsToArguments } from '@0x/test-utils';
+
+// Local bigint assertion helper
+function expectBigIntEqual(actual: any, expected: any): void {
+    const actualBigInt = typeof actual === 'bigint' ? actual : BigInt(actual.toString());
+    const expectedBigInt = typeof expected === 'bigint' ? expected : BigInt(expected.toString());
+    expect(actualBigInt).to.equal(expectedBigInt);
+}
 import { assetDataUtils } from '@0x/order-utils';
 import { RevertReason } from '@0x/utils';
 import { AuthorizableRevertErrors, SafeMathRevertErrors, StakingRevertErrors } from '@0x/utils';
@@ -76,7 +83,7 @@ blockchainTests.resets('ZrxVault unit tests', env => {
                 : filterLogsToArguments<ZrxVaultWithdrawEventArgs>(receipt.logs, 'Withdraw');
         expect(eventArgs.length).to.equal(1);
         expect(eventArgs[0].staker).to.equal(staker);
-        expect(eventArgs[0].amount).to.bignumber.equal(amount);
+        expectBigIntEqual(eventArgs[0].amount, amount);
 
         const newVaultBalance = await zrxVault.balanceOf(staker).callAsync();
         const newTokenBalance = await erc20Wrapper.getBalanceAsync(staker, zrxAssetData);
@@ -84,8 +91,8 @@ blockchainTests.resets('ZrxVault unit tests', env => {
             transferType === ZrxTransfer.Deposit
                 ? [initialVaultBalance.plus(amount), initialTokenBalance.minus(amount)]
                 : [initialVaultBalance.minus(amount), initialTokenBalance.plus(amount)];
-        expect(newVaultBalance).to.bignumber.equal(expectedVaultBalance);
-        expect(newTokenBalance).to.bignumber.equal(expectedTokenBalance);
+        expectBigIntEqual(newVaultBalance, expectedVaultBalance);
+        expectBigIntEqual(newTokenBalance, expectedTokenBalance);
     }
 
     describe('Normal operation', () => {
