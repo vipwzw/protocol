@@ -9,6 +9,21 @@ import {
     randomAddress,
     toBaseUnitAmount,
 } from '@0x/test-utils';
+
+// Local bigint assertion helper
+function expectBigIntEqual(actual: any, expected: any): void {
+    const actualBigInt = typeof actual === 'bigint' ? actual : BigInt(actual.toString());
+    const expectedBigInt = typeof expected === 'bigint' ? expected : BigInt(expected.toString());
+    expect(actualBigInt).to.equal(expectedBigInt);
+}
+
+function toBigInt(value: any): bigint {
+    if (typeof value === 'bigint') {
+        return value;
+    }
+    return BigInt(value.toString());
+}
+
 import { hexUtils } from '@0x/utils';
 import { LogEntry } from 'ethereum-types';
 
@@ -230,21 +245,21 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
         it('nothing in epoch 1', async () => {
             const { poolId } = await rewardPoolAsync();
             const operatorReward = await getOperatorRewardBalanceAsync(poolId);
-            expect(operatorReward).to.bignumber.eq(0);
+            expectBigIntEqual(toBigInt(operatorReward), 0n);
         });
 
         it('nothing in epoch 2', async () => {
             await advanceEpochAsync();
             const { poolId } = await rewardPoolAsync();
             const operatorReward = await getOperatorRewardBalanceAsync(poolId);
-            expect(operatorReward).to.bignumber.eq(0);
+            expectBigIntEqual(toBigInt(operatorReward), 0n);
         });
 
         it('nothing one epoch after rewards', async () => {
             const { poolId } = await rewardPoolAsync();
             await advanceEpochAsync();
             const operatorReward = await getOperatorRewardBalanceAsync(poolId);
-            expect(operatorReward).to.bignumber.eq(0);
+            expectBigIntEqual(toBigInt(operatorReward), 0n);
         });
 
         describe('with unfinalized rewards', () => {
@@ -259,7 +274,7 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
                 // reward to 0, which kind of makes this silly.
                 const { poolId } = await setUnfinalizedPoolRewardAsync({ operatorReward: 0 });
                 const operatorReward = await getOperatorRewardBalanceAsync(poolId);
-                expect(operatorReward).to.bignumber.eq(0);
+                expectBigIntEqual(toBigInt(operatorReward), 0n);
             });
 
             it('everything for operator with 100% share', async () => {
@@ -276,7 +291,7 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
                 const { poolId } = await setUnfinalizedPoolRewardAsync();
                 await finalizePoolAsync(poolId);
                 const operatorReward = await getOperatorRewardBalanceAsync(poolId);
-                expect(operatorReward).to.bignumber.eq(0);
+                expectBigIntEqual(toBigInt(operatorReward), 0n);
             });
         });
     });
@@ -286,7 +301,7 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
             const { poolId } = await rewardPoolAsync();
             const delegator = randomAddress();
             const delegatorReward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-            expect(delegatorReward).to.bignumber.eq(0);
+            expectBigIntEqual(toBigInt(delegatorReward), 0n);
         });
 
         it('nothing in epoch 2 for delegator with no stake', async () => {
@@ -294,7 +309,7 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
             const { poolId } = await rewardPoolAsync();
             const delegator = randomAddress();
             const delegatorReward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-            expect(delegatorReward).to.bignumber.eq(0);
+            expectBigIntEqual(toBigInt(delegatorReward), 0n);
         });
 
         it('nothing in epoch 1 for delegator staked in epoch 1', async () => {
@@ -303,7 +318,7 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
             // possible due to delegating delays.
             const { delegator } = await delegateStakeNowAsync(poolId);
             const delegatorReward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-            expect(delegatorReward).to.bignumber.eq(0);
+            expectBigIntEqual(toBigInt(delegatorReward), 0n);
         });
 
         it('nothing in epoch 2 for delegator delegating in epoch 2', async () => {
@@ -311,7 +326,7 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
             const { poolId } = await rewardPoolAsync();
             const { delegator } = await delegateStakeAsync(poolId);
             const delegatorReward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-            expect(delegatorReward).to.bignumber.eq(0);
+            expectBigIntEqual(toBigInt(delegatorReward), 0n);
         });
 
         it('nothing in epoch 2 for delegator delegating in epoch 1', async () => {
@@ -321,7 +336,7 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
             // rewards paid for stake in epoch 1.
             await rewardPoolAsync({ poolId, membersStake: stake });
             const delegatorReward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-            expect(delegatorReward).to.bignumber.eq(0);
+            expectBigIntEqual(toBigInt(delegatorReward), 0n);
         });
 
         it('all rewards from epoch 3 for delegator delegating in epoch 1', async () => {
@@ -332,7 +347,7 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
             // rewards paid for stake in epoch 2.
             const { membersReward: reward } = await rewardPoolAsync({ poolId, membersStake: stake });
             const delegatorReward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-            expect(delegatorReward).to.bignumber.eq(reward);
+            expectBigIntEqual(toBigInt(delegatorReward), toBigInt(reward));
         });
 
         it('all rewards from epoch 3 and 3 for delegator delegating in epoch 1', async () => {
@@ -372,7 +387,7 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
             const { delegatorTransfers: withdrawal } = await undelegateStakeAsync(poolId, delegator);
             assertRoughlyEquals(withdrawal, reward);
             const delegatorReward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-            expect(delegatorReward).to.bignumber.eq(0);
+            expectBigIntEqual(toBigInt(delegatorReward), 0n);
         });
 
         it('has correct reward immediately after undelegating and redelegating', async () => {
@@ -386,7 +401,7 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
             assertRoughlyEquals(withdrawal, reward);
             await delegateStakeAsync(poolId, { delegator, stake });
             const delegatorReward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-            expect(delegatorReward).to.bignumber.eq(0);
+            expectBigIntEqual(toBigInt(delegatorReward), 0n);
         });
 
         it('has correct reward immediately after undelegating, redelegating, and rewarding fees', async () => {
@@ -416,7 +431,7 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
             // Pay rewards for epoch 2.
             const { membersReward: reward } = await rewardPoolAsync({ poolId, membersStake: stake });
             const delegatorReward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-            expect(delegatorReward).to.bignumber.eq(reward);
+            expectBigIntEqual(toBigInt(delegatorReward), toBigInt(reward));
         });
 
         it('uses old stake for rewards paid in the same epoch extra stake is added', async () => {
@@ -550,7 +565,7 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
                 await advanceEpochAsync(); // epoch 2
                 await setUnfinalizedPoolRewardAsync({ poolId, membersStake: stake });
                 const reward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-                expect(reward).to.bignumber.eq(0);
+                expectBigIntEqual(toBigInt(reward), 0n);
             });
 
             it('nothing with only unfinalized rewards from epoch 2 for delegator delegating in epoch 1', async () => {
@@ -559,7 +574,7 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
                 await advanceEpochAsync(); // epoch 2
                 await setUnfinalizedPoolRewardAsync({ poolId, membersStake: stake });
                 const reward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-                expect(reward).to.bignumber.eq(0);
+                expectBigIntEqual(toBigInt(reward), 0n);
             });
 
             it('returns unfinalized rewards from epoch 3 for delegator delegating in epoch 1', async () => {
@@ -658,8 +673,8 @@ blockchainTests.resets('Delegator rewards unit tests', env => {
             const { membersReward: reward } = await rewardPoolAsync({ poolId, membersStake: stake });
             const { delegatorTransfers: withdrawal } = await touchStakeAsync(poolId, delegator);
             const finalRewardBalance = await getDelegatorRewardBalanceAsync(poolId, delegator);
-            expect(withdrawal).to.bignumber.eq(reward);
-            expect(finalRewardBalance).to.bignumber.eq(0);
+            expectBigIntEqual(toBigInt(withdrawal), toBigInt(reward));
+            expectBigIntEqual(toBigInt(finalRewardBalance), 0n);
         });
 
         it('does not collect extra rewards from delegating more stake in the reward epoch', async () => {

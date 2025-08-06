@@ -186,7 +186,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                 await payAsync();
                 const expectedTotalFees = DEFAULT_PROTOCOL_FEE_PAID.times(2);
                 const poolFees = await getProtocolFeesAsync(poolId);
-                expect(poolFees).to.bignumber.eq(expectedTotalFees);
+                expectBigIntEqual(toBigInt(poolFees), toBigInt(expectedTotalFees));
             });
         });
 
@@ -200,7 +200,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                 for (const args of logsArgs) {
                     expect(args.from).to.eq(fromAddress);
                     expect(args.to).to.eq(testContract.address);
-                    expect(args.amount).to.bignumber.eq(amount);
+                    expectBigIntEqual(toBigInt(args.amount), toBigInt(amount));
                 }
             }
 
@@ -244,7 +244,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                 await payAsync();
                 const expectedTotalFees = DEFAULT_PROTOCOL_FEE_PAID.times(2);
                 const poolFees = await getProtocolFeesAsync(poolId);
-                expect(poolFees).to.bignumber.eq(expectedTotalFees);
+                expectBigIntEqual(toBigInt(poolFees), toBigInt(expectedTotalFees));
             });
 
             it('fees paid to the same maker in WETH then ETH should go to the same pool', async () => {
@@ -261,7 +261,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                 await payAsync(false);
                 const expectedTotalFees = DEFAULT_PROTOCOL_FEE_PAID.times(2);
                 const poolFees = await getProtocolFeesAsync(poolId);
-                expect(poolFees).to.bignumber.eq(expectedTotalFees);
+                expectBigIntEqual(toBigInt(poolFees), toBigInt(expectedTotalFees));
             });
         });
 
@@ -276,7 +276,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                     .payProtocolFee(makerAddress, constants.NULL_ADDRESS, DEFAULT_PROTOCOL_FEE_PAID)
                     .awaitTransactionSuccessAsync({ from: exchangeAddress, value: DEFAULT_PROTOCOL_FEE_PAID });
                 const feesCredited = await getProtocolFeesAsync(poolId);
-                expect(feesCredited).to.bignumber.eq(DEFAULT_PROTOCOL_FEE_PAID);
+                expectBigIntEqual(toBigInt(feesCredited), toBigInt(DEFAULT_PROTOCOL_FEE_PAID));
             });
 
             it('credits pools with stake == minimum', async () => {
@@ -289,7 +289,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                     .payProtocolFee(makerAddress, constants.NULL_ADDRESS, DEFAULT_PROTOCOL_FEE_PAID)
                     .awaitTransactionSuccessAsync({ from: exchangeAddress, value: DEFAULT_PROTOCOL_FEE_PAID });
                 const feesCredited = await getProtocolFeesAsync(poolId);
-                expect(feesCredited).to.bignumber.eq(DEFAULT_PROTOCOL_FEE_PAID);
+                expectBigIntEqual(toBigInt(feesCredited), toBigInt(DEFAULT_PROTOCOL_FEE_PAID));
             });
 
             it('does not credit pools with stake < minimum', async () => {
@@ -302,7 +302,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                     .payProtocolFee(makerAddress, constants.NULL_ADDRESS, DEFAULT_PROTOCOL_FEE_PAID)
                     .awaitTransactionSuccessAsync({ from: exchangeAddress, value: DEFAULT_PROTOCOL_FEE_PAID });
                 const feesCredited = await getProtocolFeesAsync(poolId);
-                expect(feesCredited).to.bignumber.eq(0);
+                expectBigIntEqual(toBigInt(feesCredited), 0n);
             });
         });
 
@@ -365,9 +365,9 @@ blockchainTests('Protocol Fees unit tests', env => {
             it('pool is not registered to start', async () => {
                 const { poolId } = await createTestPoolAsync();
                 const pool = await testContract.getStakingPoolStatsThisEpoch(poolId).callAsync();
-                expect(pool.feesCollected).to.bignumber.eq(0);
-                expect(pool.membersStake).to.bignumber.eq(0);
-                expect(pool.weightedStake).to.bignumber.eq(0);
+                expectBigIntEqual(toBigInt(pool.feesCollected), 0n);
+                expectBigIntEqual(toBigInt(pool.membersStake), 0n);
+                expectBigIntEqual(toBigInt(pool.weightedStake), 0n);
             });
 
             it('correctly emits event for pool the first time it earns a fee', async () => {
@@ -381,13 +381,13 @@ blockchainTests('Protocol Fees unit tests', env => {
                 expect(poolEarnedRewardsEvents[0].poolId).to.eq(poolId);
                 const actualPoolStats = await testContract.getStakingPoolStatsThisEpoch(poolId).callAsync();
                 const expectedWeightedStake = toWeightedStake(pool.operatorStake, pool.membersStake);
-                expect(actualPoolStats.feesCollected).to.bignumber.eq(fee);
-                expect(actualPoolStats.membersStake).to.bignumber.eq(pool.membersStake);
-                expect(actualPoolStats.weightedStake).to.bignumber.eq(expectedWeightedStake);
+                expectBigIntEqual(toBigInt(actualPoolStats.feesCollected), toBigInt(fee));
+                expectBigIntEqual(toBigInt(actualPoolStats.membersStake), toBigInt(pool.membersStake));
+                expectBigIntEqual(toBigInt(actualPoolStats.weightedStake), toBigInt(expectedWeightedStake));
                 const state = await getFinalizationStateAsync();
-                expect(state.numPoolsToFinalize).to.bignumber.eq(1);
-                expect(state.totalFeesCollected).to.bignumber.eq(fee);
-                expect(state.totalWeightedStake).to.bignumber.eq(expectedWeightedStake);
+                expectBigIntEqual(toBigInt(state.numPoolsToFinalize), 1n);
+                expectBigIntEqual(toBigInt(state.totalFeesCollected), toBigInt(fee));
+                expectBigIntEqual(toBigInt(state.totalWeightedStake), toBigInt(expectedWeightedStake));
             });
 
             it('only adds to the already activated pool in the same epoch', async () => {
@@ -432,9 +432,9 @@ blockchainTests('Protocol Fees unit tests', env => {
                     totalWeightedStake = totalWeightedStake.plus(expectedWeightedStake);
                 }
                 const state = await getFinalizationStateAsync();
-                expect(state.numPoolsToFinalize).to.bignumber.eq(pools.length);
-                expect(state.totalFeesCollected).to.bignumber.eq(totalFees);
-                expect(state.totalWeightedStake).to.bignumber.eq(totalWeightedStake);
+                expectBigIntEqual(toBigInt(state.numPoolsToFinalize), toBigInt(pools.length));
+                expectBigIntEqual(toBigInt(state.totalFeesCollected), toBigInt(totalFees));
+                expectBigIntEqual(toBigInt(state.totalWeightedStake), toBigInt(totalWeightedStake));
             });
 
             it('resets the pool after the epoch advances', async () => {
@@ -446,9 +446,9 @@ blockchainTests('Protocol Fees unit tests', env => {
                 await payToMakerAsync(poolMaker);
                 await testContract.advanceEpoch().awaitTransactionSuccessAsync();
                 const actualPoolStats = await testContract.getStakingPoolStatsThisEpoch(poolId).callAsync();
-                expect(actualPoolStats.feesCollected).to.bignumber.eq(0);
-                expect(actualPoolStats.membersStake).to.bignumber.eq(0);
-                expect(actualPoolStats.weightedStake).to.bignumber.eq(0);
+                expectBigIntEqual(toBigInt(actualPoolStats.feesCollected), 0n);
+                expectBigIntEqual(toBigInt(actualPoolStats.membersStake), 0n);
+                expectBigIntEqual(toBigInt(actualPoolStats.weightedStake), 0n);
             });
 
             describe('Multiple makers', () => {
@@ -458,7 +458,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                     const { fee: fee2 } = await payToMakerAsync(makers[1]);
                     const expectedTotalFees = BigNumber.sum(fee1, fee2);
                     const poolFees = await getProtocolFeesAsync(poolId);
-                    expect(poolFees).to.bignumber.eq(expectedTotalFees);
+                    expectBigIntEqual(toBigInt(poolFees), toBigInt(expectedTotalFees));
                 });
 
                 it('fees paid to makers in different pools go to their respective pools', async () => {
@@ -476,8 +476,8 @@ blockchainTests('Protocol Fees unit tests', env => {
                         getProtocolFeesAsync(poolId1),
                         getProtocolFeesAsync(poolId2),
                     ]);
-                    expect(poolFees).to.bignumber.eq(fee1);
-                    expect(otherPoolFees).to.bignumber.eq(fee2);
+                                    expectBigIntEqual(toBigInt(poolFees), toBigInt(fee1));
+                expectBigIntEqual(toBigInt(otherPoolFees), toBigInt(fee2));
                 });
             });
         });

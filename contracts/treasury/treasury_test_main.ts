@@ -17,6 +17,21 @@ import {
     randomAddress,
     verifyEventsFromLogs,
 } from '@0x/test-utils';
+
+// Local bigint assertion helper
+function expectBigIntEqual(actual: any, expected: any): void {
+    const actualBigInt = typeof actual === 'bigint' ? actual : BigInt(actual.toString());
+    const expectedBigInt = typeof expected === 'bigint' ? expected : BigInt(expected.toString());
+    expect(actualBigInt).to.equal(expectedBigInt);
+}
+
+function toBigInt(value: any): bigint {
+    if (typeof value === 'bigint') {
+        return value;
+    }
+    return BigInt(value.toString());
+}
+
 import { TreasuryVote } from '@0x/protocol-utils';
 import { hexUtils } from '@0x/utils';
 import * as ethUtil from 'ethereumjs-util';
@@ -187,12 +202,12 @@ blockchainTests.resets('Treasury governance', env => {
     describe('getVotingPower()', () => {
         it('Unstaked ZRX has no voting power', async () => {
             const votingPower = await treasury.getVotingPower(delegator, []).callAsync();
-            expect(votingPower).to.bignumber.equal(0);
+            expectBigIntEqual(toBigInt(votingPower), 0n);
         });
         it('Staked but undelegated ZRX has no voting power', async () => {
             await staking.stake(constants.INITIAL_ERC20_BALANCE).awaitTransactionSuccessAsync({ from: delegator });
             const votingPower = await treasury.getVotingPower(delegator, []).callAsync();
-            expect(votingPower).to.bignumber.equal(0);
+            expectBigIntEqual(toBigInt(votingPower), 0n);
         });
         it('ZRX delegated during epoch N has no voting power during Epoch N', async () => {
             await staking.stake(TREASURY_PARAMS.proposalThreshold).awaitTransactionSuccessAsync({ from: delegator });
@@ -204,7 +219,7 @@ blockchainTests.resets('Treasury governance', env => {
                 )
                 .awaitTransactionSuccessAsync({ from: delegator });
             const votingPower = await treasury.getVotingPower(delegator, []).callAsync();
-            expect(votingPower).to.bignumber.equal(0);
+            expectBigIntEqual(toBigInt(votingPower), 0n);
             await fastForwardToNextEpochAsync();
         });
         it('ZRX delegated to the default pool retains full voting power', async () => {
@@ -218,7 +233,7 @@ blockchainTests.resets('Treasury governance', env => {
                 .awaitTransactionSuccessAsync({ from: delegator });
             await fastForwardToNextEpochAsync();
             const votingPower = await treasury.getVotingPower(delegator, []).callAsync();
-            expect(votingPower).to.bignumber.equal(TREASURY_PARAMS.proposalThreshold);
+            expectBigIntEqual(toBigInt(votingPower), toBigInt(TREASURY_PARAMS.proposalThreshold));
         });
         it('ZRX delegated to a non-default pool splits voting power between delegator and pool operator', async () => {
             await staking.stake(TREASURY_PARAMS.proposalThreshold).awaitTransactionSuccessAsync({ from: delegator });
@@ -231,9 +246,9 @@ blockchainTests.resets('Treasury governance', env => {
                 .awaitTransactionSuccessAsync({ from: delegator });
             await fastForwardToNextEpochAsync();
             const delegatorVotingPower = await treasury.getVotingPower(delegator, []).callAsync();
-            expect(delegatorVotingPower).to.bignumber.equal(TREASURY_PARAMS.proposalThreshold.dividedBy(2));
+            expectBigIntEqual(toBigInt(delegatorVotingPower), toBigInt(TREASURY_PARAMS.proposalThreshold) / 2n);
             const operatorVotingPower = await treasury.getVotingPower(poolOperator, [nonDefaultPoolId]).callAsync();
-            expect(operatorVotingPower).to.bignumber.equal(TREASURY_PARAMS.proposalThreshold.dividedBy(2));
+            expectBigIntEqual(toBigInt(operatorVotingPower), toBigInt(TREASURY_PARAMS.proposalThreshold) / 2n);
         });
         it('Reverts if given duplicate pool IDs', async () => {
             await staking.stake(TREASURY_PARAMS.proposalThreshold).awaitTransactionSuccessAsync({ from: delegator });
@@ -270,7 +285,7 @@ blockchainTests.resets('Treasury governance', env => {
                 .awaitTransactionSuccessAsync({ from: delegator });
             await fastForwardToNextEpochAsync();
             const delegatorVotingPower = await treasury.getVotingPower(delegator, []).callAsync();
-            expect(delegatorVotingPower).to.bignumber.equal(TREASURY_PARAMS.proposalThreshold.times(1.5));
+            expectBigIntEqual(toBigInt(delegatorVotingPower), (toBigInt(TREASURY_PARAMS.proposalThreshold) * 3n) / 2n);
         });
         it('Correctly sums voting power for operator with multiple pools', async () => {
             const createStakingPoolTx = staking.createStakingPool(stakingConstants.PPM, false);
@@ -402,7 +417,7 @@ blockchainTests.resets('Treasury governance', env => {
                 ],
                 ZrxTreasuryEvents.ProposalCreated,
             );
-            expect(await treasury.proposalCount().callAsync()).to.bignumber.equal(1);
+            expectBigIntEqual(toBigInt(await treasury.proposalCount().callAsync()), 1n);
         });
     });
     describe('castVote() and castVoteBySignature()', () => {
@@ -689,11 +704,13 @@ blockchainTests.resets('Treasury governance', env => {
             await fastForwardToNextEpochAsync();
             const tx = await treasury.execute(passedProposalId, actions).awaitTransactionSuccessAsync();
             verifyEventsFromLogs(tx.logs, [{ proposalId: passedProposalId }], ZrxTreasuryEvents.ProposalExecuted);
-            expect(await zrx.balanceOf(GRANT_PROPOSALS[0].recipient).callAsync()).to.bignumber.equal(
-                GRANT_PROPOSALS[0].amount,
+            expectBigIntEqual(
+                toBigInt(await zrx.balanceOf(GRANT_PROPOSALS[0].recipient).callAsync()),
+                toBigInt(GRANT_PROPOSALS[0].amount),
             );
-            expect(await zrx.balanceOf(GRANT_PROPOSALS[1].recipient).callAsync()).to.bignumber.equal(
-                GRANT_PROPOSALS[1].amount,
+            expectBigIntEqual(
+                toBigInt(await zrx.balanceOf(GRANT_PROPOSALS[1].recipient).callAsync()),
+                toBigInt(GRANT_PROPOSALS[1].amount),
             );
         });
     });
@@ -706,8 +723,8 @@ blockchainTests.resets('Treasury governance', env => {
             await weth.transfer(defaultPoolOperator.address, wethAmount).awaitTransactionSuccessAsync();
             // This function should send all the WETH to the staking proxy.
             await defaultPoolOperator.returnStakingRewards().awaitTransactionSuccessAsync();
-            expect(await weth.balanceOf(defaultPoolOperator.address).callAsync()).to.bignumber.equal(0);
-            expect(await weth.balanceOf(staking.address).callAsync()).to.bignumber.equal(wethAmount);
+            expectBigIntEqual(toBigInt(await weth.balanceOf(defaultPoolOperator.address).callAsync()), 0n);
+            expectBigIntEqual(toBigInt(await weth.balanceOf(staking.address).callAsync()), toBigInt(wethAmount));
         });
     });
     describe('Can update thresholds via proposal', () => {
@@ -749,8 +766,8 @@ blockchainTests.resets('Treasury governance', env => {
                 .awaitTransactionSuccessAsync({ from: delegator });
             const proposalThreshold = await treasury.proposalThreshold().callAsync();
             const quorumThreshold = await treasury.quorumThreshold().callAsync();
-            expect(proposalThreshold).to.bignumber.equal(newProposalThreshold);
-            expect(quorumThreshold).to.bignumber.equal(newQuorumThreshold);
+            expectBigIntEqual(toBigInt(proposalThreshold), toBigInt(newProposalThreshold));
+            expectBigIntEqual(toBigInt(quorumThreshold), toBigInt(newQuorumThreshold));
         });
     });
 });
