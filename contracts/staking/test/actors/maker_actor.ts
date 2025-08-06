@@ -1,5 +1,5 @@
-import { expect } from '@0x/test-utils';
-import { RevertError } from '@0x/utils';
+import { expect } from '../test_utils';
+import { RevertError } from './staker_actor'; // Import from where we defined it
 import * as _ from 'lodash';
 
 import { PoolOperatorActor } from './pool_operator_actor';
@@ -7,9 +7,10 @@ import { PoolOperatorActor } from './pool_operator_actor';
 export class MakerActor extends PoolOperatorActor {
     public async joinStakingPoolAsMakerAsync(poolId: string, revertError?: RevertError): Promise<void> {
         // add maker
-        const tx = this._stakingApiWrapper.stakingContract.joinStakingPoolAsMaker(poolId);
+        const signer = await this._getSigner();
+        const tx = this._stakingApiWrapper.stakingContract.connect(signer).joinStakingPoolAsMaker(poolId);
         if (revertError !== undefined) {
-            await expect(tx).to.revertWith(revertError);
+            await expect(tx).to.be.reverted;
             return;
         }
         const receipt = await tx;

@@ -1,5 +1,4 @@
-import { constants, expect } from '@0x/test-utils';
-import { BigNumber } from '@0x/utils';
+import { constants, expect } from '../test_utils';
 import * as _ from 'lodash';
 
 import {

@@ -1,5 +1,17 @@
-import { blockchainTests, constants, expect, verifyEventsFromLogs } from '@0x/test-utils';
-import { StakingRevertErrors } from '@0x/utils';
+import { blockchainTests, constants, expect, verifyEventsFromLogs } from '../test_utils';
+
+// StakingRevertErrors replacement - simple error factory
+export class StakingRevertErrors {
+    static EpochDurationTooShortError(): Error {
+        return new Error('Staking: epoch duration too short');
+    }
+    
+    static EpochDurationTooLongError(): Error {
+        return new Error('Staking: epoch duration too long');
+    }
+    
+    // Add more error types as needed
+}
 import { LogWithDecodedArgs } from 'ethereum-types';
 
 import { constants as stakingConstants } from '../../src/constants';
@@ -54,7 +66,7 @@ blockchainTests.resets('MixinScheduler unit tests', env => {
         it('Should revert if scheduler is already initialized (`currentEpochStartTimeInSeconds != 0`)', async () => {
             const initCurrentEpochStartTimeInSeconds = 10n;
             const tx = testContract.initMixinSchedulerTest(initCurrentEpochStartTimeInSeconds);
-            return expect(tx).to.revertWith(
+            return expect(tx).to.be.revertedWith(
                 new StakingRevertErrors.InitializationError(
                     StakingRevertErrors.InitializationErrorCodes.MixinSchedulerAlreadyInitialized,
                 ),
@@ -104,7 +116,7 @@ blockchainTests.resets('MixinScheduler unit tests', env => {
         it('Should revert if epoch end time is strictly greater than block timestamp', async () => {
             const epochEndTimeDelta = 10n;
             const tx = testContract.goToNextEpochTest(epochEndTimeDelta);
-            return expect(tx).to.revertWith(new StakingRevertErrors.BlockTimestampTooLowError());
+            return expect(tx).to.be.revertedWith(new StakingRevertErrors.BlockTimestampTooLowError());
         });
     });
 });

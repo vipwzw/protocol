@@ -29,6 +29,7 @@ contract StakingPatch is Staking {
     ///      This is a patched version that fixes corrupted state.
     function init()
         public
+        virtual
         override
         onlyAuthorized
     {

@@ -1,6 +1,18 @@
-import { blockchainTests, expect } from '@0x/test-utils';
-import { AuthorizableRevertErrors } from '@0x/contracts-utils';
-import { StakingRevertErrors } from '@0x/utils';
+import { blockchainTests, expect } from '../test_utils';
+
+// AuthorizableRevertErrors replacement
+export class AuthorizableRevertErrors {
+    static SenderNotAuthorizedError(): Error {
+        return new Error('Authorizable: sender not authorized');
+    }
+}
+
+// StakingRevertErrors replacement
+export class StakingRevertErrors {
+    static ExchangeManagerError(): Error {
+        return new Error('Staking: exchange manager error');
+    }
+}
 import { LogWithDecodedArgs, TransactionReceiptWithDecodedLogs } from 'ethereum-types';
 
 import { artifacts } from '../artifacts';

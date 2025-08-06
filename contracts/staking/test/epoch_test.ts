@@ -1,47 +1,56 @@
-import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
-import { blockchainTests, expect } from '@0x/test-utils';
+import { expect } from './test_utils';
 import * as _ from 'lodash';
 
 import { constants as stakingConstants } from '../src/constants';
 
 import { deployAndConfigureContractsAsync, StakingApiWrapper } from './utils/api_wrapper';
+import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
 
 // tslint:disable:no-unnecessary-type-assertion
-blockchainTests('Epochs', env => {
+describe('Epochs', () => {
     // tokens & addresses
     let accounts: string[];
     let owner: string;
     // wrappers
     let stakingApiWrapper: StakingApiWrapper;
     let erc20Wrapper: ERC20Wrapper;
-    // tests
-    before(async () => {
-        // create accounts
-        accounts = await env.getAccountAddressesAsync();
+
+    beforeEach(async () => {
+        // create fresh accounts for each test
+        const { ethers } = require('hardhat');
+        const signers = await ethers.getSigners();
+        accounts = signers.map((s: any) => s.address);
         owner = accounts[0];
-        // set up ERC20Wrapper
-        erc20Wrapper = new ERC20Wrapper(env.provider, accounts, owner);
-        // deploy staking contracts
-        stakingApiWrapper = await deployAndConfigureContractsAsync(env, owner, erc20Wrapper);
+        
+        // set up ERC20Wrapper for each test
+        erc20Wrapper = new ERC20Wrapper(ethers.provider, accounts, owner);
+        
+        // deploy fresh staking contracts for each test
+        stakingApiWrapper = await deployAndConfigureContractsAsync(
+            { provider: ethers.provider }, 
+            owner, 
+            erc20Wrapper
+        );
     });
     describe('Epochs & TimeLocks', () => {
         it('basic epochs & timeLock periods', async () => {
             ///// 1/3 Validate Assumptions /////
-            expect((await stakingApiWrapper.utils.getParamsAsync()).epochDurationInSeconds).to.be.bignumber.equal(
-                stakingConstants.DEFAULT_PARAMS.epochDurationInSeconds,
+            const params = await stakingApiWrapper.utils.getParamsAsync();
+            expect(Number(params.epochDurationInSeconds)).to.equal(
+                Number(stakingConstants.DEFAULT_PARAMS.epochDurationInSeconds),
             );
             ///// 2/3 Validate Initial Epoch & TimeLock Period /////
             {
                 // epoch
-                const currentEpoch = await stakingApiWrapper.stakingContract.currentEpoch().callAsync();
-                expect(currentEpoch).to.be.bignumber.equal(stakingConstants.INITIAL_EPOCH);
+                const currentEpoch = await stakingApiWrapper.stakingContract.currentEpoch();
+                expect(Number(currentEpoch)).to.equal(Number(stakingConstants.INITIAL_EPOCH));
             }
             ///// 3/3 Increment Epoch (TimeLock Should Not Increment) /////
             await stakingApiWrapper.utils.skipToNextEpochAndFinalizeAsync();
             {
                 // epoch
-                const currentEpoch = await stakingApiWrapper.stakingContract.currentEpoch().callAsync();
-                expect(currentEpoch).to.be.bignumber.equal(stakingConstants.INITIAL_EPOCH.plus(1));
+                const currentEpoch = await stakingApiWrapper.stakingContract.currentEpoch();
+                expect(Number(currentEpoch)).to.equal(Number(stakingConstants.INITIAL_EPOCH) + 1);
             }
         });
     });

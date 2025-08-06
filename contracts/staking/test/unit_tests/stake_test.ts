@@ -1,13 +1,19 @@
 import {
     blockchainTests,
     expect,
-    filterLogs,
     filterLogsToArguments,
     getRandomInteger,
     Numberish,
     shortZip,
-} from '@0x/test-utils';
-import { hexUtils, StakingRevertErrors } from '@0x/utils';
+} from '../test_utils';
+import { hexUtils } from '../test_utils';
+
+// StakingRevertErrors replacement  
+export class StakingRevertErrors {
+    static InsufficientBalanceError(): Error {
+        return new Error('Staking: insufficient balance');
+    }
+}
 import * as _ from 'lodash';
 import { ethers } from 'hardhat';
 

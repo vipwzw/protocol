@@ -9,7 +9,7 @@ import {
     randomAddress,
     toBaseUnitAmount,
 } from '@0x/test-utils';
-import { BigNumber, hexUtils } from '@0x/utils';
+import { hexUtils } from '@0x/utils';
 import { LogEntry } from 'ethereum-types';
 
 import { artifacts } from '../artifacts';

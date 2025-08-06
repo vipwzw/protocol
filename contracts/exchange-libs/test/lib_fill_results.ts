@@ -8,7 +8,7 @@ import {
 } from '@0x/test-utils';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { FillResults, MatchedFillResults, Order } from '@0x/utils';
-import { BigNumber, hexUtils, LibMathRevertErrors } from '@0x/utils';
+import { hexUtils, LibMathRevertErrors } from '@0x/utils';
 import { ethers } from 'ethers';
 import * as _ from 'lodash';
 

@@ -24,5 +24,7 @@ export const constants = {
         cobbDouglasAlphaDenominator: 3n,
     },
     PPM,
+    PPM_DENOMINATOR: PPM,
+    PPM_100_PERCENT: PPM,
     ONE_DAY_IN_SECONDS: 24 * 60 * 60,
 };

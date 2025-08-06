@@ -1,17 +1,23 @@
-import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
-import { blockchainTests, describe, toBaseUnitAmount } from '@0x/test-utils';
-import { BigNumber, StakingRevertErrors } from '@0x/utils';
+import { blockchainTests, toBaseUnitAmount } from './test_utils';
+
+// StakingRevertErrors replacement
+export class StakingRevertErrors {
+    static PoolManagerError(): Error {
+        return new Error('Staking: pool manager error');
+    }
+}
 import * as _ from 'lodash';
 
 import { StakeInfo, StakeStatus } from '../src/types';
 
 import { StakerActor } from './actors/staker_actor';
 import { deployAndConfigureContractsAsync, StakingApiWrapper } from './utils/api_wrapper';
+import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
 
 // tslint:disable:no-unnecessary-type-assertion
 blockchainTests.resets('Stake Statuses', env => {
     // constants
-    const ZERO = new BigNumber(0);
+    const ZERO = 0n;
     // tokens & addresses
     let accounts: string[];
     let owner: string;

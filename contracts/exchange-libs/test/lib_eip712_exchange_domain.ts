@@ -1,16 +1,40 @@
-import { blockchainTests, constants, expect, randomAddress } from '@0x/test-utils';
-import { BigNumber, signTypedDataUtils } from '@0x/utils';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
 import * as ethUtil from 'ethereumjs-util';
 
 import { TestLibEIP712ExchangeDomain__factory } from '../src/typechain-types';
 
 import { artifacts } from './artifacts';
 
-blockchainTests('LibEIP712ExchangeDomain', env => {
+// 本地常量和工具函数
+const constants = {
+    NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
+    EIP712_DOMAIN_NAME: '0x Protocol',
+    EIP712_DOMAIN_VERSION: '3.0.0',
+};
+
+const randomAddress = (): string => {
+    return ethers.Wallet.createRandom().address;
+};
+
+// 简化的 signTypedDataUtils 功能
+const signTypedDataUtils = {
+    generateDomainHash: (domain: any): Buffer => {
+        const domainData = {
+            name: domain.name,
+            version: domain.version,
+            chainId: domain.chainId,
+            verifyingContract: domain.verifyingContract,
+        };
+        const domainHash = ethers.TypedDataEncoder.hashDomain(domainData);
+        return Buffer.from(domainHash.slice(2), 'hex');
+    }
+};
+
+describe('LibEIP712ExchangeDomain', () => {
     describe('constructor', () => {
         it('should calculate the correct domain hash when verifyingContractAddressIfExists is set to null', async () => {
             const chainId = 1;
-            const { ethers } = require('hardhat');
             const signer = (await ethers.getSigners())[0];
             const libEIP712ExchangeDomainContract = await new TestLibEIP712ExchangeDomain__factory(signer).deploy(
                 chainId,
@@ -29,7 +53,6 @@ blockchainTests('LibEIP712ExchangeDomain', env => {
         it('should calculate the correct domain hash when verifyingContractAddressIfExists is set to a non-null address', async () => {
             const chainId = 1;
             const verifyingContract = randomAddress();
-            const { ethers } = require('hardhat');
             const signer = (await ethers.getSigners())[0];
             const libEIP712ExchangeDomainContract = await new TestLibEIP712ExchangeDomain__factory(signer).deploy(
                 chainId,

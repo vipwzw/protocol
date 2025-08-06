@@ -20,7 +20,7 @@ import {
     RfqOrderFields,
     Signature,
 } from '@0x/protocol-utils';
-import { BigNumber, hexUtils, ZeroExRevertErrors } from '@0x/utils';
+import { hexUtils, ZeroExRevertErrors } from '@0x/utils';
 import { TransactionReceiptWithDecodedLogs as TxReceipt } from 'ethereum-types';
 import * as _ from 'lodash';
 

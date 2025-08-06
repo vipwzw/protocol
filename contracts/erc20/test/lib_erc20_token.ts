@@ -1,18 +1,46 @@
-import {
-    blockchainTests,
-    constants,
-    getRandomInteger,
-    randomAddress,
-} from '@0x/test-utils';
 import { expect } from 'chai';
-import { hexUtils, RawRevertError, StringRevertError } from '@0x/utils';
 import { ethers } from 'hardhat';
 
 import { TestLibERC20Token, TestLibERC20Token__factory, TestLibERC20TokenTargetEvents } from './wrappers';
 
 import { artifacts } from './artifacts';
 
-blockchainTests('LibERC20Token', env => {
+// 本地工具函数替代 @0x/test-utils
+const constants = {
+    NULL_BYTES: '0x',
+};
+
+const getRandomInteger = (min: number, max: number): bigint => {
+    return BigInt(Math.floor(Math.random() * (max - min + 1)) + min);
+};
+
+const randomAddress = (): string => {
+    return ethers.Wallet.createRandom().address;
+};
+
+// 简化的错误类替代 @0x/utils
+class StringRevertError extends Error {
+    encode(): string {
+        return ethers.AbiCoder.defaultAbiCoder().encode(['string'], [this.message]);
+    }
+}
+
+class RawRevertError extends Error {
+    constructor(public data: string) {
+        super();
+    }
+}
+
+// 简化的 hexUtils 替代
+const hexUtils = {
+    leftPad: (value: number | bigint, bytes: number = 32): string => {
+        const hex = BigInt(value).toString(16);
+        const padded = hex.padStart(bytes * 2, '0');
+        return '0x' + padded;
+    }
+};
+
+describe('LibERC20Token', () => {
     let testContract: TestLibERC20Token;
     const REVERT_STRING = 'WHOOPSIE';
     const ENCODED_REVERT = new StringRevertError(REVERT_STRING).encode();
@@ -22,12 +50,9 @@ blockchainTests('LibERC20Token', env => {
     const ENCODED_SHORT_TRUE = hexUtils.leftPad(2, 31);
     const ENCODED_LONG_TRUE = hexUtils.leftPad(2, 33);
 
-    before(async () => {
-        // 使用 blockchainTests env 对象获取部署者
-        const deployerAddress = env.accounts[0];
-        // 使用 ethers 获取 signers，然后找到匹配的地址
+    beforeEach(async () => {
         const signers = await ethers.getSigners();
-        const signer = signers.find(s => s.address.toLowerCase() === deployerAddress.toLowerCase()) || signers[0];
+        const signer = signers[0];
         const testContractFactory = new TestLibERC20Token__factory(signer);
         testContract = await testContractFactory.deploy();
     });

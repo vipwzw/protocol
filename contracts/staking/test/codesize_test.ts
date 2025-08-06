@@ -1,4 +1,4 @@
-import { constants, expect, getCodesizeFromArtifact } from '@0x/test-utils';
+import { constants, expect, getCodesizeFromArtifact } from './test_utils';
 
 import { artifacts } from './artifacts';
 

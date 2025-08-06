@@ -52,7 +52,7 @@ blockchainTests.resets('Staking Authorization Tests', env => {
             // This test would need to be refactored to use different signers
             const txPromise = testContract.addAuthorizedAddress(owner);
             const expectedError = new OwnableRevertErrors.OnlyOwnerError(nonOwner, owner);
-            return expect(txPromise).to.revertWith(expectedError);
+            return expect(txPromise).to.be.revertedWith(expectedError.message);
         });
     });
 
@@ -83,7 +83,7 @@ blockchainTests.resets('Staking Authorization Tests', env => {
             // This test would need to be refactored to use different signers
             const txPromise = testContract.removeAuthorizedAddress(owner);
             const expectedError = new OwnableRevertErrors.OnlyOwnerError(nonOwner, owner);
-            return expect(txPromise).to.revertWith(expectedError);
+            return expect(txPromise).to.be.revertedWith(expectedError.message);
         });
     });
 });

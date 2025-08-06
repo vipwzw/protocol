@@ -1,5 +1,4 @@
-import { BlockchainTestsEnvironment, expect, toBaseUnitAmount, txDefaults } from '@0x/test-utils';
-import { BigNumber } from '@0x/utils';
+import { BlockchainTestsEnvironment, expect, toBaseUnitAmount, txDefaults } from '../test_utils';
 import { DecodedLogEntry, TransactionReceiptWithDecodedLogs } from 'ethereum-types';
 import * as _ from 'lodash';
 

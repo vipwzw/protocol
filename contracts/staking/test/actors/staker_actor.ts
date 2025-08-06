@@ -1,5 +1,12 @@
-import { expect } from '@0x/test-utils';
-import { RevertError } from '@0x/utils';
+import { expect } from '../test_utils';
+
+// RevertError replacement - simple Error wrapper
+export class RevertError extends Error {
+    constructor(reason?: string) {
+        super(reason);
+        this.name = 'RevertError';
+    }
+}
 import * as _ from 'lodash';
 
 import { StakeBalances, StakeInfo, StakeStatus, StoredBalance } from '../../src/types';

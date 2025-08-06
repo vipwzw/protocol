@@ -6,7 +6,7 @@ import {
     Numberish,
     toDecimal,
 } from '@0x/test-utils';
-import { BigNumber } from '@0x/utils';
+// BigNumber 已移除，使用原生 bigint
 import * as _ from 'lodash';
 
 import { artifacts } from '../artifacts';

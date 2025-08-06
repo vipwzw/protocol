@@ -1,6 +1,6 @@
 import { blockchainTests, constants, expect, getRandomInteger, randomAddress } from '@0x/test-utils';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
-import { hexUtils, BigNumber } from '@0x/utils';
+import { hexUtils } from '@0x/utils';
 
 import { TestMixinStakeBalances__factory, TestMixinStakeBalances } from '../../src/typechain-types';
 import { ethers } from 'hardhat';

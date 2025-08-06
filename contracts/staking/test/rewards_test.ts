@@ -1,6 +1,15 @@
-import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
-import { blockchainTests, constants, describe, expect, shortZip, toBaseUnitAmount } from '@0x/test-utils';
-import { BigNumber, StakingRevertErrors } from '@0x/utils';
+import { blockchainTests, constants, expect, shortZip, toBaseUnitAmount } from './test_utils';
+
+// StakingRevertErrors replacement
+export class StakingRevertErrors {
+    static OperatorShareError(): Error {
+        return new Error('Staking: operator share error');
+    }
+    
+    static PoolNotFinalizedError(): Error {
+        return new Error('Staking: pool not finalized');
+    }
+}
 import * as _ from 'lodash';
 
 import { DelegatorsByPoolId, OperatorByPoolId, StakeInfo, StakeStatus } from '../src/types';
@@ -9,6 +18,7 @@ import { FinalizerActor } from './actors/finalizer_actor';
 import { PoolOperatorActor } from './actors/pool_operator_actor';
 import { StakerActor } from './actors/staker_actor';
 import { deployAndConfigureContractsAsync, StakingApiWrapper } from './utils/api_wrapper';
+import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
 
 // tslint:disable:no-unnecessary-type-assertion
 // tslint:disable:max-file-line-count

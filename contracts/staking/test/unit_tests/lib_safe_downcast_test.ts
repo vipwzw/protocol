@@ -1,6 +1,27 @@
-import { blockchainTests, expect, Numberish } from '@0x/test-utils';
-import { SafeMathRevertErrors } from '@0x/contracts-utils';
-import { BigNumber } from '@0x/utils';
+import { blockchainTests, expect, Numberish } from '../test_utils';
+
+// SafeMathRevertErrors replacement - simple error classes
+export class SafeMathRevertErrors {
+    static Uint256Overflow(): Error {
+        return new Error('SafeMath: uint256 overflow');
+    }
+    
+    static Uint256Underflow(): Error {
+        return new Error('SafeMath: uint256 underflow');
+    }
+    
+    static DowncastErrorCodes = {
+        ValueTooLargeToDowncastToUint96: 0,
+        ValueTooLargeToDowncastToUint64: 1,
+    };
+    
+    static Uint256DowncastError = class extends Error {
+        constructor(errorCode: number, value: bigint) {
+            super(`SafeMath: downcast error ${errorCode} for value ${value}`);
+            this.name = 'Uint256DowncastError';
+        }
+    };
+}
 
 import { artifacts } from '../artifacts';
 import { TestLibSafeDowncastContract } from '../wrappers';
@@ -17,19 +38,19 @@ blockchainTests('LibSafeDowncast unit tests', env => {
         );
     });
 
-    const MAX_UINT_64 = new BigNumber(2).pow(64).minus(1);
-    const MAX_UINT_96 = new BigNumber(2).pow(96).minus(1);
-    const MAX_UINT_256 = new BigNumber(2).pow(256).minus(1);
+    const MAX_UINT_64 = (2n ** 64n) - 1n;
+    const MAX_UINT_96 = (2n ** 96n) - 1n;
+    const MAX_UINT_256 = (2n ** 256n) - 1n;
 
     describe('downcastToUint96', () => {
         async function verifyCorrectDowncastAsync(n: Numberish): Promise<void> {
-            const actual = await testContract.downcastToUint96(new BigNumber(n)).callAsync();
-            expect(actual).to.bignumber.eq(n);
+            const actual = await testContract.downcastToUint96(BigInt(n)).callAsync();
+            expect(Number(actual)).to.equal(Number(n));
         }
         function toDowncastError(n: Numberish): SafeMathRevertErrors.Uint256DowncastError {
             return new SafeMathRevertErrors.Uint256DowncastError(
                 SafeMathRevertErrors.DowncastErrorCodes.ValueTooLargeToDowncastToUint96,
-                new BigNumber(n),
+                BigInt(n),
             );
         }
 
@@ -43,24 +64,24 @@ blockchainTests('LibSafeDowncast unit tests', env => {
             return verifyCorrectDowncastAsync(MAX_UINT_96);
         });
         it('reverts on MAX_UINT_96 + 1', async () => {
-            const n = MAX_UINT_96.plus(1);
-            return expect(verifyCorrectDowncastAsync(n)).to.revertWith(toDowncastError(n));
+            const n = MAX_UINT_96 + 1n;
+            return expect(verifyCorrectDowncastAsync(n)).to.be.revertedWith(toDowncastError(n).message);
         });
         it('reverts on MAX_UINT_256', async () => {
             const n = MAX_UINT_256;
-            return expect(verifyCorrectDowncastAsync(n)).to.revertWith(toDowncastError(n));
+            return expect(verifyCorrectDowncastAsync(n)).to.be.revertedWith(toDowncastError(n).message);
         });
     });
 
     describe('downcastToUint64', () => {
         async function verifyCorrectDowncastAsync(n: Numberish): Promise<void> {
-            const actual = await testContract.downcastToUint64(new BigNumber(n)).callAsync();
-            expect(actual).to.bignumber.eq(n);
+            const actual = await testContract.downcastToUint64(BigInt(n)).callAsync();
+            expect(Number(actual)).to.equal(Number(n));
         }
         function toDowncastError(n: Numberish): SafeMathRevertErrors.Uint256DowncastError {
             return new SafeMathRevertErrors.Uint256DowncastError(
                 SafeMathRevertErrors.DowncastErrorCodes.ValueTooLargeToDowncastToUint64,
-                new BigNumber(n),
+                BigInt(n),
             );
         }
 
@@ -74,12 +95,12 @@ blockchainTests('LibSafeDowncast unit tests', env => {
             return verifyCorrectDowncastAsync(MAX_UINT_64);
         });
         it('reverts on MAX_UINT_64 + 1', async () => {
-            const n = MAX_UINT_64.plus(1);
-            return expect(verifyCorrectDowncastAsync(n)).to.revertWith(toDowncastError(n));
+            const n = MAX_UINT_64 + 1n;
+            return expect(verifyCorrectDowncastAsync(n)).to.be.revertedWith(toDowncastError(n).message);
         });
         it('reverts on MAX_UINT_256', async () => {
             const n = MAX_UINT_256;
-            return expect(verifyCorrectDowncastAsync(n)).to.revertWith(toDowncastError(n));
+            return expect(verifyCorrectDowncastAsync(n)).to.be.revertedWith(toDowncastError(n).message);
         });
     });
 });

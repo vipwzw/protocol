@@ -1,7 +1,7 @@
 import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses';
 import { constants } from '@0x/test-utils';
 import { RPCSubprovider, Web3ProviderEngine } from '@0x/subproviders';
-import { AbiEncoder, BigNumber, logUtils, providerUtils } from '@0x/utils';
+import { AbiEncoder, logUtils, providerUtils } from '@0x/utils';
 import { ethers } from 'ethers';
 import { MethodAbi, SupportedProvider } from 'ethereum-types';
 import * as fetch from 'isomorphic-fetch';
@@ -206,7 +206,7 @@ async function deploymentHistoryAsync(deployments: Deployment[], proxyFunctions:
             rollbackTargets[update.selector] = update.previousImpl;
             const rollbackLength = (await zeroEx.getRollbackLength(update.selector).callAsync()).toNumber();
             for (let i = rollbackLength - 1; i >= 0; i--) {
-                const entry = await zeroEx.getRollbackEntryAtIndex(update.selector, new BigNumber(i)).callAsync();
+                const entry = await zeroEx.getRollbackEntryAtIndex(update.selector, BigInt(i)).callAsync();
                 if (entry === update.previousImpl) {
                     break;
                 } else if (i === 0) {
@@ -301,7 +301,7 @@ async function generateRollbackAsync(proxyFunctions: ProxyFunctionEntity[]): Pro
         const rollbackLength = (await zeroEx.getRollbackLength(selector).callAsync()).toNumber();
         const rollbackHistory = await Promise.all(
             _.range(rollbackLength).map(async i =>
-                zeroEx.getRollbackEntryAtIndex(selector, new BigNumber(i)).callAsync(),
+                zeroEx.getRollbackEntryAtIndex(selector, BigInt(i)).callAsync(),
             ),
         );
         const fullHistory = proxyFunctions.find(fn => fn.id === selector)!.fullHistory;

@@ -9,7 +9,7 @@ import {
     shortZip,
     toBaseUnitAmount,
 } from '@0x/test-utils';
-import { BigNumber, hexUtils, StakingRevertErrors } from '@0x/utils';
+import { hexUtils, StakingRevertErrors } from '@0x/utils';
 import { LogEntry } from 'ethereum-types';
 import * as _ from 'lodash';
 

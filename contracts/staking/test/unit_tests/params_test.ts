@@ -64,14 +64,14 @@ blockchainTests('Configurable Parameters unit tests', env => {
         it('throws if not called by an authorized address', async () => {
             const tx = setParamsAndAssertAsync({}, notAuthorizedAddress);
             const expectedError = new AuthorizableRevertErrors.SenderNotAuthorizedError(notAuthorizedAddress);
-            return expect(tx).to.revertWith(expectedError);
+            return expect(tx).to.be.revertedWith(expectedError.message);
         });
 
         it('throws if `assertValidStorageParams()` throws`', async () => {
             const setupTx = await testContract.setShouldFailAssertValidStorageParams(true);
             await setupTx.wait();
             const tx = setParamsAndAssertAsync({});
-            return expect(tx).to.revertWith('ASSERT_VALID_STORAGE_PARAMS_FAILED');
+            return expect(tx).to.be.revertedWith('ASSERT_VALID_STORAGE_PARAMS_FAILED');
         });
 
         it('works if called by owner', async () => {

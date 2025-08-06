@@ -131,7 +131,11 @@ export const fillQuoteTransformerDataEncoder = {
     },
     decode: (encoded: string): FillQuoteTransformerData => {
         // 添加正确的函数选择器进行解码
-        const funcSelector = fillQuoteInterface.getFunction('encodeFillQuoteData').selector;
+        const func = fillQuoteInterface.getFunction('encodeFillQuoteData');
+        if (!func) {
+            throw new Error('Function encodeFillQuoteData not found in interface');
+        }
+        const funcSelector = func.selector;
         const withSelector = funcSelector + encoded.slice(2);
         const decoded = fillQuoteInterface.decodeFunctionData('encodeFillQuoteData', withSelector);
         return decoded[0] as FillQuoteTransformerData;
@@ -165,12 +169,12 @@ export interface FillQuoteTransformerData {
     sellToken: string;
     buyToken: string;
     bridgeOrders: FillQuoteTransformerBridgeOrder[];
-    limitOrders: string; // 简化为 bytes/string
-    rfqOrders: string;   // 简化为 bytes/string
+    limitOrders: string | any[]; // 兼容数组和字符串
+    rfqOrders: string | any[];   // 兼容数组和字符串
     fillSequence: FillQuoteTransformerOrderType[];
     fillAmount: bigint;
     refundReceiver: string;
-    otcOrders: string;   // 简化为 bytes/string
+    otcOrders: string | any[];   // 兼容数组和字符串
 }
 
 /**

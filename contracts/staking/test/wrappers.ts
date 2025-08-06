@@ -5,7 +5,6 @@
  */
 
 import { ethers } from 'hardhat';
-import { BigNumber } from '@0x/utils';
 import { DecodedLogArgs, LogWithDecodedArgs, TransactionReceiptWithDecodedLogs } from 'ethereum-types';
 
 // Import all TypeChain factories
@@ -148,39 +147,39 @@ export const TestStakingEvents = {
 
 // Event args types for legacy compatibility
 export interface IStakingEventsEpochEndedEventArgs extends DecodedLogArgs {
-    epoch: BigNumber;
-    rewardsAvailable: BigNumber;
-    totalFeesCollected: BigNumber;
-    totalWeightedStake: BigNumber;
+    epoch: bigint;
+    rewardsAvailable: bigint;
+    totalFeesCollected: bigint;
+    totalWeightedStake: bigint;
 }
 
 export interface IStakingEventsEpochFinalizedEventArgs extends DecodedLogArgs {
-    epoch: BigNumber;
-    rewardsPaid: BigNumber;
-    rewardsRemaining: BigNumber;
+    epoch: bigint;
+    rewardsPaid: bigint;
+    rewardsRemaining: bigint;
 }
 
 export interface IStakingEventsStakingPoolEarnedRewardsInEpochEventArgs extends DecodedLogArgs {
-    epoch: BigNumber;
+    epoch: bigint;
     poolId: string;
 }
 
 export interface IStakingEventsRewardsPaidEventArgs extends DecodedLogArgs {
-    epoch: BigNumber;
+    epoch: bigint;
     poolId: string;
-    operatorReward: BigNumber;
-    membersReward: BigNumber;
+    operatorReward: bigint;
+    membersReward: bigint;
 }
 
 // Additional event types used in tests
 export interface TestMixinSchedulerGoToNextEpochTestInfoEventArgs extends DecodedLogArgs {
-    epoch: BigNumber;
+    epoch: bigint;
 }
 
 export interface TestFinalizerDepositStakingPoolRewardsEventArgs extends DecodedLogArgs {
     poolId: string;
-    operatorReward: BigNumber;
-    membersReward: BigNumber;
+    operatorReward: bigint;
+    membersReward: bigint;
 }
 
 export interface TestExchangeManagerExchangeAddedEventArgs extends DecodedLogArgs {

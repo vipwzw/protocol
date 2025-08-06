@@ -1,5 +1,11 @@
-import { blockchainTests, constants, expect } from '@0x/test-utils';
-import { BigNumber, logUtils } from '@0x/utils';
+import { blockchainTests, constants, expect } from './test_utils';
+
+// logUtils replacement - simple console logging
+export const logUtils = {
+    warn: (message: string) => console.warn(message),
+    log: (message: string) => console.log(message),
+    error: (message: string) => console.error(message),
+};
 import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';

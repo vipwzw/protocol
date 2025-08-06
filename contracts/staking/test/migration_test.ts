@@ -1,6 +1,39 @@
-import { blockchainTests, constants, expect, filterLogsToArguments } from '@0x/test-utils';
-import { AuthorizableRevertErrors } from '@0x/contracts-utils';
-import { BigNumber, StakingRevertErrors, StringRevertError } from '@0x/utils';
+import { blockchainTests, constants, expect, filterLogsToArguments } from './test_utils';
+
+// AuthorizableRevertErrors replacement
+export class AuthorizableRevertErrors {
+    static SenderNotAuthorizedError(): Error {
+        return new Error('Authorizable: sender not authorized');
+    }
+}
+
+// StakingRevertErrors replacement
+export class StakingRevertErrors {
+    static InitializationError(): Error {
+        return new Error('Staking: initialization error');
+    }
+    
+    static InvalidParamValueErrorCodes = {
+        InvalidEpochDuration: 0,
+        InvalidCobbDouglasAlpha: 1,
+        InvalidRewardDelegatedStakeWeight: 2,
+    };
+    
+    static InvalidParamValueError = class extends Error {
+        constructor(errorCode: number) {
+            super(`StakingRevertErrors: InvalidParamValueError ${errorCode}`);
+            this.name = 'InvalidParamValueError';
+        }
+    };
+}
+
+// StringRevertError replacement
+export class StringRevertError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'StringRevertError';
+    }
+}
 
 import { constants as stakingConstants } from '../src/constants';
 
@@ -69,7 +102,7 @@ blockchainTests('Migration tests', env => {
                     from: authorizedAddress,
                     to: revertAddress,
                     data: constants.NULL_BYTES,
-                    value: new BigNumber(1),
+                    value: 1n,
                 }),
             );
         }
@@ -118,11 +151,11 @@ blockchainTests('Migration tests', env => {
                     env.txDefaults,
                 );
                 const params = await stakingProxyContract.getParams().callAsync();
-                expect(params[0]).to.bignumber.eq(stakingConstants.DEFAULT_PARAMS.epochDurationInSeconds);
-                expect(params[1]).to.bignumber.eq(stakingConstants.DEFAULT_PARAMS.rewardDelegatedStakeWeight);
-                expect(params[2]).to.bignumber.eq(stakingConstants.DEFAULT_PARAMS.minimumPoolStake);
-                expect(params[3]).to.bignumber.eq(stakingConstants.DEFAULT_PARAMS.cobbDouglasAlphaNumerator);
-                expect(params[4]).to.bignumber.eq(stakingConstants.DEFAULT_PARAMS.cobbDouglasAlphaDenominator);
+                            expect(Number(params[0])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.epochDurationInSeconds));
+            expect(Number(params[1])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.rewardDelegatedStakeWeight));
+            expect(Number(params[2])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.minimumPoolStake));
+            expect(Number(params[3])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.cobbDouglasAlphaNumerator));
+            expect(Number(params[4])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.cobbDouglasAlphaDenominator));
             });
         });
 
@@ -182,7 +215,7 @@ blockchainTests('Migration tests', env => {
                 const proxyContract = await deployStakingProxyAsync(initTargetContract.address);
                 await proxyContract.attachStakingContract(initTargetContract.address).awaitTransactionSuccessAsync();
                 const initCounter = await initTargetContract.getInitCounter().callAsync({ to: proxyContract.address });
-                expect(initCounter).to.bignumber.eq(2);
+                expect(Number(initCounter)).to.equal(2);
             });
         });
     });
@@ -206,8 +239,8 @@ blockchainTests('Migration tests', env => {
 
     blockchainTests.resets('assertValidStorageParams', async () => {
         let proxyContract: TestAssertStorageParamsContract;
-        const fiveDays = new BigNumber(5 * 24 * 60 * 60);
-        const thirtyDays = new BigNumber(30 * 24 * 60 * 60);
+        const fiveDays = BigInt(5 * 24 * 60 * 60);
+        const thirtyDays = BigInt(30 * 24 * 60 * 60);
         before(async () => {
             proxyContract = await TestAssertStorageParamsContract.deployFrom0xArtifactAsync(
                 artifacts.TestAssertStorageParams,
@@ -226,7 +259,7 @@ blockchainTests('Migration tests', env => {
             const tx = proxyContract
                 .setAndAssertParams({
                     ...stakingConstants.DEFAULT_PARAMS,
-                    epochDurationInSeconds: fiveDays.minus(1),
+                    epochDurationInSeconds: fiveDays - 1n,
                 })
                 .awaitTransactionSuccessAsync();
             const expectedError = new StakingRevertErrors.InvalidParamValueError(
@@ -238,7 +271,7 @@ blockchainTests('Migration tests', env => {
             const tx = proxyContract
                 .setAndAssertParams({
                     ...stakingConstants.DEFAULT_PARAMS,
-                    epochDurationInSeconds: thirtyDays.plus(1),
+                    epochDurationInSeconds: thirtyDays + 1n,
                 })
                 .awaitTransactionSuccessAsync();
             const expectedError = new StakingRevertErrors.InvalidParamValueError(
@@ -280,8 +313,8 @@ blockchainTests('Migration tests', env => {
             const tx = proxyContract
                 .setAndAssertParams({
                     ...stakingConstants.DEFAULT_PARAMS,
-                    cobbDouglasAlphaNumerator: new BigNumber(101),
-                    cobbDouglasAlphaDenominator: new BigNumber(100),
+                                    cobbDouglasAlphaNumerator: 101n,
+                cobbDouglasAlphaDenominator: 100n,
                 })
                 .awaitTransactionSuccessAsync();
             const expectedError = new StakingRevertErrors.InvalidParamValueError(
@@ -293,8 +326,8 @@ blockchainTests('Migration tests', env => {
             const tx = proxyContract
                 .setAndAssertParams({
                     ...stakingConstants.DEFAULT_PARAMS,
-                    cobbDouglasAlphaNumerator: new BigNumber(1),
-                    cobbDouglasAlphaDenominator: new BigNumber(1),
+                                    cobbDouglasAlphaNumerator: 1n,
+                cobbDouglasAlphaDenominator: 1n,
                 })
                 .awaitTransactionSuccessAsync();
             return expect(tx).to.be.fulfilled('');
@@ -304,7 +337,7 @@ blockchainTests('Migration tests', env => {
                 .setAndAssertParams({
                     ...stakingConstants.DEFAULT_PARAMS,
                     cobbDouglasAlphaNumerator: constants.ZERO_AMOUNT,
-                    cobbDouglasAlphaDenominator: new BigNumber(1),
+                    cobbDouglasAlphaDenominator: 1n,
                 })
                 .awaitTransactionSuccessAsync();
             return expect(tx).to.be.fulfilled('');
@@ -313,7 +346,7 @@ blockchainTests('Migration tests', env => {
             const tx = proxyContract
                 .setAndAssertParams({
                     ...stakingConstants.DEFAULT_PARAMS,
-                    rewardDelegatedStakeWeight: new BigNumber(stakingConstants.PPM).plus(1),
+                    rewardDelegatedStakeWeight: BigInt(stakingConstants.PPM) + 1n,
                 })
                 .awaitTransactionSuccessAsync();
             const expectedError = new StakingRevertErrors.InvalidParamValueError(
@@ -325,7 +358,7 @@ blockchainTests('Migration tests', env => {
             const tx = proxyContract
                 .setAndAssertParams({
                     ...stakingConstants.DEFAULT_PARAMS,
-                    rewardDelegatedStakeWeight: new BigNumber(stakingConstants.PPM),
+                    rewardDelegatedStakeWeight: BigInt(stakingConstants.PPM),
                 })
                 .awaitTransactionSuccessAsync();
             return expect(tx).to.be.fulfilled('');

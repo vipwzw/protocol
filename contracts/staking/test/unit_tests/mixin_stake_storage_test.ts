@@ -1,5 +1,4 @@
-import { blockchainTests, expect, Numberish } from '@0x/test-utils';
-import { BigNumber } from '@0x/utils';
+import { blockchainTests, expect, Numberish } from '../test_utils';
 
 import { constants } from '../../src/constants';
 import { StoredBalance } from '../../src/types';
@@ -15,9 +14,9 @@ blockchainTests.resets('MixinStakeStorage unit tests', env => {
     let defaultSyncedBalance: StoredBalance;
     let defaultUnsyncedBalance: StoredBalance;
 
-    const CURRENT_EPOCH = new BigNumber(5);
-    const INDEX_ZERO = new BigNumber(0);
-    const INDEX_ONE = new BigNumber(1);
+    const CURRENT_EPOCH = 5n;
+    const INDEX_ZERO = 0n;
+    const INDEX_ONE = 1n;
 
     before(async () => {
         testContract = await TestMixinStakeStorageContract.deployFrom0xArtifactAsync(
