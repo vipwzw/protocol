@@ -1,4 +1,4 @@
-import { expect } from '../test_utils';
+import { expect, expectBigIntEqual, toBigInt } from '../test_utils';
 
 // RevertError replacement - simple Error wrapper
 export class RevertError extends Error {
@@ -246,22 +246,26 @@ export class StakerActor extends BaseActor {
         expect(balances.delegatedStakeBalance.nextEpochBalance, 'delegated stake balance (next)').to.equal(
             expectedBalances.delegatedStakeBalance.nextEpochBalance,
         );
-        expect(
-            balances.globalUndelegatedStakeBalance.currentEpochBalance,
-            'global undelegated stake (current)',
-        ).to.bignumber.equal(expectedBalances.globalUndelegatedStakeBalance.currentEpochBalance);
-        expect(
-            balances.globalDelegatedStakeBalance.currentEpochBalance,
-            'global delegated stake (current)',
-        ).to.bignumber.equal(expectedBalances.globalDelegatedStakeBalance.currentEpochBalance);
-        expect(
-            balances.globalUndelegatedStakeBalance.nextEpochBalance,
-            'global undelegated stake (next)',
-        ).to.bignumber.equal(expectedBalances.globalUndelegatedStakeBalance.nextEpochBalance);
-        expect(
-            balances.globalDelegatedStakeBalance.nextEpochBalance,
-            'global delegated stake (next)',
-        ).to.bignumber.equal(expectedBalances.globalDelegatedStakeBalance.nextEpochBalance);
+        expectBigIntEqual(
+            toBigInt(balances.globalUndelegatedStakeBalance.currentEpochBalance),
+            toBigInt(expectedBalances.globalUndelegatedStakeBalance.currentEpochBalance),
+            'global undelegated stake (current)'
+        );
+        expectBigIntEqual(
+            toBigInt(balances.globalDelegatedStakeBalance.currentEpochBalance),
+            toBigInt(expectedBalances.globalDelegatedStakeBalance.currentEpochBalance),
+            'global delegated stake (current)'
+        );
+        expectBigIntEqual(
+            toBigInt(balances.globalUndelegatedStakeBalance.nextEpochBalance),
+            toBigInt(expectedBalances.globalUndelegatedStakeBalance.nextEpochBalance),
+            'global undelegated stake (next)'
+        );
+        expectBigIntEqual(
+            toBigInt(balances.globalDelegatedStakeBalance.nextEpochBalance),
+            toBigInt(expectedBalances.globalDelegatedStakeBalance.nextEpochBalance),
+            'global delegated stake (next)'
+        );
         expect(balances.delegatedStakeByPool, 'delegated stake by pool').to.be.deep.equal(
             expectedBalances.delegatedStakeByPool,
         );

@@ -1,4 +1,4 @@
-import { blockchainTests, constants, expect, shortZip, toBaseUnitAmount } from './test_utils';
+import { blockchainTests, constants, expect, shortZip, toBaseUnitAmount, expectBigIntEqual, expectBigIntEqualWithMessage, toBigInt } from './test_utils';
 
 // StakingRevertErrors replacement
 export class StakingRevertErrors {
@@ -140,23 +140,35 @@ blockchainTests.resets('Testing Rewards', env => {
                 // undivided balance in reward pool
                 stakingApiWrapper.stakingContract.rewardsByPoolId(poolId).callAsync(),
             ]);
-            expect(finalEndBalancesAsArray[0], 'stakerRewardBalance_1').to.be.bignumber.equal(
-                expectedEndBalances.stakerRewardBalance_1,
+            expectBigIntEqualWithMessage(
+                toBigInt(finalEndBalancesAsArray[0]),
+                toBigInt(expectedEndBalances.stakerRewardBalance_1),
+                'stakerRewardBalance_1'
             );
-            expect(finalEndBalancesAsArray[1], 'stakerWethBalance_1').to.be.bignumber.equal(
-                expectedEndBalances.stakerWethBalance_1,
+            expectBigIntEqualWithMessage(
+                toBigInt(finalEndBalancesAsArray[1]),
+                toBigInt(expectedEndBalances.stakerWethBalance_1),
+                'stakerWethBalance_1'
             );
-            expect(finalEndBalancesAsArray[2], 'stakerRewardBalance_2').to.be.bignumber.equal(
-                expectedEndBalances.stakerRewardBalance_2,
+            expectBigIntEqualWithMessage(
+                toBigInt(finalEndBalancesAsArray[2]),
+                toBigInt(expectedEndBalances.stakerRewardBalance_2),
+                'stakerRewardBalance_2'
             );
-            expect(finalEndBalancesAsArray[3], 'stakerWethBalance_2').to.be.bignumber.equal(
-                expectedEndBalances.stakerWethBalance_2,
+            expectBigIntEqualWithMessage(
+                toBigInt(finalEndBalancesAsArray[3]),
+                toBigInt(expectedEndBalances.stakerWethBalance_2),
+                'stakerWethBalance_2'
             );
-            expect(finalEndBalancesAsArray[4], 'operatorWethBalance').to.be.bignumber.equal(
-                expectedEndBalances.operatorWethBalance,
+            expectBigIntEqualWithMessage(
+                toBigInt(finalEndBalancesAsArray[4]),
+                toBigInt(expectedEndBalances.operatorWethBalance),
+                'operatorWethBalance'
             );
-            expect(finalEndBalancesAsArray[5], 'poolRewardBalance').to.be.bignumber.equal(
-                expectedEndBalances.poolRewardBalance,
+            expectBigIntEqualWithMessage(
+                toBigInt(finalEndBalancesAsArray[5]),
+                toBigInt(expectedEndBalances.poolRewardBalance),
+                'poolRewardBalance'
             );
         };
         const payProtocolFeeAndFinalize = async (_fee?: BigNumber) => {
@@ -692,8 +704,10 @@ blockchainTests.resets('Testing Rewards', env => {
             let sneakyStakerWethBalance = await stakingApiWrapper.wethContract
                 .balanceOf(sneakyStaker.getOwner())
                 .callAsync();
-            expect(sneakyStakerWethBalance, 'WETH balance after first undelegate').to.bignumber.eq(
-                sneakyStakerExpectedWethBalance,
+            expectBigIntEqual(
+                toBigInt(sneakyStakerWethBalance), 
+                toBigInt(sneakyStakerExpectedWethBalance),
+                'WETH balance after first undelegate'
             );
             // Now he'll try to do it again to see if he gets credited twice.
             await sneakyStaker.withdrawDelegatorRewardsAsync(poolId);
@@ -701,8 +715,10 @@ blockchainTests.resets('Testing Rewards', env => {
             sneakyStakerWethBalance = await stakingApiWrapper.wethContract
                 .balanceOf(sneakyStaker.getOwner())
                 .callAsync();
-            expect(sneakyStakerWethBalance, 'WETH balance after second undelegate').to.bignumber.eq(
-                sneakyStakerExpectedWethBalance,
+            expectBigIntEqual(
+                toBigInt(sneakyStakerWethBalance), 
+                toBigInt(sneakyStakerExpectedWethBalance),
+                'WETH balance after second undelegate'
             );
         });
     });

@@ -52,6 +52,11 @@ export function expectBigIntEqual(actual: bigint, expected: bigint, message?: st
     expect(actual, message).to.equal(expected);
 }
 
+// Overloaded version to support message as third parameter
+export function expectBigIntEqualWithMessage(actual: bigint, expected: bigint, message: string): void {
+    expect(actual, message).to.equal(expected);
+}
+
 export function expectBigIntGreaterThan(actual: bigint, expected: bigint, message?: string): void {
     expect(actual, message).to.be.greaterThan(expected);
 }
@@ -145,15 +150,3 @@ export const hexUtils = {
     }
 };
 
-// BigInt comparison helpers for chai assertions
-export function expectBigIntEqual(actual: bigint, expected: bigint): void {
-    expect(actual).to.equal(expected);
-}
-
-export function expectBigIntGreaterThan(actual: bigint, expected: bigint): void {
-    expect(actual > expected).to.be.true;
-}
-
-export function expectBigIntLessThan(actual: bigint, expected: bigint): void {
-    expect(actual < expected).to.be.true;
-}
