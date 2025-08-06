@@ -6,6 +6,13 @@ import {
     getRandomInteger,
     Numberish,
 } from '@0x/test-utils';
+
+// Local bigint assertion helper
+function expectBigIntEqual(actual: any, expected: any): void {
+    const actualBigInt = typeof actual === 'bigint' ? actual : BigInt(actual.toString());
+    const expectedBigInt = typeof expected === 'bigint' ? expected : BigInt(expected.toString());
+    expect(actualBigInt).to.equal(expectedBigInt);
+}
 import {
     encodeFillQuoteTransformerData,
     FillQuoteTransformerBridgeOrder as BridgeOrder,
@@ -948,7 +955,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
                 fillAmount: bridgeOrder.takerTokenAmount,
             });
             const qfr = getExpectedQuoteFillResults(data);
-            expect(qfr.takerTokensSpent).to.bignumber.eq(bridgeOrder.takerTokenAmount);
+            expectBigIntEqual(qfr.takerTokensSpent, bridgeOrder.takerTokenAmount);
             await executeTransformAsync({
                 data,
                 takerTokenBalance: qfr.takerTokensSpent,
