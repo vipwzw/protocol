@@ -9,7 +9,8 @@ import {
     verifyEventsFromLogs,
 } from '@0x/test-utils';
 import { ETH_TOKEN_ADDRESS } from '@0x/protocol-utils';
-import { AbiEncoder, hexUtils, OwnableRevertErrors, ZeroExRevertErrors } from '@0x/utils';
+import { hexUtils, OwnableRevertErrors, ZeroExRevertErrors } from '@0x/utils';
+import { ethers } from 'hardhat';
 import * as ethjs from 'ethereumjs-util';
 
 import { 
@@ -173,19 +174,9 @@ blockchainTests('TransformERC20 feature', env => {
             data: string;
         }
 
-        const transformDataEncoder = AbiEncoder.create([
-            {
-                name: 'data',
-                type: 'tuple',
-                components: [
-                    { name: 'inputToken', type: 'address' },
-                    { name: 'outputToken', type: 'address' },
-                    { name: 'burnAmount', type: 'uint256' },
-                    { name: 'mintAmount', type: 'uint256' },
-                    { name: 'feeAmount', type: 'uint256' },
-                ],
-            },
-        ]);
+        // 使用 ethers v6 的 AbiCoder 替代 AbiEncoder
+        const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+        const transformDataType = ['tuple(address inputToken, address outputToken, uint256 burnAmount, uint256 mintAmount, uint256 feeAmount)'];
 
         async function createMintTokenTransformation(
             opts: Partial<{
@@ -210,15 +201,13 @@ blockchainTests('TransformERC20 feature', env => {
             };
             return {
                 deploymentNonce: _opts.deploymentNonce,
-                data: transformDataEncoder.encode([
-                    {
-                        inputToken: _opts.inputTokenAddress,
-                        outputToken: _opts.outputTokenAddress,
-                        burnAmount: _opts.inputTokenBurnAmunt,
-                        mintAmount: _opts.outputTokenMintAmount,
-                        feeAmount: _opts.outputTokenFeeAmount,
-                    },
-                ]),
+                data: abiCoder.encode(transformDataType, [{
+                    inputToken: _opts.inputTokenAddress,
+                    outputToken: _opts.outputTokenAddress,
+                    burnAmount: _opts.inputTokenBurnAmunt,
+                    mintAmount: _opts.outputTokenMintAmount,
+                    feeAmount: _opts.outputTokenFeeAmount,
+                }]),
             };
         }
 
