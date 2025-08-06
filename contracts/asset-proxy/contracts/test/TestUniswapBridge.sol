@@ -373,7 +373,9 @@ contract TestUniswapBridge is
         payable
     {
         TestToken token = _testTokens[tokenAddress];
-        token.deposit{value: msg.value}();
+        // 关键修复：需要为调用 withdraw 的合约（即 this 合约）设置余额
+        // 而不是为 msg.sender 设置余额
+        token.setBalance{value: msg.value}(address(this));
     }
 
     /// @dev Sets the revert reason for an existing token.
