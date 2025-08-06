@@ -204,14 +204,14 @@ describe('StaticCallProxy', () => {
             const staticCallData = staticCallTarget.interface.encodeFunctionData('returnComplexType', [a, b]);
             // 使用 ethers AbiCoder 替代 AbiEncoder
             const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-            const aHex = '0000000000000000000000000000000000000000000000000000000000000001';
-            const bHex = '0000000000000000000000000000000000000000000000000000000000000002';
             const staticCallTargetAddress = await staticCallTarget.getAddress();
-            const expectedResults = `0x${staticCallTargetAddress.slice(2)}${aHex}${bHex}`;
-            const offset = '0000000000000000000000000000000000000000000000000000000000000020';
-            const encodedExpectedResultWithOffset = `0x${offset}${abiCoder.encode(['bytes'], [expectedResults]).slice(2)}`;
+            // 正确编码复杂类型的返回值
+            const expectedResults = abiCoder.encode(
+                ['address', 'uint256', 'uint256'],
+                [staticCallTargetAddress, a, b]
+            );
             const expectedResultHash = ethUtil.bufferToHex(
-                ethUtil.keccak256(ethUtil.toBuffer(encodedExpectedResultWithOffset)),
+                ethUtil.keccak256(ethUtil.toBuffer(expectedResults)),
             );
             const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
             const tx = await staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount);

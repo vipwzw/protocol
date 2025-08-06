@@ -220,7 +220,10 @@ contract TestToken {
         _revertIfReasonExists();
         balances[msg.sender] = balances[msg.sender] - amount;
         payable(msg.sender).transfer(amount);
-        TestEventsRaiser(msg.sender).raiseWethWithdraw(amount);
+        // 只有当 msg.sender 是合约时才触发事件
+        if (msg.sender.code.length > 0) {
+            TestEventsRaiser(msg.sender).raiseWethWithdraw(amount);
+        }
     }
 
     function allowance(address, address) external view returns (uint256) {

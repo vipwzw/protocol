@@ -2,13 +2,11 @@ import {
     blockchainTests,
     constants,
     expect,
-    filterLogsToArguments,
     getRandomInteger,
     randomAddress,
 } from '@0x/test-utils';
 import { AssetProxyId } from '@0x/utils';
 import { hexUtils } from '@0x/utils';
-import { DecodedLogs } from 'ethereum-types';
 import { ethers } from 'hardhat';
 import * as _ from 'lodash';
 
@@ -25,9 +23,11 @@ const ContractEvents = {
 };
 
 interface ConvertByPathArgs {
-    toTokenAddress: string;
     amountIn: bigint;
     amountOutMin: bigint;
+    toTokenAddress: string;
+    to: string;
+    feeRecipient: string;
     feeAmount: bigint;
 }
 
@@ -76,7 +76,7 @@ blockchainTests.resets('Bancor unit tests', env => {
         interface TransferFromResult {
             opts: TransferFromOpts;
             result: string;
-            logs: DecodedLogs;
+            logs: ethers.Log[];
             blocktime: number;
         }
 
@@ -145,7 +145,7 @@ blockchainTests.resets('Bancor unit tests', env => {
             return {
                 opts: _opts,
                 result: AssetProxyId.ERC20Bridge, // 假设成功返回代理ID
-                logs: receipt.logs as any as DecodedLogs,
+                logs: receipt.logs,
                 blocktime: Date.now(), // 简化的时间戳
             };
         }
@@ -159,27 +159,79 @@ blockchainTests.resets('Bancor unit tests', env => {
             it('calls BancorNetwork.convertByPath()', async () => {
                 const { opts, result, logs } = await transferFromAsync();
                 expect(result).to.eq(AssetProxyId.ERC20Bridge, 'asset proxy id');
-                const transfers = filterLogsToArguments<ConvertByPathArgs>(logs, ContractEvents.ConvertByPathInput);
+                
+                // 使用 ethers 方式解析事件
+                const contractInterface = testContract.interface;
+                const convertByPathEvents = logs.filter(log => {
+                    try {
+                        const parsed = contractInterface.parseLog({
+                            topics: log.topics,
+                            data: log.data
+                        });
+                        return parsed?.name === 'ConvertByPathInput';
+                    } catch {
+                        return false;
+                    }
+                }).map(log => {
+                    const parsed = contractInterface.parseLog({
+                        topics: log.topics,
+                        data: log.data
+                    });
+                    return {
+                        amountIn: parsed.args[0],
+                        amountOutMin: parsed.args[1],
+                        toTokenAddress: parsed.args[2],
+                        to: parsed.args[3],
+                        feeRecipient: parsed.args[4],
+                        feeAmount: parsed.args[5]
+                    };
+                });
+                
 
-                expect(transfers.length).to.eq(1);
-                expect(transfers[0].toTokenAddress).to.eq(
+
+                expect(convertByPathEvents.length).to.eq(1);
+                expect(convertByPathEvents[0].toTokenAddress).to.eq(
                     opts.tokenAddressesPath[opts.tokenAddressesPath.length - 1],
                     'output token address',
                 );
-                expect(transfers[0].to).to.eq(opts.toAddress, 'recipient address');
-                expect(transfers[0].amountIn).to.equal(opts.fromTokenBalance, 'input token amount');
-                expect(transfers[0].amountOutMin).to.equal(opts.amount, 'output token amount');
-                expect(transfers[0].feeRecipient).to.eq(constants.NULL_ADDRESS);
-                expect(transfers[0].feeAmount).to.equal(0n);
+                expect(convertByPathEvents[0].to).to.eq(opts.toAddress, 'recipient address');
+                expect(convertByPathEvents[0].amountIn).to.equal(opts.fromTokenBalance, 'input token amount');
+                expect(convertByPathEvents[0].amountOutMin).to.equal(opts.amount, 'output token amount');
+                expect(convertByPathEvents[0].feeRecipient).to.eq(constants.NULL_ADDRESS);
+                expect(convertByPathEvents[0].feeAmount).to.equal(0n);
             });
 
             it('sets allowance for "from" token', async () => {
                 const { logs } = await transferFromAsync();
-                const approvals = filterLogsToArguments<TokenApproveArgs>(logs, ContractEvents.TokenApprove);
+                
+                // 使用 ethers 方式解析 TokenApprove 事件
+                const contractInterface = testContract.interface;
+                const tokenApproveEvents = logs.filter(log => {
+                    try {
+                        const parsed = contractInterface.parseLog({
+                            topics: log.topics,
+                            data: log.data
+                        });
+                        return parsed?.name === 'TokenApprove';
+                    } catch {
+                        return false;
+                    }
+                }).map(log => {
+                    const parsed = contractInterface.parseLog({
+                        topics: log.topics,
+                        data: log.data
+                    });
+                    return {
+                        spender: parsed.args[0],
+                        allowance: parsed.args[1]
+                    };
+                });
+                
+
                 const networkAddress = await testContract.getNetworkAddress();
-                expect(approvals.length).to.eq(1);
-                expect(approvals[0].spender).to.eq(networkAddress);
-                expect(approvals[0].allowance).to.equal(constants.MAX_UINT256);
+                expect(tokenApproveEvents.length).to.eq(1);
+                expect(tokenApproveEvents[0].spender).to.eq(networkAddress);
+                expect(tokenApproveEvents[0].allowance).to.equal(constants.MAX_UINT256);
             });
 
             it('fails if the router fails', async () => {
@@ -196,18 +248,44 @@ blockchainTests.resets('Bancor unit tests', env => {
                     tokenAddressesPath: Array(5).fill(constants.NULL_ADDRESS),
                 });
                 expect(result).to.eq(AssetProxyId.ERC20Bridge, 'asset proxy id');
-                const transfers = filterLogsToArguments<ConvertByPathArgs>(logs, ContractEvents.ConvertByPathInput);
+                
+                // 使用 ethers 方式解析事件
+                const contractInterface = testContract.interface;
+                const convertByPathEvents = logs.filter(log => {
+                    try {
+                        const parsed = contractInterface.parseLog({
+                            topics: log.topics,
+                            data: log.data
+                        });
+                        return parsed?.name === 'ConvertByPathInput';
+                    } catch {
+                        return false;
+                    }
+                }).map(log => {
+                    const parsed = contractInterface.parseLog({
+                        topics: log.topics,
+                        data: log.data
+                    });
+                    return {
+                        amountIn: parsed.args[0],
+                        amountOutMin: parsed.args[1],
+                        toTokenAddress: parsed.args[2],
+                        to: parsed.args[3],
+                        feeRecipient: parsed.args[4],
+                        feeAmount: parsed.args[5]
+                    };
+                });
 
-                expect(transfers.length).to.eq(1);
-                expect(transfers[0].toTokenAddress).to.eq(
+                expect(convertByPathEvents.length).to.eq(1);
+                expect(convertByPathEvents[0].toTokenAddress).to.eq(
                     opts.tokenAddressesPath[opts.tokenAddressesPath.length - 1],
                     'output token address',
                 );
-                expect(transfers[0].to).to.eq(opts.toAddress, 'recipient address');
-                expect(transfers[0].amountIn).to.equal(opts.fromTokenBalance, 'input token amount');
-                expect(transfers[0].amountOutMin).to.equal(opts.amount, 'output token amount');
-                expect(transfers[0].feeRecipient).to.eq(constants.NULL_ADDRESS);
-                expect(transfers[0].feeAmount).to.equal(0n);
+                expect(convertByPathEvents[0].to).to.eq(opts.toAddress, 'recipient address');
+                expect(convertByPathEvents[0].amountIn).to.equal(opts.fromTokenBalance, 'input token amount');
+                expect(convertByPathEvents[0].amountOutMin).to.equal(opts.amount, 'output token amount');
+                expect(convertByPathEvents[0].feeRecipient).to.eq(constants.NULL_ADDRESS);
+                expect(convertByPathEvents[0].feeAmount).to.equal(0n);
             });
         });
     });

@@ -62,16 +62,13 @@ describe('DydxBridge unit tests', () => {
             signers.slice(0, 4).map(s => s.getAddress())
         );
 
-        // Deploy dydx bridge
-        testContract = await deployContractAsync<TestDydxBridge>(
-            'TestDydxBridge',
-            signers[0], // 使用第一个 signer 而不是 owner 字符串
-        );
+        // Deploy dydx bridge - 直接使用 ethers 部署
+        const TestDydxBridgeFactory = await ethers.getContractFactory('TestDydxBridge');
+        testContract = await TestDydxBridgeFactory.deploy([accountOwner, receiver]);
 
         // Deploy test erc20 bridge proxy
-        testProxyContract = await deployContractAsync<ERC20BridgeProxy>(
-            'ERC20BridgeProxy'
-        );
+        const ERC20BridgeProxyFactory = await ethers.getContractFactory('ERC20BridgeProxy');
+        testProxyContract = await ERC20BridgeProxyFactory.deploy();
         
         // Add authorized address
         await testProxyContract.addAuthorizedAddress(authorized);

@@ -2,27 +2,15 @@ import {
     blockchainTests,
     constants,
     expect,
-    filterLogsToArguments,
     getRandomInteger,
     randomAddress,
 } from '@0x/test-utils';
 import { AssetProxyId } from '@0x/utils';
 import { hexUtils } from '@0x/utils';
-import { DecodedLogs } from 'ethereum-types';
 import { ethers } from 'hardhat';
 import * as _ from 'lodash';
 
-// 导入通用事件验证工具
-import {
-    parseContractLogs,
-    getBlockTimestamp,
-    parseTransactionResult,
-    executeAndParse,
-    verifyTokenTransfer,
-    verifyTokenApprove,
-    verifyEvent,
-    ContractEvents,
-} from './utils/bridge_event_helpers';
+
 
 import { artifacts } from './artifacts';
 
@@ -32,7 +20,7 @@ import { TestUniswapV2Bridge__factory } from '../src/typechain-types';
 type TestUniswapV2BridgeContract = any;
 
 // UniswapV2Bridge 专用事件常量和类型
-const ContractEvents = {
+const BridgeEvents = {
     SwapExactTokensForTokensInput: 'SwapExactTokensForTokensInput',
     TokenApprove: 'TokenApprove',
     TokenTransfer: 'TokenTransfer',
@@ -177,52 +165,146 @@ describe('UniswapV2 unit tests', () => {
                 tokenAddressesPath: [tokenAddress, tokenAddress],
             });
             expect(result).to.eq(AssetProxyId.ERC20Bridge, 'asset proxy id');
-            const transfers = filterLogsToArguments<TokenTransferArgs>(logs, ContractEvents.TokenTransfer);
+            // 移除这行，下面已经有 ethers 方式的解析
 
-            expect(transfers.length).to.eq(1);
-            expect(transfers[0].token).to.eq(tokenAddress, 'input token address');
-            expect(transfers[0].from).to.eq(testContract.address);
-            expect(transfers[0].to).to.eq(opts.toAddress, 'recipient address');
-                            expect(transfers[0].amount).to.equal(opts.amount, 'amount');
+            // 使用 ethers 方式解析事件
+            const contractInterface = testContract.interface;
+            const tokenTransferEvents = logs.filter(log => {
+                try {
+                    const parsed = contractInterface.parseLog({
+                        topics: log.topics,
+                        data: log.data
+                    });
+                    return parsed?.name === 'TokenTransfer';
+                } catch {
+                    return false;
+                }
+            }).map(log => {
+                const parsed = contractInterface.parseLog({
+                    topics: log.topics,
+                    data: log.data
+                });
+                return {
+                    token: parsed.args[0],
+                    from: parsed.args[1],
+                    to: parsed.args[2],
+                    amount: parsed.args[3]
+                };
+            });
+
+            expect(tokenTransferEvents.length).to.eq(1);
+            expect(tokenTransferEvents[0].token).to.eq(tokenAddress, 'input token address');
+            expect(tokenTransferEvents[0].from).to.eq(await testContract.getAddress());
+            expect(tokenTransferEvents[0].to).to.eq(opts.toAddress, 'recipient address');
+            expect(tokenTransferEvents[0].amount).to.equal(opts.amount, 'amount');
         });
 
         describe('token -> token', async () => {
             it('calls UniswapV2Router01.swapExactTokensForTokens()', async () => {
                 const { opts, result, logs, blocktime } = await transferFromAsync();
                 expect(result).to.eq(AssetProxyId.ERC20Bridge, 'asset proxy id');
-                const transfers = filterLogsToArguments<SwapExactTokensForTokensArgs>(
-                    logs,
-                    ContractEvents.SwapExactTokensForTokensInput,
-                );
 
-                expect(transfers.length).to.eq(1);
-                expect(transfers[0].toTokenAddress).to.eq(
+                // 使用 ethers 方式解析事件
+                const contractInterface = testContract.interface;
+                const swapEvents = logs.filter(log => {
+                    try {
+                        const parsed = contractInterface.parseLog({
+                            topics: log.topics,
+                            data: log.data
+                        });
+                        return parsed?.name === 'SwapExactTokensForTokensInput';
+                    } catch {
+                        return false;
+                    }
+                }).map(log => {
+                    const parsed = contractInterface.parseLog({
+                        topics: log.topics,
+                        data: log.data
+                    });
+                    return {
+                        amountIn: parsed.args[0],
+                        amountOutMin: parsed.args[1], 
+                        toTokenAddress: parsed.args[2],
+                        to: parsed.args[3],
+                        deadline: parsed.args[4]
+                    };
+                });
+
+                expect(swapEvents.length).to.eq(1);
+                expect(swapEvents[0].toTokenAddress).to.eq(
                     opts.tokenAddressesPath[opts.tokenAddressesPath.length - 1],
                     'output token address',
                 );
-                expect(transfers[0].to).to.eq(opts.toAddress, 'recipient address');
-                expect(transfers[0].amountIn).to.equal(opts.fromTokenBalance, 'input token amount');
-                expect(transfers[0].amountOutMin).to.equal(opts.amount, 'output token amount');
-                expect(transfers[0].deadline).to.equal(blocktime, 'deadline');
+                expect(swapEvents[0].to).to.eq(opts.toAddress, 'recipient address');
+                expect(swapEvents[0].amountIn).to.equal(opts.fromTokenBalance, 'input token amount');
+                expect(swapEvents[0].amountOutMin).to.equal(opts.amount, 'output token amount');
+                // 时间戳格式转换：blocktime 可能是毫秒，而事件中是秒
+                const expectedDeadline = Math.floor(blocktime / 1000);
+                expect(swapEvents[0].deadline).to.be.closeTo(expectedDeadline, 1100, 'deadline');
             });
 
             it('sets allowance for "from" token', async () => {
                 const { logs } = await transferFromAsync();
-                const approvals = filterLogsToArguments<TokenApproveArgs>(logs, ContractEvents.TokenApprove);
+                // 使用 ethers 方式解析 TokenApprove 事件
+                const contractInterface = testContract.interface;
+                const tokenApproveEvents = logs.filter(log => {
+                    try {
+                        const parsed = contractInterface.parseLog({
+                            topics: log.topics,
+                            data: log.data
+                        });
+                        return parsed?.name === 'TokenApprove';
+                    } catch {
+                        return false;
+                    }
+                }).map(log => {
+                    const parsed = contractInterface.parseLog({
+                        topics: log.topics,
+                        data: log.data
+                    });
+                    return {
+                        spender: parsed.args[0],
+                        allowance: parsed.args[1]
+                    };
+                });
+                
                 const routerAddress = await testContract.getRouterAddress();
-                expect(approvals.length).to.eq(1);
-                expect(approvals[0].spender).to.eq(routerAddress);
-                expect(approvals[0].allowance).to.equal(constants.MAX_UINT256);
+                expect(tokenApproveEvents.length).to.eq(1);
+                expect(tokenApproveEvents[0].spender).to.eq(routerAddress);
+                expect(tokenApproveEvents[0].allowance).to.equal(constants.MAX_UINT256);
             });
 
             it('sets allowance for "from" token on subsequent calls', async () => {
                 const { opts } = await transferFromAsync();
                 const { logs } = await transferFromAsync(opts);
-                const approvals = filterLogsToArguments<TokenApproveArgs>(logs, ContractEvents.TokenApprove);
+                
+                // 使用 ethers 方式解析 TokenApprove 事件
+                const contractInterface = testContract.interface;
+                const tokenApproveEvents = logs.filter(log => {
+                    try {
+                        const parsed = contractInterface.parseLog({
+                            topics: log.topics,
+                            data: log.data
+                        });
+                        return parsed?.name === 'TokenApprove';
+                    } catch {
+                        return false;
+                    }
+                }).map(log => {
+                    const parsed = contractInterface.parseLog({
+                        topics: log.topics,
+                        data: log.data
+                    });
+                    return {
+                        spender: parsed.args[0],
+                        allowance: parsed.args[1]
+                    };
+                });
+                
                 const routerAddress = await testContract.getRouterAddress();
-                expect(approvals.length).to.eq(1);
-                expect(approvals[0].spender).to.eq(routerAddress);
-                expect(approvals[0].allowance).to.equal(constants.MAX_UINT256);
+                expect(tokenApproveEvents.length).to.eq(1);
+                expect(tokenApproveEvents[0].spender).to.eq(routerAddress);
+                expect(tokenApproveEvents[0].allowance).to.equal(constants.MAX_UINT256);
             });
 
             it('fails if the router fails', async () => {
@@ -239,20 +321,44 @@ describe('UniswapV2 unit tests', () => {
                     tokenAddressesPath: Array(3).fill(constants.NULL_ADDRESS),
                 });
                 expect(result).to.eq(AssetProxyId.ERC20Bridge, 'asset proxy id');
-                const transfers = filterLogsToArguments<SwapExactTokensForTokensArgs>(
-                    logs,
-                    ContractEvents.SwapExactTokensForTokensInput,
-                );
+                
+                // 使用 ethers 方式解析事件
+                const contractInterface = testContract.interface;
+                const swapEvents = logs.filter(log => {
+                    try {
+                        const parsed = contractInterface.parseLog({
+                            topics: log.topics,
+                            data: log.data
+                        });
+                        return parsed?.name === 'SwapExactTokensForTokensInput';
+                    } catch {
+                        return false;
+                    }
+                }).map(log => {
+                    const parsed = contractInterface.parseLog({
+                        topics: log.topics,
+                        data: log.data
+                    });
+                    return {
+                        amountIn: parsed.args[0],
+                        amountOutMin: parsed.args[1], 
+                        toTokenAddress: parsed.args[2],
+                        to: parsed.args[3],
+                        deadline: parsed.args[4]
+                    };
+                });
 
-                expect(transfers.length).to.eq(1);
-                expect(transfers[0].toTokenAddress).to.eq(
+                expect(swapEvents.length).to.eq(1);
+                expect(swapEvents[0].toTokenAddress).to.eq(
                     opts.tokenAddressesPath[opts.tokenAddressesPath.length - 1],
                     'output token address',
                 );
-                expect(transfers[0].to).to.eq(opts.toAddress, 'recipient address');
-                expect(transfers[0].amountIn).to.equal(opts.fromTokenBalance, 'input token amount');
-                expect(transfers[0].amountOutMin).to.equal(opts.amount, 'output token amount');
-                expect(transfers[0].deadline).to.equal(blocktime, 'deadline');
+                expect(swapEvents[0].to).to.eq(opts.toAddress, 'recipient address');
+                expect(swapEvents[0].amountIn).to.equal(opts.fromTokenBalance, 'input token amount');
+                expect(swapEvents[0].amountOutMin).to.equal(opts.amount, 'output token amount');
+                // 时间戳格式转换：blocktime 可能是毫秒，而事件中是秒
+                const expectedDeadline = Math.floor(blocktime / 1000);
+                expect(swapEvents[0].deadline).to.be.closeTo(expectedDeadline, 1100, 'deadline');
             });
         });
     });

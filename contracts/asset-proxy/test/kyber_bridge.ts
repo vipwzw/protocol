@@ -15,7 +15,15 @@ import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
 
-import { TestKyberBridgeContract, TestKyberBridgeEvents, KyberBridge__factory } from './wrappers';
+import { TestKyberBridge, TestKyberBridge__factory } from '../src/typechain-types';
+
+// 使用测试合约类型
+type TestKyberBridgeContract = TestKyberBridge;
+const TestKyberBridgeEvents = {
+    BuyTokenAmount: 'BuyTokenAmount',
+    SellTokenAmount: 'SellTokenAmount',
+    SetAllowance: 'SetAllowance',
+};
 
 // TODO(dorothy-zbornak): Tests need to be updated.
 describe('KyberBridge unit tests', () => {
@@ -31,7 +39,7 @@ describe('KyberBridge unit tests', () => {
     before(async () => {
         const signers = await ethers.getSigners();
         const deployer = signers[0];
-        testContract = await new KyberBridge__factory(deployer).deploy();
+        testContract = await new TestKyberBridge__factory(deployer).deploy();
     });
 
     describe('isValidSignature()', () => {
@@ -49,11 +57,10 @@ describe('KyberBridge unit tests', () => {
         let wethAddress: string;
 
         before(async () => {
+            // 修复：weth 是一个公共变量，直接获取地址  
             wethAddress = await testContract.weth();
             fromTokenAddress = await testContract.createToken(FROM_TOKEN_DECIMALS);
-            await testContract.createToken(FROM_TOKEN_DECIMALS).awaitTransactionSuccessAsync();
             toTokenAddress = await testContract.createToken(TO_TOKEN_DECIMALS);
-            await testContract.createToken(TO_TOKEN_DECIMALS).awaitTransactionSuccessAsync();
         });
 
         const STATIC_KYBER_TRADE_ARGS = {
@@ -96,12 +103,9 @@ describe('KyberBridge unit tests', () => {
             const _opts = createTransferFromOpts(opts);
             // Fund the contract with input tokens.
             await testContract
-                .grantTokensTo(_opts.fromTokenAddress, testContract.address, _opts.fromTokenBalance)
-                .awaitTransactionSuccessAsync({ value: _opts.fromTokenBalance });
+                .grantTokensTo(_opts.fromTokenAddress, await testContract.getAddress(), _opts.fromTokenBalance);
             // Fund the contract with output tokens.
-            await testContract.setNextFillAmount(_opts.fillAmount).awaitTransactionSuccessAsync({
-                value: _opts.toTokenAddress === wethAddress ? _opts.fillAmount : constants.ZERO_AMOUNT,
-            });
+            await testContract.setNextFillAmount(_opts.fillAmount);
             // Call bridgeTransferFrom().
             const bridgeTransferFromFn = testContract.bridgeTransferFrom(
                 // Output token
@@ -168,7 +172,7 @@ describe('KyberBridge unit tests', () => {
                         sellTokenAddress: opts.fromTokenAddress,
                         buyTokenAddress: KYBER_ETH_ADDRESS,
                         sellAmount: opts.fromTokenBalance,
-                        recipientAddress: testContract.address,
+                        recipientAddress: await testContract.getAddress(),
                         minConversionRate: getMinimumConversionRate(opts),
                         msgValue: constants.ZERO_AMOUNT,
                         ...STATIC_KYBER_TRADE_ARGS,
@@ -215,7 +219,7 @@ describe('KyberBridge unit tests', () => {
                 [
                     {
                         tokenAddress: fromTokenAddress,
-                        ownerAddress: testContract.address,
+                        ownerAddress: await testContract.getAddress(),
                         recipientAddress: opts.toAddress,
                         amount: opts.fromTokenBalance,
                     },
@@ -231,8 +235,8 @@ describe('KyberBridge unit tests', () => {
                 [
                     {
                         tokenAddress: opts.fromTokenAddress,
-                        ownerAddress: testContract.address,
-                        spenderAddress: testContract.address,
+                        ownerAddress: await testContract.getAddress(),
+                        spenderAddress: await testContract.getAddress(),
                         allowance: constants.MAX_UINT256,
                     },
                 ],
@@ -253,7 +257,7 @@ describe('KyberBridge unit tests', () => {
             });
             expect(logs[0].event).to.eq(TestKyberBridgeEvents.KyberBridgeWethWithdraw);
             expect(logs[0].args).to.deep.eq({
-                ownerAddress: testContract.address,
+                ownerAddress: await testContract.getAddress(),
                 amount: opts.fromTokenBalance,
             });
             expect(logs[1].event).to.eq(TestKyberBridgeEvents.KyberBridgeTrade);
@@ -271,7 +275,7 @@ describe('KyberBridge unit tests', () => {
             expect(logs[2].event).to.eq(TestKyberBridgeEvents.KyberBridgeWethDeposit);
             expect(logs[2].args).to.deep.eq({
                 msgValue: opts.fillAmount,
-                ownerAddress: testContract.address,
+                ownerAddress: await testContract.getAddress(),
                 amount: opts.fillAmount,
             });
         });
