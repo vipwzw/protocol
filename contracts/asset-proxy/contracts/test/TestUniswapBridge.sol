@@ -208,7 +208,7 @@ contract TestToken {
         payable
     {
         _revertIfReasonExists();
-        balances[msg.sender] += balances[msg.sender] + msg.value;
+        balances[msg.sender] += msg.value;
         TestEventsRaiser(msg.sender).raiseWethDeposit(msg.value);
     }
 
@@ -218,6 +218,7 @@ contract TestToken {
         external
     {
         _revertIfReasonExists();
+        require(balances[msg.sender] >= amount, "Insufficient balance");
         balances[msg.sender] = balances[msg.sender] - amount;
         payable(msg.sender).transfer(amount);
         // 只有当 msg.sender 是合约时才触发事件
