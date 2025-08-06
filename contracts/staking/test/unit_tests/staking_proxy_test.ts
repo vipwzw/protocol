@@ -1,4 +1,4 @@
-import { blockchainTests, constants, expect, verifyEventsFromLogs } from '../test_utils';
+import { blockchainTests, constants, expect, verifyEventsFromLogs, expectBigIntEqual, toBigInt } from '../test_utils';
 
 // AuthorizableRevertErrors replacement
 export class AuthorizableRevertErrors {
@@ -198,8 +198,8 @@ blockchainTests.resets('StakingProxy unit tests', env => {
                 testContract.getABIDecodedReturnData<BigNumber[]>('doMath', rawResults[1]),
             ];
             expect(returnValues[0]).to.equal(testString);
-            expect(returnValues[1][0]).to.bignumber.equal(new BigNumber(3));
-            expect(returnValues[1][1]).to.bignumber.equal(new BigNumber(1));
+            expectBigIntEqual(toBigInt(returnValues[1][0]), 3n);
+            expectBigIntEqual(toBigInt(returnValues[1][1]), 1n);
         });
 
         it('should revert if a call reverts', async () => {

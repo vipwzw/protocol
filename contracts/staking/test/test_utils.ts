@@ -47,6 +47,35 @@ export function getRandomInteger(min: number = 0, max: number = 1000000): number
 // Type alias for numeric types
 export type Numberish = number | string | bigint;
 
+// BigInt assertion utilities to replace chai-bignumber
+export function expectBigIntEqual(actual: bigint, expected: bigint, message?: string): void {
+    expect(actual, message).to.equal(expected);
+}
+
+export function expectBigIntGreaterThan(actual: bigint, expected: bigint, message?: string): void {
+    expect(actual, message).to.be.greaterThan(expected);
+}
+
+export function expectBigIntLessThan(actual: bigint, expected: bigint, message?: string): void {
+    expect(actual, message).to.be.lessThan(expected);
+}
+
+export function expectBigIntGreaterThanOrEqual(actual: bigint, expected: bigint, message?: string): void {
+    expect(actual >= expected, message || `Expected ${actual} to be >= ${expected}`).to.be.true;
+}
+
+export function expectBigIntLessThanOrEqual(actual: bigint, expected: bigint, message?: string): void {
+    expect(actual <= expected, message || `Expected ${actual} to be <= ${expected}`).to.be.true;
+}
+
+// Helper to convert various types to bigint for comparison
+export function toBigInt(value: Numberish): bigint {
+    if (typeof value === 'bigint') {
+        return value;
+    }
+    return BigInt(value);
+}
+
 // Transaction defaults
 export const txDefaults = {
     gasLimit: 6000000,
