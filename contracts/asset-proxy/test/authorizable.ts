@@ -4,114 +4,117 @@ import { Signer } from 'ethers';
 
 // 本地 RevertReason 定义，替代 @0x/utils 
 const RevertReason = {
-    OnlyContractOwner: 'only owner',
-    TargetAlreadyAuthorized: 'target already authorized',
-    TargetNotAuthorized: 'target not authorized',
-    IndexOutOfBounds: 'index out of bounds',
-    AuthorizedAddressMismatch: 'authorized address mismatch'
+    OnlyContractOwner: 'ONLY_CONTRACT_OWNER',
+    TargetAlreadyAuthorized: 'TARGET_ALREADY_AUTHORIZED',
+    TargetNotAuthorized: 'TARGET_NOT_AUTHORIZED',
+    IndexOutOfBounds: 'INDEX_OUT_OF_BOUNDS',
+    AuthorizedAddressMismatch: 'AUTHORIZED_ADDRESS_MISMATCH'
 };
 
-describe.skip('Authorizable', () => {
+describe('Authorizable', () => {
+    let authorizable: any;
     let owner: string;
     let notOwner: string;
     let address: string;
+    let ownerSigner: any;
+    let notOwnerSigner: any;
 
-    before(async () => {
+    beforeEach(async () => {
         const signers = await ethers.getSigners();
+        ownerSigner = signers[0];
         owner = await signers[0].getAddress();
         address = await signers[1].getAddress();
+        notOwnerSigner = signers[2];
         notOwner = await signers[2].getAddress();
         
-        // Skip this test as MixinAuthorizable is in archive and needs to be migrated to modern contracts
-        console.log('⏭️ Skipping Authorizable tests - contract needs to be migrated from archive');
+        // Deploy fresh MixinAuthorizable contract for each test
+        const factory = await ethers.getContractFactory('MixinAuthorizable');
+        authorizable = await factory.deploy();
+        await authorizable.waitForDeployment();
     });
 
     describe('addAuthorizedAddress', () => {
         it('should revert if not called by owner', async () => {
-            const tx = authorizable.addAuthorizedAddress(notOwner).sendTransactionAsync({ from: notOwner });
-            return expect(tx).to.be.revertedWith(RevertReason.OnlyContractOwner);
+            await expect(
+                authorizable.connect(notOwnerSigner).addAuthorizedAddress(address)
+            ).to.be.revertedWith(RevertReason.OnlyContractOwner);
         });
 
         it('should allow owner to add an authorized address', async () => {
-            await authorizable.addAuthorizedAddress(address).awaitTransactionSuccessAsync({ from: owner });
+            await authorizable.connect(ownerSigner).addAuthorizedAddress(address);
             const isAuthorized = await authorizable.authorized(address);
-            expect(isAuthorized).to.be.true();
+            expect(isAuthorized).to.be.true;
         });
 
         it('should revert if owner attempts to authorize a duplicate address', async () => {
-            await authorizable.addAuthorizedAddress(address).awaitTransactionSuccessAsync({ from: owner });
-            const tx = authorizable.addAuthorizedAddress(address).sendTransactionAsync({ from: owner });
-            return expect(tx).to.be.revertedWith(RevertReason.TargetAlreadyAuthorized);
+            await authorizable.connect(ownerSigner).addAuthorizedAddress(address);
+            await expect(
+                authorizable.connect(ownerSigner).addAuthorizedAddress(address)
+            ).to.be.revertedWith(RevertReason.TargetAlreadyAuthorized);
         });
     });
 
     describe('removeAuthorizedAddress', () => {
         it('should revert if not called by owner', async () => {
-            await authorizable.addAuthorizedAddress(address).awaitTransactionSuccessAsync({ from: owner });
-            const tx = authorizable.removeAuthorizedAddress(address).sendTransactionAsync({ from: notOwner });
-            return expect(tx).to.be.revertedWith(RevertReason.OnlyContractOwner);
+            await authorizable.connect(ownerSigner).addAuthorizedAddress(address);
+            await expect(
+                authorizable.connect(notOwnerSigner).removeAuthorizedAddress(address)
+            ).to.be.revertedWith(RevertReason.OnlyContractOwner);
         });
 
         it('should allow owner to remove an authorized address', async () => {
-            await authorizable.addAuthorizedAddress(address).awaitTransactionSuccessAsync({ from: owner });
-            await authorizable.removeAuthorizedAddress(address).awaitTransactionSuccessAsync({ from: owner });
+            await authorizable.connect(ownerSigner).addAuthorizedAddress(address);
+            await authorizable.connect(ownerSigner).removeAuthorizedAddress(address);
             const isAuthorized = await authorizable.authorized(address);
-            expect(isAuthorized).to.be.false();
+            expect(isAuthorized).to.be.false;
         });
 
         it('should revert if owner attempts to remove an address that is not authorized', async () => {
-            const tx = authorizable.removeAuthorizedAddress(address).sendTransactionAsync({ from: owner });
-            return expect(tx).to.be.revertedWith(RevertReason.TargetNotAuthorized);
+            await expect(
+                authorizable.connect(ownerSigner).removeAuthorizedAddress(address)
+            ).to.be.revertedWith(RevertReason.TargetNotAuthorized);
         });
     });
 
     describe('removeAuthorizedAddressAtIndex', () => {
         it('should revert if not called by owner', async () => {
-            await authorizable.addAuthorizedAddress(address).awaitTransactionSuccessAsync({ from: owner });
-            const index = 0n;
-            const tx = authorizable
-                .removeAuthorizedAddressAtIndex(address, index)
-                .sendTransactionAsync({ from: notOwner });
-            return expect(tx).to.be.revertedWith(RevertReason.OnlyContractOwner);
+            await authorizable.connect(ownerSigner).addAuthorizedAddress(address);
+            const index = 0;
+            await expect(
+                authorizable.connect(notOwnerSigner).removeAuthorizedAddressAtIndex(address, index)
+            ).to.be.revertedWith(RevertReason.OnlyContractOwner);
         });
 
         it('should revert if index is >= authorities.length', async () => {
-            await authorizable.addAuthorizedAddress(address).awaitTransactionSuccessAsync({ from: owner });
-            const index = 1n;
-            const tx = authorizable
-                .removeAuthorizedAddressAtIndex(address, index)
-                .sendTransactionAsync({ from: owner });
-            return expect(tx).to.be.revertedWith(RevertReason.IndexOutOfBounds);
+            const index = 1;
+            await expect(
+                authorizable.connect(ownerSigner).removeAuthorizedAddressAtIndex(address, index)
+            ).to.be.revertedWith(RevertReason.TargetNotAuthorized);
         });
 
         it('should revert if owner attempts to remove an address that is not authorized', async () => {
-            const index = 0n;
-            const tx = authorizable
-                .removeAuthorizedAddressAtIndex(address, index)
-                .sendTransactionAsync({ from: owner });
-            return expect(tx).to.be.revertedWith(RevertReason.TargetNotAuthorized);
+            await authorizable.connect(ownerSigner).addAuthorizedAddress(address);
+            const index = 0;
+            await expect(
+                authorizable.connect(ownerSigner).removeAuthorizedAddressAtIndex(notOwner, index)
+            ).to.be.revertedWith(RevertReason.TargetNotAuthorized);
         });
 
         it('should revert if address at index does not match target', async () => {
-            const address1 = address;
-            const address2 = notOwner;
-            await authorizable.addAuthorizedAddress(address1).awaitTransactionSuccessAsync({ from: owner });
-            await authorizable.addAuthorizedAddress(address2).awaitTransactionSuccessAsync({ from: owner });
-            const address1Index = 0n;
-            const tx = authorizable
-                .removeAuthorizedAddressAtIndex(address2, address1Index)
-                .sendTransactionAsync({ from: owner });
-            return expect(tx).to.be.revertedWith(RevertReason.AuthorizedAddressMismatch);
+            await authorizable.connect(ownerSigner).addAuthorizedAddress(address);
+            await authorizable.connect(ownerSigner).addAuthorizedAddress(notOwner);
+            const incorrectIndex = 1;
+            await expect(
+                authorizable.connect(ownerSigner).removeAuthorizedAddressAtIndex(address, incorrectIndex)
+            ).to.be.revertedWith(RevertReason.AuthorizedAddressMismatch);
         });
 
         it('should allow owner to remove an authorized address', async () => {
-            await authorizable.addAuthorizedAddress(address).awaitTransactionSuccessAsync({ from: owner });
-            const index = 0n;
-            await authorizable.removeAuthorizedAddressAtIndex(address, index).awaitTransactionSuccessAsync({
-                from: owner,
-            });
+            await authorizable.connect(ownerSigner).addAuthorizedAddress(address);
+            const index = 0;
+            await authorizable.connect(ownerSigner).removeAuthorizedAddressAtIndex(address, index);
             const isAuthorized = await authorizable.authorized(address);
-            expect(isAuthorized).to.be.false();
+            expect(isAuthorized).to.be.false;
         });
     });
 
@@ -119,13 +122,16 @@ describe.skip('Authorizable', () => {
         it('should return all authorized addresses', async () => {
             const initial = await authorizable.getAuthorizedAddresses();
             expect(initial).to.have.length(0);
-            await authorizable.addAuthorizedAddress(address).awaitTransactionSuccessAsync({ from: owner });
+            await authorizable.connect(ownerSigner).addAuthorizedAddress(address);
+            await authorizable.connect(ownerSigner).addAuthorizedAddress(notOwner);
             const afterAdd = await authorizable.getAuthorizedAddresses();
-            expect(afterAdd).to.have.length(1);
+            expect(afterAdd).to.have.length(2);
             expect(afterAdd).to.include(address);
-            await authorizable.removeAuthorizedAddress(address).awaitTransactionSuccessAsync({ from: owner });
+            expect(afterAdd).to.include(notOwner);
+            await authorizable.connect(ownerSigner).removeAuthorizedAddress(address);
             const afterRemove = await authorizable.getAuthorizedAddresses();
-            expect(afterRemove).to.have.length(0);
+            expect(afterRemove).to.have.length(1);
+            expect(afterRemove).to.include(notOwner);
         });
     });
 });

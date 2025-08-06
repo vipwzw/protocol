@@ -434,31 +434,67 @@ describe('DydxBridge unit tests', () => {
         });
     });
 
-    describe.skip('ERC20BridgeProxy.transferFrom()', () => {
+    describe('ERC20BridgeProxy.transferFrom()', () => {
         const bridgeData = {
             accountNumbers: [defaultAccountNumber],
             actions: [defaultWithdrawAction],
         };
         let assetData: string;
 
+        // 正确的 asset data 编码函数，参考 erc20bridge_proxy.ts
+        function encodeAssetData(tokenAddress: string, bridgeAddress: string, bridgeData: string): string {
+            // 使用 ethers AbiCoder 进行正确的 ABI 编码
+            const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+            const encodedData = abiCoder.encode(
+                ['address', 'address', 'bytes'],
+                [tokenAddress, bridgeAddress, bridgeData]
+            );
+            // 在前面加上 PROXY_ID (4 bytes) - ERC20Bridge 的 proxy ID
+            const PROXY_ID = '0xf47261b0'; // ERC20Bridge proxy ID
+            return PROXY_ID + encodedData.slice(2); // 移除 '0x' 前缀
+        }
+
         before(async () => {
-            const testTokenAddress = await testContract.getTestToken();
-            // 使用 asset data encoding 函数 - 目前先简化处理
-            const encodedBridgeData = dydxBridgeDataEncoder.encode(bridgeData);
-            // 暂时使用简单的 asset data 格式
+            // getTestToken() 是一个 external 函数，需要发送交易
+            const testTokenTx = await testContract.getTestToken();
+            const receipt = await testTokenTx.wait();
             const contractAddress = await testContract.getAddress();
-            // 简化处理 - 使用简单的字符串拼接作为临时解决方案
-            assetData = '0x' + testTokenAddress.slice(2) + contractAddress.slice(2) + encodedBridgeData.slice(2);
+            
+            // 从交易回执中获取返回值，或者直接从合约状态中读取
+            // 由于 getTestToken 实际上返回 _testTokenAddress，我们可以直接读取它
+            // 或者我们可以通过部署时的日志获取 token 地址
+            
+            // 让我们尝试从构造函数中获取创建的 token 地址
+            // 由于在构造函数中创建了 TestDydxBridgeToken，我们需要找到它的地址
+            
+            // 暂时使用一个简单的方法：调用静态调用来获取地址
+            const testTokenAddress = await testContract.getTestToken.staticCall();
+            
+            // 使用正确的编码器编码 bridge data
+            const encodedBridgeData = dydxBridgeDataEncoder.encode(bridgeData);
+            // 使用正确的 asset data 编码
+            assetData = encodeAssetData(testTokenAddress, contractAddress, encodedBridgeData);
         });
 
         it('should succeed if `bridgeTransferFrom` succeeds', async () => {
+            // 确保 revert 标志被重置
+            await testContract.setRevertOnOperate(false);
+            
+            // 需要使用授权的 signer 调用
+            const authorizedSigner = await ethers.getSigner(authorized);
+            
             await testProxyContract
+                .connect(authorizedSigner)
                 .transferFrom(assetData, accountOwner, receiver, defaultAmount);
         });
         it('should revert if `bridgeTransferFrom` reverts', async () => {
             // Set revert flag.
             await testContract.setRevertOnOperate(true);
+            // 需要使用授权的 signer 调用
+            const authorizedSigner = await ethers.getSigner(authorized);
+            
             const tx = testProxyContract
+                .connect(authorizedSigner)
                 .transferFrom(assetData, accountOwner, receiver, defaultAmount);
             const expectedError = 'TestDydxBridge/SHOULD_REVERT_ON_OPERATE';
             return expect(tx).to.be.revertedWith(expectedError);

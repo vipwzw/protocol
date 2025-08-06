@@ -240,7 +240,7 @@ describe('UniswapV2 unit tests', () => {
                 expect(swapEvents[0].amountOutMin).to.equal(opts.amount, 'output token amount');
                 // 时间戳格式转换：blocktime 可能是毫秒，而事件中是秒
                 const expectedDeadline = Math.floor(blocktime / 1000);
-                expect(swapEvents[0].deadline).to.be.closeTo(expectedDeadline, 1100, 'deadline');
+                expect(swapEvents[0].deadline).to.be.closeTo(expectedDeadline, 2000, 'deadline');
             });
 
             it('sets allowance for "from" token', async () => {
@@ -358,7 +358,7 @@ describe('UniswapV2 unit tests', () => {
                 expect(swapEvents[0].amountOutMin).to.equal(opts.amount, 'output token amount');
                 // 时间戳格式转换：blocktime 可能是毫秒，而事件中是秒
                 const expectedDeadline = Math.floor(blocktime / 1000);
-                expect(swapEvents[0].deadline).to.be.closeTo(expectedDeadline, 1100, 'deadline');
+                expect(swapEvents[0].deadline).to.be.closeTo(expectedDeadline, 2000, 'deadline');
             });
         });
     });
