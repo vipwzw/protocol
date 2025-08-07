@@ -52,7 +52,34 @@ function createLegacyWrapper(Factory: any) {
             const factory = new Factory(deployer);
             const contract = await factory.deploy(...args);
             
-            // Return the deployed contract directly
+            // Add legacy method compatibility
+            const originalMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(contract))
+                .filter(name => typeof (contract as any)[name] === 'function');
+                
+            for (const methodName of originalMethods) {
+                const originalMethod = (contract as any)[methodName];
+                if (typeof originalMethod === 'function') {
+                    (contract as any)[methodName] = function(...args: any[]) {
+                        const result = originalMethod.apply(contract, args);
+                        
+                        // Add legacy methods to transaction promises
+                        if (result && typeof result.then === 'function') {
+                            result.awaitTransactionSuccessAsync = async () => {
+                                const tx = await result;
+                                if (tx.wait) {
+                                    return await tx.wait();
+                                }
+                                return tx;
+                            };
+                            
+                            result.callAsync = () => result;
+                        }
+                        
+                        return result;
+                    };
+                }
+            }
+            
             return contract;
         }
     };

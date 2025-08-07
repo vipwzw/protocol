@@ -1,4 +1,6 @@
-import { blockchainTests, constants, expect, filterLogsToArguments } from './test_utils';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+import { constants, filterLogsToArguments } from './test_constants';
 
 // AuthorizableRevertErrors replacement
 export class AuthorizableRevertErrors {
@@ -47,21 +49,23 @@ import {
     TestStakingProxyStakingContractAttachedToProxyEventArgs,
 } from './wrappers';
 
-blockchainTests('Migration tests', env => {
+describe('Migration tests', () => {
     let authorizedAddress: string;
     let notAuthorizedAddress: string;
-
     let stakingContract: StakingContract;
 
     before(async () => {
-        [authorizedAddress, notAuthorizedAddress] = await env.getAccountAddressesAsync();
+        const signers = await ethers.getSigners();
+        [authorizedAddress, notAuthorizedAddress] = [signers[0].address, signers[1].address];
+        
         stakingContract = await StakingContract.deployFrom0xArtifactAsync(
             artifacts.TestStakingNoWETH,
-            env.provider,
-            env.txDefaults,
+            signers[0],
+            {},
             artifacts,
         );
-        await stakingContract.addAuthorizedAddress(authorizedAddress).awaitTransactionSuccessAsync();
+        const tx = await stakingContract.addAuthorizedAddress(authorizedAddress);
+        await tx.wait();
     });
 
     describe('StakingProxy', () => {
@@ -71,75 +75,71 @@ blockchainTests('Migration tests', env => {
         let revertAddress: string;
 
         async function deployStakingProxyAsync(stakingContractAddress?: string): Promise<TestStakingProxyContract> {
+            const [signer] = await ethers.getSigners();
             const proxyContract = await TestStakingProxyContract.deployFrom0xArtifactAsync(
                 artifacts.TestStakingProxy,
-                env.provider,
-                env.txDefaults,
+                signer,
+                {},
                 artifacts,
                 stakingContractAddress || constants.NULL_ADDRESS,
             );
-            await proxyContract.addAuthorizedAddress(authorizedAddress).awaitTransactionSuccessAsync();
+            const tx1 = await proxyContract.addAuthorizedAddress(authorizedAddress);
+            await tx1.wait();
             return proxyContract;
         }
 
         before(async () => {
-            [authorizedAddress, notAuthorizedAddress] = await env.getAccountAddressesAsync();
+            const [signer] = await ethers.getSigners();
             initTargetContract = await TestInitTargetContract.deployFrom0xArtifactAsync(
                 artifacts.TestInitTarget,
-                env.provider,
-                env.txDefaults,
+                signer,
+                {},
                 artifacts,
             );
-            revertAddress = await initTargetContract.SHOULD_REVERT_ADDRESS().callAsync();
+            revertAddress = await initTargetContract.SHOULD_REVERT_ADDRESS();
         });
 
         async function enableInitRevertsAsync(): Promise<void> {
             // Deposit some ether into `revertAddress` to signal `initTargetContract`
             // to fail.
-            await env.web3Wrapper.awaitTransactionMinedAsync(
-                await env.web3Wrapper.sendTransactionAsync({
-                    ...env.txDefaults,
-                    from: authorizedAddress,
-                    to: revertAddress,
-                    data: constants.NULL_BYTES,
-                    value: 1n,
-                }),
-            );
+            const [signer] = await ethers.getSigners();
+            await signer.sendTransaction({
+                to: revertAddress,
+                value: 1,
+            });
         }
 
         async function assertInitStateAsync(proxyContract: TestStakingProxyContract): Promise<void> {
-            const [senderAddress, thisAddress] = await initTargetContract.getInitState().callAsync({
-                to: proxyContract.address,
-            });
+            const [senderAddress, thisAddress] = await initTargetContract.getInitState();
             expect(senderAddress).to.eq(authorizedAddress);
-            expect(thisAddress).to.eq(proxyContract.address);
-            const attachedAddress = await proxyContract.stakingContract().callAsync();
-            expect(attachedAddress).to.eq(initTargetContract.address);
+            expect(thisAddress).to.eq(await proxyContract.getAddress());
+            const attachedAddress = await proxyContract.stakingContract();
+            expect(attachedAddress).to.eq(await initTargetContract.getAddress());
         }
 
-        blockchainTests.resets('StakingProxy constructor', async () => {
+        describe('StakingProxy constructor', () => {
             it('calls init() and attaches the contract', async () => {
-                const proxyContract = await deployStakingProxyAsync(initTargetContract.address);
+                const proxyContract = await deployStakingProxyAsync(await initTargetContract.getAddress());
                 await assertInitStateAsync(proxyContract);
             });
 
             it('reverts if init() reverts', async () => {
                 await enableInitRevertsAsync();
-                const tx = deployStakingProxyAsync(initTargetContract.address);
-                return expect(tx).to.revertWith(INIT_REVERT_ERROR);
+                const tx = deployStakingProxyAsync(await initTargetContract.getAddress());
+                return expect(tx).to.revertedWith(INIT_REVERT_ERROR);
             });
 
             it('reverts if assertValidStorageParams() fails', async () => {
                 const tx = deployStakingProxyAsync(revertAddress);
-                return expect(tx).to.revertWith(STORAGE_PARAMS_REVERT_ERROR);
+                return expect(tx).to.revertedWith(STORAGE_PARAMS_REVERT_ERROR);
             });
 
             it('should set the correct initial params', async () => {
                 const stakingProxyContractAddress = (
                     await StakingProxyContract.deployFrom0xArtifactAsync(
                         artifacts.StakingProxy,
-                        env.provider,
-                        env.txDefaults,
+                        await ethers.getSigners().then(signers => signers[0]),
+                        {},
                         artifacts,
                         stakingContract.address,
                     )
@@ -147,10 +147,10 @@ blockchainTests('Migration tests', env => {
 
                 const stakingProxyContract = new StakingContract(
                     stakingProxyContractAddress,
-                    env.provider,
-                    env.txDefaults,
+                    await ethers.getSigners().then(signers => signers[0]),
+                    {},
                 );
-                const params = await stakingProxyContract.getParams().callAsync();
+                const params = await stakingProxyContract.getParams();
                             expect(Number(params[0])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.epochDurationInSeconds));
             expect(Number(params[1])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.rewardDelegatedStakeWeight));
             expect(Number(params[2])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.minimumPoolStake));
@@ -159,7 +159,7 @@ blockchainTests('Migration tests', env => {
             });
         });
 
-        blockchainTests.resets('attachStakingContract()', async () => {
+        describe('attachStakingContract()', () => {
             let proxyContract: TestStakingProxyContract;
 
             before(async () => {
@@ -173,18 +173,18 @@ blockchainTests('Migration tests', env => {
                         from: notAuthorizedAddress,
                     });
                 const expectedError = new AuthorizableRevertErrors.SenderNotAuthorizedError(notAuthorizedAddress);
-                return expect(tx).to.revertWith(expectedError);
+                return expect(tx).to.revertedWith(expectedError);
             });
 
             it('calls init() and attaches the contract', async () => {
-                await proxyContract.attachStakingContract(initTargetContract.address).awaitTransactionSuccessAsync();
+                const tx2 = await proxyContract.attachStakingContract(await initTargetContract.getAddress());
+                await tx2.wait();
                 await assertInitStateAsync(proxyContract);
             });
 
             it('emits a `StakingContractAttachedToProxy` event', async () => {
-                const receipt = await proxyContract
-                    .attachStakingContract(initTargetContract.address)
-                    .awaitTransactionSuccessAsync();
+                const tx3 = await proxyContract.attachStakingContract(await initTargetContract.getAddress());
+                const receipt = await tx3.wait();
                 const logsArgs = filterLogsToArguments<TestStakingProxyStakingContractAttachedToProxyEventArgs>(
                     receipt.logs,
                     'StakingContractAttachedToProxy',
@@ -200,58 +200,59 @@ blockchainTests('Migration tests', env => {
                 await enableInitRevertsAsync();
                 const tx = proxyContract
                     .attachStakingContract(initTargetContract.address)
-                    .awaitTransactionSuccessAsync();
-                return expect(tx).to.revertWith(INIT_REVERT_ERROR);
+                    ; await tx.wait();
+                return expect(tx).to.revertedWith(INIT_REVERT_ERROR);
             });
 
             it('reverts if assertValidStorageParams() fails', async () => {
-                const tx = proxyContract.attachStakingContract(revertAddress).awaitTransactionSuccessAsync();
-                return expect(tx).to.revertWith(STORAGE_PARAMS_REVERT_ERROR);
+                const tx = proxyContract.attachStakingContract(revertAddress); await tx.wait();
+                return expect(tx).to.revertedWith(STORAGE_PARAMS_REVERT_ERROR);
             });
         });
 
-        blockchainTests.resets('upgrades', async () => {
+        describe('upgrades', () => {
             it('modifies prior state', async () => {
                 const proxyContract = await deployStakingProxyAsync(initTargetContract.address);
-                await proxyContract.attachStakingContract(initTargetContract.address).awaitTransactionSuccessAsync();
+                await proxyContract.attachStakingContract(initTargetContract.address); await tx.wait();
                 const initCounter = await initTargetContract.getInitCounter().callAsync({ to: proxyContract.address });
                 expect(Number(initCounter)).to.equal(2);
             });
         });
     });
 
-    blockchainTests.resets('Staking.init()', async () => {
+    describe('Staking.init()', () => {
         it('throws if not called by an authorized address', async () => {
             const tx = stakingContract.init().awaitTransactionSuccessAsync({
                 from: notAuthorizedAddress,
             });
             const expectedError = new AuthorizableRevertErrors.SenderNotAuthorizedError(notAuthorizedAddress);
-            return expect(tx).to.revertWith(expectedError);
+            return expect(tx).to.revertedWith(expectedError);
         });
 
         it('throws if already intitialized', async () => {
-            await stakingContract.init().awaitTransactionSuccessAsync();
-            const tx = stakingContract.init().awaitTransactionSuccessAsync();
+            await stakingContract.init(); await tx.wait();
+            const tx = stakingContract.init(); await tx.wait();
             const expectedError = new StakingRevertErrors.InitializationError();
-            return expect(tx).to.revertWith(expectedError);
+            return expect(tx).to.revertedWith(expectedError);
         });
     });
 
-    blockchainTests.resets('assertValidStorageParams', async () => {
+    describe('assertValidStorageParams', () => {
         let proxyContract: TestAssertStorageParamsContract;
         const fiveDays = BigInt(5 * 24 * 60 * 60);
         const thirtyDays = BigInt(30 * 24 * 60 * 60);
         before(async () => {
+            const [signer] = await ethers.getSigners();
             proxyContract = await TestAssertStorageParamsContract.deployFrom0xArtifactAsync(
                 artifacts.TestAssertStorageParams,
-                env.provider,
-                env.txDefaults,
+                signer,
+                {},
                 artifacts,
             );
         });
 
         it('succeeds if all params are valid', async () => {
-            const tx = proxyContract.setAndAssertParams(stakingConstants.DEFAULT_PARAMS).awaitTransactionSuccessAsync();
+            const tx = proxyContract.setAndAssertParams(stakingConstants.DEFAULT_PARAMS); await tx.wait();
             expect(tx).to.be.fulfilled('');
         });
 
@@ -261,11 +262,11 @@ blockchainTests('Migration tests', env => {
                     ...stakingConstants.DEFAULT_PARAMS,
                     epochDurationInSeconds: fiveDays - 1n,
                 })
-                .awaitTransactionSuccessAsync();
+                ; await tx.wait();
             const expectedError = new StakingRevertErrors.InvalidParamValueError(
                 StakingRevertErrors.InvalidParamValueErrorCodes.InvalidEpochDuration,
             );
-            return expect(tx).to.revertWith(expectedError);
+            return expect(tx).to.revertedWith(expectedError);
         });
         it('reverts if epoch duration is > 30 days', async () => {
             const tx = proxyContract
@@ -273,11 +274,11 @@ blockchainTests('Migration tests', env => {
                     ...stakingConstants.DEFAULT_PARAMS,
                     epochDurationInSeconds: thirtyDays + 1n,
                 })
-                .awaitTransactionSuccessAsync();
+                ; await tx.wait();
             const expectedError = new StakingRevertErrors.InvalidParamValueError(
                 StakingRevertErrors.InvalidParamValueErrorCodes.InvalidEpochDuration,
             );
-            return expect(tx).to.revertWith(expectedError);
+            return expect(tx).to.revertedWith(expectedError);
         });
         it('succeeds if epoch duration is 5 days', async () => {
             const tx = proxyContract
@@ -285,7 +286,7 @@ blockchainTests('Migration tests', env => {
                     ...stakingConstants.DEFAULT_PARAMS,
                     epochDurationInSeconds: fiveDays,
                 })
-                .awaitTransactionSuccessAsync();
+                ; await tx.wait();
             return expect(tx).to.be.fulfilled('');
         });
         it('succeeds if epoch duration is 30 days', async () => {
@@ -294,7 +295,7 @@ blockchainTests('Migration tests', env => {
                     ...stakingConstants.DEFAULT_PARAMS,
                     epochDurationInSeconds: thirtyDays,
                 })
-                .awaitTransactionSuccessAsync();
+                ; await tx.wait();
             return expect(tx).to.be.fulfilled('');
         });
         it('reverts if alpha denominator is 0', async () => {
@@ -303,11 +304,11 @@ blockchainTests('Migration tests', env => {
                     ...stakingConstants.DEFAULT_PARAMS,
                     cobbDouglasAlphaDenominator: constants.ZERO_AMOUNT,
                 })
-                .awaitTransactionSuccessAsync();
+                ; await tx.wait();
             const expectedError = new StakingRevertErrors.InvalidParamValueError(
                 StakingRevertErrors.InvalidParamValueErrorCodes.InvalidCobbDouglasAlpha,
             );
-            return expect(tx).to.revertWith(expectedError);
+            return expect(tx).to.revertedWith(expectedError);
         });
         it('reverts if alpha > 1', async () => {
             const tx = proxyContract
@@ -316,11 +317,11 @@ blockchainTests('Migration tests', env => {
                                     cobbDouglasAlphaNumerator: 101n,
                 cobbDouglasAlphaDenominator: 100n,
                 })
-                .awaitTransactionSuccessAsync();
+                ; await tx.wait();
             const expectedError = new StakingRevertErrors.InvalidParamValueError(
                 StakingRevertErrors.InvalidParamValueErrorCodes.InvalidCobbDouglasAlpha,
             );
-            return expect(tx).to.revertWith(expectedError);
+            return expect(tx).to.revertedWith(expectedError);
         });
         it('succeeds if alpha == 1', async () => {
             const tx = proxyContract
@@ -329,7 +330,7 @@ blockchainTests('Migration tests', env => {
                                     cobbDouglasAlphaNumerator: 1n,
                 cobbDouglasAlphaDenominator: 1n,
                 })
-                .awaitTransactionSuccessAsync();
+                ; await tx.wait();
             return expect(tx).to.be.fulfilled('');
         });
         it('succeeds if alpha == 0', async () => {
@@ -339,7 +340,7 @@ blockchainTests('Migration tests', env => {
                     cobbDouglasAlphaNumerator: constants.ZERO_AMOUNT,
                     cobbDouglasAlphaDenominator: 1n,
                 })
-                .awaitTransactionSuccessAsync();
+                ; await tx.wait();
             return expect(tx).to.be.fulfilled('');
         });
         it('reverts if delegation weight is > 100%', async () => {
@@ -348,11 +349,11 @@ blockchainTests('Migration tests', env => {
                     ...stakingConstants.DEFAULT_PARAMS,
                     rewardDelegatedStakeWeight: BigInt(stakingConstants.PPM) + 1n,
                 })
-                .awaitTransactionSuccessAsync();
+                ; await tx.wait();
             const expectedError = new StakingRevertErrors.InvalidParamValueError(
                 StakingRevertErrors.InvalidParamValueErrorCodes.InvalidRewardDelegatedStakeWeight,
             );
-            return expect(tx).to.revertWith(expectedError);
+            return expect(tx).to.revertedWith(expectedError);
         });
         it('succeeds if delegation weight is 100%', async () => {
             const tx = proxyContract
@@ -360,7 +361,7 @@ blockchainTests('Migration tests', env => {
                     ...stakingConstants.DEFAULT_PARAMS,
                     rewardDelegatedStakeWeight: BigInt(stakingConstants.PPM),
                 })
-                .awaitTransactionSuccessAsync();
+                ; await tx.wait();
             return expect(tx).to.be.fulfilled('');
         });
     });

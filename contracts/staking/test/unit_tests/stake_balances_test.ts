@@ -1,4 +1,5 @@
-import { blockchainTests, constants, expect, getRandomInteger, randomAddress } from '@0x/test-utils';
+import { expect } from 'chai';
+import { constants, expect, getRandomInteger, randomAddress } from '@0x/test-utils';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { hexUtils } from '@0x/utils';
 
@@ -8,7 +9,7 @@ import { ethers } from 'hardhat';
 import { constants as stakingConstants } from '../../src/constants';
 import { StakeStatus, StoredBalance } from '../../src/types';
 
-blockchainTests.resets('MixinStakeBalances unit tests', env => {
+describe('MixinStakeBalances unit tests', env => {
     let testContract: TestMixinStakeBalances;
     const INITIAL_EPOCH = BigInt(stakingConstants.INITIAL_EPOCH);
     const CURRENT_EPOCH = INITIAL_EPOCH + 1n;

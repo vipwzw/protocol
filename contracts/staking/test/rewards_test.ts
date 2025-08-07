@@ -1,4 +1,6 @@
-import { blockchainTests, constants, expect, shortZip, toBaseUnitAmount, expectBigIntEqual, expectBigIntEqualWithMessage, toBigInt } from './test_utils';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+import { constants, shortZip, toBaseUnitAmount, expectBigIntEqual, expectBigIntEqualWithMessage, toBigInt } from './test_constants';
 
 // StakingRevertErrors replacement
 export class StakingRevertErrors {
@@ -22,7 +24,7 @@ import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
 
 // tslint:disable:no-unnecessary-type-assertion
 // tslint:disable:max-file-line-count
-blockchainTests.resets('Testing Rewards', env => {
+describe('Testing Rewards', () => {
     // tokens & addresses
     let accounts: string[];
     let owner: string;
@@ -42,20 +44,20 @@ blockchainTests.resets('Testing Rewards', env => {
     // tests
     before(async () => {
         // create accounts
-        accounts = await env.getAccountAddressesAsync();
+        accounts = await ethers.getSigners().then(signers => signers.map(s => s.address));
         owner = accounts[0];
         exchangeAddress = accounts[1];
         takerAddress = accounts[2];
         actors = accounts.slice(3);
         // set up ERC20Wrapper
-        erc20Wrapper = new ERC20Wrapper(env.provider, accounts, owner);
+        erc20Wrapper = new ERC20Wrapper(await ethers.getSigners().then(signers => signers[0]), accounts, owner);
         // deploy staking contracts
         stakingApiWrapper = await deployAndConfigureContractsAsync(env, owner, erc20Wrapper);
         // set up staking parameters
         await stakingApiWrapper.utils.setParamsAsync({
-            minimumPoolStake: new BigNumber(2),
-            cobbDouglasAlphaNumerator: new BigNumber(1),
-            cobbDouglasAlphaDenominator: new BigNumber(6),
+            minimumPoolStake: 2n,
+            cobbDouglasAlphaNumerator: 1n,
+            cobbDouglasAlphaDenominator: 6n,
         });
         // setup stakers
         stakers = actors.slice(0, 2).map(a => new StakerActor(a, stakingApiWrapper));
@@ -65,9 +67,9 @@ blockchainTests.resets('Testing Rewards', env => {
         poolId = await poolOperator.createStakingPoolAsync(0, true);
         // Stake something in the pool or else it won't get any rewards.
         poolOperatorStaker = new StakerActor(poolOperator.getOwner(), stakingApiWrapper);
-        await poolOperatorStaker.stakeWithPoolAsync(poolId, new BigNumber(2));
+        await poolOperatorStaker.stakeWithPoolAsync(poolId, 2n);
         // set exchange address
-        await stakingApiWrapper.stakingContract.addExchangeAddress(exchangeAddress).awaitTransactionSuccessAsync();
+        await stakingApiWrapper.stakingContract.addExchangeAddress(exchangeAddress); await tx.wait();
         // associate operators for tracking in Finalizer
         const operatorByPoolId: OperatorByPoolId = {};
         operatorByPoolId[poolId] = poolOperator.getOwner();
@@ -128,17 +130,17 @@ blockchainTests.resets('Testing Rewards', env => {
                 // staker 1
                 stakingApiWrapper.stakingContract
                     .computeRewardBalanceOfDelegator(poolId, stakers[0].getOwner())
-                    .callAsync(),
-                stakingApiWrapper.wethContract.balanceOf(stakers[0].getOwner()).callAsync(),
+                    ,
+                stakingApiWrapper.wethContract.balanceOf(stakers[0].getOwner()),
                 // staker 2
                 stakingApiWrapper.stakingContract
                     .computeRewardBalanceOfDelegator(poolId, stakers[1].getOwner())
-                    .callAsync(),
-                stakingApiWrapper.wethContract.balanceOf(stakers[1].getOwner()).callAsync(),
+                    ,
+                stakingApiWrapper.wethContract.balanceOf(stakers[1].getOwner()),
                 // operator
-                stakingApiWrapper.wethContract.balanceOf(poolOperator.getOwner()).callAsync(),
+                stakingApiWrapper.wethContract.balanceOf(poolOperator.getOwner()),
                 // undivided balance in reward pool
-                stakingApiWrapper.stakingContract.rewardsByPoolId(poolId).callAsync(),
+                stakingApiWrapper.stakingContract.rewardsByPoolId(poolId),
             ]);
             expectBigIntEqualWithMessage(
                 toBigInt(finalEndBalancesAsArray[0]),
@@ -335,7 +337,7 @@ blockchainTests.resets('Testing Rewards', env => {
             const totalSharedRewardsAsNumber = _.sumBy(sharedRewards, v => {
                 return v.toNumber();
             });
-            const totalSharedRewards = new BigNumber(totalSharedRewardsAsNumber);
+            const totalSharedRewards = totalSharedRewardsAsNumbern;
             const stakeAmounts = [toBaseUnitAmount(4), toBaseUnitAmount(6)];
             const totalStakeAmount = toBaseUnitAmount(10);
             // first staker delegates (epoch 1)
@@ -613,7 +615,7 @@ blockchainTests.resets('Testing Rewards', env => {
             await stakingApiWrapper.stakingContract
                 .payProtocolFee(poolOperator.getOwner(), takerAddress, rewardForDelegator)
                 .awaitTransactionSuccessAsync({ from: exchangeAddress, value: rewardForDelegator });
-            const currentEpoch = await stakingApiWrapper.stakingContract.currentEpoch().callAsync();
+            const currentEpoch = await stakingApiWrapper.stakingContract.currentEpoch();
             await stakingApiWrapper.utils.fastForwardToNextEpochAsync();
             await stakingApiWrapper.utils.endEpochAsync();
             const expectedError = new StakingRevertErrors.PoolNotFinalizedError(poolId, currentEpoch);
@@ -621,7 +623,7 @@ blockchainTests.resets('Testing Rewards', env => {
                 stakingApiWrapper.stakingContract.withdrawDelegatorRewards(poolId).awaitTransactionSuccessAsync({
                     from: stakers[0].getOwner(),
                 }),
-            ).to.revertWith(expectedError);
+            ).to.revertedWith(expectedError);
         });
         it(`payout should be based on stake at the time of rewards`, async () => {
             const staker = stakers[0];
@@ -670,8 +672,8 @@ blockchainTests.resets('Testing Rewards', env => {
                 stakerRewardBalance_2: toBaseUnitAmount(0),
                 stakerWethBalance_1: expectedStakerRewards[0],
                 stakerWethBalance_2: expectedStakerRewards[1],
-                poolRewardBalance: new BigNumber(1), // Rounding error
-                membersRewardBalance: new BigNumber(1), // Rounding error
+                poolRewardBalance: 1n, // Rounding error
+                membersRewardBalance: 1n, // Rounding error
             });
         });
         it(`delegator should not be credited payout twice by syncing rewards twice`, async () => {
@@ -703,7 +705,7 @@ blockchainTests.resets('Testing Rewards', env => {
             // Should have been credited the correct amount of rewards.
             let sneakyStakerWethBalance = await stakingApiWrapper.wethContract
                 .balanceOf(sneakyStaker.getOwner())
-                .callAsync();
+                ;
             expectBigIntEqual(
                 toBigInt(sneakyStakerWethBalance), 
                 toBigInt(sneakyStakerExpectedWethBalance),
@@ -714,7 +716,7 @@ blockchainTests.resets('Testing Rewards', env => {
             /// The total amount credited should remain the same.
             sneakyStakerWethBalance = await stakingApiWrapper.wethContract
                 .balanceOf(sneakyStaker.getOwner())
-                .callAsync();
+                ;
             expectBigIntEqual(
                 toBigInt(sneakyStakerWethBalance), 
                 toBigInt(sneakyStakerExpectedWethBalance),

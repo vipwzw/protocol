@@ -1,6 +1,7 @@
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
 import { ReferenceFunctions } from '@0x/contracts-exchange-libs';
 import {
-    blockchainTests,
     constants,
     expect,
     getRandomInteger,
@@ -9,13 +10,13 @@ import {
     verifyEventsFromLogs,
     expectBigIntEqual,
     toBigInt,
-} from '../test_utils';
+} from '../test_constants';
 
 // getRandomPortion replacement  
 function getRandomPortion(): number {
     return Math.random();
 }
-import { hexUtils } from '../test_utils';
+import { hexUtils } from '../test_constants';
 import { LogEntry, TransactionReceiptWithDecodedLogs } from 'ethereum-types';
 
 import { StoredBalance } from '../../src/types';
@@ -25,7 +26,7 @@ import { TestMixinStakingPoolRewardsContract, TestMixinStakingPoolRewardsEvents 
 
 // TODO: Fix BigNumber usage in this file
 /*
-blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
+describe('MixinStakingPoolRewards unit tests', env => {
     let testContract: TestMixinStakingPoolRewardsContract;
 
     const POOL_ID = hexUtils.random();
@@ -36,8 +37,8 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
     before(async () => {
         testContract = await TestMixinStakingPoolRewardsContract.deployFrom0xArtifactAsync(
             artifacts.TestMixinStakingPoolRewards,
-            env.provider,
-            env.txDefaults,
+            await ethers.getSigners().then(signers => signers[0]),
+            {},
             artifacts,
         );
         await testContract
@@ -45,8 +46,8 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
                 operator: OPERATOR,
                 operatorShare: OPERATOR_SHARE,
             })
-            .awaitTransactionSuccessAsync();
-        [caller] = await env.getAccountAddressesAsync();
+            ; await tx.wait();
+        [caller] = await ethers.getSigners().then(signers => signers.map(s => s.address));
     });
 
     async function setUnfinalizedPoolRewardsAsync(
@@ -55,8 +56,8 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
         membersStake: Numberish,
     ): Promise<void> {
         await testContract
-            .setUnfinalizedPoolRewards(poolId, new BigNumber(reward), new BigNumber(membersStake))
-            .awaitTransactionSuccessAsync();
+            .setUnfinalizedPoolRewards(poolId, rewardn, membersStaken)
+            ; await tx.wait();
     }
 
     // Set the delegated stake of a delegator in a pool.
@@ -78,7 +79,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
                 currentEpochBalance: _stake.currentEpochBalance,
                 nextEpochBalance: _stake.nextEpochBalance,
             })
-            .awaitTransactionSuccessAsync();
+            ; await tx.wait();
         return _stake;
     }
 
@@ -89,9 +90,9 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
         delegator: string,
         finalizedReward?: Numberish,
     ): Promise<BigNumber> {
-        const stake = await testContract.delegatedStakeToPoolByOwner(delegator, poolId).callAsync();
+        const stake = await testContract.delegatedStakeToPoolByOwner(delegator, poolId);
         // Split the rewards up across the two calls to `_computeMemberRewardOverInterval()`
-        const reward = finalizedReward === undefined ? getRandomInteger(1, 1e18) : new BigNumber(finalizedReward);
+        const reward = finalizedReward === undefined ? getRandomInteger(1, 1e18) : finalizedRewardn;
         const oldRewards = getRandomPortion(reward);
         await testContract
             .setMemberRewardsOverInterval(
@@ -101,35 +102,35 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
                 stake.currentEpoch.plus(1),
                 oldRewards,
             )
-            .awaitTransactionSuccessAsync();
+            ; await tx.wait();
         const newRewards = reward.minus(oldRewards);
         await testContract
             .setMemberRewardsOverInterval(
                 poolId,
                 stake.nextEpochBalance,
                 stake.currentEpoch.plus(1),
-                await testContract.currentEpoch().callAsync(),
+                await testContract.currentEpoch(),
                 newRewards,
             )
-            .awaitTransactionSuccessAsync();
+            ; await tx.wait();
         return reward;
     }
 
     function toOperatorPortion(operatorShare: Numberish, reward: Numberish): BigNumber {
         return ReferenceFunctions.getPartialAmountCeil(
-            new BigNumber(operatorShare),
-            new BigNumber(constants.PPM_DENOMINATOR),
-            new BigNumber(reward),
+            operatorSharen,
+            constants.PPM_DENOMINATORn,
+            rewardn,
         );
     }
 
     function toMembersPortion(operatorShare: Numberish, reward: Numberish): BigNumber {
-        return new BigNumber(reward).minus(toOperatorPortion(operatorShare, reward));
+        return rewardn.minus(toOperatorPortion(operatorShare, reward));
     }
 
     describe('withdrawDelegatorRewards()', () => {
         it('calls `_withdrawAndSyncDelegatorRewards()` with the sender as the member', async () => {
-            const { logs } = await testContract.withdrawDelegatorRewards(POOL_ID).awaitTransactionSuccessAsync();
+            const { logs } = await testContract.withdrawDelegatorRewards(POOL_ID); await tx.wait();
             verifyEventsFromLogs(
                 logs,
                 [{ poolId: POOL_ID, delegator: caller }],
@@ -139,27 +140,27 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
     });
 
     describe('_withdrawAndSyncDelegatorRewards()', () => {
-        const POOL_REWARD = new BigNumber(getRandomInteger(1, 100e18));
+        const POOL_REWARD = getRandomInteger(1, 100e18n);
         const WETH_RESERVED_FOR_POOL_REWARDS = POOL_REWARD.plus(getRandomInteger(1, 100e18));
         const DELEGATOR = randomAddress();
         let stake: StoredBalance;
 
         before(async () => {
             stake = await setStakeAsync(POOL_ID, DELEGATOR);
-            await testContract.setPoolRewards(POOL_ID, POOL_REWARD).awaitTransactionSuccessAsync();
+            await testContract.setPoolRewards(POOL_ID, POOL_REWARD); await tx.wait();
             await testContract
                 .setWethReservedForPoolRewards(WETH_RESERVED_FOR_POOL_REWARDS)
-                .awaitTransactionSuccessAsync();
+                ; await tx.wait();
         });
 
         async function withdrawAndSyncDelegatorRewardsAsync(): Promise<TransactionReceiptWithDecodedLogs> {
-            return testContract.withdrawAndSyncDelegatorRewards(POOL_ID, DELEGATOR).awaitTransactionSuccessAsync();
+            return testContract.withdrawAndSyncDelegatorRewards(POOL_ID, DELEGATOR); await tx.wait();
         }
 
         it('reverts if the pool is not finalized', async () => {
             await setUnfinalizedPoolRewardsAsync(POOL_ID, 0, 1);
             const tx = withdrawAndSyncDelegatorRewardsAsync();
-            return expect(tx).to.revertWith('POOL_NOT_FINALIZED');
+            return expect(tx).to.revertedWith('POOL_NOT_FINALIZED');
         });
         it('calls `_updateCumulativeReward()`', async () => {
             const { logs } = await withdrawAndSyncDelegatorRewardsAsync();
@@ -179,20 +180,20 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
             const finalizedReward = getRandomPortion(POOL_REWARD);
             await setComputeDelegatorRewardStateAsync(POOL_ID, DELEGATOR, finalizedReward);
             await withdrawAndSyncDelegatorRewardsAsync();
-            const poolReward = await testContract.rewardsByPoolId(POOL_ID).callAsync();
+            const poolReward = await testContract.rewardsByPoolId(POOL_ID);
             expectBigIntEqual(toBigInt(poolReward), toBigInt(POOL_REWARD) - toBigInt(finalizedReward));
         });
         it('reduces `wethReservedForPoolRewards` for the pool', async () => {
             const finalizedReward = getRandomPortion(POOL_REWARD);
             await setComputeDelegatorRewardStateAsync(POOL_ID, DELEGATOR, finalizedReward);
             await withdrawAndSyncDelegatorRewardsAsync();
-            const wethReserved = await testContract.wethReservedForPoolRewards().callAsync();
+            const wethReserved = await testContract.wethReservedForPoolRewards();
             expectBigIntEqual(toBigInt(wethReserved), toBigInt(WETH_RESERVED_FOR_POOL_REWARDS) - toBigInt(finalizedReward));
         });
         it('syncs `_delegatedStakeToPoolByOwner`', async () => {
             await setComputeDelegatorRewardStateAsync(POOL_ID, DELEGATOR, getRandomPortion(POOL_REWARD));
             await withdrawAndSyncDelegatorRewardsAsync();
-            const stakeAfter = await testContract.delegatedStakeToPoolByOwner(DELEGATOR, POOL_ID).callAsync();
+            const stakeAfter = await testContract.delegatedStakeToPoolByOwner(DELEGATOR, POOL_ID);
             // `_loadCurrentBalance` is overridden to just increment `currentEpoch`.
             expect(stakeAfter).to.deep.eq({
                 currentEpoch: stake.currentEpoch.plus(1),
@@ -208,7 +209,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
         it('no rewards if the delegated stake epoch == current epoch', async () => {
             // Set some finalized rewards that should be ignored.
             await setComputeDelegatorRewardStateAsync(POOL_ID, DELEGATOR, getRandomInteger(1, POOL_REWARD));
-            await testContract.setCurrentEpoch(stake.currentEpoch).awaitTransactionSuccessAsync();
+            await testContract.setCurrentEpoch(stake.currentEpoch); await tx.wait();
             const { logs } = await withdrawAndSyncDelegatorRewardsAsync();
             // There will be no Transfer events if computed rewards are zero.
             verifyEventsFromLogs(logs, [], Events.Transfer);
@@ -217,7 +218,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
 
     describe('computeRewardBalanceOfOperator()', () => {
         async function computeRewardBalanceOfOperatorAsync(): Promise<BigNumber> {
-            return testContract.computeRewardBalanceOfOperator(POOL_ID).callAsync();
+            return testContract.computeRewardBalanceOfOperator(POOL_ID);
         }
 
         it('returns only unfinalized rewards', async () => {
@@ -254,7 +255,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
                     operator: OPERATOR,
                     operatorShare: constants.ZERO_AMOUNT,
                 })
-                .awaitTransactionSuccessAsync();
+                ; await tx.wait();
             await setUnfinalizedPoolRewardsAsync(POOL_ID, getRandomInteger(1, 1e18), getRandomInteger(1, 1e18));
             const reward = await computeRewardBalanceOfOperatorAsync();
             expectBigIntEqual(toBigInt(reward), 0n);
@@ -265,7 +266,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
                     operator: OPERATOR,
                     operatorShare: constants.PPM_100_PERCENT,
                 })
-                .awaitTransactionSuccessAsync();
+                ; await tx.wait();
             const unfinalizedReward = getRandomInteger(1, 1e18);
             await setUnfinalizedPoolRewardsAsync(POOL_ID, unfinalizedReward, getRandomInteger(1, 1e18));
             const reward = await computeRewardBalanceOfOperatorAsync();
@@ -279,12 +280,12 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
         let stake: StoredBalance;
 
         before(async () => {
-            currentEpoch = await testContract.currentEpoch().callAsync();
+            currentEpoch = await testContract.currentEpoch();
             stake = await setStakeAsync(POOL_ID, DELEGATOR);
         });
 
         async function computeRewardBalanceOfDelegatorAsync(): Promise<BigNumber> {
-            return testContract.computeRewardBalanceOfDelegator(POOL_ID, DELEGATOR).callAsync();
+            return testContract.computeRewardBalanceOfDelegator(POOL_ID, DELEGATOR);
         }
 
         function getDelegatorPortionOfUnfinalizedReward(
@@ -296,7 +297,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
                 : stake.nextEpochBalance;
             return ReferenceFunctions.getPartialAmountFloor(
                 unfinalizedStakeBalance,
-                new BigNumber(unfinalizedMembersStake),
+                unfinalizedMembersStaken,
                 toMembersPortion(OPERATOR_SHARE, unfinalizedReward),
             );
         }
@@ -327,10 +328,10 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
             const epoch = 2;
             await setStakeAsync(POOL_ID, DELEGATOR, {
                 ...stake,
-                currentEpoch: new BigNumber(epoch - 2),
+                currentEpoch: epoch - 2n,
                 nextEpochBalance: constants.ZERO_AMOUNT,
             });
-            await testContract.setCurrentEpoch(new BigNumber(epoch)).awaitTransactionSuccessAsync();
+            await testContract.setCurrentEpoch(epochn); await tx.wait();
             await setUnfinalizedPoolRewardsAsync(POOL_ID, getRandomInteger(1, 1e18), getRandomInteger(1, 1e18));
             const reward = await computeRewardBalanceOfDelegatorAsync();
             expectBigIntEqual(toBigInt(reward), 0n);
@@ -358,14 +359,14 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
     });
 
     describe('_syncPoolRewards()', async () => {
-        const POOL_REWARD = new BigNumber(getRandomInteger(1, 100e18));
+        const POOL_REWARD = getRandomInteger(1, 100e18n);
         const WETH_RESERVED_FOR_POOL_REWARDS = POOL_REWARD.plus(getRandomInteger(1, 100e18));
 
         before(async () => {
-            await testContract.setPoolRewards(POOL_ID, POOL_REWARD).awaitTransactionSuccessAsync();
+            await testContract.setPoolRewards(POOL_ID, POOL_REWARD); await tx.wait();
             await testContract
                 .setWethReservedForPoolRewards(WETH_RESERVED_FOR_POOL_REWARDS)
-                .awaitTransactionSuccessAsync();
+                ; await tx.wait();
         });
 
         async function syncPoolRewardsAsync(
@@ -374,11 +375,11 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
         ): Promise<[[BigNumber, BigNumber], LogEntry[]]> {
             const contractFn = testContract.syncPoolRewards(
                 POOL_ID,
-                new BigNumber(reward),
-                new BigNumber(membersStake),
+                rewardn,
+                membersStaken,
             );
-            const result = await contractFn.callAsync();
-            const { logs } = await contractFn.awaitTransactionSuccessAsync();
+            const result = await contractFn;
+            const { logs } = await contractFn; await tx.wait();
             return [result, logs];
         }
 
@@ -398,7 +399,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
             const membersStake = getRandomInteger(1, 1e18);
             await syncPoolRewardsAsync(totalReward, membersStake);
             const expectedMembersReward = toMembersPortion(OPERATOR_SHARE, totalReward);
-            const poolReward = await testContract.rewardsByPoolId(POOL_ID).callAsync();
+            const poolReward = await testContract.rewardsByPoolId(POOL_ID);
             expectBigIntEqual(toBigInt(poolReward), toBigInt(POOL_REWARD) + toBigInt(expectedMembersReward));
         });
         it("increases `wethReservedForPoolRewards` with members' portion of rewards", async () => {
@@ -406,7 +407,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
             const membersStake = getRandomInteger(1, 1e18);
             await syncPoolRewardsAsync(totalReward, membersStake);
             const expectedMembersReward = toMembersPortion(OPERATOR_SHARE, totalReward);
-            const wethReserved = await testContract.wethReservedForPoolRewards().callAsync();
+            const wethReserved = await testContract.wethReservedForPoolRewards();
             expectBigIntEqual(toBigInt(wethReserved), toBigInt(WETH_RESERVED_FOR_POOL_REWARDS) + toBigInt(expectedMembersReward));
         });
         it("returns operator and members' portion of the reward", async () => {
@@ -436,7 +437,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
                     operator: OPERATOR,
                     operatorShare: constants.ZERO_AMOUNT,
                 })
-                .awaitTransactionSuccessAsync();
+                ; await tx.wait();
             const [[operatorReward, membersReward], logs] = await syncPoolRewardsAsync(
                 totalReward,
                 getRandomInteger(1, 1e18),
@@ -455,7 +456,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
             const membersStake = constants.ZERO_AMOUNT;
             const [operatorReward, membersReward] = await testContract
                 .computePoolRewardsSplit(operatorShare, totalReward, membersStake)
-                .callAsync();
+                ;
             expectBigIntEqual(toBigInt(operatorReward), toBigInt(totalReward));
             expectBigIntEqual(toBigInt(membersReward), 0n);
         });
@@ -465,7 +466,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
             const membersStake = constants.ZERO_AMOUNT;
             const [operatorReward, membersReward] = await testContract
                 .computePoolRewardsSplit(operatorShare, totalReward, membersStake)
-                .callAsync();
+                ;
             expectBigIntEqual(toBigInt(operatorReward), toBigInt(totalReward));
             expectBigIntEqual(toBigInt(membersReward), 0n);
         });
@@ -475,7 +476,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
             const membersStake = getRandomInteger(1, 1e18);
             const [operatorReward, membersReward] = await testContract
                 .computePoolRewardsSplit(operatorShare, totalReward, membersStake)
-                .callAsync();
+                ;
             expectBigIntEqual(toBigInt(operatorReward), toBigInt(totalReward));
             expectBigIntEqual(toBigInt(membersReward), 0n);
         });
@@ -485,7 +486,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
             const membersStake = getRandomInteger(1, 1e18);
             const [operatorReward, membersReward] = await testContract
                 .computePoolRewardsSplit(operatorShare, totalReward, membersStake)
-                .callAsync();
+                ;
             expectBigIntEqual(toBigInt(operatorReward), 0n);
             expectBigIntEqual(toBigInt(membersReward), toBigInt(totalReward));
         });
@@ -495,7 +496,7 @@ blockchainTests.resets('MixinStakingPoolRewards unit tests', env => {
             const membersStake = getRandomInteger(1, 1e18);
             const [operatorReward, membersReward] = await testContract
                 .computePoolRewardsSplit(operatorShare, totalReward, membersStake)
-                .callAsync();
+                ;
             expectBigIntEqual(toBigInt(operatorReward), toBigInt(toOperatorPortion(operatorShare, totalReward)));
             expectBigIntEqual(toBigInt(membersReward), toBigInt(toMembersPortion(operatorShare, totalReward)));
         });

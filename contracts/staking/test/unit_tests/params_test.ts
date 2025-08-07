@@ -1,4 +1,5 @@
-import { blockchainTests, expect, filterLogsToArguments } from '@0x/test-utils';
+import { expect } from 'chai';
+import { expect, filterLogsToArguments } from '@0x/test-utils';
 import { AuthorizableRevertErrors } from '@0x/contracts-utils';
 import { TransactionReceiptWithDecodedLogs } from 'ethereum-types';
 import * as _ from 'lodash';
@@ -10,13 +11,13 @@ import { ethers } from 'hardhat';
 import { constants as stakingConstants } from '../../src/constants';
 import { StakingParams } from '../../src/types';
 
-blockchainTests('Configurable Parameters unit tests', env => {
+('Configurable Parameters unit tests', env => {
     let testContract: TestMixinParams;
     let authorizedAddress: string;
     let notAuthorizedAddress: string;
 
     before(async () => {
-        [authorizedAddress, notAuthorizedAddress] = await env.getAccountAddressesAsync();
+        [authorizedAddress, notAuthorizedAddress] = await ethers.getSigners().then(signers => signers.map(s => s.address));
         const [deployer] = await ethers.getSigners();
         const factory = new TestMixinParams__factory(deployer);
         testContract = await factory.deploy();
@@ -25,7 +26,7 @@ blockchainTests('Configurable Parameters unit tests', env => {
         await tx.wait();
     });
 
-    blockchainTests.resets('setParams()', () => {
+    describe('setParams()', () => {
         async function setParamsAndAssertAsync(
             params: Partial<StakingParams>,
             from?: string,
@@ -52,7 +53,7 @@ blockchainTests('Configurable Parameters unit tests', env => {
             expect(event.cobbDouglasAlphaNumerator).to.equal(_params.cobbDouglasAlphaNumerator);
             expect(event.cobbDouglasAlphaDenominator).to.equal(_params.cobbDouglasAlphaDenominator);
             // Assert `getParams()`.
-            const actual = await testContract.getParams().callAsync();
+            const actual = await testContract.getParams();
             expect(actual[0]).to.equal(_params.epochDurationInSeconds);
             expect(actual[1]).to.equal(_params.rewardDelegatedStakeWeight);
             expect(actual[2]).to.equal(_params.minimumPoolStake);

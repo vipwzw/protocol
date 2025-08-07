@@ -1,11 +1,12 @@
-import { blockchainTests, expect, toBaseUnitAmount } from '@0x/test-utils';
+import { expect } from 'chai';
+import { expect, toBaseUnitAmount } from '@0x/test-utils';
 import * as _ from 'lodash';
 
 import { constants as stakingConstants } from '../../src/constants';
 import { TestMixinCumulativeRewards__factory, TestMixinCumulativeRewards } from '../../src/typechain-types';
 import { ethers } from 'hardhat';
 
-blockchainTests.resets('MixinCumulativeRewards unit tests', env => {
+describe('MixinCumulativeRewards unit tests', env => {
     const ZERO = 0n;
     const testRewards = [
         {
@@ -222,7 +223,7 @@ blockchainTests.resets('MixinCumulativeRewards unit tests', env => {
             const tx = testContract
                 .computeMemberRewardOverInterval(testPoolId, stake, beginEpoch, endEpoch)
                 ();
-            return expect(tx).to.revertWith('CR_INTERVAL_INVALID');
+            return expect(tx).to.revertedWith('CR_INTERVAL_INVALID');
         });
     });
 });

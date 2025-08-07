@@ -1,4 +1,4 @@
-import { expect, expectBigIntEqual, toBigInt } from '../test_utils';
+import { expect, expectBigIntEqual, toBigInt } from '../test_constants';
 
 // RevertError replacement - simple Error wrapper
 export class RevertError extends Error {
@@ -52,7 +52,7 @@ export class StakerActor extends BaseActor {
         ]);
         const txReceiptPromise = txPromise.then(tx => tx.wait());
         if (revertError !== undefined) {
-            await expect(txReceiptPromise, 'expected revert error').to.revertWith(revertError);
+            await expect(txReceiptPromise, 'expected revert error').to.revertedWith(revertError);
             return;
         }
         await txReceiptPromise;
@@ -77,7 +77,7 @@ export class StakerActor extends BaseActor {
         // deposit stake
         const tx = this._stakingApiWrapper.stakingContract.stake(amount);
         if (revertError !== undefined) {
-            await expect(tx, 'expected revert error').to.revertWith(revertError);
+            await expect(tx, 'expected revert error').to.revertedWith(revertError);
             return;
         }
         const receipt = await tx;
@@ -100,7 +100,7 @@ export class StakerActor extends BaseActor {
         const tx = await this._stakingApiWrapper.stakingContract.unstake(amount);
         const txReceiptPromise = tx.wait();
         if (revertError !== undefined) {
-            await expect(txReceiptPromise, 'expected revert error').to.revertWith(revertError);
+            await expect(txReceiptPromise, 'expected revert error').to.revertedWith(revertError);
             return;
         }
         await txReceiptPromise;
@@ -133,7 +133,7 @@ export class StakerActor extends BaseActor {
         const tx = await this._stakingApiWrapper.stakingContract.moveStake(from, to, amount);
         const txReceiptPromise = tx.wait();
         if (revertError !== undefined) {
-            await expect(txReceiptPromise).to.revertWith(revertError);
+            await expect(txReceiptPromise).to.revertedWith(revertError);
             return;
         }
         await txReceiptPromise;
@@ -157,7 +157,7 @@ export class StakerActor extends BaseActor {
         const tx = await this._stakingApiWrapper.stakingContract.withdrawDelegatorRewards(poolId);
         const txReceiptPromise = tx.wait();
         if (revertError !== undefined) {
-            await expect(txReceiptPromise, 'expected revert error').to.revertWith(revertError);
+            await expect(txReceiptPromise, 'expected revert error').to.revertedWith(revertError);
             return;
         }
         await txReceiptPromise;

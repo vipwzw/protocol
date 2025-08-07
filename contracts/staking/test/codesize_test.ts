@@ -1,4 +1,6 @@
-import { constants, expect, getCodesizeFromArtifact } from './test_utils';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+import { constants, expect, getCodesizeFromArtifact } from './test_constants';
 
 import { artifacts } from './artifacts';
 

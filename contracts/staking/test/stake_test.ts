@@ -1,4 +1,6 @@
-import { blockchainTests, toBaseUnitAmount } from './test_utils';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+import { toBaseUnitAmount } from './test_constants';
 
 // StakingRevertErrors replacement
 export class StakingRevertErrors {
@@ -15,7 +17,7 @@ import { deployAndConfigureContractsAsync, StakingApiWrapper } from './utils/api
 import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
 
 // tslint:disable:no-unnecessary-type-assertion
-blockchainTests.resets('Stake Statuses', env => {
+describe('Stake Statuses', () => {
     // constants
     const ZERO = 0n;
     // tokens & addresses
@@ -33,13 +35,14 @@ blockchainTests.resets('Stake Statuses', env => {
     // tests
     before(async () => {
         // create accounts
-        accounts = await env.getAccountAddressesAsync();
+        const signers = await ethers.getSigners();
+        accounts = signers.map(s => s.address);
         owner = accounts[0];
         actors = accounts.slice(2, 5);
         // set up ERC20Wrapper
-        erc20Wrapper = new ERC20Wrapper(env.provider, accounts, owner);
+        erc20Wrapper = new ERC20Wrapper(signers[0], accounts, owner);
         // deploy staking contracts
-        stakingApiWrapper = await deployAndConfigureContractsAsync(env, owner, erc20Wrapper);
+        stakingApiWrapper = await deployAndConfigureContractsAsync(signers[0], owner, erc20Wrapper);
 
         // setup new staker
         staker = new StakerActor(actors[0], stakingApiWrapper);
@@ -49,8 +52,8 @@ blockchainTests.resets('Stake Statuses', env => {
             await stakingApiWrapper.utils.createStakingPoolAsync(poolOperator, 4, false),
             await stakingApiWrapper.utils.createStakingPoolAsync(poolOperator, 5, false),
         ]);
-        const lastPoolId = await stakingApiWrapper.stakingContract.lastPoolId().callAsync();
-        unusedPoolId = `0x${new BigNumber(lastPoolId).plus(1).toString(16).padStart(64, '0')}`;
+        const lastPoolId = await stakingApiWrapper.stakingContract.lastPoolId();
+        unusedPoolId = `0x${(BigInt(lastPoolId) + 1n).toString(16).padStart(64, '0')}`;
     });
     describe('Stake', () => {
         it('should successfully stake zero ZRX', async () => {

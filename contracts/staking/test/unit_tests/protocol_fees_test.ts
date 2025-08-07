@@ -1,5 +1,6 @@
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
 import {
-    blockchainTests,
     constants,
     expect,
     filterLogsToArguments,
@@ -8,8 +9,8 @@ import {
     randomAddress,
     expectBigIntEqual,
     toBigInt,
-} from '../test_utils';
-import { hexUtils } from '../test_utils';
+} from '../test_constants';
+import { hexUtils } from '../test_constants';
 
 // StakingRevertErrors replacement
 export class StakingRevertErrors {
@@ -32,7 +33,7 @@ import {
     TestProtocolFeesEvents,
 } from '../wrappers';
 
-blockchainTests('Protocol Fees unit tests', env => {
+('Protocol Fees unit tests', env => {
     let ownerAddress: string;
     let exchangeAddress: string;
     let notExchangeAddress: string;
@@ -45,16 +46,16 @@ blockchainTests('Protocol Fees unit tests', env => {
         // Deploy the protocol fees contract.
         testContract = await TestProtocolFeesContract.deployFrom0xArtifactAsync(
             artifacts.TestProtocolFees,
-            env.provider,
+            await ethers.getSigners().then(signers => signers[0]),
             {
-                ...env.txDefaults,
+                ...{},
                 from: ownerAddress,
             },
             artifacts,
             exchangeAddress,
         );
 
-        minimumStake = (await testContract.getParams().callAsync())[2];
+        minimumStake = (await testContract.getParams())[2];
     });
 
     interface CreateTestPoolOpts {
@@ -75,16 +76,16 @@ blockchainTests('Protocol Fees unit tests', env => {
         await testContract
             .createTestPool(
                 _opts.poolId,
-                new BigNumber(_opts.operatorStake),
-                new BigNumber(_opts.membersStake),
+                _opts.operatorStaken,
+                _opts.membersStaken,
                 _opts.makers,
             )
-            .awaitTransactionSuccessAsync();
+            ; await tx.wait();
         return _opts;
     }
 
-    blockchainTests.resets('payProtocolFee()', () => {
-        const DEFAULT_PROTOCOL_FEE_PAID = new BigNumber(150e3).times(1e9);
+    describe('payProtocolFee()', () => {
+        const DEFAULT_PROTOCOL_FEE_PAID = 150e3n.times(1e9);
         const { ZERO_AMOUNT } = constants;
         const makerAddress = randomAddress();
         const payerAddress = randomAddress();
@@ -95,7 +96,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                     .payProtocolFee(makerAddress, payerAddress, DEFAULT_PROTOCOL_FEE_PAID)
                     .awaitTransactionSuccessAsync({ from: notExchangeAddress });
                 const expectedError = new StakingRevertErrors.OnlyCallableByExchangeError(notExchangeAddress);
-                return expect(tx).to.revertWith(expectedError);
+                return expect(tx).to.revertedWith(expectedError);
             });
 
             it('should revert if `protocolFee` is zero with non-zero value sent', async () => {
@@ -106,7 +107,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                     ZERO_AMOUNT,
                     DEFAULT_PROTOCOL_FEE_PAID,
                 );
-                return expect(tx).to.revertWith(expectedError);
+                return expect(tx).to.revertedWith(expectedError);
             });
 
             it('should revert if `protocolFee` is < than the provided message value', async () => {
@@ -117,7 +118,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                     DEFAULT_PROTOCOL_FEE_PAID,
                     DEFAULT_PROTOCOL_FEE_PAID.minus(1),
                 );
-                return expect(tx).to.revertWith(expectedError);
+                return expect(tx).to.revertedWith(expectedError);
             });
 
             it('should revert if `protocolFee` is > than the provided message value', async () => {
@@ -128,12 +129,12 @@ blockchainTests('Protocol Fees unit tests', env => {
                     DEFAULT_PROTOCOL_FEE_PAID,
                     DEFAULT_PROTOCOL_FEE_PAID.plus(1),
                 );
-                return expect(tx).to.revertWith(expectedError);
+                return expect(tx).to.revertedWith(expectedError);
             });
         });
 
         async function getProtocolFeesAsync(poolId: string): Promise<BigNumber> {
-            return (await testContract.getStakingPoolStatsThisEpoch(poolId).callAsync()).feesCollected;
+            return (await testContract.getStakingPoolStatsThisEpoch(poolId)).feesCollected;
         }
 
         describe('ETH fees', () => {
@@ -306,11 +307,11 @@ blockchainTests('Protocol Fees unit tests', env => {
             });
         });
 
-        blockchainTests.resets('Finalization', () => {
+    describe('Finalization', () => {
             let membersStakeWeight: number;
 
             before(async () => {
-                membersStakeWeight = (await testContract.getParams().callAsync())[1];
+                membersStakeWeight = (await testContract.getParams())[1];
             });
 
             interface FinalizationState {
@@ -320,7 +321,7 @@ blockchainTests('Protocol Fees unit tests', env => {
             }
 
             async function getFinalizationStateAsync(): Promise<FinalizationState> {
-                const aggregatedStats = await testContract.getAggregatedStatsForCurrentEpoch().callAsync();
+                const aggregatedStats = await testContract.getAggregatedStatsForCurrentEpoch();
                 return {
                     numPoolsToFinalize: aggregatedStats.numPoolsToFinalize,
                     totalFeesCollected: aggregatedStats.totalFeesCollected,
@@ -336,20 +337,20 @@ blockchainTests('Protocol Fees unit tests', env => {
             async function payToMakerAsync(poolMaker: string, fee?: Numberish): Promise<PayToMakerResult> {
                 const _fee = fee === undefined ? getRandomInteger(1, '1e18') : fee;
                 const receipt = await testContract
-                    .payProtocolFee(poolMaker, payerAddress, new BigNumber(_fee))
+                    .payProtocolFee(poolMaker, payerAddress, _feen)
                     .awaitTransactionSuccessAsync({ from: exchangeAddress, value: _fee });
                 const events = filterLogsToArguments<IStakingEventsStakingPoolEarnedRewardsInEpochEventArgs>(
                     receipt.logs,
                     IStakingEventsEvents.StakingPoolEarnedRewardsInEpoch,
                 );
                 return {
-                    fee: new BigNumber(_fee),
+                    fee: _feen,
                     poolEarnedRewardsEvents: events,
                 };
             }
 
             function toWeightedStake(operatorStake: Numberish, membersStake: Numberish): BigNumber {
-                return new BigNumber(membersStake)
+                return membersStaken
                     .times(membersStakeWeight)
                     .dividedToIntegerBy(constants.PPM_DENOMINATOR)
                     .plus(operatorStake);
@@ -364,7 +365,7 @@ blockchainTests('Protocol Fees unit tests', env => {
 
             it('pool is not registered to start', async () => {
                 const { poolId } = await createTestPoolAsync();
-                const pool = await testContract.getStakingPoolStatsThisEpoch(poolId).callAsync();
+                const pool = await testContract.getStakingPoolStatsThisEpoch(poolId);
                 expectBigIntEqual(toBigInt(pool.feesCollected), 0n);
                 expectBigIntEqual(toBigInt(pool.membersStake), 0n);
                 expectBigIntEqual(toBigInt(pool.weightedStake), 0n);
@@ -379,7 +380,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                 const { fee, poolEarnedRewardsEvents } = await payToMakerAsync(poolMaker);
                 expect(poolEarnedRewardsEvents.length).to.eq(1);
                 expect(poolEarnedRewardsEvents[0].poolId).to.eq(poolId);
-                const actualPoolStats = await testContract.getStakingPoolStatsThisEpoch(poolId).callAsync();
+                const actualPoolStats = await testContract.getStakingPoolStatsThisEpoch(poolId);
                 const expectedWeightedStake = toWeightedStake(pool.operatorStake, pool.membersStake);
                 expectBigIntEqual(toBigInt(actualPoolStats.feesCollected), toBigInt(fee));
                 expectBigIntEqual(toBigInt(actualPoolStats.membersStake), toBigInt(pool.membersStake));
@@ -399,7 +400,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                 const { fee: fee1 } = await payToMakerAsync(poolMaker);
                 const { fee: fee2, poolEarnedRewardsEvents } = await payToMakerAsync(poolMaker);
                 expect(poolEarnedRewardsEvents).to.deep.eq([]);
-                const actualPoolStats = await testContract.getStakingPoolStatsThisEpoch(poolId).callAsync();
+                const actualPoolStats = await testContract.getStakingPoolStatsThisEpoch(poolId);
                 const expectedWeightedStake = toWeightedStake(pool.operatorStake, pool.membersStake);
                 const fees = BigNumber.sum(fee1, fee2);
                 expect(actualPoolStats.feesCollected).to.bignumber.eq(fees);
@@ -413,8 +414,8 @@ blockchainTests('Protocol Fees unit tests', env => {
 
             it('can activate multiple pools in the same epoch', async () => {
                 const pools = await Promise.all(_.times(3, async () => createTestPoolAsync()));
-                let totalFees = new BigNumber(0);
-                let totalWeightedStake = new BigNumber(0);
+                let totalFees = 0n;
+                let totalWeightedStake = 0n;
                 for (const pool of pools) {
                     const {
                         poolId,
@@ -423,7 +424,7 @@ blockchainTests('Protocol Fees unit tests', env => {
                     const { fee, poolEarnedRewardsEvents } = await payToMakerAsync(poolMaker);
                     expect(poolEarnedRewardsEvents.length).to.eq(1);
                     expect(poolEarnedRewardsEvents[0].poolId).to.eq(poolId);
-                    const actualPoolStats = await testContract.getStakingPoolStatsThisEpoch(poolId).callAsync();
+                    const actualPoolStats = await testContract.getStakingPoolStatsThisEpoch(poolId);
                     const expectedWeightedStake = toWeightedStake(pool.operatorStake, pool.membersStake);
                     expect(actualPoolStats.feesCollected).to.bignumber.eq(fee);
                     expect(actualPoolStats.membersStake).to.bignumber.eq(pool.membersStake);
@@ -444,8 +445,8 @@ blockchainTests('Protocol Fees unit tests', env => {
                     makers: [poolMaker],
                 } = pool;
                 await payToMakerAsync(poolMaker);
-                await testContract.advanceEpoch().awaitTransactionSuccessAsync();
-                const actualPoolStats = await testContract.getStakingPoolStatsThisEpoch(poolId).callAsync();
+                await testContract.advanceEpoch(); await tx.wait();
+                const actualPoolStats = await testContract.getStakingPoolStatsThisEpoch(poolId);
                 expectBigIntEqual(toBigInt(actualPoolStats.feesCollected), 0n);
                 expectBigIntEqual(toBigInt(actualPoolStats.membersStake), 0n);
                 expectBigIntEqual(toBigInt(actualPoolStats.weightedStake), 0n);

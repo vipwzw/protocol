@@ -1,7 +1,7 @@
 import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
 import { artifacts as erc20Artifacts, DummyERC20TokenContract } from '@0x/contracts-erc20';
 import { WETH9__factory, WETH9 } from '@0x/contracts-erc20';
-import { BlockchainTestsEnvironment, constants, filterLogsToArguments, txDefaults } from '../test_utils';
+import { BlockchainTestsEnvironment, constants, filterLogsToArguments, txDefaults } from '../test_constants';
 // Removed BigNumber import - using native BigInt instead
 // Removed: import { Web3Wrapper } from '@0x/web3-wrapper';
 import { BlockParamLiteral, ContractArtifact, TransactionReceiptWithDecodedLogs } from 'ethereum-types';

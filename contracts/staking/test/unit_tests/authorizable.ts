@@ -1,4 +1,5 @@
-import { blockchainTests, constants, expect, filterLogsToArguments } from '@0x/test-utils';
+import { expect } from 'chai';
+import { constants, filterLogsToArguments } from '../test_constants';
 import {
     AuthorizableAuthorizedAddressAddedEventArgs,
     AuthorizableAuthorizedAddressRemovedEventArgs,
@@ -9,16 +10,16 @@ import { TestStaking__factory, TestStaking } from '../../src/typechain-types';
 import { TestStakingEvents } from '../wrappers';
 import { ethers } from 'hardhat';
 
-blockchainTests.resets('Staking Authorization Tests', env => {
+describe('Staking Authorization Tests', () => {
     let testContract: TestStaking;
 
     let owner: string;
     let nonOwner: string;
 
     before(async () => {
-        [owner, nonOwner] = await env.getAccountAddressesAsync();
-
         const signers = await ethers.getSigners();
+        [owner, nonOwner] = [signers[0].address, signers[1].address];
+
         const deployer = signers[0]; // 使用第一个 signer 作为 owner
         const factory = new TestStaking__factory(deployer);
         testContract = await factory.deploy(

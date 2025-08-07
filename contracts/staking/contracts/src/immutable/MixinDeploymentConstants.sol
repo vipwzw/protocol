@@ -91,6 +91,7 @@ contract MixinDeploymentConstants {
     function _getZrxVault()
         internal
         view
+        virtual
         returns (IZrxVault zrxVault)
     {
         zrxVault = IZrxVault(ZRX_VAULT_ADDRESS);

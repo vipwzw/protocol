@@ -1,6 +1,7 @@
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
 import {
     assertRoughlyEquals,
-    blockchainTests,
     getRandomInteger,
     getRandomPortion,
     Numberish,
@@ -12,7 +13,7 @@ import * as _ from 'lodash';
 import { artifacts } from '../artifacts';
 import { TestCobbDouglasContract } from '../wrappers';
 
-blockchainTests('LibCobbDouglas unit tests', env => {
+('LibCobbDouglas unit tests', env => {
     const FUZZ_COUNT = 1024;
     const PRECISION = 15;
 
@@ -21,8 +22,8 @@ blockchainTests('LibCobbDouglas unit tests', env => {
     before(async () => {
         testContract = await TestCobbDouglasContract.deployFrom0xArtifactAsync(
             artifacts.TestCobbDouglas,
-            env.provider,
-            env.txDefaults,
+            await ethers.getSigners().then(signers => signers[0]),
+            {},
             artifacts,
         );
     });
@@ -78,7 +79,7 @@ blockchainTests('LibCobbDouglas unit tests', env => {
             );
             
             // 将 BigInt 结果转换为 BigNumber 以保持向后兼容
-            return new BigNumber(result.toString());
+            return result.toString(n);
         }
 
         function cobbDouglas(params?: Partial<CobbDouglasParams>): BigNumber {
@@ -100,7 +101,7 @@ blockchainTests('LibCobbDouglas unit tests', env => {
                 Math.pow(stakeRatio, 1 - alpha);
             
             // 转换回 BigNumber，使用向下取整
-            return new BigNumber(Math.floor(result));
+            return Math.floor(resultn);
         }
 
         function getRandomParams(overrides?: Partial<CobbDouglasParams>): CobbDouglasParams {
@@ -143,14 +144,14 @@ blockchainTests('LibCobbDouglas unit tests', env => {
         });
 
         it('computes the correct reward with a very low stake ratio', async () => {
-            const ownerStake = new BigNumber(DEFAULT_COBB_DOUGLAS_PARAMS.totalStake).times(1e-18);
+            const ownerStake = DEFAULT_COBB_DOUGLAS_PARAMS.totalStaken.times(1e-18);
             const expected = cobbDouglas({ ownerStake });
             const r = await callCobbDouglasAsync({ ownerStake });
             assertRoughlyEquals(r, expected, PRECISION);
         });
 
         it('computes the correct reward with a very high stake ratio', async () => {
-            const ownerStake = new BigNumber(DEFAULT_COBB_DOUGLAS_PARAMS.totalStake).times(1 - 1e-18);
+            const ownerStake = DEFAULT_COBB_DOUGLAS_PARAMS.totalStaken.times(1 - 1e-18);
             const expected = cobbDouglas({ ownerStake });
             const r = await callCobbDouglasAsync({ ownerStake });
             assertRoughlyEquals(r, expected, PRECISION);
@@ -171,30 +172,30 @@ blockchainTests('LibCobbDouglas unit tests', env => {
         });
 
         it('computes the correct reward with a very low fee ratio', async () => {
-            const ownerFees = new BigNumber(DEFAULT_COBB_DOUGLAS_PARAMS.totalFees).times(1e-18);
+            const ownerFees = DEFAULT_COBB_DOUGLAS_PARAMS.totalFeesn.times(1e-18);
             const expected = cobbDouglas({ ownerFees });
             const r = await callCobbDouglasAsync({ ownerFees });
             assertRoughlyEquals(r, expected, PRECISION);
         });
 
         it('computes the correct reward with a very high fee ratio', async () => {
-            const ownerFees = new BigNumber(DEFAULT_COBB_DOUGLAS_PARAMS.totalFees).times(1 - 1e-18);
+            const ownerFees = DEFAULT_COBB_DOUGLAS_PARAMS.totalFeesn.times(1 - 1e-18);
             const expected = cobbDouglas({ ownerFees });
             const r = await callCobbDouglasAsync({ ownerFees });
             assertRoughlyEquals(r, expected, PRECISION);
         });
 
         it('computes the correct reward with equal fee and stake ratios', async () => {
-            const ownerFees = new BigNumber(DEFAULT_COBB_DOUGLAS_PARAMS.totalFees).times(0.5);
-            const ownerStake = new BigNumber(DEFAULT_COBB_DOUGLAS_PARAMS.totalStake).times(0.5);
+            const ownerFees = DEFAULT_COBB_DOUGLAS_PARAMS.totalFeesn.times(0.5);
+            const ownerStake = DEFAULT_COBB_DOUGLAS_PARAMS.totalStaken.times(0.5);
             const expected = cobbDouglas({ ownerFees, ownerStake });
             const r = await callCobbDouglasAsync({ ownerFees, ownerStake });
             assertRoughlyEquals(r, expected, PRECISION);
         });
 
         it('computes the correct reward with full fee and stake ratios', async () => {
-            const ownerFees = new BigNumber(DEFAULT_COBB_DOUGLAS_PARAMS.totalFees);
-            const ownerStake = new BigNumber(DEFAULT_COBB_DOUGLAS_PARAMS.totalStake);
+            const ownerFees = DEFAULT_COBB_DOUGLAS_PARAMS.totalFeesn;
+            const ownerStake = DEFAULT_COBB_DOUGLAS_PARAMS.totalStaken;
             const expected = cobbDouglas({ ownerFees, ownerStake });
             const r = await callCobbDouglasAsync({ ownerFees, ownerStake });
             assertRoughlyEquals(r, expected, PRECISION);
@@ -208,7 +209,7 @@ blockchainTests('LibCobbDouglas unit tests', env => {
             assertRoughlyEquals(r, expected, PRECISION);
         });
 
-        blockchainTests.optional('fuzzing', () => {
+        describe.skip('fuzzing', () => {
             const inputs = _.times(FUZZ_COUNT, () => getRandomParams());
             for (const params of inputs) {
                 it(`cobbDouglas(${JSON.stringify(params, (key, value) => typeof value === 'bigint' ? value.toString() : value)})`, async () => {

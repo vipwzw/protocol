@@ -1,5 +1,7 @@
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
 import { ERC20Wrapper } from '@0x/contracts-asset-proxy';
-import { blockchainTests, describe } from '@0x/test-utils';
+
 import * as _ from 'lodash';
 
 import { deployAndConfigureContractsAsync, StakingApiWrapper } from './utils/api_wrapper';
@@ -7,7 +9,7 @@ import { CumulativeRewardTrackingSimulation, TestAction } from './utils/cumulati
 
 // tslint:disable:no-unnecessary-type-assertion
 // tslint:disable:max-file-line-count
-blockchainTests.resets('Cumulative Reward Tracking', env => {
+describe('Cumulative Reward Tracking', () => {
     // tokens & addresses
     let accounts: string[];
     let owner: string;
@@ -20,15 +22,16 @@ blockchainTests.resets('Cumulative Reward Tracking', env => {
     // tests
     before(async () => {
         // create accounts
-        accounts = await env.getAccountAddressesAsync();
+        accounts = await ethers.getSigners().then(signers => signers.map(s => s.address));
         owner = accounts[0];
         const actors = accounts.slice(1);
         // set up ERC20Wrapper
-        erc20Wrapper = new ERC20Wrapper(env.provider, accounts, owner);
+        erc20Wrapper = new ERC20Wrapper(await ethers.getSigners().then(signers => signers[0]), accounts, owner);
         // deploy staking contracts
-        stakingApiWrapper = await deployAndConfigureContractsAsync(env, owner, erc20Wrapper);
+        const [signer] = await ethers.getSigners();
+        stakingApiWrapper = await deployAndConfigureContractsAsync(signer, owner, erc20Wrapper);
         simulation = new CumulativeRewardTrackingSimulation(stakingApiWrapper, actors);
-        await simulation.deployAndConfigureTestContractsAsync(env);
+        await simulation.deployAndConfigureTestContractsAsync(signer);
     });
 
     describe('Tracking Cumulative Rewards (CR)', () => {

@@ -1,4 +1,4 @@
-import { constants, expect } from '../test_utils';
+import { constants, expect } from '../test_constants';
 import * as _ from 'lodash';
 
 import {
@@ -100,7 +100,7 @@ export class FinalizerActor extends BaseActor {
             const membersTotalReward = totalReward.minus(operatorReward);
 
             for (const delegator of delegatorsByPoolId[poolId]) {
-                let delegatorReward = new BigNumber(0);
+                let delegatorReward = 0n;
                 if (delegator !== operator && membersStakeInPool.gt(0)) {
                     const delegatorStake = delegatorStakesByPoolId[poolId][delegator];
                     delegatorReward = delegatorStake.times(membersTotalReward).dividedToIntegerBy(membersStakeInPool);
@@ -124,7 +124,7 @@ export class FinalizerActor extends BaseActor {
             const delegators = delegatorsByPoolId[poolId];
             delegatorBalancesByPoolId[poolId] = {};
             for (const delegator of delegators) {
-                let balance = new BigNumber(delegatorBalancesByPoolId[poolId][delegator] || 0);
+                let balance = delegatorBalancesByPoolId[poolId][delegator] || 0n;
                 if (delegator === operator) {
                     balance = balance.plus(
                         await computeRewardBalanceOfOperator
@@ -248,7 +248,7 @@ export class FinalizerActor extends BaseActor {
         if (totalRewards.eq(0) || totalFeesCollected.eq(0) || totalWeightedStake.eq(0)) {
             return _.zipObject(
                 poolIds,
-                _.times(poolIds.length, () => new BigNumber(0)),
+                _.times(poolIds.length, () => 0n),
             );
         }
         const rewards = await Promise.all(

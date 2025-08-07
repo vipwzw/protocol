@@ -134,6 +134,16 @@ contract TestMixinStake is
         return IZrxVault(address(this));
     }
 
+    /// @dev Overridden internal function to use this contract as the ZRX vault.
+    function _getZrxVault()
+        internal
+        view
+        override
+        returns (IZrxVault zrxVault)
+    {
+        return IZrxVault(address(this));
+    }
+
     /// @dev Overridden to only emit an event.
     function _withdrawAndSyncDelegatorRewards(
         bytes32 poolId,

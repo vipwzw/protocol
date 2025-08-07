@@ -1,4 +1,5 @@
-import { blockchainTests, constants, expect, verifyEventsFromLogs } from '../test_utils';
+import { expect } from 'chai';
+import { constants, expect, verifyEventsFromLogs } from '../test_constants';
 
 // StakingRevertErrors replacement - simple error factory
 export class StakingRevertErrors {
@@ -22,7 +23,7 @@ import {
     TestMixinSchedulerGoToNextEpochTestInfoEventArgs,
 } from '../wrappers';
 
-blockchainTests.resets('MixinScheduler unit tests', env => {
+describe('MixinScheduler unit tests', env => {
     let testContract: TestMixinScheduler;
 
     before(async () => {

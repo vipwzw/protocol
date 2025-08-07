@@ -18,10 +18,12 @@
 pragma solidity ^0.8.28;
 
 import "../src/immutable/MixinStorage.sol";
+import "../src/sys/MixinParams.sol";
 
 
 contract TestInitTarget is
-    MixinStorage
+    MixinStorage,
+    MixinParams
 {
     // We can't store state in this contract before it is attached, so
     // we will grant this predefined address a balance to indicate that
@@ -43,6 +45,9 @@ contract TestInitTarget is
         _initCounter += 1;
         _initSender = msg.sender;
         _initThisAddress = address(this);
+        
+        // Initialize parameters for proper validation
+        _initMixinParams();
     }
 
     function getInitState()

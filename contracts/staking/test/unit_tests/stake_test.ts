@@ -1,12 +1,11 @@
+import { expect } from 'chai';
 import {
-    blockchainTests,
-    expect,
     filterLogsToArguments,
     getRandomInteger,
     Numberish,
     shortZip,
-} from '../test_utils';
-import { hexUtils } from '../test_utils';
+    hexUtils,
+} from '../test_constants';
 
 // StakingRevertErrors replacement  
 export class StakingRevertErrors {
@@ -36,14 +35,14 @@ import {
     TestMixinStakeZrxVaultWithdrawFromEventArgs as ZrxVaultWithdrawFromEventArgs,
 } from '../wrappers';
 
-blockchainTests.resets('MixinStake unit tests', env => {
+describe('MixinStake unit tests', env => {
     let testContract: TestMixinStake;
     let staker: string;
     let stakerUndelegatedStakeSlot: string;
     let currentEpoch: bigint;
 
     before(async () => {
-        [staker] = await env.getAccountAddressesAsync();
+        [staker] = await ethers.getSigners().then(signers => signers.map(s => s.address));
         const [deployer] = await ethers.getSigners();
         const factory = new TestMixinStake__factory(deployer);
         testContract = await factory.deploy();
@@ -53,7 +52,7 @@ blockchainTests.resets('MixinStake unit tests', env => {
 
     describe('stake()', () => {
         it('deposits funds into the ZRX vault', async () => {
-            const amount = getRandomInteger(0, 100e18);
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
             const tx = await testContract.stake(amount);
             const receipt = await tx.wait();
             // 简化测试：验证交易成功且有日志
@@ -63,11 +62,13 @@ blockchainTests.resets('MixinStake unit tests', env => {
         });
 
         it('increases current and next undelegated stake balance', async () => {
-            const amount = getRandomInteger(0, 100e18);
-            const { logs } = await testContract.stake(amount).awaitTransactionSuccessAsync();
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
+            const tx = await testContract.stake(amount);
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const events = filterLogsToArguments<IncreaseCurrentAndNextBalanceEventArgs>(
                 logs,
-                StakeEvents.IncreaseCurrentAndNextBalance,
+                'IncreaseCurrentAndNextBalance',
             );
             expect(events).to.be.length(1);
             expect(events[0].balanceSlot).to.eq(stakerUndelegatedStakeSlot);
@@ -75,9 +76,11 @@ blockchainTests.resets('MixinStake unit tests', env => {
         });
 
         it('raises a `Stake` event', async () => {
-            const amount = getRandomInteger(0, 100e18);
-            const { logs } = await testContract.stake(amount).awaitTransactionSuccessAsync();
-            const events = filterLogsToArguments<StakeEventArgs>(logs, StakeEvents.Stake);
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
+            const tx = await testContract.stake(amount);
+            const receipt = await tx.wait();
+            const { logs } = receipt;
+            const events = filterLogsToArguments<StakeEventArgs>(logs, 'Stake');
             expect(events).to.be.length(1);
             expect(events[0].staker).to.eq(staker);
             expect(events[0].amount).to.equal(amount);
@@ -94,38 +97,47 @@ blockchainTests.resets('MixinStake unit tests', env => {
                     currentEpoch,
                                     currentEpochBalance: currentEpochBalance,
                 nextEpochBalance: nextEpochBalance,
-                })
-                .awaitTransactionSuccessAsync();
+                });
+const receipt = await tx.wait();
+const { logs } = receipt;
         }
 
         it('throws if not enough undelegated stake in the current epoch', async () => {
-            const amount = getRandomInteger(0, 100e18);
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
             await setUndelegatedStakeAsync(amount.minus(1), amount);
-            const tx = testContract.unstake(amount).awaitTransactionSuccessAsync();
+            const tx = testContract.unstake(amount);
+const receipt = await tx.wait();
+const { logs } = receipt;
             const expectedError = new StakingRevertErrors.InsufficientBalanceError(amount, amount.minus(1));
-            return expect(tx).to.revertWith(expectedError);
+            return expect(tx).to.revertedWith(expectedError);
         });
 
         it('throws if not enough undelegated stake in the next epoch', async () => {
-            const amount = getRandomInteger(0, 100e18);
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
             await setUndelegatedStakeAsync(amount, amount.minus(1));
-            const tx = testContract.unstake(amount).awaitTransactionSuccessAsync();
+            const tx = testContract.unstake(amount);
+const receipt = await tx.wait();
+const { logs } = receipt;
             const expectedError = new StakingRevertErrors.InsufficientBalanceError(amount, amount.minus(1));
-            return expect(tx).to.revertWith(expectedError);
+            return expect(tx).to.revertedWith(expectedError);
         });
 
         it('throws if not enough undelegated stake in both epochs', async () => {
-            const amount = getRandomInteger(0, 100e18);
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
             await setUndelegatedStakeAsync(amount.minus(1), amount.minus(1));
-            const tx = testContract.unstake(amount).awaitTransactionSuccessAsync();
+            const tx = testContract.unstake(amount);
+const receipt = await tx.wait();
+const { logs } = receipt;
             const expectedError = new StakingRevertErrors.InsufficientBalanceError(amount, amount.minus(1));
-            return expect(tx).to.revertWith(expectedError);
+            return expect(tx).to.revertedWith(expectedError);
         });
 
         it('decreases current and next undelegated stake balance', async () => {
-            const amount = getRandomInteger(0, 100e18);
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
             await setUndelegatedStakeAsync(amount, amount);
-            const { logs } = await testContract.unstake(amount).awaitTransactionSuccessAsync();
+            const tx = await testContract.unstake(amount);
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const events = filterLogsToArguments<DecreaseCurrentAndNextBalanceEventArgs>(
                 logs,
                 StakeEvents.DecreaseCurrentAndNextBalance,
@@ -136,9 +148,11 @@ blockchainTests.resets('MixinStake unit tests', env => {
         });
 
         it('withdraws funds from the ZRX vault', async () => {
-            const amount = getRandomInteger(0, 100e18);
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
             await setUndelegatedStakeAsync(amount, amount);
-            const { logs } = await testContract.unstake(amount).awaitTransactionSuccessAsync();
+            const tx = await testContract.unstake(amount);
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const events = filterLogsToArguments<ZrxVaultWithdrawFromEventArgs>(logs, StakeEvents.ZrxVaultWithdrawFrom);
             expect(events).to.be.length(1);
             expect(events[0].staker).to.eq(staker);
@@ -146,9 +160,11 @@ blockchainTests.resets('MixinStake unit tests', env => {
         });
 
         it('emits an `Unstake` event', async () => {
-            const amount = getRandomInteger(0, 100e18);
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
             await setUndelegatedStakeAsync(amount, amount);
-            const { logs } = await testContract.unstake(amount).awaitTransactionSuccessAsync();
+            const tx = await testContract.unstake(amount);
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const events = filterLogsToArguments<UnstakeEventArgs>(logs, StakeEvents.Unstake);
             expect(events).to.be.length(1);
             expect(events[0].staker).to.eq(staker);
@@ -168,16 +184,16 @@ blockchainTests.resets('MixinStake unit tests', env => {
         before(async () => {
             delegatedStakeToPoolByOwnerSlots = await Promise.all(
                 VALID_POOL_IDS.map(async poolId =>
-                    testContract.getDelegatedStakeToPoolByOwnerSlot(poolId, staker).callAsync(),
+                    testContract.getDelegatedStakeToPoolByOwnerSlot(poolId, staker),
                 ),
             );
             delegatedStakeByPoolIdSlots = await Promise.all(
-                VALID_POOL_IDS.map(async poolId => testContract.getDelegatedStakeByPoolIdSlot(poolId).callAsync()),
+                VALID_POOL_IDS.map(async poolId => testContract.getDelegatedStakeByPoolIdSlot(poolId)),
             );
-            globalDelegatedStakeSlot = await testContract.getGlobalStakeByStatusSlot(StakeStatus.Delegated).callAsync();
+            globalDelegatedStakeSlot = await testContract.getGlobalStakeByStatusSlot(StakeStatus.Delegated);
             stakerDelegatedStakeSlot = await testContract
                 .getOwnerStakeByStatusSlot(staker, StakeStatus.Delegated)
-                .callAsync();
+                ;
         });
 
         it('throws if the "from" pool is invalid', async () => {
@@ -186,9 +202,12 @@ blockchainTests.resets('MixinStake unit tests', env => {
                     { status: StakeStatus.Delegated, poolId: INVALID_POOL_ID },
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
                     getRandomInteger(0, 100e18),
-                )
-                .awaitTransactionSuccessAsync();
-            return expect(tx).to.revertWith(INVALID_POOL_ERROR);
+                );
+
+                const receipt = await tx.wait();
+
+                const { logs } = receipt;
+            return expect(tx).to.revertedWith(INVALID_POOL_ERROR);
         });
 
         it('throws if the "to" pool is invalid', async () => {
@@ -197,9 +216,12 @@ blockchainTests.resets('MixinStake unit tests', env => {
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
                     { status: StakeStatus.Delegated, poolId: INVALID_POOL_ID },
                     getRandomInteger(0, 100e18),
-                )
-                .awaitTransactionSuccessAsync();
-            return expect(tx).to.revertWith(INVALID_POOL_ERROR);
+                );
+
+                const receipt = await tx.wait();
+
+                const { logs } = receipt;
+            return expect(tx).to.revertedWith(INVALID_POOL_ERROR);
         });
 
         it('throws if the "from" and "to" pools are invalid', async () => {
@@ -208,19 +230,24 @@ blockchainTests.resets('MixinStake unit tests', env => {
                     { status: StakeStatus.Delegated, poolId: INVALID_POOL_ID },
                     { status: StakeStatus.Delegated, poolId: INVALID_POOL_ID },
                     getRandomInteger(0, 100e18),
-                )
-                .awaitTransactionSuccessAsync();
-            return expect(tx).to.revertWith(INVALID_POOL_ERROR);
+                );
+
+                const receipt = await tx.wait();
+
+                const { logs } = receipt;
+            return expect(tx).to.revertedWith(INVALID_POOL_ERROR);
         });
 
         it('withdraws delegator rewards when "from" stake is delegated', async () => {
-            const { logs } = await testContract
+            const tx = await testContract
                 .moveStake(
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
                     { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
                     getRandomInteger(0, 100e18),
                 )
-                .awaitTransactionSuccessAsync();
+                ;
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const events = filterLogsToArguments<WithdrawAndSyncDelegatorRewardsEventArgs>(
                 logs,
                 StakeEvents.WithdrawAndSyncDelegatorRewards,
@@ -231,13 +258,15 @@ blockchainTests.resets('MixinStake unit tests', env => {
         });
 
         it('withdraws delegator rewards when "to" stake is delegated', async () => {
-            const { logs } = await testContract
+            const tx = await testContract
                 .moveStake(
                     { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
                     getRandomInteger(0, 100e18),
                 )
-                .awaitTransactionSuccessAsync();
+                ;
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const events = filterLogsToArguments<WithdrawAndSyncDelegatorRewardsEventArgs>(
                 logs,
                 StakeEvents.WithdrawAndSyncDelegatorRewards,
@@ -248,13 +277,15 @@ blockchainTests.resets('MixinStake unit tests', env => {
         });
 
         it('withdraws delegator rewards when both stakes are both delegated', async () => {
-            const { logs } = await testContract
+            const tx = await testContract
                 .moveStake(
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
                     getRandomInteger(0, 100e18),
                 )
-                .awaitTransactionSuccessAsync();
+                ;
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const events = filterLogsToArguments<WithdrawAndSyncDelegatorRewardsEventArgs>(
                 logs,
                 StakeEvents.WithdrawAndSyncDelegatorRewards,
@@ -267,13 +298,15 @@ blockchainTests.resets('MixinStake unit tests', env => {
         });
 
         it('does not withdraw delegator rewards when both stakes are both undelegated', async () => {
-            const { logs } = await testContract
+            const tx = await testContract
                 .moveStake(
                     { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
                     { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
                     getRandomInteger(0, 100e18),
                 )
-                .awaitTransactionSuccessAsync();
+                ;
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const events = filterLogsToArguments<WithdrawAndSyncDelegatorRewardsEventArgs>(
                 logs,
                 StakeEvents.WithdrawAndSyncDelegatorRewards,
@@ -282,14 +315,16 @@ blockchainTests.resets('MixinStake unit tests', env => {
         });
 
         it('decreases pool and global delegated stake counters when "from" stake is delegated', async () => {
-            const amount = getRandomInteger(0, 100e18);
-            const { logs } = await testContract
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
+            const tx = await testContract
                 .moveStake(
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
                     { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
                     amount,
                 )
-                .awaitTransactionSuccessAsync();
+                ;
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const decreaseNextBalanceEvents = filterLogsToArguments<DecreaseNextBalanceEventArgs>(
                 logs,
                 StakeEvents.DecreaseNextBalance,
@@ -307,14 +342,16 @@ blockchainTests.resets('MixinStake unit tests', env => {
         });
 
         it('increases pool and global delegated stake counters when "to" stake is delegated', async () => {
-            const amount = getRandomInteger(0, 100e18);
-            const { logs } = await testContract
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
+            const tx = await testContract
                 .moveStake(
                     { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
                     amount,
                 )
-                .awaitTransactionSuccessAsync();
+                ;
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const increaseNextBalanceEvents = filterLogsToArguments<IncreaseNextBalanceEventArgs>(
                 logs,
                 StakeEvents.IncreaseNextBalance,
@@ -332,14 +369,16 @@ blockchainTests.resets('MixinStake unit tests', env => {
         });
 
         it('decreases then increases pool and global delegated stake counters when both stakes are delegated', async () => {
-            const amount = getRandomInteger(0, 100e18);
-            const { logs } = await testContract
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
+            const tx = await testContract
                 .moveStake(
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
                     amount,
                 )
-                .awaitTransactionSuccessAsync();
+                ;
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const decreaseNextBalanceEvents = filterLogs<DecreaseNextBalanceEventArgs>(
                 logs,
                 StakeEvents.DecreaseNextBalance,
@@ -375,14 +414,16 @@ blockchainTests.resets('MixinStake unit tests', env => {
         });
 
         it('does not change pool and global delegated stake counters when both stakes are undelegated', async () => {
-            const amount = getRandomInteger(0, 100e18);
-            const { logs } = await testContract
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
+            const tx = await testContract
                 .moveStake(
                     { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
                     { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
                     amount,
                 )
-                .awaitTransactionSuccessAsync();
+                ;
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const decreaseNextBalanceEvents = filterLogsToArguments<DecreaseNextBalanceEventArgs>(
                 logs,
                 StakeEvents.DecreaseNextBalance,
@@ -396,40 +437,46 @@ blockchainTests.resets('MixinStake unit tests', env => {
         });
 
         it('does nothing when moving the owner stake from undelegated to undelegated', async () => {
-            const amount = getRandomInteger(0, 100e18);
-            const { logs } = await testContract
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
+            const tx = await testContract
                 .moveStake(
                     { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
                     { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
                     amount,
                 )
-                .awaitTransactionSuccessAsync();
+                ;
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const events = filterLogsToArguments<MoveStakeStorageEventArgs>(logs, StakeEvents.MoveStakeStorage);
             expect(events).to.be.length(0);
         });
 
         it('does nothing when moving zero stake', async () => {
             const amount = 0n;
-            const { logs } = await testContract
+            const tx = await testContract
                 .moveStake(
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
                     amount,
                 )
-                .awaitTransactionSuccessAsync();
+                ;
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const events = filterLogsToArguments<MoveStakeStorageEventArgs>(logs, StakeEvents.MoveStakeStorage);
             expect(events).to.be.length(0);
         });
 
         it('moves the owner stake between the same pointer when both are delegated', async () => {
-            const amount = getRandomInteger(0, 100e18);
-            const { logs } = await testContract
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
+            const tx = await testContract
                 .moveStake(
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
                     amount,
                 )
-                .awaitTransactionSuccessAsync();
+                ;
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const events = filterLogsToArguments<MoveStakeStorageEventArgs>(logs, StakeEvents.MoveStakeStorage);
             expect(events).to.be.length(1);
             expect(events[0].fromBalanceSlot).to.eq(stakerDelegatedStakeSlot);
@@ -438,14 +485,16 @@ blockchainTests.resets('MixinStake unit tests', env => {
         });
 
         it('moves the owner stake between different pointers when "from" is undelegated and "to" is delegated', async () => {
-            const amount = getRandomInteger(0, 100e18);
-            const { logs } = await testContract
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
+            const tx = await testContract
                 .moveStake(
                     { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
                     amount,
                 )
-                .awaitTransactionSuccessAsync();
+                ;
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const events = filterLogsToArguments<MoveStakeStorageEventArgs>(logs, StakeEvents.MoveStakeStorage);
             expect(events).to.be.length(1);
             expect(events[0].fromBalanceSlot).to.eq(stakerUndelegatedStakeSlot);
@@ -454,14 +503,16 @@ blockchainTests.resets('MixinStake unit tests', env => {
         });
 
         it('moves the owner stake between different pointers when "from" is delegated and "to" is undelegated', async () => {
-            const amount = getRandomInteger(0, 100e18);
-            const { logs } = await testContract
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
+            const tx = await testContract
                 .moveStake(
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
                     { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
                     amount,
                 )
-                .awaitTransactionSuccessAsync();
+                ;
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const events = filterLogsToArguments<MoveStakeStorageEventArgs>(logs, StakeEvents.MoveStakeStorage);
             expect(events).to.be.length(1);
             expect(events[0].fromBalanceSlot).to.eq(stakerDelegatedStakeSlot);
@@ -470,14 +521,16 @@ blockchainTests.resets('MixinStake unit tests', env => {
         });
 
         it('emits a `MoveStake` event', async () => {
-            const amount = getRandomInteger(0, 100e18);
-            const { logs } = await testContract
+            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
+            const tx = await testContract
                 .moveStake(
                     { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
                     { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
                     amount,
                 )
-                .awaitTransactionSuccessAsync();
+                ;
+            const receipt = await tx.wait();
+            const { logs } = receipt;
             const events = filterLogsToArguments<MoveStakeEventArgs>(logs, StakeEvents.MoveStake);
             expect(events).to.be.length(1);
             expect(events[0].staker).to.eq(staker);

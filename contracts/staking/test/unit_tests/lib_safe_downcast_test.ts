@@ -1,4 +1,6 @@
-import { blockchainTests, expect, Numberish } from '../test_utils';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+import { expect, Numberish } from '../test_constants';
 
 // SafeMathRevertErrors replacement - simple error classes
 export class SafeMathRevertErrors {
@@ -26,14 +28,14 @@ export class SafeMathRevertErrors {
 import { artifacts } from '../artifacts';
 import { TestLibSafeDowncastContract } from '../wrappers';
 
-blockchainTests('LibSafeDowncast unit tests', env => {
+('LibSafeDowncast unit tests', env => {
     let testContract: TestLibSafeDowncastContract;
 
     before(async () => {
         testContract = await TestLibSafeDowncastContract.deployFrom0xArtifactAsync(
             artifacts.TestLibSafeDowncast,
-            env.provider,
-            env.txDefaults,
+            await ethers.getSigners().then(signers => signers[0]),
+            {},
             artifacts,
         );
     });
@@ -44,7 +46,7 @@ blockchainTests('LibSafeDowncast unit tests', env => {
 
     describe('downcastToUint96', () => {
         async function verifyCorrectDowncastAsync(n: Numberish): Promise<void> {
-            const actual = await testContract.downcastToUint96(BigInt(n)).callAsync();
+            const actual = await testContract.downcastToUint96(BigInt(n));
             expect(Number(actual)).to.equal(Number(n));
         }
         function toDowncastError(n: Numberish): SafeMathRevertErrors.Uint256DowncastError {
@@ -75,7 +77,7 @@ blockchainTests('LibSafeDowncast unit tests', env => {
 
     describe('downcastToUint64', () => {
         async function verifyCorrectDowncastAsync(n: Numberish): Promise<void> {
-            const actual = await testContract.downcastToUint64(BigInt(n)).callAsync();
+            const actual = await testContract.downcastToUint64(BigInt(n));
             expect(Number(actual)).to.equal(Number(n));
         }
         function toDowncastError(n: Numberish): SafeMathRevertErrors.Uint256DowncastError {

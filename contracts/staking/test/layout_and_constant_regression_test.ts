@@ -1,3 +1,5 @@
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
 import { artifacts } from './artifacts';
 import { TestStorageLayoutAndConstantsContract } from './wrappers';
 
