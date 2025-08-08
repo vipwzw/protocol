@@ -73,15 +73,35 @@ contract TestStaking is
         override
         returns (IEtherToken)
     {
-        // `testWethAddress` will not be set on the proxy this contract is
-        // attached to, so we need to access the storage of the deployed
-        // instance of this contract.
+        address wethAddress = TestStaking(address(uint160(stakingContract))).testWethAddress();
+        return IEtherToken(wethAddress);
+    }
+
+    /// @dev Internal override to ensure internal calls use the test WETH address
+    function _getWethContract()
+        internal
+        view
+        override
+        returns (IEtherToken)
+    {
         address wethAddress = TestStaking(address(uint160(stakingContract))).testWethAddress();
         return IEtherToken(wethAddress);
     }
 
     function getZrxVault()
         public
+        view
+        override
+        returns (IZrxVault zrxVault)
+    {
+        address zrxVaultAddress = TestStaking(address(uint160(stakingContract))).testZrxVaultAddress();
+        zrxVault = IZrxVault(zrxVaultAddress);
+        return zrxVault;
+    }
+
+    /// @dev Internal override to ensure internal calls use the test ZrxVault address
+    function _getZrxVault()
+        internal
         view
         override
         returns (IZrxVault zrxVault)

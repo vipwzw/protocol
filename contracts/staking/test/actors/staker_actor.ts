@@ -196,7 +196,9 @@ export class StakerActor extends BaseActor {
         const balances: StakeBalances = {
             currentEpoch: await this._stakingApiWrapper.stakingContract.currentEpoch(),
             zrxBalance: await this._stakingApiWrapper.zrxTokenContract.balanceOf(this._owner),
-            stakeBalance: await this._stakingApiWrapper.stakingContract.getTotalStake(this._owner),
+            stakeBalance: await (this._stakingApiWrapper.stakingContract as any)[
+                'getTotalStake(address)'
+            ](this._owner),
             stakeBalanceInVault: await this._stakingApiWrapper.zrxVaultContract.balanceOf(this._owner),
             undelegatedStakeBalance: await this._stakingApiWrapper.stakingContract
                 .getOwnerStakeByStatus(this._owner, StakeStatus.Undelegated),
