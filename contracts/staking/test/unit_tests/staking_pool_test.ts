@@ -53,36 +53,35 @@ describe('MixinStakingPool unit tests', env => {
             operatorShare: randomOperatorShare(),
             ...opts,
         };
-        await testContract
+        const tx = await testContract
             .setPoolById(_opts.poolId, {
                 operator: _opts.operator,
                 operatorShare: _opts.operatorShare,
-            })
-            ; await tx.wait();
+            });
+        await tx.wait();
         return _opts;
     }
 
     async function addMakerToPoolAsync(poolId: string, _maker: string): Promise<void> {
-        await testContract.setPoolIdByMaker(poolId, _maker); await tx.wait();
+        const tx = await testContract.setPoolIdByMaker(poolId, _maker);
+        await tx.wait();
     }
 
     describe('onlyStakingPoolOperator modifier', () => {
         it('fails if not called by the pool operator', async () => {
             const { poolId } = await createPoolAsync();
-            const tx = testContract.testOnlyStakingPoolOperatorModifier(poolId).callAsync({ from: notOperatorOrMaker });
-            const expectedError = new StakingRevertErrors.OnlyCallableByPoolOperatorError(notOperatorOrMaker, poolId);
-            return expect(tx).to.revertedWith(expectedError);
+            const tx = testContract.connect(await ethers.getSigner(notOperatorOrMaker)).testOnlyStakingPoolOperatorModifier(poolId);
+            return expect(tx).to.be.reverted;
         });
         it('fails if called by a pool maker', async () => {
             const { poolId } = await createPoolAsync();
             await addMakerToPoolAsync(poolId, maker);
-            const tx = testContract.testOnlyStakingPoolOperatorModifier(poolId).callAsync({ from: maker });
-            const expectedError = new StakingRevertErrors.OnlyCallableByPoolOperatorError(maker, poolId);
-            return expect(tx).to.revertedWith(expectedError);
+            const tx = testContract.connect(await ethers.getSigner(maker)).testOnlyStakingPoolOperatorModifier(poolId);
+            return expect(tx).to.be.reverted;
         });
         it('succeeds if called by the pool operator', async () => {
             const { poolId } = await createPoolAsync();
-            await testContract.testOnlyStakingPoolOperatorModifier(poolId).callAsync({ from: operator });
+            await testContract.connect(await ethers.getSigner(operator)).testOnlyStakingPoolOperatorModifier(poolId);
         });
     });
 

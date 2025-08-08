@@ -52,7 +52,7 @@ describe('Testing Rewards', () => {
         // set up ERC20Wrapper
         erc20Wrapper = new ERC20Wrapper(await ethers.getSigners().then(signers => signers[0]), accounts, owner);
         // deploy staking contracts
-        stakingApiWrapper = await deployAndConfigureContractsAsync(env, owner, erc20Wrapper);
+        stakingApiWrapper = await deployAndConfigureContractsAsync({ provider: ethers.provider }, owner, erc20Wrapper);
         // set up staking parameters
         await stakingApiWrapper.utils.setParamsAsync({
             minimumPoolStake: 2n,

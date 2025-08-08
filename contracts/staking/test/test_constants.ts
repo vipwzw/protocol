@@ -96,6 +96,33 @@ export const hexUtils = {
         return ethers.hexlify(ethers.randomBytes(32));
     },
     
+    hash(value: string): string {
+        const { ethers } = require('hardhat');
+        // If it's hex, hash as bytes; otherwise hash utf8 bytes
+        const data = typeof value === 'string' && value.startsWith('0x')
+            ? value
+            : ethers.toUtf8Bytes(value);
+        return ethers.keccak256(data);
+    },
+    
+    slice(hexString: string, bytes: number): string {
+        // Supports negative bytes to slice from the end, e.g., -20 for last 20 bytes
+        if (typeof hexString !== 'string' || !hexString.startsWith('0x')) {
+            throw new Error('hexUtils.slice: expected hex string with 0x prefix');
+        }
+        const hex = hexString.slice(2);
+        const totalBytes = Math.floor(hex.length / 2);
+        let startByteIndex = 0;
+        if (bytes < 0) {
+            const lastBytes = Math.min(totalBytes, Math.abs(bytes));
+            startByteIndex = totalBytes - lastBytes;
+        } else {
+            startByteIndex = Math.min(totalBytes, bytes);
+        }
+        const sliced = hex.slice(startByteIndex * 2);
+        return '0x' + sliced;
+    },
+    
     concat(...args: string[]): string {
         const { ethers } = require('hardhat');
         return ethers.concat(args);

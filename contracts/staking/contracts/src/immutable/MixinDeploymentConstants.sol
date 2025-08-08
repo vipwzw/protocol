@@ -68,6 +68,7 @@ contract MixinDeploymentConstants {
     function _getWethContract()
         internal
         view
+        virtual
         returns (IEtherToken wethContract)
     {
         wethContract = IEtherToken(WETH_ADDRESS);

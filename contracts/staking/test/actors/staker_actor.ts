@@ -1,4 +1,5 @@
-import { expect, expectBigIntEqual, toBigInt } from '../test_constants';
+import { expect } from 'chai';
+import { expectBigIntEqual, toBigInt } from '../test_constants';
 
 // RevertError replacement - simple Error wrapper
 export class RevertError extends Error {
@@ -193,33 +194,27 @@ export class StakerActor extends BaseActor {
     }
     private async _getBalancesAsync(): Promise<StakeBalances> {
         const balances: StakeBalances = {
-            currentEpoch: await this._stakingApiWrapper.stakingContract.currentEpoch().callAsync(),
-            zrxBalance: await this._stakingApiWrapper.zrxTokenContract.balanceOf(this._owner).callAsync(),
-            stakeBalance: await this._stakingApiWrapper.stakingContract.getTotalStake(this._owner).callAsync(),
-            stakeBalanceInVault: await this._stakingApiWrapper.zrxVaultContract.balanceOf(this._owner).callAsync(),
+            currentEpoch: await this._stakingApiWrapper.stakingContract.currentEpoch(),
+            zrxBalance: await this._stakingApiWrapper.zrxTokenContract.balanceOf(this._owner),
+            stakeBalance: await this._stakingApiWrapper.stakingContract.getTotalStake(this._owner),
+            stakeBalanceInVault: await this._stakingApiWrapper.zrxVaultContract.balanceOf(this._owner),
             undelegatedStakeBalance: await this._stakingApiWrapper.stakingContract
-                .getOwnerStakeByStatus(this._owner, StakeStatus.Undelegated)
-                .callAsync(),
+                .getOwnerStakeByStatus(this._owner, StakeStatus.Undelegated),
             delegatedStakeBalance: await this._stakingApiWrapper.stakingContract
-                .getOwnerStakeByStatus(this._owner, StakeStatus.Delegated)
-                .callAsync(),
+                .getOwnerStakeByStatus(this._owner, StakeStatus.Delegated),
             globalUndelegatedStakeBalance: await this._stakingApiWrapper.stakingContract
-                .getGlobalStakeByStatus(StakeStatus.Undelegated)
-                .callAsync(),
+                .getGlobalStakeByStatus(StakeStatus.Undelegated),
             globalDelegatedStakeBalance: await this._stakingApiWrapper.stakingContract
-                .getGlobalStakeByStatus(StakeStatus.Delegated)
-                .callAsync(),
+                .getGlobalStakeByStatus(StakeStatus.Delegated),
             delegatedStakeByPool: {},
             totalDelegatedStakeByPool: {},
         };
         // lookup for each pool
         for (const poolId of this._poolIds) {
             const delegatedStakeBalanceByPool = await this._stakingApiWrapper.stakingContract
-                .getStakeDelegatedToPoolByOwner(this._owner, poolId)
-                .callAsync();
+                .getStakeDelegatedToPoolByOwner(this._owner, poolId);
             const totalDelegatedStakeBalanceByPool = await this._stakingApiWrapper.stakingContract
-                .getTotalStakeDelegatedToPool(poolId)
-                .callAsync();
+                .getTotalStakeDelegatedToPool(poolId);
             balances.delegatedStakeByPool[poolId] = delegatedStakeBalanceByPool;
             balances.totalDelegatedStakeByPool[poolId] = totalDelegatedStakeBalanceByPool;
         }

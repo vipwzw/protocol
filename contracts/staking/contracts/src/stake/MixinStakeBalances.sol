@@ -85,6 +85,17 @@ contract MixinStakeBalances is
         return _getZrxVault().balanceOf(staker);
     }
 
+    /// @dev Returns the total stake across all stakers (total ZRX in the vault).
+    /// @return total ZRX staked across all stakers.
+    function getTotalStake()
+        public
+        view
+        virtual
+        returns (uint256)
+    {
+        return _getZrxVault().balanceOfZrxVault();
+    }
+
     /// @dev Returns the stake delegated to a specific staking pool, by a given staker.
     /// @param staker of stake.
     /// @param poolId Unique Id of pool.

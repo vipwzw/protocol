@@ -51,6 +51,15 @@ contract TestStakingNoWETH is
         return IEtherToken(address(this));
     }
 
+    function _getWethContract()
+        internal
+        view
+        override
+        returns (IEtherToken)
+    {
+        return IEtherToken(address(this));
+    }
+
     function _wrapEth()
         internal
         override

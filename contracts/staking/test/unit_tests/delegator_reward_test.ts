@@ -1,15 +1,13 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
+import { constants as stakingConstants } from '../../src/constants';
 import {
-    assertIntegerRoughlyEquals as assertRoughlyEquals,
     constants,
-    expect,
     filterLogsToArguments,
     getRandomInteger,
     Numberish,
     randomAddress,
-    toBaseUnitAmount,
-} from '@0x/test-utils';
+} from '../test_constants';
 
 // Local bigint assertion helper
 function expectBigIntEqual(actual: any, expected: any): void {
@@ -25,8 +23,7 @@ function toBigInt(value: any): bigint {
     return BigInt(value.toString());
 }
 
-import { hexUtils } from '@0x/utils';
-import { LogEntry } from 'ethereum-types';
+import { hexUtils } from '../test_constants';
 
 import { artifacts } from '../artifacts';
 
@@ -56,31 +53,66 @@ describe('Delegator rewards unit tests', () => {
         membersStake: Numberish;
     }
 
+    const ONE_ETHER = 10n ** 18n;
+
+    function randWei(maxInteger: number): bigint {
+        return BigInt(getRandomInteger(1, maxInteger)) * ONE_ETHER;
+    }
+
+    // Helper: approximate equality with 1 wei tolerance by default
+    function assertRoughlyEquals(actual: Numberish, expected: Numberish, tolerance: bigint = 1n): void {
+        const a = toBigInt(actual);
+        const e = toBigInt(expected);
+        const diff = a > e ? a - e : e - a;
+        expect(diff <= tolerance).to.be.true;
+    }
+
+    function bigSum(...vals: Array<Numberish>): bigint {
+        return vals.reduce((acc, v) => acc + toBigInt(v), 0n);
+    }
+
+    function toActualRewards(operatorRewardIn: Numberish, membersRewardIn: Numberish): [bigint, bigint] {
+        const op = toBigInt(operatorRewardIn);
+        const mem = toBigInt(membersRewardIn);
+        const total = op + mem;
+        if (total === 0n) {
+            return [0n, 0n];
+        }
+        const ppmDenom = BigInt(stakingConstants.PPM_DENOMINATOR);
+        const ppm100 = BigInt(stakingConstants.PPM_100_PERCENT);
+        const operatorSharePPM = (op * ppm100) / total; // floor
+        const opReward = (total * operatorSharePPM + ppmDenom - 1n) / ppmDenom; // ceil
+        const memReward = total - opReward;
+        return [opReward, memReward];
+    }
+
     async function rewardPoolAsync(opts?: Partial<RewardPoolOpts>): Promise<RewardPoolOpts> {
         const _opts = {
             poolId: hexUtils.random(),
             operator: constants.NULL_ADDRESS,
-            membersReward: getRandomInteger(1, toBaseUnitAmount(100)),
-            operatorReward: getRandomInteger(1, toBaseUnitAmount(100)),
-            membersStake: getRandomInteger(1, toBaseUnitAmount(10)),
+            membersReward: randWei(100),
+            operatorReward: randWei(100),
+            membersStake: randWei(10),
             ...opts,
         };
         // Generate a deterministic operator address based on the poolId.
         _opts.operator = poolIdToOperator(_opts.poolId);
-        await testContract
+        const tx = await testContract
             .syncPoolRewards(
                 _opts.poolId,
                 _opts.operator,
-                _opts.operatorRewardn,
-                _opts.membersRewardn,
-                _opts.membersStaken,
-            )
-            ; await tx.wait();
+                _opts.operatorReward,
+                _opts.membersReward,
+                _opts.membersStake,
+            );
+        await tx.wait();
         // Because the operator share is implicitly defined by the member and
         // operator reward, and is stored as a uint32, there will be precision
         // loss when the reward is combined then split again in the contracts.
         // So we perform this transformation on the values and return them.
-        [_opts.operatorReward, _opts.membersReward] = toActualRewards(_opts.operatorReward, _opts.membersReward);
+        const [opReward, memReward] = toActualRewards(_opts.operatorReward, _opts.membersReward);
+        _opts.operatorReward = opReward;
+        _opts.membersReward = memReward;
         return _opts;
     }
 
@@ -92,27 +124,29 @@ describe('Delegator rewards unit tests', () => {
         const _opts = {
             poolId: hexUtils.random(),
             operator: constants.NULL_ADDRESS,
-            membersReward: getRandomInteger(1, toBaseUnitAmount(100)),
-            operatorReward: getRandomInteger(1, toBaseUnitAmount(100)),
-            membersStake: getRandomInteger(1, toBaseUnitAmount(10)),
+            membersReward: randWei(100),
+            operatorReward: randWei(100),
+            membersStake: randWei(10),
             ...opts,
         };
         // Generate a deterministic operator address based on the poolId.
         _opts.operator = poolIdToOperator(_opts.poolId);
-        await testContract
+        const tx = await testContract
             .setUnfinalizedPoolReward(
                 _opts.poolId,
                 _opts.operator,
-                _opts.operatorRewardn,
-                _opts.membersRewardn,
-                _opts.membersStaken,
-            )
-            ; await tx.wait();
+                _opts.operatorReward,
+                _opts.membersReward,
+                _opts.membersStake,
+            );
+        await tx.wait();
         // Because the operator share is implicitly defined by the member and
         // operator reward, and is stored as a uint32, there will be precision
         // loss when the reward is combined then split again in the contracts.
         // So we perform this transformation on the values and return them.
-        [_opts.operatorReward, _opts.membersReward] = toActualRewards(_opts.operatorReward, _opts.membersReward);
+        const [opReward, memReward] = toActualRewards(_opts.operatorReward, _opts.membersReward);
+        _opts.operatorReward = opReward;
+        _opts.membersReward = memReward;
         return _opts;
     }
 
@@ -123,22 +157,10 @@ describe('Delegator rewards unit tests', () => {
 
     // Converts pre-split rewards to the amounts the contracts will calculate
     // after suffering precision loss from the low-precision `operatorShare`.
-    function toActualRewards(operatorReward: Numberish, membersReward: Numberish): [BigNumber, BigNumber] {
-        const totalReward = BigNumber.sum(operatorReward, membersReward);
-        const operatorSharePPM = operatorRewardn
-            .times(constants.PPM_100_PERCENT)
-            .dividedBy(totalReward)
-            .integerValue(BigNumber.ROUND_DOWN);
-        const _operatorReward = totalReward
-            .times(operatorSharePPM)
-            .dividedBy(constants.PPM_100_PERCENT)
-            .integerValue(BigNumber.ROUND_UP);
-        const _membersReward = totalReward.minus(_operatorReward);
-        return [_operatorReward, _membersReward];
-    }
+    // (moved above) toActualRewards using bigint
 
     type ResultWithTransfers<T extends {}> = T & {
-        delegatorTransfers: BigNumber;
+        delegatorTransfers: bigint;
     };
 
     interface DelegateStakeOpts {
@@ -160,13 +182,14 @@ describe('Delegator rewards unit tests', () => {
     ): Promise<ResultWithTransfers<DelegateStakeOpts>> {
         const _opts = {
             delegator: randomAddress(),
-            stake: getRandomInteger(1, toBaseUnitAmount(10)),
+            stake: randWei(10),
             ...opts,
         };
         const fn = now
             ? testContract.delegateStakeNow.bind(testContract)
             : testContract.delegateStake.bind(testContract);
-        const receipt = await fn(_opts.delegator, poolId, _opts.staken); await tx.wait();
+        const tx = await fn(_opts.delegator, poolId, _opts.stake);
+        const receipt = await tx.wait();
         const delegatorTransfers = getTransfersFromLogs(receipt.logs, _opts.delegator);
         return {
             ..._opts,
@@ -191,31 +214,32 @@ describe('Delegator rewards unit tests', () => {
         };
     }
 
-    function getTransfersFromLogs(logs: LogEntry[], delegator?: string): BigNumber {
+    function getTransfersFromLogs(logs: any[], delegator?: string): bigint {
         let delegatorTransfers = constants.ZERO_AMOUNT;
         const transferArgs = filterLogsToArguments<TestDelegatorRewardsTransferEventArgs>(
             logs,
-            TestDelegatorRewardsEvents.Transfer,
+            'Transfer',
         );
         for (const event of transferArgs) {
             if (event._to === delegator) {
-                delegatorTransfers = delegatorTransfers.plus(event._value);
+                delegatorTransfers = toBigInt(delegatorTransfers) + toBigInt(event._value);
             }
         }
         return delegatorTransfers;
     }
 
     async function advanceEpochAsync(): Promise<number> {
-        await testContract.advanceEpoch(); await tx.wait();
+        const tx = await testContract.advanceEpoch();
+        await tx.wait();
         const epoch = await testContract.currentEpoch();
-        return epoch.toNumber();
+        return Number(epoch);
     }
 
-    async function getDelegatorRewardBalanceAsync(poolId: string, delegator: string): Promise<BigNumber> {
+    async function getDelegatorRewardBalanceAsync(poolId: string, delegator: string): Promise<bigint> {
         return testContract.computeRewardBalanceOfDelegator(poolId, delegator);
     }
 
-    async function getOperatorRewardBalanceAsync(poolId: string): Promise<BigNumber> {
+    async function getOperatorRewardBalanceAsync(poolId: string): Promise<bigint> {
         return testContract.computeRewardBalanceOfOperator(poolId);
     }
 
@@ -224,7 +248,8 @@ describe('Delegator rewards unit tests', () => {
     }
 
     async function finalizePoolAsync(poolId: string): Promise<ResultWithTransfers<{}>> {
-        const receipt = await testContract.finalizePool(poolId); await tx.wait();
+        const tx = await testContract.finalizePool(poolId);
+        const receipt = await tx.wait();
         const delegatorTransfers = getTransfersFromLogs(receipt.logs, poolId);
         return {
             delegatorTransfers,
@@ -235,11 +260,14 @@ describe('Delegator rewards unit tests', () => {
         totalRewards: Numberish,
         delegatorStake: Numberish,
         totalDelegatorStake: Numberish,
-    ): BigNumber {
-        return totalRewardsn
-            .times(delegatorStake)
-            .dividedBy(totalDelegatorStaken)
-            .integerValue(BigNumber.ROUND_DOWN);
+    ): bigint {
+        const total = toBigInt(totalRewards);
+        const stake = toBigInt(delegatorStake);
+        const denom = toBigInt(totalDelegatorStake);
+        if (denom === 0n) {
+            return 0n;
+        }
+        return (total * stake) / denom; // floor
     }
 
     describe('computeRewardBalanceOfOperator()', () => {
@@ -360,7 +388,7 @@ describe('Delegator rewards unit tests', () => {
             await advanceEpochAsync(); // epoch 4
             const { membersReward: reward2 } = await rewardPoolAsync({ poolId, membersStake: stake });
             const delegatorReward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-            assertRoughlyEquals(delegatorReward, BigNumber.sum(reward1, reward2));
+            assertRoughlyEquals(delegatorReward, bigSum(reward1, reward2));
         });
 
         it('partial rewards from epoch 3 and 3 for delegator partially delegating in epoch 1', async () => {
@@ -371,7 +399,7 @@ describe('Delegator rewards unit tests', () => {
             // rewards paid for stake in epoch 2.
             const { membersReward: reward, membersStake: rewardStake } = await rewardPoolAsync({
                 poolId,
-                membersStake: delegatorStaken.times(2),
+                membersStake: toBigInt(delegatorStake) * 2n,
             });
             const delegatorReward = await getDelegatorRewardBalanceAsync(poolId, delegator);
             const expectedDelegatorRewards = computeDelegatorRewards(reward, delegatorStake, rewardStake);
@@ -441,11 +469,11 @@ describe('Delegator rewards unit tests', () => {
             const { delegator, stake: stake1 } = await delegateStakeAsync(poolId);
             await advanceEpochAsync(); // epoch 2 (stake1 now active)
             await advanceEpochAsync(); // epoch 3
-            const stake2 = getRandomInteger(0, stake1);
-            const totalStake = BigNumber.sum(stake1, stake2);
+            const stake2 = toBigInt(stake1) / 2n;
+            const totalStake = toBigInt(stake1) + toBigInt(stake2);
             // Make the total stake in rewards > totalStake so delegator never
             // receives 100% of rewards.
-            const rewardStake = totalStake.times(2);
+            const rewardStake = totalStake * 2n;
             // Pay rewards for epoch 2.
             const { membersReward: reward1 } = await rewardPoolAsync({ poolId, membersStake: rewardStake });
             // add extra stake
@@ -456,11 +484,11 @@ describe('Delegator rewards unit tests', () => {
             // Pay rewards for epoch 4.
             const { membersReward: reward2 } = await rewardPoolAsync({ poolId, membersStake: rewardStake });
             const delegatorReward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-            const expectedDelegatorReward = BigNumber.sum(
+            const expectedDelegatorReward = bigSum(
                 computeDelegatorRewards(reward1, stake1, rewardStake),
                 computeDelegatorRewards(reward2, totalStake, rewardStake),
             );
-            assertRoughlyEquals(BigNumber.sum(withdrawal, delegatorReward), expectedDelegatorReward);
+            assertRoughlyEquals(bigSum(withdrawal, delegatorReward), expectedDelegatorReward);
         });
 
         it('uses old stake for rewards paid in the epoch right after extra stake is added', async () => {
@@ -470,18 +498,18 @@ describe('Delegator rewards unit tests', () => {
             await advanceEpochAsync(); // epoch 2 (stake1 now active)
             // add extra stake
             const { stake: stake2 } = await delegateStakeAsync(poolId, { delegator });
-            const totalStake = BigNumber.sum(stake1, stake2);
+            const totalStake = toBigInt(stake1) + toBigInt(stake2);
             await advanceEpochAsync(); // epoch 3 (stake2 now active)
             // Make the total stake in rewards > totalStake so delegator never
             // receives 100% of rewards.
-            const rewardStake = totalStake.times(2);
+            const rewardStake = totalStake * 2n;
             // Pay rewards for epoch 2.
             const { membersReward: reward1 } = await rewardPoolAsync({ poolId, membersStake: rewardStake });
             await advanceEpochAsync(); // epoch 4
             // Pay rewards for epoch 3.
             const { membersReward: reward2 } = await rewardPoolAsync({ poolId, membersStake: rewardStake });
             const delegatorReward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-            const expectedDelegatorReward = BigNumber.sum(
+            const expectedDelegatorReward = bigSum(
                 computeDelegatorRewards(reward1, stake1, rewardStake),
                 computeDelegatorRewards(reward2, totalStake, rewardStake),
             );
@@ -493,7 +521,7 @@ describe('Delegator rewards unit tests', () => {
             const { delegator: delegatorA, stake: stakeA } = await delegateStakeAsync(poolId);
             await advanceEpochAsync(); // epoch 2 (stake A now active)
             const { delegator: delegatorB, stake: stakeB } = await delegateStakeAsync(poolId);
-            const totalStake = BigNumber.sum(stakeA, stakeB);
+            const totalStake = toBigInt(stakeA) + toBigInt(stakeB);
             await advanceEpochAsync(); // epoch 3 (stake B now active)
             // rewards paid for stake in epoch 2 (delegator A only)
             const { membersReward: reward1 } = await rewardPoolAsync({ poolId, membersStake: stakeA });
@@ -501,13 +529,13 @@ describe('Delegator rewards unit tests', () => {
             // rewards paid for stake in epoch 3 (delegator A and B)
             const { membersReward: reward2 } = await rewardPoolAsync({ poolId, membersStake: totalStake });
             const delegatorRewardA = await getDelegatorRewardBalanceAsync(poolId, delegatorA);
-            const expectedDelegatorRewardA = BigNumber.sum(
+            const expectedDelegatorRewardA = bigSum(
                 computeDelegatorRewards(reward1, stakeA, stakeA),
                 computeDelegatorRewards(reward2, stakeA, totalStake),
             );
             assertRoughlyEquals(delegatorRewardA, expectedDelegatorRewardA);
             const delegatorRewardB = await getDelegatorRewardBalanceAsync(poolId, delegatorB);
-            const expectedDelegatorRewardB = BigNumber.sum(computeDelegatorRewards(reward2, stakeB, totalStake));
+            const expectedDelegatorRewardB = computeDelegatorRewards(reward2, stakeB, totalStake);
             assertRoughlyEquals(delegatorRewardB, expectedDelegatorRewardB);
         });
 
@@ -516,7 +544,7 @@ describe('Delegator rewards unit tests', () => {
             const { delegator: delegatorA, stake: stakeA } = await delegateStakeAsync(poolId);
             await advanceEpochAsync(); // epoch 2 (stake A now active)
             const { delegator: delegatorB, stake: stakeB } = await delegateStakeAsync(poolId);
-            const totalStake = BigNumber.sum(stakeA, stakeB);
+            const totalStake = toBigInt(stakeA) + toBigInt(stakeB);
             await advanceEpochAsync(); // epoch 3 (stake B now active)
             // rewards paid for stake in epoch 2 (delegator A only)
             const { membersReward: reward1 } = await rewardPoolAsync({ poolId, membersStake: stakeA });
@@ -525,13 +553,13 @@ describe('Delegator rewards unit tests', () => {
             // rewards paid for stake in epoch 4 (delegator A and B)
             const { membersReward: reward2 } = await rewardPoolAsync({ poolId, membersStake: totalStake });
             const delegatorRewardA = await getDelegatorRewardBalanceAsync(poolId, delegatorA);
-            const expectedDelegatorRewardA = BigNumber.sum(
+            const expectedDelegatorRewardA = bigSum(
                 computeDelegatorRewards(reward1, stakeA, stakeA),
                 computeDelegatorRewards(reward2, stakeA, totalStake),
             );
             assertRoughlyEquals(delegatorRewardA, expectedDelegatorRewardA);
             const delegatorRewardB = await getDelegatorRewardBalanceAsync(poolId, delegatorB);
-            const expectedDelegatorRewardB = BigNumber.sum(computeDelegatorRewards(reward2, stakeB, totalStake));
+            const expectedDelegatorRewardB = computeDelegatorRewards(reward2, stakeB, totalStake);
             assertRoughlyEquals(delegatorRewardB, expectedDelegatorRewardB);
         });
 
@@ -543,16 +571,16 @@ describe('Delegator rewards unit tests', () => {
             // rewards paid for stake in epoch 2.
             const { membersReward: reward1, membersStake: rewardStake1 } = await rewardPoolAsync({
                 poolId,
-                membersStake: delegatorStaken.times(2),
+                membersStake: toBigInt(delegatorStake) * 2n,
             });
             await advanceEpochAsync(); // epoch 4
             // rewards paid for stake in epoch 3
             const { membersReward: reward2, membersStake: rewardStake2 } = await rewardPoolAsync({
                 poolId,
-                membersStake: delegatorStaken.times(3),
+                membersStake: toBigInt(delegatorStake) * 3n,
             });
             const delegatorReward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-            const expectedDelegatorReward = BigNumber.sum(
+            const expectedDelegatorReward = bigSum(
                 computeDelegatorRewards(reward1, delegatorStake, rewardStake1),
                 computeDelegatorRewards(reward2, delegatorStake, rewardStake2),
             );
@@ -617,7 +645,7 @@ describe('Delegator rewards unit tests', () => {
                     membersStake: stake,
                 });
                 const reward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-                const expectedReward = BigNumber.sum(prevReward, unfinalizedReward);
+                const expectedReward = bigSum(prevReward, unfinalizedReward);
                 assertRoughlyEquals(reward, expectedReward);
             });
 
@@ -634,7 +662,7 @@ describe('Delegator rewards unit tests', () => {
                     membersStake: stake,
                 });
                 const reward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-                const expectedReward = BigNumber.sum(prevReward, unfinalizedReward);
+                const expectedReward = bigSum(prevReward, unfinalizedReward);
                 assertRoughlyEquals(reward, expectedReward);
             });
 
@@ -645,17 +673,17 @@ describe('Delegator rewards unit tests', () => {
                 await advanceEpochAsync(); // epoch 3
                 const { membersReward: prevReward, membersStake: prevStake } = await rewardPoolAsync({
                     poolId,
-                    membersStake: staken.times(2),
+                    membersStake: toBigInt(stake) * 2n,
                 });
                 await advanceEpochAsync(); // epoch 4
                 await advanceEpochAsync(); // epoch 5
                 const { membersReward: unfinalizedReward, membersStake: unfinalizedStake } =
                     await setUnfinalizedPoolRewardAsync({
                         poolId,
-                        membersStake: staken.times(5),
+                        membersStake: toBigInt(stake) * 5n,
                     });
                 const reward = await getDelegatorRewardBalanceAsync(poolId, delegator);
-                const expectedReward = BigNumber.sum(
+                const expectedReward = bigSum(
                     computeDelegatorRewards(prevReward, stake, prevStake),
                     computeDelegatorRewards(unfinalizedReward, stake, unfinalizedStake),
                 );
@@ -684,7 +712,7 @@ describe('Delegator rewards unit tests', () => {
             // stake
             stakeResults.push(await delegateStakeAsync(poolId));
             const { delegator, stake } = stakeResults[0];
-            const rewardStake = staken.times(2);
+            const rewardStake = toBigInt(stake) * 2n;
             await advanceEpochAsync(); // epoch 2 (stake now active)
             // add more stake.
             stakeResults.push(await delegateStakeAsync(poolId, { delegator, stake }));
@@ -698,7 +726,7 @@ describe('Delegator rewards unit tests', () => {
             // Should only see deposits for epoch 3.
             const allDeposits = stakeResults.map(r => r.delegatorTransfers);
             const expectedReward = computeDelegatorRewards(reward, stake, rewardStake);
-            assertRoughlyEquals(BigNumber.sum(...allDeposits), expectedReward);
+            assertRoughlyEquals(bigSum(...allDeposits), expectedReward);
         });
 
         it('only collects rewards from staked epochs', async () => {
@@ -707,12 +735,12 @@ describe('Delegator rewards unit tests', () => {
             // stake
             stakeResults.push(await delegateStakeAsync(poolId));
             const { delegator, stake } = stakeResults[0];
-            const rewardStake = staken.times(2);
+            const rewardStake = toBigInt(stake) * 2n;
             await advanceEpochAsync(); // epoch 2 (full stake now active)
             // reward for epoch 1
             await rewardPoolAsync({ poolId, membersStake: rewardStake });
             // unstake some
-            const unstake = staken.dividedToIntegerBy(2);
+            const unstake = toBigInt(stake) / 2n;
             stakeResults.push(await undelegateStakeAsync(poolId, delegator, unstake));
             await advanceEpochAsync(); // epoch 3 (half active stake)
             // reward for epoch 2
@@ -725,18 +753,18 @@ describe('Delegator rewards unit tests', () => {
             // touch the stake to claim rewards
             stakeResults.push(await touchStakeAsync(poolId, delegator));
             const allDeposits = stakeResults.map(r => r.delegatorTransfers);
-            const expectedReward = BigNumber.sum(
+            const expectedReward = bigSum(
                 computeDelegatorRewards(reward1, stake, rewardStake),
-                computeDelegatorRewards(reward2, staken.minus(unstake), rewardStake),
+                computeDelegatorRewards(reward2, toBigInt(stake) - toBigInt(unstake), rewardStake),
             );
-            assertRoughlyEquals(BigNumber.sum(...allDeposits), expectedReward);
+            assertRoughlyEquals(bigSum(...allDeposits), expectedReward);
         });
 
         it('two delegators can collect split rewards as soon as available', async () => {
             const poolId = hexUtils.random();
             const { delegator: delegatorA, stake: stakeA } = await delegateStakeAsync(poolId);
             const { delegator: delegatorB, stake: stakeB } = await delegateStakeAsync(poolId);
-            const totalStake = BigNumber.sum(stakeA, stakeB);
+            const totalStake = toBigInt(stakeA) + toBigInt(stakeB);
             await advanceEpochAsync(); // epoch 2 (stakes now active)
             await advanceEpochAsync(); // epoch 3
             // rewards paid for stake in epoch 2
@@ -753,7 +781,7 @@ describe('Delegator rewards unit tests', () => {
             const poolId = hexUtils.random();
             const { delegator: delegatorA, stake: stakeA } = await delegateStakeAsync(poolId);
             const { delegator: delegatorB, stake: stakeB } = await delegateStakeAsync(poolId);
-            const totalStake = BigNumber.sum(stakeA, stakeB);
+            const totalStake = toBigInt(stakeA) + toBigInt(stakeB);
             await advanceEpochAsync(); // epoch 2 (stakes now active)
             await advanceEpochAsync(); // epoch 3
             // rewards paid for stake in epoch 2
@@ -764,7 +792,7 @@ describe('Delegator rewards unit tests', () => {
                 poolId,
                 membersStake: totalStake,
             });
-            const totalRewards = BigNumber.sum(prevReward, unfinalizedReward);
+            const totalRewards = bigSum(prevReward, unfinalizedReward);
             await finalizePoolAsync(poolId);
             const { delegatorTransfers: withdrawalA } = await touchStakeAsync(poolId, delegatorA);
             assertRoughlyEquals(withdrawalA, computeDelegatorRewards(totalRewards, stakeA, totalStake));

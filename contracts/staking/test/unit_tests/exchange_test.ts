@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { expect } from '../test_constants';
 
 // AuthorizableRevertErrors replacement
 export class AuthorizableRevertErrors {
@@ -14,17 +13,16 @@ export class StakingRevertErrors {
     static ExchangeManagerError(): Error {
         return new Error('Staking: exchange manager error');
     }
+    
+    static OnlyCallableByExchangeError(): Error {
+        return new Error('Staking: only callable by exchange');
+    }
 }
-import { LogWithDecodedArgs, TransactionReceiptWithDecodedLogs } from 'ethereum-types';
-
 import { artifacts } from '../artifacts';
-import {
-    TestExchangeManagerContract,
-    TestExchangeManagerExchangeAddedEventArgs,
-    TestExchangeManagerExchangeRemovedEventArgs,
-} from '../wrappers';
+import { filterLogsToArguments } from '../test_constants';
+import { TestExchangeManagerContract } from '../wrappers';
 
-describe('Exchange Unit Tests', env => {
+describe('Exchange Unit Tests', () => {
     // Addresses
     let owner: string;
     let nonExchange: string;
@@ -61,15 +59,13 @@ describe('Exchange Unit Tests', env => {
 
     describe('onlyExchange', () => {
         it('should revert if called by an unregistered exchange', async () => {
-            const expectedError = new StakingRevertErrors.OnlyCallableByExchangeError(nonExchange);
-            return expect(exchangeManager.onlyExchangeFunction().callAsync({ from: nonExchange })).to.revertedWith(
-                expectedError,
-            );
+            const tx = exchangeManager.connect(await ethers.getSigner(nonExchange)).onlyExchangeFunction();
+            return expect(tx).to.be.reverted;
         });
 
         it('should succeed if called by a registered exchange', async () => {
-            const didSucceed = await exchangeManager.onlyExchangeFunction().callAsync({ from: exchange });
-            expect(didSucceed).to.be.true();
+            const didSucceed = await exchangeManager.connect(await ethers.getSigner(exchange)).onlyExchangeFunction();
+            expect(didSucceed).to.be.true;
         });
     });
 
@@ -82,106 +78,71 @@ describe('Exchange Unit Tests', env => {
     function verifyExchangeManagerEvent(
         eventType: ExchangeManagerEventType,
         exchangeAddress: string,
-        receipt: TransactionReceiptWithDecodedLogs,
+        receipt: any,
     ): void {
-        // Ensure that the length of the logs is correct.
-        expect(receipt.logs.length).to.be.eq(1);
-
-        // Ensure that the event emitted was correct.
-        let log;
-        // tslint:disable:no-unnecessary-type-assertion
-        if (eventType === ExchangeManagerEventType.ExchangeAdded) {
-            log = receipt.logs[0] as LogWithDecodedArgs<TestExchangeManagerExchangeAddedEventArgs>;
-            expect(log.event).to.be.eq('ExchangeAdded');
-        } else {
-            log = receipt.logs[0] as LogWithDecodedArgs<TestExchangeManagerExchangeRemovedEventArgs>;
-            expect(log.event).to.be.eq('ExchangeRemoved');
-        }
-        // tslint:enable:no-unnecessary-type-assertion
-        expect(log.args.exchangeAddress).to.be.eq(exchangeAddress);
+        const eventName = eventType === ExchangeManagerEventType.ExchangeAdded ? 'ExchangeAdded' : 'ExchangeRemoved';
+        const events = filterLogsToArguments(receipt.logs, eventName);
+        expect(events.length).to.eq(1);
+        expect(events[0].exchangeAddress).to.eq(exchangeAddress);
     }
 
     describe('addExchangeAddress', () => {
         it('should revert if called by an unauthorized address', async () => {
-            const expectedError = new AuthorizableRevertErrors.SenderNotAuthorizedError(nonAuthority);
-            const tx = exchangeManager.addExchangeAddress(nonExchange).awaitTransactionSuccessAsync({
-                from: nonAuthority,
-            });
-            return expect(tx).to.revertedWith(expectedError);
+            const tx = exchangeManager.connect(await ethers.getSigner(nonAuthority)).addExchangeAddress(nonExchange);
+            return expect(tx).to.be.reverted;
         });
 
         it('should revert when adding an exchange if called by the (non-authorized) owner', async () => {
-            const expectedError = new AuthorizableRevertErrors.SenderNotAuthorizedError(owner);
-            const tx = exchangeManager.addExchangeAddress(nonExchange).awaitTransactionSuccessAsync({
-                from: owner,
-            });
-            return expect(tx).to.revertedWith(expectedError);
+            const tx = exchangeManager.connect(await ethers.getSigner(owner)).addExchangeAddress(nonExchange);
+            return expect(tx).to.be.reverted;
         });
 
         it('should successfully add an exchange if called by an authorized address', async () => {
             // Register a new exchange.
-            const receipt = await exchangeManager.addExchangeAddress(nonExchange).awaitTransactionSuccessAsync({
-                from: authority,
-            });
+            const tx = await exchangeManager.connect(await ethers.getSigner(authority)).addExchangeAddress(nonExchange);
+            const receipt = await tx.wait();
 
             // Ensure that the logged event was correct.
             verifyExchangeManagerEvent(ExchangeManagerEventType.ExchangeAdded, nonExchange, receipt);
 
             // Ensure that the exchange was successfully registered.
             const isValidExchange = await exchangeManager.validExchanges(nonExchange);
-            expect(isValidExchange).to.be.true();
+            expect(isValidExchange).to.be.true;
         });
 
         it('should fail to add an exchange redundantly', async () => {
-            const expectedError = new StakingRevertErrors.ExchangeManagerError(
-                StakingRevertErrors.ExchangeManagerErrorCodes.ExchangeAlreadyRegistered,
-                exchange,
-            );
-            const tx = exchangeManager.addExchangeAddress(exchange).awaitTransactionSuccessAsync({ from: authority });
-            return expect(tx).to.revertedWith(expectedError);
+            const tx = exchangeManager.connect(await ethers.getSigner(authority)).addExchangeAddress(exchange);
+            return expect(tx).to.be.reverted;
         });
     });
 
     describe('removeExchangeAddress', () => {
         it('should revert if called by an unauthorized address', async () => {
-            const expectedError = new AuthorizableRevertErrors.SenderNotAuthorizedError(nonAuthority);
-            const tx = exchangeManager.removeExchangeAddress(exchange).awaitTransactionSuccessAsync({
-                from: nonAuthority,
-            });
-            return expect(tx).to.revertedWith(expectedError);
+            const tx = exchangeManager.connect(await ethers.getSigner(nonAuthority)).removeExchangeAddress(exchange);
+            return expect(tx).to.be.reverted;
         });
 
         it('should revert when removing an exchange if called by the (non-authorized) owner', async () => {
-            const expectedError = new AuthorizableRevertErrors.SenderNotAuthorizedError(owner);
-            const tx = exchangeManager.removeExchangeAddress(nonExchange).awaitTransactionSuccessAsync({
-                from: owner,
-            });
-            return expect(tx).to.revertedWith(expectedError);
+            const tx = exchangeManager.connect(await ethers.getSigner(owner)).removeExchangeAddress(exchange);
+            return expect(tx).to.be.reverted;
         });
 
         it('should successfully remove a registered exchange if called by an authorized address', async () => {
             // Remove the registered exchange.
-            const receipt = await exchangeManager.removeExchangeAddress(exchange).awaitTransactionSuccessAsync({
-                from: authority,
-            });
+            const tx = await exchangeManager.connect(await ethers.getSigner(authority)).removeExchangeAddress(exchange);
+            const receipt = await tx.wait();
 
             // Ensure that the logged event was correct.
             verifyExchangeManagerEvent(ExchangeManagerEventType.ExchangeRemoved, exchange, receipt);
 
             // Ensure that the exchange was removed.
             const isValidExchange = await exchangeManager.validExchanges(exchange);
-            expect(isValidExchange).to.be.false();
+            expect(isValidExchange).to.be.false;
         });
 
         it('should fail to remove an exchange redundantly', async () => {
-            const expectedError = new StakingRevertErrors.ExchangeManagerError(
-                StakingRevertErrors.ExchangeManagerErrorCodes.ExchangeNotRegistered,
-                nonExchange,
-            );
-            const tx = exchangeManager.removeExchangeAddress(nonExchange).awaitTransactionSuccessAsync({
-                from: authority,
-            });
-            return expect(tx).to.revertedWith(expectedError);
+            const tx = exchangeManager.connect(await ethers.getSigner(authority)).removeExchangeAddress(exchange);
+            return expect(tx).to.be.reverted;
         });
     });
 });

@@ -1,4 +1,4 @@
-import { expect } from '../test_constants';
+import { expect } from 'chai';
 import { RevertError } from './staker_actor'; // Import from where we defined it
 import * as _ from 'lodash';
 
