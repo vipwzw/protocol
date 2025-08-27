@@ -1,6 +1,7 @@
-import { blockchainTests, expect, LogDecoder, randomAddress, verifyEventsFromLogs } from '@0x/test-utils';
+import { LogDecoder, randomAddress, verifyEventsFromLogs } from '@0x/utils';
+import { expect } from 'chai';
 import { hexUtils, OwnableRevertErrors, StringRevertError, ZeroExRevertErrors } from '@0x/utils';
-import { ethers } from 'ethers';
+import { ethers } from 'hardhat';
 
 import { artifacts } from '../artifacts';
 import { abis } from '../utils/abis';
@@ -11,7 +12,12 @@ import { IOwnableFeature__factory } from '../../src/typechain-types/factories/co
 import type { IOwnableFeature } from '../../src/typechain-types/contracts/src/features/interfaces';
 // IOwnableFeatureEvents will be handled differently
 
-blockchainTests('Ownable feature', env => {
+describe('Ownable feature', () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+    } as any;
     let notOwner: string;
     let owner: string;
     let ownable: IOwnableFeature;
@@ -22,8 +28,10 @@ blockchainTests('Ownable feature', env => {
     let logDecoder: LogDecoder;
 
     before(async () => {
+        const accounts = await env.getAccountAddressesAsync();
+        env.txDefaults.from = accounts[0];
         [owner, notOwner] = await env.getAccountAddressesAsync();
-        logDecoder = new LogDecoder(Object.values(abis));
+        // LogDecoder 已废弃，使用 ethers 的原生事件解析
         const zeroEx = await initialMigrateAsync(owner, env.provider, env.txDefaults);
         // 创建 OwnableFeature 接口
         ownable = IOwnableFeature__factory.connect(await zeroEx.getAddress(), await env.provider.getSigner(owner));

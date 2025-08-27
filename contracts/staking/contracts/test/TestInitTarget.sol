@@ -46,8 +46,16 @@ contract TestInitTarget is
         _initSender = msg.sender;
         _initThisAddress = address(this);
         
-        // Initialize parameters for proper validation
-        _initMixinParams();
+        // Initialize parameters for proper validation only once
+        if (
+            epochDurationInSeconds == 0 &&
+            rewardDelegatedStakeWeight == 0 &&
+            minimumPoolStake == 0 &&
+            cobbDouglasAlphaNumerator == 0 &&
+            cobbDouglasAlphaDenominator == 0
+        ) {
+            _initMixinParams();
+        }
     }
 
     function getInitState()

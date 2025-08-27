@@ -1,7 +1,8 @@
-import { ethers } from "ethers";
-import { blockchainTests, constants, describe, expect, verifyEventsFromLogs } from '@0x/test-utils';
+import { ethers } from "hardhat";
+import { constants, verifyEventsFromLogs } from '@0x/utils';
+import { expect } from 'chai';
 import { OrderStatus, OtcOrder, RevertErrors, SignatureType } from '@0x/protocol-utils';
-import { } from '@0x/utils';
+
 
 import { 
     IOwnableFeatureContract, 
@@ -13,7 +14,7 @@ import {
     TestOrderSignerRegistryWithContractWallet__factory
 } from '../../src/wrappers';
 import { artifacts } from '../artifacts';
-import { abis } from '../utils/abis';
+
 import { fullMigrateAsync } from '../utils/migration';
 import {
     computeOtcOrderFilledAmounts,
@@ -28,7 +29,12 @@ import {
     TestWethContract,
 } from '../wrappers';
 
-blockchainTests('OtcOrdersFeature', env => {
+describe('OtcOrdersFeature', () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+    } as any;
     const { NULL_ADDRESS, MAX_UINT256, ZERO_AMOUNT: ZERO } = constants;
     const ETH_TOKEN_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
     let maker: string;
@@ -49,10 +55,11 @@ blockchainTests('OtcOrdersFeature', env => {
 
     before(async () => {
         // Useful for ETH balance accounting
-        const txDefaults = { ...env.txDefaults, gasPrice: 0 };
         let owner;
         [owner, maker, taker, notMaker, notTaker, contractWalletOwner, contractWalletSigner, txOrigin, notTxOrigin] =
             await env.getAccountAddressesAsync();
+        env.txDefaults.from = owner;
+        const txDefaults = { ...env.txDefaults, gasPrice: 0 };
         
         const signer = await env.provider.getSigner(owner);
         const tokenFactories = [...new Array(2)].map(() => new TestMintableERC20Token__factory(signer));
@@ -74,22 +81,25 @@ blockchainTests('OtcOrdersFeature', env => {
         );
         await otcFeatureImpl.waitForDeployment();
         
-        const ownableFeature = new IOwnableFeatureContract(await zeroEx.getAddress(), env.provider, txDefaults, abis);
         const ownerSigner = await env.provider.getSigner(owner);
-        await ownableFeature
-            .connect(ownerSigner)
-            .migrate(await otcFeatureImpl.getAddress(), otcFeatureImpl.migrate().getABIEncodedTransactionData(), owner);
+        const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
+        await ownableFeature.migrate(await otcFeatureImpl.getAddress(), otcFeatureImpl.interface.encodeFunctionData('migrate'), owner);
         verifyingContract = await zeroEx.getAddress();
 
+        const makerSigner = await env.provider.getSigner(maker);
+        const notMakerSigner = await env.provider.getSigner(notMaker);
+        const takerSigner = await env.provider.getSigner(taker);
+        const notTakerSigner = await env.provider.getSigner(notTaker);
+        
         await Promise.all([
-            makerToken.approve(await zeroEx.getAddress(), MAX_UINT256)({ from: maker }),
-            makerToken.approve(await zeroEx.getAddress(), MAX_UINT256)({ from: notMaker }),
-            takerToken.approve(await zeroEx.getAddress(), MAX_UINT256)({ from: taker }),
-            takerToken.approve(await zeroEx.getAddress(), MAX_UINT256)({ from: notTaker }),
-            wethToken.approve(await zeroEx.getAddress(), MAX_UINT256)({ from: maker }),
-            wethToken.approve(await zeroEx.getAddress(), MAX_UINT256)({ from: notMaker }),
-            wethToken.approve(await zeroEx.getAddress(), MAX_UINT256)({ from: taker }),
-            wethToken.approve(await zeroEx.getAddress(), MAX_UINT256)({ from: notTaker }),
+            makerToken.connect(makerSigner).approve(await zeroEx.getAddress(), MAX_UINT256),
+            makerToken.connect(notMakerSigner).approve(await zeroEx.getAddress(), MAX_UINT256),
+            takerToken.connect(takerSigner).approve(await zeroEx.getAddress(), MAX_UINT256),
+            takerToken.connect(notTakerSigner).approve(await zeroEx.getAddress(), MAX_UINT256),
+            wethToken.connect(makerSigner).approve(await zeroEx.getAddress(), MAX_UINT256),
+            wethToken.connect(notMakerSigner).approve(await zeroEx.getAddress(), MAX_UINT256),
+            wethToken.connect(takerSigner).approve(await zeroEx.getAddress(), MAX_UINT256),
+            wethToken.connect(notTakerSigner).approve(await zeroEx.getAddress(), MAX_UINT256),
         ]);
 
         // contract wallet for signer delegation
@@ -112,7 +122,7 @@ blockchainTests('OtcOrdersFeature', env => {
         return getRandomOtcOrder({
             maker,
             verifyingContract,
-            chainId: 1337,
+            chainId: (await ethers.provider.getNetwork()).chainId,
             takerToken: await takerToken.getAddress(),
             makerToken: await makerToken.getAddress(),
             taker: NULL_ADDRESS,
@@ -153,7 +163,7 @@ blockchainTests('OtcOrdersFeature', env => {
         });
 
         it('unfilled expired order', async () => {
-            const expiry = createExpiry(-60);
+            const expiry = await createExpiry(-60);
             const order = await getTestOtcOrder({ expiry });
             const info = await zeroEx.getOtcOrderInfo(order)();
             expect(info).to.deep.equal({
@@ -163,7 +173,7 @@ blockchainTests('OtcOrdersFeature', env => {
         });
 
         it('filled then expired order', async () => {
-            const expiry = createExpiry(60);
+            const expiry = await createExpiry(60);
             const order = await getTestOtcOrder({ expiry });
             await testUtils.fillOtcOrderAsync(order);
             // Advance time to expire the order.
@@ -219,7 +229,7 @@ blockchainTests('OtcOrdersFeature', env => {
 
         it('can partially fill an order', async () => {
             const order = await getTestOtcOrder();
-            const fillAmount = order.takerAmount - 1;
+            const fillAmount = order.takerAmount - 1n;
             const receipt = await testUtils.fillOtcOrderAsync(order, fillAmount);
             verifyEventsFromLogs(
                 receipt.logs,
@@ -282,7 +292,7 @@ blockchainTests('OtcOrdersFeature', env => {
         });
 
         it('cannot fill an expired order', async () => {
-            const order = await getTestOtcOrder({ expiry: createExpiry(-60) });
+            const order = await getTestOtcOrder({ expiry: await createExpiry(-60) });
             const tx = testUtils.fillOtcOrderAsync(order);
             return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Expired),
@@ -331,7 +341,7 @@ blockchainTests('OtcOrdersFeature', env => {
         it('cannot fill an order whose nonce is less than the nonce last used in that bucket', async () => {
             const order1 = getTestOtcOrder();
             await testUtils.fillOtcOrderAsync(order1);
-            const order2 = getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce - 1 });
+            const order2 = getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce - 1n });
             const tx = testUtils.fillOtcOrderAsync(order2);
             return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.OrderNotFillableError(order2.getHash(), OrderStatus.Invalid),
@@ -494,7 +504,7 @@ blockchainTests('OtcOrdersFeature', env => {
         });
         it('Can partially fill an order with ETH (takerToken=WETH)', async () => {
             const order = await getTestOtcOrder({ takerToken: await wethToken.getAddress() });
-            const fillAmount = order.takerAmount - 1;
+            const fillAmount = order.takerAmount - 1n;
             const receipt = await testUtils.fillOtcOrderWithEthAsync(order, fillAmount);
             verifyEventsFromLogs(
                 receipt.logs,
@@ -505,7 +515,7 @@ blockchainTests('OtcOrdersFeature', env => {
         });
         it('Can partially fill an order with ETH (takerToken=ETH)', async () => {
             const order = await getTestOtcOrder({ takerToken: ETH_TOKEN_ADDRESS });
-            const fillAmount = order.takerAmount - 1;
+            const fillAmount = order.takerAmount - 1n;
             const makerEthBalanceBefore = await env.web3Wrapper.getBalanceInWeiAsync(maker);
             const receipt = await testUtils.fillOtcOrderWithEthAsync(order, fillAmount);
             verifyEventsFromLogs(
@@ -619,7 +629,7 @@ blockchainTests('OtcOrdersFeature', env => {
         });
 
         it('cannot fill an expired order', async () => {
-            const order = await getTestOtcOrder({ taker, txOrigin, expiry: createExpiry(-60) });
+            const order = await getTestOtcOrder({ taker, txOrigin, expiry: await createExpiry(-60) });
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order);
             return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Expired),
@@ -691,7 +701,7 @@ blockchainTests('OtcOrdersFeature', env => {
                 taker,
                 txOrigin,
                 nonceBucket: order1.nonceBucket,
-                nonce: order1.nonce - 1,
+                nonce: order1.nonce - 1n,
             });
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order2);
             return expect(tx).to.be.revertedWith(

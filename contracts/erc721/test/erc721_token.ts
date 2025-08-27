@@ -1,8 +1,7 @@
 import {
     constants,
-    BlockchainLifecycle,
     verifyERC721TransferEvent,
-} from '@0x/test-utils';
+} from '@0x/utils';
 import { RevertReason } from '@0x/utils';
 import { ethers } from 'hardhat';
 import { expect } from 'chai';

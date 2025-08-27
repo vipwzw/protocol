@@ -1,5 +1,4 @@
-import { chaiSetup, constants, provider, txDefaults } from '@0x/test-utils';
-import { BlockchainLifecycle } from '@0x/dev-utils';
+import { chaiSetup, constants, provider, txDefaults } from '@0x/utils';
 import * as chai from 'chai';
 import { ethers } from 'hardhat';
 
@@ -7,11 +6,11 @@ import { ZRXToken, ZRXToken__factory } from './wrappers';
 
 import { artifacts } from './artifacts';
 
-import { verifyTransferEvent, verifyApprovalEvent } from '@0x/test-utils';
+import { verifyTransferEvent, verifyApprovalEvent } from '@0x/utils';
 
-chaiSetup.configure();
+// chaiSetup 已废弃，Hardhat 自动配置 chai
 const expect = chai.expect;
-const blockchainLifecycle = new BlockchainLifecycle();
+
 
 describe('ZRXToken', () => {
     let owner: string;

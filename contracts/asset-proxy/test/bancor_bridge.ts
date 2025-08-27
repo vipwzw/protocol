@@ -1,10 +1,9 @@
 import {
-    blockchainTests,
     constants,
-    expect,
     getRandomInteger,
     randomAddress,
-} from '@0x/test-utils';
+} from '@0x/utils';
+import { expect } from 'chai';
 import { AssetProxyId } from '@0x/utils';
 import { hexUtils } from '@0x/utils';
 import { ethers } from 'hardhat';
@@ -36,7 +35,7 @@ interface TokenApproveArgs {
     allowance: bigint;
 }
 
-blockchainTests.resets('Bancor unit tests', env => {
+describe('Bancor unit tests', () => {
     const FROM_TOKEN_DECIMALS = 6;
     const TO_TOKEN_DECIMALS = 18;
     const FROM_TOKEN_BASE = 10n ** BigInt(FROM_TOKEN_DECIMALS);

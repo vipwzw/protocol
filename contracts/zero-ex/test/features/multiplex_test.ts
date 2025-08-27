@@ -1,12 +1,11 @@
-import { ethers } from "ethers";
+import { ethers } from "hardhat";
 import {
-    blockchainTests,
     constants,
-    expect,
     getRandomInteger,
     toBaseUnitAmount,
     verifyEventsFromLogs,
-} from '@0x/test-utils';
+} from '@0x/utils';
+import { expect } from 'chai';
 import { OtcOrder, RfqOrder, SIGNATURE_ABI } from '@0x/protocol-utils';
 import { AbiEncoder,  hexUtils } from '@0x/utils';
 import { LogWithDecodedArgs } from 'ethereum-types';
@@ -26,7 +25,7 @@ import {
     MultiplexFeature__factory
 } from '../../src/wrappers';
 import { artifacts } from '../artifacts';
-import { abis } from '../utils/abis';
+
 import { fullMigrateAsync } from '../utils/migration';
 import { getRandomOtcOrder, getRandomRfqOrder } from '../utils/orders';
 import {
@@ -84,7 +83,12 @@ function encodeFractionalFillAmount(frac: number): bigint {
     return HIGH_BIT + BigInt(Math.floor(Number(frac) * 1e18));
 }
 
-blockchainTests('MultiplexFeature', env => {
+describe('MultiplexFeature', () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+    } as any;
     const POOL_FEE = 1234;
 
     let zeroEx: IZeroExContract;
@@ -114,11 +118,9 @@ blockchainTests('MultiplexFeature', env => {
         );
         await featureImpl.waitForDeployment();
         
-        const ownableFeature = new IOwnableFeatureContract(await zeroEx.getAddress(), env.provider, env.txDefaults);
         const ownerSigner = await env.provider.getSigner(owner);
-        await ownableFeature
-            .connect(ownerSigner)
-            .migrate(await featureImpl.getAddress(), featureImpl.migrate().getABIEncodedTransactionData(), owner);
+        const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
+        await ownableFeature.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
     }
 
     async function migrateLiquidityProviderContractsAsync(): Promise<void> {
@@ -160,11 +162,9 @@ blockchainTests('MultiplexFeature', env => {
         );
         await featureImpl.waitForDeployment();
         
-        const ownableFeature = new IOwnableFeatureContract(await zeroEx.getAddress(), env.provider, env.txDefaults);
         const ownerSigner = await env.provider.getSigner(owner);
-        await ownableFeature
-            .connect(ownerSigner)
-            .migrate(await featureImpl.getAddress(), featureImpl.migrate().getABIEncodedTransactionData(), owner);
+        const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
+        await ownableFeature.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
     }
 
     //////////////// Miscellaneous utils ////////////////
@@ -235,7 +235,7 @@ blockchainTests('MultiplexFeature', env => {
         return getRandomRfqOrder({
             maker,
             verifyingContract: await zeroEx.getAddress(),
-            chainId: 1337,
+            chainId: (await ethers.provider.getNetwork()).chainId,
             takerToken: await dai.getAddress(),
             makerToken: await zrx.getAddress(),
             makerAmount: toBaseUnitAmount(1),
@@ -271,7 +271,7 @@ blockchainTests('MultiplexFeature', env => {
         return getRandomOtcOrder({
             maker,
             verifyingContract: await zeroEx.getAddress(),
-            chainId: 1337,
+            chainId: (await ethers.provider.getNetwork()).chainId,
             takerToken: await dai.getAddress(),
             makerToken: await zrx.getAddress(),
             makerAmount: toBaseUnitAmount(1),
@@ -471,6 +471,7 @@ blockchainTests('MultiplexFeature', env => {
 
     before(async () => {
         [owner, maker, taker] = await env.getAccountAddressesAsync();
+        env.txDefaults.from = owner;
         zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {});
         flashWalletAddress = await zeroEx.getTransformWallet();
 
@@ -517,11 +518,9 @@ blockchainTests('MultiplexFeature', env => {
         );
         await featureImpl.waitForDeployment();
         
-        const ownableFeature = new IOwnableFeatureContract(await zeroEx.getAddress(), env.provider, env.txDefaults);
         const ownerSigner = await env.provider.getSigner(owner);
-        await ownableFeature
-            .connect(ownerSigner)
-            .migrate(await featureImpl.getAddress(), featureImpl.migrate().getABIEncodedTransactionData(), owner);
+        const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
+        await ownableFeature.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
         multiplex = new MultiplexFeatureContract(await zeroEx.getAddress(), env.provider, env.txDefaults, abis);
     });
 

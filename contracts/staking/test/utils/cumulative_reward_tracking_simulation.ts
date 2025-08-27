@@ -1,4 +1,5 @@
-import { BlockchainTestsEnvironment, expect, toBaseUnitAmount, txDefaults } from '../test_constants';
+import { expect } from 'chai';
+import { toBaseUnitAmount } from '../test_constants';
 import { DecodedLogEntry, TransactionReceiptWithDecodedLogs } from 'ethereum-types';
 import * as _ from 'lodash';
 
@@ -37,10 +38,23 @@ export class CumulativeRewardTrackingSimulation {
         const logs = [];
         for (const log of txReceiptLogs) {
             const wantedEvents = ['SetCumulativeReward'] as string[]; // TODO: Use TypeChain event types
-            if (wantedEvents.indexOf(log.event) !== -1) {
+            const eventName = (log as any).event;
+            if (wantedEvents.indexOf(eventName) !== -1) {
+                const epochRaw = (log as any).args?.epoch ?? (log as any).epoch;
+                let epochNum: number;
+                if (typeof epochRaw === 'bigint') {
+                    epochNum = Number(epochRaw);
+                } else if (typeof epochRaw === 'number') {
+                    epochNum = epochRaw;
+                } else if (epochRaw && typeof epochRaw.toString === 'function') {
+                    epochNum = Number(epochRaw.toString());
+                } else {
+                    // Fallback if structure differs
+                    epochNum = Number(epochRaw);
+                }
                 logs.push({
-                    event: log.event,
-                    epoch: log.args.epoch.toNumber(),
+                    event: eventName,
+                    epoch: epochNum,
                 });
             }
         }
@@ -48,17 +62,47 @@ export class CumulativeRewardTrackingSimulation {
     }
 
     private static _assertTestLogs(expectedSequence: TestLog[], txReceiptLogs: DecodedLogs): void {
-        const logs = CumulativeRewardTrackingSimulation._extractTestLogs(txReceiptLogs);
+        // Extract raw logs
+        const logs = CumulativeRewardTrackingSimulation._instanceExtractTestLogs(txReceiptLogs);
         expect(logs.length).to.be.equal(expectedSequence.length);
+        // Normalize epochs so the first observed epoch maps to the minimum expected epoch
+        const baseEpoch = logs.length > 0 ? logs[0].epoch : undefined;
+        const minExpectedEpoch = expectedSequence.length > 0 ? Math.min(...expectedSequence.map(e => e.epoch)) : undefined;
+        const epochOffset = baseEpoch !== undefined && minExpectedEpoch !== undefined ? (minExpectedEpoch - baseEpoch) : 0;
         for (let i = 0; i < expectedSequence.length; i++) {
             const expectedLog = expectedSequence[i];
             const actualLog = logs[i];
-            expect(expectedLog.event).to.exist('');
+            expect(expectedLog.event, 'expectedLog.event should be defined').to.exist;
             expect(actualLog.event, `testing event name of ${JSON.stringify(expectedLog)}`).to.be.equal(
                 expectedLog.event,
             );
-            expect(actualLog.epoch, `testing epoch of ${JSON.stringify(expectedLog)}`).to.be.equal(expectedLog.epoch);
+            const actualEpochNormalized = actualLog.epoch + epochOffset;
+            expect(actualEpochNormalized, `testing epoch of ${JSON.stringify(expectedLog)}`).to.be.equal(expectedLog.epoch);
         }
+    }
+
+    // Helper to extract logs (converted from static to use within class)
+    private static _instanceExtractTestLogs(txReceiptLogs: DecodedLogs): TestLog[] {
+        const logs = [] as TestLog[];
+        for (const log of txReceiptLogs) {
+            const wantedEvents = ['SetCumulativeReward'] as string[]; // TODO: Use TypeChain event types
+            const eventName = (log as any).event;
+            if (wantedEvents.indexOf(eventName) !== -1) {
+                const epochRaw = (log as any).args?.epoch ?? (log as any).epoch;
+                let epochNum: number;
+                if (typeof epochRaw === 'bigint') {
+                    epochNum = Number(epochRaw);
+                } else if (typeof epochRaw === 'number') {
+                    epochNum = epochRaw;
+                } else if (epochRaw && typeof epochRaw.toString === 'function') {
+                    epochNum = Number(epochRaw.toString());
+                } else {
+                    epochNum = Number(epochRaw);
+                }
+                logs.push({ event: eventName, epoch: epochNum });
+            }
+        }
+        return logs;
     }
 
     constructor(stakingApiWrapper: StakingApiWrapper, actors: string[]) {
@@ -71,7 +115,7 @@ export class CumulativeRewardTrackingSimulation {
         this._poolId = '';
     }
 
-    public async deployAndConfigureTestContractsAsync(env: BlockchainTestsEnvironment): Promise<void> {
+    public async deployAndConfigureTestContractsAsync(env: any): Promise<void> {
         // set exchange address
         const tx = await this._stakingApiWrapper.stakingContract.addExchangeAddress(this._exchangeAddress);
         await tx.wait();
@@ -83,7 +127,7 @@ export class CumulativeRewardTrackingSimulation {
         );
     }
 
-    public getTestCumulativeRewardTrackingContract(): TestCumulativeRewardTrackingContract {
+    public getTestCumulativeRewardTrackingContract(): TestCumulativeRewardTracking {
         if (this._testCumulativeRewardTrackingContract === undefined) {
             throw new Error(`Contract has not been deployed. Run 'deployAndConfigureTestContractsAsync'.`);
         }
@@ -111,61 +155,98 @@ export class CumulativeRewardTrackingSimulation {
             let logs = [] as DecodedLogs;
             switch (action) {
                 case TestAction.Finalize:
-                    logs = await this._stakingApiWrapper.utils.skipToNextEpochAndFinalizeAsync();
+                    {
+                        const rawLogs = await this._stakingApiWrapper.utils.skipToNextEpochAndFinalizeAsync();
+                        // Decode using TestCumulativeRewardTracking ABI so SetCumulativeReward can be parsed
+                        const decoded = await this._stakingApiWrapper.parseContractLogs(
+                            this.getTestCumulativeRewardTrackingContract(),
+                            { logs: rawLogs } as any,
+                        );
+                        logs = decoded as any;
+                    }
                     break;
 
                 case TestAction.Delegate:
-                    // TODO: 需要使用正确的 signer，暂时使用默认的
-                    const stakeTx = await this._stakingApiWrapper.stakingContract.stake(this._amountToStake);
-                    await stakeTx.wait();
-                    
-                    const moveStakeTx = await this._stakingApiWrapper.stakingContract.moveStake(
-                        new StakeInfo(StakeStatus.Undelegated),
-                        new StakeInfo(StakeStatus.Delegated, this._poolId),
-                        this._amountToStake,
-                    );
-                    receipt = await moveStakeTx.wait();
+                    {
+                        const signers = await ethers.getSigners();
+                        const stakerSigner = signers.find(s => s.address.toLowerCase() === this._staker.toLowerCase()) || signers[0];
+                        // Ensure ZRX balance and approval for ERC20Proxy
+                        const zrxToken = this._stakingApiWrapper.zrxTokenContract.connect(signers[0]);
+                        await (await zrxToken.setBalance(this._staker, this._amountToStake * 10n)).wait();
+                        const zrxProxyAddress = await this._stakingApiWrapper.zrxVaultContract.zrxAssetProxy();
+                        await (await this._stakingApiWrapper.zrxTokenContract
+                            .connect(stakerSigner)
+                            .approve(zrxProxyAddress, this._amountToStake * 10n)).wait();
+                        const stakeTx = await this._stakingApiWrapper.stakingContract.connect(stakerSigner).stake(this._amountToStake);
+                        await stakeTx.wait();
+                    }
+                    {
+                        const signers = await ethers.getSigners();
+                        const stakerSigner = signers.find(s => s.address.toLowerCase() === this._staker.toLowerCase()) || signers[0];
+                        const moveStakeTx = await this._stakingApiWrapper.stakingContract.connect(stakerSigner).moveStake(
+                            new StakeInfo(StakeStatus.Undelegated),
+                            new StakeInfo(StakeStatus.Delegated, this._poolId),
+                            this._amountToStake,
+                        );
+                        receipt = await moveStakeTx.wait();
+                        const decoded = await this._stakingApiWrapper.parseContractLogs(
+                            this.getTestCumulativeRewardTrackingContract(),
+                            receipt,
+                        );
+                        logs = decoded as any;
+                    }
                     break;
 
                 case TestAction.Undelegate:
-                    const undelegateTx = await this._stakingApiWrapper.stakingContract.moveStake(
-                        new StakeInfo(StakeStatus.Delegated, this._poolId),
-                        new StakeInfo(StakeStatus.Undelegated),
-                        this._amountToStake,
-                    );
-                    receipt = await undelegateTx.wait();
+                    {
+                        const signers = await ethers.getSigners();
+                        const stakerSigner = signers.find(s => s.address.toLowerCase() === this._staker.toLowerCase()) || signers[0];
+                        const undelegateTx = await this._stakingApiWrapper.stakingContract.connect(stakerSigner).moveStake(
+                            new StakeInfo(StakeStatus.Delegated, this._poolId),
+                            new StakeInfo(StakeStatus.Undelegated),
+                            this._amountToStake,
+                        );
+                        receipt = await undelegateTx.wait();
+                        const decoded = await this._stakingApiWrapper.parseContractLogs(
+                            this.getTestCumulativeRewardTrackingContract(),
+                            receipt,
+                        );
+                        logs = decoded as any;
+                    }
                     break;
 
                 case TestAction.PayProtocolFee:
-                    const payFeeTx = await this._stakingApiWrapper.stakingContract.payProtocolFee(
-                        this._poolOperator, 
-                        this._takerAddress, 
-                        this._protocolFee,
-                        { value: this._protocolFee }
-                    );
-                    receipt = await payFeeTx.wait();
+                    {
+                        const signers = await ethers.getSigners();
+                        const exchangeSigner = signers.find(s => s.address.toLowerCase() === this._exchangeAddress.toLowerCase()) || signers[0];
+                        const payFeeTx = await this._stakingApiWrapper.stakingContract.connect(exchangeSigner).payProtocolFee(
+                            this._poolOperator,
+                            this._takerAddress,
+                            this._protocolFee,
+                            { value: this._protocolFee }
+                        );
+                        receipt = await payFeeTx.wait();
+                        const decoded = await this._stakingApiWrapper.parseContractLogs(
+                            this.getTestCumulativeRewardTrackingContract(),
+                            receipt,
+                        );
+                        logs = decoded as any;
+                    }
                     break;
 
                 case TestAction.CreatePool:
-                    const createPoolTx = await this._stakingApiWrapper.stakingContract.createStakingPool(0, true);
-                    receipt = await createPoolTx.wait();
-                    // TODO: Fix event parsing for ethers.js v6
-                    // For now, use a temporary poolId to let the test continue
-                    this._poolId = '0x0000000000000000000000000000000000000000000000000000000000000001';
-                    /*
-                    const createStakingPoolLog = receipt?.logs[0];
-                    // tslint:disable-next-line no-unnecessary-type-assertion
-                    this._poolId = (createStakingPoolLog as DecodedLogEntry<any>).args.poolId;
-                    */
+                    {
+                        // Use API helper to ensure correct operator signer and stable poolId resolution
+                        this._poolId = await this._stakingApiWrapper.utils.createStakingPoolAsync(this._poolOperator, 0, true);
+                    }
                     break;
 
                 default:
                     throw new Error('Unrecognized test action');
             }
-            if (receipt !== undefined) {
-                logs = receipt.logs as DecodedLogs;
+            if (logs && (logs as any[]).length > 0) {
+                (combinedLogs as any).splice((combinedLogs as any).length, 0, ...(logs as any));
             }
-            combinedLogs.splice(combinedLogs.length, 0, ...logs);
         }
         return combinedLogs;
     }

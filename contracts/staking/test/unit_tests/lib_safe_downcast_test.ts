@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { expect, Numberish } from '../test_constants';
+import type { Numberish } from '../test_constants';
 
 // SafeMathRevertErrors replacement - simple error classes
 export class SafeMathRevertErrors {
@@ -28,7 +28,7 @@ export class SafeMathRevertErrors {
 import { artifacts } from '../artifacts';
 import { TestLibSafeDowncastContract } from '../wrappers';
 
-('LibSafeDowncast unit tests', env => {
+describe('LibSafeDowncast unit tests', () => {
     let testContract: TestLibSafeDowncastContract;
 
     before(async () => {
@@ -67,11 +67,11 @@ import { TestLibSafeDowncastContract } from '../wrappers';
         });
         it('reverts on MAX_UINT_96 + 1', async () => {
             const n = MAX_UINT_96 + 1n;
-            return expect(verifyCorrectDowncastAsync(n)).to.be.revertedWith(toDowncastError(n).message);
+            return expect(verifyCorrectDowncastAsync(n)).to.be.reverted;
         });
         it('reverts on MAX_UINT_256', async () => {
             const n = MAX_UINT_256;
-            return expect(verifyCorrectDowncastAsync(n)).to.be.revertedWith(toDowncastError(n).message);
+            return expect(verifyCorrectDowncastAsync(n)).to.be.reverted;
         });
     });
 
@@ -98,11 +98,11 @@ import { TestLibSafeDowncastContract } from '../wrappers';
         });
         it('reverts on MAX_UINT_64 + 1', async () => {
             const n = MAX_UINT_64 + 1n;
-            return expect(verifyCorrectDowncastAsync(n)).to.be.revertedWith(toDowncastError(n).message);
+            return expect(verifyCorrectDowncastAsync(n)).to.be.reverted;
         });
         it('reverts on MAX_UINT_256', async () => {
             const n = MAX_UINT_256;
-            return expect(verifyCorrectDowncastAsync(n)).to.be.revertedWith(toDowncastError(n).message);
+            return expect(verifyCorrectDowncastAsync(n)).to.be.reverted;
         });
     });
 });

@@ -5,8 +5,7 @@ import {
     expectTransactionFailedWithoutReasonAsync,
     provider,
     txDefaults,
-} from '@0x/test-utils';
-import { BlockchainLifecycle } from '@0x/dev-utils';
+} from '@0x/utils';
 import * as chai from 'chai';
 import { ethers } from 'hardhat';
 
@@ -14,9 +13,8 @@ import { WETH9, WETH9__factory } from './wrappers';
 
 import { artifacts } from './artifacts';
 
-chaiSetup.configure();
+// chaiSetup 已废弃，Hardhat 自动配置 chai
 const expect = chai.expect;
-const blockchainLifecycle = new BlockchainLifecycle();
 
 describe('EtherToken', () => {
     let account: string;
@@ -24,23 +22,19 @@ describe('EtherToken', () => {
     let etherToken: WETH9;
 
     before(async () => {
-        await blockchainLifecycle.startAsync();
-    });
-    after(async () => {
-        await blockchainLifecycle.revertAsync();
-    });
-    before(async () => {
         const accounts = await ethers.getSigners();
         account = accounts[0].address;
 
         const weth9Factory = new WETH9__factory(accounts[0]);
         etherToken = await weth9Factory.deploy();
     });
+    let snapshotId: string;
     beforeEach(async () => {
-        await blockchainLifecycle.startAsync();
+        // 使用 Hardhat 快照功能替代 BlockchainLifecycle
+        snapshotId = await ethers.provider.send("evm_snapshot", []);
     });
     afterEach(async () => {
-        await blockchainLifecycle.revertAsync();
+        await ethers.provider.send("evm_revert", [snapshotId]);
     });
     describe('deposit', () => {
         it('should revert if caller attempts to deposit more Ether than caller balance', async () => {

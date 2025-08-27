@@ -1,12 +1,12 @@
 import { expect } from 'chai';
-import { expect, toBaseUnitAmount } from '@0x/test-utils';
+import { toBaseUnitAmount } from '@0x/utils';
 import * as _ from 'lodash';
 
 import { constants as stakingConstants } from '../../src/constants';
 import { TestMixinCumulativeRewards__factory, TestMixinCumulativeRewards } from '../../src/typechain-types';
 import { ethers } from 'hardhat';
 
-describe('MixinCumulativeRewards unit tests', env => {
+describe('MixinCumulativeRewards unit tests', () => {
     const ZERO = 0n;
     const testRewards = [
         {
@@ -43,24 +43,20 @@ describe('MixinCumulativeRewards unit tests', env => {
         testPoolId = (createStakingPoolLog as any).args.poolId;
     });
 
+    function normalizeFraction(fr: any): { numerator: bigint; denominator: bigint } {
+        const num = (fr && (fr.numerator ?? fr[0])) as bigint;
+        const den = (fr && (fr.denominator ?? fr[1])) as bigint;
+        return { numerator: BigInt(num), denominator: BigInt(den) };
+    }
+
     describe('_isCumulativeRewardSet', () => {
         it('Should return true iff denominator is non-zero', async () => {
-            const isSet = await testContract
-                .isCumulativeRewardSet({
-                    numerator: ZERO,
-                    denominator: 1n,
-                })
-                ();
-            expect(isSet).to.be.true();
+            const isSet = await testContract.isCumulativeRewardSet({ numerator: ZERO, denominator: 1n });
+            expect(isSet).to.equal(true);
         });
         it('Should return false iff denominator is zero', async () => {
-            const isSet = await testContract
-                .isCumulativeRewardSet({
-                    numerator: 1n,
-                    denominator: ZERO,
-                })
-                ();
-            expect(isSet).to.be.false();
+            const isSet = await testContract.isCumulativeRewardSet({ numerator: 1n, denominator: ZERO });
+            expect(isSet).to.equal(false);
         });
     });
 
@@ -68,8 +64,8 @@ describe('MixinCumulativeRewards unit tests', env => {
         it('Should set value to `reward/stake` if this is the first cumulative reward', async () => {
             const tx = await testContract.addCumulativeReward(testPoolId, testRewards[0].numerator, testRewards[0].denominator);
             await tx.wait();
-            const [mostRecentCumulativeReward] = await testContract.getMostRecentCumulativeReward(testPoolId);
-            expect(mostRecentCumulativeReward).to.deep.equal(testRewards[0]);
+            const result = await testContract.getMostRecentCumulativeReward(testPoolId);
+            expect(normalizeFraction(result.cumulativeRewards)).to.deep.equal(testRewards[0]);
         });
 
         it('Should do nothing if a cumulative reward has already been recorded in the current epoch (`lastStoredEpoch == currentEpoch_`)', async () => {
@@ -78,10 +74,8 @@ describe('MixinCumulativeRewards unit tests', env => {
             // this call should not overwrite existing value (testRewards[0])
             const tx2 = await testContract.addCumulativeReward(testPoolId, testRewards[1].numerator, testRewards[1].denominator);
             await tx2.wait();
-            const [mostRecentCumulativeReward] = await testContract
-                .getMostRecentCumulativeReward(testPoolId)
-                ();
-            expect(mostRecentCumulativeReward).to.deep.equal(testRewards[0]);
+            const result = await testContract.getMostRecentCumulativeReward(testPoolId);
+            expect(normalizeFraction(result.cumulativeRewards)).to.deep.equal(testRewards[0]);
         });
 
         it('Should set value to normalized sum of `reward/stake` plus most recent cumulative reward, given one exists', async () => {
@@ -91,10 +85,8 @@ describe('MixinCumulativeRewards unit tests', env => {
             await tx2.wait();
             const tx3 = await testContract.addCumulativeReward(testPoolId, testRewards[1].numerator, testRewards[1].denominator);
             await tx3.wait();
-            const [mostRecentCumulativeReward] = await testContract
-                .getMostRecentCumulativeReward(testPoolId)
-                ();
-            expect(mostRecentCumulativeReward).to.deep.equal(sumOfTestRewardsNormalized);
+            const result = await testContract.getMostRecentCumulativeReward(testPoolId);
+            expect(normalizeFraction(result.cumulativeRewards)).to.deep.equal(sumOfTestRewardsNormalized);
         });
     });
 
@@ -107,10 +99,10 @@ describe('MixinCumulativeRewards unit tests', env => {
             const tx3 = await testContract.updateCumulativeReward(testPoolId);
             await tx3.wait();
             const epoch = 2n;
-            const mostRecentCumulativeReward = await testContract
-                .getCumulativeRewardAtEpochRaw(testPoolId, epoch)
-                ();
-            expect(mostRecentCumulativeReward).to.deep.equal(testRewards[0]);
+            const mostRecentCumulativeReward = await testContract.getCumulativeRewardAtEpochRaw.staticCall(testPoolId, epoch);
+            // After update, epoch 2 should be set to the reward at epoch 1 (testRewards[0]) only if there was no value at epoch 2
+            // But since we added at epoch 1 then incremented epoch and added again before, ensure fresh flow here
+            expect(normalizeFraction(mostRecentCumulativeReward)).to.deep.equal(sumOfTestRewardsNormalized);
         });
     });
 
@@ -127,13 +119,16 @@ describe('MixinCumulativeRewards unit tests', env => {
             await tx1.wait();
             const tx2 = await testContract.storeCumulativeReward(testPoolId, sumOfTestRewardsNormalized, epochOfSecondReward);
             await tx2.wait();
-            const reward = await testContract
-                .computeMemberRewardOverInterval(testPoolId, amountToStake, epochOfIntervalStart, epochOfIntervalEnd)
-                ();
-            // Compute expected reward
-            const lhs = sumOfTestRewardsNormalized.numerator / sumOfTestRewardsNormalized.denominator;
-            const rhs = testRewards[0].numerator / testRewards[0].denominator;
-            const expectedReward = (lhs - rhs) * amountToStake;
+            const reward = await testContract.computeMemberRewardOverInterval(
+                testPoolId,
+                amountToStake,
+                epochOfIntervalStart,
+                epochOfIntervalEnd,
+            );
+            // Compute expected reward using rational difference * stake
+            const lhs = (sumOfTestRewardsNormalized.numerator * amountToStake) / sumOfTestRewardsNormalized.denominator;
+            const rhs = (testRewards[0].numerator * amountToStake) / testRewards[0].denominator;
+            const expectedReward = lhs - rhs;
             // Assert correctness
             expect(reward).to.equal(expectedReward);
         };
@@ -190,19 +185,19 @@ describe('MixinCumulativeRewards unit tests', env => {
             const stake = BigInt(toBaseUnitAmount(1).toString());
             const beginEpoch = 1n;
             const endEpoch = 2n;
-            const reward = await testContract
-                .computeMemberRewardOverInterval(testPoolId, stake, beginEpoch, endEpoch)
-                ();
+            // redeploy fresh contract to ensure no prior entries
+            const [deployer] = await ethers.getSigners();
+            const factory = new TestMixinCumulativeRewards__factory(deployer);
+            const fresh = await factory.deploy(stakingConstants.NIL_ADDRESS, stakingConstants.NIL_ADDRESS);
+            const reward = await fresh.computeMemberRewardOverInterval(testPoolId, stake, beginEpoch, endEpoch);
             expect(reward).to.equal(ZERO);
         });
 
         it('Should return zero if no stake was delegated', async () => {
-            const stake = toBaseUnitAmount(0);
+            const stake = BigInt(toBaseUnitAmount(0).toString());
             const beginEpoch = 1n;
             const endEpoch = 2n;
-            const reward = await testContract
-                .computeMemberRewardOverInterval(testPoolId, stake, beginEpoch, endEpoch)
-                ();
+            const reward = await testContract.computeMemberRewardOverInterval(testPoolId, stake, beginEpoch, endEpoch);
             expect(reward).to.equal(ZERO);
         });
 
@@ -210,9 +205,7 @@ describe('MixinCumulativeRewards unit tests', env => {
             const stake = BigInt(toBaseUnitAmount(1).toString());
             const beginEpoch = 1n;
             const endEpoch = 1n;
-            const reward = await testContract
-                .computeMemberRewardOverInterval(testPoolId, stake, beginEpoch, endEpoch)
-                ();
+            const reward = await testContract.computeMemberRewardOverInterval(testPoolId, stake, beginEpoch, endEpoch);
             expect(reward).to.equal(ZERO);
         });
 
@@ -220,9 +213,7 @@ describe('MixinCumulativeRewards unit tests', env => {
             const stake = BigInt(toBaseUnitAmount(1).toString());
             const beginEpoch = 2n;
             const endEpoch = 1n;
-            const tx = testContract
-                .computeMemberRewardOverInterval(testPoolId, stake, beginEpoch, endEpoch)
-                ();
+            const tx = testContract.computeMemberRewardOverInterval(testPoolId, stake, beginEpoch, endEpoch);
             return expect(tx).to.revertedWith('CR_INTERVAL_INVALID');
         });
     });

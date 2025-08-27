@@ -278,7 +278,6 @@ export class ERC721Order extends NFTOrder {
     public getEIP712TypedData(): EIP712TypedData {
         return {
             types: {
-                EIP712Domain: EIP712_DOMAIN_PARAMETERS,
                 [ERC721Order.STRUCT_NAME]: ERC721Order.STRUCT_ABI,
                 ['Fee']: NFTOrder.FEE_ABI,
                 ['Property']: NFTOrder.PROPERTY_ABI,
@@ -389,7 +388,6 @@ export class ERC1155Order extends NFTOrder {
     public getEIP712TypedData(): EIP712TypedData {
         return {
             types: {
-                EIP712Domain: EIP712_DOMAIN_PARAMETERS,
                 [ERC1155Order.STRUCT_NAME]: ERC1155Order.STRUCT_ABI,
                 ['Fee']: NFTOrder.FEE_ABI,
                 ['Property']: NFTOrder.PROPERTY_ABI,

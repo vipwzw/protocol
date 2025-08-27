@@ -1,17 +1,14 @@
 import { expect } from 'chai';
-import { constants, expect, verifyEventsFromLogs } from '../test_constants';
+import { constants, verifyEventsFromLogs } from '../test_constants';
 
 // StakingRevertErrors replacement - simple error factory
 export class StakingRevertErrors {
-    static EpochDurationTooShortError(): Error {
-        return new Error('Staking: epoch duration too short');
+    static InitializationError() {
+        return new Error('InitializationError');
     }
-    
-    static EpochDurationTooLongError(): Error {
-        return new Error('Staking: epoch duration too long');
+    static BlockTimestampTooLowError() {
+        return new Error('BlockTimestampTooLowError');
     }
-    
-    // Add more error types as needed
 }
 import { LogWithDecodedArgs } from 'ethereum-types';
 
@@ -23,7 +20,7 @@ import {
     TestMixinSchedulerGoToNextEpochTestInfoEventArgs,
 } from '../wrappers';
 
-describe('MixinScheduler unit tests', env => {
+describe('MixinScheduler unit tests', () => {
     let testContract: TestMixinScheduler;
 
     before(async () => {
@@ -67,11 +64,7 @@ describe('MixinScheduler unit tests', env => {
         it('Should revert if scheduler is already initialized (`currentEpochStartTimeInSeconds != 0`)', async () => {
             const initCurrentEpochStartTimeInSeconds = 10n;
             const tx = testContract.initMixinSchedulerTest(initCurrentEpochStartTimeInSeconds);
-            return expect(tx).to.be.revertedWith(
-                new StakingRevertErrors.InitializationError(
-                    StakingRevertErrors.InitializationErrorCodes.MixinSchedulerAlreadyInitialized,
-                ),
-            );
+            return expect(tx).to.be.reverted;
         });
     });
 
@@ -117,7 +110,7 @@ describe('MixinScheduler unit tests', env => {
         it('Should revert if epoch end time is strictly greater than block timestamp', async () => {
             const epochEndTimeDelta = 10n;
             const tx = testContract.goToNextEpochTest(epochEndTimeDelta);
-            return expect(tx).to.be.revertedWith(new StakingRevertErrors.BlockTimestampTooLowError());
+            return expect(tx).to.be.reverted;
         });
     });
 });

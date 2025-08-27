@@ -1,0 +1,612 @@
+yarn run v1.22.22
+$ npx hardhat test --grep NativeOrdersFeature
+npm warn Unknown env config "version-git-tag". This will stop working in the next major version of npm.
+npm warn Unknown env config "network-timeout". This will stop working in the next major version of npm.
+npm warn Unknown env config "argv". This will stop working in the next major version of npm.
+npm warn Unknown env config "version-commit-hooks". This will stop working in the next major version of npm.
+npm warn Unknown env config "version-git-message". This will stop working in the next major version of npm.
+npm warn Unknown env config "version-tag-prefix". This will stop working in the next major version of npm.
+
+
+  BatchFillNativeOrdersFeature
+    batchFillLimitOrders
+      ✔ Fully fills multiple orders (74ms)
+      ✔ Partially fills multiple orders (81ms)
+      ✔ Fills multiple orders and refunds excess ETH (73ms)
+      ✔ Skips over unfillable orders and refunds excess ETH (74ms)
+      ✔ Fills multiple orders with revertIfIncomplete=true (57ms)
+      ✔ If revertIfIncomplete==true, reverts on an unfillable order (67ms)
+      ✔ If revertIfIncomplete==true, reverts on an incomplete fill  (74ms)
+    batchFillRfqOrders
+      - Fully fills multiple orders
+      - Partially fills multiple orders
+      - Skips over unfillable orders
+      - Fills multiple orders with revertIfIncomplete=true
+      - If revertIfIncomplete==true, reverts on an unfillable order
+      - If revertIfIncomplete==true, reverts on an incomplete fill 
+
+  NativeOrdersFeature
+    getProtocolFeeMultiplier()
+      ✔ returns the protocol fee multiplier
+    getLimitOrderHash()
+      ✔ returns the correct hash
+    getRfqOrderHash()
+      ✔ returns the correct hash
+    getLimitOrderInfo()
+      1) unfilled order
+      ✔ unfilled cancelled order
+      ✔ unfilled expired order
+      2) filled then expired order
+      3) filled order
+      4) partially filled order
+      5) filled then cancelled order
+      6) partially filled then cancelled order
+    getRfqOrderInfo()
+      ✔ unfilled order
+      ✔ unfilled cancelled order
+      ✔ unfilled expired order
+      7) filled then expired order
+      ✔ filled order
+      ✔ partially filled order
+      ✔ filled then cancelled order
+      ✔ partially filled then cancelled order
+      ✔ invalid origin
+    cancelLimitOrder()
+      ✔ can cancel an unfilled order
+      8) can cancel a fully filled order
+      9) can cancel a partially filled order
+      ✔ can cancel an expired order
+      ✔ can cancel a cancelled order
+      ✔ cannot cancel someone else's order
+    cancelRfqOrder()
+      ✔ can cancel an unfilled order
+      ✔ can cancel a fully filled order
+      ✔ can cancel a partially filled order
+      ✔ can cancel an expired order
+      ✔ can cancel a cancelled order
+      ✔ cannot cancel someone else's order
+    batchCancelLimitOrders()
+      ✔ can cancel multiple orders (51ms)
+      ✔ cannot cancel someone else's orders (50ms)
+    batchCancelRfqOrders()
+      ✔ can cancel multiple orders (43ms)
+      ✔ cannot cancel someone else's orders (41ms)
+    cancelPairOrders()
+      10) can cancel multiple limit orders of the same pair with salt < minValidSalt
+      11) does not cancel limit orders of a different pair
+      ✔ can cancel multiple RFQ orders of the same pair with salt < minValidSalt
+      ✔ does not cancel RFQ orders of a different pair
+    batchCancelPairOrders()
+      12) can cancel multiple limit order pairs
+      ✔ can cancel multiple RFQ order pairs
+    fillLimitOrder()
+      13) can fully fill an order
+      14) can partially fill an order
+      15) can fully fill an order in two steps
+      16) clamps fill amount to remaining available
+      17) clamps fill amount to remaining available in partial filled order
+      ✔ cannot fill an expired order
+      ✔ cannot fill a cancelled order
+      ✔ cannot fill a salt/pair cancelled order
+      ✔ non-taker cannot fill order
+      ✔ non-sender cannot fill order
+      ✔ cannot fill order with bad signature
+      - fails if no protocol fee attached
+      18) refunds excess protocol fee
+    registerAllowedRfqOrigins()
+      ✔ cannot register through a contract
+    fillRfqOrder()
+      ✔ can fully fill an order
+      ✔ can partially fill an order
+      ✔ can fully fill an order in two steps
+      ✔ clamps fill amount to remaining available
+      ✔ clamps fill amount to remaining available in partial filled order
+      ✔ cannot fill an order with wrong tx.origin
+      ✔ can fill an order from a different tx.origin if registered
+      ✔ cannot fill an order with registered then unregistered tx.origin
+      ✔ cannot fill an order with a zero tx.origin
+      ✔ non-taker cannot fill order
+      ✔ cannot fill an expired order
+      ✔ cannot fill a cancelled order
+      ✔ cannot fill a salt/pair cancelled order
+      ✔ cannot fill order with bad signature
+      ✔ fails if ETH is attached
+    fillOrKillLimitOrder()
+      19) can fully fill an order
+      ✔ reverts if cannot fill the exact amount
+      20) refunds excess protocol fee
+    fillOrKillRfqOrder()
+      ✔ can fully fill an order
+      ✔ reverts if cannot fill the exact amount
+      ✔ fails if ETH is attached
+    getLimitOrderRelevantState()
+      ✔ works with an empty order
+      ✔ works with cancelled order
+      21) works with a bad signature
+      22) works with an unfilled order
+      23) works with a fully filled order
+      24) works with an under-funded, partially-filled order
+    getRfqOrderRelevantState()
+      ✔ works with an empty order
+      ✔ works with cancelled order
+      ✔ works with a bad signature
+      ✔ works with an unfilled order
+      ✔ works with a fully filled order
+      ✔ works with an under-funded, partially-filled order
+    batchGetLimitOrderRelevantStates()
+      25) works with multiple orders
+      26) swallows reverts
+    batchGetRfqOrderRelevantStates()
+      ✔ works with multiple orders (43ms)
+    registerAllowedSigner()
+      ✔ fires appropriate events
+      ✔ allows for fills on orders signed by a approved signer
+      ✔ disallows fills if the signer is revoked
+      ✔ doesn't allow fills with an unapproved signer
+      ✔ allows an approved signer to cancel an RFQ order
+      ✔ allows an approved signer to cancel a limit order
+      ✔ doesn't allow an unapproved signer to cancel an RFQ order
+      ✔ doesn't allow an unapproved signer to cancel a limit order
+      ✔ allows a signer to cancel pair RFQ orders
+      ✔ doesn't allow an unapproved signer to cancel pair RFQ orders
+      27) allows a signer to cancel pair limit orders
+      ✔ doesn't allow an unapproved signer to cancel pair limit orders
+      ✔ allows a signer to cancel multiple RFQ order pairs
+      ✔ doesn't allow an unapproved signer to batch cancel pair rfq orders
+      28) allows a signer to cancel multiple limit order pairs
+      ✔ doesn't allow an unapproved signer to batch cancel pair limit orders
+
+  Full migration
+    NativeOrdersFeature feature
+      ✔ transferProtocolFeesForPools is registered
+      ✔ fillLimitOrder is registered
+      ✔ fillRfqOrder is registered
+      ✔ fillOrKillLimitOrder is registered
+      ✔ fillOrKillRfqOrder is registered
+      ✔ _fillLimitOrder is registered
+      ✔ _fillLimitOrder cannot be called from outside
+      ✔ _fillRfqOrder is registered
+      ✔ _fillRfqOrder cannot be called from outside
+      ✔ cancelLimitOrder is registered
+      ✔ cancelRfqOrder is registered
+      ✔ batchCancelLimitOrders is registered
+      ✔ batchCancelRfqOrders is registered
+      ✔ cancelPairLimitOrders is registered
+      ✔ batchCancelPairLimitOrders is registered
+      ✔ cancelPairRfqOrders is registered
+      ✔ batchCancelPairRfqOrders is registered
+      ✔ getLimitOrderInfo is registered
+      ✔ getRfqOrderInfo is registered
+      ✔ getLimitOrderHash is registered
+      ✔ getRfqOrderHash is registered
+      ✔ getProtocolFeeMultiplier is registered
+      ✔ registerAllowedRfqOrigins is registered
+      ✔ getLimitOrderRelevantState is registered
+      ✔ getRfqOrderRelevantState is registered
+      ✔ batchGetLimitOrderRelevantStates is registered
+      ✔ batchGetRfqOrderRelevantStates is registered
+
+
+  113 passing (3s)
+  7 pending
+  28 failing
+
+  1) NativeOrdersFeature
+       getLimitOrderInfo()
+         unfilled order:
+
+      Order status
+      + expected - actual
+
+      -4
+      +1
+      
+      at assertOrderInfoEquals (test/utils/orders.ts:362:46)
+      at Context.<anonymous> (test/features/native_orders_feature_test.ts:260:34)
+
+  2) NativeOrdersFeature
+       getLimitOrderInfo()
+         filled then expired order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394e4384f915046fe5c5f66549caccc6c617baa28e96cf7d6f0a064caa269220bd8f0000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:127)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async NativeOrdersTestEnvironment.fillLimitOrderAsync (test/utils/orders.ts:130:20)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:296:13)
+  
+
+  3) NativeOrdersFeature
+       getLimitOrderInfo()
+         filled order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394ed0f0b5b4b621235bb25f9db6814108fab5d2176bff7d50f5c41b73498625c0990000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:127)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async NativeOrdersTestEnvironment.fillLimitOrderAsync (test/utils/orders.ts:130:20)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:311:13)
+  
+
+  4) NativeOrdersFeature
+       getLimitOrderInfo()
+         partially filled order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394e1a408a32f46406f960bb20ec800385987e99854262fb7f1a86d7e6a3a947be900000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:127)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async NativeOrdersTestEnvironment.fillLimitOrderAsync (test/utils/orders.ts:130:20)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:325:13)
+  
+
+  5) NativeOrdersFeature
+       getLimitOrderInfo()
+         filled then cancelled order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394ebba65e5d8f153a7cac1f96347b66b689800388365ca181259293219f949b42970000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:127)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async NativeOrdersTestEnvironment.fillLimitOrderAsync (test/utils/orders.ts:130:20)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:337:13)
+  
+
+  6) NativeOrdersFeature
+       getLimitOrderInfo()
+         partially filled then cancelled order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394e787990d7d47bf0afe3966c16b2d82e53260f66a6697e0fcdc7269ae3d90817b00000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:127)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async NativeOrdersTestEnvironment.fillLimitOrderAsync (test/utils/orders.ts:130:20)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:353:13)
+  
+
+  7) NativeOrdersFeature
+       getRfqOrderInfo()
+         filled then expired order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394ebd696c0d4c57c517de38968cebaa49b5c52764607ff99fa6fd2861dd58fe651a0000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:156)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillRfqOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:412:13)
+  
+
+  8) NativeOrdersFeature
+       cancelLimitOrder()
+         can cancel a fully filled order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394ee36327997edfe991daf893fdeeed92a1db8c054999b5236f88f774b393ebfabd0000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:127)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async NativeOrdersTestEnvironment.fillLimitOrderAsync (test/utils/orders.ts:130:20)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:512:13)
+  
+
+  9) NativeOrdersFeature
+       cancelLimitOrder()
+         can cancel a partially filled order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394ef4772a2c21857a342f7cfbdd9e89a1537190d69400a1a096eb24b262e799e5ba0000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:127)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async NativeOrdersTestEnvironment.fillLimitOrderAsync (test/utils/orders.ts:130:20)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:528:13)
+  
+
+  10) NativeOrdersFeature
+       cancelPairOrders()
+         can cancel multiple limit orders of the same pair with salt < minValidSalt:
+     AssertionError: expected [ 4, 4, 4 ] to deeply equal [ 3, 3, 1 ]
+      at Context.<anonymous> (test/features/native_orders_feature_test.ts:770:38)
+
+  11) NativeOrdersFeature
+       cancelPairOrders()
+         does not cancel limit orders of a different pair:
+
+      AssertionError: expected 4 to equal 1
+      + expected - actual
+
+      -4
+      +1
+      
+      at Context.<anonymous> (test/features/native_orders_feature_test.ts:786:39)
+
+  12) NativeOrdersFeature
+       batchCancelPairOrders()
+         can cancel multiple limit order pairs:
+     AssertionError: expected [ 4, 4 ] to deeply equal [ 3, 3 ]
+      at Context.<anonymous> (test/features/native_orders_feature_test.ts:879:38)
+
+  13) NativeOrdersFeature
+       fillLimitOrder()
+         can fully fill an order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394e322449dfdaf6c7d044a08a8b97af93433f27c7adf5644e42d4167d38e63690770000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:127)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async NativeOrdersTestEnvironment.fillLimitOrderAsync (test/utils/orders.ts:130:20)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:963:29)
+  
+
+  14) NativeOrdersFeature
+       fillLimitOrder()
+         can partially fill an order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394ebe97e3346807184f9d56332c93146fde804217c30ea247a6c5cd933ba971d80d0000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:127)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async NativeOrdersTestEnvironment.fillLimitOrderAsync (test/utils/orders.ts:130:20)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:982:29)
+  
+
+  15) NativeOrdersFeature
+       fillLimitOrder()
+         can fully fill an order in two steps:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394ee9379d1b347ec904456d4234707b520b269a8d562d0034252548e1c77a80ad990000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:127)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async NativeOrdersTestEnvironment.fillLimitOrderAsync (test/utils/orders.ts:130:20)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:1003:27)
+  
+
+  16) NativeOrdersFeature
+       fillLimitOrder()
+         clamps fill amount to remaining available:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394ea077198931b609bd2c56d3d4f92045e26606009db6620cd1b22688698a8153820000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:127)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async NativeOrdersTestEnvironment.fillLimitOrderAsync (test/utils/orders.ts:130:20)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:1030:29)
+  
+
+  17) NativeOrdersFeature
+       fillLimitOrder()
+         clamps fill amount to remaining available in partial filled order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394ed8aababe40ce8cfd1ef4a98485fd867241eb150ec51664418dc5fdb8ae13042c0000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:127)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async NativeOrdersTestEnvironment.fillLimitOrderAsync (test/utils/orders.ts:130:20)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:1051:27)
+  
+
+  18) NativeOrdersFeature
+       fillLimitOrder()
+         refunds excess protocol fee:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394e1cc7155026d155f24bdb8cd1630d83a083735b6ddd348a377d3d30144d9674730000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:127)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async NativeOrdersTestEnvironment.fillLimitOrderAsync (test/utils/orders.ts:130:20)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:1152:29)
+  
+
+  19) NativeOrdersFeature
+       fillOrKillLimitOrder()
+         can fully fill an order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394e2fbdcc81a86da79b79ee4e9d40f7d842ecd73f36f3c19dea53dcc04f9a4ea97d0000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillOrKillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:185)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillOrKillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:1435:13)
+  
+
+  20) NativeOrdersFeature
+       fillOrKillLimitOrder()
+         refunds excess protocol fee:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394ecf86047d0de7aca704643ffa3cdeb941166c9e272926d8a3334a2cc0c11e9f480000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillOrKillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:185)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillOrKillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:1471:13)
+  
+
+  21) NativeOrdersFeature
+       getLimitOrderRelevantState()
+         works with a bad signature:
+     AssertionError: expected {
+  orderHash: '0xb00812849a4159c8a313ec968518fb901df0211481225a3b878f37eea0506664',
+  status: 4n,
+  takerTokenFilledAmount: 0n
+} to deeply equal {
+  orderHash: '0xb00812849a4159c8a313ec968518fb901df0211481225a3b878f37eea0506664',
+  status: 1,
+  takerTokenFilledAmount: 0n
+}
+      at Context.<anonymous> (test/features/native_orders_feature_test.ts:1596:75)
+
+  22) NativeOrdersFeature
+       getLimitOrderRelevantState()
+         works with an unfilled order:
+     AssertionError: expected {
+  orderHash: '0x9673ea9420968b20f81106f902cc6b57644770db9479296c7c50a8fe336a51cc',
+  status: 4n,
+  takerTokenFilledAmount: 0n
+} to deeply equal {
+  orderHash: '0x9673ea9420968b20f81106f902cc6b57644770db9479296c7c50a8fe336a51cc',
+  status: 1,
+  takerTokenFilledAmount: 0n
+}
+      at Context.<anonymous> (test/features/native_orders_feature_test.ts:1612:75)
+
+  23) NativeOrdersFeature
+       getLimitOrderRelevantState()
+         works with a fully filled order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394e9b5224e4c6d4edaf280c00efb6a42a709a8eb06dc9a4c2d8e758783e4d79e1ab0000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:127)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async NativeOrdersTestEnvironment.fillLimitOrderAsync (test/utils/orders.ts:130:20)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:1627:13)
+  
+
+  24) NativeOrdersFeature
+       getLimitOrderRelevantState()
+         works with an under-funded, partially-filled order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x47ab394eb40fdd70bb6ee450d8dc5940eccc52d32e29382dd068b1c2e4f72f927251d33d0000000000000000000000000000000000000000000000000000000000000004)
+    at TestNativeOrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestNativeOrdersFeature.fillOrKillRfqOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:229)
+    at TestNativeOrdersFeature.fillLimitOrder (contracts/src/features/native_orders/NativeOrdersSettlement.sol:127)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.fillLimitOrder (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async NativeOrdersTestEnvironment.fillLimitOrderAsync (test/utils/orders.ts:130:20)
+    at async Context.<anonymous> (test/features/native_orders_feature_test.ts:1650:13)
+  
+
+  25) NativeOrdersFeature
+       batchGetLimitOrderRelevantStates()
+         works with multiple orders:
+     AssertionError: expected {
+  orderHash: '0x08c8c3802b5b44403cbc043b74527e2272ae7a5c6adca1f884441da1c4352d12',
+  status: 4n,
+  takerTokenFilledAmount: 0n
+} to deeply equal {
+  orderHash: '0x08c8c3802b5b44403cbc043b74527e2272ae7a5c6adca1f884441da1c4352d12',
+  status: 1,
+  takerTokenFilledAmount: 0n
+}
+      at Context.<anonymous> (test/features/native_orders_feature_test.ts:1820:79)
+
+  26) NativeOrdersFeature
+       batchGetLimitOrderRelevantStates()
+         swallows reverts:
+     AssertionError: expected {
+  orderHash: '0xd23e047aa2abbe7c9d6f9cf465e8141f69ad2a5f3ff7e66637d5c90ddebb4d99',
+  status: 4n,
+  takerTokenFilledAmount: 0n
+} to deeply equal {
+  orderHash: '0xd23e047aa2abbe7c9d6f9cf465e8141f69ad2a5f3ff7e66637d5c90ddebb4d99',
+  status: 1,
+  takerTokenFilledAmount: 0n
+}
+      at Context.<anonymous> (test/features/native_orders_feature_test.ts:1845:79)
+
+  27) NativeOrdersFeature
+       registerAllowedSigner()
+         allows a signer to cancel pair limit orders:
+
+      Order status
+      + expected - actual
+
+      -4
+      +3
+      
+      at assertOrderInfoEquals (test/utils/orders.ts:362:46)
+      at Context.<anonymous> (test/features/native_orders_feature_test.ts:2156:34)
+
+  28) NativeOrdersFeature
+       registerAllowedSigner()
+         allows a signer to cancel multiple limit order pairs:
+     AssertionError: expected [ 4, 4 ] to deeply equal [ 3, 3 ]
+      at Context.<anonymous> (test/features/native_orders_feature_test.ts:2294:38)
+
+
+
+error Command failed with exit code 28.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.

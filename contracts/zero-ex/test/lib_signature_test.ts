@@ -1,7 +1,7 @@
-import { blockchainTests, expect } from '@0x/test-utils';
+import { expect } from 'chai';
 import { hexUtils } from '@0x/utils';
 import * as ethjs from 'ethereumjs-util';
-import { ethers } from 'ethers';
+import { ethers } from 'hardhat';
 
 import { eip712SignHashWithKey, ethSignHashWithKey, RevertErrors, SignatureType } from '@0x/protocol-utils';
 
@@ -11,7 +11,12 @@ import type { TestLibSignature } from '../src/typechain-types/contracts/test/Tes
 
 const EMPTY_REVERT = 'reverted with no data';
 
-blockchainTests('LibSignature library', env => {
+describe('LibSignature library', () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+    } as any;
     let testLib: TestLibSignature;
     let signerKey: string;
     let signer: string;
@@ -22,6 +27,7 @@ blockchainTests('LibSignature library', env => {
         
         // 使用测试环境中的 provider 和账户
         const accounts = await env.getAccountAddressesAsync();
+        env.txDefaults.from = accounts[0];
         const ethersProvider = await env.provider.getSigner(accounts[0]);
         
         const factory = new TestLibSignature__factory(ethersProvider);

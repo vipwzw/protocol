@@ -1,5 +1,6 @@
 import { LibMathRevertErrors } from '@0x/contracts-exchange-libs';
-import { constants, expect, verifyEventsFromLogs, filterLogs, verifyEvents } from '@0x/test-utils';
+import { constants, verifyEventsFromLogs, filterLogs, verifyEvents } from '@0x/utils';
+import { expect } from 'chai';
 import { AssetProxyId, RevertReason } from '@0x/utils';
 import { ethers } from 'hardhat';
 import { Signer } from 'ethers';

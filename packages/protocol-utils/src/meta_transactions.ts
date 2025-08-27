@@ -120,7 +120,6 @@ export class MetaTransaction {
     public getEIP712TypedData(): EIP712TypedData {
         return {
             types: {
-                EIP712Domain: EIP712_DOMAIN_PARAMETERS,
                 [MetaTransaction.STRUCT_NAME]: MetaTransaction.STRUCT_ABI,
             },
             domain: createExchangeProxyEIP712Domain(this.chainId, this.verifyingContract) as any,

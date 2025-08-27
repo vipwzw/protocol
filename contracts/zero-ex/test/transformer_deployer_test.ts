@@ -1,6 +1,7 @@
-import { blockchainTests, constants, expect, randomAddress, verifyEventsFromLogs } from '@0x/test-utils';
+import { constants, randomAddress, verifyEventsFromLogs } from '@0x/utils';
+import { expect } from 'chai';
 import { AuthorizableRevertErrors } from '@0x/utils';
-import { ethers } from 'ethers';
+import { ethers } from 'hardhat';
 
 import { artifacts } from './artifacts';
 import { TransformerDeployer__factory } from '../src/typechain-types/factories/contracts/src/external/TransformerDeployer.sol';
@@ -8,7 +9,12 @@ import { TestTransformerDeployerTransformer__factory } from '../src/typechain-ty
 import type { TransformerDeployer } from '../src/typechain-types/contracts/src/external/TransformerDeployer';
 import type { TestTransformerDeployerTransformer } from '../src/typechain-types/contracts/test/TestTransformerDeployerTransformer';
 
-blockchainTests('TransformerDeployer', env => {
+describe('TransformerDeployer', () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+    } as any;
     let authority: string;
     let deployer: TransformerDeployer;
     const deployBytes = artifacts.TestTransformerDeployerTransformer.bytecode;
@@ -18,6 +24,7 @@ blockchainTests('TransformerDeployer', env => {
         
         // 使用 TypeChain 工厂部署合约
         const accounts = await env.getAccountAddressesAsync();
+        env.txDefaults.from = accounts[0];
         const signer = await env.provider.getSigner(accounts[0]);
         
         const factory = new TransformerDeployer__factory(signer);

@@ -1,6 +1,7 @@
-import { ethers } from "ethers";
+import { ethers } from "hardhat";
 import { artifacts as erc20Artifacts, DummyERC20TokenContract } from '@0x/contracts-erc20';
-import { blockchainTests, constants, expect, verifyEventsFromLogs } from '@0x/test-utils';
+import { constants, verifyEventsFromLogs } from '@0x/utils';
+import { expect } from 'chai';
 import { OwnableRevertErrors, ZeroExRevertErrors } from '@0x/utils';
 
 import { 
@@ -14,7 +15,6 @@ import {
     TestLiquidityProvider__factory
 } from '../../src/wrappers';
 import { artifacts } from '../artifacts';
-import { abis } from '../utils/abis';
 import { fullMigrateAsync } from '../utils/migration';
 import {
     LiquidityProviderSandboxContract,
@@ -23,7 +23,12 @@ import {
     TestWethContract,
 } from '../wrappers';
 
-blockchainTests('LiquidityProvider feature', env => {
+describe('LiquidityProvider feature', () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+    } as any;
     let zeroEx: IZeroExContract;
     let feature: LiquidityProviderFeatureContract;
     let sandbox: LiquidityProviderSandboxContract;
@@ -65,17 +70,15 @@ blockchainTests('LiquidityProvider feature', env => {
         const featureImpl = await featureFactory.deploy(await sandbox.getAddress());
         await featureImpl.waitForDeployment();
 
-        const ownableFeature = new IOwnableFeatureContract(await zeroEx.getAddress(), env.provider, env.txDefaults, abis);
         const ownerSigner = await env.provider.getSigner(owner);
-        await ownableFeature
-            .connect(ownerSigner)
-            .migrate(await featureImpl.getAddress(), featureImpl.migrate().getABIEncodedTransactionData(), owner);
+        const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
+        await ownableFeature.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
 
         const liquidityProviderFactory = new TestLiquidityProvider__factory(signer);
         liquidityProvider = await liquidityProviderFactory.deploy();
         await liquidityProvider.waitForDeployment();
     });
-    blockchainTests('Sandbox', () => {
+    describe('Sandbox', () => {
         it('Cannot call sandbox `executeSellTokenForToken` function directly', async () => {
             const takerSigner = await env.provider.getSigner(taker);
             return expect(
@@ -118,7 +121,7 @@ blockchainTests('LiquidityProvider feature', env => {
             return expect(tx).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(taker));
         });
     });
-    blockchainTests('Swap', () => {
+    describe('Swap', () => {
         const ETH_TOKEN_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 
         it('Successfully executes an ERC20-ERC20 swap', async () => {

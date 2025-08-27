@@ -7,6 +7,17 @@ export class StakingRevertErrors {
     static PoolManagerError(): Error {
         return new Error('Staking: pool manager error');
     }
+    // Lightweight placeholders to satisfy `new StakingRevertErrors.XxxError(...)` usages in tests
+    static InsufficientBalanceError = class extends Error {
+        constructor(_amount: bigint, _available: bigint) {
+            super('Staking: insufficient balance');
+        }
+    };
+    static PoolExistenceError = class extends Error {
+        constructor(_poolId: string, _exists: boolean) {
+            super('Staking: pool existence mismatch');
+        }
+    };
 }
 import * as _ from 'lodash';
 
@@ -208,7 +219,7 @@ describe('Stake Statuses', () => {
             // run test, checking balances in epochs [n .. n + 2]
             // in epoch `n` - `next` is set
             // in epoch `n+1` - `current` is set
-            await staker.moveStakeAsync(from, to, amount.div(2));
+            await staker.moveStakeAsync(from, to, amount / 2n);
             await staker.goToNextEpochAsync();
         };
         it('undelegated -> undelegated', async () => {

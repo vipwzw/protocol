@@ -22,6 +22,8 @@ pragma solidity ^0.8.28;
 
 import "@0x/contracts-exchange-libs/contracts/src/LibMath.sol";
 // LibSafeMath removed in Solidity 0.8.28 - using built-in overflow checks
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "../libs/LibStakingRichErrors.sol";
 import "./MixinCumulativeRewards.sol";
 import "../sys/MixinAbstract.sol";
 

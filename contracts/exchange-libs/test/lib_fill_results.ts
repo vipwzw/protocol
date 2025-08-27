@@ -1,11 +1,9 @@
 import {
-    blockchainTests,
     constants,
-    describe,
-    expect,
     testCombinatoriallyWithReferenceFunc,
     uint256Values,
-} from '@0x/test-utils';
+} from '@0x/utils';
+import { expect } from 'chai';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { FillResults, MatchedFillResults, Order } from '@0x/utils';
 import { hexUtils, LibMathRevertErrors } from '@0x/utils';
@@ -18,7 +16,7 @@ import { artifacts } from './artifacts';
 import { TestLibFillResults__factory } from '../src/typechain-types';
 import { TestLibFillResults } from '../src/typechain-types';
 
-blockchainTests('LibFillResults', env => {
+describe('LibFillResults', () => {
     interface PartialMatchedFillResults {
         left: Partial<FillResults>;
         right: Partial<FillResults>;
@@ -446,7 +444,7 @@ blockchainTests('LibFillResults', env => {
         return matchedFillResults;
     }
 
-    blockchainTests('calculateMatchedFillResults', async () => {
+    describe('calculateMatchedFillResults', async () => {
         /**
          * Asserts that the results of calling `calculateMatchedFillResults()` is consistent with the results that are expected.
          */
@@ -1138,7 +1136,7 @@ blockchainTests('LibFillResults', env => {
         });
     });
 
-    blockchainTests('calculateMatchedFillResultsWithMaximalFill', async () => {
+    describe('calculateMatchedFillResultsWithMaximalFill', async () => {
         /**
          * Asserts that the results of calling `calculateMatchedFillResults()` is consistent with the results that are expected.
          */

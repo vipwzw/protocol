@@ -1,0 +1,480 @@
+yarn run v1.22.22
+$ /Users/king/javascript/protocol/node_modules/.bin/hardhat test test/features/erc1155_orders_test.ts
+
+
+  ERC1155OrdersFeature
+    getERC1155OrderHash()
+      ✔ returns the correct hash for order with no fees or properties
+      ✔ returns the correct hash for order with null property
+      ✔ returns the correct hash for order with 1 fee, 1 property
+      ✔ returns the correct hash for order with 2 fees, 2 properties
+    validateERC1155OrderSignature
+      ✔ succeeds for a valid EthSign signature
+      ✔ reverts for an invalid EthSign signature
+      ✔ succeeds for a valid EIP-712 signature
+      ✔ reverts for an invalid EIP-712 signature
+    cancelERC1155Order
+      ✔ can cancel an order
+      ✔ cancelling an order twice silently succeeds
+    sellERC1155
+      ✔ can fully fill a ERC1155 buy order
+      1) can partially fill a ERC1155 buy order
+      ✔ cannot fill the same order twice
+      2) cannot fill a cancelled order
+      ✔ cannot fill an invalid order (erc20Token == ETH)
+      3) cannot fill an expired order
+      ✔ reverts if a sell order is provided
+      4) reverts if the taker is not the taker address specified in the order
+      5) succeeds if the taker is the taker address specified in the order
+      6) reverts if an invalid signature is provided
+      7) reverts if `unwrapNativeToken` is true and `erc20Token` is not WETH
+      8) sends ETH to taker if `unwrapNativeToken` is true and `erc20Token` is WETH
+      fees
+        9) single fee to EOA
+        10) partial fill, single fee
+        11) single fee, successful callback
+        12) single fee, callback reverts
+        13) single fee, callback returns invalid value
+        14) multiple fees to EOAs
+      properties
+        15) Checks tokenId if no properties are provided
+        16) Null property
+        17) Reverts if property validation fails
+        18) Successful property validation
+    onERC1155Received
+      - throws if data is not encoded correctly
+      - reverts if msg.sender != order.erc1155Token
+      - reverts if transferred tokenId does not match order.erc1155TokenId
+      - can sell ERC1155 without approval
+    buyERC1155
+      19) can fill a ERC1155 sell order
+      20) can partially fill a ERC1155 sell order
+      21) cannot fill the same order twice
+      22) cannot fill a cancelled order
+      23) cannot fill an expired order
+      24) reverts if a buy order is provided
+      25) reverts if the taker is not the taker address specified in the order
+      26) succeeds if the taker is the taker address specified in the order
+      27) reverts if an invalid signature is provided
+      ETH
+        28) can fill an order with ETH (and refunds excess ETH)
+        29) can fill a WETH order with ETH
+        30) uses WETH if not enough ETH to fill WETH order
+      fees
+        31) single fee to EOA
+        32) partial fill, single fee
+        33) pays fees in ETH if erc20Token == ETH
+        34) pays fees in ETH if erc20Token == WETH but taker uses ETH
+        35) pays fees in WETH if taker uses WETH
+        36) reverts if overspent ETH
+    batchBuyERC1155s
+      37) reverts if arrays are different lengths
+      38) successfully fills multiple orders
+      39) catches revert if one order fails
+      40) bubbles up revert if one order fails and `revertIfIncomplete == true`
+      41) can fill multiple orders with ETH, refund excess ETH
+    preSignERC1155Order
+      - can fill order that has been presigned by the maker
+      - cannot fill order that has not been presigned by the maker
+      - cannot fill order that was presigned then cancelled
+      ✔ only maker can presign order
+
+
+  15 passing (566ms)
+  7 pending
+  41 failing
+
+  1) ERC1155OrdersFeature
+       sellERC1155
+         can partially fill a ERC1155 buy order:
+
+      AssertionError: expected 13193937738911874603 to equal 6886662187349492859.
+      + expected - actual
+
+      -13193937738911874603
+      +6886662187349492859
+      
+      at assertBalancesAsync (test/features/erc1155_orders_test.ts:182:37)
+      at async Context.<anonymous> (test/features/erc1155_orders_test.ts:423:13)
+
+  2) ERC1155OrdersFeature
+       sellERC1155
+         cannot fill a cancelled order:
+     AssertionError: Expected transaction to be reverted with reason 'OrderNotFillableError', but it reverted with a custom error
+  
+
+  3) ERC1155OrdersFeature
+       sellERC1155
+         cannot fill an expired order:
+     AssertionError: Expected transaction to be reverted with reason 'OrderNotFillableError', but it reverted with a custom error
+  
+
+  4) ERC1155OrdersFeature
+       sellERC1155
+         reverts if the taker is not the taker address specified in the order:
+     AssertionError: Expected transaction to be reverted with reason 'OnlyTakerError', but it reverted with a custom error
+  
+
+  5) ERC1155OrdersFeature
+       sellERC1155
+         succeeds if the taker is the taker address specified in the order:
+
+      AssertionError: expected 22602042961852315126 to equal 1981892538669098120.
+      + expected - actual
+
+      -22602042961852315126
+      +1981892538669098120
+      
+      at assertBalancesAsync (test/features/erc1155_orders_test.ts:182:37)
+      at async Context.<anonymous> (test/features/erc1155_orders_test.ts:510:13)
+
+  6) ERC1155OrdersFeature
+       sellERC1155
+         reverts if an invalid signature is provided:
+     AssertionError: Expected transaction to be reverted with reason 'InvalidSignerError', but it reverted with a custom error
+  
+
+  7) ERC1155OrdersFeature
+       sellERC1155
+         reverts if `unwrapNativeToken` is true and `erc20Token` is not WETH:
+     AssertionError: Expected transaction to be reverted with reason 'ERC20TokenMismatchError', but it reverted with a custom error
+  
+
+  8) ERC1155OrdersFeature
+       sellERC1155
+         sends ETH to taker if `unwrapNativeToken` is true and `erc20Token` is WETH:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x03174b9c00000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c8e70fe572612b4f39aecae4e90a7c9bc71abdfc340783338e8e440029e67b572b0000000000000000000000000000000000000000000000000000000000000003)
+    at ERC1155OrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at ERC1155OrdersFeature.buyERC1155 (contracts/src/features/nft_orders/ERC1155OrdersFeature.sol:121)
+    at ERC1155OrdersFeature._sellNFT (contracts/src/features/nft_orders/NFTOrders.sol:71)
+    at ERC1155OrdersFeature._sellERC1155 (contracts/src/features/nft_orders/ERC1155OrdersFeature.sol:319)
+    at ERC1155OrdersFeature.sellERC1155 (contracts/src/features/nft_orders/ERC1155OrdersFeature.sol:85)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.sellERC1155 (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/erc1155_orders_test.ts:544:13)
+  
+
+  9) ERC1155OrdersFeature
+       sellERC1155
+         fees
+           single fee to EOA:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x03174b9c00000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c89edec82391ab14cbb03677210a8699a565259a089307fdcf9dd5804b392cdf650000000000000000000000000000000000000000000000000000000000000003)
+    at ERC1155OrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at ERC1155OrdersFeature.buyERC1155 (contracts/src/features/nft_orders/ERC1155OrdersFeature.sol:121)
+    at ERC1155OrdersFeature._sellNFT (contracts/src/features/nft_orders/NFTOrders.sol:71)
+    at ERC1155OrdersFeature._sellERC1155 (contracts/src/features/nft_orders/ERC1155OrdersFeature.sol:319)
+    at ERC1155OrdersFeature.sellERC1155 (contracts/src/features/nft_orders/ERC1155OrdersFeature.sol:85)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.sellERC1155 (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/erc1155_orders_test.ts:562:17)
+  
+
+  10) ERC1155OrdersFeature
+       sellERC1155
+         fees
+           partial fill, single fee:
+     TypeError: Cannot convert a BigInt value to a number
+      at Math.max (<anonymous>)
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:577:48)
+
+  11) ERC1155OrdersFeature
+       sellERC1155
+         fees
+           single fee, successful callback:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x03174b9c00000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c8d24bf62352f214dfc94607cd3fd7ea2c2547097b65dc66e8a3e1853a9805e9550000000000000000000000000000000000000000000000000000000000000003)
+    at ERC1155OrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at ERC1155OrdersFeature.buyERC1155 (contracts/src/features/nft_orders/ERC1155OrdersFeature.sol:121)
+    at ERC1155OrdersFeature._sellNFT (contracts/src/features/nft_orders/NFTOrders.sol:71)
+    at ERC1155OrdersFeature._sellERC1155 (contracts/src/features/nft_orders/ERC1155OrdersFeature.sol:319)
+    at ERC1155OrdersFeature.sellERC1155 (contracts/src/features/nft_orders/ERC1155OrdersFeature.sol:85)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.sellERC1155 (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/erc1155_orders_test.ts:595:17)
+  
+
+  12) ERC1155OrdersFeature
+       sellERC1155
+         fees
+           single fee, callback reverts:
+     TypeError: zeroEx.sellERC1155 is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:608:22)
+
+  13) ERC1155OrdersFeature
+       sellERC1155
+         fees
+           single fee, callback returns invalid value:
+     TypeError: zeroEx.sellERC1155 is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:624:22)
+
+  14) ERC1155OrdersFeature
+       sellERC1155
+         fees
+           multiple fees to EOAs:
+     TypeError: zeroEx.sellERC1155 is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:641:22)
+
+  15) ERC1155OrdersFeature
+       sellERC1155
+         properties
+           Checks tokenId if no properties are provided:
+     TypeError: Cannot mix BigInt and other types, use explicit conversions
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:662:66)
+
+  16) ERC1155OrdersFeature
+       sellERC1155
+         properties
+           Null property:
+     TypeError: zeroEx.sellERC1155 is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:694:22)
+
+  17) ERC1155OrdersFeature
+       sellERC1155
+         properties
+           Reverts if property validation fails:
+     AssertionError: Expected transaction to be reverted with reason 'PropertyValidationFailedError', but it reverted with a custom error
+  
+
+  18) ERC1155OrdersFeature
+       sellERC1155
+         properties
+           Successful property validation:
+     TypeError: zeroEx.sellERC1155 is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:734:22)
+
+  19) ERC1155OrdersFeature
+       buyERC1155
+         can fill a ERC1155 sell order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x03174b9c00000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c803377346959195865d8c834276a9eb22db8fce3cfd5afa1376750a17a12f36570000000000000000000000000000000000000000000000000000000000000003)
+    at ERC1155OrdersFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at ERC1155OrdersFeature.buyERC1155 (contracts/src/features/nft_orders/ERC1155OrdersFeature.sol:121)
+    at ERC1155OrdersFeature._buyNFT (contracts/src/features/nft_orders/NFTOrders.sol:139)
+    at ERC1155OrdersFeature._buyERC1155 (contracts/src/features/nft_orders/ERC1155OrdersFeature.sol:342)
+    at ERC1155OrdersFeature.buyERC1155 (contracts/src/features/nft_orders/ERC1155OrdersFeature.sol:117)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.buyERC1155 (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/erc1155_orders_test.ts:892:24)
+  
+
+  20) ERC1155OrdersFeature
+       buyERC1155
+         can partially fill a ERC1155 sell order:
+     TypeError: invalid BigNumberish value (argument="value", value=[ COULD NOT SERIALIZE ], code=INVALID_ARGUMENT, version=6.15.0)
+      at makeError (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at getBigInt (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/maths.ts:113:19)
+      at NumberCoder.encode (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/number.ts:36:30)
+      at /Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/array.ts:64:19
+      at Array.forEach (<anonymous>)
+      at pack (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/array.ts:47:12)
+      at TupleCoder.encode (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/tuple.ts:62:20)
+      at AbiCoder.encode (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/abi-coder.ts:195:15)
+
+  21) ERC1155OrdersFeature
+       buyERC1155
+         cannot fill the same order twice:
+     TypeError: zeroEx.buyERC1155 is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:935:18)
+
+  22) ERC1155OrdersFeature
+       buyERC1155
+         cannot fill a cancelled order:
+     AssertionError: Expected transaction to be reverted with reason 'OrderNotFillableError', but it reverted with a custom error
+  
+
+  23) ERC1155OrdersFeature
+       buyERC1155
+         cannot fill an expired order:
+     TypeError: zeroEx.buyERC1155 is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:970:18)
+
+  24) ERC1155OrdersFeature
+       buyERC1155
+         reverts if a buy order is provided:
+     TypeError: zeroEx.buyERC1155 is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:985:18)
+
+  25) ERC1155OrdersFeature
+       buyERC1155
+         reverts if the taker is not the taker address specified in the order:
+     AssertionError: Expected transaction to be reverted with reason 'OnlyTakerError', but it reverted with a custom error
+  
+
+  26) ERC1155OrdersFeature
+       buyERC1155
+         succeeds if the taker is the taker address specified in the order:
+     TypeError: zeroEx.buyERC1155 is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:1011:18)
+
+  27) ERC1155OrdersFeature
+       buyERC1155
+         reverts if an invalid signature is provided:
+     TypeError: zeroEx.buyERC1155 is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:1024:18)
+
+  28) ERC1155OrdersFeature
+       buyERC1155
+         ETH
+           can fill an order with ETH (and refunds excess ETH):
+     TypeError: zeroEx.buyERC1155 is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:1041:22)
+
+  29) ERC1155OrdersFeature
+       buyERC1155
+         ETH
+           can fill a WETH order with ETH:
+     TypeError: zeroEx.buyERC1155 is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:1074:22)
+
+  30) ERC1155OrdersFeature
+       buyERC1155
+         ETH
+           uses WETH if not enough ETH to fill WETH order:
+     TypeError: weth.deposit(...) is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:1089:37)
+
+  31) ERC1155OrdersFeature
+       buyERC1155
+         fees
+           single fee to EOA:
+     TypeError: zeroEx.buyERC1155 is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:1118:22)
+
+  32) ERC1155OrdersFeature
+       buyERC1155
+         fees
+           partial fill, single fee:
+     TypeError: Cannot convert a BigInt value to a number
+      at Math.max (<anonymous>)
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:1136:48)
+
+  33) ERC1155OrdersFeature
+       buyERC1155
+         fees
+           pays fees in ETH if erc20Token == ETH:
+     TypeError: zeroEx.buyERC1155 is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:1157:22)
+
+  34) ERC1155OrdersFeature
+       buyERC1155
+         fees
+           pays fees in ETH if erc20Token == WETH but taker uses ETH:
+     TypeError: value must be a string (argument="value", value=111, code=INVALID_ARGUMENT, version=6.15.0)
+      at makeError (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at Proxy.parseUnits (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/units.ts:64:19)
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:1182:44)
+
+  35) ERC1155OrdersFeature
+       buyERC1155
+         fees
+           pays fees in WETH if taker uses WETH:
+     TypeError: value must be a string (argument="value", value=111, code=INVALID_ARGUMENT, version=6.15.0)
+      at makeError (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at Proxy.parseUnits (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/units.ts:64:19)
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:1238:44)
+
+  36) ERC1155OrdersFeature
+       buyERC1155
+         fees
+           reverts if overspent ETH:
+     TypeError: value must be a string (argument="value", value=111, code=INVALID_ARGUMENT, version=6.15.0)
+      at makeError (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at Proxy.parseUnits (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/units.ts:64:19)
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:1264:44)
+
+  37) ERC1155OrdersFeature
+       batchBuyERC1155s
+         reverts if arrays are different lengths:
+     TypeError: zeroEx.batchBuyERC1155s is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:1295:18)
+
+  38) ERC1155OrdersFeature
+       batchBuyERC1155s
+         successfully fills multiple orders:
+
+      AssertionError: expected 85832767585962912927 to equal 6750202336801715871.
+      + expected - actual
+
+      -85832767585962912927
+      +6750202336801715871
+      
+      at assertBalancesAsync (test/features/erc1155_orders_test.ts:174:37)
+      at async Context.<anonymous> (test/features/erc1155_orders_test.ts:1330:13)
+
+  39) ERC1155OrdersFeature
+       batchBuyERC1155s
+         catches revert if one order fails:
+     AssertionError: expected ContractTransactionResponse {
+  provider: HardhatEthersProvider {
+    _hardhatProvider: LazyInitializationProviderAdapter {
+      _providerFactory: [AsyncFunction (anonymous)],
+      _emitter: [EventEmitter],
+      _initializingPromise: [Promise],
+      provider: [BackwardsCompatibilityProviderAdapter]
+    },
+    _networkName: 'hardhat',
+    _blockListeners: [],
+    _transactionHashListeners: Map(0) {},
+    _eventListeners: []
+  },
+  blockNumber: 127,
+  blockHash: '0xcb258a7f93ad05bd582441605e0cc5214dad738275b131bef8e9f0f63bdcf787',
+  index: undefined,
+  hash: '0x5003ffa1f8c2ad7d93f5c9fd21af3a24760338ef0e164c2313d8a7f549d4c564',
+  type: 2,
+  to: '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9',
+  from: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
+  nonce: 23,
+  gasLimit: 30000000n,
+  gasPrice: 1000000058n,
+  maxPriorityFeePerGas: 1000000000n,
+  maxFeePerGas: 1000000116n,
+  maxFeePerBlobGas: null,
+  data: '0x8468061500000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000048000000000000000000000000000000000000000000000000000000000000005a000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000689b0157d5190386d38033001d64fc4ed024d9f727ef9aeaa33f657979eff9c7d2a47444000000000000000000000000e7f1725e7734ce288f8367e1bb143e90bb3f05120000000000000000000000000000000000000000000000002b744a29a0b363b200000000000000000000000000000000000000000000000000000000000001800000000000000000000000009fe46736679d2d9a65f0992f2272de9f3c7fa6e0808bf43bdd551a3266c7cbd352f3e7aae1a03c733ae3d4ebbb1c5ec9405143f200000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000083354340ea2cca8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000689b0157a5caa9a5d86fd560eeaa0039ef032ac5dc346eecf93c087ab0f40e17fee15cce0000000000000000000000005fbdb2315678afecb367f032d93f642f64180aa300000000000000000000000000000000000000000000000026f6b1f7bcce022700000000000000000000000000000000000000000000000000000000000001800000000000000000000000009fe46736679d2d9a65f0992f2272de9f3c7fa6e0105cf934fc890afc9837a20cedf51ce533290e37ae836a4ca3aa8e09fe75c27200000000000000000000000000000000000000000000000000000000000001a00000000000000000000000000000000000000000000000004da7628993bdca8d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000001b234cb15120332a4c94825f8951b453fd3367305e9cdfad67897ef623ac221fb22e524d653ef971a28c9b55d1fb4af7db3e72738ea018574c356eb63b4ab120610000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000001c72511cd8ea857bdd813a4cda07ca20c8ee5d6febf2589317dd42a0c43a7e0807039a3beacd951dfb269b58cb8a17e1ad9b84fa9baf21667c4f466a4839c816ec000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000083354340ea2cca800000000000000000000000000000000000000000000000004da7628993bdca8d00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+  value: 0n,
+  chainId: 31337n,
+  signature: Signature { r: "0xc4cdb56f05aca7caf4f64eb3c6044e0d86f1ba6a7da19239ff7ae2825772a789", s: "0x00376ffc749715c70eaecb57a53e831724e007b212c442871be7da9e341ef063", yParity: 0, networkV: null },
+  accessList: [],
+  blobVersionedHashes: null,
+  authorizationList: null
+} to deeply equal [ true, false ]
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:1361:39)
+
+  40) ERC1155OrdersFeature
+       batchBuyERC1155s
+         bubbles up revert if one order fails and `revertIfIncomplete == true`:
+     TypeError: zeroEx.batchBuyERC1155s is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:1396:18)
+
+  41) ERC1155OrdersFeature
+       batchBuyERC1155s
+         can fill multiple orders with ETH, refund excess ETH:
+     TypeError: zeroEx.batchBuyERC1155s is not a function
+      at Context.<anonymous> (test/features/erc1155_orders_test.ts:1424:18)
+
+
+
+error Command failed with exit code 41.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.

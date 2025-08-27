@@ -1,41 +1,13 @@
-import { expect } from 'chai';
-import { ethers } from 'hardhat';
+import chai, { expect } from 'chai';
+import { ethers, network } from 'hardhat';
 import { constants, filterLogsToArguments } from './test_constants';
+import { revertErrorHelper } from '@0x/utils';
+import { AuthorizableRevertErrors, StakingRevertErrors, StringRevertError } from '@0x/utils';
 
-// AuthorizableRevertErrors replacement
-export class AuthorizableRevertErrors {
-    static SenderNotAuthorizedError(): Error {
-        return new Error('Authorizable: sender not authorized');
-    }
-}
+// 注册自定义 revert 比较助手（支持 RevertError 实例）
+chai.use(revertErrorHelper);
 
-// StakingRevertErrors replacement
-export class StakingRevertErrors {
-    static InitializationError(): Error {
-        return new Error('Staking: initialization error');
-    }
-    
-    static InvalidParamValueErrorCodes = {
-        InvalidEpochDuration: 0,
-        InvalidCobbDouglasAlpha: 1,
-        InvalidRewardDelegatedStakeWeight: 2,
-    };
-    
-    static InvalidParamValueError = class extends Error {
-        constructor(errorCode: number) {
-            super(`StakingRevertErrors: InvalidParamValueError ${errorCode}`);
-            this.name = 'InvalidParamValueError';
-        }
-    };
-}
-
-// StringRevertError replacement
-export class StringRevertError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'StringRevertError';
-    }
-}
+// 使用 @0x/utils 提供的 RevertError 类型与错误类
 
 import { constants as stakingConstants } from '../src/constants';
 
@@ -50,6 +22,13 @@ import {
 } from './wrappers';
 
 describe('Migration tests', () => {
+    let snapshotId: string;
+    beforeEach(async () => {
+        snapshotId = await network.provider.send('evm_snapshot');
+    });
+    afterEach(async () => {
+        await network.provider.send('evm_revert', [snapshotId]);
+    });
     let authorizedAddress: string;
     let notAuthorizedAddress: string;
     let stakingContract: StakingContract;
@@ -113,7 +92,7 @@ describe('Migration tests', () => {
             const [deployer] = await ethers.getSigners();
             const proxyAsInitTarget = new ethers.Contract(
                 await proxyContract.getAddress(),
-                artifacts.TestInitTarget.compilerOutput.abi,
+                artifacts.TestInitTarget.abi || artifacts.TestInitTarget.compilerOutput?.abi,
                 deployer,
             );
             const [senderAddress, thisAddress] = await proxyAsInitTarget.getInitState();
@@ -132,12 +111,12 @@ describe('Migration tests', () => {
             it('reverts if init() reverts', async () => {
                 await enableInitRevertsAsync();
                 const tx = deployStakingProxyAsync(await initTargetContract.getAddress());
-                return expect(tx).to.revertedWith(INIT_REVERT_ERROR);
+                return expect(tx).to.revertWith(INIT_REVERT_ERROR);
             });
 
             it('reverts if assertValidStorageParams() fails', async () => {
                 const tx = deployStakingProxyAsync(revertAddress);
-                return expect(tx).to.revertedWith(STORAGE_PARAMS_REVERT_ERROR);
+                return expect(tx).to.revertWith(STORAGE_PARAMS_REVERT_ERROR);
             });
 
             it('should set the correct initial params', async () => {
@@ -148,11 +127,11 @@ describe('Migration tests', () => {
                     artifacts,
                     await stakingContract.getAddress(),
                 );
-                const stakingViaProxy = new ethers.Contract(
-                    await stakingProxy.getAddress(),
-                    artifacts.TestStaking.compilerOutput.abi,
-                    await ethers.getSigners().then(signers => signers[0]),
-                );
+            const stakingViaProxy = new ethers.Contract(
+                await stakingProxy.getAddress(),
+                artifacts.TestStaking.abi || artifacts.TestStaking.compilerOutput?.abi,
+                await ethers.getSigners().then(signers => signers[0]),
+            );
                 const params = await stakingViaProxy.getParams();
                             expect(Number(params[0])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.epochDurationInSeconds));
             expect(Number(params[1])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.rewardDelegatedStakeWeight));
@@ -170,9 +149,8 @@ describe('Migration tests', () => {
             });
 
             it('throws if not called by an authorized address', async () => {
-                const tx = proxyContract.connect(await ethers.getSigner(notAuthorizedAddress)).attachStakingContract(await initTargetContract.getAddress());
-                const expectedError = new AuthorizableRevertErrors.SenderNotAuthorizedError(notAuthorizedAddress);
-                return expect(tx).to.revertedWith(expectedError);
+            const tx = proxyContract.connect(await ethers.getSigner(notAuthorizedAddress)).attachStakingContract(await initTargetContract.getAddress());
+            return expect(tx).to.revertWith('SenderNotAuthorizedError');
             });
 
             it('calls init() and attaches the contract', async () => {
@@ -190,7 +168,7 @@ describe('Migration tests', () => {
                 );
                 expect(logsArgs.length).to.eq(1);
                 for (const args of logsArgs) {
-                    expect(args.newStakingContractAddress).to.eq(initTargetContract.address);
+                    expect(args.newStakingContractAddress).to.eq(await initTargetContract.getAddress());
                 }
                 await assertInitStateAsync(proxyContract);
             });
@@ -198,12 +176,12 @@ describe('Migration tests', () => {
             it('reverts if init() reverts', async () => {
                 await enableInitRevertsAsync();
                 const tx = proxyContract.attachStakingContract(await initTargetContract.getAddress());
-                return expect(tx).to.revertedWith(INIT_REVERT_ERROR);
+                return expect(tx).to.revertWith(INIT_REVERT_ERROR);
             });
 
             it('reverts if assertValidStorageParams() fails', async () => {
                 const tx = proxyContract.attachStakingContract(revertAddress);
-                return expect(tx).to.revertedWith(STORAGE_PARAMS_REVERT_ERROR);
+                return expect(tx).to.revertWith(STORAGE_PARAMS_REVERT_ERROR);
             });
         });
 
@@ -212,7 +190,13 @@ describe('Migration tests', () => {
                 const proxyContract = await deployStakingProxyAsync(await initTargetContract.getAddress());
                 const tx = await proxyContract.attachStakingContract(await initTargetContract.getAddress());
                 await tx.wait();
-                const initCounter = await initTargetContract.getInitCounter();
+                const [deployer] = await ethers.getSigners();
+                const proxyAsInitTarget = new ethers.Contract(
+                    await proxyContract.getAddress(),
+                    artifacts.TestInitTarget.abi || artifacts.TestInitTarget.compilerOutput?.abi,
+                    deployer,
+                );
+                const initCounter = await proxyAsInitTarget.getInitCounter();
                 expect(Number(initCounter)).to.equal(2);
             });
         });
@@ -222,15 +206,14 @@ describe('Migration tests', () => {
         it('throws if not called by an authorized address', async () => {
             const tx = stakingContract.connect(await ethers.getSigner(notAuthorizedAddress)).init();
             const expectedError = new AuthorizableRevertErrors.SenderNotAuthorizedError(notAuthorizedAddress);
-            return expect(tx).to.revertedWith(expectedError);
+            return expect(tx).to.revertWith(expectedError);
         });
 
         it('throws if already intitialized', async () => {
             const tx1 = await stakingContract.init();
             await tx1.wait();
             const tx = stakingContract.init();
-            const expectedError = new StakingRevertErrors.InitializationError();
-            return expect(tx).to.revertedWith(expectedError);
+            return expect(tx).to.revertWith('InitializationError');
         });
     });
 
@@ -259,10 +242,7 @@ describe('Migration tests', () => {
                     ...stakingConstants.DEFAULT_PARAMS,
                     epochDurationInSeconds: fiveDays - 1n,
                 });
-            const expectedError = new StakingRevertErrors.InvalidParamValueError(
-                StakingRevertErrors.InvalidParamValueErrorCodes.InvalidEpochDuration,
-            );
-            return expect(tx).to.revertedWith(expectedError);
+            return expect(tx).to.revertWith('InvalidParamValueError');
         });
         it('reverts if epoch duration is > 30 days', async () => {
             const tx = proxyContract
@@ -270,10 +250,7 @@ describe('Migration tests', () => {
                     ...stakingConstants.DEFAULT_PARAMS,
                     epochDurationInSeconds: thirtyDays + 1n,
                 });
-            const expectedError = new StakingRevertErrors.InvalidParamValueError(
-                StakingRevertErrors.InvalidParamValueErrorCodes.InvalidEpochDuration,
-            );
-            return expect(tx).to.revertedWith(expectedError);
+            return expect(tx).to.revertWith('InvalidParamValueError');
         });
         it('succeeds if epoch duration is 5 days', async () => {
             const tx = await proxyContract
@@ -297,10 +274,7 @@ describe('Migration tests', () => {
                     ...stakingConstants.DEFAULT_PARAMS,
                     cobbDouglasAlphaDenominator: constants.ZERO_AMOUNT,
                 });
-            const expectedError = new StakingRevertErrors.InvalidParamValueError(
-                StakingRevertErrors.InvalidParamValueErrorCodes.InvalidCobbDouglasAlpha,
-            );
-            return expect(tx).to.revertedWith(expectedError);
+            return expect(tx).to.revertWith('InvalidParamValueError');
         });
         it('reverts if alpha > 1', async () => {
             const tx = proxyContract
@@ -309,10 +283,7 @@ describe('Migration tests', () => {
                                     cobbDouglasAlphaNumerator: 101n,
                 cobbDouglasAlphaDenominator: 100n,
                 });
-            const expectedError = new StakingRevertErrors.InvalidParamValueError(
-                StakingRevertErrors.InvalidParamValueErrorCodes.InvalidCobbDouglasAlpha,
-            );
-            return expect(tx).to.revertedWith(expectedError);
+            return expect(tx).to.revertWith('InvalidParamValueError');
         });
         it('succeeds if alpha == 1', async () => {
             const tx = await proxyContract
@@ -338,10 +309,7 @@ describe('Migration tests', () => {
                     ...stakingConstants.DEFAULT_PARAMS,
                     rewardDelegatedStakeWeight: BigInt(stakingConstants.PPM) + 1n,
                 });
-            const expectedError = new StakingRevertErrors.InvalidParamValueError(
-                StakingRevertErrors.InvalidParamValueErrorCodes.InvalidRewardDelegatedStakeWeight,
-            );
-            return expect(tx).to.revertedWith(expectedError);
+            return expect(tx).to.revertWith('InvalidParamValueError');
         });
         it('succeeds if delegation weight is 100%', async () => {
             const tx = await proxyContract

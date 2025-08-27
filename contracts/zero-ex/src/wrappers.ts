@@ -10,8 +10,15 @@ export { ZeroExOptimized } from './typechain-types/contracts/src/ZeroExOptimized
 export { FullMigration } from './typechain-types/contracts/src/migrations/FullMigration';
 export { InitialMigration } from './typechain-types/contracts/src/migrations/InitialMigration';
 
-// Export factory types for contract deployment
-export * from './typechain-types/factories';
+// Export factory classes (flatten common ones to avoid deep import issues)
+export { ZeroEx__factory } from './typechain-types/factories/contracts/src';
+export { InitialMigration__factory, FullMigration__factory } from './typechain-types/factories/contracts/src/migrations';
+export * from './typechain-types/factories/contracts/src/features';
+export * from './typechain-types/factories/contracts/test';
+export * from './typechain-types/factories/contracts/test/tokens';
+export * from './typechain-types/factories/contracts/src/external';
+export * from './typechain-types/factories/contracts/src/transformers';
+export * from './typechain-types/factories/contracts/src/transformers/bridges';
 
 // Export common types
 export * from './typechain-types/common';

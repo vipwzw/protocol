@@ -134,6 +134,16 @@ contract TestMixinStakeBalances is
         return IZrxVault(address(this));
     }
 
+    /// @dev Internal override to ensure internal calls use this contract as the ZRX vault
+    function _getZrxVault()
+        internal
+        view
+        override
+        returns (IZrxVault zrxVault)
+    {
+        return IZrxVault(address(this));
+    }
+
     /// @dev Overridden to just return the input with the epoch incremented.
     function _loadCurrentBalance(IStructs.StoredBalance storage balancePtr)
         internal

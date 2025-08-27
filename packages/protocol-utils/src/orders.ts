@@ -220,7 +220,6 @@ export class LimitOrder extends OrderBase {
     public getEIP712TypedData(): EIP712TypedData {
         return {
             types: {
-                EIP712Domain: EIP712_DOMAIN_PARAMETERS,
                 [LimitOrder.STRUCT_NAME]: LimitOrder.STRUCT_ABI,
             },
             domain: createExchangeProxyEIP712Domain(this.chainId, this.verifyingContract) as any,
@@ -318,7 +317,6 @@ export class RfqOrder extends OrderBase {
     public getEIP712TypedData(): EIP712TypedData {
         return {
             types: {
-                EIP712Domain: EIP712_DOMAIN_PARAMETERS,
                 [RfqOrder.STRUCT_NAME]: RfqOrder.STRUCT_ABI,
             },
             domain: createExchangeProxyEIP712Domain(this.chainId, this.verifyingContract) as any,
@@ -450,7 +448,6 @@ export class OtcOrder extends OrderBase {
     public getEIP712TypedData(): EIP712TypedData {
         return {
             types: {
-                EIP712Domain: EIP712_DOMAIN_PARAMETERS,
                 [OtcOrder.STRUCT_NAME]: OtcOrder.STRUCT_ABI,
             },
             domain: createExchangeProxyEIP712Domain(this.chainId, this.verifyingContract) as any,

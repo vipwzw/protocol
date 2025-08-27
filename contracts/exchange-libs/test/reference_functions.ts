@@ -1,4 +1,5 @@
-import { constants, describe, expect } from '@0x/test-utils';
+import { constants } from '@0x/utils';
+import { expect } from 'chai';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { LibMathRevertErrors } from '@0x/utils';
 import * as _ from 'lodash';

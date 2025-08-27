@@ -1,4 +1,5 @@
-import { blockchainTests, constants, describe, expect } from '@0x/test-utils';
+import { constants } from '@0x/utils';
+import { expect } from 'chai';
 import { eip712Utils } from '@0x/order-utils';
 import { ZeroExTransaction } from '@0x/utils';
 import { hexUtils, signTypedDataUtils } from '@0x/utils';
@@ -9,7 +10,7 @@ import { TestLibZeroExTransaction__factory } from '../src/typechain-types';
 
 import { artifacts } from './artifacts';
 
-blockchainTests('LibZeroExTransaction', env => {
+describe('LibZeroExTransaction', () => {
     let libZeroExTransactionContract: any;
 
     const randomAddress = () => hexUtils.random(constants.ADDRESS_LENGTH);

@@ -29,6 +29,7 @@ import {
     TestMixinStake__factory,
     TestCumulativeRewardTracking__factory,
     StakingProxy__factory,
+    TestStakingProxy__factory,
     ZrxVault__factory,
 } from '../src/typechain-types';
 
@@ -36,7 +37,7 @@ import {
 export * from '../src/typechain-types';
 
 // Modern contract wrapper that provides legacy deployFrom0xArtifactAsync interface
-function createLegacyWrapper(Factory: any) {
+function  createLegacyWrapper(Factory: any) {
     return class {
         public static async deployFrom0xArtifactAsync(
             artifact: any,
@@ -48,9 +49,9 @@ function createLegacyWrapper(Factory: any) {
             // Get signer from ethers
             const [deployer] = await ethers.getSigners();
             
-            // Create factory and deploy
+            // Create factory and deploy (Hardhat + TypeChain style)
             const factory = new Factory(deployer);
-            const contract = await factory.deploy(...args);
+            const contract = await (factory as any).deploy(...(args as any));
             
             // Add legacy method compatibility
             const originalMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(contract))
@@ -104,6 +105,7 @@ export const StakingPatchContract = createLegacyWrapper(StakingPatch__factory);
 export const StakingContract = createLegacyWrapper(Staking__factory);
 export const ZrxVaultContract = createLegacyWrapper(ZrxVault__factory);
 export const TestMixinStakeContract = createLegacyWrapper(TestMixinStake__factory);
+// Deprecated: Prefer using TestStaking + TestStaking__factory directly (Hardhat style)
 export const TestStakingContract = createLegacyWrapper(TestStaking__factory);
 export const TestCumulativeRewardTrackingContract = createLegacyWrapper(TestCumulativeRewardTracking__factory);
 
@@ -118,7 +120,7 @@ export class StakingProxyContract {
     ): Promise<any> {
         const [deployer] = await ethers.getSigners();
         const factory = new StakingProxy__factory(deployer);
-        const contract = await factory.deploy(...args);
+        const contract = await (factory as any).deploy(...(args as any));
         
         // Add custom methods
         (contract as any).attachStakingContract = (address: string) => {
@@ -147,7 +149,21 @@ export class StakingProxyContract {
     }
 }
 
-export const TestStakingProxyContract = StakingProxyContract;
+// Provide a dedicated wrapper bound to TestStakingProxy (constructor uses same interface)
+export class TestStakingProxyContract {
+    public static async deployFrom0xArtifactAsync(
+        artifact: any,
+        provider: any,
+        txDefaults: any,
+        logDecodeDependencies: any,
+        ...args: any[]
+    ): Promise<any> {
+        const [deployer] = await ethers.getSigners();
+        const factory = new TestStakingProxy__factory(deployer);
+        const contract = await (factory as any).deploy(...(args as any));
+        return contract;
+    }
+}
 
 // Legacy compatibility function for filterLogsToArguments
 export function filterLogsToArguments(logs: any[], eventName: string): any[] {
@@ -170,6 +186,8 @@ export const StakingProxyEvents = {
 export const TestStakingEvents = {
     EpochEnded: 'EpochEnded',
     StakingPoolEarnedRewardsInEpoch: 'StakingPoolEarnedRewardsInEpoch',
+    AuthorizedAddressAdded: 'AuthorizedAddressAdded',
+    AuthorizedAddressRemoved: 'AuthorizedAddressRemoved',
 };
 
 // Event args types for legacy compatibility

@@ -1,23 +1,16 @@
-import { ethers } from "ethers";
-import {
-    blockchainTests,
-    constants,
-    expect,
-    getRandomInteger,
-    randomAddress,
-    verifyEventsFromLogs,
-} from '@0x/test-utils';
+import { ethers } from "hardhat";
+import { constants, getRandomInteger, randomAddress, verifyEventsFromLogs } from '@0x/utils';
+import { expect } from 'chai';
 import { MetaTransaction, MetaTransactionFields } from '@0x/protocol-utils';
 import { hexUtils, StringRevertError, ZeroExRevertErrors } from '@0x/utils';
 import * as _ from 'lodash';
 
+import { IZeroExContract, MetaTransactionsFeatureContract } from '../wrappers';
 import { 
-    IZeroExContract, 
-    MetaTransactionsFeatureContract,
     TestMetaTransactionsTransformERC20Feature__factory,
     TestMetaTransactionsNativeOrdersFeature__factory,
-    TestMintableERC20Token__factory
-} from '../../src/wrappers';
+} from '../../src/typechain-types/factories/contracts/test';
+import { TestMintableERC20Token__factory } from '../../src/typechain-types/factories/contracts/test/tokens';
 import { artifacts } from '../artifacts';
 import { abis } from '../utils/abis';
 import { fullMigrateAsync } from '../utils/migration';
@@ -32,7 +25,15 @@ import {
 
 const { NULL_ADDRESS, ZERO_AMOUNT } = constants;
 
-blockchainTests('MetaTransactions feature', env => {
+describe('MetaTransactions feature', () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+        web3Wrapper: {
+            getBalanceInWeiAsync: async (addr: string, blockTag?: number) => ethers.provider.getBalance(addr, blockTag as any),
+        },
+    } as any;
     let owner: string;
     let maker: string;
     let sender: string;
@@ -52,6 +53,8 @@ blockchainTests('MetaTransactions feature', env => {
     const REENTRANCY_FLAG_MTX = 0x1;
 
     before(async () => {
+        const accounts = await env.getAccountAddressesAsync();
+        env.txDefaults.from = accounts[0];
         let possibleSigners: string[];
         [owner, maker, sender, notSigner, ...possibleSigners] = await env.getAccountAddressesAsync();
         
@@ -82,8 +85,8 @@ blockchainTests('MetaTransactions feature', env => {
 
         // some accounts returned can be unfunded
         for (const possibleSigner of possibleSigners) {
-            const balance = await env.web3Wrapper.getBalanceInWeiAsync(possibleSigner);
-            if (balance.isGreaterThan(0)) {
+            const balance = await env.provider.getBalance(possibleSigner);
+            if (balance > 0n) {
                 signers.push(possibleSigner);
                 await feeToken
                     .approve(await zeroEx.getAddress(), MAX_FEE_AMOUNT)
@@ -100,13 +103,13 @@ blockchainTests('MetaTransactions feature', env => {
             // TODO: dekz Ganache gasPrice opcode is returning 0, cannot influence it up to test this case
             minGasPrice: ZERO_AMOUNT,
             maxGasPrice: getRandomInteger('1e9', '100e9'),
-            expirationTimeSeconds: ethers.parseUnits(Math.floor(_.now() / 1000) + 360),
-            salt: ethers.parseUnits(hexUtils.random()),
+            expirationTimeSeconds: BigInt(Math.floor(_.now() / 1000) + 360),
+            salt: BigInt(hexUtils.random()),
             callData: hexUtils.random(4),
             value: getRandomInteger(1, '1e18'),
             feeToken: await feeToken.getAddress(),
             feeAmount: getRandomInteger(1, MAX_FEE_AMOUNT),
-            chainId: 1337,
+            chainId: (await ethers.provider.getNetwork()).chainId,
             verifyingContract: await zeroEx.getAddress(),
             ...fields,
         });
@@ -135,7 +138,7 @@ blockchainTests('MetaTransactions feature', env => {
             outputToken: randomAddress(),
             inputTokenAmount: getRandomInteger(1, '1e18'),
             minOutputTokenAmount: getRandomInteger(1, '1e18'),
-            transformations: [{ deploymentNonce: ethers.parseUnits(123), data: hexUtils.random() }],
+            transformations: [{ deploymentNonce: 123n, data: hexUtils.random() }],
             ...fields,
         };
     }
@@ -146,7 +149,7 @@ blockchainTests('MetaTransactions feature', env => {
     describe('executeMetaTransaction()', () => {
         it('can call NativeOrders.fillLimitOrder()', async () => {
             const order = getRandomLimitOrder({ maker });
-            const fillAmount = ethers.parseUnits(23456);
+            const fillAmount = 23456n;
             const sig = await order.getSignatureWithProviderAsync(env.provider);
             const mtx = await getRandomMetaTransaction({
                 callData: nativeOrdersFeature.fillLimitOrder(order, sig, fillAmount).getABIEncodedTransactionData(),
@@ -182,7 +185,7 @@ blockchainTests('MetaTransactions feature', env => {
         it('can call NativeOrders.fillRfqOrder()', async () => {
             const order = getRandomRfqOrder({ maker });
             const sig = await order.getSignatureWithProviderAsync(env.provider);
-            const fillAmount = ethers.parseUnits(23456);
+            const fillAmount = 23456n;
             const mtx = await getRandomMetaTransaction({
                 callData: nativeOrdersFeature.fillRfqOrder(order, sig, fillAmount).getABIEncodedTransactionData(),
                 value: ZERO_AMOUNT,
@@ -342,7 +345,7 @@ blockchainTests('MetaTransactions feature', env => {
         it('fails if the translated call fails', async () => {
             const args = getRandomTransformERC20Args();
             const mtx = await getRandomMetaTransaction({
-                value: ethers.parseUnits(TRANSFORM_ERC20_FAILING_VALUE),
+                value: BigInt(TRANSFORM_ERC20_FAILING_VALUE),
                 callData: transformERC20Feature
                     .transformERC20(
                         args.inputToken,
@@ -435,7 +438,7 @@ blockchainTests('MetaTransactions feature', env => {
             const signature = await mtx.getSignatureWithProviderAsync(env.provider);
             const callOpts = {
                 gasPrice: mtx.minGasPrice,
-                value: mtx.value - 1,
+                value: mtx.value - 1n,
             };
             const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
             return expect(tx).to.be.revertedWith(
@@ -453,7 +456,7 @@ blockchainTests('MetaTransactions feature', env => {
             const mtxHash = mtx.getHash();
             const signature = await mtx.getSignatureWithProviderAsync(env.provider);
             const callOpts = {
-                gasPrice: mtx.minGasPrice - 1,
+                gasPrice: mtx.minGasPrice - 1n,
                 value: mtx.value,
             };
             const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
@@ -473,7 +476,7 @@ blockchainTests('MetaTransactions feature', env => {
             const mtxHash = mtx.getHash();
             const signature = await mtx.getSignatureWithProviderAsync(env.provider);
             const callOpts = {
-                gasPrice: mtx.maxGasPrice + 1,
+                gasPrice: mtx.maxGasPrice + 1n,
                 value: mtx.value,
             };
             const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
@@ -489,7 +492,7 @@ blockchainTests('MetaTransactions feature', env => {
 
         it('fails if expired', async () => {
             const mtx = await getRandomMetaTransaction({
-                expirationTimeSeconds: ethers.parseUnits(Math.floor(_.now() / 1000 - 60)),
+                expirationTimeSeconds: BigInt(Math.floor(_.now() / 1000 - 60)),
             });
             const mtxHash = mtx.getHash();
             const signature = await mtx.getSignatureWithProviderAsync(env.provider);
@@ -633,14 +636,12 @@ blockchainTests('MetaTransactions feature', env => {
                 value: mtx.value,
             };
             // Send pre-existing ETH to the EP.
-            await env.web3Wrapper(
-                await env.web3Wrapper.sendTransactionAsync({
-                    from: owner,
-                    to: await zeroEx.getAddress(),
-                    value: ethers.parseUnits(1),
-                }),
-            );
-            const tx = feature.executeMetaTransaction(mtx, signature)(callOpts);
+            const ownerSigner = await env.provider.getSigner(owner);
+            await (await ownerSigner.sendTransaction({
+                to: await zeroEx.getAddress(),
+                value: 1n
+            })).wait();
+            const tx = feature.batchExecuteMetaTransactions([mtx], [signature])(callOpts);
             return expect(tx).to.be.revertedWith('MetaTransactionsFeature/ETH_LEAK');
         });
     });
@@ -666,7 +667,7 @@ blockchainTests('MetaTransactions feature', env => {
                 mtxs.map(async mtx => mtx.getSignatureWithProviderAsync(env.provider)),
             );
             const callOpts = {
-                gasPrice: Math.max(...mtxs.map(mtx => mtx.minGasPrice)),
+                gasPrice: mtxs.map(mtx => mtx.minGasPrice).reduce((a, b) => (a > b ? a : b), 0n),
                 value: mtxs.map(mtx => mtx.value).reduce((a, b) => a + b, 0n),
             };
             const rawResults = await feature.batchExecuteMetaTransactions(mtxs, signatures)(callOpts);
@@ -693,10 +694,10 @@ blockchainTests('MetaTransactions feature', env => {
             const mtxs = _.times(2, () => mtx);
             const signatures = await Promise.all(mtxs.map(async m => m.getSignatureWithProviderAsync(env.provider)));
             const callOpts = {
-                gasPrice: Math.max(...mtxs.map(m => m.minGasPrice)),
+                gasPrice: mtxs.map(m => m.minGasPrice).reduce((a, b) => (a > b ? a : b), 0n),
                 value: mtxs.map(m => m.value).reduce((a, b) => a + b, 0n),
             };
-            const block = await env.web3Wrapper.getBlockNumberAsync();
+            const block = await env.provider.getBlockNumber();
             const tx = feature.batchExecuteMetaTransactions(mtxs, signatures)(callOpts);
             return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.MetaTransactions.MetaTransactionAlreadyExecutedError(mtxHash, block),
@@ -706,7 +707,7 @@ blockchainTests('MetaTransactions feature', env => {
         it('fails if a meta-transaction fails', async () => {
             const args = getRandomTransformERC20Args();
             const mtx = await getRandomMetaTransaction({
-                value: ethers.parseUnits(TRANSFORM_ERC20_FAILING_VALUE),
+                value: BigInt(TRANSFORM_ERC20_FAILING_VALUE),
                 callData: transformERC20Feature
                     .transformERC20(
                         args.inputToken,
@@ -819,13 +820,11 @@ blockchainTests('MetaTransactions feature', env => {
                 value: mtx.value,
             };
             // Send pre-existing ETH to the EP.
-            await env.web3Wrapper(
-                await env.web3Wrapper.sendTransactionAsync({
-                    from: owner,
-                    to: await zeroEx.getAddress(),
-                    value: ethers.parseUnits(1),
-                }),
-            );
+            const ownerSigner = await env.provider.getSigner(owner);
+            await (await ownerSigner.sendTransaction({
+                to: await zeroEx.getAddress(),
+                value: ethers.parseUnits('1')
+            })).wait();
             const tx = feature.batchExecuteMetaTransactions([mtx], [signature])(callOpts);
             return expect(tx).to.be.revertedWith('MetaTransactionsFeature/ETH_LEAK');
         });

@@ -1,5 +1,5 @@
 import { artifacts as erc721Artifacts, DummyERC721Token, DummyERC721Token__factory } from '@0x/contracts-erc721';
-import { constants, txDefaults } from '@0x/test-utils';
+import { constants, txDefaults } from '@0x/utils';
 import { generatePseudoRandomSalt } from '@0x/order-utils';
 import { ZeroExProvider } from 'ethereum-types';
 import * as _ from 'lodash';

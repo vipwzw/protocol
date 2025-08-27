@@ -1,4 +1,4 @@
-import { describe } from '@0x/test-utils';
+// describe 是 Hardhat 的全局函数
 import { readdir, readFile } from 'fs';
 import { basename, resolve } from 'path';
 import { promisify } from 'util';

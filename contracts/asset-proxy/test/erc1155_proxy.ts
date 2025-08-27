@@ -11,7 +11,7 @@ import {
     provider,
     txDefaults,
     web3Wrapper,
-} from '@0x/test-utils';
+} from '@0x/utils';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 // BlockchainLifecycle 已移除，使用 Hardhat 原生快照功能
 import { AssetProxyId, RevertReason } from '@0x/utils';

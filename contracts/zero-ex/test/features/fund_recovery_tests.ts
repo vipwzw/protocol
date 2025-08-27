@@ -1,6 +1,7 @@
-import { blockchainTests, constants, expect, randomAddress } from '@0x/test-utils';
+import { constants, randomAddress } from '@0x/utils';
+import { expect } from 'chai';
 import { OwnableRevertErrors } from '@0x/utils';
-import { ethers } from 'ethers';
+import { ethers } from 'hardhat';
 
 import { IOwnableFeatureContract, IZeroExContract, FundRecoveryFeature__factory } from '../../src/wrappers';
 import { artifacts } from '../artifacts';
@@ -9,11 +10,23 @@ import { abis } from '../utils/abis';
 import { fullMigrateAsync } from '../utils/migration';
 import { TestMintableERC20Token } from '../../src/typechain-types/contracts/test/tokens/TestMintableERC20Token';
 
-blockchainTests('FundRecovery', async env => {
+describe('FundRecovery', async () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+        web3Wrapper: {
+            getBalanceInWeiAsync: async (addr: string) => ethers.provider.getBalance(addr),
+            awaitTransactionMinedAsync: async (hash: string) => ethers.provider.waitForTransaction(hash),
+            sendTransactionAsync: async (tx: any) => (await ethers.getSigner(tx.from)).sendTransaction(tx).then(r => r.hash),
+        },
+    } as any;
     let owner: string;
     let zeroEx: IZeroExContract;
     let token: TestMintableERC20Token;
     before(async () => {
+        const accounts = await env.getAccountAddressesAsync();
+        env.txDefaults.from = accounts[0];
         const INITIAL_ERC20_BALANCE = ethers.parseUnits('10000', 18);
         [owner] = await env.getAccountAddressesAsync();
         zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {});
@@ -25,13 +38,12 @@ blockchainTests('FundRecovery', async env => {
         const featureFactory = new FundRecoveryFeature__factory(signer);
         const featureImpl = await featureFactory.deploy();
         await featureImpl.waitForDeployment();
-        const ownableFeature = new IOwnableFeatureContract(await zeroEx.getAddress(), env.provider, env.txDefaults, abis);
         const ownerSigner = await env.provider.getSigner(owner);
-        await ownableFeature
+        await zeroEx
             .connect(ownerSigner)
-            .migrate(await featureImpl.getAddress(), featureImpl.migrate().getABIEncodedTransactionData(), owner);
+            .migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
     });
-    blockchainTests('Should delegatecall `transferTrappedTokensTo` from the exchange proxy', () => {
+    describe('Should delegatecall `transferTrappedTokensTo` from the exchange proxy', () => {
         const ETH_TOKEN_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
         const recipientAddress = randomAddress();
         it('Tranfers an arbitrary ERC-20 Token', async () => {

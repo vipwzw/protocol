@@ -1,17 +1,16 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { expect, Numberish } from '../test_constants';
+import { Numberish } from '../test_constants';
 
 import { constants } from '../../src/constants';
 import { StoredBalance } from '../../src/types';
 
 import { StakingRevertErrors } from '../../src';
 
-import { artifacts } from '../artifacts';
-import { TestMixinStakeStorageContract } from '../wrappers';
+import { TestMixinStakeStorage__factory, TestMixinStakeStorage } from '../../src/typechain-types';
 
-describe('MixinStakeStorage unit tests', env => {
-    let testContract: TestMixinStakeStorageContract;
+describe('MixinStakeStorage unit tests', () => {
+    let testContract: TestMixinStakeStorage;
     let defaultUninitializedBalance: StoredBalance;
     let defaultSyncedBalance: StoredBalance;
     let defaultUnsyncedBalance: StoredBalance;
@@ -21,12 +20,9 @@ describe('MixinStakeStorage unit tests', env => {
     const INDEX_ONE = 1n;
 
     before(async () => {
-        testContract = await TestMixinStakeStorageContract.deployFrom0xArtifactAsync(
-            artifacts.TestMixinStakeStorage,
-            await ethers.getSigners().then(signers => signers[0]),
-            {},
-            artifacts,
-        );
+        const [deployer] = await ethers.getSigners();
+        const factory = new TestMixinStakeStorage__factory(deployer);
+        testContract = await factory.deploy();
         const tx = await testContract.setCurrentEpoch(CURRENT_EPOCH);
         await tx.wait();
         defaultUninitializedBalance = {
@@ -134,9 +130,12 @@ describe('MixinStakeStorage unit tests', env => {
         it('Balance updates current epoch fields if the balance has not yet been synced in the current epoch', async () => {
             const tx = await testContract.setStoredBalance(defaultUnsyncedBalance, INDEX_ZERO);
             await tx.wait();
-            const tx2 = await testContract.loadCurrentBalance(INDEX_ZERO);
-            await tx2.wait();
-            const actualBalance = await getTestBalancesAsync(INDEX_ZERO);
+            const result = await testContract.loadCurrentBalance.staticCall(INDEX_ZERO);
+            const actualBalance = {
+                currentEpoch: (result as any).currentEpoch ?? result[0],
+                currentEpochBalance: (result as any).currentEpochBalance ?? result[1],
+                nextEpochBalance: (result as any).nextEpochBalance ?? result[2],
+            };
             expect(actualBalance).to.deep.equal(defaultSyncedBalance);
         });
         it('Balance loads unsynced balance from storage without changing fields', async () => {

@@ -1,6 +1,7 @@
-import { blockchainTests, expect, verifyEventsFromLogs } from '@0x/test-utils';
+import { verifyEventsFromLogs } from '@0x/utils';
+import { expect } from 'chai';
 import { hexUtils } from '@0x/utils';
-import { ethers } from 'ethers';
+import { ethers } from 'hardhat';
 
 import { artifacts } from './artifacts';
 import { PermissionlessTransformerDeployer__factory } from '../src/typechain-types/factories/contracts/src/external';
@@ -8,7 +9,12 @@ import { TestPermissionlessTransformerDeployerTransformer__factory } from '../sr
 import type { PermissionlessTransformerDeployer } from '../src/typechain-types/contracts/src/external/PermissionlessTransformerDeployer';
 import type { TestPermissionlessTransformerDeployerTransformer } from '../src/typechain-types/contracts/test/TestPermissionlessTransformerDeployerTransformer';
 
-blockchainTests('PermissionlessTransformerDeployer', env => {
+describe('PermissionlessTransformerDeployer', () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+    } as any;
     let sender: string;
     let deployer: PermissionlessTransformerDeployer;
     const deployBytes = artifacts.TestPermissionlessTransformerDeployerTransformer.bytecode;
@@ -18,6 +24,7 @@ blockchainTests('PermissionlessTransformerDeployer', env => {
         
         // 使用 TypeChain 工厂部署合约
         const accounts = await env.getAccountAddressesAsync();
+        env.txDefaults.from = accounts[0];
         const signer = await env.provider.getSigner(accounts[0]);
         
         const factory = new PermissionlessTransformerDeployer__factory(signer);

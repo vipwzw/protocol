@@ -17,6 +17,7 @@ export { fetchAsync } from './fetch_async';
 export { signTypedDataUtils } from './sign_typed_data_utils';
 export { hexUtils } from './hex_utils';
 export * from './types';
+export * from './test_helpers';
 
 // 显式导出类型定义（interface 和 type 在运行时不存在，需要显式导出）
 export type {
@@ -107,6 +108,9 @@ export {
     AnyRevertError,
 } from './revert_error';
 export { fromTokenUnitAmount, toTokenUnitAmount } from './token_utils';
+
+// 测试辅助工具（从 @0x/test-utils 和 @0x/dev-utils 迁移）
+export * from './test_helpers';
 
 export import BrokerRevertErrors = require('./revert_errors/broker/revert_errors');
 export import CoordinatorRevertErrors = require('./revert_errors/coordinator/revert_errors');

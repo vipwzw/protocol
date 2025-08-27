@@ -805,7 +805,7 @@ describe('Delegator rewards unit tests', () => {
             const poolId = hexUtils.random();
             const { delegator: delegatorA, stake: stakeA } = await delegateStakeAsync(poolId);
             const { delegator: delegatorB, stake: stakeB } = await delegateStakeAsync(poolId);
-            const totalStake = BigNumber.sum(stakeA, stakeB);
+            const totalStake = toBigInt(stakeA) + toBigInt(stakeB);
             await advanceEpochAsync(); // epoch 2 (stakes now active)
             await advanceEpochAsync(); // epoch 3
             // rewards paid for stake in epoch 2
@@ -816,7 +816,7 @@ describe('Delegator rewards unit tests', () => {
                 poolId,
                 membersStake: totalStake,
             });
-            const totalRewards = BigNumber.sum(prevReward, unfinalizedReward);
+            const totalRewards = bigSum(prevReward, unfinalizedReward);
             // finalize
             await finalizePoolAsync(poolId);
             // delegator A will collect rewards by touching stake.

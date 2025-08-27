@@ -1,12 +1,11 @@
 import {
-    blockchainTests,
     constants,
-    expect,
     getRandomInteger,
     getRandomPortion,
     randomAddress,
     verifyEventsFromLogs,
-} from '@0x/test-utils';
+} from '@0x/utils';
+import { expect } from 'chai';
 import { AssetProxyId } from '@0x/utils';
 import { hexUtils } from '@0x/utils';
 import { ethers } from 'hardhat';

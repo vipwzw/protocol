@@ -1,5 +1,4 @@
-import { chaiSetup, constants, provider, txDefaults } from '@0x/test-utils';
-import { BlockchainLifecycle } from '@0x/dev-utils';
+import { chaiSetup, constants, provider, txDefaults } from '@0x/utils';
 import { RevertReason } from '@0x/utils';
 import * as chai from 'chai';
 import { ethers } from 'hardhat';
@@ -8,9 +7,9 @@ import { DummyERC20Token, DummyERC20Token__factory } from './wrappers';
 
 import { artifacts } from './artifacts';
 
-chaiSetup.configure();
+// chaiSetup 已废弃，Hardhat 自动配置 chai
 const expect = chai.expect;
-const blockchainLifecycle = new BlockchainLifecycle();
+
 
 describe('UnlimitedAllowanceToken', () => {
     let owner: string;

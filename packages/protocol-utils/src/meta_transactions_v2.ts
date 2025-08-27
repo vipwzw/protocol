@@ -116,7 +116,6 @@ export class MetaTransactionV2 {
     public getEIP712TypedData(): EIP712TypedData {
         return {
             types: {
-                EIP712Domain: EIP712_DOMAIN_PARAMETERS,
                 [MetaTransactionV2.MTX_STRUCT_NAME]: MetaTransactionV2.MTX_STRUCT_ABI,
                 [MetaTransactionV2.FEE_STRUCT_NAME]: MetaTransactionV2.FEE_STRUCT_ABI,
             },

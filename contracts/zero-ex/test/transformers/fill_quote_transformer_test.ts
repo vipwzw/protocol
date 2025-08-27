@@ -1,11 +1,6 @@
-import {
-    assertIntegerRoughlyEquals,
-    blockchainTests,
-    constants,
-    expect,
-    getRandomInteger,
-    Numberish,
-} from '@0x/test-utils';
+import { assertIntegerRoughlyEquals, constants, getRandomInteger, Numberish } from '@0x/utils';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
 
 // Local bigint assertion helper
 function expectBigIntEqual(actual: any, expected: any): void {
@@ -32,7 +27,6 @@ import { TransactionReceiptWithDecodedLogs as TxReceipt } from 'ethereum-types';
 import * as _ from 'lodash';
 
 import { artifacts } from '../artifacts';
-import { TestFillQuoteTransformerBridgeContract } from '../wrappers';
 import { getRandomLimitOrder, getRandomRfqOrder } from '../utils/orders';
 import {
     EthereumBridgeAdapterContract,
@@ -40,7 +34,6 @@ import {
     TestFillQuoteTransformerExchangeContract,
     TestFillQuoteTransformerHostContract,
     TestMintableERC20TokenContract,
-    TestFillQuoteTransformerBridgeContract,
     EthereumBridgeAdapter__factory,
     FillQuoteTransformer__factory,
     TestFillQuoteTransformerExchange__factory,
@@ -51,19 +44,54 @@ import {
 
 const { NULL_ADDRESS, NULL_BYTES, MAX_UINT256, ZERO_AMOUNT } = constants;
 
-blockchainTests.resets('FillQuoteTransformer', env => {
+// BigInt helpers
+function toBigIntSafe(value: any): bigint {
+    if (typeof value === 'bigint') return value;
+    if (typeof value === 'number') return BigInt(Math.floor(value));
+    if (typeof value === 'string') return value.startsWith('0x') ? BigInt(value) : BigInt(value || 0);
+    return BigInt(value || 0);
+}
+
+function minBigInt(...values: Array<bigint>): bigint {
+    return values.reduce((a, b) => (a < b ? a : b));
+}
+
+function sumBigInt(values: Array<bigint>): bigint {
+    return values.reduce((a, b) => a + b, 0n);
+}
+
+function divRoundDown(numer: bigint, denom: bigint): bigint {
+    return numer / denom;
+}
+
+function divRoundUp(numer: bigint, denom: bigint): bigint {
+    return (numer + denom - 1n) / denom;
+}
+
+describe('FillQuoteTransformer', () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+        web3Wrapper: {
+            getBalanceInWeiAsync: async (addr: string) => ethers.provider.getBalance(addr),
+        },
+    } as any;
     let maker: string;
     let feeRecipient: string;
     let sender: string;
     let taker: string;
     let exchange: TestFillQuoteTransformerExchangeContract;
-    let bridge: TestFillQuoteTransformerBridgeContract;
+    let bridge: any;
+    let BRIDGE_ADDRESS: string;
     let transformer: FillQuoteTransformerContract;
     let host: TestFillQuoteTransformerHostContract;
     let makerToken: TestMintableERC20TokenContract;
     let takerToken: TestMintableERC20TokenContract;
     let takerFeeToken: TestMintableERC20TokenContract;
     let singleProtocolFee: bigint;
+    let makerTokenAddress: string;
+    let takerTokenAddress: string;
 
     const GAS_PRICE = 1337;
     // Left half is 0, corresponding to BridgeProtocol.Unknown
@@ -72,7 +100,9 @@ blockchainTests.resets('FillQuoteTransformer', env => {
     const REVERT_AMOUNT = BigInt(0xdeadbeef);
 
     before(async () => {
-        [maker, feeRecipient, sender, taker] = await env.getAccountAddressesAsync();
+        const accounts = await env.getAccountAddressesAsync();
+        env.txDefaults.from = accounts[0];
+        [maker, feeRecipient, sender, taker] = accounts;
         const deployer = maker; // Use first account as deployer
         const signer = await env.provider.getSigner(deployer);
         const senderSigner = await env.provider.getSigner(sender);
@@ -104,6 +134,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         const bridgeFactory = new TestFillQuoteTransformerBridge__factory(senderSigner);
         bridge = await bridgeFactory.deploy();
         await bridge.waitForDeployment();
+        BRIDGE_ADDRESS = await bridge.getAddress();
         // Deploy tokens
         const tokenFactories = _.times(3, () => new TestMintableERC20Token__factory(signer));
         const tokenDeployments = await Promise.all(
@@ -111,6 +142,8 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         );
         await Promise.all(tokenDeployments.map(token => token.waitForDeployment()));
         [makerToken, takerToken, takerFeeToken] = tokenDeployments;
+        makerTokenAddress = await makerToken.getAddress();
+        takerTokenAddress = await takerToken.getAddress();
         singleProtocolFee = BigInt(await exchange.getProtocolFeeMultiplier()) * BigInt(GAS_PRICE);
     });
 
@@ -118,8 +151,8 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         return getRandomLimitOrder({
             maker,
             feeRecipient,
-            makerToken: makerToken.address,
-            takerToken: takerToken.address,
+            makerToken: makerTokenAddress,
+            takerToken: takerTokenAddress,
             makerAmount: getRandomInteger('0.1e18', '1e18'),
             takerAmount: getRandomInteger('0.1e18', '1e18'),
             takerTokenFeeAmount: getRandomInteger('0.1e18', '1e18'),
@@ -130,8 +163,8 @@ blockchainTests.resets('FillQuoteTransformer', env => {
     function createRfqOrder(fields: Partial<RfqOrderFields> = {}): RfqOrder {
         return getRandomRfqOrder({
             maker,
-            makerToken: makerToken.address,
-            takerToken: takerToken.address,
+            makerToken: makerTokenAddress,
+            takerToken: takerTokenAddress,
             makerAmount: getRandomInteger('0.1e18', '1e18'),
             takerAmount: getRandomInteger('0.1e18', '1e18'),
             ...fields,
@@ -139,12 +172,36 @@ blockchainTests.resets('FillQuoteTransformer', env => {
     }
 
     function createBridgeOrder(fillRatio: Numberish = 1.0): BridgeOrder {
-        const makerTokenAmount = getRandomInteger('0.1e18', '1e18');
+        const makerTokenAmount = toBigIntSafe(getRandomInteger('0.1e18', '1e18'));
+        const takerTokenAmount = toBigIntSafe(getRandomInteger('0.1e18', '1e18'));
+        // Convert fillRatio to a rational numerator/denominator
+        let num = 1n;
+        let den = 1n;
+        if (typeof fillRatio === 'number') {
+            // Encode common fractions (0.5, 1.0). For arbitrary numbers, approximate at 1e6 precision
+            const precision = 1_000_000n;
+            num = BigInt(Math.round(fillRatio * Number(precision)));
+            den = precision;
+        } else if (typeof fillRatio === 'bigint') {
+            num = fillRatio;
+            den = 1n;
+        } else if (typeof fillRatio === 'string') {
+            if (fillRatio.includes('.')) {
+                const [i, f] = fillRatio.split('.');
+                const scale = 10n ** BigInt(f.length);
+                num = BigInt(i) * scale + BigInt(f);
+                den = scale;
+            } else {
+                num = BigInt(fillRatio);
+                den = 1n;
+            }
+        }
+        const boughtAmount = (makerTokenAmount * num) / den;
         return {
             makerTokenAmount,
             source: TEST_BRIDGE_SOURCE,
-            takerTokenAmount: getRandomInteger('0.1e18', '1e18'),
-            bridgeData: encodeBridgeData(BigInt(Math.floor(makerTokenAmount * fillRatio))),
+            takerTokenAmount,
+            bridgeData: encodeBridgeData(boughtAmount),
         };
     }
 
@@ -152,30 +209,31 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         return {
             // The r field of the signature is the pre-filled amount.
             r: hexUtils.leftPad(preFilledTakerAmount),
-            s: NULL_BYTES,
+            s: hexUtils.leftPad(0),
             v: 0,
             signatureType: 0,
         };
     }
 
     function orderSignatureToPreFilledTakerAmount(signature: Signature): bigint {
-        return BigInt(signature.r);
+        return toBigIntSafe(signature.r);
     }
 
     function encodeBridgeData(boughtAmount: bigint): string {
-        // abi.encode(bridgeAddress, bridgeData)
-        return hexUtils.concat(hexUtils.leftPad(bridge.address), hexUtils.leftPad(32), hexUtils.leftPad(boughtAmount));
+        // MixinZeroExBridge expects abi.encode(ILiquidityProvider, bytes)
+        const lpData = ethers.AbiCoder.defaultAbiCoder().encode(['uint256'], [boughtAmount]);
+        return ethers.AbiCoder.defaultAbiCoder().encode(['address', 'bytes'], [BRIDGE_ADDRESS, lpData]);
     }
 
     interface QuoteFillResults {
-        makerTokensBought: BigNumber;
-        takerTokensSpent: BigNumber;
-        protocolFeePaid: BigNumber;
+        makerTokensBought: bigint;
+        takerTokensSpent: bigint;
+        protocolFeePaid: bigint;
     }
 
     interface SimulationState {
-        takerTokenBalance: BigNumber;
-        ethBalance: BigNumber;
+        takerTokenBalance: bigint;
+        ethBalance: bigint;
     }
 
     function getExpectedQuoteFillResults(
@@ -189,14 +247,14 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         };
         type FillOrderResults = typeof EMPTY_FILL_ORDER_RESULTS;
 
-        let takerTokenBalanceRemaining = state.takerTokenBalance;
+        let takerTokenBalanceRemaining: bigint = state.takerTokenBalance;
         if (data.side === Side.Sell && data.fillAmount !== MAX_UINT256) {
             takerTokenBalanceRemaining = data.fillAmount;
         }
-        let ethBalanceRemaining = state.ethBalance;
-        let soldAmount = ZERO_AMOUNT;
-        let boughtAmount = ZERO_AMOUNT;
-        const fillAmount = normalizeFillAmount(data.fillAmount, state.takerTokenBalance);
+        let ethBalanceRemaining: bigint = state.ethBalance;
+        let soldAmount: bigint = ZERO_AMOUNT;
+        let boughtAmount: bigint = ZERO_AMOUNT;
+        const fillAmount: bigint = normalizeFillAmount(data.fillAmount, state.takerTokenBalance);
         const orderIndices = [0, 0, 0];
 
         function computeTakerTokenFillAmount(
@@ -204,29 +262,28 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             orderMakerTokenAmount: bigint,
             orderTakerTokenFeeAmount: bigint = ZERO_AMOUNT,
         ): bigint {
-            let takerTokenFillAmount = ZERO_AMOUNT;
+            let takerTokenFillAmount = 0n;
             if (data.side === Side.Sell) {
-                takerTokenFillAmount = fillAmount.minus(soldAmount);
-                if (orderTakerTokenFeeAmount.gt(0)) {
-                    takerTokenFillAmount = takerTokenFillAmount
-                        .times(orderTakerTokenAmount)
-                        .div(orderTakerTokenAmount.plus(orderTakerTokenFeeAmount))
-                        .integerValue(BigNumber.ROUND_UP);
+                takerTokenFillAmount = fillAmount - soldAmount;
+                if (orderTakerTokenFeeAmount > 0n) {
+                    takerTokenFillAmount = divRoundUp(
+                        takerTokenFillAmount * orderTakerTokenAmount,
+                        orderTakerTokenAmount + orderTakerTokenFeeAmount,
+                    );
                 }
             } else {
                 // Buy
-                takerTokenFillAmount = fillAmount
-                    .minus(boughtAmount)
-                    .times(orderTakerTokenAmount)
-                    .div(orderMakerTokenAmount)
-                    .integerValue(BigNumber.ROUND_UP);
+                takerTokenFillAmount = divRoundUp(
+                    (fillAmount - boughtAmount) * orderTakerTokenAmount,
+                    orderMakerTokenAmount,
+                );
             }
-            return BigNumber.min(takerTokenFillAmount, orderTakerTokenAmount, takerTokenBalanceRemaining);
+            return minBigInt(takerTokenFillAmount, orderTakerTokenAmount, takerTokenBalanceRemaining);
         }
 
         function fillBridgeOrder(order: BridgeOrder): FillOrderResults {
             const bridgeBoughtAmount = decodeBridgeData(order.bridgeData).boughtAmount;
-            if (bridgeBoughtAmount.eq(REVERT_AMOUNT)) {
+            if (bridgeBoughtAmount === REVERT_AMOUNT) {
                 return EMPTY_FILL_ORDER_RESULTS;
             }
             return {
@@ -238,96 +295,93 @@ blockchainTests.resets('FillQuoteTransformer', env => {
 
         function fillLimitOrder(oi: FillQuoteTransformerLimitOrderInfo): FillOrderResults {
             const preFilledTakerAmount = orderSignatureToPreFilledTakerAmount(oi.signature);
-            if (preFilledTakerAmount.gte(oi.order.takerAmount) || preFilledTakerAmount.eq(REVERT_AMOUNT)) {
+            if (preFilledTakerAmount >= oi.order.takerAmount || preFilledTakerAmount === REVERT_AMOUNT) {
                 return EMPTY_FILL_ORDER_RESULTS;
             }
-            if (ethBalanceRemaining.lt(singleProtocolFee)) {
+            if (ethBalanceRemaining < singleProtocolFee) {
                 return EMPTY_FILL_ORDER_RESULTS;
             }
-            const takerTokenFillAmount = BigNumber.min(
+            const takerTokenFillAmount = minBigInt(
                 computeTakerTokenFillAmount(oi.order.takerAmount, oi.order.makerAmount, oi.order.takerTokenFeeAmount),
-                oi.order.takerAmount.minus(preFilledTakerAmount),
+                oi.order.takerAmount - preFilledTakerAmount,
                 oi.maxTakerTokenFillAmount,
             );
-            const fillRatio = takerTokenFillAmount.div(oi.order.takerAmount);
+            const makerTokenBoughtAmount = (takerTokenFillAmount * oi.order.makerAmount) / oi.order.takerAmount;
+            const takerFee = (takerTokenFillAmount * oi.order.takerTokenFeeAmount) / oi.order.takerAmount;
             return {
                 ...EMPTY_FILL_ORDER_RESULTS,
-                takerTokenSoldAmount: takerTokenFillAmount.plus(
-                    fillRatio.times(oi.order.takerTokenFeeAmount).integerValue(BigNumber.ROUND_DOWN),
-                ),
-                makerTokenBoughtAmount: fillRatio.times(oi.order.makerAmount).integerValue(BigNumber.ROUND_DOWN),
+                takerTokenSoldAmount: takerTokenFillAmount + takerFee,
+                makerTokenBoughtAmount,
                 protocolFeePaid: singleProtocolFee,
             };
         }
 
         function fillRfqOrder(oi: FillQuoteTransformerRfqOrderInfo): FillOrderResults {
             const preFilledTakerAmount = orderSignatureToPreFilledTakerAmount(oi.signature);
-            if (preFilledTakerAmount.gte(oi.order.takerAmount) || preFilledTakerAmount.eq(REVERT_AMOUNT)) {
+            if (preFilledTakerAmount >= oi.order.takerAmount || preFilledTakerAmount === REVERT_AMOUNT) {
                 return EMPTY_FILL_ORDER_RESULTS;
             }
-            const takerTokenFillAmount = BigNumber.min(
+            const takerTokenFillAmount = minBigInt(
                 computeTakerTokenFillAmount(oi.order.takerAmount, oi.order.makerAmount),
-                oi.order.takerAmount.minus(preFilledTakerAmount),
+                oi.order.takerAmount - preFilledTakerAmount,
                 oi.maxTakerTokenFillAmount,
             );
-            const fillRatio = takerTokenFillAmount.div(oi.order.takerAmount);
+            const makerTokenBoughtAmount = (takerTokenFillAmount * oi.order.makerAmount) / oi.order.takerAmount;
             return {
                 ...EMPTY_FILL_ORDER_RESULTS,
                 takerTokenSoldAmount: takerTokenFillAmount,
-                makerTokenBoughtAmount: fillRatio.times(oi.order.makerAmount).integerValue(BigNumber.ROUND_DOWN),
+                makerTokenBoughtAmount,
             };
         }
+
+        // 解码本地使用的 infos（如果为 bytes 则解码）
+        const limitInfos: FillQuoteTransformerLimitOrderInfo[] = decodeLimitOrderInfos(data.limitOrders as any);
+        const rfqInfos: FillQuoteTransformerRfqOrderInfo[] = decodeRfqOrderInfos(data.rfqOrders as any);
 
         for (let i = 0; i < data.fillSequence.length; ++i) {
             const orderType = data.fillSequence[i];
             if (data.side === Side.Sell) {
-                if (soldAmount.gte(fillAmount)) {
+                if (soldAmount >= fillAmount) {
                     break;
                 }
             } else {
-                if (boughtAmount.gte(fillAmount)) {
+                if (boughtAmount >= fillAmount) {
                     break;
                 }
             }
             let results = EMPTY_FILL_ORDER_RESULTS;
             switch (orderType) {
                 case OrderType.Bridge:
-                    {
-                        results = fillBridgeOrder(data.bridgeOrders[orderIndices[orderType]]);
-                    }
+                    results = fillBridgeOrder(data.bridgeOrders[orderIndices[orderType]]);
                     break;
                 case OrderType.Limit:
-                    {
-                        results = fillLimitOrder(data.limitOrders[orderIndices[orderType]]);
-                    }
+                    results = fillLimitOrder(limitInfos[orderIndices[orderType]]);
                     break;
                 case OrderType.Rfq:
-                    {
-                        results = fillRfqOrder(data.rfqOrders[orderIndices[orderType]]);
-                    }
+                    results = fillRfqOrder(rfqInfos[orderIndices[orderType]]);
                     break;
                 default:
                     throw new Error('Unknown order type');
             }
-            soldAmount = soldAmount.plus(results.takerTokenSoldAmount);
-            boughtAmount = boughtAmount.plus(results.makerTokenBoughtAmount);
-            ethBalanceRemaining = ethBalanceRemaining.minus(results.protocolFeePaid);
-            takerTokenBalanceRemaining = takerTokenBalanceRemaining.minus(results.takerTokenSoldAmount);
+            soldAmount += results.takerTokenSoldAmount;
+            boughtAmount += results.makerTokenBoughtAmount;
+            ethBalanceRemaining -= results.protocolFeePaid;
+            takerTokenBalanceRemaining -= results.takerTokenSoldAmount;
             orderIndices[orderType]++;
         }
 
         return {
             takerTokensSpent: soldAmount,
             makerTokensBought: boughtAmount,
-            protocolFeePaid: state.ethBalance.minus(ethBalanceRemaining),
+            protocolFeePaid: state.ethBalance - ethBalanceRemaining,
         };
     }
 
     interface Balances {
-        makerTokenBalance: BigNumber;
-        takerTokensBalance: BigNumber;
-        takerFeeBalance: BigNumber;
-        ethBalance: BigNumber;
+        makerTokenBalance: bigint;
+        takerTokensBalance: bigint;
+        takerFeeBalance: bigint;
+        ethBalance: bigint;
     }
 
     const ZERO_BALANCES = {
@@ -350,10 +404,10 @@ blockchainTests.resets('FillQuoteTransformer', env => {
     }
 
     function assertBalances(actual: Balances, expected: Balances): void {
-        assertIntegerRoughlyEquals(actual.makerTokenBalance, expected.makerTokenBalance, 10, 'makerTokenBalance');
-        assertIntegerRoughlyEquals(actual.takerTokensBalance, expected.takerTokensBalance, 10, 'takerTokensBalance');
-        assertIntegerRoughlyEquals(actual.takerFeeBalance, expected.takerFeeBalance, 10, 'takerFeeBalance');
-        assertIntegerRoughlyEquals(actual.ethBalance, expected.ethBalance, 10, 'ethBalance');
+        assertIntegerRoughlyEquals(actual.makerTokenBalance, expected.makerTokenBalance, 10n);
+        assertIntegerRoughlyEquals(actual.takerTokensBalance, expected.takerTokensBalance, 10n);
+        assertIntegerRoughlyEquals(actual.takerFeeBalance, expected.takerFeeBalance, 10n);
+        assertIntegerRoughlyEquals(actual.ethBalance, expected.ethBalance, 10n);
     }
 
     async function assertCurrentBalancesAsync(owner: string, expected: Balances): Promise<void> {
@@ -366,7 +420,8 @@ blockchainTests.resets('FillQuoteTransformer', env => {
 
     function normalizeFillAmount(raw: bigint, balance: bigint): bigint {
         if (raw >= HIGH_BIT) {
-            return BigInt(Math.floor(Number(raw - HIGH_BIT) / 1e18 * Number(balance)));
+            const f = raw - HIGH_BIT; // scaled by 1e18
+            return (balance * f) / 1000000000000000000n;
         }
         return raw;
     }
@@ -377,21 +432,20 @@ blockchainTests.resets('FillQuoteTransformer', env => {
     }
 
     function decodeBridgeData(encoded: string): BridgeData {
-        return {
-            bridge: hexUtils.slice(encoded, 0, 32),
-            boughtAmount: BigInt(hexUtils.slice(encoded, 64)),
-        };
+        const [bridgeAddr, lpData] = ethers.AbiCoder.defaultAbiCoder().decode(['address', 'bytes'], encoded);
+        const [amount] = ethers.AbiCoder.defaultAbiCoder().decode(['uint256'], lpData);
+        return { bridge: bridgeAddr, boughtAmount: BigInt(amount.toString()) };
     }
 
     function createTransformData(fields: Partial<FillQuoteTransformerData> = {}): FillQuoteTransformerData {
         return {
             side: Side.Sell,
-            sellToken: takerToken.address,
-            buyToken: makerToken.address,
+            sellToken: takerTokenAddress,
+            buyToken: makerTokenAddress,
             bridgeOrders: [],
-            limitOrders: [],
-            otcOrders: [],
-            rfqOrders: [],
+            limitOrders: '0x',
+            otcOrders: '0x',
+            rfqOrders: '0x',
             fillSequence: [],
             fillAmount: MAX_UINT256,
             refundReceiver: NULL_ADDRESS,
@@ -408,11 +462,141 @@ blockchainTests.resets('FillQuoteTransformer', env => {
     }
 
     interface ExecuteTransformParams {
-        takerTokenBalance: BigNumber;
-        ethBalance: BigNumber;
+        takerTokenBalance: bigint;
+        ethBalance: bigint;
         sender: string;
         taker: string;
         data: FillQuoteTransformerData;
+    }
+
+    // Encoders for native order infos (ethers v6 requires bytes for nested tuples in our transformer)
+    const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+    const SIGNATURE_ABI = [
+        { name: 'signatureType', type: 'uint8' },
+        { name: 'v', type: 'uint8' },
+        { name: 'r', type: 'bytes32' },
+        { name: 's', type: 'bytes32' },
+    ];
+    function encodeTupleComponents(components: any[]): string {
+        return `(${components
+            .map((c: any) =>
+                c.type === 'tuple'
+                    ? encodeTupleComponents(c.components)
+                    : `${c.type}${c.name ? ' ' + c.name : ''}`,
+            )
+            .join(',')})`;
+    }
+    function valuesFromComponents(components: any[], obj: any): any[] {
+        return components.map((c: any) => {
+            const v = obj[c.name];
+            if (c.type === 'tuple') {
+                return valuesFromComponents(c.components, v);
+            }
+            return v;
+        });
+    }
+    function encodeLimitOrderInfos(infos: Array<FillQuoteTransformerLimitOrderInfo>): string {
+        if (!infos.length) return '0x';
+        const components = [
+            { name: 'order', type: 'tuple', components: (LimitOrder as any).STRUCT_ABI },
+            { name: 'signature', type: 'tuple', components: SIGNATURE_ABI },
+            { name: 'maxTakerTokenFillAmount', type: 'uint256' },
+        ];
+        const typeStr = `tuple(${components
+            .map(c => (c.type === 'tuple' ? encodeTupleComponents((c as any).components) : `${c.type}${c.name ? ' ' + c.name : ''}`))
+            .join(',')})[]`;
+        const values = infos.map(i => [
+            valuesFromComponents((LimitOrder as any).STRUCT_ABI, i.order),
+            [i.signature.signatureType, i.signature.v, i.signature.r, i.signature.s],
+            i.maxTakerTokenFillAmount,
+        ]);
+        return abiCoder.encode([typeStr], [values]);
+    }
+    function decodeLimitOrderInfos(encoded: string | any[]): Array<FillQuoteTransformerLimitOrderInfo> {
+        if (Array.isArray(encoded)) return encoded as any;
+        if (!encoded || encoded === '0x') return [];
+        const components = [
+            { name: 'order', type: 'tuple', components: (LimitOrder as any).STRUCT_ABI },
+            { name: 'signature', type: 'tuple', components: SIGNATURE_ABI },
+            { name: 'maxTakerTokenFillAmount', type: 'uint256' },
+        ];
+        const typeStr = `tuple(${components
+            .map(c => (c.type === 'tuple' ? encodeTupleComponents((c as any).components) : `${c.type}${c.name ? ' ' + c.name : ''}`))
+            .join(',')})[]`;
+        const [decoded] = abiCoder.decode([typeStr], encoded);
+        // decoded is Result[]; each item is [order(tuple Result), signature(tuple), max]
+        return (decoded as any[]).map(item => {
+            const orderTuple = item[0];
+            const orderAbi = (LimitOrder as any).STRUCT_ABI as any[];
+            const orderObj: any = {};
+            orderAbi.forEach((c, idx) => {
+                orderObj[c.name] = orderTuple[idx];
+            });
+            const sigTuple = item[1];
+            const sigObj = {
+                signatureType: Number(sigTuple[0]),
+                v: Number(sigTuple[1]),
+                r: sigTuple[2] as string,
+                s: sigTuple[3] as string,
+            };
+            return {
+                order: orderObj,
+                signature: sigObj,
+                maxTakerTokenFillAmount: BigInt(item[2].toString()),
+            } as FillQuoteTransformerLimitOrderInfo;
+        });
+    }
+    function encodeRfqOrderInfos(infos: Array<FillQuoteTransformerRfqOrderInfo>): string {
+        if (!infos.length) return '0x';
+        const RFQ_STRUCT_ABI = (RfqOrder as any).STRUCT_ABI;
+        const components = [
+            { name: 'order', type: 'tuple', components: RFQ_STRUCT_ABI },
+            { name: 'signature', type: 'tuple', components: SIGNATURE_ABI },
+            { name: 'maxTakerTokenFillAmount', type: 'uint256' },
+        ];
+        const typeStr = `tuple(${components
+            .map(c => (c.type === 'tuple' ? encodeTupleComponents((c as any).components) : `${c.type}${c.name ? ' ' + c.name : ''}`))
+            .join(',')})[]`;
+        const values = infos.map(i => [
+            valuesFromComponents(RFQ_STRUCT_ABI, i.order),
+            [i.signature.signatureType, i.signature.v, i.signature.r, i.signature.s],
+            i.maxTakerTokenFillAmount,
+        ]);
+        return abiCoder.encode([typeStr], [values]);
+    }
+    function decodeRfqOrderInfos(encoded: string | any[]): Array<FillQuoteTransformerRfqOrderInfo> {
+        if (Array.isArray(encoded)) return encoded as any;
+        if (!encoded || encoded === '0x') return [];
+        const RFQ_STRUCT_ABI = (RfqOrder as any).STRUCT_ABI;
+        const components = [
+            { name: 'order', type: 'tuple', components: RFQ_STRUCT_ABI },
+            { name: 'signature', type: 'tuple', components: SIGNATURE_ABI },
+            { name: 'maxTakerTokenFillAmount', type: 'uint256' },
+        ];
+        const typeStr = `tuple(${components
+            .map(c => (c.type === 'tuple' ? encodeTupleComponents((c as any).components) : `${c.type}${c.name ? ' ' + c.name : ''}`))
+            .join(',')})[]`;
+        const [decoded] = abiCoder.decode([typeStr], encoded);
+        return (decoded as any[]).map(item => {
+            const orderTuple = item[0];
+            const orderAbi = RFQ_STRUCT_ABI as any[];
+            const orderObj: any = {};
+            orderAbi.forEach((c, idx) => {
+                orderObj[c.name] = orderTuple[idx];
+            });
+            const sigTuple = item[1];
+            const sigObj = {
+                signatureType: Number(sigTuple[0]),
+                v: Number(sigTuple[1]),
+                r: sigTuple[2] as string,
+                s: sigTuple[3] as string,
+            };
+            return {
+                order: orderObj,
+                signature: sigObj,
+                maxTakerTokenFillAmount: BigInt(item[2].toString()),
+            } as FillQuoteTransformerRfqOrderInfo;
+        });
     }
 
     async function executeTransformAsync(params: Partial<ExecuteTransformParams> = {}): Promise<TxReceipt> {
@@ -428,23 +612,24 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         const tx = await host
             .connect(senderSigner)
             .executeTransform(
-                transformer.address,
-                takerToken.address,
+                await transformer.getAddress(),
+                await takerToken.getAddress(),
                 _params.takerTokenBalance,
                 _params.sender,
                 _params.taker,
                 encodeFillQuoteTransformerData(_params.data),
                 { value: _params.ethBalance }
             );
-        return await tx.wait();
+        const receipt = await tx.wait();
+        return receipt! as any;
     }
 
     async function assertFinalBalancesAsync(qfr: QuoteFillResults): Promise<void> {
-        await assertCurrentBalancesAsync(host.address, {
+        await assertCurrentBalancesAsync(await host.getAddress(), {
             ...ZERO_BALANCES,
             makerTokenBalance: qfr.makerTokensBought,
         });
-        await assertCurrentBalancesAsync(exchange.address, { ...ZERO_BALANCES, ethBalance: qfr.protocolFeePaid });
+        await assertCurrentBalancesAsync(await exchange.getAddress(), { ...ZERO_BALANCES, ethBalance: qfr.protocolFeePaid });
     }
 
     describe('sell quotes', () => {
@@ -452,7 +637,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             const bridgeOrders = [createBridgeOrder()];
             const data = createTransformData({
                 bridgeOrders,
-                fillAmount: BigNumber.sum(...bridgeOrders.map(o => o.takerTokenAmount)),
+                fillAmount: sumBigInt(bridgeOrders.map(o => o.takerTokenAmount)),
                 fillSequence: bridgeOrders.map(() => OrderType.Bridge),
             });
             const qfr = getExpectedQuoteFillResults(data);
@@ -465,7 +650,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
 
         it('can partially sell to a single bridge order with a fractional fillAmount', async () => {
             const bridgeOrders = [createBridgeOrder()];
-            const totalTakerBalance = BigNumber.sum(...bridgeOrders.map(o => o.takerTokenAmount));
+            const totalTakerBalance = sumBigInt(bridgeOrders.map(o => o.takerTokenAmount));
             const data = createTransformData({
                 bridgeOrders,
                 fillAmount: encodeFractionalFillAmount(0.5),
@@ -479,9 +664,9 @@ blockchainTests.resets('FillQuoteTransformer', env => {
                 takerTokenBalance: totalTakerBalance,
                 data,
             });
-            await assertCurrentBalancesAsync(host.address, {
+            await assertCurrentBalancesAsync(await host.getAddress(), {
                 ...ZERO_BALANCES,
-                takerTokensBalance: totalTakerBalance.minus(qfr.takerTokensSpent),
+                takerTokensBalance: totalTakerBalance - qfr.takerTokensSpent,
                 makerTokenBalance: qfr.makerTokensBought,
             });
         });
@@ -490,18 +675,18 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             const bridgeOrders = [createBridgeOrder()];
             const data = createTransformData({
                 bridgeOrders,
-                fillAmount: BigNumber.sum(...bridgeOrders.map(o => o.takerTokenAmount)),
+                fillAmount: sumBigInt(bridgeOrders.map(o => o.takerTokenAmount)),
                 fillSequence: bridgeOrders.map(() => OrderType.Bridge),
             });
             const tx = executeTransformAsync({
                 takerTokenBalance: data.fillAmount,
-                data: { ...data, fillAmount: data.fillAmount.plus(1) },
+                data: { ...data, fillAmount: data.fillAmount + 1n },
             });
             return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.TransformERC20.IncompleteFillSellQuoteError(
                     data.sellToken,
                     data.fillAmount,
-                    data.fillAmount.plus(1),
+                    data.fillAmount + 1n,
                 ),
             );
         });
@@ -510,7 +695,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             const bridgeOrders = [createBridgeOrder()];
             const data = createTransformData({
                 bridgeOrders,
-                fillAmount: BigNumber.sum(...bridgeOrders.map(o => o.takerTokenAmount)),
+                fillAmount: sumBigInt(bridgeOrders.map(o => o.takerTokenAmount)),
                 fillSequence: bridgeOrders.map(() => OrderType.Bridge),
             });
             const qfr = getExpectedQuoteFillResults(data);
@@ -524,18 +709,18 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         it('can fully sell to a single limit order', async () => {
             const limitOrders = [createLimitOrder()];
             const data = createTransformData({
-                limitOrders: limitOrders.map(o => ({
+                limitOrders: encodeLimitOrderInfos(limitOrders.map(o => ({
                     order: o,
                     maxTakerTokenFillAmount: MAX_UINT256,
                     signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(...limitOrders.map(o => o.takerAmount.plus(o.takerTokenFeeAmount))),
+                }))),
+                fillAmount: sumBigInt(limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount)),
                 fillSequence: limitOrders.map(() => OrderType.Limit),
             });
             const qfr = getExpectedQuoteFillResults(
                 data,
                 createSimulationState({
-                    ethBalance: singleProtocolFee.times(limitOrders.length),
+                    ethBalance: singleProtocolFee * BigInt(limitOrders.length),
                 }),
             );
             await executeTransformAsync({
@@ -549,20 +734,18 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         it('can partial sell to a single limit order', async () => {
             const limitOrders = [createLimitOrder()];
             const data = createTransformData({
-                limitOrders: limitOrders.map(o => ({
+                limitOrders: encodeLimitOrderInfos(limitOrders.map(o => ({
                     order: o,
                     maxTakerTokenFillAmount: MAX_UINT256,
                     signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(
-                    ...limitOrders.map(o => o.takerAmount.plus(o.takerTokenFeeAmount)),
-                ).dividedToIntegerBy(2),
+                }))),
+                fillAmount: sumBigInt(limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount)) / 2n,
                 fillSequence: limitOrders.map(() => OrderType.Limit),
             });
             const qfr = getExpectedQuoteFillResults(
                 data,
                 createSimulationState({
-                    ethBalance: singleProtocolFee.times(limitOrders.length),
+                    ethBalance: singleProtocolFee * BigInt(limitOrders.length),
                 }),
             );
             await executeTransformAsync({
@@ -576,18 +759,18 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         it('can fully sell to a single limit order without fees', async () => {
             const limitOrders = [createLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })];
             const data = createTransformData({
-                limitOrders: limitOrders.map(o => ({
+                limitOrders: encodeLimitOrderInfos(limitOrders.map(o => ({
                     order: o,
                     maxTakerTokenFillAmount: MAX_UINT256,
                     signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(...limitOrders.map(o => o.takerAmount.plus(o.takerTokenFeeAmount))),
+                }))),
+                fillAmount: sumBigInt(limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount)),
                 fillSequence: limitOrders.map(() => OrderType.Limit),
             });
             const qfr = getExpectedQuoteFillResults(
                 data,
                 createSimulationState({
-                    ethBalance: singleProtocolFee.times(limitOrders.length),
+                    ethBalance: singleProtocolFee * BigInt(limitOrders.length),
                 }),
             );
             await executeTransformAsync({
@@ -601,20 +784,18 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         it('can partial sell to a single limit order without fees', async () => {
             const limitOrders = [createLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })];
             const data = createTransformData({
-                limitOrders: limitOrders.map(o => ({
+                limitOrders: encodeLimitOrderInfos(limitOrders.map(o => ({
                     order: o,
                     maxTakerTokenFillAmount: MAX_UINT256,
                     signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(
-                    ...limitOrders.map(o => o.takerAmount.plus(o.takerTokenFeeAmount)),
-                ).dividedToIntegerBy(2),
+                }))),
+                fillAmount: sumBigInt(limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount)) / 2n,
                 fillSequence: limitOrders.map(() => OrderType.Limit),
             });
             const qfr = getExpectedQuoteFillResults(
                 data,
                 createSimulationState({
-                    ethBalance: singleProtocolFee.times(limitOrders.length),
+                    ethBalance: singleProtocolFee * BigInt(limitOrders.length),
                 }),
             );
             await executeTransformAsync({
@@ -628,12 +809,12 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         it('can fully sell to a single RFQ order', async () => {
             const rfqOrders = [createRfqOrder()];
             const data = createTransformData({
-                rfqOrders: rfqOrders.map(o => ({
+                rfqOrders: encodeRfqOrderInfos(rfqOrders.map(o => ({
                     order: o,
                     maxTakerTokenFillAmount: MAX_UINT256,
                     signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(...rfqOrders.map(o => o.takerAmount)),
+                }))),
+                fillAmount: sumBigInt(rfqOrders.map(o => o.takerAmount)),
                 fillSequence: rfqOrders.map(() => OrderType.Rfq),
             });
             const qfr = getExpectedQuoteFillResults(data, createSimulationState());
@@ -647,12 +828,12 @@ blockchainTests.resets('FillQuoteTransformer', env => {
         it('can partially sell to a single RFQ order', async () => {
             const rfqOrders = [createRfqOrder()];
             const data = createTransformData({
-                rfqOrders: rfqOrders.map(o => ({
+                rfqOrders: encodeRfqOrderInfos(rfqOrders.map(o => ({
                     order: o,
                     maxTakerTokenFillAmount: MAX_UINT256,
                     signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(...rfqOrders.map(o => o.takerAmount)).dividedToIntegerBy(2),
+                }))),
+                fillAmount: sumBigInt(rfqOrders.map(o => o.takerAmount)) / 2n,
                 fillSequence: rfqOrders.map(() => OrderType.Rfq),
             });
             const qfr = getExpectedQuoteFillResults(data, createSimulationState());
@@ -669,21 +850,13 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             const bridgeOrders = [createBridgeOrder()];
             const data = createTransformData({
                 bridgeOrders,
-                rfqOrders: rfqOrders.map(o => ({
-                    order: o,
-                    maxTakerTokenFillAmount: MAX_UINT256,
-                    signature: createOrderSignature(),
-                })),
-                limitOrders: limitOrders.map(o => ({
-                    order: o,
-                    maxTakerTokenFillAmount: MAX_UINT256,
-                    signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(
+                rfqOrders: encodeRfqOrderInfos(rfqOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() }))),
+                limitOrders: encodeLimitOrderInfos(limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() }))),
+                fillAmount: sumBigInt([
                     ...rfqOrders.map(o => o.takerAmount),
-                    ...limitOrders.map(o => o.takerAmount.plus(o.takerTokenFeeAmount)),
+                    ...limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount),
                     ...bridgeOrders.map(o => o.takerTokenAmount),
-                ),
+                ]),
                 fillSequence: _.shuffle([
                     ...bridgeOrders.map(() => OrderType.Bridge),
                     ...rfqOrders.map(() => OrderType.Rfq),
@@ -693,7 +866,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             const qfr = getExpectedQuoteFillResults(
                 data,
                 createSimulationState({
-                    ethBalance: singleProtocolFee.times(limitOrders.length),
+                    ethBalance: singleProtocolFee * BigInt(limitOrders.length),
                 }),
             );
             await executeTransformAsync({
@@ -710,21 +883,17 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             const bridgeOrders = [createBridgeOrder()];
             const data = createTransformData({
                 bridgeOrders,
-                rfqOrders: rfqOrders.map(o => ({
+                rfqOrders: encodeRfqOrderInfos(rfqOrders.map(o => ({
                     order: o,
                     maxTakerTokenFillAmount: MAX_UINT256,
                     signature: createOrderSignature(),
-                })),
-                limitOrders: limitOrders.map(o => ({
-                    order: o,
-                    maxTakerTokenFillAmount: MAX_UINT256,
-                    signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(
+                }))),
+                limitOrders: encodeLimitOrderInfos(limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() }))),
+                fillAmount: sumBigInt([
                     ...rfqOrders.map(o => o.takerAmount),
-                    ...limitOrders.map(o => o.takerAmount.plus(o.takerTokenFeeAmount)),
+                    ...limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount),
                     ...bridgeOrders.map(o => o.takerTokenAmount),
-                ).dividedToIntegerBy(2),
+                ]) / 2n,
                 fillSequence: _.shuffle([
                     ...bridgeOrders.map(() => OrderType.Bridge),
                     ...rfqOrders.map(() => OrderType.Rfq),
@@ -734,7 +903,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             const qfr = getExpectedQuoteFillResults(
                 data,
                 createSimulationState({
-                    ethBalance: singleProtocolFee.times(limitOrders.length),
+                    ethBalance: singleProtocolFee * BigInt(limitOrders.length),
                 }),
             );
             await executeTransformAsync({
@@ -751,21 +920,17 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             const bridgeOrders = _.times(4, () => createBridgeOrder());
             const data = createTransformData({
                 bridgeOrders,
-                rfqOrders: rfqOrders.map(o => ({
+                rfqOrders: encodeRfqOrderInfos(rfqOrders.map(o => ({
                     order: o,
                     maxTakerTokenFillAmount: MAX_UINT256,
                     signature: createOrderSignature(),
-                })),
-                limitOrders: limitOrders.map(o => ({
-                    order: o,
-                    maxTakerTokenFillAmount: MAX_UINT256,
-                    signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(
+                }))),
+                limitOrders: encodeLimitOrderInfos(limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() }))),
+                fillAmount: sumBigInt([
                     ...rfqOrders.map(o => o.takerAmount),
-                    ...limitOrders.map(o => o.takerAmount.plus(o.takerTokenFeeAmount)),
+                    ...limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount),
                     ...bridgeOrders.map(o => o.takerTokenAmount),
-                ),
+                ]),
                 fillSequence: _.shuffle([
                     ...bridgeOrders.map(() => OrderType.Bridge),
                     ...rfqOrders.map(() => OrderType.Rfq),
@@ -775,7 +940,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             const qfr = getExpectedQuoteFillResults(
                 data,
                 createSimulationState({
-                    ethBalance: singleProtocolFee.times(limitOrders.length),
+                    ethBalance: singleProtocolFee * BigInt(limitOrders.length),
                 }),
             );
             await executeTransformAsync({
@@ -823,18 +988,17 @@ blockchainTests.resets('FillQuoteTransformer', env => {
                     },
                 ],
                 // Only require the last two orders to be filled.
-                fillAmount: BigNumber.sum(
-                    rfqOrder.takerAmount,
-                    limitOrder.takerAmount.plus(limitOrder.takerTokenFeeAmount),
-                    bridgeOrder.takerTokenAmount,
-                )
-                    .minus(failedOrderType === OrderType.Bridge ? bridgeOrder.takerTokenAmount : 0)
-                    .minus(failedOrderType === OrderType.Rfq ? rfqOrder.takerAmount : 0)
-                    .minus(
-                        failedOrderType === OrderType.Limit
-                            ? limitOrder.takerAmount.plus(limitOrder.takerTokenFeeAmount)
-                            : 0,
-                    ),
+                fillAmount:
+                    sumBigInt([
+                        rfqOrder.takerAmount,
+                        limitOrder.takerAmount + limitOrder.takerTokenFeeAmount,
+                        bridgeOrder.takerTokenAmount,
+                    ]) -
+                    (failedOrderType === OrderType.Bridge ? bridgeOrder.takerTokenAmount : 0n) -
+                    (failedOrderType === OrderType.Rfq ? rfqOrder.takerAmount : 0n) -
+                    (failedOrderType === OrderType.Limit
+                        ? limitOrder.takerAmount + limitOrder.takerTokenFeeAmount
+                        : 0n),
             });
             const qfr = getExpectedQuoteFillResults(
                 data,
@@ -865,7 +1029,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
                         // If slipped, produce half the tokens.
                         bridgeData:
                             slippedOrderType === OrderType.Bridge
-                                ? encodeBridgeData(bridgeOrder.makerTokenAmount.dividedToIntegerBy(2))
+                                ? encodeBridgeData(bridgeOrder.makerTokenAmount / 2n)
                                 : bridgeOrder.bridgeData,
                     },
                 ],
@@ -876,7 +1040,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
                         // If slipped, set half the order to filled.
                         signature: createOrderSignature(
                             slippedOrderType === OrderType.Rfq
-                                ? rfqOrder.takerAmount.div(2).integerValue(BigNumber.ROUND_DOWN)
+                                ? rfqOrder.takerAmount / 2n
                                 : ZERO_AMOUNT,
                         ),
                     },
@@ -888,35 +1052,23 @@ blockchainTests.resets('FillQuoteTransformer', env => {
                         // If slipped, set half the order to filled.
                         signature: createOrderSignature(
                             slippedOrderType === OrderType.Limit
-                                ? limitOrder.takerAmount.div(2).integerValue(BigNumber.ROUND_DOWN)
+                                ? limitOrder.takerAmount / 2n
                                 : ZERO_AMOUNT,
                         ),
                     },
                 ],
                 // Only require half the first order to be filled.
-                fillAmount: BigNumber.sum(
-                    rfqOrder.takerAmount,
-                    limitOrder.takerAmount.plus(limitOrder.takerTokenFeeAmount),
-                    bridgeOrder.takerTokenAmount,
-                )
-                    .minus(
-                        slippedOrderType === OrderType.Bridge
-                            ? bridgeOrder.takerTokenAmount.div(2).integerValue(BigNumber.ROUND_UP)
-                            : 0,
-                    )
-                    .minus(
-                        slippedOrderType === OrderType.Rfq
-                            ? rfqOrder.takerAmount.div(2).integerValue(BigNumber.ROUND_UP)
-                            : 0,
-                    )
-                    .minus(
-                        slippedOrderType === OrderType.Limit
-                            ? limitOrder.takerAmount
-                                  .plus(limitOrder.takerTokenFeeAmount)
-                                  .div(2)
-                                  .integerValue(BigNumber.ROUND_UP)
-                            : 0,
-                    ),
+                fillAmount:
+                    sumBigInt([
+                        rfqOrder.takerAmount,
+                        limitOrder.takerAmount + limitOrder.takerTokenFeeAmount,
+                        bridgeOrder.takerTokenAmount,
+                    ]) -
+                    (slippedOrderType === OrderType.Bridge ? (bridgeOrder.takerTokenAmount + 1n) / 2n : 0n) -
+                    (slippedOrderType === OrderType.Rfq ? (rfqOrder.takerAmount + 1n) / 2n : 0n) -
+                    (slippedOrderType === OrderType.Limit
+                        ? (limitOrder.takerAmount + limitOrder.takerTokenFeeAmount + 1n) / 2n
+                        : 0n),
             });
             const qfr = getExpectedQuoteFillResults(
                 data,
@@ -970,29 +1122,29 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             const data = createTransformData({
                 bridgeOrders,
                 side: Side.Buy,
-                fillAmount: BigNumber.sum(...bridgeOrders.map(o => o.makerTokenAmount)),
+                fillAmount: sumBigInt(bridgeOrders.map(o => o.makerTokenAmount)),
                 fillSequence: bridgeOrders.map(() => OrderType.Bridge),
             });
             const tx = executeTransformAsync({
-                takerTokenBalance: BigNumber.sum(...bridgeOrders.map(o => o.takerTokenAmount)),
-                data: { ...data, fillAmount: data.fillAmount.plus(1) },
+                takerTokenBalance: sumBigInt(bridgeOrders.map(o => o.takerTokenAmount)),
+                data: { ...data, fillAmount: data.fillAmount + 1n },
             });
             return expect(tx).to.be.revertedWith(
                 new ZeroExRevertErrors.TransformERC20.IncompleteFillBuyQuoteError(
                     data.buyToken,
                     data.fillAmount,
-                    data.fillAmount.plus(1),
+                    data.fillAmount + 1n,
                 ),
             );
         });
 
         it('can fully buy to a single bridge order', async () => {
             const bridgeOrders = [createBridgeOrder()];
-            const totalTakerTokens = BigNumber.sum(...bridgeOrders.map(o => o.takerTokenAmount));
+            const totalTakerTokens = sumBigInt(bridgeOrders.map(o => o.takerTokenAmount));
             const data = createTransformData({
                 bridgeOrders,
                 side: Side.Buy,
-                fillAmount: BigNumber.sum(...bridgeOrders.map(o => o.makerTokenAmount)),
+                fillAmount: sumBigInt(bridgeOrders.map(o => o.makerTokenAmount)),
                 fillSequence: bridgeOrders.map(() => OrderType.Bridge),
             });
             const qfr = getExpectedQuoteFillResults(
@@ -1008,21 +1160,17 @@ blockchainTests.resets('FillQuoteTransformer', env => {
 
         it('can fully buy to a single limit order', async () => {
             const limitOrders = [createLimitOrder()];
-            const totalTakerTokens = BigNumber.sum(...limitOrders.map(o => o.takerAmount.plus(o.takerTokenFeeAmount)));
+            const totalTakerTokens = sumBigInt(limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount));
             const data = createTransformData({
                 side: Side.Buy,
-                limitOrders: limitOrders.map(o => ({
-                    order: o,
-                    maxTakerTokenFillAmount: MAX_UINT256,
-                    signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(...limitOrders.map(o => o.makerAmount)),
+                limitOrders: encodeLimitOrderInfos(limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() }))),
+                fillAmount: sumBigInt(limitOrders.map(o => o.makerAmount)),
                 fillSequence: limitOrders.map(() => OrderType.Limit),
             });
             const qfr = getExpectedQuoteFillResults(
                 data,
                 createSimulationState({
-                    ethBalance: singleProtocolFee.times(limitOrders.length),
+                    ethBalance: singleProtocolFee * BigInt(limitOrders.length),
                     takerTokenBalance: totalTakerTokens,
                 }),
             );
@@ -1036,21 +1184,17 @@ blockchainTests.resets('FillQuoteTransformer', env => {
 
         it('can partial buy to a single limit order', async () => {
             const limitOrders = [createLimitOrder()];
-            const totalTakerTokens = BigNumber.sum(...limitOrders.map(o => o.takerAmount.plus(o.takerTokenFeeAmount)));
+            const totalTakerTokens = sumBigInt(limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount));
             const data = createTransformData({
                 side: Side.Buy,
-                limitOrders: limitOrders.map(o => ({
-                    order: o,
-                    maxTakerTokenFillAmount: MAX_UINT256,
-                    signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(...limitOrders.map(o => o.makerAmount)).dividedToIntegerBy(2),
+                limitOrders: encodeLimitOrderInfos(limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() }))),
+                fillAmount: sumBigInt(limitOrders.map(o => o.makerAmount)) / 2n,
                 fillSequence: limitOrders.map(() => OrderType.Limit),
             });
             const qfr = getExpectedQuoteFillResults(
                 data,
                 createSimulationState({
-                    ethBalance: singleProtocolFee.times(limitOrders.length),
+                    ethBalance: singleProtocolFee * BigInt(limitOrders.length),
                     takerTokenBalance: totalTakerTokens,
                 }),
             );
@@ -1064,21 +1208,17 @@ blockchainTests.resets('FillQuoteTransformer', env => {
 
         it('can fully buy to a single limit order without fees', async () => {
             const limitOrders = [createLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })];
-            const totalTakerTokens = BigNumber.sum(...limitOrders.map(o => o.takerAmount));
+            const totalTakerTokens = sumBigInt(limitOrders.map(o => o.takerAmount));
             const data = createTransformData({
                 side: Side.Buy,
-                limitOrders: limitOrders.map(o => ({
-                    order: o,
-                    maxTakerTokenFillAmount: MAX_UINT256,
-                    signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(...limitOrders.map(o => o.makerAmount)),
+                limitOrders: encodeLimitOrderInfos(limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() }))),
+                fillAmount: sumBigInt(limitOrders.map(o => o.makerAmount)),
                 fillSequence: limitOrders.map(() => OrderType.Limit),
             });
             const qfr = getExpectedQuoteFillResults(
                 data,
                 createSimulationState({
-                    ethBalance: singleProtocolFee.times(limitOrders.length),
+                    ethBalance: singleProtocolFee * BigInt(limitOrders.length),
                     takerTokenBalance: totalTakerTokens,
                 }),
             );
@@ -1092,21 +1232,17 @@ blockchainTests.resets('FillQuoteTransformer', env => {
 
         it('can partial buy to a single limit order without fees', async () => {
             const limitOrders = [createLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })];
-            const totalTakerTokens = BigNumber.sum(...limitOrders.map(o => o.takerAmount));
+            const totalTakerTokens = sumBigInt(limitOrders.map(o => o.takerAmount));
             const data = createTransformData({
                 side: Side.Buy,
-                limitOrders: limitOrders.map(o => ({
-                    order: o,
-                    maxTakerTokenFillAmount: MAX_UINT256,
-                    signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(...limitOrders.map(o => o.makerAmount)).dividedToIntegerBy(2),
+                limitOrders: encodeLimitOrderInfos(limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() }))),
+                fillAmount: sumBigInt(limitOrders.map(o => o.makerAmount)) / 2n,
                 fillSequence: limitOrders.map(() => OrderType.Limit),
             });
             const qfr = getExpectedQuoteFillResults(
                 data,
                 createSimulationState({
-                    ethBalance: singleProtocolFee.times(limitOrders.length),
+                    ethBalance: singleProtocolFee * BigInt(limitOrders.length),
                     takerTokenBalance: totalTakerTokens,
                 }),
             );
@@ -1120,15 +1256,15 @@ blockchainTests.resets('FillQuoteTransformer', env => {
 
         it('can fully buy to a single RFQ order', async () => {
             const rfqOrders = [createRfqOrder()];
-            const totalTakerTokens = BigNumber.sum(...rfqOrders.map(o => o.takerAmount));
+            const totalTakerTokens = sumBigInt(rfqOrders.map(o => o.takerAmount));
             const data = createTransformData({
                 side: Side.Buy,
-                rfqOrders: rfqOrders.map(o => ({
+                rfqOrders: encodeRfqOrderInfos(rfqOrders.map(o => ({
                     order: o,
                     maxTakerTokenFillAmount: MAX_UINT256,
                     signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(...rfqOrders.map(o => o.makerAmount)),
+                }))),
+                fillAmount: sumBigInt(rfqOrders.map(o => o.makerAmount)),
                 fillSequence: rfqOrders.map(() => OrderType.Rfq),
             });
             const qfr = getExpectedQuoteFillResults(
@@ -1144,15 +1280,15 @@ blockchainTests.resets('FillQuoteTransformer', env => {
 
         it('can partially buy to a single RFQ order', async () => {
             const rfqOrders = [createRfqOrder()];
-            const totalTakerTokens = BigNumber.sum(...rfqOrders.map(o => o.takerAmount));
+            const totalTakerTokens = sumBigInt(rfqOrders.map(o => o.takerAmount));
             const data = createTransformData({
                 side: Side.Buy,
-                rfqOrders: rfqOrders.map(o => ({
+                rfqOrders: encodeRfqOrderInfos(rfqOrders.map(o => ({
                     order: o,
                     maxTakerTokenFillAmount: MAX_UINT256,
                     signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(...rfqOrders.map(o => o.makerAmount)).dividedToIntegerBy(2),
+                }))),
+                fillAmount: sumBigInt(rfqOrders.map(o => o.makerAmount)) / 2n,
                 fillSequence: rfqOrders.map(() => OrderType.Rfq),
             });
             const qfr = getExpectedQuoteFillResults(
@@ -1170,29 +1306,25 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             const rfqOrders = [createRfqOrder()];
             const limitOrders = [createLimitOrder()];
             const bridgeOrders = [createBridgeOrder()];
-            const totalTakerTokens = BigNumber.sum(
+            const totalTakerTokens = sumBigInt([
                 ...rfqOrders.map(o => o.takerAmount),
-                ...limitOrders.map(o => o.takerAmount.plus(o.takerTokenFeeAmount)),
+                ...limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount),
                 ...bridgeOrders.map(o => o.takerTokenAmount),
-            );
+            ]);
             const data = createTransformData({
                 side: Side.Buy,
                 bridgeOrders,
-                rfqOrders: rfqOrders.map(o => ({
+                rfqOrders: encodeRfqOrderInfos(rfqOrders.map(o => ({
                     order: o,
                     maxTakerTokenFillAmount: MAX_UINT256,
                     signature: createOrderSignature(),
-                })),
-                limitOrders: limitOrders.map(o => ({
-                    order: o,
-                    maxTakerTokenFillAmount: MAX_UINT256,
-                    signature: createOrderSignature(),
-                })),
-                fillAmount: BigNumber.sum(
+                }))),
+                limitOrders: encodeLimitOrderInfos(limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() }))),
+                fillAmount: sumBigInt([
                     ...rfqOrders.map(o => o.makerAmount),
                     ...limitOrders.map(o => o.makerAmount),
                     ...bridgeOrders.map(o => o.makerTokenAmount),
-                ),
+                ]),
                 fillSequence: _.shuffle([
                     ...bridgeOrders.map(() => OrderType.Bridge),
                     ...rfqOrders.map(() => OrderType.Rfq),
@@ -1202,7 +1334,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             const qfr = getExpectedQuoteFillResults(
                 data,
                 createSimulationState({
-                    ethBalance: singleProtocolFee.times(limitOrders.length),
+                    ethBalance: singleProtocolFee * BigInt(limitOrders.length),
                     takerTokenBalance: totalTakerTokens,
                 }),
             );
@@ -1219,11 +1351,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             const limitOrder = createLimitOrder();
             const bridgeOrder = createBridgeOrder();
             const fillSequence = _.shuffle([OrderType.Bridge, OrderType.Rfq, OrderType.Limit]);
-            const totalTakerTokens = BigNumber.sum(
-                rfqOrder.takerAmount,
-                limitOrder.takerAmount.plus(limitOrder.takerTokenFeeAmount),
-                bridgeOrder.takerTokenAmount,
-            );
+            const totalTakerTokens = rfqOrder.takerAmount + (limitOrder.takerAmount + limitOrder.takerTokenFeeAmount) + bridgeOrder.takerTokenAmount;
             // Fail the first order in the sequence.
             const failedOrderType = fillSequence[0];
             const data = createTransformData({
@@ -1257,10 +1385,11 @@ blockchainTests.resets('FillQuoteTransformer', env => {
                     },
                 ],
                 // Only require the last two orders to be filled.
-                fillAmount: BigNumber.sum(rfqOrder.makerAmount, limitOrder.makerAmount, bridgeOrder.makerTokenAmount)
-                    .minus(failedOrderType === OrderType.Bridge ? bridgeOrder.makerTokenAmount : 0)
-                    .minus(failedOrderType === OrderType.Rfq ? rfqOrder.makerAmount : 0)
-                    .minus(failedOrderType === OrderType.Limit ? limitOrder.makerAmount : 0),
+                fillAmount:
+                    rfqOrder.makerAmount + limitOrder.makerAmount + bridgeOrder.makerTokenAmount -
+                    (failedOrderType === OrderType.Bridge ? bridgeOrder.makerTokenAmount : 0n) -
+                    (failedOrderType === OrderType.Rfq ? rfqOrder.makerAmount : 0n) -
+                    (failedOrderType === OrderType.Limit ? limitOrder.makerAmount : 0n),
             });
             const qfr = getExpectedQuoteFillResults(
                 data,
@@ -1282,11 +1411,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
             const limitOrder = createLimitOrder();
             const bridgeOrder = createBridgeOrder();
             const fillSequence = _.shuffle([OrderType.Bridge, OrderType.Rfq, OrderType.Limit]);
-            const totalTakerTokens = BigNumber.sum(
-                rfqOrder.takerAmount,
-                limitOrder.takerAmount.plus(limitOrder.takerTokenFeeAmount),
-                bridgeOrder.takerTokenAmount,
-            );
+            const totalTakerTokens = rfqOrder.takerAmount + (limitOrder.takerAmount + limitOrder.takerTokenFeeAmount) + bridgeOrder.takerTokenAmount;
             // Slip the first order in the sequence.
             const slippedOrderType = fillSequence[0];
             const data = createTransformData({
@@ -1296,9 +1421,9 @@ blockchainTests.resets('FillQuoteTransformer', env => {
                     {
                         ...bridgeOrder,
                         // If slipped, produce half the tokens.
-                        bridgeData:
+                bridgeData:
                             slippedOrderType === OrderType.Bridge
-                                ? encodeBridgeData(bridgeOrder.makerTokenAmount.dividedToIntegerBy(2))
+                                ? encodeBridgeData(bridgeOrder.makerTokenAmount / 2n)
                                 : bridgeOrder.bridgeData,
                     },
                 ],
@@ -1309,7 +1434,7 @@ blockchainTests.resets('FillQuoteTransformer', env => {
                         // If slipped, set half the order to filled.
                         signature: createOrderSignature(
                             slippedOrderType === OrderType.Rfq
-                                ? rfqOrder.takerAmount.div(2).integerValue(BigNumber.ROUND_DOWN)
+                                ? rfqOrder.takerAmount / 2n
                                 : ZERO_AMOUNT,
                         ),
                     },
@@ -1321,28 +1446,17 @@ blockchainTests.resets('FillQuoteTransformer', env => {
                         // If slipped, set half the order to filled.
                         signature: createOrderSignature(
                             slippedOrderType === OrderType.Limit
-                                ? limitOrder.takerAmount.div(2).integerValue(BigNumber.ROUND_DOWN)
+                                ? limitOrder.takerAmount / 2n
                                 : ZERO_AMOUNT,
                         ),
                     },
                 ],
                 // Only require half the first order to be filled.
-                fillAmount: BigNumber.sum(rfqOrder.makerAmount, limitOrder.makerAmount, bridgeOrder.makerTokenAmount)
-                    .minus(
-                        slippedOrderType === OrderType.Bridge
-                            ? bridgeOrder.makerTokenAmount.div(2).integerValue(BigNumber.ROUND_UP)
-                            : 0,
-                    )
-                    .minus(
-                        slippedOrderType === OrderType.Rfq
-                            ? rfqOrder.makerAmount.div(2).integerValue(BigNumber.ROUND_UP)
-                            : 0,
-                    )
-                    .minus(
-                        slippedOrderType === OrderType.Limit
-                            ? limitOrder.makerAmount.div(2).integerValue(BigNumber.ROUND_UP)
-                            : 0,
-                    ),
+                fillAmount:
+                    rfqOrder.makerAmount + limitOrder.makerAmount + bridgeOrder.makerTokenAmount -
+                    (slippedOrderType === OrderType.Bridge ? (bridgeOrder.makerTokenAmount + 1n) / 2n : 0n) -
+                    (slippedOrderType === OrderType.Rfq ? (rfqOrder.makerAmount + 1n) / 2n : 0n) -
+                    (slippedOrderType === OrderType.Limit ? (limitOrder.makerAmount + 1n) / 2n : 0n),
             });
             const qfr = getExpectedQuoteFillResults(
                 data,

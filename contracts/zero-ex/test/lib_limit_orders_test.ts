@@ -1,17 +1,23 @@
-import { blockchainTests, describe, expect } from '@0x/test-utils';
-import { ethers } from 'ethers';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
 
 import { artifacts } from './artifacts';
 import { getRandomLimitOrder, getRandomRfqOrder } from './utils/orders';
 import { TestLibNativeOrder__factory } from '../src/typechain-types/factories/contracts/test';
 import type { TestLibNativeOrder } from '../src/typechain-types/contracts/test/TestLibNativeOrder';
 
-blockchainTests('LibLimitOrder tests', env => {
+describe('LibLimitOrder tests', () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+    } as any;
     let testContract: TestLibNativeOrder;
 
     before(async () => {
         // 使用测试环境中的 provider 和账户
         const accounts = await env.getAccountAddressesAsync();
+        env.txDefaults.from = accounts[0];
         const signer = await env.provider.getSigner(accounts[0]);
         
         const factory = new TestLibNativeOrder__factory(signer);

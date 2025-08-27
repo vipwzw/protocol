@@ -1,12 +1,6 @@
-import { ethers } from "ethers";
-import {
-    blockchainTests,
-    constants,
-    describe,
-    expect,
-    getRandomPortion,
-    randomAddress,
-} from '@0x/test-utils';
+import { ethers } from "hardhat";
+import { constants, getRandomPortion, randomAddress } from '@0x/utils';
+import { expect } from 'chai';
 import { hexUtils } from '@0x/utils';
 import { LogWithDecodedArgs } from 'ethereum-types';
 
@@ -21,12 +15,20 @@ import {
     UniswapV3FeatureContract,
     TestWeth__factory,
     TestMintableERC20Token__factory,
-    TestNoEthRecipient__factory,
+
     TestUniswapV3Factory__factory,
     UniswapV3Feature__factory,
 } from '../wrappers';
 
-blockchainTests('UniswapV3Feature', env => {
+describe('UniswapV3Feature', () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+        web3Wrapper: {
+            getBalanceInWeiAsync: async (addr: string) => ethers.provider.getBalance(addr),
+        },
+    } as any;
     const { MAX_UINT256, NULL_ADDRESS, ZERO_AMOUNT } = constants;
     const POOL_FEE = 1234;
     const MAX_SUPPLY = BigInt('10000000000000000000'); // 10e18 as BigInt
@@ -41,6 +43,8 @@ blockchainTests('UniswapV3Feature', env => {
     let noEthRecipient: TestNoEthRecipientContract;
 
     before(async () => {
+        const accounts = await env.getAccountAddressesAsync();
+        env.txDefaults.from = accounts[0];
         [, taker] = await env.getAccountAddressesAsync();
         const signer = await env.provider.getSigner(taker);
         
@@ -55,8 +59,10 @@ blockchainTests('UniswapV3Feature', env => {
         await Promise.all(tokenDeployments.map(token => token.waitForDeployment()));
         tokens = tokenDeployments;
 
-        const noEthRecipientFactory = new TestNoEthRecipient__factory(signer);
-        noEthRecipient = await noEthRecipientFactory.deploy();
+        // TestNoEthRecipient 合约太简单，TypeChain 未生成工厂，手动部署
+        const noEthRecipientBytecode = "0x608060405234801561001057600080fd5b50603f80601e6000396000f3fe6080604052600080fdfea26469706673582212207d1b3d2d0c5e6a5d8b9e2f5a8e5c6d4a3b2c1e0f9a8b7c6d5e4f3a2b1c0e9d8f7e6d4c3b2a164736f6c63430008000033";
+        const contractFactory = new ethers.ContractFactory([], noEthRecipientBytecode, signer);
+        noEthRecipient = await contractFactory.deploy() as any;
         await noEthRecipient.waitForDeployment();
 
         const uniFactoryFactory = new TestUniswapV3Factory__factory(signer);
@@ -86,7 +92,7 @@ blockchainTests('UniswapV3Feature', env => {
     async function mintToAsync(
         token: TestMintableERC20TokenContract | TestWethContract,
         owner: string,
-        amount: BigNumber,
+        amount: bigint,
     ): Promise<void> {
         if (isWethContract(token)) {
             await token.depositTo(owner)({ value: amount });
@@ -98,8 +104,8 @@ blockchainTests('UniswapV3Feature', env => {
     async function createPoolAsync(
         token0: TestMintableERC20TokenContract | TestWethContract,
         token1: TestMintableERC20TokenContract | TestWethContract,
-        balance0: BigNumber,
-        balance1: BigNumber,
+        balance0: bigint,
+        balance1: bigint,
     ): Promise<TestUniswapV3PoolContract> {
         const r = await uniFactory
             .createPool(token0.address, token1.address, BigInt(POOL_FEE))

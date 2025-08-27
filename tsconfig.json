@@ -24,7 +24,6 @@
     // any top-level TypeScript code.
     "include": [],
     "references": [
-        { "path": "./contracts/test-utils" },
         { "path": "./contracts/utils" },
         { "path": "./contracts/erc20" },
         { "path": "./contracts/erc721" },

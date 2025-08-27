@@ -6,17 +6,16 @@ import {
     StakeInfo,
     StakeStatus,
     StakingProxyContract,
-    TestStakingContract,
     ZrxVaultContract,
 } from '@0x/contracts-staking';
 import {
-    blockchainTests,
+
     constants,
     expect,
     getRandomInteger,
     randomAddress,
     verifyEventsFromLogs,
-} from '@0x/test-utils';
+} from '@0x/utils';
 
 // Local bigint assertion helper
 function expectBigIntEqual(actual: any, expected: any): void {
@@ -39,7 +38,7 @@ import * as ethUtil from 'ethereumjs-util';
 import { artifacts } from './artifacts';
 import { DefaultPoolOperatorContract, ZrxTreasuryContract, ZrxTreasuryEvents } from './wrappers';
 
-blockchainTests.resets('Treasury governance', env => {
+describe('Treasury governance', () => {
     const TREASURY_PARAMS = {
         votingPeriod: new BigNumber(3).times(stakingConstants.ONE_DAY_IN_SECONDS),
         proposalThreshold: new BigNumber(100),
@@ -63,7 +62,7 @@ blockchainTests.resets('Treasury governance', env => {
     let zrx: DummyERC20TokenContract;
     let weth: DummyERC20TokenContract;
     let erc20ProxyContract: ERC20ProxyContract;
-    let staking: TestStakingContract;
+    let staking: any;
     let treasury: ZrxTreasuryContract;
     let defaultPoolId: string;
     let defaultPoolOperator: DefaultPoolOperatorContract;
@@ -92,7 +91,7 @@ blockchainTests.resets('Treasury governance', env => {
         );
         await erc20ProxyContract.addAuthorizedAddress(zrxVaultContract.address).awaitTransactionSuccessAsync();
         await zrxVaultContract.addAuthorizedAddress(admin).awaitTransactionSuccessAsync();
-        const stakingLogic = await TestStakingContract.deployFrom0xArtifactAsync(
+        const stakingLogic = await (StakingProxyContract as any).deployFrom0xArtifactAsync(
             stakingArtifacts.TestStaking,
             env.provider,
             env.txDefaults,
@@ -109,7 +108,11 @@ blockchainTests.resets('Treasury governance', env => {
         );
         await stakingProxyContract.addAuthorizedAddress(admin).awaitTransactionSuccessAsync();
         await zrxVaultContract.setStakingProxy(stakingProxyContract.address).awaitTransactionSuccessAsync();
-        staking = new TestStakingContract(stakingProxyContract.address, env.provider, env.txDefaults);
+        staking = new (require('ethers').Contract)(
+            stakingProxyContract.address,
+            stakingArtifacts.TestStaking.compilerOutput.abi,
+            await (require('hardhat').ethers).getSigners().then((s: any[]) => s[0]),
+        );
     }
 
     async function fastForwardToNextEpochAsync(): Promise<void> {

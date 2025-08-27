@@ -1,5 +1,6 @@
-import { ethers } from "ethers";
-import { blockchainTests, constants, expect, getRandomInteger, verifyEventsFromLogs } from '@0x/test-utils';
+import { ethers } from "hardhat";
+import { constants, getRandomInteger, verifyEventsFromLogs, filterLogs } from '@0x/utils';
+import { expect } from 'chai';
 import { hexUtils } from '@0x/utils';
 
 import { artifacts } from '../artifacts';
@@ -14,7 +15,12 @@ import {
     MooniswapLiquidityProvider__factory
 } from '../wrappers';
 
-blockchainTests('MooniswapLiquidityProvider feature', env => {
+describe('MooniswapLiquidityProvider feature', () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+    } as any;
     let lp: MooniswapLiquidityProviderContract;
     let sellToken: TestMintableERC20TokenContract;
     let buyToken: TestMintableERC20TokenContract;
@@ -30,6 +36,7 @@ blockchainTests('MooniswapLiquidityProvider feature', env => {
 
     before(async () => {
         [, taker] = await env.getAccountAddressesAsync();
+        env.txDefaults.from = taker;
         
         const signer = await env.provider.getSigner(taker);
         
@@ -61,117 +68,120 @@ blockchainTests('MooniswapLiquidityProvider feature', env => {
         buyTokenAddress: string,
         buyAmount: bigint,
     ): Promise<void> {
-        if (sellTokenAddress.toLowerCase() === await weth.getAddress().toLowerCase()) {
-            await weth.deposit()({
-                from: taker,
-                value: sellAmount,
-            });
-            await weth.transfer(await lp.getAddress(), sellAmount)({ from: taker });
-        } else if (sellTokenAddress.toLowerCase() === await sellToken.getAddress().toLowerCase()) {
-            await sellToken.mint(await lp.getAddress(), sellAmount)();
+        const wethAddr = (await weth.getAddress()).toLowerCase();
+        if (sellTokenAddress.toLowerCase() === wethAddr) {
+            const signer = await env.provider.getSigner(taker);
+            await (await weth.connect(signer).deposit({ value: sellAmount })).wait();
+            await (await weth.connect(signer).transfer(await lp.getAddress(), sellAmount)).wait();
+        } else if (sellTokenAddress.toLowerCase() === (await sellToken.getAddress()).toLowerCase()) {
+            await (await sellToken.mint(await lp.getAddress(), sellAmount)).wait();
         } else {
-            await await env.web3Wrapper(
-                await env.web3Wrapper.sendTransactionAsync({
-                    to: await lp.getAddress(),
-                    from: taker,
-                    value: sellAmount,
-                }),
-            );
+            const signer = await env.provider.getSigner(taker);
+            await (await signer.sendTransaction({ to: await lp.getAddress(), value: sellAmount })).wait();
         }
-        await testMooniswap.setNextBoughtAmount(buyAmount)({
+        await (await testMooniswap.setNextBoughtAmount(buyAmount, {
             value: buyTokenAddress.toLowerCase() === ETH_TOKEN_ADDRESS.toLowerCase() ? buyAmount : ZERO_AMOUNT,
-        });
+        })).wait();
     }
 
     it('can swap ERC20->ERC20', async () => {
         await prepareNextSwapFundsAsync(await sellToken.getAddress(), SELL_AMOUNT, await buyToken.getAddress(), BUY_AMOUNT);
-        const call = lp.sellTokenForToken(await sellToken.getAddress(), await buyToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData);
-        const boughtAmount = await call();
-        const { logs } = await call();
-        expect(boughtAmount).to.eq(BUY_AMOUNT);
-        expect(await buyToken.balanceOf(RECIPIENT)()).to.eq(BUY_AMOUNT);
+        const tx = await lp.sellTokenForToken(await sellToken.getAddress(), await buyToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData);
+        const receipt = await tx.wait();
+        expect(await buyToken.balanceOf(RECIPIENT)).to.eq(BUY_AMOUNT);
+        const mooniContract = testMooniswap as unknown as ethers.Contract;
         verifyEventsFromLogs(
-            logs,
+            receipt.logs,
+            mooniContract,
             [
                 {
-                    value: ZERO_AMOUNT,
-                    sellToken: await sellToken.getAddress(),
-                    buyToken: await buyToken.getAddress(),
-                    sellAmount: SELL_AMOUNT,
-                    minBuyAmount: BUY_AMOUNT,
-                    referral: NULL_ADDRESS,
+                    event: 'MooniswapCalled',
+                    args: {
+                        value: ZERO_AMOUNT,
+                        sellToken: await sellToken.getAddress(),
+                        buyToken: await buyToken.getAddress(),
+                        sellAmount: SELL_AMOUNT,
+                        minBuyAmount: BUY_AMOUNT,
+                        referral: NULL_ADDRESS,
+                    },
                 },
             ],
-            'MooniswapCalled',
         );
     });
 
     it('can swap ERC20->ETH', async () => {
         await prepareNextSwapFundsAsync(await sellToken.getAddress(), SELL_AMOUNT, ETH_TOKEN_ADDRESS, BUY_AMOUNT);
-        const call = lp.sellTokenForEth(await sellToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData);
-        const boughtAmount = await call();
-        const { logs } = await call();
-        expect(boughtAmount).to.eq(BUY_AMOUNT);
-        expect(await env.web3Wrapper.getBalanceInWeiAsync(RECIPIENT)).to.eq(BUY_AMOUNT);
+        const tx = await lp.sellTokenForEth(await sellToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData);
+        const receipt = await tx.wait();
+        expect(await env.provider.getBalance(RECIPIENT)).to.eq(BUY_AMOUNT);
+        const mooniContract = testMooniswap as unknown as ethers.Contract;
         verifyEventsFromLogs(
-            logs,
+            receipt.logs,
+            mooniContract,
             [
                 {
-                    value: ZERO_AMOUNT,
-                    sellToken: await sellToken.getAddress(),
-                    buyToken: NULL_ADDRESS,
-                    sellAmount: SELL_AMOUNT,
-                    minBuyAmount: BUY_AMOUNT,
-                    referral: NULL_ADDRESS,
+                    event: 'MooniswapCalled',
+                    args: {
+                        value: ZERO_AMOUNT,
+                        sellToken: await sellToken.getAddress(),
+                        buyToken: NULL_ADDRESS,
+                        sellAmount: SELL_AMOUNT,
+                        minBuyAmount: BUY_AMOUNT,
+                        referral: NULL_ADDRESS,
+                    },
                 },
             ],
-            'MooniswapCalled',
         );
     });
 
     it('can swap ETH->ERC20', async () => {
         await prepareNextSwapFundsAsync(ETH_TOKEN_ADDRESS, SELL_AMOUNT, await buyToken.getAddress(), BUY_AMOUNT);
-        const call = lp.sellEthForToken(await buyToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData);
-        const boughtAmount = await call();
-        const { logs } = await call();
-        expect(boughtAmount).to.eq(BUY_AMOUNT);
-        expect(await buyToken.balanceOf(RECIPIENT)()).to.eq(BUY_AMOUNT);
+        const tx = await lp.sellEthForToken(await buyToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData);
+        const receipt = await tx.wait();
+        expect(await buyToken.balanceOf(RECIPIENT)).to.eq(BUY_AMOUNT);
+        const mooniContract = testMooniswap as unknown as ethers.Contract;
         verifyEventsFromLogs(
-            logs,
+            receipt.logs,
+            mooniContract,
             [
                 {
-                    value: SELL_AMOUNT,
-                    sellToken: NULL_ADDRESS,
-                    buyToken: await buyToken.getAddress(),
-                    sellAmount: SELL_AMOUNT,
-                    minBuyAmount: BUY_AMOUNT,
-                    referral: NULL_ADDRESS,
+                    event: 'MooniswapCalled',
+                    args: {
+                        value: SELL_AMOUNT,
+                        sellToken: NULL_ADDRESS,
+                        buyToken: await buyToken.getAddress(),
+                        sellAmount: SELL_AMOUNT,
+                        minBuyAmount: BUY_AMOUNT,
+                        referral: NULL_ADDRESS,
+                    },
                 },
             ],
-            'MooniswapCalled',
         );
     });
 
     it('can swap ETH->ERC20 with attached ETH', async () => {
-        await testMooniswap.setNextBoughtAmount(BUY_AMOUNT)();
-        const call = lp.sellEthForToken(await buyToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData);
-        const boughtAmount = await call({ value: SELL_AMOUNT });
-        const { logs } = await call({ value: SELL_AMOUNT });
-        expect(boughtAmount).to.eq(BUY_AMOUNT);
-        expect(await buyToken.balanceOf(RECIPIENT)()).to.eq(BUY_AMOUNT);
+        // 先设置期望买入数量，再进行一次交易
+        await (await testMooniswap.setNextBoughtAmount(BUY_AMOUNT)).wait();
+        const tx = await lp.sellEthForToken(await buyToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData, { value: SELL_AMOUNT });
+        const receipt = await tx.wait();
+        expect(await buyToken.balanceOf(RECIPIENT)).to.eq(BUY_AMOUNT);
+        const mooniContract = testMooniswap as unknown as ethers.Contract;
         verifyEventsFromLogs(
-            logs,
+            receipt.logs,
+            mooniContract,
             [
                 {
-                    value: SELL_AMOUNT,
-                    sellToken: NULL_ADDRESS,
-                    buyToken: await buyToken.getAddress(),
-                    sellAmount: SELL_AMOUNT,
-                    minBuyAmount: BUY_AMOUNT,
-                    referral: NULL_ADDRESS,
+                    event: 'MooniswapCalled',
+                    args: {
+                        value: SELL_AMOUNT,
+                        sellToken: NULL_ADDRESS,
+                        buyToken: await buyToken.getAddress(),
+                        sellAmount: SELL_AMOUNT,
+                        minBuyAmount: BUY_AMOUNT,
+                        referral: NULL_ADDRESS,
+                    },
                 },
             ],
-            'MooniswapCalled',
         );
     });
 
@@ -179,106 +189,108 @@ blockchainTests('MooniswapLiquidityProvider feature', env => {
         await prepareNextSwapFundsAsync(
             await sellToken.getAddress(),
             SELL_AMOUNT,
-            ETH_TOKEN_ADDRESS, // Mooni contract holds ETH.
+            ETH_TOKEN_ADDRESS,
             BUY_AMOUNT,
         );
-        const call = lp.sellTokenForToken(await sellToken.getAddress(), await weth.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData);
-        const boughtAmount = await call();
-        const { logs } = await call();
-        expect(boughtAmount).to.eq(BUY_AMOUNT);
-        expect(await sellToken.balanceOf(testMooniswap.address)()).to.eq(SELL_AMOUNT);
-        expect(await weth.balanceOf(RECIPIENT)()).to.eq(BUY_AMOUNT);
+        const tx = await lp.sellTokenForToken(await sellToken.getAddress(), await weth.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData);
+        const receipt = await tx.wait();
+        expect(await sellToken.balanceOf(await testMooniswap.getAddress())).to.eq(SELL_AMOUNT);
+        expect(await weth.balanceOf(RECIPIENT)).to.eq(BUY_AMOUNT);
+        const mooniContract = testMooniswap as unknown as ethers.Contract;
         verifyEventsFromLogs(
-            logs,
+            receipt.logs,
+            mooniContract,
             [
                 {
-                    value: ZERO_AMOUNT,
-                    sellToken: await sellToken.getAddress(),
-                    buyToken: NULL_ADDRESS,
-                    sellAmount: SELL_AMOUNT,
-                    minBuyAmount: BUY_AMOUNT,
-                    referral: NULL_ADDRESS,
+                    event: 'MooniswapCalled',
+                    args: {
+                        value: ZERO_AMOUNT,
+                        sellToken: await sellToken.getAddress(),
+                        buyToken: NULL_ADDRESS,
+                        sellAmount: SELL_AMOUNT,
+                        minBuyAmount: BUY_AMOUNT,
+                        referral: NULL_ADDRESS,
+                    },
                 },
             ],
-            'MooniswapCalled',
         );
     });
 
     it('can swap WETH->ERC20', async () => {
         await prepareNextSwapFundsAsync(await weth.getAddress(), SELL_AMOUNT, await buyToken.getAddress(), BUY_AMOUNT);
-        const call = lp.sellTokenForToken(await weth.getAddress(), await buyToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData);
-        const boughtAmount = await call();
-        const { logs } = await call();
-        expect(boughtAmount).to.eq(BUY_AMOUNT);
-        expect(await env.web3Wrapper.getBalanceInWeiAsync(testMooniswap.address)).to.eq(SELL_AMOUNT);
-        expect(await buyToken.balanceOf(RECIPIENT)()).to.eq(BUY_AMOUNT);
+        const tx = await lp.sellTokenForToken(await weth.getAddress(), await buyToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData);
+        const receipt = await tx.wait();
+        expect(await env.provider.getBalance(await testMooniswap.getAddress())).to.eq(SELL_AMOUNT);
+        expect(await buyToken.balanceOf(RECIPIENT)).to.eq(BUY_AMOUNT);
+        const mooniContract = testMooniswap as unknown as ethers.Contract;
         verifyEventsFromLogs(
-            logs,
+            receipt.logs,
+            mooniContract,
             [
                 {
-                    value: SELL_AMOUNT,
-                    sellToken: NULL_ADDRESS,
-                    buyToken: await buyToken.getAddress(),
-                    sellAmount: SELL_AMOUNT,
-                    minBuyAmount: BUY_AMOUNT,
-                    referral: NULL_ADDRESS,
+                    event: 'MooniswapCalled',
+                    args: {
+                        value: SELL_AMOUNT,
+                        sellToken: NULL_ADDRESS,
+                        buyToken: await buyToken.getAddress(),
+                        sellAmount: SELL_AMOUNT,
+                        minBuyAmount: BUY_AMOUNT,
+                        referral: NULL_ADDRESS,
+                    },
                 },
             ],
-            'MooniswapCalled',
         );
     });
 
     it('reverts if pool reverts', async () => {
         await prepareNextSwapFundsAsync(await sellToken.getAddress(), SELL_AMOUNT, await buyToken.getAddress(), BUY_AMOUNT);
-        await testMooniswap.setNextBoughtAmount(BUY_AMOUNT - 1)();
-        const call = lp.sellTokenForToken(await sellToken.getAddress(), await buyToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData);
-        return expect(call()).to.be.revertedWith('UNDERBOUGHT');
+        await (await testMooniswap.setNextBoughtAmount(BUY_AMOUNT - 1n)).wait();
+        await expect(lp.sellTokenForToken(await sellToken.getAddress(), await buyToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData)).to.be.revertedWith('UNDERBOUGHT');
     });
 
     it('reverts if ERC20->ERC20 is the same token', async () => {
-        const call = lp.sellTokenForToken(await sellToken.getAddress(), await sellToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData);
-        return expect(call()).to.be.revertedWith('MooniswapLiquidityProvider/INVALID_ARGS');
+        await expect(
+            lp.sellTokenForToken(await sellToken.getAddress(), await sellToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData)
+        ).to.be.revertedWith('MooniswapLiquidityProvider/INVALID_ARGS');
     });
 
     it('reverts if ERC20->ERC20 receives an ETH input token', async () => {
-        const call = lp.sellTokenForToken(ETH_TOKEN_ADDRESS, await buyToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData);
-        return expect(call()).to.be.revertedWith('MooniswapLiquidityProvider/INVALID_ARGS');
+        await expect(
+            lp.sellTokenForToken(ETH_TOKEN_ADDRESS, await buyToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData)
+        ).to.be.revertedWith('MooniswapLiquidityProvider/INVALID_ARGS');
     });
 
     it('reverts if ERC20->ERC20 receives an ETH output token', async () => {
-        const call = lp.sellTokenForToken(await sellToken.getAddress(), ETH_TOKEN_ADDRESS, RECIPIENT, BUY_AMOUNT, mooniswapData);
-        return expect(call()).to.be.revertedWith('MooniswapLiquidityProvider/INVALID_ARGS');
+        await expect(
+            lp.sellTokenForToken(await sellToken.getAddress(), ETH_TOKEN_ADDRESS, RECIPIENT, BUY_AMOUNT, mooniswapData)
+        ).to.be.revertedWith('MooniswapLiquidityProvider/INVALID_ARGS');
     });
 
     it('reverts if ERC20->ETH receives an ETH input token', async () => {
-        const call = lp.sellTokenForEth(ETH_TOKEN_ADDRESS, RECIPIENT, BUY_AMOUNT, mooniswapData);
-        return expect(call()).to.be.revertedWith('MooniswapLiquidityProvider/INVALID_ARGS');
+        await expect(
+            lp.sellTokenForEth(ETH_TOKEN_ADDRESS, RECIPIENT, BUY_AMOUNT, mooniswapData)
+        ).to.be.revertedWith('MooniswapLiquidityProvider/INVALID_ARGS');
     });
 
     it('reverts if ETH->ERC20 receives an ETH output token', async () => {
-        const call = lp.sellEthForToken(ETH_TOKEN_ADDRESS, RECIPIENT, BUY_AMOUNT, mooniswapData);
-        return expect(call()).to.be.revertedWith('MooniswapLiquidityProvider/INVALID_ARGS');
+        await expect(
+            lp.sellEthForToken(ETH_TOKEN_ADDRESS, RECIPIENT, BUY_AMOUNT, mooniswapData)
+        ).to.be.revertedWith('MooniswapLiquidityProvider/INVALID_ARGS');
     });
 
     it('emits a LiquidityProviderFill event', async () => {
         await prepareNextSwapFundsAsync(await sellToken.getAddress(), SELL_AMOUNT, await buyToken.getAddress(), BUY_AMOUNT);
-        const call = lp.sellTokenForToken(await sellToken.getAddress(), await buyToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData);
-        const { logs } = await call();
-        verifyEventsFromLogs(
-            logs,
-            [
-                {
-                    inputToken: await sellToken.getAddress(),
-                    outputToken: await buyToken.getAddress(),
-                    inputTokenAmount: SELL_AMOUNT,
-                    outputTokenAmount: BUY_AMOUNT,
-                    sourceId: hexUtils.rightPad(hexUtils.toHex(Buffer.from('Mooniswap'))),
-                    sourceAddress: testMooniswap.address,
-                    sender: taker,
-                    recipient: RECIPIENT,
-                },
-            ],
-            'LiquidityProviderFill',
-        );
+        const receipt = await (await lp.sellTokenForToken(await sellToken.getAddress(), await buyToken.getAddress(), RECIPIENT, BUY_AMOUNT, mooniswapData)).wait();
+        const parsed = filterLogs(receipt.logs, (lp as unknown as ethers.Contract), 'LiquidityProviderFill');
+        expect(parsed.length).to.equal(1);
+        const args = parsed[0].args as any;
+        expect(args.inputToken).to.equal(await sellToken.getAddress());
+        expect(args.outputToken).to.equal(await buyToken.getAddress());
+        expect(args.sellAmount ?? args.inputTokenAmount).to.equal(SELL_AMOUNT);
+        expect(args.boughtAmount ?? args.outputTokenAmount).to.equal(BUY_AMOUNT);
+        expect((args.sourceId as string)).to.equal(hexUtils.rightPad(hexUtils.toHex(Buffer.from('Mooniswap'))));
+        expect(args.sourceAddress).to.equal(await testMooniswap.getAddress());
+        expect(String(args.sender).toLowerCase()).to.equal(String(taker).toLowerCase());
+        expect(String(args.recipient).toLowerCase()).to.equal(String(RECIPIENT).toLowerCase());
     });
 });

@@ -1,11 +1,10 @@
-import { ethers } from "ethers";
+import { ethers } from "hardhat";
 import {
-    blockchainTests,
-    expect,
     getRandomInteger,
     randomAddress,
     verifyEventsFromLogs,
-} from '@0x/test-utils';
+} from '@0x/utils';
+import { expect } from 'chai';
 import { hexUtils, RawRevertError, StringRevertError } from '@0x/utils';
 
 import { artifacts } from './artifacts';
@@ -16,13 +15,19 @@ import {
     TestTokenSpenderERC20Token__factory,
 } from './wrappers';
 
-blockchainTests.resets('FixinTokenSpender', env => {
+describe('FixinTokenSpender', () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+    } as any;
     let tokenSpender: TestFixinTokenSpenderContract;
     let token: TestTokenSpenderERC20TokenContract;
     let greedyToken: TestTokenSpenderERC20TokenContract;
 
     before(async () => {
         const [deployer] = await env.getAccountAddressesAsync();
+        env.txDefaults.from = deployer;
         const signer = await env.provider.getSigner(deployer);
         
         const tokenFactory = new TestTokenSpenderERC20Token__factory(signer);

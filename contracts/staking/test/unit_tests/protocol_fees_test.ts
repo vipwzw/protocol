@@ -11,6 +11,7 @@ import {
     toBigInt,
 } from '../test_constants';
 import { hexUtils } from '../test_constants';
+import { TestProtocolFees__factory, TestProtocolFees } from '../../src/typechain-types';
 
 // StakingRevertErrors replacement
 export class StakingRevertErrors {
@@ -486,3 +487,34 @@ import {
 });
 // tslint:disable: max-file-line-count
 */
+
+// Minimal modernized tests (Hardhat + Ethers v6)
+describe('Protocol Fees unit tests', () => {
+    let exchange: string;
+    let testContract: TestProtocolFees;
+
+    before(async () => {
+        const signers = await ethers.getSigners();
+        exchange = await signers[1].getAddress();
+        const factory = new TestProtocolFees__factory(signers[0]);
+        testContract = await factory.deploy(exchange);
+    });
+
+    it('credits pool with ETH protocol fee when maker is in a pool', async () => {
+        const poolId = hexUtils.random();
+        const maker = randomAddress();
+        const payer = randomAddress();
+        // Default minimumPoolStake is 100 * 1e18, so set operator stake >= that
+        const minimum = 100n * 10n ** 18n;
+        const tx1 = await testContract.createTestPool(poolId, minimum, 0, [maker]);
+        await tx1.wait();
+        const exchangeSigner = await ethers.getSigner(exchange);
+        const fee = 150_000n * 1_000_000_000n; // 150k gwei
+        const receipt = await (await testContract.connect(exchangeSigner).payProtocolFee(maker, payer, fee, { value: fee })).wait();
+        const logs = receipt?.logs ?? [];
+        const erc20Transfers = filterLogsToArguments(logs, 'ERC20ProxyTransferFrom');
+        expect(erc20Transfers).to.deep.equal([]);
+        const stats = await testContract.getStakingPoolStatsThisEpoch(poolId);
+        expectBigIntEqual(toBigInt(stats.feesCollected), toBigInt(fee));
+    });
+});

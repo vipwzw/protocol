@@ -1,5 +1,5 @@
 import { artifacts as erc20Artifacts, DummyERC20Token__factory, DummyERC20Token } from '@0x/contracts-erc20';
-import { constants, ERC20BalancesByOwner, txDefaults } from '@0x/test-utils';
+import { constants, ERC20BalancesByOwner, txDefaults } from '@0x/utils';
 import { ZeroExProvider } from 'ethereum-types';
 import * as _ from 'lodash';
 
@@ -39,7 +39,7 @@ export class ERC20Wrapper {
         for (let i = 0; i < numberToDeploy; i++) {
             const factory = new DummyERC20Token__factory(signer);
             // Use minimal supply to avoid any overflow issues
-            const safeTotalSupply = ethers.parseUnits('1000', decimals); // 1,000 tokens total
+            const safeTotalSupply = ethers.parseUnits('1000000000', Number(decimals)); // 1,000,000,000 tokens total
             const contract = await factory.deploy(
                 `Dummy Token ${i}`,
                 `DUM${i}`,
@@ -74,9 +74,9 @@ export class ERC20Wrapper {
         const signers = await ethers.getSigners();
         const proxyAddress = await this._proxyContract!.getAddress();
         
-        // 使用最小的初始余额和权限额度，避免任何溢出
-        const initialBalance = ethers.parseUnits('10', 18); // 10 tokens per user
-        const allowanceAmount = ethers.parseUnits('100', 18); // 100 tokens allowance
+        // Provide reasonable balances and allowances to each owner
+        const initialBalance = ethers.parseUnits('1000', 18); // 1,000 tokens per user
+        const allowanceAmount = ethers.parseUnits('1000', 18); // 1,000 tokens allowance
         
         for (const dummyTokenContract of this._dummyTokenContracts) {
             // 确保使用合约的 owner (部署者) 来调用 setBalance
@@ -87,18 +87,17 @@ export class ERC20Wrapper {
                 const tokenOwnerAddress = this._tokenOwnerAddresses[i];
                 
                 try {
-                    // 暂时跳过 setBalance，直接设置 allowance，看看是否能解决问题
-                    
-                    // 获取对应的 signer 来执行 approve
+                    // Set user balance directly on the dummy token
+                    const setBalTx = await contractWithOwner.setBalance(tokenOwnerAddress, initialBalance);
+                    await setBalTx.wait();
+
+                    // Approve proxy from the user's signer
                     const userSigner = signers.find((s: any) => s.address.toLowerCase() === tokenOwnerAddress.toLowerCase()) || signers[i % signers.length];
                     const contractWithSigner = dummyTokenContract.connect(userSigner);
-                    
-                    // 设置代理合约的 allowance - 即使余额为0，我们也可以设置 allowance
-                    const approveTx = await contractWithSigner.approve(proxyAddress, 0); // 设置为0先试试
+                    const approveTx = await contractWithSigner.approve(proxyAddress, allowanceAmount);
                     await approveTx.wait();
-                    
                 } catch (error) {
-                    // 继续处理下一个，不要因为单个失败就停止整个过程
+                    // Continue to next user
                 }
             }
         }
@@ -167,9 +166,9 @@ export class ERC20Wrapper {
         return tokenAddresses;
     }
     private async _getTokenContractFromAssetDataAsync(assetData: string): Promise<DummyERC20Token> {
-        // For now, simplified implementation - decode assetData to get token address
-        // This would typically use a proper asset data decoder
-        const tokenAddress = assetData.slice(34); // Skip function selector and padding
+        // Decode assetData to get token address: last 20 bytes
+        const normalized = assetData.startsWith('0x') ? assetData.slice(2) : assetData;
+        const tokenAddress = '0x' + normalized.slice(-40);
         const tokenContractIfExists = await Promise.all(
             this._dummyTokenContracts.map(async c => ({
                 contract: c,

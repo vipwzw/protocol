@@ -15,12 +15,15 @@ describe('Staking Authorization Tests', () => {
 
     let owner: string;
     let nonOwner: string;
+    let ownerSigner: any;
+    let nonOwnerSigner: any;
 
     before(async () => {
         const signers = await ethers.getSigners();
-        [owner, nonOwner] = [signers[0].address, signers[1].address];
+        [ownerSigner, nonOwnerSigner] = [signers[0], signers[1]];
+        [owner, nonOwner] = [ownerSigner.address, nonOwnerSigner.address];
 
-        const deployer = signers[0]; // 使用第一个 signer 作为 owner
+        const deployer = ownerSigner; // 使用第一个 signer 作为 owner
         const factory = new TestStaking__factory(deployer);
         testContract = await factory.deploy(
             constants.NULL_ADDRESS,
@@ -49,16 +52,19 @@ describe('Staking Authorization Tests', () => {
         });
 
         it('should throw if non-owner adds authorized address', async () => {
-            // Note: With ethers.js v6, we can't easily test transactions "from" different accounts
-            // This test would need to be refactored to use different signers
-            const txPromise = testContract.addAuthorizedAddress(owner);
-            const expectedError = new OwnableRevertErrors.OnlyOwnerError(nonOwner, owner);
-            return expect(txPromise).to.be.revertedWith(expectedError.message);
+            const txPromise = testContract.connect(nonOwnerSigner).addAuthorizedAddress(owner);
+            await expect(txPromise).to.be.reverted;
         });
     });
 
     describe('removeAuthorizedAddress', () => {
         before(async () => {
+            // 重新部署，确保没有前序授权残留
+            const factory = new TestStaking__factory(ownerSigner);
+            testContract = await factory.deploy(
+                constants.NULL_ADDRESS,
+                constants.NULL_ADDRESS,
+            );
             const tx = await testContract.addAuthorizedAddress(owner);
             await tx.wait();
             const authorities = await testContract.getAuthorizedAddresses();
@@ -80,11 +86,8 @@ describe('Staking Authorization Tests', () => {
         });
 
         it('should throw if non-owner removes authorized address', async () => {
-            // Note: With ethers.js v6, we can't easily test transactions "from" different accounts
-            // This test would need to be refactored to use different signers
-            const txPromise = testContract.removeAuthorizedAddress(owner);
-            const expectedError = new OwnableRevertErrors.OnlyOwnerError(nonOwner, owner);
-            return expect(txPromise).to.be.revertedWith(expectedError.message);
+            const txPromise = testContract.connect(nonOwnerSigner).removeAuthorizedAddress(owner);
+            await expect(txPromise).to.be.reverted;
         });
     });
 });

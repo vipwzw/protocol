@@ -1,13 +1,12 @@
 import {
-    blockchainTests,
     constants,
-    expect,
     getRandomInteger,
     getRandomPortion,
     Numberish,
     randomAddress,
     verifyEventsFromLogs,
-} from '@0x/test-utils';
+} from '@0x/utils';
+import { expect } from 'chai';
 import { ETH_TOKEN_ADDRESS } from '@0x/protocol-utils';
 import { hexUtils, OwnableRevertErrors, ZeroExRevertErrors } from '@0x/utils';
 import { ethers } from 'hardhat';
@@ -22,6 +21,7 @@ import {
 } from '../../src/wrappers';
 import { artifacts } from '../artifacts';
 import { abis } from '../utils/abis';
+
 import { fullMigrateAsync } from '../utils/migration';
 import {
     FlashWalletContract,
@@ -32,7 +32,12 @@ import {
     TransformERC20FeatureEvents,
 } from '../wrappers';
 
-blockchainTests('TransformERC20 feature', env => {
+describe('TransformERC20 feature', () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+    } as any;
     const callDataSignerKey = hexUtils.random();
     const callDataSigner = ethjs.bufferToHex(ethjs.privateToAddress(ethjs.toBuffer(callDataSignerKey)));
     let owner: string;
@@ -45,6 +50,7 @@ blockchainTests('TransformERC20 feature', env => {
 
     before(async () => {
         [owner, taker, sender, transformerDeployer] = await env.getAccountAddressesAsync();
+        env.txDefaults.from = owner;
         const signer = await env.provider.getSigner(owner);
         const testTransformFactory = new TestTransformERC20__factory(signer);
         const testTransformContract = await testTransformFactory.deploy();

@@ -5,13 +5,49 @@ export const constants = {
     ZERO_AMOUNT: 0n,
     DUMMY_TOKEN_DECIMALS: 18n,
     MAX_CODE_SIZE: 0x6000, // 24,576 bytes (EIP-170 limit)
+    MAX_UINT256: (1n << 256n) - 1n,
+    PPM_100_PERCENT: 1000000,
 } as const;
+
+// Compute deployed code size (in bytes) from a Hardhat artifact
+export function getCodesizeFromArtifact(artifact: any): number {
+    const deployedBytecode: string | undefined =
+        artifact?.deployedBytecode || artifact?.evm?.deployedBytecode?.object || artifact?.bytecode;
+    if (typeof deployedBytecode !== 'string' || !deployedBytecode.startsWith('0x')) {
+        return 0;
+    }
+    return (deployedBytecode.length - 2) / 2;
+}
 
 // Utility function for filtering logs
 export function filterLogsToArguments(logs: any[], eventName: string): any[] {
     return logs
         .filter(log => log.fragment && log.fragment.name === eventName)
-        .map(log => log.args);
+        .map(log => {
+            const args = log.args;
+            if (!args) {
+                return {};
+            }
+            // Prefer named fields from fragment inputs
+            try {
+                const named: Record<string, any> = {};
+                if (log.fragment && Array.isArray(args) && log.fragment.inputs) {
+                    log.fragment.inputs.forEach((input: any, idx: number) => {
+                        named[input.name] = args[idx];
+                    });
+                    return named;
+                }
+                // Fallback: strip numeric indices from Result-like objects
+                for (const [key, value] of Object.entries(args)) {
+                    if (Number.isNaN(Number(key))) {
+                        named[key] = value;
+                    }
+                }
+                return Object.keys(named).length ? named : args;
+            } catch {
+                return args;
+            }
+        });
 }
 
 // Random address generator
@@ -132,3 +168,18 @@ export const hexUtils = {
         return (hexString.length - 2) / 2; // Remove '0x' and divide by 2
     }
 };
+
+// Verify events helper compatible with ethers v6 logs
+export function verifyEventsFromLogs(logs: any[], expected: Array<Record<string, any>>, eventName: string): void {
+    const { expect } = require('chai');
+    const actual = filterLogsToArguments(logs, eventName);
+    expect(actual.length, `Expected ${expected.length} '${eventName}' events, got ${actual.length}`).to.equal(expected.length);
+    for (let i = 0; i < expected.length; i++) {
+        const exp = expected[i];
+        const act = actual[i] ?? {};
+        // Ensure all expected keys match in the actual event
+        for (const [key, value] of Object.entries(exp)) {
+            expect(act[key], `Event ${eventName} index ${i} key '${key}' mismatch`).to.equal(value);
+        }
+    }
+}

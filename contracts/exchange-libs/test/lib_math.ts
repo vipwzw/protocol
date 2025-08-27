@@ -1,11 +1,9 @@
 import {
-    blockchainTests,
     constants,
-    describe,
-    expect,
     testCombinatoriallyWithReferenceFunc,
     uint256Values,
-} from '@0x/test-utils';
+} from '@0x/utils';
+import { expect } from 'chai';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { LibMathRevertErrors } from '@0x/utils';
 
@@ -21,7 +19,7 @@ import {
 import { artifacts } from './artifacts';
 import { TestLibMath__factory } from '../src/typechain-types';
 
-blockchainTests('LibMath', env => {
+describe('LibMath', () => {
     const { ONE_ETHER, MAX_UINT256, MAX_UINT256_ROOT, ZERO_AMOUNT } = constants;
     let libsContract: any;
 

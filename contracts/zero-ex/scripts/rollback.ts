@@ -1,5 +1,5 @@
 import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses';
-import { constants } from '@0x/test-utils';
+import { constants } from '@0x/utils';
 import { RPCSubprovider, Web3ProviderEngine } from '@0x/subproviders';
 import { AbiEncoder, logUtils, providerUtils } from '@0x/utils';
 import { ethers } from 'ethers';

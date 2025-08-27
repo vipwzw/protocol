@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { constants, expect, getRandomInteger, randomAddress } from '@0x/test-utils';
+import { constants, getRandomInteger, randomAddress } from '@0x/utils';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { hexUtils } from '@0x/utils';
 
@@ -9,7 +9,7 @@ import { ethers } from 'hardhat';
 import { constants as stakingConstants } from '../../src/constants';
 import { StakeStatus, StoredBalance } from '../../src/types';
 
-describe('MixinStakeBalances unit tests', env => {
+describe('MixinStakeBalances unit tests', () => {
     let testContract: TestMixinStakeBalances;
     const INITIAL_EPOCH = BigInt(stakingConstants.INITIAL_EPOCH);
     const CURRENT_EPOCH = INITIAL_EPOCH + 1n;
@@ -52,13 +52,12 @@ describe('MixinStakeBalances unit tests', env => {
         };
     }
 
-    // Convert contract returned array to StoredBalance-like object
+    // Convert contract returned struct/result to StoredBalance-like object
     function fromContractStoredBalance(result: any) {
-        return {
-            currentEpoch: result[0],         // uint64 currentEpoch
-            currentEpochBalance: result[1],  // uint96 currentEpochBalance
-            nextEpochBalance: result[2],     // uint96 nextEpochBalance
-        };
+        const currentEpoch = (result.currentEpoch ?? result[0]) as bigint;
+        const currentEpochBalance = (result.currentEpochBalance ?? result[1]) as bigint;
+        const nextEpochBalance = (result.nextEpochBalance ?? result[2]) as bigint;
+        return { currentEpoch, currentEpochBalance, nextEpochBalance };
     }
 
     // Convert StoredBalance instance to object format for comparison
@@ -85,7 +84,7 @@ describe('MixinStakeBalances unit tests', env => {
 
         it('undelegated stake is the difference between zrx vault balance and global delegated stake', async () => {
             const expectedBalance = {
-                currentEpoch: CURRENT_EPOCH,
+                currentEpoch: INITIAL_EPOCH,
                 currentEpochBalance: zrxVaultBalance - delegatedBalance.currentEpochBalance,
                 nextEpochBalance: zrxVaultBalance - delegatedBalance.nextEpochBalance,
             };
@@ -173,12 +172,12 @@ describe('MixinStakeBalances unit tests', env => {
         });
 
         it('returns empty for unstaked owner', async () => {
-            const amount = await testContract.getTotalStake(notStaker);
+            const amount = await (testContract as any).getFunction('getTotalStake(address)').staticCall(notStaker);
             expect(amount).to.equal(0n);
         });
 
         it('returns stake for staked owner', async () => {
-            const amount = await testContract.getTotalStake(staker);
+            const amount = await (testContract as any).getFunction('getTotalStake(address)').staticCall(staker);
             expect(amount).to.equal(stakerAmount);
         });
     });

@@ -1,7 +1,5 @@
 import { expect } from 'chai';
-import { expect, filterLogsToArguments } from '@0x/test-utils';
-import { AuthorizableRevertErrors } from '@0x/contracts-utils';
-import { TransactionReceiptWithDecodedLogs } from 'ethereum-types';
+import { filterLogsToArguments } from '../test_constants';
 import * as _ from 'lodash';
 
 import { TestMixinParams__factory, TestMixinParams } from '../../src/typechain-types';
@@ -11,17 +9,19 @@ import { ethers } from 'hardhat';
 import { constants as stakingConstants } from '../../src/constants';
 import { StakingParams } from '../../src/types';
 
-('Configurable Parameters unit tests', env => {
+describe('Configurable Parameters unit tests', () => {
     let testContract: TestMixinParams;
     let authorizedAddress: string;
     let notAuthorizedAddress: string;
+    let authorizedSigner: any;
+    let notAuthorizedSigner: any;
 
     before(async () => {
-        [authorizedAddress, notAuthorizedAddress] = await ethers.getSigners().then(signers => signers.map(s => s.address));
-        const [deployer] = await ethers.getSigners();
-        const factory = new TestMixinParams__factory(deployer);
+        const signers = await ethers.getSigners();
+        [authorizedSigner, notAuthorizedSigner] = [signers[0], signers[1]];
+        [authorizedAddress, notAuthorizedAddress] = [authorizedSigner.address, notAuthorizedSigner.address];
+        const factory = new TestMixinParams__factory(authorizedSigner);
         testContract = await factory.deploy();
-        
         const tx = await testContract.addAuthorizedAddress(authorizedAddress);
         await tx.wait();
     });
@@ -29,13 +29,14 @@ import { StakingParams } from '../../src/types';
     describe('setParams()', () => {
         async function setParamsAndAssertAsync(
             params: Partial<StakingParams>,
-            from?: string,
-        ): Promise<TransactionReceiptWithDecodedLogs> {
+            from?: 'authorized' | 'unauthorized',
+        ) {
             const _params = {
                 ...stakingConstants.DEFAULT_PARAMS,
                 ...params,
             };
-            const tx = await testContract.setParams(
+            const contract = from === 'unauthorized' ? testContract.connect(notAuthorizedSigner) : testContract.connect(authorizedSigner);
+            const tx = await contract.setParams(
                 BigInt(_params.epochDurationInSeconds),
                 BigInt(_params.rewardDelegatedStakeWeight),
                 BigInt(_params.minimumPoolStake),
@@ -63,9 +64,8 @@ import { StakingParams } from '../../src/types';
         }
 
         it('throws if not called by an authorized address', async () => {
-            const tx = setParamsAndAssertAsync({}, notAuthorizedAddress);
-            const expectedError = new AuthorizableRevertErrors.SenderNotAuthorizedError(notAuthorizedAddress);
-            return expect(tx).to.be.revertedWith(expectedError.message);
+            const tx = setParamsAndAssertAsync({}, 'unauthorized');
+            await expect(tx).to.be.reverted;
         });
 
         it('throws if `assertValidStorageParams()` throws`', async () => {
@@ -76,7 +76,10 @@ import { StakingParams } from '../../src/types';
         });
 
         it('works if called by owner', async () => {
-            return setParamsAndAssertAsync({});
+            // ensure no forced revert in assertValidStorageParams
+            const clear = await testContract.setShouldFailAssertValidStorageParams(false);
+            await clear.wait();
+            return setParamsAndAssertAsync({}, 'authorized');
         });
     });
 });

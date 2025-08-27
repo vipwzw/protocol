@@ -1,4 +1,4 @@
-import { constants, BlockchainLifecycle } from '@0x/test-utils';
+import { constants } from '@0x/utils';
 import { RevertReason } from '@0x/utils';
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
@@ -6,7 +6,6 @@ import * as _ from 'lodash';
 
 import { DummyERC1155Receiver__factory, ERC1155Mintable__factory, DummyERC1155Receiver, ERC1155Mintable } from './wrappers';
 
-const blockchainLifecycle = new BlockchainLifecycle();
 // tslint:disable:no-unnecessary-type-assertion
 describe('ERC1155Token', () => {
     // constant values used in transfer tests
@@ -27,12 +26,6 @@ describe('ERC1155Token', () => {
     let nonFungibleToken: bigint;
     let fungibleToken: bigint;
     // tests
-    before(async () => {
-        await blockchainLifecycle.startAsync();
-    });
-    after(async () => {
-        await blockchainLifecycle.revertAsync();
-    });
     before(async () => {
         // deploy erc1155 contract & receiver
         const signers = await ethers.getSigners();
@@ -70,11 +63,13 @@ describe('ERC1155Token', () => {
         // index 从 1 开始，第一个 NFT 的 index 是 1
         const nftItemId = nonFungibleToken | 1n;
     });
+    let snapshotId: string;
     beforeEach(async () => {
-        await blockchainLifecycle.startAsync();
+        // 使用 Hardhat 快照功能替代 BlockchainLifecycle
+        snapshotId = await ethers.provider.send("evm_snapshot", []);
     });
     afterEach(async () => {
-        await blockchainLifecycle.revertAsync();
+        await ethers.provider.send("evm_revert", [snapshotId]);
     });
     describe('safeTransferFrom', () => {
         it('should transfer fungible token if called by token owner', async () => {

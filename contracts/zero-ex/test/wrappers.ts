@@ -140,7 +140,7 @@ export {
     TestTransformerDeployerTransformer__factory,
     TestPermissionlessTransformerDeployerTransformer__factory,
     TestLiquidityProvider__factory,
-    TestNoEthRecipient__factory,
+
     TestRfqOriginRegistration__factory,
     TestOrderSignerRegistryWithContractWallet__factory,
     TestFeeRecipient__factory,
@@ -157,11 +157,12 @@ export {
 // 代币测试合约工厂
 export { 
     TestMintableERC20Token__factory,
-    TestMintableERC721Token__factory,
-    TestMintableERC1155Token__factory,
     TestTokenSpenderERC20Token__factory,
     TestWeth__factory
 } from '../src/typechain-types/factories/contracts/test/tokens';
+
+export { TestMintableERC721Token__factory } from '../src/typechain-types/factories/contracts/test/tokens/TestMintableERC721Token.sol';
+export { TestMintableERC1155Token__factory } from '../src/typechain-types/factories/contracts/test/tokens/TestMintableERC1155Token.sol';
 
 // Feature 工厂
 export { 

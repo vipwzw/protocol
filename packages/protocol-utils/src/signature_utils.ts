@@ -49,18 +49,45 @@ export async function ethSignHashWithProviderAsync(
     signer: string,
     provider: SupportedProvider,
 ): Promise<Signature> {
-    // 为 ethers v6 兼容性创建 provider
+    // 对于 Hardhat 测试环境，使用改进的 getSigner 方法
+    try {
+        if (provider && typeof provider === 'object' && 'getSigner' in provider) {
+            // 使用 provider 的 getSigner 方法 (支持测试环境)
+            const targetSigner = await (provider as any).getSigner(signer);
+            if (targetSigner && targetSigner.signMessage) {
+                const rpcSig = await targetSigner.signMessage(ethers.getBytes(hash));
+                return {
+                    ...parseRpcSignature(rpcSig),
+                    signatureType: SignatureType.EthSign,
+                };
+            }
+        }
+        
+        // 检查直接的 ethers provider with getSigners
+        if (provider && typeof provider === 'object' && 'getSigners' in provider) {
+            const signers = await (provider as any).getSigners();
+            const testSigner = signers[0];
+            if (testSigner) {
+                const rpcSig = await testSigner.signMessage(ethers.getBytes(hash));
+                return {
+                    ...parseRpcSignature(rpcSig),
+                    signatureType: SignatureType.EthSign,
+                };
+            }
+        }
+    } catch (hardhatError: any) {
+        console.warn(`Hardhat signing failed: ${hardhatError.message}`);
+    }
+    
+    // 处理其他类型的 provider (保持向后兼容)
     let ethersProvider: ethers.JsonRpcProvider;
     
     if (typeof provider === 'string') {
-        // 如果 provider 是字符串 URL
         ethersProvider = new ethers.JsonRpcProvider(provider);
     } else if (provider && typeof provider === 'object' && 'host' in provider) {
-        // 如果 provider 是对象，尝试构造 URL
         const url = `http://${provider.host}:${(provider as any).port || 8545}`;
         ethersProvider = new ethers.JsonRpcProvider(url);
     } else {
-        // 默认使用本地 hardhat 网络
         ethersProvider = new ethers.JsonRpcProvider('http://localhost:8545');
     }
     
@@ -93,18 +120,45 @@ export async function eip712SignTypedDataWithProviderAsync(
     signer: string,
     provider: SupportedProvider,
 ): Promise<Signature> {
-    // 为 ethers v6 兼容性创建 provider
+    // 对于 Hardhat 测试环境，使用改进的 getSigner 方法
+    try {
+        if (provider && typeof provider === 'object' && 'getSigner' in provider) {
+            // 使用 provider 的 getSigner 方法 (支持测试环境)
+            const targetSigner = await (provider as any).getSigner(signer);
+            if (targetSigner && targetSigner.signTypedData) {
+                const rpcSig = await targetSigner.signTypedData(data.domain, data.types, data.message);
+                return {
+                    ...parseRpcSignature(rpcSig),
+                    signatureType: SignatureType.EIP712,
+                };
+            }
+        }
+        
+        // 检查直接的 ethers provider with getSigners
+        if (provider && typeof provider === 'object' && 'getSigners' in provider) {
+            const signers = await (provider as any).getSigners();
+            const testSigner = signers[0];
+            if (testSigner) {
+                const rpcSig = await testSigner.signTypedData(data.domain, data.types, data.message);
+                return {
+                    ...parseRpcSignature(rpcSig),
+                    signatureType: SignatureType.EIP712,
+                };
+            }
+        }
+    } catch (hardhatError: any) {
+        console.warn(`Hardhat EIP712 signing failed: ${hardhatError.message}`);
+    }
+    
+    // 处理其他类型的 provider (保持向后兼容)
     let ethersProvider: ethers.JsonRpcProvider;
     
     if (typeof provider === 'string') {
-        // 如果 provider 是字符串 URL
         ethersProvider = new ethers.JsonRpcProvider(provider);
     } else if (provider && typeof provider === 'object' && 'host' in provider) {
-        // 如果 provider 是对象，尝试构造 URL
         const url = `http://${provider.host}:${(provider as any).port || 8545}`;
         ethersProvider = new ethers.JsonRpcProvider(url);
     } else {
-        // 默认使用本地 hardhat 网络
         ethersProvider = new ethers.JsonRpcProvider('http://localhost:8545');
     }
     

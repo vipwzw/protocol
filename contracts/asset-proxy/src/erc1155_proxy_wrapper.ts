@@ -4,7 +4,7 @@ import {
     constants,
     LogDecoder,
     txDefaults,
-} from '@0x/test-utils';
+} from '@0x/utils';
 import { ZeroExProvider } from 'ethereum-types';
 import { ethers } from 'hardhat';
 import * as _ from 'lodash';

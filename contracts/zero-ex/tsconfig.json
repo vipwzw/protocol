@@ -21,7 +21,6 @@
         { "path": "../erc20" },
         { "path": "../utils" },
         { "path": "../../packages/protocol-utils" },
-        { "path": "../../packages/utils" },
-        { "path": "../../packages/test-utils" }
+        { "path": "../../packages/utils" }
     ]
 }
