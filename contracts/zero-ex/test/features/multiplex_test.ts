@@ -501,7 +501,7 @@ describe('MultiplexFeature', () => {
         await migrateLiquidityProviderContractsAsync();
         await migrateUniswapV2ContractsAsync();
         await migrateUniswapV3ContractsAsync();
-        transformerNonce = await env.web3Wrapper.getAccountNonceAsync(owner);
+        transformerNonce = await ethers.provider.getTransactionCount(owner);
         
         const transformerFactory = new TestMintTokenERC20Transformer__factory(signer);
         await transformerFactory.deploy();

@@ -51,7 +51,7 @@ describe('Ownable feature', () => {
             const notOwnerSigner = await env.provider.getSigner(notOwner);
             return expect(
                 ownable.connect(notOwnerSigner).transferOwnership(newOwner)
-            ).to.be.reverted;
+            ).to.be.rejected;
         });
 
         it('owner can transfer ownership', async () => {
@@ -82,7 +82,7 @@ describe('Ownable feature', () => {
                 ownable
                     .connect(notOwnerSigner)
                     .migrate(await testMigrator.getAddress(), succeedingMigrateFnCallData, newOwner)
-            ).to.be.reverted;
+            ).to.be.rejected;
         });
 
         it('can successfully execute a migration', async () => {
@@ -111,7 +111,7 @@ describe('Ownable feature', () => {
                 ownable
                     .connect(ownerSigner)
                     .migrate(await testMigrator.getAddress(), failingMigrateFnCallData, newOwner)
-            ).to.be.reverted;
+            ).to.be.rejected;
         });
 
         it('reverting migration reverts', async () => {
@@ -120,7 +120,7 @@ describe('Ownable feature', () => {
                 ownable
                     .connect(ownerSigner)
                     .migrate(await testMigrator.getAddress(), revertingMigrateFnCallData, newOwner)
-            ).to.be.reverted;
+            ).to.be.rejected;
         });
     });
 });

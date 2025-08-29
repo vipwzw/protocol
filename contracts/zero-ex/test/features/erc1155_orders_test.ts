@@ -569,7 +569,7 @@ describe('ERC1155OrdersFeature', () => {
             const order = await getTestERC1155Order();
             const signature = await order.getSignatureWithProviderAsync(env.provider, 3, otherMaker);
             const tx = erc1155Feature.validateERC1155OrderSignature(order, signature);
-            await expect(tx).to.be.reverted;
+            await expect(tx).to.be.rejected;
         });
         it('succeeds for a valid EIP-712 signature', async () => {
             const order = await getTestERC1155Order();
@@ -580,7 +580,7 @@ describe('ERC1155OrdersFeature', () => {
             const order = await getTestERC1155Order();
             const signature = await order.getSignatureWithProviderAsync(env.provider, 3, otherMaker);
             const tx = erc1155Feature.validateERC1155OrderSignature(order, signature);
-            await expect(tx).to.be.reverted;
+            await expect(tx).to.be.rejected;
         });
     });
 
@@ -658,7 +658,7 @@ describe('ERC1155OrdersFeature', () => {
             await erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             const tx = erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             // 期望交易失败，因为订单已经被填充
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('cannot fill a cancelled order', async () => {
             const order = await getTestERC1155Order({
@@ -671,7 +671,7 @@ describe('ERC1155OrdersFeature', () => {
             const takerSigner = await getSigner(taker);
             const tx = erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             // 期望交易失败，因为订单已被取消
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('cannot fill an invalid order (erc20Token == ETH)', async () => {
             const order = await getTestERC1155Order({
@@ -695,7 +695,7 @@ describe('ERC1155OrdersFeature', () => {
             const tx = erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
             // TODO: 找到正确的方法匹配自定义错误
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('reverts if a sell order is provided', async () => {
             const order = await getTestERC1155Order({
@@ -716,7 +716,7 @@ describe('ERC1155OrdersFeature', () => {
             await mintAssetsAsync(order, order.erc1155TokenId, order.erc1155TokenAmount, otherTaker);
             const otherTakerSigner = await getSigner(otherTaker);
             const tx = erc1155Feature.connect(otherTakerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
-            await expect(tx).to.be.reverted;
+            await expect(tx).to.be.rejected;
         });
         it('succeeds if the taker is the taker address specified in the order', async () => {
             const order = await getTestERC1155Order({
@@ -737,7 +737,7 @@ describe('ERC1155OrdersFeature', () => {
             await mintAssetsAsync(order);
             const takerSigner = await getSigner(taker);
             const tx = erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
-            await expect(tx).to.be.reverted;
+            await expect(tx).to.be.rejected;
         });
         it('reverts if `unwrapNativeToken` is true and `erc20Token` is not WETH', async () => {
             const order = await getTestERC1155Order({
@@ -755,7 +755,7 @@ describe('ERC1155OrdersFeature', () => {
                     true,
                     NULL_BYTES,
                 )
-            ).to.be.reverted;
+            ).to.be.rejected;
         });
         it('sends ETH to taker if `unwrapNativeToken` is true and `erc20Token` is WETH', async () => {
             const order = await getTestERC1155Order({
@@ -853,7 +853,7 @@ describe('ERC1155OrdersFeature', () => {
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
                 const tx = erc1155Feature.connect(await getSigner(taker)).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
-                await expect(tx).to.be.reverted;
+                await expect(tx).to.be.rejected;
             });
             it('single fee, callback returns invalid value', async () => {
                 const order = await getTestERC1155Order({
@@ -869,7 +869,7 @@ describe('ERC1155OrdersFeature', () => {
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
                 const tx = erc1155Feature.connect(await getSigner(taker)).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
-                await expect(tx).to.be.reverted;
+                await expect(tx).to.be.rejected;
             });
             it('multiple fees to EOAs', async () => {
                 const order = await getTestERC1155Order({
@@ -918,7 +918,7 @@ describe('ERC1155OrdersFeature', () => {
                     false,
                     NULL_BYTES,
                 );
-                await expect(tx).to.be.reverted;
+                await expect(tx).to.be.rejected;
             });
             it('Null property', async () => {
                 const order = await getTestERC1155Order({
@@ -952,7 +952,7 @@ describe('ERC1155OrdersFeature', () => {
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order, tokenId);
                 const tx = erc1155Feature.connect(await getSigner(taker)).sellERC1155(order, signature, tokenId, order.erc1155TokenAmount, false, NULL_BYTES);
-                await expect(tx).to.be.reverted;
+                await expect(tx).to.be.rejected;
             });
             it('Successful property validation', async () => {
                 const order = await getTestERC1155Order({
@@ -1038,7 +1038,7 @@ describe('ERC1155OrdersFeature', () => {
                 order.erc1155TokenAmount,
                 hexUtils.random(),
             );
-            await expect(tx).to.be.reverted;
+            await expect(tx).to.be.rejected;
         });
         it('reverts if msg.sender != order.erc1155Token', async () => {
             const order = await getTestERC1155Order({
@@ -1057,7 +1057,7 @@ describe('ERC1155OrdersFeature', () => {
                     unwrapNativeToken: false,
                 }),
             );
-            await expect(tx).to.be.reverted;
+            await expect(tx).to.be.rejected;
             // 更精确的匹配依赖于 rich error 解析，后续可替换为编码匹配
             /* return expect(tx).to.be.revertedWith(
                 new RevertErrors.NFTOrders.ERC1155TokenMismatchError(taker, order.erc1155Token),
@@ -1082,7 +1082,7 @@ describe('ERC1155OrdersFeature', () => {
                     unwrapNativeToken: false,
                 }),
             );
-            await expect(tx).to.be.reverted;
+            await expect(tx).to.be.rejected;
         });
         it('can sell ERC1155 without approval', async () => {
             const order = await getTestERC1155Order({
@@ -1155,7 +1155,7 @@ describe('ERC1155OrdersFeature', () => {
                 const tx = erc1155Feature.connect(takerSigner).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
             // 期望交易失败，因为订单已填充，不可再次填充
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
-            await expect(tx).to.be.reverted;
+            await expect(tx).to.be.rejected;
         });
         it('cannot fill a cancelled order', async () => {
             const order = await getTestERC1155Order({
@@ -1168,7 +1168,7 @@ describe('ERC1155OrdersFeature', () => {
             const tx = erc1155Feature.connect(await getSigner(taker)).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
             // 期望交易失败，因为订单已取消，不可填充
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
-            await expect(tx).to.be.reverted;
+            await expect(tx).to.be.rejected;
         });
         it('cannot fill an expired order', async () => {
             const order = await getTestERC1155Order({
@@ -1181,7 +1181,7 @@ describe('ERC1155OrdersFeature', () => {
             const tx = erc1155Feature.connect(takerSigner).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
             // 期望交易失败，因为订单已过期，不可填充
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
-            await expect(tx).to.be.reverted;
+            await expect(tx).to.be.rejected;
         });
         it('reverts if a buy order is provided', async () => {
             const order = await getTestERC1155Order({
@@ -1200,7 +1200,7 @@ describe('ERC1155OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order, order.erc1155TokenId, order.erc1155TokenAmount, otherTaker);
             const tx = erc1155Feature.connect(await getSigner(otherTaker)).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
-            await expect(tx).to.be.reverted;
+            await expect(tx).to.be.rejected;
         });
         it('succeeds if the taker is the taker address specified in the order', async () => {
             const order = await getTestERC1155Order({
@@ -1220,7 +1220,7 @@ describe('ERC1155OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider, 3, otherMaker);
             await mintAssetsAsync(order);
             const tx = erc1155Feature.connect(await getSigner(taker)).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
-            await expect(tx).to.be.reverted;
+            await expect(tx).to.be.rejected;
         });
         describe('ETH', () => {
             // ETH 相关测试需要余额重置
@@ -1422,7 +1422,7 @@ describe('ERC1155OrdersFeature', () => {
                 const tx = erc1155Feature.connect(await getSigner(taker)).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, {
                     value: order.erc20TokenAmount,
                 });
-                await expect(tx).to.be.reverted;
+                await expect(tx).to.be.rejected;
             });
         });
     });
@@ -1498,7 +1498,7 @@ describe('ERC1155OrdersFeature', () => {
                 [NULL_BYTES, NULL_BYTES],
                 false,
             );
-            await expect(tx).not.to.be.reverted; // 部分失败不应整体 revert，应返回 successes
+            await expect(tx).not.to.be.rejected; // 部分失败不应整体 revert，应返回 successes
             await assertBalancesAsync(order1);
             const makerBalance = await erc1155Token.balanceOf(maker, order2.erc1155TokenId);
             expect(makerBalance).to.equal(order2.erc1155TokenAmount);
@@ -1528,7 +1528,7 @@ describe('ERC1155OrdersFeature', () => {
                 [NULL_BYTES, NULL_BYTES],
                 true,
             );
-            await expect(tx).to.be.reverted;
+            await expect(tx).to.be.rejected;
         });
         it('can fill multiple orders with ETH, refund excess ETH', async () => {
             const order1 = await getTestERC1155Order({
@@ -1613,7 +1613,7 @@ describe('ERC1155OrdersFeature', () => {
                 false,
                 NULL_BYTES,
             );
-            await expect(tx).to.be.reverted;
+            await expect(tx).to.be.rejected;
         });
         it('cannot fill order that was presigned then cancelled', async () => {
             const order = await getTestERC1155Order({
@@ -1631,7 +1631,7 @@ describe('ERC1155OrdersFeature', () => {
                 false,
                 NULL_BYTES,
             );
-            await expect(tx).to.be.reverted;
+            await expect(tx).to.be.rejected;
         });
         it('only maker can presign order', async () => {
             const order = await getTestERC1155Order({

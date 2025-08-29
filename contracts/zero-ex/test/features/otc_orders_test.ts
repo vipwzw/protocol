@@ -177,7 +177,8 @@ describe('OtcOrdersFeature', () => {
             const order = await getTestOtcOrder({ expiry });
             await testUtils.fillOtcOrderAsync(order);
             // Advance time to expire the order.
-            await env.web3Wrapper.increaseTimeAsync(61);
+            await ethers.provider.send('evm_increaseTime', [61]);
+            await ethers.provider.send('evm_mine', []);
             const info = await zeroEx.getOtcOrderInfo(order)();
             expect(info).to.deep.equal({
                 status: OrderStatus.Invalid,
@@ -383,7 +384,7 @@ describe('OtcOrdersFeature', () => {
         });
 
         it('can fill a WETH buy order and receive ETH', async () => {
-            const takerEthBalanceBefore = await env.web3Wrapper.getBalanceInWeiAsync(taker);
+            const takerEthBalanceBefore = await ethers.provider.getBalance(taker);
             const order = await getTestOtcOrder({ makerToken: await wethToken.getAddress(), makerAmount: ethers.parseEther('1') });
             await wethToken.deposit()({ from: maker, value: order.makerAmount });
             const receipt = await testUtils.fillOtcOrderAsync(order, order.takerAmount, taker, true);
@@ -392,7 +393,7 @@ describe('OtcOrdersFeature', () => {
                 [testUtils.createOtcOrderFilledEventArgs(order)],
                 IZeroExEvents.OtcOrderFilled,
             );
-            const takerEthBalanceAfter = await env.web3Wrapper.getBalanceInWeiAsync(taker);
+            const takerEthBalanceAfter = await ethers.provider.getBalance(taker);
             expect(takerEthBalanceAfter - takerEthBalanceBefore).to.equal(order.makerAmount);
         });
 
@@ -486,7 +487,7 @@ describe('OtcOrdersFeature', () => {
         });
         it('Can fill an order with ETH (takerToken=ETH)', async () => {
             const order = await getTestOtcOrder({ takerToken: ETH_TOKEN_ADDRESS });
-            const makerEthBalanceBefore = await env.web3Wrapper.getBalanceInWeiAsync(maker);
+            const makerEthBalanceBefore = await ethers.provider.getBalance(maker);
             const receipt = await testUtils.fillOtcOrderWithEthAsync(order);
             verifyEventsFromLogs(
                 receipt.logs,
@@ -497,7 +498,7 @@ describe('OtcOrdersFeature', () => {
                 .balanceOf(taker)
                 ();
             expect(takerBalance, 'taker balance').to.eq(order.makerAmount);
-            const makerEthBalanceAfter = await env.web3Wrapper.getBalanceInWeiAsync(maker);
+            const makerEthBalanceAfter = await ethers.provider.getBalance(maker);
             expect(makerEthBalanceAfter - makerEthBalanceBefore, 'maker balance').to.equal(
                 order.takerAmount,
             );
@@ -516,7 +517,7 @@ describe('OtcOrdersFeature', () => {
         it('Can partially fill an order with ETH (takerToken=ETH)', async () => {
             const order = await getTestOtcOrder({ takerToken: ETH_TOKEN_ADDRESS });
             const fillAmount = order.takerAmount - 1n;
-            const makerEthBalanceBefore = await env.web3Wrapper.getBalanceInWeiAsync(maker);
+            const makerEthBalanceBefore = await ethers.provider.getBalance(maker);
             const receipt = await testUtils.fillOtcOrderWithEthAsync(order, fillAmount);
             verifyEventsFromLogs(
                 receipt.logs,
@@ -528,7 +529,7 @@ describe('OtcOrdersFeature', () => {
                 .balanceOf(taker)
                 ();
             expect(takerBalance, 'taker balance').to.eq(makerTokenFilledAmount);
-            const makerEthBalanceAfter = await env.web3Wrapper.getBalanceInWeiAsync(maker);
+            const makerEthBalanceAfter = await ethers.provider.getBalance(maker);
             expect(makerEthBalanceAfter - makerEthBalanceBefore, 'maker balance').to.equal(
                 takerTokenFilledAmount,
             );
@@ -536,29 +537,29 @@ describe('OtcOrdersFeature', () => {
         it('Can refund excess ETH is msg.value > order.takerAmount (takerToken=WETH)', async () => {
             const order = await getTestOtcOrder({ takerToken: await wethToken.getAddress() });
             const fillAmount = order.takerAmount + 420;
-            const takerEthBalanceBefore = await env.web3Wrapper.getBalanceInWeiAsync(taker);
+            const takerEthBalanceBefore = await ethers.provider.getBalance(taker);
             const receipt = await testUtils.fillOtcOrderWithEthAsync(order, fillAmount);
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order)],
                 IZeroExEvents.OtcOrderFilled,
             );
-            const takerEthBalanceAfter = await env.web3Wrapper.getBalanceInWeiAsync(taker);
+            const takerEthBalanceAfter = await ethers.provider.getBalance(taker);
             expect(takerEthBalanceBefore - takerEthBalanceAfter).to.equal(order.takerAmount);
             await assertExpectedFinalBalancesFromOtcOrderFillAsync(order);
         });
         it('Can refund excess ETH is msg.value > order.takerAmount (takerToken=ETH)', async () => {
             const order = await getTestOtcOrder({ takerToken: ETH_TOKEN_ADDRESS });
             const fillAmount = order.takerAmount + 420;
-            const takerEthBalanceBefore = await env.web3Wrapper.getBalanceInWeiAsync(taker);
-            const makerEthBalanceBefore = await env.web3Wrapper.getBalanceInWeiAsync(maker);
+            const takerEthBalanceBefore = await ethers.provider.getBalance(taker);
+            const makerEthBalanceBefore = await ethers.provider.getBalance(maker);
             const receipt = await testUtils.fillOtcOrderWithEthAsync(order, fillAmount);
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order)],
                 IZeroExEvents.OtcOrderFilled,
             );
-            const takerEthBalanceAfter = await env.web3Wrapper.getBalanceInWeiAsync(taker);
+            const takerEthBalanceAfter = await ethers.provider.getBalance(taker);
             expect(takerEthBalanceBefore - takerEthBalanceAfter, 'taker eth balance').to.equal(
                 order.takerAmount,
             );
@@ -566,7 +567,7 @@ describe('OtcOrdersFeature', () => {
                 .balanceOf(taker)
                 ();
             expect(takerBalance, 'taker balance').to.eq(order.makerAmount);
-            const makerEthBalanceAfter = await env.web3Wrapper.getBalanceInWeiAsync(maker);
+            const makerEthBalanceAfter = await ethers.provider.getBalance(maker);
             expect(makerEthBalanceAfter - makerEthBalanceBefore, 'maker balance').to.equal(
                 order.takerAmount,
             );
@@ -749,7 +750,7 @@ describe('OtcOrdersFeature', () => {
         });
 
         it('can fill a WETH buy order and receive ETH', async () => {
-            const takerEthBalanceBefore = await env.web3Wrapper.getBalanceInWeiAsync(taker);
+            const takerEthBalanceBefore = await ethers.provider.getBalance(taker);
             const order = await getTestOtcOrder({
                 taker,
                 txOrigin,
@@ -763,7 +764,7 @@ describe('OtcOrdersFeature', () => {
                 [testUtils.createOtcOrderFilledEventArgs(order)],
                 IZeroExEvents.OtcOrderFilled,
             );
-            const takerEthBalanceAfter = await env.web3Wrapper.getBalanceInWeiAsync(taker);
+            const takerEthBalanceAfter = await ethers.provider.getBalance(taker);
             expect(takerEthBalanceAfter - takerEthBalanceBefore).to.equal(order.makerAmount);
         });
 

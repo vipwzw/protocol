@@ -64,34 +64,32 @@ describe('FundRecovery', async () => {
         });
         it('Amount -1 transfers entire balance of ETH', async () => {
             const amountOut = 20n;
-            await env.web3Wrapper.awaitTransactionMinedAsync(
-                await env.web3Wrapper.sendTransactionAsync({
-                    from: owner,
-                    to: zeroEx.address,
-                    value: amountOut,
-                }),
-            );
-            const balanceOwner = await env.web3Wrapper.getBalanceInWeiAsync(zeroEx.address);
+            const ownerSigner = await ethers.getSigner(owner);
+            const tx = await ownerSigner.sendTransaction({
+                to: await zeroEx.getAddress(),
+                value: amountOut,
+            });
+            await tx.wait();
+            const balanceOwner = await ethers.provider.getBalance(zeroEx.address);
             await zeroEx
                 .transferTrappedTokensTo(ETH_TOKEN_ADDRESS, constants.MAX_UINT256, recipientAddress)
                 ({ from: owner });
-            const recipientAddressBalanceAferTransfer = await env.web3Wrapper.getBalanceInWeiAsync(recipientAddress);
+            const recipientAddressBalanceAferTransfer = await ethers.provider.getBalance(recipientAddress);
             return expect(recipientAddressBalanceAferTransfer).to.equal(balanceOwner);
         });
         it('Transfers ETH ', async () => {
             const amountOut = 20n;
-            await env.web3Wrapper.awaitTransactionMinedAsync(
-                await env.web3Wrapper.sendTransactionAsync({
-                    from: owner,
-                    to: zeroEx.address,
-                    value: amountOut,
-                }),
-            );
+            const ownerSigner = await ethers.getSigner(owner);
+            const tx = await ownerSigner.sendTransaction({
+                to: await zeroEx.getAddress(),
+                value: amountOut,
+            });
+            await tx.wait();
             const ownerSigner2 = await env.provider.getSigner(owner);
             await zeroEx
                 .connect(ownerSigner2)
                 .transferTrappedTokensTo(ETH_TOKEN_ADDRESS, amountOut - 1, recipientAddress);
-            const recipientAddressBalance = await env.web3Wrapper.getBalanceInWeiAsync(recipientAddress);
+            const recipientAddressBalance = await ethers.provider.getBalance(recipientAddress);
             return expect(recipientAddressBalance).to.eq(amountOut - 1);
         });
         it('Feature `transferTrappedTokensTo` can only be called by owner', async () => {

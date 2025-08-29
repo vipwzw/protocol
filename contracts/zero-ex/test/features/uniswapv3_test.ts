@@ -227,7 +227,7 @@ describe('UniswapV3Feature', () => {
                 ({ from: taker });
             // Test pools always ask for full sell amount and pay entire balance.
             expect(await sellToken.balanceOf(taker)()).to.eq(0);
-            expect(await env.web3Wrapper.getBalanceInWeiAsync(recipient)).to.eq(buyAmount);
+            expect(await ethers.provider.getBalance(recipient)).to.eq(buyAmount);
             expect(await sellToken.balanceOf(pool.address)()).to.eq(sellAmount);
         });
 
@@ -235,12 +235,12 @@ describe('UniswapV3Feature', () => {
             const [sellToken] = tokens;
             const pool = await createPoolAsync(sellToken, weth, ZERO_AMOUNT, buyAmount);
             await mintToAsync(sellToken, taker, sellAmount);
-            const takerBalanceBefore = await env.web3Wrapper.getBalanceInWeiAsync(taker);
+            const takerBalanceBefore = await ethers.provider.getBalance(taker);
             await feature
                 .sellTokenForEthToUniswapV3(encodePath([sellToken, weth]), sellAmount, buyAmount, NULL_ADDRESS)
                 ({ from: taker, gasPrice: ZERO_AMOUNT });
             // Test pools always ask for full sell amount and pay entire balance.
-            expect((await env.web3Wrapper.getBalanceInWeiAsync(taker)) - takerBalanceBefore).to.eq(
+            expect((await ethers.provider.getBalance(taker)) - takerBalanceBefore).to.eq(
                 buyAmount,
             );
             expect(await sellToken.balanceOf(pool.address)()).to.eq(sellAmount);

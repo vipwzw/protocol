@@ -164,7 +164,7 @@ describe('TransformERC20 feature', () => {
             outputToken = await outputTokenFactory.deploy();
             await outputToken.waitForDeployment();
 
-            transformerNonce = await env.web3Wrapper.getAccountNonceAsync(transformerDeployer);
+            transformerNonce = await ethers.provider.getTransactionCount(transformerDeployer);
             
             const transformerDeployerSigner = await env.provider.getSigner(transformerDeployer);
             const mintTransformerFactory = new TestMintTokenERC20Transformer__factory(transformerDeployerSigner);
@@ -285,7 +285,7 @@ describe('TransformERC20 feature', () => {
                     inputTokenBurnAmunt: inputTokenAmount,
                     outputTokenAddress: ETH_TOKEN_ADDRESS,
                 });
-                const startingOutputTokenBalance = await env.web3Wrapper.getBalanceInWeiAsync(taker);
+                const startingOutputTokenBalance = await ethers.provider.getBalance(taker);
                 const receipt = await feature
                     ._transformERC20({
                         taker,
@@ -326,7 +326,7 @@ describe('TransformERC20 feature', () => {
                     ],
                     TestMintTokenERC20TransformerEvents.MintTransform,
                 );
-                expect(await env.web3Wrapper.getBalanceInWeiAsync(taker)).to.eq(
+                expect(await ethers.provider.getBalance(taker)).to.eq(
                     startingOutputTokenBalance + outputTokenMintAmount,
                 );
             });

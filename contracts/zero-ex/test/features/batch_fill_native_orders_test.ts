@@ -194,8 +194,8 @@ describe('BatchFillNativeOrdersFeature', () => {
                 expect(feeRecipientBalance, `fee recipient balance`).to.eq(expectedFeeRecipientBalance);
             }
             if (receipt) {
-                const balanceOfTakerNow = await env.web3Wrapper.getBalanceInWeiAsync(taker);
-                const balanceOfTakerBefore = await env.web3Wrapper.getBalanceInWeiAsync(taker, receipt.blockNumber - 1);
+                const balanceOfTakerNow = await ethers.provider.getBalance(taker);
+                const balanceOfTakerBefore = await ethers.provider.getBalance(taker, receipt.blockNumber - 1);
                 const protocolFees = testUtils.protocolFee * BigInt(orders.length);
                 const totalCost = testUtils.gasPrice * BigInt(receipt.gasUsed) + protocolFees;
                 expect(balanceOfTakerBefore - totalCost, 'taker ETH balance').to.eq(balanceOfTakerNow);
@@ -378,7 +378,7 @@ describe('BatchFillNativeOrdersFeature', () => {
                 { value }
             );
             // TODO: Fix specific error matching - using generic revert for now
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('If revertIfIncomplete==true, reverts on an incomplete fill ', async () => {
             const fillableOrders = await Promise.all([...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
@@ -400,7 +400,7 @@ describe('BatchFillNativeOrdersFeature', () => {
                 { value }
             );
             // TODO: Fix specific error matching - using generic revert for now
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
     });
     describe('batchFillRfqOrders', () => {
@@ -580,7 +580,7 @@ describe('BatchFillNativeOrdersFeature', () => {
                 true
             );
             // TODO: 修复精确错误匹配 - RevertErrors 对象序列化问题
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('If revertIfIncomplete==true, reverts on an incomplete fill ', async () => {
             const fillableOrders = await Promise.all([...new Array(3)].map(async () => getTestRfqOrder()));
@@ -600,7 +600,7 @@ describe('BatchFillNativeOrdersFeature', () => {
                 true
             );
             // TODO: 修复精确错误匹配 - RevertErrors 对象序列化问题
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
     });
 });

@@ -1,0 +1,107 @@
+  9) SimpleFunctionRegistry feature
+       `rollback()` to non-zero impl reverts for unregistered function:
+     AssertionError: Expected transaction to be reverted with reason 'NotInRollbackHistoryError', but it reverted with a custom error
+  
+
+  10) SimpleFunctionRegistry feature
+--
+       can query rollback history:
+
+      AssertionError: expected 8 to equal 3.
+      + expected - actual
+
+      -8
+--
+       owner can rollback a function to zero:
+
+      AssertionError: expected 8 to equal 0.
+      + expected - actual
+
+      -8
+--
+  18) SimpleFunctionRegistry feature
+       owner cannot rollback a function to a version not in history:
+     AssertionError: Expected transaction to be reverted with reason 'NotInRollbackHistoryError', but it didn't revert
+  
+
+  19) TransformERC20 feature
+--
+  22) Initial migration
+       External contract cannot call die():
+     AssertionError: Expected transaction to be reverted with reason 'InitialMigration/INVALID_SENDER', but it didn't revert
+  
+
+  23) Initial migration
+--
+       can swap ETH->ERC20:
+
+      AssertionError: expected 10450658489684776928 to equal 5225329244842388464.
+      + expected - actual
+
+      -10450658489684776928
+--
+       can swap ETH->ERC20 with attached ETH:
+
+      AssertionError: expected 15675987734527165392 to equal 5225329244842388464.
+      + expected - actual
+
+      -15675987734527165392
+--
+       can swap ERC20->WETH:
+
+      AssertionError: expected 21246937914676728453 to equal 7082312638225576151.
+      + expected - actual
+
+      -21246937914676728453
+--
+       can swap WETH->ERC20:
+
+      AssertionError: expected 21246937914676728453 to equal 7082312638225576151.
+      + expected - actual
+
+      -21246937914676728453
+--
+       emits a LiquidityProviderFill event:
+
+      AssertionError: expected +0 to equal 1
+      + expected - actual
+
+      -0
+--
+       deploy()
+         cannot deploy suicidal contract:
+     AssertionError: Expected transaction to be reverted
+  
+
+  31) FillQuoteTransformer
+--
+  57) PayTakerTransformer
+       can transfer all of a token and ETH:
+     AssertionError: expected { ethBalance: 345570969193378411n, tokenBalance: 642659509283541051n } to deeply equal { tokenBalance: 438229191622844719n, ethBalance: 301408716156299400n }
+      at Context.<anonymous> (test/transformers/pay_taker_transformer_test.ts:100:55)
+
+  58) PayTakerTransformer
+       can transfer all of a token and ETH (empty amounts):
+     AssertionError: expected { ethBalance: 1025566154527545752n, tokenBalance: 792443612529897011n } to deeply equal { tokenBalance: 149784103246355960n, ethBalance: 679995185334167341n }
+      at Context.<anonymous> (test/transformers/pay_taker_transformer_test.ts:120:55)
+
+  59) PayTakerTransformer
+       can transfer less than the balance of a token and ETH:
+     AssertionError: expected {
+  ethBalance: 1068068967662511321n,
+  tokenBalance: 1086339412463022023n
+} to deeply equal { tokenBalance: 293895799933125012n, ethBalance: 42502813134965569n }
+--
+         destroys the transformer:
+
+      AssertionError: expected '0x608060405234801561000f575f5ffd5b506…' to equal '0x'
+      + expected - actual
+
+      -0x608060405234801561000f575f5ffd5b506004361061003f575f3560e01c8063832b24bb14610043578063c9353cb51461007b578063d5f3948814610090575b5f5ffd5b61005d610051366004610266565b506309e4c94f60e11b90565b6040516001600160e01b031990911681526020015b60405180910390f35b61008e6100893660046102a4565b6100cf565b005b6100b77f000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226681565b6040516001600160a01b039091168152602001610072565b336001600160a01b037f000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226616146101315761013161012c337f000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226661019a565b610217565b306001600160a01b037f0000000000000000000000009155497eae31d432c0b13dbcc0615a37f55a2c87161461018e5761018e61012c307f0000000000000000000000009155497eae31d432c0b13dbcc0615a37f55a2c8761021f565b806001600160a01b0316ff5b6040516001600160a01b038084166024830152821660448201526060907f5cec653b364cca3880afa73ceff506d0651d11d26abbbe4a56460aa933b21b08906064015b60408051601f198184030181529190526020810180516001600160e01b03166001600160e01b031990931692909217909152905092915050565b805160208201fd5b6040516001600160a01b038084166024830152821660448201526060907fb5cf2cd09307d6c717473134badbb9761c2c97d7565566c2a71eba6cd6fc514d906064016101dd565b5f60208284031215610276575f5ffd5b813567ffffffffffffffff81111561028c575f5ffd5b82016060818503121561029d575f5ffd5b9392505050565b5f602082840312156102b4575f5ffd5b81356001600160a01b038116811461029d575f5ffdfea264697066735822122065459f1d28f6ea276582b144f5546f3ef81ce3bc9af242a95a7975c456df4ffd64736f6c634300081c0033
+--
+  65) WethTransformer
+       can wrap all ETH:
+     AssertionError: expected { ethBalance: 0n, wethBalance: 0n } to deeply equal { ethBalance: 0n, wethBalance: 34873731692753814n }
+      at Context.<anonymous> (test/transformers/weth_transformer_test.ts:114:54)
+
+  66) WethTransformer

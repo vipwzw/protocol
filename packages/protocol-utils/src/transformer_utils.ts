@@ -82,6 +82,25 @@ function convertToArrayFormat(obj: any, components: any[]): any {
                 // 处理嵌套的 tuple 对象
                 return convertToArrayFormat(value, component.components);
             }
+            
+            // 🔧 处理 null/undefined 值 - 为不同类型提供默认值
+            if (value === null || value === undefined) {
+                if (component.type.startsWith('uint') || component.type.startsWith('int')) {
+                    return '0';
+                } else if (component.type === 'address') {
+                    return '0x0000000000000000000000000000000000000000';
+                } else if (component.type === 'bytes32') {
+                    return '0x0000000000000000000000000000000000000000000000000000000000000000';
+                } else if (component.type === 'bool') {
+                    return false;
+                } else if (component.type.endsWith('[]')) {
+                    return []; // 空数组作为默认值
+                } else {
+                    console.warn(`🔍 为未知类型 "${component.type}" 的字段 "${component.name}" 设置默认值 "0"`);
+                    return '0';
+                }
+            }
+            
             return value;
         });
     }
@@ -95,7 +114,7 @@ function convertToArrayFormat(obj: any, components: any[]): any {
  */
 const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
-// 定义 FillQuoteTransformerData 的完整 ABI (匹配测试合约结构)
+// 定义 FillQuoteTransformerData 的完整 ABI (匹配 Solidity 合约结构)
 const FILL_QUOTE_TRANSFORMER_DATA_ABI = {
     type: 'tuple',
     components: [
@@ -103,12 +122,12 @@ const FILL_QUOTE_TRANSFORMER_DATA_ABI = {
         { name: 'sellToken', type: 'address' },
         { name: 'buyToken', type: 'address' },
         { name: 'bridgeOrders', type: 'tuple[]', components: BRIDGE_ORDER_ABI_COMPONENTS },
-        { name: 'limitOrders', type: 'bytes' },
-        { name: 'rfqOrders', type: 'bytes' },
+        { name: 'limitOrders', type: 'tuple[]', components: LIMIT_ORDER_INFO_ABI_COMPONENTS },
+        { name: 'rfqOrders', type: 'tuple[]', components: RFQ_ORDER_INFO_ABI_COMPONENTS }, // 修复：使用正确的 RFQ 结构
         { name: 'fillSequence', type: 'uint8[]' },
         { name: 'fillAmount', type: 'uint256' },
         { name: 'refundReceiver', type: 'address' },
-        { name: 'otcOrders', type: 'bytes' }
+        { name: 'otcOrders', type: 'tuple[]', components: OTC_ORDER_INFO_ABI_COMPONENTS } // 修复：使用正确的 OTC 结构
     ]
 };
 
@@ -162,19 +181,19 @@ export enum FillQuoteTransformerOrderType {
 
 /**
  * Transform data for `FillQuoteTransformer.transform()`.
- * 注意：这个结构匹配测试合约期望的格式
+ * 注意：这个结构匹配 Solidity 合约期望的格式
  */
 export interface FillQuoteTransformerData {
     side: FillQuoteTransformerSide;
     sellToken: string;
     buyToken: string;
     bridgeOrders: FillQuoteTransformerBridgeOrder[];
-    limitOrders: string | any[]; // 兼容数组和字符串
-    rfqOrders: string | any[];   // 兼容数组和字符串
+    limitOrders: FillQuoteTransformerLimitOrderInfo[]; // 数组，匹配合约
+    rfqOrders: FillQuoteTransformerRfqOrderInfo[];      // 数组，匹配合约
     fillSequence: FillQuoteTransformerOrderType[];
     fillAmount: bigint;
     refundReceiver: string;
-    otcOrders: string | any[];   // 兼容数组和字符串
+    otcOrders: FillQuoteTransformerOtcOrderInfo[];      // 数组，匹配合约
 }
 
 /**

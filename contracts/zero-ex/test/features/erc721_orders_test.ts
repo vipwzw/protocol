@@ -585,7 +585,7 @@ describe('ERC721OrdersFeature', () => {
             await erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
             const tx = erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('can fill two orders from the same maker with different nonces', async () => {
             // 使用唯一的 nonce 避免测试间冲突
@@ -625,7 +625,7 @@ describe('ERC721OrdersFeature', () => {
             const takerSigner = await env.provider.getSigner(taker);
             const tx = erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('cannot fill an invalid order (erc20Token == ETH)', async () => {
             const order = await getTestERC721Order({
@@ -648,7 +648,7 @@ describe('ERC721OrdersFeature', () => {
             const takerSigner = await env.provider.getSigner(taker);
             const tx = erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('reverts if a sell order is provided', async () => {
             const order = await getTestERC721Order({
@@ -670,7 +670,7 @@ describe('ERC721OrdersFeature', () => {
             const otherTakerSigner = await env.provider.getSigner(otherTaker);
             const tx = erc721Feature.connect(otherTakerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 OnlyTakerError，但由于技术限制暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it.skip('succeeds if the taker is the taker address specified in the order', async () => {
             // 使用唯一的 nonce 避免测试间冲突
@@ -695,7 +695,7 @@ describe('ERC721OrdersFeature', () => {
             const takerSigner = await env.provider.getSigner(taker);
             const tx = erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 InvalidSignerError，但由于技术限制暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('reverts if `unwrapNativeToken` is true and `erc20Token` is not WETH', async () => {
             const order = await getTestERC721Order({
@@ -706,7 +706,7 @@ describe('ERC721OrdersFeature', () => {
             const takerSigner = await env.provider.getSigner(taker);
             const tx = erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, true, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 ERC20TokenMismatchError，但由于技术限制暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it.skip('sends ETH to taker if `unwrapNativeToken` is true and `erc20Token` is WETH', async () => {
             const order = await getTestERC721Order({
@@ -843,7 +843,7 @@ describe('ERC721OrdersFeature', () => {
                 const tx = erc721Feature.connect(takerSigner)
                     .sellERC721(order, signature, order.erc721TokenId + 1n, false, NULL_BYTES);
                 // 注意：理想情况下应该匹配具体的 TokenIdMismatchError，但由于技术限制暂时使用通用匹配
-                return expect(tx).to.be.reverted;
+                return expect(tx).to.be.rejected;
             });
             it('Null property', async () => {
                 const order = await getTestERC721Order({
@@ -991,7 +991,7 @@ describe('ERC721OrdersFeature', () => {
                 );
             // 注意：合约抛出自定义错误，但由于 Hardhat Chai Matchers 的限制，暂时使用通用匹配
             // TODO: 找到正确的方法来匹配 ERC721TokenMismatchError 自定义错误
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('reverts if transferred tokenId does not match order.erc721TokenId', async () => {
             const order = await getTestERC721Order({
@@ -1014,7 +1014,7 @@ describe('ERC721OrdersFeature', () => {
                     }),
                 );
             // 注意：理想情况下应该匹配具体的 TokenIdMismatchError，但由于技术限制暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('can sell ERC721 without approval', async () => {
             const order = await getTestERC721Order({
@@ -1075,7 +1075,7 @@ describe('ERC721OrdersFeature', () => {
             await erc721Feature.connect(takerSigner).buyERC721(order, signature, NULL_BYTES);
             const tx = erc721Feature.connect(takerSigner).buyERC721(order, signature, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('cannot fill a cancelled order', async () => {
             const order = await getTestERC721Order({
@@ -1088,7 +1088,7 @@ describe('ERC721OrdersFeature', () => {
             const takerSigner = await env.provider.getSigner(taker);
             const tx = erc721Feature.connect(takerSigner).buyERC721(order, signature, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('cannot fill an expired order', async () => {
             const order = await getTestERC721Order({
@@ -1100,7 +1100,7 @@ describe('ERC721OrdersFeature', () => {
             const takerSigner = await env.provider.getSigner(taker);
             const tx = erc721Feature.connect(takerSigner).buyERC721(order, signature, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('reverts if a buy order is provided', async () => {
             const order = await getTestERC721Order({
@@ -1122,7 +1122,7 @@ describe('ERC721OrdersFeature', () => {
             const otherTakerSigner = await env.provider.getSigner(otherTaker);
             const tx = erc721Feature.connect(otherTakerSigner).buyERC721(order, signature, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 OnlyTakerError，但由于技术限制暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('succeeds if the taker is the taker address specified in the order', async () => {
             // 使用固定的 nonce 避免状态干扰
@@ -1147,7 +1147,7 @@ describe('ERC721OrdersFeature', () => {
             const takerSigner = await env.provider.getSigner(taker);
             const tx = erc721Feature.connect(takerSigner).buyERC721(order, signature, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 InvalidSignerError，但由于技术限制暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         describe('ETH', () => {
             it('can fill an order with ETH (and refunds excess ETH)', async () => {
@@ -1382,7 +1382,7 @@ describe('ERC721OrdersFeature', () => {
                     value: order.erc20TokenAmount,
                 });
                 // 注意：理想情况下应该匹配具体的 OverspentEthError，但由于技术限制暂时使用通用匹配
-                return expect(tx).to.be.reverted;
+                return expect(tx).to.be.rejected;
             });
         });
     });
@@ -1503,7 +1503,7 @@ describe('ERC721OrdersFeature', () => {
                 true
             );
             // 注意：理想情况下应该匹配具体的 InvalidSignerError，但由于技术限制暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('can fill multiple orders with ETH, refund excess ETH', async () => {
             const order1 = await getTestERC721Order({
@@ -1578,7 +1578,7 @@ describe('ERC721OrdersFeature', () => {
             const tx = erc721Feature.connect(takerSigner).sellERC721(order, PRESIGN_SIGNATURE, order.erc721TokenId, false, NULL_BYTES);
             // TODO: 需要精确匹配 InvalidSignerError，但由于 Hardhat Chai Matchers 技术限制，暂时使用通用匹配
             // const expectedError = new RevertErrors.NFTOrders.InvalidSignerError(await contractMaker.getAddress(), NULL_ADDRESS);
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('cannot fill order that was presigned then cancelled', async () => {
             const order = await getTestERC721Order({
@@ -1596,7 +1596,7 @@ describe('ERC721OrdersFeature', () => {
             //     order.nonce,
             //     NFTOrder.OrderStatus.Unfillable,
             // );
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
     });
     describe('matchERC721Orders', () => {
@@ -1646,7 +1646,7 @@ describe('ERC721OrdersFeature', () => {
             const matcherSigner = await getSigner(matcher);
             const tx = erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
             // TODO: 需要精确匹配 TokenIdMismatchError，但由于 Hardhat Chai Matchers 技术限制，暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('erc721Token must match', async () => {
             const sellOrder = await getTestERC721Order({
@@ -1662,7 +1662,7 @@ describe('ERC721OrdersFeature', () => {
             const matcherSigner = await getSigner(matcher);
             const tx = erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
             // TODO: 需要精确匹配 ERC721TokenMismatchError，但由于 Hardhat Chai Matchers 技术限制，暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('erc20Token must match', async () => {
             const sellOrder = await getTestERC721Order({
@@ -1680,7 +1680,7 @@ describe('ERC721OrdersFeature', () => {
             const matcherSigner = await getSigner(matcher);
             const tx = erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
             // TODO: 需要精确匹配 ERC20TokenMismatchError，但由于 Hardhat Chai Matchers 技术限制，暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('reverts if spread is negative', async () => {
             const sellOrder = await getTestERC721Order({
@@ -1696,7 +1696,7 @@ describe('ERC721OrdersFeature', () => {
             const matcherSigner = await getSigner(matcher);
             const tx = erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
             // TODO: 需要精确匹配 NegativeSpreadError，但由于 Hardhat Chai Matchers 技术限制，暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('matches two orders and sends profit to matcher', async () => {
             const sellOrder = await getTestERC721Order({
@@ -1844,7 +1844,7 @@ describe('ERC721OrdersFeature', () => {
             const matcherSigner = await getSigner(matcher);
             const tx = erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
             // TODO: 需要精确匹配 SellOrderFeesExceedSpreadError，但由于 Hardhat Chai Matchers 技术限制，暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
         it('reverts if sell order fees exceed spread (ETH/WETH)', async () => {
             const spread = getRandomInteger(1, '1e18');
@@ -1875,7 +1875,7 @@ describe('ERC721OrdersFeature', () => {
             const matcherSigner = await getSigner(matcher);
             const tx = erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
             // TODO: 需要精确匹配 SellOrderFeesExceedSpreadError，但由于 Hardhat Chai Matchers 技术限制，暂时使用通用匹配
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.be.rejected;
         });
     });
 });

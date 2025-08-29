@@ -1,0 +1,1291 @@
+
+
+  BatchFillNativeOrdersFeature
+    batchFillLimitOrders
+      ✔ Fully fills multiple orders (64ms)
+      ✔ Partially fills multiple orders (59ms)
+      ✔ Fills multiple orders and refunds excess ETH (56ms)
+      ✔ Skips over unfillable orders and refunds excess ETH (108ms)
+      ✔ Fills multiple orders with revertIfIncomplete=true (67ms)
+      ✔ If revertIfIncomplete==true, reverts on an unfillable order (68ms)
+      ✔ If revertIfIncomplete==true, reverts on an incomplete fill  (68ms)
+    batchFillRfqOrders
+      ✔ Fully fills multiple orders (47ms)
+      ✔ Partially fills multiple orders (48ms)
+      ✔ Skips over unfillable orders (61ms)
+      ✔ Fills multiple orders with revertIfIncomplete=true (48ms)
+      ✔ If revertIfIncomplete==true, reverts on an unfillable order (53ms)
+      ✔ If revertIfIncomplete==true, reverts on an incomplete fill  (56ms)
+
+  ERC1155OrdersFeature
+    getERC1155OrderHash()
+      ✔ returns the correct hash for order with no fees or properties
+      ✔ returns the correct hash for order with null property
+      ✔ returns the correct hash for order with 1 fee, 1 property
+      ✔ returns the correct hash for order with 2 fees, 2 properties
+    validateERC1155OrderSignature
+      ✔ succeeds for a valid EthSign signature
+      ✔ reverts for an invalid EthSign signature
+      ✔ succeeds for a valid EIP-712 signature
+      ✔ reverts for an invalid EIP-712 signature
+    cancelERC1155Order
+      ✔ can cancel an order
+      ✔ cancelling an order twice silently succeeds
+    sellERC1155
+      ✔ can fully fill a ERC1155 buy order
+      ✔ can partially fill a ERC1155 buy order
+      ✔ cannot fill the same order twice
+      ✔ cannot fill a cancelled order
+      ✔ cannot fill an invalid order (erc20Token == ETH)
+      ✔ cannot fill an expired order
+      ✔ reverts if a sell order is provided
+      ✔ reverts if the taker is not the taker address specified in the order
+      ✔ succeeds if the taker is the taker address specified in the order
+      ✔ reverts if an invalid signature is provided
+      ✔ reverts if `unwrapNativeToken` is true and `erc20Token` is not WETH
+      ✔ sends ETH to taker if `unwrapNativeToken` is true and `erc20Token` is WETH
+      fees
+        ✔ single fee to EOA
+        ✔ partial fill, single fee
+        ✔ single fee, successful callback
+        ✔ single fee, callback reverts
+        ✔ single fee, callback returns invalid value
+        ✔ multiple fees to EOAs
+      properties
+        ✔ Checks tokenId if no properties are provided
+        ✔ Null property
+        ✔ Reverts if property validation fails
+        ✔ Successful property validation
+    onERC1155Received
+      ✔ throws if data is not encoded correctly
+      ✔ reverts if msg.sender != order.erc1155Token
+      ✔ reverts if transferred tokenId does not match order.erc1155TokenId
+      ✔ can sell ERC1155 without approval
+    buyERC1155
+      ✔ can fill a ERC1155 sell order
+      ✔ can partially fill a ERC1155 sell order
+      ✔ cannot fill the same order twice
+      ✔ cannot fill a cancelled order
+      ✔ cannot fill an expired order
+      ✔ reverts if a buy order is provided
+      ✔ reverts if the taker is not the taker address specified in the order
+      ✔ succeeds if the taker is the taker address specified in the order
+      ✔ reverts if an invalid signature is provided
+      ETH
+        ✔ can fill an order with ETH (and refunds excess ETH)
+        ✔ can fill a WETH order with ETH
+        ✔ uses WETH if not enough ETH to fill WETH order
+      fees
+        ✔ single fee to EOA
+        ✔ partial fill, single fee
+        ✔ pays fees in ETH if erc20Token == ETH
+        ✔ pays fees in ETH if erc20Token == WETH but taker uses ETH
+        ✔ pays fees in WETH if taker uses WETH
+        ✔ reverts if overspent ETH
+    batchBuyERC1155s
+      ✔ reverts if arrays are different lengths
+      ✔ successfully fills multiple orders
+      ✔ catches revert if one order fails
+      ✔ bubbles up revert if one order fails and `revertIfIncomplete == true`
+      ✔ can fill multiple orders with ETH, refund excess ETH
+    preSignERC1155Order
+      ✔ can fill order that has been presigned by the maker
+      ✔ cannot fill order that has not been presigned by the maker
+      ✔ cannot fill order that was presigned then cancelled
+      ✔ only maker can presign order
+
+  ERC721OrdersFeature
+    getERC721OrderHash()
+      ✔ returns the correct hash for order with no fees or properties
+      ✔ returns the correct hash for order with null property
+      ✔ returns the correct hash for order with 1 fee, 1 property
+      ✔ returns the correct hash for order with 2 fees, 2 properties
+    validateERC721OrderSignature
+      ✔ succeeds for a valid EthSign signature
+      ✔ reverts for an invalid EthSign signature
+      ✔ succeeds for a valid EIP-712 signature
+      ✔ reverts for an invalid EIP-712 signature
+    cancelERC721Order
+      ✔ can cancel an order
+      ✔ cancelling an order twice silently succeeds
+    sellERC721
+      - can fill a ERC721 buy order
+      - cannot fill the same order twice
+      - can fill two orders from the same maker with different nonces
+      - cannot fill a cancelled order
+      - cannot fill an invalid order (erc20Token == ETH)
+      - cannot fill an expired order
+      - reverts if a sell order is provided
+      - reverts if the taker is not the taker address specified in the order
+      - succeeds if the taker is the taker address specified in the order
+      - reverts if an invalid signature is provided
+      - reverts if `unwrapNativeToken` is true and `erc20Token` is not WETH
+      - sends ETH to taker if `unwrapNativeToken` is true and `erc20Token` is WETH
+      fees
+        - single fee to EOA
+        - single fee, successful callback
+        - single fee, callback reverts
+        - single fee, callback returns invalid value
+        - multiple fees to EOAs
+      properties
+        - Checks tokenId if no properties are provided
+        - Null property
+        - Reverts if property validation fails
+        - Successful property validation
+    onERC721Received
+      ✔ throws if data is not encoded correctly
+      ✔ reverts if msg.sender != order.erc721Token
+      ✔ reverts if transferred tokenId does not match order.erc721TokenId
+      ✔ can sell ERC721 without approval
+    buyERC721
+      ✔ can fill a ERC721 sell order
+      ✔ cannot fill the same order twice
+      ✔ cannot fill a cancelled order
+      ✔ cannot fill an expired order
+      ✔ reverts if a buy order is provided
+      ✔ reverts if the taker is not the taker address specified in the order
+      ✔ succeeds if the taker is the taker address specified in the order
+      ✔ reverts if an invalid signature is provided
+      ETH
+        ✔ can fill an order with ETH (and refunds excess ETH)
+        ✔ can fill a WETH order with ETH
+        ✔ uses WETH if not enough ETH to fill WETH order
+      fees
+        ✔ single fee to EOA (buyERC721)
+        ✔ pays fees in ETH if erc20Token == ETH
+        ✔ pays fees in ETH if erc20Token == WETH but taker uses ETH
+        ✔ pays fees in WETH if taker uses WETH
+        ✔ reverts if overspent ETH
+    batchBuyERC721s
+      ✔ reverts if arrays are different lengths
+      ✔ successfully fills multiple orders
+      ✔ catches revert if one order fails
+      ✔ bubbles up revert if one order fails and `revertIfIncomplete == true`
+      ✔ can fill multiple orders with ETH, refund excess ETH
+    preSignERC721Order
+      ✔ can fill order that has been presigned by the maker
+      ✔ cannot fill order that has not been presigned by the maker
+      ✔ cannot fill order that was presigned then cancelled
+    matchERC721Orders
+      ✔ cannot match two sell orders
+      ✔ cannot match two buy orders
+      ✔ erc721TokenId must match
+      ✔ erc721Token must match
+      ✔ erc20Token must match
+      ✔ reverts if spread is negative
+      ✔ matches two orders and sends profit to matcher
+      ✔ matches two ETH/WETH orders and sends profit to matcher
+      ✔ matches two orders (with fees) and sends profit to matcher
+      ✔ matches two ETH/WETH (with fees) orders and sends profit to matcher
+      ✔ reverts if sell order fees exceed spread
+      ✔ reverts if sell order fees exceed spread (ETH/WETH)
+
+  FundRecovery
+    1) "before all" hook in "FundRecovery"
+
+  LiquidityProvider feature
+    2) "before all" hook in "LiquidityProvider feature"
+
+  MetaTransactions feature
+    3) "before all" hook in "MetaTransactions feature"
+
+  MultiplexFeature
+    4) "before all" hook in "MultiplexFeature"
+
+  NativeOrdersFeature
+    getProtocolFeeMultiplier()
+      ✔ returns the protocol fee multiplier
+    getLimitOrderHash()
+      ✔ returns the correct hash
+    getRfqOrderHash()
+      ✔ returns the correct hash
+    getLimitOrderInfo()
+      ✔ unfilled order
+      ✔ unfilled cancelled order
+      ✔ unfilled expired order
+      ✔ filled then expired order
+      ✔ filled order
+      ✔ partially filled order
+      ✔ filled then cancelled order
+      ✔ partially filled then cancelled order
+    getRfqOrderInfo()
+      ✔ unfilled order
+      ✔ unfilled cancelled order
+      ✔ unfilled expired order
+      ✔ filled then expired order
+      ✔ filled order
+      ✔ partially filled order
+      ✔ filled then cancelled order
+      ✔ partially filled then cancelled order
+      ✔ invalid origin
+    cancelLimitOrder()
+      ✔ can cancel an unfilled order
+      ✔ can cancel a fully filled order
+      ✔ can cancel a partially filled order
+      ✔ can cancel an expired order
+      ✔ can cancel a cancelled order
+      ✔ cannot cancel someone else's order
+    cancelRfqOrder()
+      ✔ can cancel an unfilled order
+      ✔ can cancel a fully filled order
+      ✔ can cancel a partially filled order
+      ✔ can cancel an expired order
+      ✔ can cancel a cancelled order
+      ✔ cannot cancel someone else's order
+    batchCancelLimitOrders()
+      ✔ can cancel multiple orders (49ms)
+      ✔ cannot cancel someone else's orders (48ms)
+    batchCancelRfqOrders()
+      ✔ can cancel multiple orders (41ms)
+      ✔ cannot cancel someone else's orders (39ms)
+    cancelPairOrders()
+      ✔ can cancel multiple limit orders of the same pair with salt < minValidSalt (48ms)
+      ✔ does not cancel limit orders of a different pair
+      ✔ can cancel multiple RFQ orders of the same pair with salt < minValidSalt
+      ✔ does not cancel RFQ orders of a different pair
+    batchCancelPairOrders()
+      ✔ can cancel multiple limit order pairs
+      ✔ can cancel multiple RFQ order pairs
+    fillLimitOrder()
+      ✔ can fully fill an order
+      ✔ can partially fill an order
+      ✔ can fully fill an order in two steps
+      ✔ clamps fill amount to remaining available
+      ✔ clamps fill amount to remaining available in partial filled order
+      ✔ cannot fill an expired order
+      ✔ cannot fill a cancelled order
+      ✔ cannot fill a salt/pair cancelled order
+      ✔ non-taker cannot fill order
+      ✔ non-sender cannot fill order
+      ✔ cannot fill order with bad signature
+      ✔ fails if no protocol fee attached
+      ✔ refunds excess protocol fee
+    registerAllowedRfqOrigins()
+      ✔ cannot register through a contract
+    fillRfqOrder()
+      ✔ can fully fill an order
+      ✔ can partially fill an order
+      ✔ can fully fill an order in two steps
+      ✔ clamps fill amount to remaining available
+      ✔ clamps fill amount to remaining available in partial filled order
+      ✔ cannot fill an order with wrong tx.origin
+      ✔ can fill an order from a different tx.origin if registered
+      ✔ cannot fill an order with registered then unregistered tx.origin
+      ✔ cannot fill an order with a zero tx.origin
+      ✔ non-taker cannot fill order
+      ✔ cannot fill an expired order
+      ✔ cannot fill a cancelled order
+      ✔ cannot fill a salt/pair cancelled order
+      ✔ cannot fill order with bad signature
+      ✔ fails if ETH is attached
+    fillOrKillLimitOrder()
+      ✔ can fully fill an order
+      ✔ reverts if cannot fill the exact amount
+      ✔ refunds excess protocol fee
+    fillOrKillRfqOrder()
+      ✔ can fully fill an order
+      ✔ reverts if cannot fill the exact amount
+      ✔ fails if ETH is attached
+    getLimitOrderRelevantState()
+      ✔ works with an empty order
+      ✔ works with cancelled order
+      ✔ works with a bad signature
+      ✔ works with an unfilled order
+      ✔ works with a fully filled order
+      ✔ works with an under-funded, partially-filled order
+    getRfqOrderRelevantState()
+      ✔ works with an empty order
+      ✔ works with cancelled order
+      ✔ works with a bad signature
+      ✔ works with an unfilled order
+      ✔ works with a fully filled order
+      ✔ works with an under-funded, partially-filled order
+    batchGetLimitOrderRelevantStates()
+      ✔ works with multiple orders (51ms)
+      ✔ swallows reverts (53ms)
+    batchGetRfqOrderRelevantStates()
+      ✔ works with multiple orders (43ms)
+    registerAllowedSigner()
+      ✔ fires appropriate events
+      ✔ allows for fills on orders signed by a approved signer
+      ✔ disallows fills if the signer is revoked
+      ✔ doesn't allow fills with an unapproved signer
+      ✔ allows an approved signer to cancel an RFQ order
+      ✔ allows an approved signer to cancel a limit order
+      ✔ doesn't allow an unapproved signer to cancel an RFQ order
+      ✔ doesn't allow an unapproved signer to cancel a limit order
+      ✔ allows a signer to cancel pair RFQ orders
+      ✔ doesn't allow an unapproved signer to cancel pair RFQ orders
+      ✔ allows a signer to cancel pair limit orders
+      ✔ doesn't allow an unapproved signer to cancel pair limit orders
+      ✔ allows a signer to cancel multiple RFQ order pairs
+      ✔ doesn't allow an unapproved signer to batch cancel pair rfq orders
+      ✔ allows a signer to cancel multiple limit order pairs
+      ✔ doesn't allow an unapproved signer to batch cancel pair limit orders
+
+  OtcOrdersFeature
+    5) "before all" hook in "OtcOrdersFeature"
+
+  Ownable feature
+    transferOwnership()
+      ✔ non-owner cannot transfer ownership
+      ✔ owner can transfer ownership
+    migrate()
+      ✔ non-owner cannot call migrate()
+      6) can successfully execute a migration
+      ✔ failing migration reverts
+      ✔ reverting migration reverts
+
+  Selector collision test
+    - Function selectors do not collide
+
+  SimpleFunctionRegistry feature
+    7) `extend()` cannot be called by a non-owner
+    8) `rollback()` cannot be called by a non-owner
+    9) `rollback()` to non-zero impl reverts for unregistered function
+    ✔ `rollback()` to zero impl succeeds for unregistered function
+    10) owner can add a new function with `extend()`
+    11) owner can replace add a function with `extend()`
+    12) owner can zero a function with `extend()`
+    13) can query rollback history
+    14) owner can rollback a function to zero
+    15) owner can rollback a function to the prior version
+    16) owner can rollback a zero function to the prior version
+    17) owner can rollback a function to a much older version
+    18) owner cannot rollback a function to a version not in history
+
+  TransformERC20 feature
+    19) "before all" hook in "TransformERC20 feature"
+
+  UniswapV3Feature
+    20) "before all" hook in "UniswapV3Feature"
+
+  FixinTokenSpender
+    transferERC20TokensFrom()
+      ✔ transferERC20TokensFrom() successfully calls compliant ERC20 token
+      ✔ transferERC20TokensFrom() successfully calls non-compliant ERC20 token
+      ✔ transferERC20TokensFrom() reverts if ERC20 token reverts
+      ✔ transferERC20TokensFrom() reverts if ERC20 token returns false
+      ✔ transferERC20TokensFrom() allows extra data after true
+      ✔ transferERC20TokensFrom() reverts when there's extra data after false
+      ✔ transferERC20TokensFrom() cannot call self
+    getSpendableERC20BalanceOf()
+      ✔ returns the minimum of the owner's balance and allowance
+
+  Full migration
+    ✔ ZeroEx has the correct owner
+    ✔ FullMigration contract self-destructs
+    ✔ Non-deployer cannot call migrateZeroEx()
+    TransformERC20 feature
+      ✔ _transformERC20 is registered
+      ✔ _transformERC20 cannot be called from outside
+      ✔ createTransformWallet is registered
+      ✔ getTransformWallet is registered
+      ✔ setTransformerDeployer is registered
+      ✔ getQuoteSigner is registered
+      ✔ setQuoteSigner is registered
+    MetaTransactions feature
+      ✔ executeMetaTransaction is registered
+      ✔ batchExecuteMetaTransactions is registered
+      ✔ getMetaTransactionExecutedBlock is registered
+      ✔ getMetaTransactionHashExecutedBlock is registered
+      ✔ getMetaTransactionHash is registered
+    NativeOrdersFeature feature
+      ✔ transferProtocolFeesForPools is registered
+      ✔ fillLimitOrder is registered
+      ✔ fillRfqOrder is registered
+      ✔ fillOrKillLimitOrder is registered
+      ✔ fillOrKillRfqOrder is registered
+      ✔ _fillLimitOrder is registered
+      ✔ _fillLimitOrder cannot be called from outside
+      ✔ _fillRfqOrder is registered
+      ✔ _fillRfqOrder cannot be called from outside
+      ✔ cancelLimitOrder is registered
+      ✔ cancelRfqOrder is registered
+      ✔ batchCancelLimitOrders is registered
+      ✔ batchCancelRfqOrders is registered
+      ✔ cancelPairLimitOrders is registered
+      ✔ batchCancelPairLimitOrders is registered
+      ✔ cancelPairRfqOrders is registered
+      ✔ batchCancelPairRfqOrders is registered
+      ✔ getLimitOrderInfo is registered
+      ✔ getRfqOrderInfo is registered
+      ✔ getLimitOrderHash is registered
+      ✔ getRfqOrderHash is registered
+      ✔ getProtocolFeeMultiplier is registered
+      ✔ registerAllowedRfqOrigins is registered
+      ✔ getLimitOrderRelevantState is registered
+      ✔ getRfqOrderRelevantState is registered
+      ✔ batchGetLimitOrderRelevantStates is registered
+      ✔ batchGetRfqOrderRelevantStates is registered
+    TransformERC20
+      ✔ has the correct transformer deployer
+
+  Initial migration
+    ✔ Self-destructs after deployment
+    21) Non-deployer cannot call initializeZeroEx()
+    22) External contract cannot call die()
+    bootstrapping
+      ✔ Migrator cannot call bootstrap() again
+      ✔ Bootstrap feature self destructs after deployment
+    Ownable feature
+      23) "before all" hook for "has the correct owner"
+    SimpleFunctionRegistry feature
+      24) "before all" hook for "_extendSelf() is deregistered"
+
+  LibLimitOrder tests
+    getLimitOrderStructHash()
+      ✔ returns the correct hash
+    getRfqOrderStructHash()
+      ✔ returns the correct hash
+
+  LibSignature library
+    getSignerOfHash()
+      ✔ can recover the signer of an EIP712 signature
+      ✔ can recover the signer of an EthSign signature
+      ✔ throws if the signature type is out of range
+      ✔ throws if the signature data is malformed
+      ✔ throws if an EC value is out of range
+      ✔ throws if the type is Illegal
+      ✔ throws if the type is Invalid
+
+  CurveLiquidityProvider feature
+    ✔ can swap ERC20->ERC20
+    ✔ can swap ERC20->ETH
+    ✔ can swap ETH->ERC20
+    ✔ can swap ETH->ERC20 with attached ETH
+    ✔ can swap with a pool that returns bought amount
+    ✔ reverts if pool reverts
+    ✔ reverts if underbought
+    ✔ reverts if ERC20->ERC20 receives an ETH input token
+    ✔ reverts if ERC20->ERC20 receives an ETH output token
+    ✔ reverts if ERC20->ETH receives an ETH input token
+    ✔ reverts if ETH->ERC20 receives an ETH output token
+    ✔ emits a LiquidityProviderFill event
+
+  MooniswapLiquidityProvider feature
+    ✔ can swap ERC20->ERC20
+    ✔ can swap ERC20->ETH
+    25) can swap ETH->ERC20
+    26) can swap ETH->ERC20 with attached ETH
+    27) can swap ERC20->WETH
+    28) can swap WETH->ERC20
+    ✔ reverts if pool reverts
+    ✔ reverts if ERC20->ERC20 is the same token
+    ✔ reverts if ERC20->ERC20 receives an ETH input token
+    ✔ reverts if ERC20->ERC20 receives an ETH output token
+    ✔ reverts if ERC20->ETH receives an ETH input token
+    ✔ reverts if ETH->ERC20 receives an ETH output token
+    29) emits a LiquidityProviderFill event
+
+  PermissionlessTransformerDeployer
+    deploy()
+      ✔ can deploy safe contract
+      ✔ deploys at predictable address
+      30) cannot deploy suicidal contract
+      ✔ can deploy safe contract with value
+      ✔ reverts if constructor throws
+      ✔ can retrieve deployment salt from contract address
+      ✔ can retrieve deployment init code hash from contract address
+
+  ProtocolFees
+    FeeCollector
+      ✔ should disallow unauthorized initialization
+    _collectProtocolFee()
+      ✔ should revert if insufficient ETH transferred
+      ✔ should accept ETH fee
+      ✔ should accept ETH after first transfer
+      ✔ should attribute fees correctly
+
+  Storage ID uniqueness test
+    ✔ all StorageId references are unique in storage libraries
+
+  TransformerDeployer
+    deploy()
+      ✔ non-authority cannot call
+      ✔ authority can deploy
+      ✔ authority can deploy with value
+      ✔ reverts if constructor throws
+      ✔ updates nonce
+      ✔ nonce can predict deployment address
+      ✔ can retrieve deployment nonce from contract address
+    kill()
+      ✔ non-authority cannot call
+      ✔ authority can kill a contract
+
+  FillQuoteTransformer
+    sell quotes
+      ✔ can fully sell to a single bridge order with -1 fillAmount
+      31) can partially sell to a single bridge order with a fractional fillAmount
+      32) fails if incomplete sell
+      33) can fully sell to a single bridge order
+      34) can fully sell to a single limit order
+      35) can partial sell to a single limit order
+      36) can fully sell to a single limit order without fees
+      37) can partial sell to a single limit order without fees
+      38) can fully sell to a single RFQ order
+      39) can partially sell to a single RFQ order
+      40) can fully sell to one of each order type
+      41) can partially sell to one of each order type
+      42) can fully sell to multiple of each order type
+      43) can recover from a failed order
+      44) can recover from a slipped order
+      45) skips limit orders when not enough protocol fee balance
+    buy quotes
+      46) fails if incomplete buy
+      47) can fully buy to a single bridge order
+      48) can fully buy to a single limit order
+      49) can partial buy to a single limit order
+      50) can fully buy to a single limit order without fees
+      51) can partial buy to a single limit order without fees
+      52) can fully buy to a single RFQ order
+      53) can partially buy to a single RFQ order
+      54) can fully buy to one of each order type
+      55) can recover from a failed order
+      56) can recover from a slipped order
+
+  PayTakerTransformer
+    ✔ can transfer a token and ETH
+    57) can transfer all of a token and ETH
+    58) can transfer all of a token and ETH (empty amounts)
+    59) can transfer less than the balance of a token and ETH
+
+  Transformer (base)
+    die()
+      ✔ cannot be called by non-deployer
+      ✔ cannot be called outside of its own context
+      60) destroys the transformer
+
+  WethTransformer
+    ✔ fails if the token is neither ETH or WETH
+    61) can unwrap WETH
+    62) can unwrap all WETH
+    63) can unwrap some WETH
+    64) can wrap ETH
+    65) can wrap all ETH
+    66) can wrap some ETH
+
+
+  349 passing (6s)
+  22 pending
+  66 failing
+
+  1) FundRecovery
+       "before all" hook in "FundRecovery":
+     TypeError: zeroEx.connect(...).migrate is not a function
+      at Context.<anonymous> (test/features/fund_recovery_tests.ts:44:14)
+
+  2) LiquidityProvider feature
+       "before all" hook in "LiquidityProvider feature":
+     TypeError: invalid address (argument="address", value="", code=INVALID_ARGUMENT, version=6.15.0)
+      at makeError (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at getAddress (/Users/king/javascript/protocol/node_modules/ethers/src.ts/address/address.ts:147:19)
+      at new HardhatEthersSigner (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:97:30)
+      at HardhatEthersSigner.create (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:83:12)
+      at async deployFromHardhatArtifactAsync (src/migration.ts:42:20)
+      at async fullMigrateAsync (src/migration.ts:271:22)
+      at async Context.<anonymous> (test/features/liquidity_provider_test.ts:43:18)
+
+  3) MetaTransactions feature
+       "before all" hook in "MetaTransactions feature":
+     TypeError: wrappers_1.MetaTransactionsFeatureContract is not a constructor
+      at Context.<anonymous> (test/features/meta_transactions_test.ts:75:19)
+
+  4) MultiplexFeature
+       "before all" hook in "MultiplexFeature":
+     TypeError: zeroEx.getTransformWallet is not a function
+      at Context.<anonymous> (test/features/multiplex_test.ts:476:43)
+
+  5) OtcOrdersFeature
+       "before all" hook in "OtcOrdersFeature":
+     TypeError: contractWallet.approveERC20(...) is not a function
+      at Context.<anonymous> (test/features/otc_orders_test.ts:112:97)
+
+  6) Ownable feature
+       migrate()
+         can successfully execute a migration:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x1de45ad1000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266000000000000000000000000cf82457114c167a9af6b43abe7d22f1241fb532d)
+    at OwnableFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at OwnableFeature.onlyOwner (contracts/src/fixins/FixinCommon.sol:43)
+    at OwnableFeature.migrate (contracts/src/features/OwnableFeature.sol:74)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.migrate (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/ownable_test.ts:90:24)
+  
+
+  7) SimpleFunctionRegistry feature
+       `extend()` cannot be called by a non-owner:
+     ProviderError: Unknown account 0x590E75a0F5908f8bc8d1c9A5147e840Eb29f13C6
+      at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:368:19)
+      at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+      at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+      at async Proxy.extend (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+
+  8) SimpleFunctionRegistry feature
+       `rollback()` cannot be called by a non-owner:
+     ProviderError: Unknown account 0x590E75a0F5908f8bc8d1c9A5147e840Eb29f13C6
+      at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:368:19)
+      at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+      at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+      at async Proxy.rollback (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+
+  9) SimpleFunctionRegistry feature
+       `rollback()` to non-zero impl reverts for unregistered function:
+     AssertionError: Expected transaction to be reverted with reason 'NotInRollbackHistoryError', but it reverted with a custom error
+  
+
+  10) SimpleFunctionRegistry feature
+       owner can add a new function with `extend()`:
+     TypeError: testFeature.testFn is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:92:37)
+
+  11) SimpleFunctionRegistry feature
+       owner can replace add a function with `extend()`:
+     TypeError: testFeature.testFn is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:100:37)
+
+  12) SimpleFunctionRegistry feature
+       owner can zero a function with `extend()`:
+     TypeError: testFeature.testFn is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:108:35)
+
+  13) SimpleFunctionRegistry feature
+       can query rollback history:
+
+      AssertionError: expected 8 to equal 3.
+      + expected - actual
+
+      -8
+      +3
+      
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:119:35)
+
+  14) SimpleFunctionRegistry feature
+       owner can rollback a function to zero:
+
+      AssertionError: expected 8 to equal 0.
+      + expected - actual
+
+      -8
+      +0
+      
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:142:35)
+
+  15) SimpleFunctionRegistry feature
+       owner can rollback a function to the prior version:
+     TypeError: registry.extend(...) is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:149:83)
+
+  16) SimpleFunctionRegistry feature
+       owner can rollback a zero function to the prior version:
+     TypeError: registry.extend(...) is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:159:83)
+
+  17) SimpleFunctionRegistry feature
+       owner can rollback a function to a much older version:
+     TypeError: registry.extend(...) is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:170:83)
+
+  18) SimpleFunctionRegistry feature
+       owner cannot rollback a function to a version not in history:
+     AssertionError: Expected transaction to be reverted with reason 'NotInRollbackHistoryError', but it didn't revert
+  
+
+  19) TransformERC20 feature
+       "before all" hook in "TransformERC20 feature":
+     TypeError: wrappers_1.TransformERC20FeatureContract is not a constructor
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:68:19)
+
+  20) UniswapV3Feature
+       "before all" hook in "UniswapV3Feature":
+     TypeError: invalid BytesLike value (argument="value", value="0x608060405234801561001057600080fd5b50603f80601e6000396000f3fe6080604052600080fdfea26469706673582212207d1b3d2d0c5e6a5d8b9e2f5a8e5c6d4a3b2c1e0f9a8b7c6d5e4f3a2b1c0e9d8f7e6d4c3b2a164736f6c63430008000033", code=INVALID_ARGUMENT, version=6.15.0)
+      at makeError (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at _getBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/data.ts:44:19)
+      at getBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/data.ts:55:12)
+      at new ContractFactory (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/factory.ts:61:40)
+      at Context.<anonymous> (test/features/uniswapv3_test.ts:64:33)
+
+  21) Initial migration
+       Non-deployer cannot call initializeZeroEx():
+     ProviderError: Unknown account 0x876C8323c5A4421D41dDdaB8748df239a42EA316
+      at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:368:19)
+      at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+      at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+      at async Proxy.initializeZeroEx (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+
+  22) Initial migration
+       External contract cannot call die():
+     AssertionError: Expected transaction to be reverted with reason 'InitialMigration/INVALID_SENDER', but it didn't revert
+  
+
+  23) Initial migration
+       Ownable feature
+         "before all" hook for "has the correct owner":
+     TypeError: wrappers_1.IOwnableFeatureContract is not a constructor
+      at Context.<anonymous> (test/initial_migration_test.ts:88:23)
+
+  24) Initial migration
+       SimpleFunctionRegistry feature
+         "before all" hook for "_extendSelf() is deregistered":
+     ReferenceError: SimpleFunctionRegistryFeatureContract is not defined
+      at Context.<anonymous> (test/initial_migration_test.ts:101:13)
+      at processImmediate (node:internal/timers:505:21)
+
+  25) MooniswapLiquidityProvider feature
+       can swap ETH->ERC20:
+
+      AssertionError: expected 10450658489684776928 to equal 5225329244842388464.
+      + expected - actual
+
+      -10450658489684776928
+      +5225329244842388464
+      
+      at Context.<anonymous> (test/liqudity-providers/mooniswap_test.ts:141:56)
+
+  26) MooniswapLiquidityProvider feature
+       can swap ETH->ERC20 with attached ETH:
+
+      AssertionError: expected 15675987734527165392 to equal 5225329244842388464.
+      + expected - actual
+
+      -15675987734527165392
+      +5225329244842388464
+      
+      at Context.<anonymous> (test/liqudity-providers/mooniswap_test.ts:167:56)
+
+  27) MooniswapLiquidityProvider feature
+       can swap ERC20->WETH:
+
+      AssertionError: expected 21246937914676728453 to equal 7082312638225576151.
+      + expected - actual
+
+      -21246937914676728453
+      +7082312638225576151
+      
+      at Context.<anonymous> (test/liqudity-providers/mooniswap_test.ts:197:80)
+
+  28) MooniswapLiquidityProvider feature
+       can swap WETH->ERC20:
+
+      AssertionError: expected 21246937914676728453 to equal 7082312638225576151.
+      + expected - actual
+
+      -21246937914676728453
+      +7082312638225576151
+      
+      at Context.<anonymous> (test/liqudity-providers/mooniswap_test.ts:223:84)
+
+  29) MooniswapLiquidityProvider feature
+       emits a LiquidityProviderFill event:
+
+      AssertionError: expected +0 to equal 1
+      + expected - actual
+
+      -0
+      +1
+      
+      at Context.<anonymous> (test/liqudity-providers/mooniswap_test.ts:285:34)
+
+  30) PermissionlessTransformerDeployer
+       deploy()
+         cannot deploy suicidal contract:
+     AssertionError: Expected transaction to be reverted
+  
+
+  31) FillQuoteTransformer
+       sell quotes
+         can partially sell to a single bridge order with a fractional fillAmount:
+
+      makerTokenBalance
+      + expected - actual
+
+      -220508460165535616
+      +10
+      
+      at assertIntegerRoughlyEquals (test/transformers/fill_quote_transformer_test.ts:40:24)
+      at assertBalances (test/transformers/fill_quote_transformer_test.ts:376:9)
+      at assertCurrentBalancesAsync (test/transformers/fill_quote_transformer_test.ts:383:9)
+      at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:503:13)
+
+  32) FillQuoteTransformer
+       sell quotes
+         fails if incomplete sell:
+     Error: Invalid Chai property: revertWith. Did you mean "revertedWith"?
+      at Object.proxyGetter [as get] (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/proxify.js:75:17)
+      at Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:521:33)
+
+  33) FillQuoteTransformer
+       sell quotes
+         can fully sell to a single bridge order:
+
+      makerTokenBalance
+      + expected - actual
+
+      -961249730637761792
+      +10
+      
+      at assertIntegerRoughlyEquals (test/transformers/fill_quote_transformer_test.ts:40:24)
+      at assertBalances (test/transformers/fill_quote_transformer_test.ts:376:9)
+      at assertCurrentBalancesAsync (test/transformers/fill_quote_transformer_test.ts:383:9)
+      at async assertFinalBalancesAsync (test/transformers/fill_quote_transformer_test.ts:464:9)
+
+  34) FillQuoteTransformer
+       sell quotes
+         can fully sell to a single limit order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d400000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000010446f4dd9e9499d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:562:13)
+  
+
+  35) FillQuoteTransformer
+       sell quotes
+         can partial sell to a single limit order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d400000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001a0000000000000000000000000000000000000000000000000057ff257593925d5000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:587:13)
+  
+
+  36) FillQuoteTransformer
+       sell quotes
+         can fully sell to a single limit order without fees:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d400000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001a00000000000000000000000000000000000000000000000000c7540a60997e3a9000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:612:13)
+  
+
+  37) FillQuoteTransformer
+       sell quotes
+         can partial sell to a single limit order without fees:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d400000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000004f17185f9583c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:637:13)
+  
+
+  38) FillQuoteTransformer
+       sell quotes
+         can fully sell to a single RFQ order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d400000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001a00000000000000000000000000000000000000000000000000750ae45dde9a355000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:657:13)
+  
+
+  39) FillQuoteTransformer
+       sell quotes
+         can partially sell to a single RFQ order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d400000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000001de96a791beaf22000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:676:13)
+  
+
+  40) FillQuoteTransformer
+       sell quotes
+         can fully sell to one of each order type:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000380000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d40000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000002c00000000000000000000000000000000000000000000000002be3582379eec2d2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000a4a864fd750495dd9b4ab67d45e7a07f0000000000000000000000000000000000000000000000000dbdbb143c351bed00000000000000000000000000000000000000000000000007eac773af476d6e000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000600000000000000000000000005b057dbee4ca3d50b17665e482906c293cb35219000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000007eac773af476d800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:716:13)
+  
+
+  41) FillQuoteTransformer
+       sell quotes
+         can partially sell to one of each order type:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000380000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d40000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000002c00000000000000000000000000000000000000000000000000b089244e9d13a68000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000a4a864fd750495dd9b4ab67d45e7a07f00000000000000000000000000000000000000000000000009c4eec57ff5cf6c0000000000000000000000000000000000000000000000000357fc7e167baa11000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000600000000000000000000000005b057dbee4ca3d50b17665e482906c293cb3521900000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000357fc7e167baa200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:757:13)
+  
+
+  42) FillQuoteTransformer
+       sell quotes
+         can fully sell to multiple of each order type:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a40000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000007a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d4000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000005e000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000620000000000000000000000000000000000000000000000000651fec4bcf657c69000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007600000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000001800000000000000000000000000000000000000000000000000000000000000280000000000000000000000000000000000000000000000000000000000000038000000000000000000000000000000000a4a864fd750495dd9b4ab67d45e7a07f00000000000000000000000000000000000000000000000004b2ec67284c3ddc00000000000000000000000000000000000000000000000001f55e5ca884b803000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000600000000000000000000000005b057dbee4ca3d50b17665e482906c293cb35219000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000001f55e5ca884b80000000000000000000000000000000000a4a864fd750495dd9b4ab67d45e7a07f0000000000000000000000000000000000000000000000000be4b149ec2ec621000000000000000000000000000000000000000000000000033de829b36e0f41000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000600000000000000000000000005b057dbee4ca3d50b17665e482906c293cb352190000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000033de829b36e0f4000000000000000000000000000000000a4a864fd750495dd9b4ab67d45e7a07f0000000000000000000000000000000000000000000000000a4b2377b36de40c0000000000000000000000000000000000000000000000000334233e7cbc1175000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000600000000000000000000000005b057dbee4ca3d50b17665e482906c293cb3521900000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000334233e7cbc118000000000000000000000000000000000a4a864fd750495dd9b4ab67d45e7a07f0000000000000000000000000000000000000000000000000afdc1029812078800000000000000000000000000000000000000000000000005a1e1dd925dc68f000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000600000000000000000000000005b057dbee4ca3d50b17665e482906c293cb35219000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000005a1e1dd925dc6800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000090000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:798:13)
+  
+
+  43) FillQuoteTransformer
+       sell quotes
+         can recover from a failed order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000380000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d40000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000002c00000000000000000000000000000000000000000000000001a858a9d2533dda3000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000a4a864fd750495dd9b4ab67d45e7a07f0000000000000000000000000000000000000000000000000bcfd95dafa8b36c00000000000000000000000000000000000000000000000008a900fb7e7ce7b1000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000600000000000000000000000005b057dbee4ca3d50b17665e482906c293cb35219000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000008a900fb7e7ce7800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:860:13)
+  
+
+  44) FillQuoteTransformer
+       sell quotes
+         can recover from a slipped order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000380000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d40000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000002c00000000000000000000000000000000000000000000000000fb49701a409b530000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000a4a864fd750495dd9b4ab67d45e7a07f00000000000000000000000000000000000000000000000002f443606c08bb9700000000000000000000000000000000000000000000000004432602f69a665d000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000600000000000000000000000005b057dbee4ca3d50b17665e482906c293cb35219000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000004432602f69a66400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:933:13)
+  
+
+  45) FillQuoteTransformer
+       sell quotes
+         skips limit orders when not enough protocol fee balance:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000360000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d40000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000002c000000000000000000000000000000000000000000000000007953f0a6347d84c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000a4a864fd750495dd9b4ab67d45e7a07f00000000000000000000000000000000000000000000000007953f0a6347d84c00000000000000000000000000000000000000000000000009020fe1892b99b3000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000600000000000000000000000005b057dbee4ca3d50b17665e482906c293cb35219000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000009020fe1892b99b3000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:965:13)
+  
+
+  46) FillQuoteTransformer
+       buy quotes
+         fails if incomplete buy:
+     Error: Invalid Chai property: revertWith. Did you mean "revertedWith"?
+      at Object.proxyGetter [as get] (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/proxify.js:75:17)
+      at Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:986:33)
+
+  47) FillQuoteTransformer
+       buy quotes
+         can fully buy to a single bridge order:
+
+      makerTokenBalance
+      + expected - actual
+
+      -2527481687738474112
+      +10
+      
+      at assertIntegerRoughlyEquals (test/transformers/fill_quote_transformer_test.ts:40:24)
+      at assertBalances (test/transformers/fill_quote_transformer_test.ts:376:9)
+      at assertCurrentBalancesAsync (test/transformers/fill_quote_transformer_test.ts:383:9)
+      at async assertFinalBalancesAsync (test/transformers/fill_quote_transformer_test.ts:464:9)
+
+  48) FillQuoteTransformer
+       buy quotes
+         can fully buy to a single limit order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d400000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000001cd1c6b848ab3e1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:1035:13)
+  
+
+  49) FillQuoteTransformer
+       buy quotes
+         can partial buy to a single limit order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d400000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000003837e4afe67f9af000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:1063:13)
+  
+
+  50) FillQuoteTransformer
+       buy quotes
+         can fully buy to a single limit order without fees:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d400000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000009a55b015859e7de000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:1091:13)
+  
+
+  51) FillQuoteTransformer
+       buy quotes
+         can partial buy to a single limit order without fees:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d400000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001a0000000000000000000000000000000000000000000000000029e2e81f9712457000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:1119:13)
+  
+
+  52) FillQuoteTransformer
+       buy quotes
+         can fully buy to a single RFQ order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d400000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000007d0b971746bf6c8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:1144:13)
+  
+
+  53) FillQuoteTransformer
+       buy quotes
+         can partially buy to a single RFQ order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d400000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001a0000000000000000000000000000000000000000000000000058dcaa8bcb3b30c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:1168:13)
+  
+
+  54) FillQuoteTransformer
+       buy quotes
+         can fully buy to one of each order type:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000380000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d40000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000002c000000000000000000000000000000000000000000000000024c95317db5d2d98000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000a4a864fd750495dd9b4ab67d45e7a07f0000000000000000000000000000000000000000000000000af360b560400d9e0000000000000000000000000000000000000000000000000da8a4b02e534b07000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000600000000000000000000000005b057dbee4ca3d50b17665e482906c293cb3521900000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000da8a4b02e534b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:1215:13)
+  
+
+  55) FillQuoteTransformer
+       buy quotes
+         can recover from a failed order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000380000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d40000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000002c0000000000000000000000000000000000000000000000000139d9c4df3b8b7af000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000a4a864fd750495dd9b4ab67d45e7a07f00000000000000000000000000000000000000000000000003852a52383db50e0000000000000000000000000000000000000000000000000aaa0d378a335ddc000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000600000000000000000000000005b057dbee4ca3d50b17665e482906c293cb3521900000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000aaa0d378a335e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:1278:13)
+  
+
+  56) FillQuoteTransformer
+       buy quotes
+         can recover from a slipped order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0x505ff6a4000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000380000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000009e7f7d0e8b8f38e3cf2b3f7dd362ba2e9e82baa40000000000000000000000003949c97925e5aa13e34ddb18eabf0b70abb0c7d40000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000002c000000000000000000000000000000000000000000000000019ef81f45ff8a806000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000a4a864fd750495dd9b4ab67d45e7a07f000000000000000000000000000000000000000000000000025e793e97e7b7650000000000000000000000000000000000000000000000000977022ccf74fa5b000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000600000000000000000000000005b057dbee4ca3d50b17665e482906c293cb3521900000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000977022ccf74fa800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:168)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:450:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:1354:13)
+  
+
+  57) PayTakerTransformer
+       can transfer all of a token and ETH:
+     AssertionError: expected { ethBalance: 345570969193378411n, tokenBalance: 642659509283541051n } to deeply equal { tokenBalance: 438229191622844719n, ethBalance: 301408716156299400n }
+      at Context.<anonymous> (test/transformers/pay_taker_transformer_test.ts:100:55)
+
+  58) PayTakerTransformer
+       can transfer all of a token and ETH (empty amounts):
+     AssertionError: expected { ethBalance: 1025566154527545752n, tokenBalance: 792443612529897011n } to deeply equal { tokenBalance: 149784103246355960n, ethBalance: 679995185334167341n }
+      at Context.<anonymous> (test/transformers/pay_taker_transformer_test.ts:120:55)
+
+  59) PayTakerTransformer
+       can transfer less than the balance of a token and ETH:
+     AssertionError: expected {
+  ethBalance: 1068068967662511321n,
+  tokenBalance: 1086339412463022023n
+} to deeply equal { tokenBalance: 293895799933125012n, ethBalance: 42502813134965569n }
+      at Context.<anonymous> (test/transformers/pay_taker_transformer_test.ts:143:55)
+
+  60) Transformer (base)
+       die()
+         destroys the transformer:
+
+      AssertionError: expected '0x608060405234801561000f575f5ffd5b506…' to equal '0x'
+      + expected - actual
+
+      -0x608060405234801561000f575f5ffd5b506004361061003f575f3560e01c8063832b24bb14610043578063c9353cb51461007b578063d5f3948814610090575b5f5ffd5b61005d610051366004610266565b506309e4c94f60e11b90565b6040516001600160e01b031990911681526020015b60405180910390f35b61008e6100893660046102a4565b6100cf565b005b6100b77f000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226681565b6040516001600160a01b039091168152602001610072565b336001600160a01b037f000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226616146101315761013161012c337f000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226661019a565b610217565b306001600160a01b037f0000000000000000000000009155497eae31d432c0b13dbcc0615a37f55a2c87161461018e5761018e61012c307f0000000000000000000000009155497eae31d432c0b13dbcc0615a37f55a2c8761021f565b806001600160a01b0316ff5b6040516001600160a01b038084166024830152821660448201526060907f5cec653b364cca3880afa73ceff506d0651d11d26abbbe4a56460aa933b21b08906064015b60408051601f198184030181529190526020810180516001600160e01b03166001600160e01b031990931692909217909152905092915050565b805160208201fd5b6040516001600160a01b038084166024830152821660448201526060907fb5cf2cd09307d6c717473134badbb9761c2c97d7565566c2a71eba6cd6fc514d906064016101dd565b5f60208284031215610276575f5ffd5b813567ffffffffffffffff81111561028c575f5ffd5b82016060818503121561029d575f5ffd5b9392505050565b5f602082840312156102b4575f5ffd5b81356001600160a01b038116811461029d575f5ffdfea264697066735822122065459f1d28f6ea276582b144f5546f3ef81ce3bc9af242a95a7975c456df4ffd64736f6c634300081c0033
+      +0x
+      
+      at Context.<anonymous> (test/transformers/transformer_base_test.ts:48:36)
+
+  61) WethTransformer
+       can unwrap WETH:
+     Error: Transaction reverted: function call failed to execute
+    at TestWethTransformerHost.executeTransform (contracts/test/TestWethTransformerHost.sol:31)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/transformers/weth_transformer_test.ts:61:9)
+  
+
+  62) WethTransformer
+       can unwrap all WETH:
+     Error: Transaction reverted: function call failed to execute
+    at TestWethTransformerHost.executeTransform (contracts/test/TestWethTransformerHost.sol:31)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/transformers/weth_transformer_test.ts:74:9)
+  
+
+  63) WethTransformer
+       can unwrap some WETH:
+     Error: Transaction reverted: function call failed to execute
+    at TestWethTransformerHost.executeTransform (contracts/test/TestWethTransformerHost.sol:31)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/transformers/weth_transformer_test.ts:87:9)
+  
+
+  64) WethTransformer
+       can wrap ETH:
+     Error: Transaction reverted without a reason string
+    at TestWethTransformerHost.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestWethTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/transformers/weth_transformer_test.ts:100:9)
+  
+
+  65) WethTransformer
+       can wrap all ETH:
+     AssertionError: expected { ethBalance: 0n, wethBalance: 0n } to deeply equal { ethBalance: 0n, wethBalance: 34873731692753814n }
+      at Context.<anonymous> (test/transformers/weth_transformer_test.ts:114:54)
+
+  66) WethTransformer
+       can wrap some ETH:
+     Error: Transaction reverted without a reason string
+    at TestWethTransformerHost.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at TestWethTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/transformers/weth_transformer_test.ts:126:9)
+  
+
+
+

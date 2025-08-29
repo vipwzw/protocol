@@ -19,6 +19,7 @@ import "@0x/contracts-utils/contracts/src/LibMath.sol";
 import "./tokens/TestMintableERC20Token.sol";
 import "../src/features/libs/LibNativeOrder.sol";
 import "../src/features/libs/LibSignature.sol";
+import "hardhat/console.sol";
 
 contract TestFillQuoteTransformerExchange {
     bytes32 public constant EIP712_EXCHANGE_DOMAIN_HASH =
