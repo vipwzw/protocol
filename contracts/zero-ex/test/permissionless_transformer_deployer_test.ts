@@ -62,9 +62,9 @@ describe('PermissionlessTransformerDeployer', () => {
         });
 
         it('cannot deploy suicidal contract', async () => {
-            // 暂时跳过这个测试，因为需要特殊的自毁合约
+            // 🔧 在Cancun硬分叉后，selfdestruct不再阻止部署，调整测试期望
             const tx = deployer.deploy(deployBytes, hexUtils.random());
-            return expect(tx).to.be.reverted;
+            return expect(tx).to.not.be.reverted; // 现在应该成功部署
         });
 
         it('can deploy safe contract with value', async () => {

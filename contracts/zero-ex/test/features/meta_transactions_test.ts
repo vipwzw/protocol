@@ -72,12 +72,8 @@ describe('MetaTransactions feature', () => {
             transformERC20: await transformERC20Feature.getAddress(),
             nativeOrders: await nativeOrdersFeature.getAddress(),
         });
-        feature = new MetaTransactionsFeatureContract(
-            await zeroEx.getAddress(),
-            env.provider,
-            { ...env.txDefaults, from: sender },
-            abis,
-        );
+        // 🔧 使用ethers.getContractAt替代constructor
+        feature = await ethers.getContractAt('IMetaTransactionsFeature', await zeroEx.getAddress()) as MetaTransactionsFeatureContract;
         
         const feeTokenFactory = new TestMintableERC20Token__factory(signer);
         feeToken = await feeTokenFactory.deploy();

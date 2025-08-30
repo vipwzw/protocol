@@ -45,6 +45,25 @@ describe('Ownable feature', () => {
         revertingMigrateFnCallData = testMigrator.interface.encodeFunctionData('revertingMigrate');
     });
 
+    // 🔧 状态重置机制：防止测试间干扰
+    let snapshotId: string;
+    
+    before(async () => {
+        snapshotId = await ethers.provider.send("evm_snapshot", []);
+    });
+    
+    beforeEach(async () => {
+        await ethers.provider.send("evm_revert", [snapshotId]);
+        snapshotId = await ethers.provider.send("evm_snapshot", []);
+        
+        // 重新获取账户地址
+        [owner, notOwner] = await env.getAccountAddressesAsync();
+        env.txDefaults.from = owner;
+        
+        // 重新创建合约实例
+        ownable = IOwnableFeature__factory.connect(await ownable.getAddress(), await env.provider.getSigner(owner));
+    });
+
     describe('transferOwnership()', () => {
         it('non-owner cannot transfer ownership', async () => {
             const newOwner = randomAddress();

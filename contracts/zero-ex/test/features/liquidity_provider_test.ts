@@ -46,20 +46,23 @@ describe('LiquidityProvider feature', () => {
         const signer = await env.provider.getSigner(owner);
         const tokenFactory = new DummyERC20Token__factory(signer);
         token = await tokenFactory.deploy(
-            constants.DUMMY_TOKEN_NAME,
-            constants.DUMMY_TOKEN_SYMBOL,
-            constants.DUMMY_TOKEN_DECIMALS,
-            constants.DUMMY_TOKEN_TOTAL_SUPPLY,
+            "DummyToken", // 🔧 使用简单字符串替代可能不存在的常量
+            "DUMMY",
+            18,
+            ethers.parseEther("1000000"), // 1M tokens
         );
         await token.waitForDeployment();
-        await token.setBalance(taker, constants.INITIAL_ERC20_BALANCE);
+        // 🔧 尝试使用mint方法替代setBalance
+        const takerSigner = await env.provider.getSigner(taker);
+        await token.connect(takerSigner).mint(ethers.parseEther("1000"));
         const wethFactory = new TestWeth__factory(signer);
         weth = await wethFactory.deploy();
         await weth.waitForDeployment();
-        const takerSigner = await env.provider.getSigner(taker);
+        
+        // 🔧 设置token授权
         await token
             .connect(takerSigner)
-            .approve(await zeroEx.getAddress(), constants.INITIAL_ERC20_ALLOWANCE);
+            .approve(await zeroEx.getAddress(), ethers.parseEther("10000")); // 🔧 使用简单值
 
         feature = new LiquidityProviderFeatureContract(await zeroEx.getAddress(), env.provider, env.txDefaults, abis);
         
