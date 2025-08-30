@@ -62,6 +62,36 @@ describe('MooniswapLiquidityProvider feature', () => {
         mooniswapData = hexUtils.leftPad(await testMooniswap.getAddress());
     });
 
+    // 🔧 状态重置机制：防止测试间干扰
+    let snapshotId: string;
+    
+    before(async () => {
+        snapshotId = await ethers.provider.send("evm_snapshot", []);
+    });
+    
+    beforeEach(async () => {
+        await ethers.provider.send("evm_revert", [snapshotId]);
+        snapshotId = await ethers.provider.send("evm_snapshot", []);
+        
+        // 重新获取账户地址
+        [, taker] = await env.getAccountAddressesAsync();
+        env.txDefaults.from = taker;
+        
+        // 重新创建合约实例
+        const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
+        sellToken = await TokenFactory.attach(await sellToken.getAddress()) as TestMintableERC20TokenContract;
+        buyToken = await TokenFactory.attach(await buyToken.getAddress()) as TestMintableERC20TokenContract;
+        
+        const WethFactory = await ethers.getContractFactory('TestWeth');
+        weth = await WethFactory.attach(await weth.getAddress()) as TestWethContract;
+        
+        const MooniswapFactory = await ethers.getContractFactory('TestMooniswap');
+        testMooniswap = await MooniswapFactory.attach(await testMooniswap.getAddress()) as TestMooniswapContract;
+        
+        const LpFactory = await ethers.getContractFactory('MooniswapLiquidityProvider');
+        lp = await LpFactory.attach(await lp.getAddress()) as MooniswapLiquidityProviderContract;
+    });
+
     async function prepareNextSwapFundsAsync(
         sellTokenAddress: string,
         sellAmount: bigint,

@@ -40,6 +40,7 @@ describe('LiquidityProvider feature', () => {
 
     before(async () => {
         [owner, taker] = await env.getAccountAddressesAsync();
+        env.txDefaults.from = owner; // 🔧 设置正确的from地址
         zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {});
 
         const signer = await env.provider.getSigner(owner);
