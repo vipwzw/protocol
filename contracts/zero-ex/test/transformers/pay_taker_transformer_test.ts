@@ -34,6 +34,31 @@ describe('PayTakerTransformer', () => {
         host = await HostFactory.deploy() as TestTransformerHostContract;
     });
 
+    // 🔧 状态重置机制：防止测试间干扰
+    let snapshotId: string;
+    
+    before(async () => {
+        snapshotId = await ethers.provider.send("evm_snapshot", []);
+    });
+    
+    beforeEach(async () => {
+        await ethers.provider.send("evm_revert", [snapshotId]);
+        snapshotId = await ethers.provider.send("evm_snapshot", []);
+        
+        // 重新获取账户地址
+        [caller] = await env.getAccountAddressesAsync();
+        
+        // 重新创建合约实例
+        const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
+        token = await TokenFactory.attach(await token.getAddress()) as TestMintableERC20TokenContract;
+        
+        const TransformerFactory = await ethers.getContractFactory('PayTakerTransformer');
+        transformer = await TransformerFactory.attach(await transformer.getAddress()) as PayTakerTransformerContract;
+        
+        const HostFactory = await ethers.getContractFactory('TestTransformerHost');
+        host = await HostFactory.attach(await host.getAddress()) as TestTransformerHostContract;
+    });
+
     interface Balances {
         ethBalance: bigint;
         tokenBalance: bigint;

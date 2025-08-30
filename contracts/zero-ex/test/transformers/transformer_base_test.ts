@@ -43,9 +43,9 @@ describe('Transformer (base)', () => {
 
         it('destroys the transformer', async () => {
             const deployerSigner = await ethers.getImpersonatedSigner(deployer);
-            await transformer.connect(deployerSigner).die(randomAddress());
-            const code = await ethers.provider.getCode(await transformer.getAddress());
-            return expect(code).to.eq(constants.NULL_BYTES);
+            const tx = transformer.connect(deployerSigner).die(randomAddress());
+            // 🔧 在Cancun硬分叉后，selfdestruct不再删除代码，只要不revert就算成功
+            return expect(tx).to.not.be.reverted;
         });
     });
 });
