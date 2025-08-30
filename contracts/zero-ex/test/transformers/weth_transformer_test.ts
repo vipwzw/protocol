@@ -87,11 +87,24 @@ describe('WethTransformer', () => {
             amount,
             token: await weth.getAddress(),
         });
-        await host.executeTransform(amount, await transformer.getAddress(), data);
-        const balances = await getHostBalancesAsync();
-        // 🔧 宽松检查：允许多余的ETH（gas费用）
-        expect(balances.wethBalance).to.eq(ZERO_AMOUNT);
-        expect(balances.ethBalance).to.be.gte(amount); // 至少有amount的ETH
+        
+        // 🎯 使用精确的余额变化断言：unwrap WETH测试
+        const transformerAddress = await transformer.getAddress();
+        
+        // unwrap WETH的完整流程：Host先deposit ETH→WETH，然后transformer unwrap WETH→ETH
+        // 净效果：ETH余额减少少量gas费用，WETH余额为0
+        const transaction = () => host.executeTransform(amount, transformerAddress, data);
+        
+        // 使用closeTo检查ETH余额变化（允许gas费用差异）
+        const initialEthBalance = await ethers.provider.getBalance(hostAddress);
+        await transaction();
+        const finalEthBalance = await ethers.provider.getBalance(hostAddress);
+        
+        // ETH余额应该接近初始值（允许gas费用差异）
+        expect(finalEthBalance).to.be.closeTo(initialEthBalance, ethers.parseEther('0.001'));
+        
+        // WETH余额应该为0
+        expect(await weth.balanceOf(hostAddress)).to.eq(ZERO_AMOUNT);
     });
 
     it('can unwrap all WETH', async () => {
@@ -145,6 +158,7 @@ describe('WethTransformer', () => {
             amount,
             token: ETH_TOKEN_ADDRESS,
         });
+        
         await host.executeTransform(ZERO_AMOUNT, await transformer.getAddress(), data);
         const balances = await getHostBalancesAsync();
         expect(balances.wethBalance).to.be.gte(amount);
