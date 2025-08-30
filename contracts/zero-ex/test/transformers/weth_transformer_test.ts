@@ -92,19 +92,14 @@ describe('WethTransformer', () => {
         const transformerAddress = await transformer.getAddress();
         
         // unwrap WETH的完整流程：Host先deposit ETH→WETH，然后transformer unwrap WETH→ETH
-        // 净效果：ETH余额减少少量gas费用，WETH余额为0
+        // 净效果：ETH余额不变（gas费用自动过滤），WETH余额减少amount
         const transaction = () => host.executeTransform(amount, transformerAddress, data);
         
-        // 使用closeTo检查ETH余额变化（允许gas费用差异）
-        const initialEthBalance = await ethers.provider.getBalance(hostAddress);
-        await transaction();
-        const finalEthBalance = await ethers.provider.getBalance(hostAddress);
+        // 🎯 精确断言：changeEtherBalance自动过滤gas费用
+        await expect(transaction).to.changeEtherBalance(host, 0); // 净变化为0（自动过滤gas）
         
-        // ETH余额应该接近初始值（允许gas费用差异）
-        expect(finalEthBalance).to.be.closeTo(initialEthBalance, ethers.parseEther('0.001'));
-        
-        // WETH余额应该为0
-        expect(await weth.balanceOf(hostAddress)).to.eq(ZERO_AMOUNT);
+        // 🎯 精确断言：WETH余额变化
+        await expect(transaction).to.changeTokenBalance(weth, host, 0); // WETH: deposit amount然后unwrap amount，净变化0
     });
 
     it('can unwrap all WETH', async () => {
