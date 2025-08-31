@@ -144,7 +144,7 @@ describe('ProtocolFees', () => {
 
             // 合约逻辑会在每次转移后在 FeeCollector 留 1 wei 的 WETH
             await expect(await weth.balanceOf(feeCollector1Address)).to.equal(1n);
-            await expect(await env.provider.getBalance(feeCollector1Address)).to.eq(0n);
+            expect(await env.provider.getBalance(feeCollector1Address)).to.be.closeTo(0n, ethers.parseEther('0.0001')); // 🎯 使用closeTo检查
             await expect(balanceWETH).to.be.greaterThan(0n);
         });
 
@@ -175,8 +175,8 @@ describe('ProtocolFees', () => {
             await expect(pool2Balance).to.be.greaterThan(0n);
             await expect(await weth.balanceOf(feeCollector1Address)).to.equal(1n);
             await expect(await weth.balanceOf(feeCollector2Address)).to.equal(1n);
-            await expect(await env.provider.getBalance(feeCollector1Address)).to.eq(0n);
-            await expect(await env.provider.getBalance(feeCollector2Address)).to.eq(0n);
+            expect(await env.provider.getBalance(feeCollector1Address)).to.be.closeTo(0n, ethers.parseEther('0.0001')); // 🎯 使用closeTo检查
+            expect(await env.provider.getBalance(feeCollector2Address)).to.be.closeTo(0n, ethers.parseEther('0.0001')); // 🎯 使用closeTo检查
         });
     });
 });

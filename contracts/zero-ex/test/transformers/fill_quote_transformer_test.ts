@@ -775,7 +775,14 @@ describe('FillQuoteTransformer', () => {
                 takerTokenBalance: data.fillAmount,
                 data: { ...data, fillAmount: data.fillAmount + 1n },
             });
-            return expect(tx).to.be.reverted; // 🔧 简单检查：只要revert就算成功
+            // 🔧 验证正确的IncompleteFillSellQuoteError
+            try {
+                await tx;
+                expect.fail('Transaction should have reverted');
+            } catch (error: any) {
+                // 检查错误消息包含正确的错误选择器
+                expect(error.message).to.include('0xadc35ca6'); // IncompleteFillSellQuoteError选择器
+            }
         });
 
         it('can fully sell to a single bridge order', async () => {
@@ -1245,7 +1252,14 @@ describe('FillQuoteTransformer', () => {
                 takerTokenBalance: sumBigInt(bridgeOrders.map(o => o.takerTokenAmount)),
                 data: { ...data, fillAmount: data.fillAmount + 1n },
             });
-            return expect(tx).to.be.reverted; // 🔧 简单检查：只要revert就算成功
+            // 🔧 验证正确的IncompleteFillBuyQuoteError
+            try {
+                await tx;
+                expect.fail('Transaction should have reverted');
+            } catch (error: any) {
+                // 检查错误消息包含正确的错误选择器
+                expect(error.message).to.include('0x498df3ae'); // IncompleteFillBuyQuoteError选择器
+            }
         });
 
         it('can fully buy to a single bridge order', async () => {

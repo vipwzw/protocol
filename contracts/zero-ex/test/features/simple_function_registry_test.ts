@@ -71,16 +71,23 @@ describe('SimpleFunctionRegistry feature', () => {
 
     it('`extend()` cannot be called by a non-owner', async () => {
         const notOwnerSigner = await env.provider.getSigner(notOwner);
-        return expect(
-            registry.connect(notOwnerSigner).extend(hexUtils.random(4), randomAddress())
-        ).to.be.reverted; // 🔧 使用通用revert检查
+        const tx = registry.connect(notOwnerSigner).extend(hexUtils.random(4), randomAddress());
+        
+        // 🔧 验证正确的OnlyOwnerError
+        try {
+            await tx;
+            expect.fail('Transaction should have reverted');
+        } catch (error: any) {
+            // 🔧 验证正确的OnlyOwnerError选择器
+            expect(error.message).to.include('0x1de45ad1'); // OnlyOwnerError选择器
+        }
     });
 
     it('`rollback()` cannot be called by a non-owner', async () => {
         const notOwnerSigner = await env.provider.getSigner(notOwner);
         return expect(
             registry.connect(notOwnerSigner).rollback(hexUtils.random(4), NULL_ADDRESS)
-        ).to.be.reverted; // 🔧 使用通用revert检查
+        ).to.be.revertedWithCustomError(registry, 'OnlyOwnerError'); // 🔧 匹配具体的自定义错误
     });
 
     it('`rollback()` to non-zero impl reverts for unregistered function', async () => {
@@ -88,7 +95,7 @@ describe('SimpleFunctionRegistry feature', () => {
         const ownerSigner = await env.provider.getSigner(owner);
         return expect(
             registry.connect(ownerSigner).rollback(testFnSelector, rollbackAddress)
-        ).to.be.reverted; // 🔧 使用通用revert检查
+        ).to.be.revertedWithCustomError(registry, 'NotInRollbackHistoryError'); // 🔧 匹配正确的错误类型
     });
 
     it('`rollback()` to zero impl succeeds for unregistered function', async () => {
@@ -203,6 +210,6 @@ describe('SimpleFunctionRegistry feature', () => {
         await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl2.getAddress());
         return expect(
             registry.connect(ownerSigner).rollback(testFnSelector, await testFeatureImpl1.getAddress())
-        ).to.be.reverted; // 🔧 使用通用revert检查
+        ).to.be.revertedWithCustomError(registry, 'NotInRollbackHistoryError'); // 🔧 匹配正确的错误类型
     });
 });

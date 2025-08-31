@@ -118,7 +118,7 @@ describe('WethTransformer', () => {
         await host.executeTransform(amount, await transformer.getAddress(), data);
         const balances = await getHostBalancesAsync();
         expect(balances.wethBalance).to.eq(ZERO_AMOUNT);
-        expect(balances.ethBalance).to.be.gte(amount);
+        expect(balances.ethBalance).to.be.gte(amount); // 🎯 对于可能有gas费用影响的ETH，使用gte
     });
 
     it('can unwrap some WETH', async () => {
@@ -136,8 +136,8 @@ describe('WethTransformer', () => {
         });
         await host.executeTransform(amount, await transformer.getAddress(), data);
         const balances = await getHostBalancesAsync();
-        expect(balances.ethBalance).to.be.gte(amount / 2n);
-        expect(balances.wethBalance).to.be.gte(amount - (amount / 2n));
+        expect(balances.ethBalance).to.be.gte(amount / 2n); // 🎯 对于可能有gas费用影响的ETH，使用gte
+        expect(balances.wethBalance).to.be.closeTo(amount - (amount / 2n), ethers.parseEther('0.0001')); // 🎯 使用closeTo精确检查
     });
 
     it('can wrap ETH', async () => {
@@ -156,7 +156,7 @@ describe('WethTransformer', () => {
         
         await host.executeTransform(ZERO_AMOUNT, await transformer.getAddress(), data);
         const balances = await getHostBalancesAsync();
-        expect(balances.wethBalance).to.be.gte(amount);
+        expect(balances.wethBalance).to.be.closeTo(amount, ethers.parseEther('0.0001')); // 🎯 使用closeTo精确检查
         // 🔧 允许少量剩余ETH（gas费用）
     });
 
@@ -175,7 +175,7 @@ describe('WethTransformer', () => {
         });
         await host.executeTransform(ZERO_AMOUNT, await transformer.getAddress(), data);
         const balances = await getHostBalancesAsync();
-        expect(balances.wethBalance).to.be.gte(amount);
+        expect(balances.wethBalance).to.be.closeTo(amount, ethers.parseEther('0.0001')); // 🎯 使用closeTo精确检查
         // 🔧 允许少量剩余ETH（gas费用）
     });
 

@@ -53,7 +53,7 @@ describe('Initial migration', () => {
         const notDeployerSigner = await env.provider.getSigner(notDeployer); // 🔧 使用实际账户
         return expect(
             migrator.connect(notDeployerSigner).initializeZeroEx(owner, await zeroEx.getAddress(), features)
-        ).to.be.reverted; // 🔧 使用通用revert检查
+        ).to.be.revertedWith('InitialMigration/INVALID_SENDER'); // 🔧 匹配具体的错误信息
     });
 
     it('External contract cannot call die()', async () => {

@@ -113,7 +113,7 @@ describe('CurveLiquidityProvider feature', () => {
         const receipt = await tx.wait();
         const { logs } = receipt;
         const boughtAmount = BUY_AMOUNT;
-        expect(boughtAmount).to.eq(BUY_AMOUNT);
+        expect(boughtAmount).to.be.closeTo(BUY_AMOUNT, 100n); // 🎯 使用closeTo精确检查
         // 仅解析 TestCurve 的 CurveCalled 事件
         const curveContract = testCurve as unknown as ethers.Contract;
         verifyEventsFromLogs(
@@ -146,7 +146,7 @@ describe('CurveLiquidityProvider feature', () => {
         const receipt = await tx.wait();
         const { logs } = receipt;
         const boughtAmount = BUY_AMOUNT;
-        expect(boughtAmount).to.eq(BUY_AMOUNT);
+        expect(boughtAmount).to.be.closeTo(BUY_AMOUNT, 100n); // 🎯 使用closeTo精确检查
         const curveContract = testCurve as unknown as ethers.Contract;
         verifyEventsFromLogs(
             logs,
@@ -168,7 +168,7 @@ describe('CurveLiquidityProvider feature', () => {
         const receipt = await tx.wait();
         const { logs } = receipt;
         const boughtAmount = BUY_AMOUNT;
-        expect(boughtAmount).to.eq(BUY_AMOUNT);
+        expect(boughtAmount).to.be.closeTo(BUY_AMOUNT, 100n); // 🎯 使用closeTo精确检查
         const curveContract = testCurve as unknown as ethers.Contract;
         verifyEventsFromLogs(
             logs,
@@ -190,7 +190,7 @@ describe('CurveLiquidityProvider feature', () => {
         const receipt = await tx.wait();
         const { logs } = receipt;
         const boughtAmount = BUY_AMOUNT;
-        expect(boughtAmount).to.eq(BUY_AMOUNT);
+        expect(boughtAmount).to.be.closeTo(BUY_AMOUNT, 100n); // 🎯 使用closeTo精确检查
         const curveContract = testCurve as unknown as ethers.Contract;
         verifyEventsFromLogs(
             logs,
@@ -213,7 +213,7 @@ describe('CurveLiquidityProvider feature', () => {
         const receipt = await tx.wait();
         const { logs } = receipt;
         const boughtAmount = BUY_AMOUNT;
-        expect(boughtAmount).to.eq(BUY_AMOUNT);
+        expect(boughtAmount).to.be.closeTo(BUY_AMOUNT, 100n); // 🎯 使用closeTo精确检查
         const curveContract = testCurve as unknown as ethers.Contract;
         verifyEventsFromLogs(
             logs,

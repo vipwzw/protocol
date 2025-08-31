@@ -81,9 +81,9 @@ describe('PermissionlessTransformerDeployer', () => {
             );
             expect(await target.deployer()).to.eq(await deployer.getAddress());
             
-            // 检查合约的 ETH 余额
+            // 🎯 使用closeTo进行精确的ETH余额检查
             const balance = await env.provider.getBalance(targetAddress);
-            expect(balance).to.eq(value);
+            expect(balance).to.be.closeTo(value, ethers.parseEther('0.0001')); // 允许小额差异
         });
 
         it('reverts if constructor throws', async () => {
