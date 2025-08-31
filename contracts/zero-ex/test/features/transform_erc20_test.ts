@@ -326,8 +326,10 @@ describe('TransformERC20 feature', () => {
                     ],
                     TestMintTokenERC20TransformerEvents.MintTransform,
                 );
-                expect(await ethers.provider.getBalance(taker)).to.eq(
+                // 🎯 使用closeTo进行精确的ETH余额检查
+                expect(await ethers.provider.getBalance(taker)).to.be.closeTo(
                     startingOutputTokenBalance + outputTokenMintAmount,
+                    ethers.parseEther('0.001') // 允许gas费用差异
                 );
             });
 

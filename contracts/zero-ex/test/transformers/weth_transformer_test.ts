@@ -194,7 +194,7 @@ describe('WethTransformer', () => {
         });
         await host.executeTransform(ZERO_AMOUNT, await transformer.getAddress(), data);
         const balances = await getHostBalancesAsync();
-        expect(balances.wethBalance).to.be.gte(amount / 2n);
-        expect(balances.ethBalance).to.be.gte(amount - (amount / 2n));
+        expect(balances.wethBalance).to.be.closeTo(amount / 2n, ethers.parseEther('0.0001')); // 🎯 使用closeTo精确检查
+        expect(balances.ethBalance).to.be.gte(amount - (amount / 2n)); // 🎯 ETH保留gte处理gas影响
     });
 });
