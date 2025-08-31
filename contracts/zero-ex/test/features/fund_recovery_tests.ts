@@ -39,7 +39,9 @@ describe('FundRecovery', async () => {
         const featureImpl = await featureFactory.deploy();
         await featureImpl.waitForDeployment();
         const ownerSigner = await env.provider.getSigner(owner);
-        await zeroEx
+        // 🔧 使用IOwnableFeature接口调用migrate
+        const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress());
+        await ownableFeature
             .connect(ownerSigner)
             .migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
     });

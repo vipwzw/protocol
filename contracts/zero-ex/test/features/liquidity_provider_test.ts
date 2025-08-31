@@ -1,5 +1,6 @@
 import { ethers } from "hardhat";
-import { artifacts as erc20Artifacts, DummyERC20TokenContract } from '@0x/contracts-erc20';
+// 🔧 使用TestMintableERC20Token替代DummyERC20Token
+// import { artifacts as erc20Artifacts, DummyERC20TokenContract } from '@0x/contracts-erc20';
 import { constants, verifyEventsFromLogs } from '@0x/utils';
 import { expect } from 'chai';
 import { OwnableRevertErrors, ZeroExRevertErrors } from '@0x/utils';
@@ -8,7 +9,8 @@ import {
     IOwnableFeatureContract, 
     IZeroExContract, 
     LiquidityProviderFeatureContract,
-    DummyERC20Token__factory,
+    TestMintableERC20Token__factory, // 🔧 使用TestMintableERC20Token
+    TestMintableERC20TokenContract, // 🔧 添加类型导入
     TestWeth__factory,
     LiquidityProviderSandbox__factory,
     LiquidityProviderFeature__factory,
@@ -33,7 +35,7 @@ describe('LiquidityProvider feature', () => {
     let feature: LiquidityProviderFeatureContract;
     let sandbox: LiquidityProviderSandboxContract;
     let liquidityProvider: TestLiquidityProviderContract;
-    let token: DummyERC20TokenContract;
+    let token: TestMintableERC20TokenContract; // 🔧 使用TestMintableERC20Token类型
     let weth: TestWethContract;
     let owner: string;
     let taker: string;
@@ -44,22 +46,17 @@ describe('LiquidityProvider feature', () => {
         zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {});
 
         const signer = await env.provider.getSigner(owner);
-        const tokenFactory = new DummyERC20Token__factory(signer);
-        token = await tokenFactory.deploy(
-            "DummyToken", // 🔧 使用简单字符串替代可能不存在的常量
-            "DUMMY",
-            18,
-            ethers.parseEther("1000000"), // 1M tokens
-        );
+        const tokenFactory = new TestMintableERC20Token__factory(signer);
+        token = await tokenFactory.deploy(); // 🔧 TestMintableERC20Token不需要构造参数
         await token.waitForDeployment();
-        // 🔧 尝试使用mint方法替代setBalance
-        const takerSigner = await env.provider.getSigner(taker);
-        await token.connect(takerSigner).mint(ethers.parseEther("1000"));
+        // 🔧 使用正确的mint语法：mint(recipient, amount)
+        await token.mint(taker, ethers.parseEther("1000"));
         const wethFactory = new TestWeth__factory(signer);
         weth = await wethFactory.deploy();
         await weth.waitForDeployment();
         
         // 🔧 设置token授权
+        const takerSigner = await env.provider.getSigner(taker);
         await token
             .connect(takerSigner)
             .approve(await zeroEx.getAddress(), ethers.parseEther("10000")); // 🔧 使用简单值
