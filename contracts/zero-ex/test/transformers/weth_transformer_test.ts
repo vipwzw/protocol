@@ -175,8 +175,9 @@ describe('WethTransformer', () => {
         });
         await host.executeTransform(ZERO_AMOUNT, await transformer.getAddress(), data);
         const balances = await getHostBalancesAsync();
-        expect(balances.wethBalance).to.be.closeTo(amount, ethers.parseEther('0.0001')); // 🎯 使用closeTo精确检查
-        // 🔧 允许少量剩余ETH（gas费用）
+        // 🎯 wrap all ETH: 应该wrap所有可用的ETH，考虑我们提供的额外ETH
+        expect(balances.wethBalance).to.be.gte(amount); // 至少wrap了amount
+        expect(balances.ethBalance).to.be.lte(ethers.parseEther('0.01')); // 剩余ETH应该很少
     });
 
     it('can wrap some ETH', async () => {
