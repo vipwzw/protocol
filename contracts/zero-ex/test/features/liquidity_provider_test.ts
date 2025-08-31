@@ -17,6 +17,7 @@ import {
     TestLiquidityProvider__factory
 } from '../../src/wrappers';
 import { artifacts } from '../artifacts';
+import { abis } from '../utils/abis'; // 🔧 添加abis导入
 import { fullMigrateAsync } from '../utils/migration';
 import {
     LiquidityProviderSandboxContract,
@@ -61,7 +62,8 @@ describe('LiquidityProvider feature', () => {
             .connect(takerSigner)
             .approve(await zeroEx.getAddress(), ethers.parseEther("10000")); // 🔧 使用简单值
 
-        feature = new LiquidityProviderFeatureContract(await zeroEx.getAddress(), env.provider, env.txDefaults, abis);
+        // 🔧 使用ethers.getContractAt替代constructor
+        feature = await ethers.getContractAt('ILiquidityProviderFeature', await zeroEx.getAddress()) as LiquidityProviderFeatureContract;
         
         const sandboxFactory = new LiquidityProviderSandbox__factory(signer);
         sandbox = await sandboxFactory.deploy(await zeroEx.getAddress());

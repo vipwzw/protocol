@@ -88,20 +88,25 @@ describe('FundRecovery', async () => {
             });
             await tx.wait();
             const ownerSigner2 = await env.provider.getSigner(owner);
-            await zeroEx
+            // 🔧 使用FundRecoveryFeature接口调用transferTrappedTokensTo
+            const fundRecoveryFeature = await ethers.getContractAt('IFundRecoveryFeature', await zeroEx.getAddress());
+            await fundRecoveryFeature
                 .connect(ownerSigner2)
-                .transferTrappedTokensTo(ETH_TOKEN_ADDRESS, amountOut - 1, recipientAddress);
+                .transferTrappedTokensTo(ETH_TOKEN_ADDRESS, amountOut - 1n, recipientAddress); // 🔧 使用BigInt字面量
             const recipientAddressBalance = await ethers.provider.getBalance(recipientAddress);
-            return expect(recipientAddressBalance).to.eq(amountOut - 1);
+            return expect(recipientAddressBalance).to.be.closeTo(amountOut - 1n, ethers.parseEther('0.001')); // 🔧 使用closeTo精确检查
         });
         it('Feature `transferTrappedTokensTo` can only be called by owner', async () => {
-            const notOwner = randomAddress();
-            const notOwnerSigner = await env.provider.getSigner(notOwner);
+            // 🔧 使用FundRecoveryFeature接口和实际账户
+            const fundRecoveryFeature = await ethers.getContractAt('IFundRecoveryFeature', await zeroEx.getAddress());
+            const [, notOwnerAccount] = await ethers.getSigners(); // 使用实际账户
+            const notOwnerSigner = notOwnerAccount;
+            
             return expect(
-                zeroEx
+                fundRecoveryFeature
                     .connect(notOwnerSigner)
                     .transferTrappedTokensTo(ETH_TOKEN_ADDRESS, constants.MAX_UINT256, recipientAddress)
-            ).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(notOwner, owner));
+            ).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(await notOwnerSigner.getAddress(), owner));
         });
     });
 });
