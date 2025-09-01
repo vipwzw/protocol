@@ -473,7 +473,9 @@ describe('MultiplexFeature', () => {
         [owner, maker, taker] = await env.getAccountAddressesAsync();
         env.txDefaults.from = owner;
         zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {});
-        flashWalletAddress = await zeroEx.getTransformWallet();
+        // 🔧 使用MultiplexFeature接口调用getTransformWallet
+        const multiplexFeature = await ethers.getContractAt('IMultiplexFeature', await zeroEx.getAddress());
+        flashWalletAddress = await multiplexFeature.getTransformWallet();
 
         const signer = await env.provider.getSigner(owner);
         const tokenFactories = [...new Array(3)].map(() => new TestMintableERC20Token__factory(signer));

@@ -84,10 +84,10 @@ describe('MetaTransactions feature', () => {
             const balance = await env.provider.getBalance(possibleSigner);
             if (balance > 0n) {
                 signers.push(possibleSigner);
-                await feeToken
-                    .approve(await zeroEx.getAddress(), MAX_FEE_AMOUNT)
-                    ({ from: possibleSigner });
-                await feeToken.mint(possibleSigner, MAX_FEE_AMOUNT)();
+                // 🔧 使用正确的ethers v6语法
+                const possibleSignerSigner = await env.provider.getSigner(possibleSigner);
+                await feeToken.connect(possibleSignerSigner).approve(await zeroEx.getAddress(), MAX_FEE_AMOUNT);
+                await feeToken.mint(possibleSigner, MAX_FEE_AMOUNT);
             }
         }
     });
