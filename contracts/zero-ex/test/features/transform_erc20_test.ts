@@ -65,13 +65,11 @@ describe('TransformERC20 feature', () => {
             },
             { transformerDeployer },
         );
-        feature = new TransformERC20FeatureContract(
-            await zeroEx.getAddress(),
-            env.provider,
-            { ...env.txDefaults, from: sender },
-            abis,
-        );
-        wallet = new FlashWalletContract(await feature.getTransformWallet(), env.provider, env.txDefaults);
+        // 🔧 使用ethers.getContractAt替代constructor
+        feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress()) as TransformERC20FeatureContract;
+        // 🔧 使用ethers.getContractAt获取FlashWallet
+        const flashWalletAddress = await feature.getTransformWallet();
+        wallet = await ethers.getContractAt('IFlashWallet', flashWalletAddress) as FlashWalletContract;
         const ownerSigner = await env.provider.getSigner(owner);
         await feature.connect(ownerSigner).setQuoteSigner(callDataSigner);
     });

@@ -108,12 +108,13 @@ describe('OtcOrdersFeature', () => {
         contractWallet = await contractWalletFactory.deploy(await zeroEx.getAddress());
         await contractWallet.waitForDeployment();
 
+        // 🔧 使用现代ethers v6语法
         await contractWallet
-            .approveERC20(await makerToken.getAddress(), await zeroEx.getAddress(), MAX_UINT256)
-            ({ from: contractWalletOwner });
+            .connect(contractWalletOwnerSigner)
+            .approveERC20(await makerToken.getAddress(), await zeroEx.getAddress(), MAX_UINT256);
         await contractWallet
-            .approveERC20(await takerToken.getAddress(), await zeroEx.getAddress(), MAX_UINT256)
-            ({ from: contractWalletOwner });
+            .connect(contractWalletOwnerSigner)
+            .approveERC20(await takerToken.getAddress(), await zeroEx.getAddress(), MAX_UINT256);
 
         testUtils = new NativeOrdersTestEnvironment(maker, taker, makerToken, takerToken, zeroEx, ZERO, ZERO, env);
     });

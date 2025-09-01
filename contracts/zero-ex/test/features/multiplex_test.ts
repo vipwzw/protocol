@@ -25,6 +25,7 @@ import {
     MultiplexFeature__factory
 } from '../../src/wrappers';
 import { artifacts } from '../artifacts';
+import { abis } from '../utils/abis'; // 🔧 添加abis导入
 
 import { fullMigrateAsync } from '../utils/migration';
 import { getRandomOtcOrder, getRandomRfqOrder } from '../utils/orders';
@@ -130,28 +131,31 @@ describe('MultiplexFeature', () => {
         sandbox = await sandboxFactory.deploy(await zeroEx.getAddress());
         await sandbox.waitForDeployment();
         
-        const liquidityProviderFactory = new TestLiquidityProvider__factory(signer);
-        liquidityProvider = await liquidityProviderFactory.deploy();
+        // 🔧 使用ethers.getContractFactory替代可能不存在的factory
+        const liquidityProviderFactory = await ethers.getContractFactory('TestLiquidityProvider');
+        liquidityProvider = await liquidityProviderFactory.deploy() as TestLiquidityProviderContract;
         await liquidityProvider.waitForDeployment();
     }
 
     async function migrateUniswapV2ContractsAsync(): Promise<void> {
         const signer = await env.provider.getSigner(owner);
         
-        const sushiFactoryFactory = new TestUniswapV2Factory__factory(signer);
-        sushiFactory = await sushiFactoryFactory.deploy();
+        // 🔧 使用ethers.getContractFactory替代可能不存在的factory
+        const sushiFactoryFactory = await ethers.getContractFactory('TestUniswapV2Factory');
+        sushiFactory = await sushiFactoryFactory.deploy() as TestUniswapV2FactoryContract;
         await sushiFactory.waitForDeployment();
         
-        const uniV2FactoryFactory = new TestUniswapV2Factory__factory(signer);
-        uniV2Factory = await uniV2FactoryFactory.deploy();
+        const uniV2FactoryFactory = await ethers.getContractFactory('TestUniswapV2Factory');
+        uniV2Factory = await uniV2FactoryFactory.deploy() as TestUniswapV2FactoryContract;
         await uniV2Factory.waitForDeployment();
     }
 
     async function migrateUniswapV3ContractsAsync(): Promise<void> {
         const signer = await env.provider.getSigner(owner);
         
-        const uniV3FactoryFactory = new TestUniswapV3Factory__factory(signer);
-        uniV3Factory = await uniV3FactoryFactory.deploy();
+        // 🔧 使用ethers.getContractFactory替代可能不存在的factory
+        const uniV3FactoryFactory = await ethers.getContractFactory('TestUniswapV3Factory');
+        uniV3Factory = await uniV3FactoryFactory.deploy() as TestUniswapV3FactoryContract;
         await uniV3Factory.waitForDeployment();
         
         const featureFactory = new UniswapV3Feature__factory(signer);
@@ -473,9 +477,9 @@ describe('MultiplexFeature', () => {
         [owner, maker, taker] = await env.getAccountAddressesAsync();
         env.txDefaults.from = owner;
         zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {});
-        // 🔧 使用MultiplexFeature接口调用getTransformWallet
-        const multiplexFeature = await ethers.getContractAt('IMultiplexFeature', await zeroEx.getAddress());
-        flashWalletAddress = await multiplexFeature.getTransformWallet();
+        // 🔧 使用ITransformERC20Feature接口调用getTransformWallet
+        const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+        flashWalletAddress = await transformERC20Feature.getTransformWallet();
 
         const signer = await env.provider.getSigner(owner);
         const tokenFactories = [...new Array(3)].map(() => new TestMintableERC20Token__factory(signer));
@@ -508,7 +512,8 @@ describe('MultiplexFeature', () => {
         const transformerFactory = new TestMintTokenERC20Transformer__factory(signer);
         await transformerFactory.deploy();
 
-        const featureFactory = new MultiplexFeature__factory(signer);
+        // 🔧 使用ethers.getContractFactory替代可能不存在的factory
+        const featureFactory = await ethers.getContractFactory('MultiplexFeature');
         const featureImpl = await featureFactory.deploy(
             await zeroEx.getAddress(),
             await weth.getAddress(),
@@ -523,7 +528,8 @@ describe('MultiplexFeature', () => {
         const ownerSigner = await env.provider.getSigner(owner);
         const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
         await ownableFeature.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
-        multiplex = new MultiplexFeatureContract(await zeroEx.getAddress(), env.provider, env.txDefaults, abis);
+        // 🔧 使用ethers.getContractAt替代constructor
+        multiplex = await ethers.getContractAt('IMultiplexFeature', await zeroEx.getAddress()) as MultiplexFeatureContract;
     });
 
     describe('batch sells', () => {
