@@ -38,6 +38,8 @@ describe('UniswapV3Feature', () => {
     let tokens: TestMintableERC20TokenContract[];
     const sellAmount = getRandomPortion(MAX_SUPPLY);
     const buyAmount = getRandomPortion(MAX_SUPPLY);
+    let owner: string; // 🔧 添加缺失的owner变量声明
+    let maker: string; // 🔧 添加缺失的maker变量声明
     let taker: string;
     const recipient = randomAddress();
     let noEthRecipient: TestNoEthRecipientContract;
@@ -92,19 +94,52 @@ describe('UniswapV3Feature', () => {
         );
     });
 
+    // 🔧 状态重置机制：防止测试间干扰（解决POOL_ALREADY_EXISTS问题）
+    let snapshotId: string;
+    
+    before(async () => {
+        snapshotId = await ethers.provider.send("evm_snapshot", []);
+    });
+    
+    beforeEach(async () => {
+        await ethers.provider.send("evm_revert", [snapshotId]);
+        snapshotId = await ethers.provider.send("evm_snapshot", []);
+        
+        // 重新获取账户地址
+        [owner, maker, taker] = await env.getAccountAddressesAsync();
+        env.txDefaults.from = owner;
+        
+        // 重新创建合约实例
+        const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
+        tokens = await Promise.all(tokens.map(async (token) => 
+            await TokenFactory.attach(await token.getAddress()) as TestMintableERC20TokenContract
+        ));
+        
+        const WethFactory = await ethers.getContractFactory('TestWeth');
+        weth = await WethFactory.attach(await weth.getAddress()) as TestWethContract;
+        
+        const UniFactoryFactory = await ethers.getContractFactory('TestUniswapV3Factory');
+        uniFactory = await UniFactoryFactory.attach(await uniFactory.getAddress()) as TestUniswapV3FactoryContract;
+        
+        const FeatureFactory = await ethers.getContractFactory('UniswapV3Feature');
+        feature = await FeatureFactory.attach(await feature.getAddress()) as UniswapV3FeatureContract;
+    });
+
     function isWethContract(t: TestMintableERC20TokenContract | TestWethContract): t is TestWethContract {
         return !!(t as any).deposit;
     }
 
     async function mintToAsync(
         token: TestMintableERC20TokenContract | TestWethContract,
-        owner: string,
+        recipient: string, // 🔧 重命名参数避免与全局变量冲突
         amount: bigint,
     ): Promise<void> {
         if (isWethContract(token)) {
-            await token.depositTo(owner)({ value: amount });
+            // 🔧 使用现代ethers v6语法
+            const recipientSigner = await env.provider.getSigner(recipient);
+            await token.connect(recipientSigner).deposit({ value: amount });
         } else {
-            await token.mint(owner, amount); // 🔧 使用现代ethers v6语法
+            await token.mint(recipient, amount); // 🔧 使用现代ethers v6语法
         }
     }
 
@@ -120,8 +155,13 @@ describe('UniswapV3Feature', () => {
             await token1.getAddress(), 
             BigInt(POOL_FEE)
         );
-        // 🔧 使用ethers.getContractAt获取pool实例
-        const poolAddress = (r.logs[0] as LogWithDecodedArgs<TestUniswapV3FactoryPoolCreatedEventArgs>).args.pool;
+        // 🔧 使用ethers.getContractAt获取pool实例，安全处理事件日志
+        const receipt = await r.wait();
+        const poolCreatedEvent = receipt.logs.find((log: any) => log.fragment?.name === 'PoolCreated');
+        if (!poolCreatedEvent) {
+            throw new Error('PoolCreated event not found');
+        }
+        const poolAddress = (poolCreatedEvent as any).args.pool;
         const pool = await ethers.getContractAt('TestUniswapV3Pool', poolAddress) as TestUniswapV3PoolContract;
         await mintToAsync(token0, await pool.getAddress(), balance0); // 🔧 使用getAddress()
         await mintToAsync(token1, await pool.getAddress(), balance1); // 🔧 使用getAddress()

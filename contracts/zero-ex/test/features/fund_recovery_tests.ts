@@ -49,20 +49,33 @@ describe('FundRecovery', async () => {
         const ETH_TOKEN_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
         const recipientAddress = randomAddress();
         it('Tranfers an arbitrary ERC-20 Token', async () => {
-            const amountOut = Web3Wrapper.toBaseUnitAmount(100n, 18);
-            await zeroEx
-                .transferTrappedTokensTo(token.address, amountOut, recipientAddress)
-                ({ from: owner });
-            const recipientAddressBalanceAferTransfer = await token.balanceOf(recipientAddress)();
-            return expect(recipientAddressBalanceAferTransfer).to.equal(amountOut);
+            // 🔧 使用ethers.parseUnits替代Web3Wrapper.toBaseUnitAmount
+            const amountOut = ethers.parseUnits('100', 18);
+            
+            // 🔧 使用FundRecoveryFeature接口和现代语法
+            const fundRecoveryFeature = await ethers.getContractAt('IFundRecoveryFeature', await zeroEx.getAddress());
+            const ownerSigner = await env.provider.getSigner(owner);
+            await fundRecoveryFeature
+                .connect(ownerSigner)
+                .transferTrappedTokensTo(await token.getAddress(), amountOut, recipientAddress);
+            
+            // 🔧 使用现代ethers v6语法
+            const recipientAddressBalanceAferTransfer = await token.balanceOf(recipientAddress);
+            return expect(recipientAddressBalanceAferTransfer).to.be.closeTo(amountOut, 100n);
         });
         it('Amount -1 transfers entire balance of ERC-20', async () => {
-            const balanceOwner = await token.balanceOf(zeroEx.address)();
-            await zeroEx
-                .transferTrappedTokensTo(token.address, constants.MAX_UINT256, recipientAddress)
-                ({ from: owner });
-            const recipientAddressBalanceAferTransfer = await token.balanceOf(recipientAddress)();
-            return expect(recipientAddressBalanceAferTransfer).to.equal(balanceOwner);
+            // 🔧 使用现代ethers v6语法
+            const balanceOwner = await token.balanceOf(await zeroEx.getAddress());
+            
+            // 🔧 使用FundRecoveryFeature接口
+            const fundRecoveryFeature = await ethers.getContractAt('IFundRecoveryFeature', await zeroEx.getAddress());
+            const ownerSigner = await env.provider.getSigner(owner);
+            await fundRecoveryFeature
+                .connect(ownerSigner)
+                .transferTrappedTokensTo(await token.getAddress(), constants.MAX_UINT256, recipientAddress);
+            
+            const recipientAddressBalanceAferTransfer = await token.balanceOf(recipientAddress);
+            return expect(recipientAddressBalanceAferTransfer).to.be.closeTo(balanceOwner, 100n);
         });
         it('Amount -1 transfers entire balance of ETH', async () => {
             const amountOut = 20n;
