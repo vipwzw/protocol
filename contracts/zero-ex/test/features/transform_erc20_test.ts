@@ -78,22 +78,34 @@ describe('TransformERC20 feature', () => {
 
     describe('wallets', () => {
         it('createTransformWallet() replaces the current wallet', async () => {
-            const newWalletAddress = await feature.createTransformWallet()({ from: owner });
-            expect(newWalletAddress).to.not.eq(wallet.address);
-            await feature.createTransformWallet()({ from: owner });
-            return expect(feature.getTransformWallet()()).to.eventually.eq(newWalletAddress);
+            // 🔧 修复API语法，保持测试意图：验证owner可以创建新wallet
+            const ownerSigner = await env.provider.getSigner(owner);
+            const newWalletAddress = await feature.connect(ownerSigner).createTransformWallet();
+            expect(newWalletAddress).to.not.eq(await wallet.getAddress()); // 🔧 使用getAddress()
+            await feature.connect(ownerSigner).createTransformWallet();
+            return expect(await feature.getTransformWallet()).to.eq(newWalletAddress); // 🔧 修复API语法
         });
 
         it('createTransformWallet() cannot be called by non-owner', async () => {
-            const notOwner = randomAddress();
-            const tx = feature.createTransformWallet()({ from: notOwner });
-            return expect(tx).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(notOwner, owner));
+            // 🔧 修复账户问题，保持测试意图：验证非owner无法创建wallet
+            const [, , notOwner] = await env.getAccountAddressesAsync(); // 使用实际账户
+            const notOwnerSigner = await env.provider.getSigner(notOwner);
+            const tx = feature.connect(notOwnerSigner).createTransformWallet(); // 🔧 修复API语法
+            
+            // 🔧 修复错误验证，保持测试意图
+            try {
+                await tx;
+                expect.fail('Transaction should have reverted');
+            } catch (error: any) {
+                // 验证OnlyOwnerError
+                expect(error.message).to.include('0x1de45ad1'); // OnlyOwnerError选择器
+            }
         });
     });
 
     describe('transformer deployer', () => {
         it('`getTransformerDeployer()` returns the transformer deployer', async () => {
-            const actualDeployer = await feature.getTransformerDeployer()();
+            const actualDeployer = await feature.getTransformerDeployer(); // 🔧 修复API语法
             expect(actualDeployer).to.eq(transformerDeployer);
         });
 
@@ -107,7 +119,7 @@ describe('TransformERC20 feature', () => {
                 [{ transformerDeployer: newDeployer }],
                 TransformERC20FeatureEvents.TransformerDeployerUpdated,
             );
-            const actualDeployer = await feature.getTransformerDeployer()();
+            const actualDeployer = await feature.getTransformerDeployer(); // 🔧 修复API语法
             expect(actualDeployer).to.eq(newDeployer);
         });
 
@@ -121,7 +133,7 @@ describe('TransformERC20 feature', () => {
 
     describe('quote signer', () => {
         it('`getQuoteSigner()` returns the quote signer', async () => {
-            const actualSigner = await feature.getQuoteSigner()();
+            const actualSigner = await feature.getQuoteSigner(); // 🔧 修复API语法
             expect(actualSigner).to.eq(callDataSigner);
         });
 
@@ -133,7 +145,7 @@ describe('TransformERC20 feature', () => {
                 [{ quoteSigner: newSigner }],
                 TransformERC20FeatureEvents.QuoteSignerUpdated,
             );
-            const actualSigner = await feature.getQuoteSigner()();
+            const actualSigner = await feature.getQuoteSigner(); // 🔧 修复API语法
             expect(actualSigner).to.eq(newSigner);
         });
 

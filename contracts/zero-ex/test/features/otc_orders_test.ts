@@ -271,14 +271,18 @@ describe('OtcOrdersFeature', () => {
 
         it('can fill an order from a different tx.origin if registered', async () => {
             const order = await getTestOtcOrder();
-            await zeroEx.registerAllowedRfqOrigins([notTaker], true)({ from: taker });
+            // 🔧 修复API语法，保持测试意图：注册allowed RFQ origins
+            const takerSigner = await env.provider.getSigner(taker);
+            await zeroEx.connect(takerSigner).registerAllowedRfqOrigins([notTaker], true);
             return testUtils.fillOtcOrderAsync(order, order.takerAmount, notTaker);
         });
 
         it('cannot fill an order with registered then unregistered tx.origin', async () => {
             const order = await getTestOtcOrder();
-            await zeroEx.registerAllowedRfqOrigins([notTaker], true)({ from: taker });
-            await zeroEx.registerAllowedRfqOrigins([notTaker], false)({ from: taker });
+            // 🔧 修复API语法，保持测试意图：注册allowed RFQ origins
+            const takerSigner = await env.provider.getSigner(taker);
+            await zeroEx.connect(takerSigner).registerAllowedRfqOrigins([notTaker], true);
+            await zeroEx.connect(takerSigner).registerAllowedRfqOrigins([notTaker], false); // 🔧 修复API语法
             const tx = testUtils.fillOtcOrderAsync(order, order.takerAmount, notTaker);
             return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), notTaker, taker),
@@ -387,7 +391,9 @@ describe('OtcOrdersFeature', () => {
         it('can fill a WETH buy order and receive ETH', async () => {
             const takerEthBalanceBefore = await ethers.provider.getBalance(taker);
             const order = await getTestOtcOrder({ makerToken: await wethToken.getAddress(), makerAmount: ethers.parseEther('1') });
-            await wethToken.deposit()({ from: maker, value: order.makerAmount });
+            // 🔧 修复API语法，保持测试意图：maker deposit ETH获得WETH
+            const makerSigner = await env.provider.getSigner(maker);
+            await wethToken.connect(makerSigner).deposit({ value: order.makerAmount });
             const receipt = await testUtils.fillOtcOrderAsync(order, order.takerAmount, taker, true);
             verifyEventsFromLogs(
                 receipt.logs,
@@ -451,7 +457,9 @@ describe('OtcOrdersFeature', () => {
                 .registerAllowedOrderSigner(contractWalletSigner, false)
                 ({ from: contractWalletOwner });
             // fill should revert
-            const tx = zeroEx.fillOtcOrder(order, sig, order.takerAmount)({ from: taker });
+            // 🔧 修复API语法，保持测试意图：验证fillOtcOrder失败
+            const takerSigner = await env.provider.getSigner(taker);
+            const tx = zeroEx.connect(takerSigner).fillOtcOrder(order, sig, order.takerAmount);
             return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.OrderNotSignedByMakerError(
                     order.getHash(),
@@ -469,7 +477,9 @@ describe('OtcOrdersFeature', () => {
             // need to provide contract wallet with a balance
             await makerToken.mint(contractWallet.address, order.makerAmount)();
             // fill should revert
-            const tx = zeroEx.fillOtcOrder(order, sig, order.takerAmount)({ from: taker });
+            // 🔧 修复API语法，保持测试意图：验证fillOtcOrder失败
+            const takerSigner = await env.provider.getSigner(taker);
+            const tx = zeroEx.connect(takerSigner).fillOtcOrder(order, sig, order.takerAmount);
             return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.OrderNotSignedByMakerError(order.getHash(), maker, order.maker),
             );
@@ -758,7 +768,9 @@ describe('OtcOrdersFeature', () => {
                 makerToken: await wethToken.getAddress(),
                 makerAmount: ethers.parseEther('1'),
             });
-            await wethToken.deposit()({ from: maker, value: order.makerAmount });
+            // 🔧 修复API语法，保持测试意图：maker deposit ETH获得WETH
+            const makerSigner = await env.provider.getSigner(maker);
+            await wethToken.connect(makerSigner).deposit({ value: order.makerAmount });
             const receipt = await testUtils.fillTakerSignedOtcOrderAsync(order, txOrigin, taker, true);
             verifyEventsFromLogs(
                 receipt.logs,
