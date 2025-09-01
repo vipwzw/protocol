@@ -115,7 +115,8 @@ describe('MetaTransactions feature', () => {
         it('generates the correct hash', async () => {
             const mtx = await getRandomMetaTransaction();
             const expected = mtx.getHash();
-            const actual = await feature.getMetaTransactionHash(mtx)();
+            // 🔧 修复API语法，保持测试意图：验证hash计算的正确性
+            const actual = await feature.getMetaTransactionHash(mtx);
             expect(actual).to.eq(expected);
         });
     });
