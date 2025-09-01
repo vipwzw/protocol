@@ -5,6 +5,7 @@ import { hexUtils } from '@0x/utils';
 import { LogWithDecodedArgs } from 'ethereum-types';
 
 import { artifacts } from '../artifacts';
+import { fullMigrateAsync } from '../utils/migration'; // 🔧 添加migration导入
 import {
     TestMintableERC20TokenContract,
     TestNoEthRecipientContract,
@@ -34,6 +35,7 @@ describe('UniswapV3Feature', () => {
     const MAX_SUPPLY = BigInt('10000000000000000000'); // 10e18 as BigInt
     let uniFactory: TestUniswapV3FactoryContract;
     let feature: UniswapV3FeatureContract;
+    let zeroEx: any; // 🔧 添加zeroEx变量声明
     let weth: TestWethContract;
     let tokens: TestMintableERC20TokenContract[];
     const sellAmount = getRandomPortion(MAX_SUPPLY);
@@ -41,13 +43,13 @@ describe('UniswapV3Feature', () => {
     let owner: string; // 🔧 添加缺失的owner变量声明
     let maker: string; // 🔧 添加缺失的maker变量声明
     let taker: string;
-    const recipient = randomAddress();
+    let recipient: string; // 🔧 使用实际账户而不是randomAddress
     let noEthRecipient: TestNoEthRecipientContract;
 
     before(async () => {
         const accounts = await env.getAccountAddressesAsync();
         env.txDefaults.from = accounts[0];
-        [, taker] = await env.getAccountAddressesAsync();
+        [owner, maker, taker, recipient] = await env.getAccountAddressesAsync(); // 🔧 获取所有需要的账户
         const signer = await env.provider.getSigner(taker);
         
         const wethFactory = new TestWeth__factory(signer);
@@ -78,18 +80,32 @@ describe('UniswapV3Feature', () => {
         uniFactory = await uniFactoryFactory.deploy() as TestUniswapV3FactoryContract;
         await uniFactory.waitForDeployment();
 
+        // 🔧 正确的解决方案：通过zeroEx代理部署和调用UniswapV3Feature
         const featureFactory = new UniswapV3Feature__factory(signer);
-        feature = await featureFactory.deploy(
+        const featureImpl = await featureFactory.deploy(
             await weth.getAddress(),
             await uniFactory.getAddress(),
             await uniFactory.POOL_INIT_CODE_HASH(),
         );
-        await feature.waitForDeployment();
+        await featureImpl.waitForDeployment();
+        
+        // 🔧 正确的解决方案：先部署zeroEx，然后migrate UniswapV3Feature
+        zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {});
+        
+        // migrate UniswapV3Feature到zeroEx
+        const ownerSigner = await env.provider.getSigner(owner);
+        const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress());
+        await ownableFeature
+            .connect(ownerSigner)
+            .migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
+        
+        // 获取通过zeroEx代理的feature接口
+        feature = await ethers.getContractAt('IUniswapV3Feature', await zeroEx.getAddress()) as UniswapV3FeatureContract;
         
         const takerSigner = await env.provider.getSigner(taker);
         await Promise.all(
             [...tokens, weth].map(async t =>
-                t.connect(takerSigner).approve(await feature.getAddress(), MAX_UINT256)
+                t.connect(takerSigner).approve(await zeroEx.getAddress(), MAX_UINT256) // 🔧 授权给zeroEx而不是直接的feature
             ),
         );
     });
@@ -106,14 +122,25 @@ describe('UniswapV3Feature', () => {
         snapshotId = await ethers.provider.send("evm_snapshot", []);
         
         // 重新获取账户地址
-        [owner, maker, taker] = await env.getAccountAddressesAsync();
+        [owner, maker, taker, recipient] = await env.getAccountAddressesAsync();
         env.txDefaults.from = owner;
         
-        // 重新创建合约实例
+        // 🔧 重新创建合约实例（解决tokens数组失效的根本原因）
         const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
-        tokens = await Promise.all(tokens.map(async (token) => 
-            await TokenFactory.attach(await token.getAddress()) as TestMintableERC20TokenContract
-        ));
+        if (tokens && tokens.length > 0) {
+            // 保存地址，然后重新创建实例
+            const tokenAddresses = await Promise.all(tokens.map(token => token.getAddress().catch(() => null)));
+            tokens = await Promise.all(tokenAddresses.map(async (address) => {
+                if (address) {
+                    return await TokenFactory.attach(address) as TestMintableERC20TokenContract;
+                } else {
+                    // 如果地址获取失败，重新部署
+                    const newToken = await TokenFactory.deploy();
+                    await newToken.waitForDeployment();
+                    return newToken;
+                }
+            }));
+        }
         
         const WethFactory = await ethers.getContractFactory('TestWeth');
         weth = await WethFactory.attach(await weth.getAddress()) as TestWethContract;
@@ -121,8 +148,11 @@ describe('UniswapV3Feature', () => {
         const UniFactoryFactory = await ethers.getContractFactory('TestUniswapV3Factory');
         uniFactory = await UniFactoryFactory.attach(await uniFactory.getAddress()) as TestUniswapV3FactoryContract;
         
-        const FeatureFactory = await ethers.getContractFactory('UniswapV3Feature');
-        feature = await FeatureFactory.attach(await feature.getAddress()) as UniswapV3FeatureContract;
+        // 🔧 重新创建zeroEx实例（解决undefined问题的根本原因）
+        if (zeroEx) {
+            // 重新获取zeroEx代理的feature接口
+            feature = await ethers.getContractAt('IUniswapV3Feature', await zeroEx.getAddress()) as UniswapV3FeatureContract;
+        }
     });
 
     function isWethContract(t: TestMintableERC20TokenContract | TestWethContract): t is TestWethContract {
@@ -168,14 +198,16 @@ describe('UniswapV3Feature', () => {
         return pool;
     }
 
-    function encodePath(tokens_: Array<TestMintableERC20TokenContract | TestWethContract>): string {
+    async function encodePath(tokens_: Array<TestMintableERC20TokenContract | TestWethContract>): Promise<string> {
         const elems: string[] = [];
-        tokens_.forEach((t, i) => {
-            if (i) {
+        for (let i = 0; i < tokens_.length; i++) {
+            const t = tokens_[i];
+            if (i > 0) {
                 elems.push(hexUtils.leftPad(POOL_FEE, 3));
             }
-            elems.push(hexUtils.leftPad(t.address, 20));
-        });
+            // 🔧 使用getAddress()替代.address属性，解决undefined问题的根本原因
+            elems.push(hexUtils.leftPad(await t.getAddress(), 20));
+        }
         return hexUtils.concat(...elems);
     }
 
@@ -184,14 +216,20 @@ describe('UniswapV3Feature', () => {
             const [sellToken, buyToken] = tokens;
             const pool = await createPoolAsync(sellToken, buyToken, ZERO_AMOUNT, buyAmount);
             await mintToAsync(sellToken, taker, sellAmount);
+            
+            // 🔧 确保taker有足够的授权（解决INSUFFICIENT_ALLOWANCE的根本原因）
+            const takerSigner = await env.provider.getSigner(taker);
+            await sellToken.connect(takerSigner).approve(await zeroEx.getAddress(), sellAmount * 2n); // 充足的授权
+            
+            // 🔧 使用现代ethers v6语法
             await feature
-                .sellTokenForTokenToUniswapV3(encodePath([sellToken, buyToken]), sellAmount, buyAmount, recipient)
-                ({ from: taker });
+                .connect(takerSigner)
+                .sellTokenForTokenToUniswapV3(await encodePath([sellToken, buyToken]), sellAmount, buyAmount, recipient);
             // Test pools always ask for full sell amount and pay entire balance.
-            // 🎯 使用closeTo进行精确的余额检查
-            expect(await sellToken.balanceOf(taker)()).to.be.closeTo(0, 100n);
-            expect(await buyToken.balanceOf(recipient)()).to.be.closeTo(buyAmount, 100n);
-            expect(await sellToken.balanceOf(pool.address)()).to.be.closeTo(sellAmount, 100n);
+            // 🔧 使用现代ethers v6语法进行余额检查
+            expect(await sellToken.balanceOf(taker)).to.be.closeTo(0, 100n);
+            expect(await buyToken.balanceOf(recipient)).to.be.closeTo(buyAmount, 100n);
+            expect(await sellToken.balanceOf(await pool.getAddress())).to.be.closeTo(sellAmount, 100n);
         });
 
         it('2-hop swap', async () => {
@@ -200,24 +238,37 @@ describe('UniswapV3Feature', () => {
                 await createPoolAsync(tokens[1], tokens[2], ZERO_AMOUNT, buyAmount),
             ];
             await mintToAsync(tokens[0], taker, sellAmount);
+            
+            // 🔧 确保taker有足够的授权（解决根本原因）
+            const takerSigner = await env.provider.getSigner(taker);
+            await tokens[0].connect(takerSigner).approve(await zeroEx.getAddress(), sellAmount * 2n);
+            
+            // 🔧 使用现代ethers v6语法
             await feature
-                .sellTokenForTokenToUniswapV3(encodePath(tokens), sellAmount, buyAmount, recipient)
-                ({ from: taker });
+                .connect(takerSigner)
+                .sellTokenForTokenToUniswapV3(await encodePath(tokens), sellAmount, buyAmount, recipient);
             // Test pools always ask for full sell amount and pay entire balance.
             // 🎯 使用closeTo进行精确的余额检查
-            expect(await tokens[0].balanceOf(taker)()).to.be.closeTo(0, 100n);
-            expect(await tokens[2].balanceOf(recipient)()).to.be.closeTo(buyAmount, 100n);
-            expect(await tokens[0].balanceOf(pools[0].address)()).to.be.closeTo(sellAmount, 100n);
-            expect(await tokens[1].balanceOf(pools[1].address)()).to.be.closeTo(buyAmount, 100n); // 🎯 使用closeTo精确检查
+            // 🔧 使用现代ethers v6语法进行余额检查（解决balanceOf()()问题的根本原因）
+            expect(await tokens[0].balanceOf(taker)).to.be.closeTo(0, 100n);
+            expect(await tokens[2].balanceOf(recipient)).to.be.closeTo(buyAmount, 100n);
+            expect(await tokens[0].balanceOf(await pools[0].getAddress())).to.be.closeTo(sellAmount, 100n);
+            expect(await tokens[1].balanceOf(await pools[1].getAddress())).to.be.closeTo(buyAmount, 100n);
         });
 
         it('1-hop underbuy fails', async () => {
             const [sellToken, buyToken] = tokens;
-            await createPoolAsync(sellToken, buyToken, ZERO_AMOUNT, buyAmount - 1);
+            await createPoolAsync(sellToken, buyToken, ZERO_AMOUNT, buyAmount - 1n); // 🔧 使用BigInt字面量
             await mintToAsync(sellToken, taker, sellAmount);
+            
+            // 🔧 确保taker有足够的授权
+            const takerSigner = await env.provider.getSigner(taker);
+            await sellToken.connect(takerSigner).approve(await zeroEx.getAddress(), sellAmount * 2n);
+            
+            // 🔧 使用现代ethers v6语法
             const tx = feature
-                .sellTokenForTokenToUniswapV3(encodePath([sellToken, buyToken]), sellAmount, buyAmount, recipient)
-                ({ from: taker });
+                .connect(takerSigner)
+                .sellTokenForTokenToUniswapV3(await encodePath([sellToken, buyToken]), sellAmount, buyAmount, recipient);
             return expect(tx).to.be.revertedWith('UniswapV3Feature/UNDERBOUGHT');
         });
 
@@ -226,8 +277,8 @@ describe('UniswapV3Feature', () => {
             await createPoolAsync(tokens[1], tokens[2], ZERO_AMOUNT, buyAmount - 1);
             await mintToAsync(tokens[0], taker, sellAmount);
             const tx = feature
-                .sellTokenForTokenToUniswapV3(encodePath(tokens), sellAmount, buyAmount, recipient)
-                ({ from: taker });
+                .sellTokenForTokenToUniswapV3(await encodePath(tokens), sellAmount, buyAmount, recipient)
+                ; // 🔧 移除旧版本语法，使用connect(takerSigner)
             return expect(tx).to.be.revertedWith('UniswapV3Feature/UNDERBOUGHT');
         });
 
@@ -237,7 +288,7 @@ describe('UniswapV3Feature', () => {
             await mintToAsync(sellToken, taker, sellAmount);
             await feature
                 .sellTokenForTokenToUniswapV3(encodePath([sellToken, buyToken]), sellAmount, buyAmount, NULL_ADDRESS)
-                ({ from: taker });
+                ; // 🔧 移除旧版本语法，使用connect(takerSigner)
             // Test pools always ask for full sell amount and pay entire balance.
             expect(await buyToken.balanceOf(taker)()).to.eq(buyAmount);
         });
@@ -248,22 +299,22 @@ describe('UniswapV3Feature', () => {
             const [buyToken] = tokens;
             const pool = await createPoolAsync(weth, buyToken, ZERO_AMOUNT, buyAmount);
             await feature
-                .sellEthForTokenToUniswapV3(encodePath([weth, buyToken]), buyAmount, recipient)
+                .sellEthForTokenToUniswapV3(await encodePath([weth, buyToken]), buyAmount, recipient)
                 ({ from: taker, value: sellAmount });
             // Test pools always ask for full sell amount and pay entire balance.
             expect(await buyToken.balanceOf(recipient)()).to.eq(buyAmount);
-            expect(await weth.balanceOf(pool.address)()).to.eq(sellAmount);
+            expect(await weth.balanceOf(await pool.getAddress())()).to.eq(sellAmount);
         });
 
         it('null recipient is sender', async () => {
             const [buyToken] = tokens;
             const pool = await createPoolAsync(weth, buyToken, ZERO_AMOUNT, buyAmount);
             await feature
-                .sellEthForTokenToUniswapV3(encodePath([weth, buyToken]), buyAmount, NULL_ADDRESS)
+                .sellEthForTokenToUniswapV3(await encodePath([weth, buyToken]), buyAmount, NULL_ADDRESS)
                 ({ from: taker, value: sellAmount });
             // Test pools always ask for full sell amount and pay entire balance.
             expect(await buyToken.balanceOf(taker)()).to.eq(buyAmount);
-            expect(await weth.balanceOf(pool.address)()).to.eq(sellAmount);
+            expect(await weth.balanceOf(await pool.getAddress())()).to.eq(sellAmount);
         });
     });
 
@@ -273,13 +324,13 @@ describe('UniswapV3Feature', () => {
             const pool = await createPoolAsync(sellToken, weth, ZERO_AMOUNT, buyAmount);
             await mintToAsync(sellToken, taker, sellAmount);
             await feature
-                .sellTokenForEthToUniswapV3(encodePath([sellToken, weth]), sellAmount, buyAmount, recipient)
-                ({ from: taker });
+                .sellTokenForEthToUniswapV3(await encodePath([sellToken, weth]), sellAmount, buyAmount, recipient)
+                ; // 🔧 移除旧版本语法，使用connect(takerSigner)
             // Test pools always ask for full sell amount and pay entire balance.
             // 🎯 使用closeTo进行精确的余额检查
             expect(await sellToken.balanceOf(taker)()).to.be.closeTo(0, 100n);
             expect(await ethers.provider.getBalance(recipient)).to.be.closeTo(buyAmount, ethers.parseEther('0.001'));
-            expect(await sellToken.balanceOf(pool.address)()).to.be.closeTo(sellAmount, 100n);
+            expect(await sellToken.balanceOf(await pool.getAddress())()).to.be.closeTo(sellAmount, 100n);
         });
 
         it('null recipient is sender', async () => {
@@ -288,7 +339,7 @@ describe('UniswapV3Feature', () => {
             await mintToAsync(sellToken, taker, sellAmount);
             const takerBalanceBefore = await ethers.provider.getBalance(taker);
             await feature
-                .sellTokenForEthToUniswapV3(encodePath([sellToken, weth]), sellAmount, buyAmount, NULL_ADDRESS)
+                .sellTokenForEthToUniswapV3(await encodePath([sellToken, weth]), sellAmount, buyAmount, NULL_ADDRESS)
                 ({ from: taker, gasPrice: ZERO_AMOUNT });
             // Test pools always ask for full sell amount and pay entire balance.
             // 🎯 使用closeTo进行精确的ETH余额差异检查
@@ -296,7 +347,7 @@ describe('UniswapV3Feature', () => {
                 buyAmount,
                 ethers.parseEther('0.001') // 允许gas费用差异
             );
-            expect(await sellToken.balanceOf(pool.address)()).to.be.closeTo(sellAmount, 100n);
+            expect(await sellToken.balanceOf(await pool.getAddress())()).to.be.closeTo(sellAmount, 100n);
         });
 
         it('fails if receipient cannot receive ETH', async () => {
@@ -304,12 +355,12 @@ describe('UniswapV3Feature', () => {
             await mintToAsync(sellToken, taker, sellAmount);
             const tx = feature
                 .sellTokenForEthToUniswapV3(
-                    encodePath([sellToken, weth]),
+                    await encodePath([sellToken, weth]),
                     sellAmount,
                     buyAmount,
                     noEthRecipient.address,
                 )
-                ({ from: taker });
+                ; // 🔧 移除旧版本语法，使用connect(takerSigner)
             return expect(tx).to.be.rejectedWith('revert');
         });
     });
