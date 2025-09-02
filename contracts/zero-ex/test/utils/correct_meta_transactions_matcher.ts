@@ -221,12 +221,11 @@ export class CorrectMetaTransactionsMatcher {
             throw new Error("交易应该失败但没有失败");
         } catch (error: any) {
             // 基于业务逻辑构造预期错误
-            const expectedError = new ZeroExRevertErrors.SignatureValidator.SignatureValidationError(
-                expectedCode,    // 基于测试场景确定（如 WRONG_SIGNER = 4）
-                expectedHash,    // MetaTransaction hash
-                expectedSigner,  // 预期的签名者
-                usedSignature    // 测试中使用的签名
-            );
+            const expectedError = new ZeroExRevertErrors.SignatureValidator.SignatureValidationError();
+            expectedError.code = expectedCode;        // 基于测试场景确定（如 WRONG_SIGNER = 4）
+            expectedError.hash = expectedHash;        // MetaTransaction hash
+            expectedError.signerAddress = expectedSigner;  // 预期的签名者
+            expectedError.signature = usedSignature;      // 测试中使用的签名
             
             // 直接比较编码结果
             if (error.data !== expectedError.encode()) {

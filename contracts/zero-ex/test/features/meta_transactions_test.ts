@@ -3,7 +3,7 @@ import { constants, getRandomInteger, randomAddress } from '@0x/utils';
 import { expect } from 'chai';
 import { MetaTransaction, MetaTransactionFields } from '@0x/protocol-utils';
 import { hexUtils, StringRevertError, ZeroExRevertErrors } from '@0x/utils';
-import { ErrorMatcher } from '../utils/error_matcher';
+import { CorrectMetaTransactionsMatcher } from '../utils/correct_meta_transactions_matcher';
 import * as _ from 'lodash';
 
 import { IZeroExContract, MetaTransactionsFeatureContract } from '../wrappers';
@@ -498,11 +498,11 @@ describe('MetaTransactions feature', () => {
                 gasPrice: mtx.minGasPrice,
                 value: mtx.value,
             };
-            // 🔧 使用封装的 ErrorMatcher 进行完整匹配
-            await ErrorMatcher.expectMetaTransactionUnsupportedFunctionError(
+            // ✅ 基于业务逻辑构造错误：函数选择器从 callData 中已知
+            await CorrectMetaTransactionsMatcher.expectMetaTransactionUnsupportedFunctionError(
                 feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts),
                 mtxHash,
-                hexUtils.slice(mtx.callData, 0, 4)
+                hexUtils.slice(mtx.callData, 0, 4) // 从测试构造的 callData 中提取
             );
         });
 
@@ -518,13 +518,14 @@ describe('MetaTransactions feature', () => {
                 gasPrice: mtx.minGasPrice,
                 value: mtx.value,
             };
-            const receipt = await feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts);
+            const tx = await feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts);
+            const receipt = await tx.wait();
             
-            // 🔧 使用封装的 ErrorMatcher 进行完整匹配
-            await ErrorMatcher.expectMetaTransactionAlreadyExecutedError(
+            // ✅ 基于业务逻辑构造错误：从第一次执行的 receipt 获取 blockNumber
+            await CorrectMetaTransactionsMatcher.expectMetaTransactionAlreadyExecutedError(
                 feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts),
                 mtxHash,
-                receipt.blockNumber
+                receipt! // 传入第一次执行的 receipt
             );
         });
 
@@ -538,12 +539,12 @@ describe('MetaTransactions feature', () => {
                 gasPrice: mtx.minGasPrice,
                 value: mtx.value - 1n,
             };
-            // 🔧 使用封装的 ErrorMatcher 进行完整匹配
-            await ErrorMatcher.expectMetaTransactionInsufficientEthError(
+            // ✅ 基于业务逻辑构造错误：ETH 数量都是测试中已知的
+            await CorrectMetaTransactionsMatcher.expectMetaTransactionInsufficientEthError(
                 feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts),
                 mtxHash,
-                callOpts.value,
-                mtx.value
+                callOpts.value, // 实际发送的 ETH（不足）
+                mtx.value       // MetaTransaction 需要的 ETH
             );
         });
 
@@ -558,13 +559,13 @@ describe('MetaTransactions feature', () => {
                 gasPrice: mtx.minGasPrice - 1n,
                 value: mtx.value,
             };
-            // 🔧 使用封装的 ErrorMatcher 进行完整匹配
-            await ErrorMatcher.expectMetaTransactionGasPriceError(
+            // ✅ 基于业务逻辑构造错误：所有 gas price 参数都是测试中已知的
+            await CorrectMetaTransactionsMatcher.expectMetaTransactionGasPriceError(
                 feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts),
                 mtxHash,
-                callOpts.gasPrice,
-                mtx.minGasPrice,
-                mtx.maxGasPrice
+                callOpts.gasPrice, // 实际使用的 gas price（过低）
+                mtx.minGasPrice,   // MetaTransaction 的最小 gas price
+                mtx.maxGasPrice    // MetaTransaction 的最大 gas price
             );
         });
 
@@ -579,13 +580,13 @@ describe('MetaTransactions feature', () => {
                 gasPrice: mtx.maxGasPrice + 1n,
                 value: mtx.value,
             };
-            // 🔧 使用封装的 ErrorMatcher 进行完整匹配
-            await ErrorMatcher.expectMetaTransactionGasPriceError(
+            // ✅ 基于业务逻辑构造错误：所有 gas price 参数都是测试中已知的
+            await CorrectMetaTransactionsMatcher.expectMetaTransactionGasPriceError(
                 feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts),
                 mtxHash,
-                callOpts.gasPrice,
-                mtx.minGasPrice,
-                mtx.maxGasPrice
+                callOpts.gasPrice, // 实际使用的 gas price（过高）
+                mtx.minGasPrice,   // MetaTransaction 的最小 gas price
+                mtx.maxGasPrice    // MetaTransaction 的最大 gas price
             );
         });
 
@@ -600,11 +601,12 @@ describe('MetaTransactions feature', () => {
                 gasPrice: mtx.maxGasPrice,
                 value: mtx.value,
             };
-            // 🔧 使用封装的 ErrorMatcher 进行完整匹配
-            await ErrorMatcher.expectMetaTransactionExpiredError(
+            // ✅ 基于业务逻辑构造错误：通过 provider 获取当前时间戳
+            await CorrectMetaTransactionsMatcher.expectMetaTransactionExpiredError(
                 feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts),
                 mtxHash,
-                mtx.expirationTimeSeconds
+                mtx.expirationTimeSeconds,
+                env.provider // 提供 provider 以获取当前区块时间戳
             );
         });
 
@@ -619,13 +621,12 @@ describe('MetaTransactions feature', () => {
                 gasPrice: mtx.maxGasPrice,
                 value: mtx.value,
             };
-            // 🔧 使用封装的 ErrorMatcher 进行完整匹配
-            // 实际的 sender 是执行交易的账户（owner，即 signers[0]）
-            await ErrorMatcher.expectMetaTransactionWrongSenderError(
+            // ✅ 基于业务逻辑构造错误：sender 地址都是测试中已知的
+            await CorrectMetaTransactionsMatcher.expectMetaTransactionWrongSenderError(
                 feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts),
                 mtxHash,
-                owner, // 这是实际执行交易的账户地址
-                requiredSender
+                owner,         // 实际执行交易的账户（测试中已知）
+                requiredSender // MetaTransaction 中指定的 sender（测试中已知）
             );
         });
 
@@ -640,12 +641,13 @@ describe('MetaTransactions feature', () => {
                 gasPrice: mtx.maxGasPrice,
                 value: mtx.value,
             };
-            // 🔧 使用封装的 ErrorMatcher 进行完整匹配
-            await ErrorMatcher.expectSignatureValidationError(
+            // ✅ 基于业务逻辑构造错误：签名验证参数都是测试中已知的
+            await CorrectMetaTransactionsMatcher.expectSignatureValidationError(
                 feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts),
-                mtxHash,
-                mtx.signer,
-                4 // WRONG_SIGNER
+                4,         // WRONG_SIGNER - 基于测试场景确定
+                mtxHash,   // MetaTransaction hash
+                mtx.signer, // 预期的签名者
+                signature.signature   // 获取签名的 hex 字符串
             );
         });
 
@@ -662,11 +664,14 @@ describe('MetaTransactions feature', () => {
                 gasPrice: mtx.maxGasPrice,
                 value: mtx.value,
             };
-            // 🔧 使用封装的 ErrorMatcher 进行完整匹配
-            await ErrorMatcher.expectMetaTransactionCallFailedError(
+            // ✅ 基于业务逻辑构造错误：callData 已知，returnData 需要分析重入错误
+            // 对于重入错误，我们知道会返回 reentrancy guard 的错误信息
+            const expectedReturnData = '0x'; // 重入错误通常返回空数据或特定错误
+            await CorrectMetaTransactionsMatcher.expectMetaTransactionCallFailedError(
                 feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts),
-                mtxHash
-                // callData 和 returnData 参数复杂，只验证 mtxHash
+                mtxHash,
+                mtx.callData,        // 测试中构造的 callData
+                expectedReturnData   // 基于重入场景分析的 returnData
             );
         });
 
@@ -683,11 +688,13 @@ describe('MetaTransactions feature', () => {
                 gasPrice: mtx.maxGasPrice,
                 value: mtx.value,
             };
-            // 🔧 使用封装的 ErrorMatcher 进行完整匹配
-            await ErrorMatcher.expectMetaTransactionCallFailedError(
+            // ✅ 基于业务逻辑构造错误：callData 已知，returnData 需要分析批量重入错误
+            const expectedReturnData = '0x'; // 批量重入错误通常返回空数据或特定错误
+            await CorrectMetaTransactionsMatcher.expectMetaTransactionCallFailedError(
                 feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts),
-                mtxHash
-                // callData 和 returnData 参数复杂，只验证 mtxHash
+                mtxHash,
+                mtx.callData,        // 测试中构造的 callData
+                expectedReturnData   // 基于批量重入场景分析的 returnData
             );
         });
 
@@ -754,12 +761,19 @@ describe('MetaTransactions feature', () => {
                 value: mtxs.map(m => m.value).reduce((a, b) => a + b, 0n),
             };
             const signerForCall = await env.provider.getSigner(owner);
-            // 🔧 使用封装的 ErrorMatcher 进行完整匹配
-            // 不验证具体的 block number，因为它可能在执行时发生变化
-            await ErrorMatcher.expectMetaTransactionAlreadyExecutedError(
+            
+            // 先执行一次以获取 receipt
+            const firstTx = await feature.connect(signerForCall).batchExecuteMetaTransactions([mtxToStruct(mtx)], [signatures[0]], {
+                gasPrice: mtx.minGasPrice,
+                value: mtx.value,
+            });
+            const firstReceipt = await firstTx.wait();
+            
+            // ✅ 基于业务逻辑构造错误：从第一次执行的 receipt 获取 blockNumber
+            await CorrectMetaTransactionsMatcher.expectMetaTransactionAlreadyExecutedError(
                 feature.connect(signerForCall).batchExecuteMetaTransactions(mtxs.map(mtxToStruct), signatures, callOpts),
                 mtxHash,
-                0 // 使用 0 作为占位符，ErrorMatcher 会使用实际的 block number
+                firstReceipt! // 传入第一次执行的 receipt
             );
         });
 
@@ -777,11 +791,13 @@ describe('MetaTransactions feature', () => {
                 value: mtx.value,
             };
             const signerForCall = await env.provider.getSigner(mtx.signer);
-            // 🔧 使用封装的 ErrorMatcher 进行完整匹配
-            await ErrorMatcher.expectMetaTransactionCallFailedError(
+            // ✅ 基于业务逻辑构造错误：callData 已知，returnData 需要分析失败原因
+            const expectedReturnData = '0x'; // 失败的 MetaTransaction 通常返回空数据或特定错误
+            await CorrectMetaTransactionsMatcher.expectMetaTransactionCallFailedError(
                 feature.connect(signerForCall).batchExecuteMetaTransactions([mtxToStruct(mtx)], [signature], callOpts),
-                mtxHash
-                // callData 和 returnData 参数复杂，只验证 mtxHash
+                mtxHash,
+                mtx.callData,        // 测试中构造的 callData
+                expectedReturnData   // 基于失败场景分析的 returnData
             );
         });
 
@@ -799,11 +815,13 @@ describe('MetaTransactions feature', () => {
                 value: mtx.value,
             };
             const signerForCall = await env.provider.getSigner(mtx.signer);
-            // 🔧 使用封装的 ErrorMatcher 进行完整匹配
-            await ErrorMatcher.expectMetaTransactionCallFailedError(
+            // ✅ 基于业务逻辑构造错误：callData 已知，returnData 需要分析重入错误
+            const expectedReturnData = '0x'; // 重入错误通常返回空数据或特定错误
+            await CorrectMetaTransactionsMatcher.expectMetaTransactionCallFailedError(
                 feature.connect(signerForCall).batchExecuteMetaTransactions([mtxToStruct(mtx)], [signature], callOpts),
-                mtxHash
-                // callData 和 returnData 参数复杂，只验证 mtxHash
+                mtxHash,
+                mtx.callData,        // 测试中构造的 callData
+                expectedReturnData   // 基于重入场景分析的 returnData
             );
         });
 
@@ -821,11 +839,13 @@ describe('MetaTransactions feature', () => {
                 value: mtx.value,
             };
             const signerForCall = await env.provider.getSigner(mtx.signer);
-            // 🔧 使用封装的 ErrorMatcher 进行完整匹配
-            await ErrorMatcher.expectMetaTransactionCallFailedError(
+            // ✅ 基于业务逻辑构造错误：callData 已知，returnData 需要分析批量重入错误
+            const expectedReturnData = '0x'; // 批量重入错误通常返回空数据或特定错误
+            await CorrectMetaTransactionsMatcher.expectMetaTransactionCallFailedError(
                 feature.connect(signerForCall).batchExecuteMetaTransactions([mtxToStruct(mtx)], [signature], callOpts),
-                mtxHash
-                // callData 和 returnData 参数复杂，只验证 mtxHash
+                mtxHash,
+                mtx.callData,        // 测试中构造的 callData
+                expectedReturnData   // 基于批量重入场景分析的 returnData
             );
         });
 
