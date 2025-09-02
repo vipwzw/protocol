@@ -2,17 +2,11 @@
 
 /**
  * 错误处理修复命令行工具
- * 
- * 使用方法:
- * npx ts-node scripts/fix_error_handling.ts --scan
- * npx ts-node scripts/fix_error_handling.ts --fix test/features/meta_transactions_test.ts
- * npx ts-node scripts/fix_error_handling.ts --report
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import { ErrorFixAutomation } from '../test/utils/error_fix_automation';
-import { ErrorTypeDetector } from '../test/utils/error_type_detector';
 
 interface CliOptions {
     scan?: boolean;
@@ -42,7 +36,7 @@ class ErrorHandlingCli {
             } else {
                 console.log('请指定一个命令。使用 --help 查看帮助。');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('❌ 执行失败:', error.message);
             process.exit(1);
         }
@@ -72,10 +66,6 @@ class ErrorHandlingCli {
             for (const fileAnalysis of scanResult.fixSuggestions) {
                 console.log(`- ${fileAnalysis.filePath} (${fileAnalysis.issues.length} 个问题)`);
             }
-            
-            console.log('\n💡 建议:');
-            console.log('- 使用 --fix <文件路径> 修复特定文件');
-            console.log('- 使用 --report 生成详细报告');
         } else {
             console.log('\n✅ 所有文件都没有发现错误处理问题！');
         }
@@ -91,10 +81,6 @@ class ErrorHandlingCli {
             throw new Error(`文件不存在: ${filePath}`);
         }
 
-        // 分析文件
-        const content = fs.readFileSync(filePath, 'utf-8');
-        console.log('📋 分析文件内容...');
-        
         // 应用自动修复
         const fixResult = await ErrorFixAutomation.autoFix(filePath, dryRun);
         
@@ -115,9 +101,6 @@ class ErrorHandlingCli {
         } else {
             console.log('✅ 文件没有发现需要自动修复的问题。');
         }
-
-        // 提供手动修复建议
-        await this.provideManualFixSuggestions(filePath);
     }
 
     /**
@@ -140,49 +123,6 @@ class ErrorHandlingCli {
     }
 
     /**
-     * 提供手动修复建议
-     */
-    private static async provideManualFixSuggestions(filePath: string) {
-        console.log('\n🔍 检查需要手动修复的问题...');
-        
-        const content = fs.readFileSync(filePath, 'utf-8');
-        const lines = content.split('\n');
-        const suggestions: string[] = [];
-
-        // 检查复杂的错误处理模式
-        lines.forEach((line, index) => {
-            if (line.includes('MetaTransactionExpiredError') || 
-                line.includes('MetaTransactionAlreadyExecutedError')) {
-                suggestions.push(`第 ${index + 1} 行: 考虑使用 UnifiedErrorMatcher 处理动态参数错误`);
-            }
-            
-            if (line.includes('// TODO') && line.toLowerCase().includes('error')) {
-                suggestions.push(`第 ${index + 1} 行: 完成 TODO 中的错误处理`);
-            }
-            
-            if (line.includes('try {') && lines[index + 1]?.includes('await')) {
-                const nextFewLines = lines.slice(index, index + 10).join('\n');
-                if (nextFewLines.includes('error.data') && nextFewLines.includes('expect')) {
-                    suggestions.push(`第 ${index + 1} 行: 考虑使用 UnifiedErrorMatcher 简化 try-catch 错误处理`);
-                }
-            }
-        });
-
-        if (suggestions.length > 0) {
-            console.log('\n💡 手动修复建议:');
-            suggestions.forEach(suggestion => {
-                console.log(`- ${suggestion}`);
-            });
-            
-            console.log('\n📖 参考资料:');
-            console.log('- 查看 UNIFIED_ERROR_HANDLING_GUIDE.md 获取详细指南');
-            console.log('- 查看 test/utils/error_handling_examples.ts 获取示例代码');
-        } else {
-            console.log('✅ 没有发现需要手动修复的复杂问题。');
-        }
-    }
-
-    /**
      * 显示文件差异
      */
     private static showDiff(original: string, fixed: string) {
@@ -197,8 +137,8 @@ class ErrorHandlingCli {
             const fixedLine = fixedLines[i] || '';
             
             if (origLine !== fixedLine) {
-                console.log(`${i + 1:3}: - ${origLine}`);
-                console.log(`${i + 1:3}: + ${fixedLine}`);
+                console.log(`${(i + 1).toString().padStart(3)}: - ${origLine}`);
+                console.log(`${(i + 1).toString().padStart(3)}: + ${fixedLine}`);
                 diffCount++;
             }
         }

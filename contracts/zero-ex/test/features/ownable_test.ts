@@ -2,6 +2,7 @@ import { LogDecoder, randomAddress, verifyEventsFromLogs } from '@0x/utils';
 import { expect } from 'chai';
 import { hexUtils, OwnableRevertErrors, StringRevertError, ZeroExRevertErrors } from '@0x/utils';
 import { ethers } from 'hardhat';
+import { UnifiedErrorMatcher } from '../utils/unified_error_matcher';
 
 import { artifacts } from '../artifacts';
 import { abis } from '../utils/abis';
@@ -68,9 +69,11 @@ describe('Ownable feature', () => {
         it('non-owner cannot transfer ownership', async () => {
             const newOwner = randomAddress();
             const notOwnerSigner = await env.provider.getSigner(notOwner);
-            return expect(
-                ownable.connect(notOwnerSigner).transferOwnership(newOwner)
-            ).to.be.rejected;
+            // ✅ 使用具体的错误匹配：OnlyOwnerError
+            await UnifiedErrorMatcher.expectError(
+                ownable.connect(notOwnerSigner).transferOwnership(newOwner),
+                new OwnableRevertErrors.OnlyOwnerError(notOwner, owner)
+            );
         });
 
         it('owner can transfer ownership', async () => {

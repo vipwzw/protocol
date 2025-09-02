@@ -49,57 +49,63 @@ export class ErrorTypeDetector {
      */
     private static getErrorInfoBySelector(selector: string): ErrorInfo | null {
         const errorMap: Record<string, ErrorInfo> = {
-            // MetaTransactions Rich Errors (动态参数)
+            // MetaTransactions Rich Errors - 重新分类基于业务逻辑分析
             '0x47ab394e': {
                 name: 'MetaTransactionExpiredError',
-                type: 'dynamic',
+                type: 'dynamic', // block.timestamp 真正动态
                 abi: ['bytes32', 'uint256', 'uint256'],
                 paramNames: ['mtxHash', 'blockTimestamp', 'expirationTimeSeconds']
             },
             '0x618fb3e2': {
                 name: 'MetaTransactionAlreadyExecutedError', 
-                type: 'dynamic',
+                type: 'dynamic', // block.number 真正动态
                 abi: ['bytes32', 'uint256'],
                 paramNames: ['mtxHash', 'blockNumber']
             },
             '0x4c7607a3': {
                 name: 'SignatureValidationError',
-                type: 'dynamic',
+                type: 'business_logic', // 基于业务逻辑可构造，但需要特殊处理
                 abi: ['uint8', 'bytes32', 'address', 'bytes'],
                 paramNames: ['code', 'hash', 'signerAddress', 'signature']
             },
             '0x5c5c3d37': {
                 name: 'MetaTransactionCallFailedError',
-                type: 'dynamic', 
+                type: 'business_logic', // callData 已知，returnData 可分析
                 abi: ['bytes32', 'bytes', 'bytes'],
                 paramNames: ['mtxHash', 'callData', 'returnData']
             },
             '0x8c4e5de5': {
                 name: 'MetaTransactionWrongSenderError',
-                type: 'static',
+                type: 'static', // 所有参数都可预测
                 abi: ['bytes32', 'address', 'address'],
                 paramNames: ['mtxHash', 'sender', 'expectedSender']
             },
             '0x1c18f846': {
                 name: 'MetaTransactionUnsupportedFunctionError',
-                type: 'static',
+                type: 'static', // 所有参数都可预测
                 abi: ['bytes32', 'bytes4'],
                 paramNames: ['mtxHash', 'selector']
             },
             '0x9c4ae9c0': {
                 name: 'MetaTransactionInsufficientEthError',
-                type: 'static',
+                type: 'static', // 所有参数都可预测
                 abi: ['bytes32', 'uint256', 'uint256'],
                 paramNames: ['mtxHash', 'ethSent', 'ethRequired']
             },
             '0x7e6b1ba9': {
                 name: 'MetaTransactionGasPriceError',
-                type: 'static',
+                type: 'static', // 所有参数都可预测
                 abi: ['bytes32', 'uint256', 'uint256', 'uint256'],
                 paramNames: ['mtxHash', 'gasPrice', 'minGasPrice', 'maxGasPrice']
             },
 
-            // Native Orders Rich Errors (静态参数)
+            // Native Orders Rich Errors - 基于业务逻辑分析
+            '0x1d44aa5d': {
+                name: 'BatchFillIncompleteError',
+                type: 'business_logic', // 填充数量基于业务逻辑可计算
+                abi: ['bytes32', 'uint256', 'uint256'],
+                paramNames: ['orderHash', 'takerTokenFilledAmount', 'takerTokenFillAmount']
+            },
             '0x7e5a2318': {
                 name: 'OnlyOrderMakerAllowed',
                 type: 'static',
@@ -164,6 +170,8 @@ export class ErrorTypeDetector {
             case 'rich_error':
                 if (analysis.errorType === 'dynamic') {
                     return this.generateDynamicErrorCode(analysis, testContext);
+                } else if (analysis.errorType === 'business_logic') {
+                    return this.generateBusinessLogicErrorCode(analysis, testContext);
                 } else {
                     return this.generateStaticErrorCode(analysis, testContext);
                 }
@@ -194,6 +202,67 @@ await UnifiedErrorMatcher.expectMetaTransactionsError(
         allowedBlockNumberDiff: 0       // 对于 AlreadyExecutedError，可设置允许的块号差异
     }
 );`;
+    }
+
+    /**
+     * 生成业务逻辑错误匹配代码
+     * 这些错误的参数可以通过分析业务逻辑来构造
+     */
+    private static generateBusinessLogicErrorCode(analysis: ErrorAnalysis, testContext?: string): string {
+        const errorName = analysis.errorName;
+        
+        switch (errorName) {
+            case 'BatchFillIncompleteError':
+                return `
+// 🔧 业务逻辑分析：BatchFillIncompleteError
+// 理解场景：订单已部分填充，尝试填充完整数量时只能填充剩余部分
+const remainingAmount = originalOrder.takerAmount - alreadyFilledAmount;
+await UnifiedErrorMatcher.expectNativeOrdersError(
+    ${testContext || 'txPromise'},
+    new RevertErrors.NativeOrders.BatchFillIncompleteError(
+        orderHash,
+        remainingAmount,        // takerTokenFilledAmount: 实际填充的剩余数量
+        originalOrder.takerAmount // takerTokenFillAmount: 请求填充的完整数量
+    )
+);`;
+            
+            case 'SignatureValidationError':
+                return `
+// 🔧 业务逻辑分析：SignatureValidationError  
+// 需要分析具体的签名验证失败原因
+await UnifiedErrorMatcher.expectMetaTransactionsError(
+    ${testContext || 'txPromise'},
+    new ZeroExRevertErrors.SignatureValidator.SignatureValidationError(
+        4, // WRONG_SIGNER - 根据具体场景调整
+        mtxHash,
+        expectedSigner,
+        '0x' // 签名数据，通常为空或无效签名
+    )
+);`;
+            
+            case 'MetaTransactionCallFailedError':
+                return `
+// 🔧 业务逻辑分析：MetaTransactionCallFailedError
+// callData 已知，returnData 需要分析失败原因
+await UnifiedErrorMatcher.expectMetaTransactionsError(
+    ${testContext || 'txPromise'},
+    new ZeroExRevertErrors.MetaTransactions.MetaTransactionCallFailedError(
+        mtxHash,
+        expectedCallData, // 从测试上下文获取
+        expectedReturnData // 分析失败调用的返回数据
+    )
+);`;
+            
+            default:
+                return `
+// 🔧 业务逻辑错误：${errorName}
+// 需要分析具体的业务场景来构造参数
+// 参数: ${analysis.paramNames?.join(', ')}
+await UnifiedErrorMatcher.expectError(
+    ${testContext || 'txPromise'},
+    // 根据业务逻辑构造具体的错误对象
+);`;
+        }
     }
 
     /**
@@ -307,7 +376,7 @@ await expect(${testContext || 'txPromise'}).to.be.revertedWith("${analysis.messa
 // 类型定义
 interface ErrorInfo {
     name: string;
-    type: 'static' | 'dynamic';
+    type: 'static' | 'dynamic' | 'business_logic';
     abi: string[];
     paramNames: string[];
 }

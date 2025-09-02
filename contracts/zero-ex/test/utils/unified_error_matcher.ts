@@ -122,18 +122,19 @@ export class UnifiedErrorMatcher {
     }
 
     /**
-     * 检查是否是包含动态参数的错误
+     * 检查是否是包含真正动态参数的错误
+     * 
+     * 重要原则：只有真正无法从业务逻辑预测的参数才是动态的
+     * - block.timestamp, block.number 等区块链状态
+     * - 不是业务逻辑计算结果（如 BatchFillIncompleteError 的填充数量）
      */
     private static isDynamicParameterError(error: RevertError): boolean {
         const errorName = error.constructor.name;
-        const dynamicErrorTypes = [
-            'MetaTransactionExpiredError',
-            'MetaTransactionAlreadyExecutedError',
-            'MetaTransactionCallFailedError',
-            'MetaTransactionInsufficientEthError',
-            'MetaTransactionGasPriceError'
+        const trueDynamicErrorTypes = [
+            'MetaTransactionExpiredError',        // block.timestamp 是真正动态的
+            'MetaTransactionAlreadyExecutedError' // block.number 是真正动态的
         ];
-        return dynamicErrorTypes.includes(errorName);
+        return trueDynamicErrorTypes.includes(errorName);
     }
 
     /**
