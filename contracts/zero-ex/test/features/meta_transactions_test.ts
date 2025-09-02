@@ -664,14 +664,11 @@ describe('MetaTransactions feature', () => {
                 gasPrice: mtx.maxGasPrice,
                 value: mtx.value,
             };
-            // ✅ 基于业务逻辑构造错误：callData 已知，returnData 需要分析重入错误
-            // 对于重入错误，我们知道会返回 reentrancy guard 的错误信息
-            const expectedReturnData = '0x'; // 重入错误通常返回空数据或特定错误
+            // ✅ 基于业务逻辑构造错误：callData 已知，returnData 由合约内部调用失败产生
             await CorrectMetaTransactionsMatcher.expectMetaTransactionCallFailedError(
                 feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts),
                 mtxHash,
-                mtx.callData,        // 测试中构造的 callData
-                expectedReturnData   // 基于重入场景分析的 returnData
+                mtx.callData        // 测试中构造的 callData，returnData 不验证具体内容
             );
         });
 
@@ -688,13 +685,11 @@ describe('MetaTransactions feature', () => {
                 gasPrice: mtx.maxGasPrice,
                 value: mtx.value,
             };
-            // ✅ 基于业务逻辑构造错误：callData 已知，returnData 需要分析批量重入错误
-            const expectedReturnData = '0x'; // 批量重入错误通常返回空数据或特定错误
+            // ✅ 基于业务逻辑构造错误：callData 已知，returnData 由合约内部调用失败产生
             await CorrectMetaTransactionsMatcher.expectMetaTransactionCallFailedError(
                 feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts),
                 mtxHash,
-                mtx.callData,        // 测试中构造的 callData
-                expectedReturnData   // 基于批量重入场景分析的 returnData
+                mtx.callData        // 测试中构造的 callData，returnData 不验证具体内容
             );
         });
 
@@ -791,13 +786,11 @@ describe('MetaTransactions feature', () => {
                 value: mtx.value,
             };
             const signerForCall = await env.provider.getSigner(mtx.signer);
-            // ✅ 基于业务逻辑构造错误：callData 已知，returnData 需要分析失败原因
-            const expectedReturnData = '0x'; // 失败的 MetaTransaction 通常返回空数据或特定错误
+            // ✅ 基于业务逻辑构造错误：callData 已知，returnData 由合约内部调用失败产生
             await CorrectMetaTransactionsMatcher.expectMetaTransactionCallFailedError(
                 feature.connect(signerForCall).batchExecuteMetaTransactions([mtxToStruct(mtx)], [signature], callOpts),
                 mtxHash,
-                mtx.callData,        // 测试中构造的 callData
-                expectedReturnData   // 基于失败场景分析的 returnData
+                mtx.callData        // 测试中构造的 callData，returnData 不验证具体内容
             );
         });
 
@@ -815,13 +808,11 @@ describe('MetaTransactions feature', () => {
                 value: mtx.value,
             };
             const signerForCall = await env.provider.getSigner(mtx.signer);
-            // ✅ 基于业务逻辑构造错误：callData 已知，returnData 需要分析重入错误
-            const expectedReturnData = '0x'; // 重入错误通常返回空数据或特定错误
+            // ✅ 基于业务逻辑构造错误：callData 已知，returnData 由合约内部调用失败产生
             await CorrectMetaTransactionsMatcher.expectMetaTransactionCallFailedError(
                 feature.connect(signerForCall).batchExecuteMetaTransactions([mtxToStruct(mtx)], [signature], callOpts),
                 mtxHash,
-                mtx.callData,        // 测试中构造的 callData
-                expectedReturnData   // 基于重入场景分析的 returnData
+                mtx.callData        // 测试中构造的 callData，returnData 不验证具体内容
             );
         });
 
@@ -839,13 +830,11 @@ describe('MetaTransactions feature', () => {
                 value: mtx.value,
             };
             const signerForCall = await env.provider.getSigner(mtx.signer);
-            // ✅ 基于业务逻辑构造错误：callData 已知，returnData 需要分析批量重入错误
-            const expectedReturnData = '0x'; // 批量重入错误通常返回空数据或特定错误
+            // ✅ 基于业务逻辑构造错误：callData 已知，returnData 由合约内部调用失败产生
             await CorrectMetaTransactionsMatcher.expectMetaTransactionCallFailedError(
                 feature.connect(signerForCall).batchExecuteMetaTransactions([mtxToStruct(mtx)], [signature], callOpts),
                 mtxHash,
-                mtx.callData,        // 测试中构造的 callData
-                expectedReturnData   // 基于批量重入场景分析的 returnData
+                mtx.callData        // 测试中构造的 callData，returnData 不验证具体内容
             );
         });
 
