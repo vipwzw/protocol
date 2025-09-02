@@ -135,7 +135,9 @@ describe('OtcOrdersFeature', () => {
     describe('getOtcOrderHash()', () => {
         it('returns the correct hash', async () => {
             const order = await getTestOtcOrder();
-            const hash = await zeroEx.getOtcOrderHash(order)();
+            // 🔧 修复API语法：使用正确的合约接口
+            const otcFeature = await ethers.getContractAt('IOtcOrdersFeature', await zeroEx.getAddress());
+            const hash = await otcFeature.getOtcOrderHash(order);
             expect(hash).to.eq(order.getHash());
         });
     });
