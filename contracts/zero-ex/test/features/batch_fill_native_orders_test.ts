@@ -5,6 +5,7 @@ import { LimitOrder, LimitOrderFields, OrderStatus, RevertErrors, RfqOrder, RfqO
 
 import { TransactionReceiptWithDecodedLogs } from 'ethereum-types';
 import * as _ from 'lodash';
+import { UnifiedErrorMatcher } from '../utils/unified_error_matcher';
 
 import { 
     BatchFillNativeOrdersFeatureContract, 
@@ -377,8 +378,15 @@ describe('BatchFillNativeOrdersFeature', () => {
                 true,
                 { value }
             );
-            // TODO: Fix specific error matching - using generic revert for now
-            return expect(tx).to.be.rejected;
+            // ✅ 使用具体的错误匹配：BatchFillIncompleteError
+            await UnifiedErrorMatcher.expectNativeOrdersError(
+                tx,
+                new RevertErrors.NativeOrders.BatchFillIncompleteError(
+                    expiredOrder.getHash(),
+                    0n, // takerTokenFilledAmount (expired order can't be filled)
+                    expiredOrder.takerAmount // takerTokenFillAmount
+                )
+            );
         });
         it('If revertIfIncomplete==true, reverts on an incomplete fill ', async () => {
             const fillableOrders = await Promise.all([...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
@@ -399,8 +407,40 @@ describe('BatchFillNativeOrdersFeature', () => {
                 true,
                 { value }
             );
-            // TODO: Fix specific error matching - using generic revert for now
-            return expect(tx).to.be.rejected;
+            // ✅ 使用具体的错误匹配：BatchFillIncompleteError (部分填充的订单)
+            // 注意：takerTokenFilledAmount 是动态的，需要从实际错误中解析
+            try {
+                await tx;
+                throw new Error("交易应该失败但没有失败");
+            } catch (error: any) {
+                // 验证错误类型是 BatchFillIncompleteError
+                const expectedSelector = '0x1d44aa5d'; // BatchFillIncompleteError 选择器
+                if (!error.data || !error.data.startsWith(expectedSelector)) {
+                    throw new Error(`未找到预期的 BatchFillIncompleteError，实际错误: ${error.data}`);
+                }
+                
+                // 解析错误参数并验证关键字段
+                const ethers = await import('ethers');
+                const abiCoder = ethers.ethers.AbiCoder.defaultAbiCoder();
+                const errorParams = '0x' + error.data.slice(10);
+                const decoded = abiCoder.decode(['bytes32', 'uint256', 'uint256'], errorParams);
+                
+                const actualOrderHash = decoded[0];
+                const actualFilledAmount = decoded[1];
+                const actualFillAmount = decoded[2];
+                
+                // 验证订单哈希和填充数量
+                if (actualOrderHash !== partiallyFilledOrder.getHash()) {
+                    throw new Error(`订单哈希不匹配。期望: ${partiallyFilledOrder.getHash()}, 实际: ${actualOrderHash}`);
+                }
+                if (actualFillAmount !== partiallyFilledOrder.takerAmount) {
+                    throw new Error(`填充数量不匹配。期望: ${partiallyFilledOrder.takerAmount}, 实际: ${actualFillAmount}`);
+                }
+                // actualFilledAmount 是动态的，我们只验证它大于 0 且小于总数量
+                if (actualFilledAmount === 0n || actualFilledAmount >= partiallyFilledOrder.takerAmount) {
+                    throw new Error(`已填充数量异常: ${actualFilledAmount}`);
+                }
+            }
         });
     });
     describe('batchFillRfqOrders', () => {
@@ -579,8 +619,15 @@ describe('BatchFillNativeOrdersFeature', () => {
                 orders.map(order => order.takerAmount),
                 true
             );
-            // TODO: 修复精确错误匹配 - RevertErrors 对象序列化问题
-            return expect(tx).to.be.rejected;
+            // ✅ 使用具体的错误匹配：BatchFillIncompleteError (RFQ 过期订单)
+            await UnifiedErrorMatcher.expectNativeOrdersError(
+                tx,
+                new RevertErrors.NativeOrders.BatchFillIncompleteError(
+                    expiredOrder.getHash(),
+                    0n, // takerTokenFilledAmount (expired order can't be filled)
+                    expiredOrder.takerAmount // takerTokenFillAmount
+                )
+            );
         });
         it('If revertIfIncomplete==true, reverts on an incomplete fill ', async () => {
             const fillableOrders = await Promise.all([...new Array(3)].map(async () => getTestRfqOrder()));
@@ -599,8 +646,40 @@ describe('BatchFillNativeOrdersFeature', () => {
                 orders.map(order => order.takerAmount),
                 true
             );
-            // TODO: 修复精确错误匹配 - RevertErrors 对象序列化问题
-            return expect(tx).to.be.rejected;
+            // ✅ 使用具体的错误匹配：BatchFillIncompleteError (RFQ 部分填充订单)
+            // 注意：takerTokenFilledAmount 是动态的，需要从实际错误中解析
+            try {
+                await tx;
+                throw new Error("交易应该失败但没有失败");
+            } catch (error: any) {
+                // 验证错误类型是 BatchFillIncompleteError
+                const expectedSelector = '0x1d44aa5d'; // BatchFillIncompleteError 选择器
+                if (!error.data || !error.data.startsWith(expectedSelector)) {
+                    throw new Error(`未找到预期的 BatchFillIncompleteError，实际错误: ${error.data}`);
+                }
+                
+                // 解析错误参数并验证关键字段
+                const ethers = await import('ethers');
+                const abiCoder = ethers.ethers.AbiCoder.defaultAbiCoder();
+                const errorParams = '0x' + error.data.slice(10);
+                const decoded = abiCoder.decode(['bytes32', 'uint256', 'uint256'], errorParams);
+                
+                const actualOrderHash = decoded[0];
+                const actualFilledAmount = decoded[1];
+                const actualFillAmount = decoded[2];
+                
+                // 验证订单哈希和填充数量
+                if (actualOrderHash !== partiallyFilledOrder.getHash()) {
+                    throw new Error(`订单哈希不匹配。期望: ${partiallyFilledOrder.getHash()}, 实际: ${actualOrderHash}`);
+                }
+                if (actualFillAmount !== partiallyFilledOrder.takerAmount) {
+                    throw new Error(`填充数量不匹配。期望: ${partiallyFilledOrder.takerAmount}, 实际: ${actualFillAmount}`);
+                }
+                // actualFilledAmount 是动态的，我们只验证它大于 0 且小于总数量
+                if (actualFilledAmount === 0n || actualFilledAmount >= partiallyFilledOrder.takerAmount) {
+                    throw new Error(`已填充数量异常: ${actualFilledAmount}`);
+                }
+            }
         });
     });
 });
