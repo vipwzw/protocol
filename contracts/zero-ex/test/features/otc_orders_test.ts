@@ -620,20 +620,23 @@ describe('OtcOrdersFeature', () => {
 
         it('can fill an order from a different tx.origin if registered', async () => {
             const order = await getTestOtcOrder({ taker, txOrigin });
-            await zeroEx
-                .registerAllowedRfqOrigins([notTxOrigin], true)
-                ({ from: txOrigin });
+            const nativeOrdersFeature = await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress());
+            await nativeOrdersFeature
+                .connect(await env.provider.getSigner(txOrigin))
+                .registerAllowedRfqOrigins([notTxOrigin], true);
             return testUtils.fillTakerSignedOtcOrderAsync(order, notTxOrigin);
         });
 
         it('cannot fill an order with registered then unregistered tx.origin', async () => {
             const order = await getTestOtcOrder({ taker, txOrigin });
-            await zeroEx
-                .registerAllowedRfqOrigins([notTxOrigin], true)
-                ({ from: txOrigin });
-            await zeroEx
-                .registerAllowedRfqOrigins([notTxOrigin], false)
-                ({ from: txOrigin });
+            const nativeOrdersFeature = await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress());
+            const txOriginSigner = await env.provider.getSigner(txOrigin);
+            await nativeOrdersFeature
+                .connect(txOriginSigner)
+                .registerAllowedRfqOrigins([notTxOrigin], true);
+            await nativeOrdersFeature
+                .connect(txOriginSigner)
+                .registerAllowedRfqOrigins([notTxOrigin], false);
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order, notTxOrigin);
             return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), notTxOrigin, txOrigin),
@@ -807,7 +810,8 @@ describe('OtcOrdersFeature', () => {
             });
             await testUtils.prepareBalancesForOrdersAsync([order1], taker);
             await testUtils.prepareBalancesForOrdersAsync([order2], notTaker);
-            const tx = await zeroEx
+            const otcOrdersFeature = await ethers.getContractAt('IOtcOrdersFeature', await zeroEx.getAddress());
+            const tx = await otcOrdersFeature
                 .batchFillTakerSignedOtcOrders(
                     [order1, order2],
                     [
@@ -839,8 +843,10 @@ describe('OtcOrdersFeature', () => {
             });
             await testUtils.prepareBalancesForOrdersAsync([order1], taker);
             await testUtils.prepareBalancesForOrdersAsync([order2], notTaker);
-            await wethToken.deposit()({ from: maker, value: order2.makerAmount });
-            const tx = await zeroEx
+            const makerSigner = await env.provider.getSigner(maker);
+            await wethToken.connect(makerSigner).deposit({ value: order2.makerAmount });
+            const otcOrdersFeature = await ethers.getContractAt('IOtcOrdersFeature', await zeroEx.getAddress());
+            const tx = await otcOrdersFeature
                 .batchFillTakerSignedOtcOrders(
                     [order1, order2],
                     [
@@ -870,7 +876,8 @@ describe('OtcOrdersFeature', () => {
             });
             await testUtils.prepareBalancesForOrdersAsync([order1], taker);
             await testUtils.prepareBalancesForOrdersAsync([order2], notTaker);
-            const tx = await zeroEx
+            const otcOrdersFeature = await ethers.getContractAt('IOtcOrdersFeature', await zeroEx.getAddress());
+            const tx = await otcOrdersFeature
                 .batchFillTakerSignedOtcOrders(
                     [order1, order2],
                     [

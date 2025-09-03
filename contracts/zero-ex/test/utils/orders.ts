@@ -205,7 +205,8 @@ export class NativeOrdersTestEnvironment {
                 );
             return await tx.wait();
         } else {
-            const tx = await this.zeroEx
+            const otcOrdersFeature = await ethers.getContractAt('IOtcOrdersFeature', await this.zeroEx.getAddress());
+            const tx = await otcOrdersFeature
                 .connect(originSigner)
                 .fillTakerSignedOtcOrder(
                     order,
