@@ -130,7 +130,9 @@ describe('SimpleFunctionRegistry feature', () => {
         //     [{ selector: testFnSelector, oldImpl: NULL_ADDRESS, newImpl: await testFeatureImpl1.getAddress() }],
         //     ISimpleFunctionRegistryFeatureEvents.ProxyFunctionUpdated,
         // );
-        const r = await testFeature.testFn();
+        // 重新获取合约实例以包含新添加的函数
+        const testFeatureWithFn = await ethers.getContractAt('TestSimpleFunctionRegistryFeatureImpl1', await zeroEx.getAddress());
+        const r = await testFeatureWithFn.testFn();
         expect(r).to.eq(1337);
     });
 
