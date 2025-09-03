@@ -33,7 +33,10 @@ describe('OtcOrdersFeature', () => {
     const env = {
         provider: ethers.provider,
         txDefaults: { from: '' as string },
-        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+        getAccountAddressesAsync: async (): Promise<string[]> => {
+            const signers = await ethers.getSigners();
+            return Promise.all(signers.map(s => s.getAddress()));
+        },
     } as any;
     const { NULL_ADDRESS, MAX_UINT256, ZERO_AMOUNT: ZERO } = constants;
     const ETH_TOKEN_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
@@ -84,6 +87,9 @@ describe('OtcOrdersFeature', () => {
         const ownerSigner = await env.provider.getSigner(owner);
         const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
         await ownableFeature.migrate(await otcFeatureImpl.getAddress(), otcFeatureImpl.interface.encodeFunctionData('migrate'), owner);
+        
+        // 重新获取 zeroEx 实例以包含 OTC Orders 功能
+        zeroEx = await ethers.getContractAt('IOtcOrdersFeature', await zeroEx.getAddress()) as any;
         verifyingContract = await zeroEx.getAddress();
 
         const makerSigner = await env.provider.getSigner(maker);
@@ -144,13 +150,13 @@ describe('OtcOrdersFeature', () => {
 
     describe('lastOtcTxOriginNonce()', () => {
         it('returns 0 if bucket is unused', async () => {
-            const nonce = await zeroEx.lastOtcTxOriginNonce(taker, ZERO)();
+            const nonce = await zeroEx.lastOtcTxOriginNonce(taker, ZERO);
             expect(nonce).to.eq(0);
         });
         it('returns the last nonce used in a bucket', async () => {
             const order = await getTestOtcOrder();
             await testUtils.fillOtcOrderAsync(order);
-            const nonce = await zeroEx.lastOtcTxOriginNonce(taker, order.nonceBucket)();
+            const nonce = await zeroEx.lastOtcTxOriginNonce(taker, order.nonceBucket);
             expect(nonce).to.eq(order.nonce);
         });
     });
@@ -158,21 +164,19 @@ describe('OtcOrdersFeature', () => {
     describe('getOtcOrderInfo()', () => {
         it('unfilled order', async () => {
             const order = await getTestOtcOrder();
-            const info = await zeroEx.getOtcOrderInfo(order)();
-            expect(info).to.deep.equal({
-                status: OrderStatus.Fillable,
-                orderHash: order.getHash(),
-            });
+            const info = await zeroEx.getOtcOrderInfo(order);
+            // ethers v6 返回 Result 数组格式: [orderHash, status]
+            expect(info[0]).to.equal(order.getHash()); // orderHash
+            expect(info[1]).to.equal(BigInt(OrderStatus.Fillable)); // status
         });
 
         it('unfilled expired order', async () => {
             const expiry = await createExpiry(-60);
             const order = await getTestOtcOrder({ expiry });
-            const info = await zeroEx.getOtcOrderInfo(order)();
-            expect(info).to.deep.equal({
-                status: OrderStatus.Expired,
-                orderHash: order.getHash(),
-            });
+            const info = await zeroEx.getOtcOrderInfo(order);
+            // ethers v6 返回 Result 数组格式: [orderHash, status]
+            expect(info[0]).to.equal(order.getHash()); // orderHash
+            expect(info[1]).to.equal(BigInt(OrderStatus.Expired)); // status
         });
 
         it('filled then expired order', async () => {
@@ -182,22 +186,20 @@ describe('OtcOrdersFeature', () => {
             // Advance time to expire the order.
             await ethers.provider.send('evm_increaseTime', [61]);
             await ethers.provider.send('evm_mine', []);
-            const info = await zeroEx.getOtcOrderInfo(order)();
-            expect(info).to.deep.equal({
-                status: OrderStatus.Invalid,
-                orderHash: order.getHash(),
-            });
+            const info = await zeroEx.getOtcOrderInfo(order);
+            // ethers v6 返回 Result 数组格式: [orderHash, status]
+            expect(info[0]).to.equal(order.getHash()); // orderHash
+            expect(info[1]).to.equal(BigInt(OrderStatus.Invalid)); // status
         });
 
         it('filled order', async () => {
             const order = await getTestOtcOrder();
             // Fill the order first.
             await testUtils.fillOtcOrderAsync(order);
-            const info = await zeroEx.getOtcOrderInfo(order)();
-            expect(info).to.deep.equal({
-                status: OrderStatus.Invalid,
-                orderHash: order.getHash(),
-            });
+            const info = await zeroEx.getOtcOrderInfo(order);
+            // ethers v6 返回 Result 数组格式: [orderHash, status]
+            expect(info[0]).to.equal(order.getHash()); // orderHash
+            expect(info[1]).to.equal(BigInt(OrderStatus.Invalid)); // status
         });
     });
 

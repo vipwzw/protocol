@@ -88,7 +88,10 @@ describe('MultiplexFeature', () => {
     const env = {
         provider: ethers.provider,
         txDefaults: { from: '' as string },
-        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+        getAccountAddressesAsync: async (): Promise<string[]> => {
+            const signers = await ethers.getSigners();
+            return Promise.all(signers.map(s => s.getAddress()));
+        },
     } as any;
     const POOL_FEE = 1234;
 
@@ -183,9 +186,9 @@ describe('MultiplexFeature', () => {
         amount: bigint,
     ): Promise<void> {
         if (isWethContract(token)) {
-            await token.depositTo(recipient)({ value: amount });
+            await token.depositTo(recipient, { value: amount });
         } else {
-            await token.mint(recipient, amount)();
+            await token.mint(recipient, amount);
         }
     }
 
@@ -198,15 +201,15 @@ describe('MultiplexFeature', () => {
         balance0: bigint = toBaseUnitAmount(10),
         balance1: bigint = toBaseUnitAmount(10),
     ): Promise<TestUniswapV2PoolContract> {
-        const r = await factory.createPool(token0.address, token1.address)();
+        const r = await factory.createPool(await token0.getAddress(), await token1.getAddress())();
         const pool = new TestUniswapV2PoolContract(
             (r.logs[0] as LogWithDecodedArgs<TestUniswapV2FactoryPoolCreatedEventArgs>).args.pool,
             env.provider,
             env.txDefaults,
         );
-        await mintToAsync(token0, pool.address, balance0);
-        await mintToAsync(token1, pool.address, balance1);
-        if (token0.address < token1.address) {
+        await mintToAsync(token0, await pool.getAddress(), balance0);
+        await mintToAsync(token1, await pool.getAddress(), balance1);
+        if (token0.address < await token1.getAddress()) {
             await pool.setReserves(balance0, balance1, constants.ZERO_AMOUNT)();
         } else {
             await pool.setReserves(balance1, balance0, constants.ZERO_AMOUNT)();
@@ -221,15 +224,15 @@ describe('MultiplexFeature', () => {
         balance1: bigint = toBaseUnitAmount(10),
     ): Promise<TestUniswapV3PoolContract> {
         const r = await uniV3Factory
-            .createPool(token0.address, token1.address, BigInt(POOL_FEE))
+            .createPool(await token0.getAddress(), await token1.getAddress(), BigInt(POOL_FEE))
             ();
         const pool = new TestUniswapV3PoolContract(
             (r.logs[0] as LogWithDecodedArgs<TestUniswapV3FactoryPoolCreatedEventArgs>).args.pool,
             env.provider,
             env.txDefaults,
         );
-        await mintToAsync(token0, pool.address, balance0);
-        await mintToAsync(token1, pool.address, balance1);
+        await mintToAsync(token0, await pool.getAddress(), balance0);
+        await mintToAsync(token1, await pool.getAddress(), balance1);
         return pool;
     }
 
@@ -357,16 +360,17 @@ describe('MultiplexFeature', () => {
         };
     }
 
-    function getUniswapV3MultiHopSubcall(
+    async function getUniswapV3MultiHopSubcall(
         tokens_: Array<TestMintableERC20TokenContract | TestWethContract>,
-    ): MultiHopSellSubcall {
+    ): Promise<MultiHopSellSubcall> {
         const elems: string[] = [];
-        tokens_.forEach((t, i) => {
+        for (let i = 0; i < tokens_.length; i++) {
+            const t = tokens_[i];
             if (i) {
                 elems.push(hexUtils.leftPad(POOL_FEE, 3));
             }
-            elems.push(hexUtils.leftPad(t.address, 20));
-        });
+            elems.push(hexUtils.leftPad(await t.getAddress(), 20));
+        }
         const data = hexUtils.concat(...elems);
 
         return {
@@ -374,12 +378,12 @@ describe('MultiplexFeature', () => {
             data,
         };
     }
-    function getUniswapV3BatchSubcall(
+    async function getUniswapV3BatchSubcall(
         tokens: Array<TestMintableERC20TokenContract | TestWethContract>,
         sellAmount: bigint = getRandomInteger(1, toBaseUnitAmount(1)),
-    ): BatchSellSubcall {
+    ): Promise<BatchSellSubcall> {
         return {
-            ...getUniswapV3MultiHopSubcall(tokens),
+            ...(await getUniswapV3MultiHopSubcall(tokens)),
             sellAmount,
         };
     }
@@ -388,7 +392,7 @@ describe('MultiplexFeature', () => {
         const abiCoder = ethers.AbiCoder.defaultAbiCoder();
         return {
             id: MultiplexSubcall.LiquidityProvider,
-            data: abiCoder.encode(["address", "bytes"], [liquidityProvider.address, constants.NULL_BYTES,
+            data: abiCoder.encode(["address", "bytes"], [await liquidityProvider.getAddress(), constants.NULL_BYTES,
             ]),
         };
     }
@@ -513,14 +517,14 @@ describe('MultiplexFeature', () => {
                 await mintToAsync(dai, taker, rfqSubcall.sellAmount);
 
                 const tx = multiplex
-                    .multiplexBatchSellTokenForToken(
-                        dai.address,
-                        zrx.address,
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexBatchSellTokenForToken(await dai.getAddress(),
+                        await zrx.getAddress(),
                         [rfqSubcall],
                         order.takerAmount,
                         order.makerAmount + 1,
-                    )
-                    ({ from: taker });
+                    );
                 return expect(tx).to.be.revertedWith('MultiplexFeature::_multiplexBatchSell/UNDERBOUGHT');
             });
             it('reverts if given an invalid subcall type', async () => {
@@ -530,14 +534,14 @@ describe('MultiplexFeature', () => {
                     data: constants.NULL_BYTES,
                 };
                 const tx = multiplex
-                    .multiplexBatchSellTokenForToken(
-                        dai.address,
-                        zrx.address,
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexBatchSellTokenForToken(await dai.getAddress(),
+                        await zrx.getAddress(),
                         [invalidSubcall],
                         invalidSubcall.sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 return expect(tx).to.be.revertedWith('MultiplexFeature::_executeBatchSell/INVALID_SUBCALL');
             });
             it('reverts if the full sell amount is not sold', async () => {
@@ -546,14 +550,14 @@ describe('MultiplexFeature', () => {
                 await mintToAsync(dai, taker, rfqSubcall.sellAmount);
 
                 const tx = multiplex
-                    .multiplexBatchSellTokenForToken(
-                        dai.address,
-                        zrx.address,
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexBatchSellTokenForToken(await dai.getAddress(),
+                        await zrx.getAddress(),
                         [rfqSubcall],
                         order.takerAmount + 1,
                         order.makerAmount,
-                    )
-                    ({ from: taker });
+                    );
                 return expect(tx).to.be.revertedWith('MultiplexFeature::_executeBatchSell/INCORRECT_AMOUNT_SOLD');
             });
             it('RFQ, fallback(UniswapV2)', async () => {
@@ -562,15 +566,16 @@ describe('MultiplexFeature', () => {
                 await createUniswapV2PoolAsync(uniV2Factory, dai, zrx);
                 await mintToAsync(dai, taker, rfqSubcall.sellAmount);
 
+                const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
+                    .connect(takerSigner)
                     .multiplexBatchSellTokenForToken(
-                        dai.address,
-                        zrx.address,
-                        [rfqSubcall, getUniswapV2BatchSubcall([dai.address, zrx.address], order.takerAmount)],
+                        await dai.getAddress(),
+                        await zrx.getAddress(),
+                        [rfqSubcall, getUniswapV2BatchSubcall([await dai.getAddress(), await zrx.getAddress()], order.takerAmount)],
                         order.takerAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs(
                     tx.logs,
                     [
@@ -596,9 +601,9 @@ describe('MultiplexFeature', () => {
 
                 const tx = await multiplex
                     .multiplexBatchSellTokenForToken(
-                        dai.address,
-                        zrx.address,
-                        [otcSubcall, getUniswapV2BatchSubcall([dai.address, zrx.address], order.takerAmount)],
+                        await dai.getAddress(),
+                        await zrx.getAddress(),
+                        [otcSubcall, getUniswapV2BatchSubcall([await dai.getAddress(), zrx.address], order.takerAmount)],
                         order.takerAmount,
                         constants.ZERO_AMOUNT,
                     )
@@ -627,9 +632,9 @@ describe('MultiplexFeature', () => {
 
                 const tx = await multiplex
                     .multiplexBatchSellTokenForToken(
-                        dai.address,
-                        zrx.address,
-                        [rfqSubcall, getUniswapV2BatchSubcall([dai.address, zrx.address], order.takerAmount)],
+                        await dai.getAddress(),
+                        await zrx.getAddress(),
+                        [rfqSubcall, getUniswapV2BatchSubcall([await dai.getAddress(), zrx.address], order.takerAmount)],
                         order.takerAmount,
                         constants.ZERO_AMOUNT,
                     )
@@ -649,14 +654,14 @@ describe('MultiplexFeature', () => {
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: uniswap.address,
+                            to: await uniswap.getAddress(),
                             value: order.takerAmount,
                         },
                         {
-                            token: zrx.address,
-                            from: uniswap.address,
+                            token: await zrx.getAddress(),
+                            from: await uniswap.getAddress(),
                             to: taker,
                         },
                     ],
@@ -671,9 +676,9 @@ describe('MultiplexFeature', () => {
 
                 const tx = await multiplex
                     .multiplexBatchSellTokenForToken(
-                        dai.address,
-                        zrx.address,
-                        [otcSubcall, getUniswapV2BatchSubcall([dai.address, zrx.address], order.takerAmount)],
+                        await dai.getAddress(),
+                        await zrx.getAddress(),
+                        [otcSubcall, getUniswapV2BatchSubcall([await dai.getAddress(), zrx.address], order.takerAmount)],
                         order.takerAmount,
                         constants.ZERO_AMOUNT,
                     )
@@ -693,14 +698,14 @@ describe('MultiplexFeature', () => {
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: uniswap.address,
+                            to: await uniswap.getAddress(),
                             value: order.takerAmount,
                         },
                         {
-                            token: zrx.address,
-                            from: uniswap.address,
+                            token: await zrx.getAddress(),
+                            from: await uniswap.getAddress(),
                             to: taker,
                         },
                     ],
@@ -710,18 +715,18 @@ describe('MultiplexFeature', () => {
             it('expired RFQ, fallback(TransformERC20)', async () => {
                 const order = await getTestRfqOrder({ expiry: constants.ZERO_AMOUNT });
                 const rfqSubcall = await getRfqSubcallAsync(order);
-                const transformERC20Subcall = getTransformERC20Subcall(dai.address, zrx.address, order.takerAmount);
+                const transformERC20Subcall = getTransformERC20Subcall(await dai.getAddress(), await zrx.getAddress(), order.takerAmount);
                 await mintToAsync(dai, taker, order.takerAmount);
 
                 const tx = await multiplex
-                    .multiplexBatchSellTokenForToken(
-                        dai.address,
-                        zrx.address,
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexBatchSellTokenForToken(await dai.getAddress(),
+                        await zrx.getAddress(),
                         [rfqSubcall, transformERC20Subcall],
                         order.takerAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs(
                     tx.logs,
                     [
@@ -737,18 +742,18 @@ describe('MultiplexFeature', () => {
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
                             to: flashWalletAddress,
                             value: order.takerAmount,
                         },
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: flashWalletAddress,
                             to: constants.NULL_ADDRESS,
                         },
                         {
-                            token: zrx.address,
+                            token: await zrx.getAddress(),
                             from: flashWalletAddress,
                             to: taker,
                         },
@@ -773,54 +778,54 @@ describe('MultiplexFeature', () => {
                 const uniV3 = await createUniswapV3PoolAsync(dai, zrx);
                 const liquidityProviderSubcall = getLiquidityProviderBatchSubcall();
                 const uniV3Subcall = getUniswapV3BatchSubcall([dai, zrx]);
-                const sushiswapSubcall = getUniswapV2BatchSubcall([dai.address, zrx.address], undefined, true);
+                const sushiswapSubcall = getUniswapV2BatchSubcall([await dai.getAddress(), zrx.address], undefined, true);
                 const sellAmount = [liquidityProviderSubcall, uniV3Subcall, sushiswapSubcall]
                     .map(c => c.sellAmount)
                     .reduce((a, b) => a + b, 0n) - 1n;
                 await mintToAsync(dai, taker, sellAmount);
                 const tx = await multiplex
-                    .multiplexBatchSellTokenForToken(
-                        dai.address,
-                        zrx.address,
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexBatchSellTokenForToken(await dai.getAddress(),
+                        await zrx.getAddress(),
                         [liquidityProviderSubcall, uniV3Subcall, sushiswapSubcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: liquidityProvider.address,
+                            to: await liquidityProvider.getAddress(),
                             value: liquidityProviderSubcall.sellAmount,
                         },
                         {
-                            token: zrx.address,
-                            from: liquidityProvider.address,
+                            token: await zrx.getAddress(),
+                            from: await liquidityProvider.getAddress(),
                             to: taker,
                         },
                         {
-                            token: zrx.address,
-                            from: uniV3.address,
+                            token: await zrx.getAddress(),
+                            from: await uniV3.getAddress(),
                             to: taker,
                         },
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: uniV3.address,
+                            to: await uniV3.getAddress(),
                             value: uniV3Subcall.sellAmount,
                         },
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: sushiswap.address,
+                            to: await sushiswap.getAddress(),
                             value: sushiswapSubcall.sellAmount - 1,
                         },
                         {
-                            token: zrx.address,
-                            from: sushiswap.address,
+                            token: await zrx.getAddress(),
+                            from: await sushiswap.getAddress(),
                             to: taker,
                         },
                     ],
@@ -837,41 +842,41 @@ describe('MultiplexFeature', () => {
                 const rfqSubcall = await getRfqSubcallAsync(order, encodeFractionalFillAmount(rfqFillProportion));
                 // fractional fill amount 100% => the rest of the total sell amount is sold to Uniswap
                 const uniswapV2Subcall = getUniswapV2BatchSubcall(
-                    [dai.address, zrx.address],
+                    [await dai.getAddress(), zrx.address],
                     encodeFractionalFillAmount(1),
                 );
                 const tx = await multiplex
-                    .multiplexBatchSellTokenForToken(
-                        dai.address,
-                        zrx.address,
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexBatchSellTokenForToken(await dai.getAddress(),
+                        await zrx.getAddress(),
                         [rfqSubcall, uniswapV2Subcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
                             to: order.maker,
                             value: sellAmount * rfqFillProportion,
                         },
                         {
-                            token: zrx.address,
+                            token: await zrx.getAddress(),
                             from: order.maker,
                             to: taker,
                         },
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: uniswap.address,
+                            to: await uniswap.getAddress(),
                             value: sellAmount - sellAmount * rfqFillProportion,
                         },
                         {
-                            token: zrx.address,
-                            from: uniswap.address,
+                            token: await zrx.getAddress(),
+                            from: await uniswap.getAddress(),
                             to: taker,
                         },
                     ],
@@ -884,52 +889,52 @@ describe('MultiplexFeature', () => {
                 const uniV3 = await createUniswapV3PoolAsync(dai, shib);
                 const uniV3Subcall = getUniswapV3MultiHopSubcall([dai, shib]);
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, shib, zrx);
-                const uniV2Subcall = getUniswapV2MultiHopSubcall([shib.address, zrx.address]);
+                const uniV2Subcall = getUniswapV2MultiHopSubcall([await shib.getAddress(), zrx.address]);
                 const nestedMultiHopSubcall = getNestedMultiHopSellSubcall(
-                    [dai.address, shib.address, zrx.address],
+                    [await dai.getAddress(), await shib.getAddress(), zrx.address],
                     [uniV3Subcall, uniV2Subcall],
                 );
                 const sellAmount = rfqSubcall.sellAmount + nestedMultiHopSubcall.sellAmount;
                 await mintToAsync(dai, taker, sellAmount);
 
                 const tx = await multiplex
-                    .multiplexBatchSellTokenForToken(
-                        dai.address,
-                        zrx.address,
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexBatchSellTokenForToken(await dai.getAddress(),
+                        await zrx.getAddress(),
                         [rfqSubcall, nestedMultiHopSubcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
                             to: order.maker,
                             value: order.takerAmount,
                         },
                         {
-                            token: zrx.address,
+                            token: await zrx.getAddress(),
                             from: order.maker,
                             to: taker,
                             value: order.makerAmount,
                         },
                         {
-                            token: shib.address,
-                            from: uniV3.address,
-                            to: uniV2.address,
+                            token: await shib.getAddress(),
+                            from: await uniV3.getAddress(),
+                            to: await uniV2.getAddress(),
                         },
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: uniV3.address,
+                            to: await uniV3.getAddress(),
                             value: nestedMultiHopSubcall.sellAmount,
                         },
                         {
-                            token: zrx.address,
-                            from: uniV2.address,
+                            token: await zrx.getAddress(),
+                            from: await uniV2.getAddress(),
                             to: taker,
                         },
                     ],
@@ -943,7 +948,7 @@ describe('MultiplexFeature', () => {
                 const rfqSubcall = await getRfqSubcallAsync(order);
 
                 const tx = await multiplex
-                    .multiplexBatchSellEthForToken(zrx.address, [rfqSubcall], constants.ZERO_AMOUNT)
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [rfqSubcall], constants.ZERO_AMOUNT)
                     ({ from: taker, value: order.takerAmount });
                 verifyEventsFromLogs(
                     tx.logs,
@@ -954,13 +959,13 @@ describe('MultiplexFeature', () => {
                     tx.logs,
                     [
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: await zeroEx.getAddress(),
                             to: order.maker,
                             value: order.takerAmount,
                         },
                         {
-                            token: zrx.address,
+                            token: await zrx.getAddress(),
                             from: order.maker,
                             to: taker,
                             value: order.makerAmount,
@@ -974,7 +979,7 @@ describe('MultiplexFeature', () => {
                 const otcSubcall = await getOtcSubcallAsync(order);
 
                 const tx = await multiplex
-                    .multiplexBatchSellEthForToken(zrx.address, [otcSubcall], constants.ZERO_AMOUNT)
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [otcSubcall], constants.ZERO_AMOUNT)
                     ({ from: taker, value: order.takerAmount });
                 verifyEventsFromLogs(
                     tx.logs,
@@ -985,13 +990,13 @@ describe('MultiplexFeature', () => {
                     tx.logs,
                     [
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: await zeroEx.getAddress(),
                             to: order.maker,
                             value: order.takerAmount,
                         },
                         {
-                            token: zrx.address,
+                            token: await zrx.getAddress(),
                             from: order.maker,
                             to: taker,
                             value: order.makerAmount,
@@ -1002,10 +1007,10 @@ describe('MultiplexFeature', () => {
             });
             it('UniswapV2', async () => {
                 const uniswap = await createUniswapV2PoolAsync(uniV2Factory, weth, zrx);
-                const uniswapV2Subcall = getUniswapV2BatchSubcall([weth.address, zrx.address]);
+                const uniswapV2Subcall = getUniswapV2BatchSubcall([await weth.getAddress(), zrx.address]);
 
                 const tx = await multiplex
-                    .multiplexBatchSellEthForToken(zrx.address, [uniswapV2Subcall], constants.ZERO_AMOUNT)
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [uniswapV2Subcall], constants.ZERO_AMOUNT)
                     ({ from: taker, value: uniswapV2Subcall.sellAmount });
                 verifyEventsFromLogs(
                     tx.logs,
@@ -1016,14 +1021,14 @@ describe('MultiplexFeature', () => {
                     tx.logs,
                     [
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: await zeroEx.getAddress(),
-                            to: uniswap.address,
+                            to: await uniswap.getAddress(),
                             value: uniswapV2Subcall.sellAmount,
                         },
                         {
-                            token: zrx.address,
-                            from: uniswap.address,
+                            token: await zrx.getAddress(),
+                            from: await uniswap.getAddress(),
                             to: taker,
                         },
                     ],
@@ -1034,7 +1039,7 @@ describe('MultiplexFeature', () => {
                 const uniV3 = await createUniswapV3PoolAsync(weth, zrx);
                 const uniswapV3Subcall = getUniswapV3BatchSubcall([weth, zrx]);
                 const tx = await multiplex
-                    .multiplexBatchSellEthForToken(zrx.address, [uniswapV3Subcall], constants.ZERO_AMOUNT)
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [uniswapV3Subcall], constants.ZERO_AMOUNT)
                     ({ from: taker, value: uniswapV3Subcall.sellAmount });
                 verifyEventsFromLogs(
                     tx.logs,
@@ -1045,14 +1050,14 @@ describe('MultiplexFeature', () => {
                     tx.logs,
                     [
                         {
-                            token: zrx.address,
-                            from: uniV3.address,
+                            token: await zrx.getAddress(),
+                            from: await uniV3.getAddress(),
                             to: taker,
                         },
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: await zeroEx.getAddress(),
-                            to: uniV3.address,
+                            to: await uniV3.getAddress(),
                             value: uniswapV3Subcall.sellAmount,
                         },
                     ],
@@ -1062,7 +1067,7 @@ describe('MultiplexFeature', () => {
             it('LiquidityProvider', async () => {
                 const liquidityProviderSubcall = getLiquidityProviderBatchSubcall();
                 const tx = await multiplex
-                    .multiplexBatchSellEthForToken(zrx.address, [liquidityProviderSubcall], constants.ZERO_AMOUNT)
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [liquidityProviderSubcall], constants.ZERO_AMOUNT)
                     ({ from: taker, value: liquidityProviderSubcall.sellAmount });
                 verifyEventsFromLogs(
                     tx.logs,
@@ -1073,14 +1078,14 @@ describe('MultiplexFeature', () => {
                     tx.logs,
                     [
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: await zeroEx.getAddress(),
-                            to: liquidityProvider.address,
+                            to: await liquidityProvider.getAddress(),
                             value: liquidityProviderSubcall.sellAmount,
                         },
                         {
-                            token: zrx.address,
-                            from: liquidityProvider.address,
+                            token: await zrx.getAddress(),
+                            from: await liquidityProvider.getAddress(),
                             to: taker,
                         },
                     ],
@@ -1088,9 +1093,9 @@ describe('MultiplexFeature', () => {
                 );
             });
             it('TransformERC20', async () => {
-                const transformERC20Subcall = getTransformERC20Subcall(weth.address, zrx.address);
+                const transformERC20Subcall = getTransformERC20Subcall(await weth.getAddress(), await zrx.getAddress());
                 const tx = await multiplex
-                    .multiplexBatchSellEthForToken(zrx.address, [transformERC20Subcall], constants.ZERO_AMOUNT)
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [transformERC20Subcall], constants.ZERO_AMOUNT)
                     ({ from: taker, value: transformERC20Subcall.sellAmount });
                 verifyEventsFromLogs(
                     tx.logs,
@@ -1101,18 +1106,18 @@ describe('MultiplexFeature', () => {
                     tx.logs,
                     [
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: await zeroEx.getAddress(),
                             to: flashWalletAddress,
                             value: transformERC20Subcall.sellAmount,
                         },
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: flashWalletAddress,
                             to: constants.NULL_ADDRESS,
                         },
                         {
-                            token: zrx.address,
+                            token: await zrx.getAddress(),
                             from: flashWalletAddress,
                             to: taker,
                         },
@@ -1121,21 +1126,21 @@ describe('MultiplexFeature', () => {
                 );
             });
             it('RFQ, MultiHop(UniV3, UniV2)', async () => {
-                const order = await getTestRfqOrder({ takerToken: weth.address, makerToken: zrx.address });
+                const order = await getTestRfqOrder({ takerToken: await weth.getAddress(), makerToken: zrx.address });
                 const rfqSubcall = await getRfqSubcallAsync(order);
                 const uniV3 = await createUniswapV3PoolAsync(weth, shib);
                 const uniV3Subcall = getUniswapV3MultiHopSubcall([weth, shib]);
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, shib, zrx);
-                const uniV2Subcall = getUniswapV2MultiHopSubcall([shib.address, zrx.address]);
+                const uniV2Subcall = getUniswapV2MultiHopSubcall([await shib.getAddress(), zrx.address]);
                 const nestedMultiHopSubcall = getNestedMultiHopSellSubcall(
-                    [weth.address, shib.address, zrx.address],
+                    [await weth.getAddress(), await shib.getAddress(), zrx.address],
                     [uniV3Subcall, uniV2Subcall],
                 );
                 const sellAmount = rfqSubcall.sellAmount + nestedMultiHopSubcall.sellAmount;
 
                 const tx = await multiplex
                     .multiplexBatchSellEthForToken(
-                        zrx.address,
+                        await zrx.getAddress(),
                         [rfqSubcall, nestedMultiHopSubcall],
                         constants.ZERO_AMOUNT,
                     )
@@ -1145,31 +1150,31 @@ describe('MultiplexFeature', () => {
                     tx.logs,
                     [
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: await zeroEx.getAddress(),
                             to: order.maker,
                             value: order.takerAmount,
                         },
                         {
-                            token: zrx.address,
+                            token: await zrx.getAddress(),
                             from: order.maker,
                             to: taker,
                             value: order.makerAmount,
                         },
                         {
-                            token: shib.address,
-                            from: uniV3.address,
-                            to: uniV2.address,
+                            token: await shib.getAddress(),
+                            from: await uniV3.getAddress(),
+                            to: await uniV2.getAddress(),
                         },
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: await zeroEx.getAddress(),
-                            to: uniV3.address,
+                            to: await uniV3.getAddress(),
                             value: nestedMultiHopSubcall.sellAmount,
                         },
                         {
-                            token: zrx.address,
-                            from: uniV2.address,
+                            token: await zrx.getAddress(),
+                            from: await uniV2.getAddress(),
                             to: taker,
                         },
                     ],
@@ -1183,20 +1188,21 @@ describe('MultiplexFeature', () => {
                 const rfqSubcall = await getRfqSubcallAsync(order);
                 await mintToAsync(dai, taker, order.takerAmount);
                 const tx = await multiplex
-                    .multiplexBatchSellTokenForEth(dai.address, [rfqSubcall], order.takerAmount, constants.ZERO_AMOUNT)
-                    ({ from: taker });
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexBatchSellTokenForEth(await dai.getAddress(), [rfqSubcall], order.takerAmount, constants.ZERO_AMOUNT);
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress() }], TestWethEvents.Withdrawal);
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
                             to: order.maker,
                             value: order.takerAmount,
                         },
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: order.maker,
                             to: await zeroEx.getAddress(),
                             value: order.makerAmount,
@@ -1210,20 +1216,21 @@ describe('MultiplexFeature', () => {
                 const otcSubcall = await getOtcSubcallAsync(order);
                 await mintToAsync(dai, taker, order.takerAmount);
                 const tx = await multiplex
-                    .multiplexBatchSellTokenForEth(dai.address, [otcSubcall], order.takerAmount, constants.ZERO_AMOUNT)
-                    ({ from: taker });
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexBatchSellTokenForEth(await dai.getAddress(), [otcSubcall], order.takerAmount, constants.ZERO_AMOUNT);
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress() }], TestWethEvents.Withdrawal);
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
                             to: order.maker,
                             value: order.takerAmount,
                         },
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: order.maker,
                             to: await zeroEx.getAddress(),
                             value: order.makerAmount,
@@ -1233,31 +1240,31 @@ describe('MultiplexFeature', () => {
                 );
             });
             it('UniswapV2', async () => {
-                const uniswapV2Subcall = getUniswapV2BatchSubcall([dai.address, weth.address]);
+                const uniswapV2Subcall = getUniswapV2BatchSubcall([await dai.getAddress(), weth.address]);
                 const uniswap = await createUniswapV2PoolAsync(uniV2Factory, dai, weth);
                 await mintToAsync(dai, taker, uniswapV2Subcall.sellAmount);
 
                 const tx = await multiplex
-                    .multiplexBatchSellTokenForEth(
-                        dai.address,
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexBatchSellTokenForEth(await dai.getAddress(),
                         [uniswapV2Subcall],
                         uniswapV2Subcall.sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress() }], TestWethEvents.Withdrawal);
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: uniswap.address,
+                            to: await uniswap.getAddress(),
                             value: uniswapV2Subcall.sellAmount,
                         },
                         {
-                            token: weth.address,
-                            from: uniswap.address,
+                            token: await weth.getAddress(),
+                            from: await uniswap.getAddress(),
                             to: await zeroEx.getAddress(),
                         },
                     ],
@@ -1270,26 +1277,26 @@ describe('MultiplexFeature', () => {
                 await mintToAsync(dai, taker, uniswapV3Subcall.sellAmount);
 
                 const tx = await multiplex
-                    .multiplexBatchSellTokenForEth(
-                        dai.address,
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexBatchSellTokenForEth(await dai.getAddress(),
                         [uniswapV3Subcall],
                         uniswapV3Subcall.sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress() }], TestWethEvents.Withdrawal);
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: weth.address,
-                            from: uniV3.address,
+                            token: await weth.getAddress(),
+                            from: await uniV3.getAddress(),
                             to: await zeroEx.getAddress(),
                         },
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: uniV3.address,
+                            to: await uniV3.getAddress(),
                             value: uniswapV3Subcall.sellAmount,
                         },
                     ],
@@ -1301,26 +1308,26 @@ describe('MultiplexFeature', () => {
                 await mintToAsync(dai, taker, liquidityProviderSubcall.sellAmount);
 
                 const tx = await multiplex
-                    .multiplexBatchSellTokenForEth(
-                        dai.address,
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexBatchSellTokenForEth(await dai.getAddress(),
                         [liquidityProviderSubcall],
                         liquidityProviderSubcall.sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress() }], TestWethEvents.Withdrawal);
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: liquidityProvider.address,
+                            to: await liquidityProvider.getAddress(),
                             value: liquidityProviderSubcall.sellAmount,
                         },
                         {
-                            token: weth.address,
-                            from: liquidityProvider.address,
+                            token: await weth.getAddress(),
+                            from: await liquidityProvider.getAddress(),
                             to: await zeroEx.getAddress(),
                         },
                     ],
@@ -1329,38 +1336,38 @@ describe('MultiplexFeature', () => {
             });
             it('TransformERC20', async () => {
                 const transformERC20Subcall = getTransformERC20Subcall(
-                    dai.address,
-                    weth.address,
+                    await dai.getAddress(),
+                    await weth.getAddress(),
                     undefined,
                     constants.ZERO_AMOUNT,
                 );
                 await mintToAsync(dai, taker, transformERC20Subcall.sellAmount);
 
                 const tx = await multiplex
-                    .multiplexBatchSellTokenForEth(
-                        dai.address,
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexBatchSellTokenForEth(await dai.getAddress(),
                         [transformERC20Subcall],
                         transformERC20Subcall.sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress() }], TestWethEvents.Withdrawal);
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
                             to: flashWalletAddress,
                             value: transformERC20Subcall.sellAmount,
                         },
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: flashWalletAddress,
                             to: constants.NULL_ADDRESS,
                         },
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: flashWalletAddress,
                             to: await zeroEx.getAddress(),
                         },
@@ -1369,56 +1376,56 @@ describe('MultiplexFeature', () => {
                 );
             });
             it('RFQ, MultiHop(UniV3, UniV2)', async () => {
-                const order = await getTestRfqOrder({ takerToken: dai.address, makerToken: weth.address });
+                const order = await getTestRfqOrder({ takerToken: await dai.getAddress(), makerToken: weth.address });
                 const rfqSubcall = await getRfqSubcallAsync(order);
                 const uniV3 = await createUniswapV3PoolAsync(dai, shib);
                 const uniV3Subcall = getUniswapV3MultiHopSubcall([dai, shib]);
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, shib, weth);
-                const uniV2Subcall = getUniswapV2MultiHopSubcall([shib.address, weth.address]);
+                const uniV2Subcall = getUniswapV2MultiHopSubcall([await shib.getAddress(), weth.address]);
                 const nestedMultiHopSubcall = getNestedMultiHopSellSubcall(
-                    [dai.address, shib.address, weth.address],
+                    [await dai.getAddress(), await shib.getAddress(), weth.address],
                     [uniV3Subcall, uniV2Subcall],
                 );
                 const sellAmount = rfqSubcall.sellAmount + nestedMultiHopSubcall.sellAmount;
                 await mintToAsync(dai, taker, sellAmount);
 
                 const tx = await multiplex
-                    .multiplexBatchSellTokenForEth(
-                        dai.address,
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexBatchSellTokenForEth(await dai.getAddress(),
                         [rfqSubcall, nestedMultiHopSubcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
                             to: order.maker,
                             value: order.takerAmount,
                         },
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: order.maker,
                             to: await zeroEx.getAddress(),
                             value: order.makerAmount,
                         },
                         {
-                            token: shib.address,
-                            from: uniV3.address,
-                            to: uniV2.address,
+                            token: await shib.getAddress(),
+                            from: await uniV3.getAddress(),
+                            to: await uniV2.getAddress(),
                         },
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: uniV3.address,
+                            to: await uniV3.getAddress(),
                             value: nestedMultiHopSubcall.sellAmount,
                         },
                         {
-                            token: weth.address,
-                            from: uniV2.address,
+                            token: await weth.getAddress(),
+                            from: await uniV2.getAddress(),
                             to: await zeroEx.getAddress(),
                         },
                     ],
@@ -1437,7 +1444,7 @@ describe('MultiplexFeature', () => {
                 };
                 const tx = multiplex
                     .multiplexMultiHopSellTokenForToken(
-                        [dai.address, zrx.address],
+                        [await dai.getAddress(), zrx.address],
                         [invalidSubcall],
                         toBaseUnitAmount(1),
                         constants.ZERO_AMOUNT,
@@ -1448,69 +1455,69 @@ describe('MultiplexFeature', () => {
             it('reverts if minBuyAmount is not satisfied', async () => {
                 const sellAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 await createUniswapV2PoolAsync(uniV2Factory, dai, zrx);
-                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([dai.address, zrx.address]);
+                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([await dai.getAddress(), zrx.address]);
                 await mintToAsync(dai, taker, sellAmount);
 
                 const tx = multiplex
-                    .multiplexMultiHopSellTokenForToken(
-                        [dai.address, zrx.address],
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexMultiHopSellTokenForToken([await dai.getAddress(), zrx.address],
                         [uniswapV2Subcall],
                         sellAmount,
                         constants.MAX_UINT256,
-                    )
-                    ({ from: taker });
+                    );
                 return expect(tx).to.be.revertedWith('MultiplexFeature::_multiplexMultiHopSell/UNDERBOUGHT');
             });
             it('reverts if array lengths are mismatched', async () => {
                 const sellAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 await createUniswapV2PoolAsync(uniV2Factory, dai, zrx);
-                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([dai.address, zrx.address]);
+                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([await dai.getAddress(), zrx.address]);
                 await mintToAsync(dai, taker, sellAmount);
 
                 const tx = multiplex
-                    .multiplexMultiHopSellTokenForToken(
-                        [dai.address, zrx.address],
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexMultiHopSellTokenForToken([await dai.getAddress(), zrx.address],
                         [uniswapV2Subcall, uniswapV2Subcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 return expect(tx).to.be.revertedWith('MultiplexFeature::_multiplexMultiHopSell/MISMATCHED_ARRAY_LENGTHS');
             });
             it('UniswapV2 -> LiquidityProvider', async () => {
                 const sellAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const buyAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const uniswap = await createUniswapV2PoolAsync(uniV2Factory, dai, shib);
-                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([dai.address, shib.address]);
+                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([await dai.getAddress(), shib.address]);
                 const liquidityProviderSubcall = getLiquidityProviderMultiHopSubcall();
                 await mintToAsync(dai, taker, sellAmount);
-                await mintToAsync(zrx, liquidityProvider.address, buyAmount);
+                await mintToAsync(zrx, await liquidityProvider.getAddress(), buyAmount);
 
                 const tx = await multiplex
-                    .multiplexMultiHopSellTokenForToken(
-                        [dai.address, shib.address, zrx.address],
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexMultiHopSellTokenForToken([await dai.getAddress(), await shib.getAddress(), zrx.address],
                         [uniswapV2Subcall, liquidityProviderSubcall],
                         sellAmount,
                         buyAmount,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: uniswap.address,
+                            to: await uniswap.getAddress(),
                             value: sellAmount,
                         },
                         {
-                            token: shib.address,
-                            from: uniswap.address,
-                            to: liquidityProvider.address,
+                            token: await shib.getAddress(),
+                            from: await uniswap.getAddress(),
+                            to: await liquidityProvider.getAddress(),
                         },
                         {
-                            token: zrx.address,
-                            from: liquidityProvider.address,
+                            token: await zrx.getAddress(),
+                            from: await liquidityProvider.getAddress(),
                             to: taker,
                             value: buyAmount,
                         },
@@ -1523,36 +1530,36 @@ describe('MultiplexFeature', () => {
                 const shibAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const liquidityProviderSubcall = getLiquidityProviderMultiHopSubcall();
                 const sushiswap = await createUniswapV2PoolAsync(sushiFactory, shib, zrx);
-                const sushiswapSubcall = getUniswapV2MultiHopSubcall([shib.address, zrx.address], true);
+                const sushiswapSubcall = getUniswapV2MultiHopSubcall([await shib.getAddress(), zrx.address], true);
                 await mintToAsync(dai, taker, sellAmount);
-                await mintToAsync(shib, liquidityProvider.address, shibAmount);
+                await mintToAsync(shib, await liquidityProvider.getAddress(), shibAmount);
 
                 const tx = await multiplex
-                    .multiplexMultiHopSellTokenForToken(
-                        [dai.address, shib.address, zrx.address],
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexMultiHopSellTokenForToken([await dai.getAddress(), await shib.getAddress(), zrx.address],
                         [liquidityProviderSubcall, sushiswapSubcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: liquidityProvider.address,
+                            to: await liquidityProvider.getAddress(),
                             value: sellAmount,
                         },
                         {
-                            token: shib.address,
-                            from: liquidityProvider.address,
-                            to: sushiswap.address,
+                            token: await shib.getAddress(),
+                            from: await liquidityProvider.getAddress(),
+                            to: await sushiswap.getAddress(),
                             value: shibAmount,
                         },
                         {
-                            token: zrx.address,
-                            from: sushiswap.address,
+                            token: await zrx.getAddress(),
+                            from: await sushiswap.getAddress(),
                             to: taker,
                         },
                     ],
@@ -1564,56 +1571,56 @@ describe('MultiplexFeature', () => {
                 await mintToAsync(dai, taker, sellAmount);
                 const uniV3 = await createUniswapV3PoolAsync(dai, shib);
                 const uniV3Subcall = getUniswapV3MultiHopSubcall([dai, shib]);
-                const rfqOrder = getTestRfqOrder({ takerToken: shib.address, makerToken: zrx.address });
+                const rfqOrder = getTestRfqOrder({ takerToken: await shib.getAddress(), makerToken: zrx.address });
                 const rfqFillProportion = 0.42;
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, encodeFractionalFillAmount(rfqFillProportion));
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, shib, zrx);
                 const uniV2Subcall = getUniswapV2BatchSubcall(
-                    [shib.address, zrx.address],
+                    [await shib.getAddress(), zrx.address],
                     encodeFractionalFillAmount(1),
                 );
                 const nestedBatchSellSubcall = getNestedBatchSellSubcall([rfqSubcall, uniV2Subcall]);
 
                 const tx = await multiplex
-                    .multiplexMultiHopSellTokenForToken(
-                        [dai.address, shib.address, zrx.address],
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexMultiHopSellTokenForToken([await dai.getAddress(), await shib.getAddress(), zrx.address],
                         [uniV3Subcall, nestedBatchSellSubcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: shib.address,
-                            from: uniV3.address,
+                            token: await shib.getAddress(),
+                            from: await uniV3.getAddress(),
                             to: await zeroEx.getAddress(),
                         },
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: uniV3.address,
+                            to: await uniV3.getAddress(),
                             value: sellAmount,
                         },
                         {
-                            token: shib.address,
+                            token: await shib.getAddress(),
                             from: await zeroEx.getAddress(),
                             to: maker,
                         },
                         {
-                            token: zrx.address,
+                            token: await zrx.getAddress(),
                             from: maker,
                             to: taker,
                         },
                         {
-                            token: shib.address,
+                            token: await shib.getAddress(),
                             from: await zeroEx.getAddress(),
-                            to: uniV2.address,
+                            to: await uniV2.getAddress(),
                         },
                         {
-                            token: zrx.address,
-                            from: uniV2.address,
+                            token: await zrx.getAddress(),
+                            from: await uniV2.getAddress(),
                             to: taker,
                         },
                     ],
@@ -1621,10 +1628,10 @@ describe('MultiplexFeature', () => {
                 );
             });
             it('BatchSell(RFQ, UniswapV2) -> UniswapV3', async () => {
-                const rfqOrder = getTestRfqOrder({ takerToken: dai.address, makerToken: shib.address });
+                const rfqOrder = getTestRfqOrder({ takerToken: await dai.getAddress(), makerToken: shib.address });
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, rfqOrder.takerAmount);
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, dai, shib);
-                const uniV2Subcall = getUniswapV2BatchSubcall([dai.address, shib.address]);
+                const uniV2Subcall = getUniswapV2BatchSubcall([await dai.getAddress(), shib.address]);
                 const sellAmount = rfqSubcall.sellAmount + uniV2Subcall.sellAmount;
                 await mintToAsync(dai, taker, sellAmount);
                 const nestedBatchSellSubcall = getNestedBatchSellSubcall([rfqSubcall, uniV2Subcall]);
@@ -1633,48 +1640,48 @@ describe('MultiplexFeature', () => {
                 const uniV3Subcall = getUniswapV3MultiHopSubcall([shib, zrx]);
 
                 const tx = await multiplex
-                    .multiplexMultiHopSellTokenForToken(
-                        [dai.address, shib.address, zrx.address],
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexMultiHopSellTokenForToken([await dai.getAddress(), await shib.getAddress(), zrx.address],
                         [nestedBatchSellSubcall, uniV3Subcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
                             to: maker,
                             value: rfqOrder.takerAmount,
                         },
                         {
-                            token: shib.address,
+                            token: await shib.getAddress(),
                             from: maker,
                             to: await zeroEx.getAddress(),
                             value: rfqOrder.makerAmount,
                         },
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: uniV2.address,
+                            to: await uniV2.getAddress(),
                             value: uniV2Subcall.sellAmount,
                         },
                         {
-                            token: shib.address,
-                            from: uniV2.address,
+                            token: await shib.getAddress(),
+                            from: await uniV2.getAddress(),
                             to: await zeroEx.getAddress(),
                         },
                         {
-                            token: zrx.address,
-                            from: uniV3.address,
+                            token: await zrx.getAddress(),
+                            from: await uniV3.getAddress(),
                             to: taker,
                         },
                         {
-                            token: shib.address,
+                            token: await shib.getAddress(),
                             from: await zeroEx.getAddress(),
-                            to: uniV3.address,
+                            to: await uniV3.getAddress(),
                         },
                     ],
                     TestMintableERC20TokenEvents.Transfer,
@@ -1685,12 +1692,12 @@ describe('MultiplexFeature', () => {
             it('reverts if first token is not WETH', async () => {
                 const sellAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 await createUniswapV2PoolAsync(uniV2Factory, weth, zrx);
-                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([weth.address, zrx.address]);
+                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([await weth.getAddress(), zrx.address]);
                 await mintToAsync(weth, taker, sellAmount);
 
                 const tx = multiplex
                     .multiplexMultiHopSellEthForToken(
-                        [dai.address, zrx.address],
+                        [await dai.getAddress(), zrx.address],
                         [uniswapV2Subcall],
                         constants.ZERO_AMOUNT,
                     )
@@ -1701,13 +1708,13 @@ describe('MultiplexFeature', () => {
                 const sellAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const buyAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const uniswap = await createUniswapV2PoolAsync(uniV2Factory, weth, shib);
-                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([weth.address, shib.address]);
+                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([await weth.getAddress(), shib.address]);
                 const liquidityProviderSubcall = getLiquidityProviderMultiHopSubcall();
-                await mintToAsync(zrx, liquidityProvider.address, buyAmount);
+                await mintToAsync(zrx, await liquidityProvider.getAddress(), buyAmount);
 
                 const tx = await multiplex
                     .multiplexMultiHopSellEthForToken(
-                        [weth.address, shib.address, zrx.address],
+                        [await weth.getAddress(), await shib.getAddress(), zrx.address],
                         [uniswapV2Subcall, liquidityProviderSubcall],
                         buyAmount,
                     )
@@ -1717,19 +1724,19 @@ describe('MultiplexFeature', () => {
                     tx.logs,
                     [
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: await zeroEx.getAddress(),
-                            to: uniswap.address,
+                            to: await uniswap.getAddress(),
                             value: sellAmount,
                         },
                         {
-                            token: shib.address,
-                            from: uniswap.address,
-                            to: liquidityProvider.address,
+                            token: await shib.getAddress(),
+                            from: await uniswap.getAddress(),
+                            to: await liquidityProvider.getAddress(),
                         },
                         {
-                            token: zrx.address,
-                            from: liquidityProvider.address,
+                            token: await zrx.getAddress(),
+                            from: await liquidityProvider.getAddress(),
                             to: taker,
                             value: buyAmount,
                         },
@@ -1742,12 +1749,12 @@ describe('MultiplexFeature', () => {
                 const shibAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const liquidityProviderSubcall = getLiquidityProviderMultiHopSubcall();
                 const sushiswap = await createUniswapV2PoolAsync(sushiFactory, shib, zrx);
-                const sushiswapSubcall = getUniswapV2MultiHopSubcall([shib.address, zrx.address], true);
-                await mintToAsync(shib, liquidityProvider.address, shibAmount);
+                const sushiswapSubcall = getUniswapV2MultiHopSubcall([await shib.getAddress(), zrx.address], true);
+                await mintToAsync(shib, await liquidityProvider.getAddress(), shibAmount);
 
                 const tx = await multiplex
                     .multiplexMultiHopSellEthForToken(
-                        [weth.address, shib.address, zrx.address],
+                        [await weth.getAddress(), await shib.getAddress(), zrx.address],
                         [liquidityProviderSubcall, sushiswapSubcall],
                         constants.ZERO_AMOUNT,
                     )
@@ -1757,20 +1764,20 @@ describe('MultiplexFeature', () => {
                     tx.logs,
                     [
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: await zeroEx.getAddress(),
-                            to: liquidityProvider.address,
+                            to: await liquidityProvider.getAddress(),
                             value: sellAmount,
                         },
                         {
-                            token: shib.address,
-                            from: liquidityProvider.address,
-                            to: sushiswap.address,
+                            token: await shib.getAddress(),
+                            from: await liquidityProvider.getAddress(),
+                            to: await sushiswap.getAddress(),
                             value: shibAmount,
                         },
                         {
-                            token: zrx.address,
-                            from: sushiswap.address,
+                            token: await zrx.getAddress(),
+                            from: await sushiswap.getAddress(),
                             to: taker,
                         },
                     ],
@@ -1781,19 +1788,19 @@ describe('MultiplexFeature', () => {
                 const sellAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const uniV3 = await createUniswapV3PoolAsync(weth, shib);
                 const uniV3Subcall = getUniswapV3MultiHopSubcall([weth, shib]);
-                const rfqOrder = getTestRfqOrder({ takerToken: shib.address, makerToken: zrx.address });
+                const rfqOrder = getTestRfqOrder({ takerToken: await shib.getAddress(), makerToken: zrx.address });
                 const rfqFillProportion = 0.42;
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, encodeFractionalFillAmount(rfqFillProportion));
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, shib, zrx);
                 const uniV2Subcall = getUniswapV2BatchSubcall(
-                    [shib.address, zrx.address],
+                    [await shib.getAddress(), zrx.address],
                     encodeFractionalFillAmount(1),
                 );
                 const nestedBatchSellSubcall = getNestedBatchSellSubcall([rfqSubcall, uniV2Subcall]);
 
                 const tx = await multiplex
                     .multiplexMultiHopSellEthForToken(
-                        [weth.address, shib.address, zrx.address],
+                        [await weth.getAddress(), await shib.getAddress(), zrx.address],
                         [uniV3Subcall, nestedBatchSellSubcall],
                         constants.ZERO_AMOUNT,
                     )
@@ -1803,34 +1810,34 @@ describe('MultiplexFeature', () => {
                     tx.logs,
                     [
                         {
-                            token: shib.address,
-                            from: uniV3.address,
+                            token: await shib.getAddress(),
+                            from: await uniV3.getAddress(),
                             to: await zeroEx.getAddress(),
                         },
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: await zeroEx.getAddress(),
-                            to: uniV3.address,
+                            to: await uniV3.getAddress(),
                             value: sellAmount,
                         },
                         {
-                            token: shib.address,
+                            token: await shib.getAddress(),
                             from: await zeroEx.getAddress(),
                             to: maker,
                         },
                         {
-                            token: zrx.address,
+                            token: await zrx.getAddress(),
                             from: maker,
                             to: taker,
                         },
                         {
-                            token: shib.address,
+                            token: await shib.getAddress(),
                             from: await zeroEx.getAddress(),
-                            to: uniV2.address,
+                            to: await uniV2.getAddress(),
                         },
                         {
-                            token: zrx.address,
-                            from: uniV2.address,
+                            token: await zrx.getAddress(),
+                            from: await uniV2.getAddress(),
                             to: taker,
                         },
                     ],
@@ -1838,10 +1845,10 @@ describe('MultiplexFeature', () => {
                 );
             });
             it('BatchSell(RFQ, UniswapV2) -> UniswapV3', async () => {
-                const rfqOrder = getTestRfqOrder({ takerToken: weth.address, makerToken: shib.address });
+                const rfqOrder = getTestRfqOrder({ takerToken: await weth.getAddress(), makerToken: shib.address });
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, rfqOrder.takerAmount);
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, weth, shib);
-                const uniV2Subcall = getUniswapV2BatchSubcall([weth.address, shib.address]);
+                const uniV2Subcall = getUniswapV2BatchSubcall([await weth.getAddress(), shib.address]);
                 const sellAmount = rfqSubcall.sellAmount + uniV2Subcall.sellAmount;
                 const nestedBatchSellSubcall = getNestedBatchSellSubcall([rfqSubcall, uniV2Subcall]);
 
@@ -1850,7 +1857,7 @@ describe('MultiplexFeature', () => {
 
                 const tx = await multiplex
                     .multiplexMultiHopSellEthForToken(
-                        [weth.address, shib.address, zrx.address],
+                        [await weth.getAddress(), await shib.getAddress(), zrx.address],
                         [nestedBatchSellSubcall, uniV3Subcall],
                         constants.ZERO_AMOUNT,
                     )
@@ -1860,37 +1867,37 @@ describe('MultiplexFeature', () => {
                     tx.logs,
                     [
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: await zeroEx.getAddress(),
                             to: maker,
                             value: rfqOrder.takerAmount,
                         },
                         {
-                            token: shib.address,
+                            token: await shib.getAddress(),
                             from: maker,
                             to: await zeroEx.getAddress(),
                             value: rfqOrder.makerAmount,
                         },
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: await zeroEx.getAddress(),
-                            to: uniV2.address,
+                            to: await uniV2.getAddress(),
                             value: uniV2Subcall.sellAmount,
                         },
                         {
-                            token: shib.address,
-                            from: uniV2.address,
+                            token: await shib.getAddress(),
+                            from: await uniV2.getAddress(),
                             to: await zeroEx.getAddress(),
                         },
                         {
-                            token: zrx.address,
-                            from: uniV3.address,
+                            token: await zrx.getAddress(),
+                            from: await uniV3.getAddress(),
                             to: taker,
                         },
                         {
-                            token: shib.address,
+                            token: await shib.getAddress(),
                             from: await zeroEx.getAddress(),
-                            to: uniV3.address,
+                            to: await uniV3.getAddress(),
                         },
                     ],
                     TestMintableERC20TokenEvents.Transfer,
@@ -1901,53 +1908,53 @@ describe('MultiplexFeature', () => {
             it('reverts if last token is not WETH', async () => {
                 const sellAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 await createUniswapV2PoolAsync(uniV2Factory, zrx, weth);
-                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([zrx.address, weth.address]);
+                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([await zrx.getAddress(), weth.address]);
                 await mintToAsync(zrx, taker, sellAmount);
 
                 const tx = multiplex
-                    .multiplexMultiHopSellTokenForEth(
-                        [zrx.address, dai.address],
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexMultiHopSellTokenForEth([await zrx.getAddress(), dai.address],
                         [uniswapV2Subcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 return expect(tx).to.be.revertedWith('MultiplexFeature::multiplexMultiHopSellTokenForEth/NOT_WETH');
             });
             it('UniswapV2 -> LiquidityProvider', async () => {
                 const sellAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const buyAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const uniswap = await createUniswapV2PoolAsync(uniV2Factory, dai, shib);
-                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([dai.address, shib.address]);
+                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([await dai.getAddress(), shib.address]);
                 const liquidityProviderSubcall = getLiquidityProviderMultiHopSubcall();
                 await mintToAsync(dai, taker, sellAmount);
-                await mintToAsync(weth, liquidityProvider.address, buyAmount);
+                await mintToAsync(weth, await liquidityProvider.getAddress(), buyAmount);
 
                 const tx = await multiplex
-                    .multiplexMultiHopSellTokenForEth(
-                        [dai.address, shib.address, weth.address],
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexMultiHopSellTokenForEth([await dai.getAddress(), await shib.getAddress(), weth.address],
                         [uniswapV2Subcall, liquidityProviderSubcall],
                         sellAmount,
                         buyAmount,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: uniswap.address,
+                            to: await uniswap.getAddress(),
                             value: sellAmount,
                         },
                         {
-                            token: shib.address,
-                            from: uniswap.address,
-                            to: liquidityProvider.address,
+                            token: await shib.getAddress(),
+                            from: await uniswap.getAddress(),
+                            to: await liquidityProvider.getAddress(),
                         },
                         {
-                            token: weth.address,
-                            from: liquidityProvider.address,
+                            token: await weth.getAddress(),
+                            from: await liquidityProvider.getAddress(),
                             to: await zeroEx.getAddress(),
                             value: buyAmount,
                         },
@@ -1961,36 +1968,36 @@ describe('MultiplexFeature', () => {
                 const shibAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const liquidityProviderSubcall = getLiquidityProviderMultiHopSubcall();
                 const sushiswap = await createUniswapV2PoolAsync(sushiFactory, shib, weth);
-                const sushiswapSubcall = getUniswapV2MultiHopSubcall([shib.address, weth.address], true);
+                const sushiswapSubcall = getUniswapV2MultiHopSubcall([await shib.getAddress(), weth.address], true);
                 await mintToAsync(dai, taker, sellAmount);
-                await mintToAsync(shib, liquidityProvider.address, shibAmount);
+                await mintToAsync(shib, await liquidityProvider.getAddress(), shibAmount);
 
                 const tx = await multiplex
-                    .multiplexMultiHopSellTokenForEth(
-                        [dai.address, shib.address, weth.address],
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexMultiHopSellTokenForEth([await dai.getAddress(), await shib.getAddress(), weth.address],
                         [liquidityProviderSubcall, sushiswapSubcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: liquidityProvider.address,
+                            to: await liquidityProvider.getAddress(),
                             value: sellAmount,
                         },
                         {
-                            token: shib.address,
-                            from: liquidityProvider.address,
-                            to: sushiswap.address,
+                            token: await shib.getAddress(),
+                            from: await liquidityProvider.getAddress(),
+                            to: await sushiswap.getAddress(),
                             value: shibAmount,
                         },
                         {
-                            token: weth.address,
-                            from: sushiswap.address,
+                            token: await weth.getAddress(),
+                            from: await sushiswap.getAddress(),
                             to: await zeroEx.getAddress(),
                         },
                     ],
@@ -2002,57 +2009,57 @@ describe('MultiplexFeature', () => {
                 const sellAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const uniV3 = await createUniswapV3PoolAsync(dai, shib);
                 const uniV3Subcall = getUniswapV3MultiHopSubcall([dai, shib]);
-                const rfqOrder = getTestRfqOrder({ takerToken: shib.address, makerToken: weth.address });
+                const rfqOrder = getTestRfqOrder({ takerToken: await shib.getAddress(), makerToken: weth.address });
                 const rfqFillProportion = 0.42;
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, encodeFractionalFillAmount(rfqFillProportion));
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, shib, weth);
                 const uniV2Subcall = getUniswapV2BatchSubcall(
-                    [shib.address, weth.address],
+                    [await shib.getAddress(), weth.address],
                     encodeFractionalFillAmount(1),
                 );
                 const nestedBatchSellSubcall = getNestedBatchSellSubcall([rfqSubcall, uniV2Subcall]);
                 await mintToAsync(dai, taker, sellAmount);
 
                 const tx = await multiplex
-                    .multiplexMultiHopSellTokenForEth(
-                        [dai.address, shib.address, weth.address],
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexMultiHopSellTokenForEth([await dai.getAddress(), await shib.getAddress(), weth.address],
                         [uniV3Subcall, nestedBatchSellSubcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: shib.address,
-                            from: uniV3.address,
+                            token: await shib.getAddress(),
+                            from: await uniV3.getAddress(),
                             to: await zeroEx.getAddress(),
                         },
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: uniV3.address,
+                            to: await uniV3.getAddress(),
                             value: sellAmount,
                         },
                         {
-                            token: shib.address,
+                            token: await shib.getAddress(),
                             from: await zeroEx.getAddress(),
                             to: maker,
                         },
                         {
-                            token: weth.address,
+                            token: await weth.getAddress(),
                             from: maker,
                             to: await zeroEx.getAddress(),
                         },
                         {
-                            token: shib.address,
+                            token: await shib.getAddress(),
                             from: await zeroEx.getAddress(),
-                            to: uniV2.address,
+                            to: await uniV2.getAddress(),
                         },
                         {
-                            token: weth.address,
-                            from: uniV2.address,
+                            token: await weth.getAddress(),
+                            from: await uniV2.getAddress(),
                             to: await zeroEx.getAddress(),
                         },
                     ],
@@ -2061,10 +2068,10 @@ describe('MultiplexFeature', () => {
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress() }], TestWethEvents.Withdrawal);
             });
             it('BatchSell(RFQ, UniswapV2) -> UniswapV3', async () => {
-                const rfqOrder = getTestRfqOrder({ takerToken: dai.address, makerToken: shib.address });
+                const rfqOrder = getTestRfqOrder({ takerToken: await dai.getAddress(), makerToken: shib.address });
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, rfqOrder.takerAmount);
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, dai, shib);
-                const uniV2Subcall = getUniswapV2BatchSubcall([dai.address, shib.address]);
+                const uniV2Subcall = getUniswapV2BatchSubcall([await dai.getAddress(), shib.address]);
                 const sellAmount = rfqSubcall.sellAmount + uniV2Subcall.sellAmount;
                 const nestedBatchSellSubcall = getNestedBatchSellSubcall([rfqSubcall, uniV2Subcall]);
                 await mintToAsync(dai, taker, sellAmount);
@@ -2072,48 +2079,48 @@ describe('MultiplexFeature', () => {
                 const uniV3Subcall = getUniswapV3MultiHopSubcall([shib, weth]);
 
                 const tx = await multiplex
-                    .multiplexMultiHopSellTokenForEth(
-                        [dai.address, shib.address, weth.address],
+                    .connect(await env.provider.getSigner(taker))
+
+                    .multiplexMultiHopSellTokenForEth([await dai.getAddress(), await shib.getAddress(), weth.address],
                         [nestedBatchSellSubcall, uniV3Subcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker });
+                    );
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
                     [
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
                             to: maker,
                             value: rfqOrder.takerAmount,
                         },
                         {
-                            token: shib.address,
+                            token: await shib.getAddress(),
                             from: maker,
                             to: await zeroEx.getAddress(),
                             value: rfqOrder.makerAmount,
                         },
                         {
-                            token: dai.address,
+                            token: await dai.getAddress(),
                             from: taker,
-                            to: uniV2.address,
+                            to: await uniV2.getAddress(),
                             value: uniV2Subcall.sellAmount,
                         },
                         {
-                            token: shib.address,
-                            from: uniV2.address,
+                            token: await shib.getAddress(),
+                            from: await uniV2.getAddress(),
                             to: await zeroEx.getAddress(),
                         },
                         {
-                            token: weth.address,
-                            from: uniV3.address,
+                            token: await weth.getAddress(),
+                            from: await uniV3.getAddress(),
                             to: await zeroEx.getAddress(),
                         },
                         {
-                            token: shib.address,
+                            token: await shib.getAddress(),
                             from: await zeroEx.getAddress(),
-                            to: uniV3.address,
+                            to: await uniV3.getAddress(),
                         },
                     ],
                     TestMintableERC20TokenEvents.Transfer,
