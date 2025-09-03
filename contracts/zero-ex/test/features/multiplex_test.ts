@@ -259,7 +259,7 @@ describe('MultiplexFeature', () => {
         const makerToken =
             rfqOrder.makerToken === weth.address
                 ? weth
-                : new TestMintableERC20TokenContract(rfqOrder.makerToken, env.provider, env.txDefaults);
+                : await ethers.getContractAt('TestMintableERC20Token', rfqOrder.makerToken);
         await mintToAsync(makerToken, rfqOrder.maker, rfqOrder.makerAmount);
         const signature = await rfqOrder.getSignatureWithProviderAsync(env.provider);
         return {
@@ -311,7 +311,7 @@ describe('MultiplexFeature', () => {
         const makerToken =
             otcOrder.makerToken === weth.address
                 ? weth
-                : new TestMintableERC20TokenContract(otcOrder.makerToken, env.provider, env.txDefaults);
+                : await ethers.getContractAt('TestMintableERC20Token', otcOrder.makerToken);
         await mintToAsync(makerToken, otcOrder.maker, otcOrder.makerAmount);
         const signature = await otcOrder.getSignatureWithProviderAsync(env.provider);
         return {
@@ -1064,16 +1064,18 @@ describe('MultiplexFeature', () => {
             });
             it('LiquidityProvider', async () => {
                 const liquidityProviderSubcall = getLiquidityProviderBatchSubcall();
+                const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
-                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [liquidityProviderSubcall], constants.ZERO_AMOUNT)
-                    ({ from: taker, value: liquidityProviderSubcall.sellAmount });
+                    .connect(takerSigner)
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [liquidityProviderSubcall], constants.ZERO_AMOUNT, { value: liquidityProviderSubcall.sellAmount });
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
-                    tx.logs,
+                    receipt.logs,
                     [{ owner: await zeroEx.getAddress(), value: liquidityProviderSubcall.sellAmount }],
                     TestWethEvents.Deposit,
                 );
                 verifyEventsFromLogs<TransferEvent>(
-                    tx.logs,
+                    receipt.logs,
                     [
                         {
                             token: await weth.getAddress(),
