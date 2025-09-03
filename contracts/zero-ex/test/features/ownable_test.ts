@@ -100,11 +100,13 @@ describe('Ownable feature', () => {
 
         it('non-owner cannot call migrate()', async () => {
             const notOwnerSigner = await env.provider.getSigner(notOwner);
-            return expect(
+            // ✅ 基于业务逻辑构造错误：只有 owner 可以调用 migrate
+            await UnifiedErrorMatcher.expectError(
                 ownable
                     .connect(notOwnerSigner)
-                    .migrate(await testMigrator.getAddress(), succeedingMigrateFnCallData, newOwner)
-            ).to.be.rejected;
+                    .migrate(await testMigrator.getAddress(), succeedingMigrateFnCallData, newOwner),
+                new OwnableRevertErrors.OnlyOwnerError(notOwner, owner)
+            );
         });
 
         it('can successfully execute a migration', async () => {
@@ -129,20 +131,30 @@ describe('Ownable feature', () => {
 
         it('failing migration reverts', async () => {
             const ownerSigner = await env.provider.getSigner(owner);
-            return expect(
+            // ✅ 基于业务逻辑构造错误：迁移函数返回错误的魔法字节
+            // failingMigrate 返回 0xdeadbeef 而不是 MIGRATE_SUCCESS (0x2c64c5ef)
+            const expectedReturnData = '0xdeadbeef00000000000000000000000000000000000000000000000000000000';
+            await UnifiedErrorMatcher.expectError(
                 ownable
                     .connect(ownerSigner)
-                    .migrate(await testMigrator.getAddress(), failingMigrateFnCallData, newOwner)
-            ).to.be.rejected;
+                    .migrate(await testMigrator.getAddress(), failingMigrateFnCallData, newOwner),
+                new ZeroExRevertErrors.Ownable.MigrateCallFailedError(await testMigrator.getAddress(), expectedReturnData)
+            );
         });
 
         it('reverting migration reverts', async () => {
             const ownerSigner = await env.provider.getSigner(owner);
-            return expect(
+            // ✅ 基于业务逻辑构造错误：迁移函数直接 revert("OOPSIE")
+            // 这会导致 delegatecall 失败，LibMigrate 会抛出 MigrateCallFailedError
+            // returnData 包含 revert 的错误信息
+            const revertData = ethers.AbiCoder.defaultAbiCoder().encode(['string'], ['OOPSIE']);
+            const expectedReturnData = '0x08c379a0' + revertData.slice(2); // Error(string) selector + data
+            await UnifiedErrorMatcher.expectError(
                 ownable
                     .connect(ownerSigner)
-                    .migrate(await testMigrator.getAddress(), revertingMigrateFnCallData, newOwner)
-            ).to.be.rejected;
+                    .migrate(await testMigrator.getAddress(), revertingMigrateFnCallData, newOwner),
+                new ZeroExRevertErrors.Ownable.MigrateCallFailedError(await testMigrator.getAddress(), expectedReturnData)
+            );
         });
     });
 });
