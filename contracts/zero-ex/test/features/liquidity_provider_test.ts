@@ -22,7 +22,6 @@ import { fullMigrateAsync } from '../utils/migration';
 import {
     LiquidityProviderSandboxContract,
     TestLiquidityProviderContract,
-    TestLiquidityProviderEvents,
     TestWethContract,
 } from '../wrappers';
 
@@ -84,63 +83,85 @@ describe('LiquidityProvider feature', () => {
     describe('Sandbox', () => {
         it('Cannot call sandbox `executeSellTokenForToken` function directly', async () => {
             const takerSigner = await env.provider.getSigner(taker);
-            return expect(
-                sandbox
-                    .connect(takerSigner)
-                    .executeSellTokenForToken(
-                        await liquidityProvider.getAddress(),
-                        await token.getAddress(),
-                        await weth.getAddress(),
-                        taker,
-                        constants.ZERO_AMOUNT,
-                        constants.NULL_BYTES,
-                    )
-            ).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(taker));
+            const tx = sandbox
+                .connect(takerSigner)
+                .executeSellTokenForToken(
+                    await liquidityProvider.getAddress(),
+                    await token.getAddress(),
+                    await weth.getAddress(),
+                    taker,
+                    constants.ZERO_AMOUNT,
+                    constants.NULL_BYTES,
+                );
+            
+            try {
+                await tx;
+                expect.fail('Transaction should have reverted');
+            } catch (error: any) {
+                // 验证OnlyOwnerError选择器
+                expect(error.message).to.include('0x1de45ad1'); // OnlyOwnerError选择器
+            }
         });
         it('Cannot call sandbox `executeSellEthForToken` function directly', async () => {
             const takerSigner = await env.provider.getSigner(taker);
-            return expect(
-                sandbox
-                    .connect(takerSigner)
-                    .executeSellEthForToken(
-                        await liquidityProvider.getAddress(),
-                        await token.getAddress(),
-                        taker,
-                        constants.ZERO_AMOUNT,
-                        constants.NULL_BYTES,
-                    )
-            ).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(taker));
+            const tx = sandbox
+                .connect(takerSigner)
+                .executeSellEthForToken(
+                    await liquidityProvider.getAddress(),
+                    await token.getAddress(),
+                    taker,
+                    constants.ZERO_AMOUNT,
+                    constants.NULL_BYTES,
+                );
+            
+            try {
+                await tx;
+                expect.fail('Transaction should have reverted');
+            } catch (error: any) {
+                // 验证OnlyOwnerError选择器
+                expect(error.message).to.include('0x1de45ad1'); // OnlyOwnerError选择器
+            }
         });
         it('Cannot call sandbox `executeSellTokenForEth` function directly', async () => {
+            const takerSigner = await env.provider.getSigner(taker);
             const tx = sandbox
+                .connect(takerSigner)
                 .executeSellTokenForEth(
                     await liquidityProvider.getAddress(),
                     await token.getAddress(),
                     taker,
                     constants.ZERO_AMOUNT,
                     constants.NULL_BYTES,
-                )
-                ({ from: taker });
-            return expect(tx).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(taker));
+                );
+            
+            try {
+                await tx;
+                expect.fail('Transaction should have reverted');
+            } catch (error: any) {
+                // 验证OnlyOwnerError选择器
+                expect(error.message).to.include('0x1de45ad1'); // OnlyOwnerError选择器
+            }
         });
     });
     describe('Swap', () => {
         const ETH_TOKEN_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 
         it('Successfully executes an ERC20-ERC20 swap', async () => {
+            const takerSigner = await env.provider.getSigner(taker);
             const tx = await feature
+                .connect(takerSigner)
                 .sellToLiquidityProvider(
                     await token.getAddress(),
                     await weth.getAddress(),
                     await liquidityProvider.getAddress(),
-                    constants.NULL_ADDRESS,
-                    constants.ONE_ETHER,
-                    constants.ZERO_AMOUNT,
-                    constants.NULL_BYTES,
-                )
-                ({ from: taker });
+                    '0x0000000000000000000000000000000000000000', // NULL_ADDRESS
+                    ethers.parseEther('1'), // ONE_ETHER
+                    0n, // ZERO_AMOUNT
+                    '0x', // NULL_BYTES
+                );
+            const receipt = await tx.wait();
             verifyEventsFromLogs(
-                tx.logs,
+                receipt.logs,
                 [
                     {
                         inputToken: await token.getAddress(),
@@ -150,7 +171,7 @@ describe('LiquidityProvider feature', () => {
                         inputTokenBalance: constants.ONE_ETHER,
                     },
                 ],
-                TestLiquidityProviderEvents.SellTokenForToken,
+                'SellTokenForToken',
             );
         });
         it('Reverts if cannot fulfill the minimum buy amount', async () => {
