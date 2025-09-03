@@ -138,7 +138,7 @@ describe('TransformERC20 feature', () => {
     describe('quote signer', () => {
         it('`getQuoteSigner()` returns the quote signer', async () => {
             const actualSigner = await feature.getQuoteSigner(); // 🔧 修复API语法
-            expect(actualSigner).to.eq(callDataSigner);
+            expect(actualSigner.toLowerCase()).to.eq(callDataSigner.toLowerCase());
         });
 
         it('owner can set the quote signer with `setQuoteSigner()`', async () => {

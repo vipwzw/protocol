@@ -311,9 +311,8 @@ describe('OtcOrdersFeature', () => {
             // Overwrite chainId to result in a different hash and therefore different
             // signature.
             const tx = testUtils.fillOtcOrderAsync(order.clone({ chainId: 1234 }));
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotSignedByMakerError(order.getHash(), undefined, order.maker),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotSignedByMakerError(order.getHash(), undefined, order.maker);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('fails if ETH is attached', async () => {
@@ -414,7 +413,7 @@ describe('OtcOrdersFeature', () => {
         });
 
         it('allows for fills on orders signed by a approved signer', async () => {
-            const order = await getTestOtcOrder({ maker: contractWallet.address });
+            const order = await getTestOtcOrder({ maker: await contractWallet.getAddress() });
             const sig = await order.getSignatureWithProviderAsync(
                 env.provider,
                 SignatureType.EthSign,
@@ -423,15 +422,18 @@ describe('OtcOrdersFeature', () => {
             // covers taker
             await testUtils.prepareBalancesForOrdersAsync([order]);
             // need to provide contract wallet with a balance
-            await makerToken.mint(contractWallet.address, order.makerAmount)();
+            await makerToken.mint(await contractWallet.getAddress(), order.makerAmount);
             // allow signer
+            const contractWalletOwnerSigner = await env.provider.getSigner(contractWalletOwner);
             await contractWallet
-                .registerAllowedOrderSigner(contractWalletSigner, true)
-                ({ from: contractWalletOwner });
+                .connect(contractWalletOwnerSigner)
+                .registerAllowedOrderSigner(contractWalletSigner, true);
             // fill should succeed
-            const receipt = await zeroEx
-                .fillOtcOrder(order, sig, order.takerAmount)
-                ({ from: taker });
+            const takerSigner = await env.provider.getSigner(taker);
+            const tx = await zeroEx
+                .connect(takerSigner)
+                .fillOtcOrder(order, sig, order.takerAmount);
+            const receipt = await tx.wait();
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order)],
@@ -441,7 +443,7 @@ describe('OtcOrdersFeature', () => {
         });
 
         it('disallows fills if the signer is revoked', async () => {
-            const order = await getTestOtcOrder({ maker: contractWallet.address });
+            const order = await getTestOtcOrder({ maker: await contractWallet.getAddress() });
             const sig = await order.getSignatureWithProviderAsync(
                 env.provider,
                 SignatureType.EthSign,
@@ -450,7 +452,7 @@ describe('OtcOrdersFeature', () => {
             // covers taker
             await testUtils.prepareBalancesForOrdersAsync([order]);
             // need to provide contract wallet with a balance
-            await makerToken.mint(contractWallet.address, order.makerAmount)();
+            await makerToken.mint(await contractWallet.getAddress(), order.makerAmount);
             // first allow signer
             await contractWallet
                 .registerAllowedOrderSigner(contractWalletSigner, true)
@@ -473,12 +475,12 @@ describe('OtcOrdersFeature', () => {
         });
 
         it(`doesn't allow fills with an unapproved signer`, async () => {
-            const order = await getTestOtcOrder({ maker: contractWallet.address });
+            const order = await getTestOtcOrder({ maker: await contractWallet.getAddress() });
             const sig = await order.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, maker);
             // covers taker
             await testUtils.prepareBalancesForOrdersAsync([order]);
             // need to provide contract wallet with a balance
-            await makerToken.mint(contractWallet.address, order.makerAmount)();
+            await makerToken.mint(await contractWallet.getAddress(), order.makerAmount);
             // fill should revert
             // 🔧 修复API语法，保持测试意图：验证fillOtcOrder失败
             const takerSigner = await env.provider.getSigner(taker);
