@@ -575,7 +575,7 @@ describe('MultiplexFeature', () => {
                         constants.ZERO_AMOUNT,
                     );
                 verifyEventsFromLogs(
-                    tx.logs,
+                    receipt.logs,
                     [
                         {
                             orderHash: order.getHash(),
@@ -607,7 +607,7 @@ describe('MultiplexFeature', () => {
                     )
                     ({ from: taker });
                 verifyEventsFromLogs(
-                    tx.logs,
+                    receipt.logs,
                     [
                         {
                             orderHash: order.getHash(),
@@ -638,7 +638,7 @@ describe('MultiplexFeature', () => {
                     )
                     ({ from: taker });
                 verifyEventsFromLogs(
-                    tx.logs,
+                    receipt.logs,
                     [
                         {
                             orderHash: order.getHash(),
@@ -682,7 +682,7 @@ describe('MultiplexFeature', () => {
                     )
                     ({ from: taker });
                 verifyEventsFromLogs(
-                    tx.logs,
+                    receipt.logs,
                     [
                         {
                             orderHash: order.getHash(),
@@ -726,7 +726,7 @@ describe('MultiplexFeature', () => {
                         constants.ZERO_AMOUNT,
                     );
                 verifyEventsFromLogs(
-                    tx.logs,
+                    receipt.logs,
                     [
                         {
                             orderHash: order.getHash(),
@@ -759,7 +759,7 @@ describe('MultiplexFeature', () => {
                     TestMintableERC20TokenEvents.Transfer,
                 );
                 verifyEventsFromLogs(
-                    tx.logs,
+                    receipt.logs,
                     [
                         {
                             caller: await zeroEx.getAddress(),
@@ -978,11 +978,13 @@ describe('MultiplexFeature', () => {
                 const order = await getTestOtcOrder({ takerToken: await weth.getAddress() });
                 const otcSubcall = await getOtcSubcallAsync(order);
 
+                const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
-                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [otcSubcall], constants.ZERO_AMOUNT)
-                    ({ from: taker, value: order.takerAmount });
+                    .connect(takerSigner)
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [otcSubcall], constants.ZERO_AMOUNT, { value: order.takerAmount });
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
-                    tx.logs,
+                    receipt.logs,
                     [{ owner: await zeroEx.getAddress(), value: order.takerAmount }],
                     TestWethEvents.Deposit,
                 );
@@ -1009,11 +1011,13 @@ describe('MultiplexFeature', () => {
                 const uniswap = await createUniswapV2PoolAsync(uniV2Factory, weth, zrx);
                 const uniswapV2Subcall = getUniswapV2BatchSubcall([await weth.getAddress(), await zrx.getAddress()]);
 
+                const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
-                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [uniswapV2Subcall], constants.ZERO_AMOUNT)
-                    ({ from: taker, value: uniswapV2Subcall.sellAmount });
+                    .connect(takerSigner)
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [uniswapV2Subcall], constants.ZERO_AMOUNT, { value: uniswapV2Subcall.sellAmount });
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
-                    tx.logs,
+                    receipt.logs,
                     [{ owner: await zeroEx.getAddress(), value: uniswapV2Subcall.sellAmount }],
                     TestWethEvents.Deposit,
                 );
@@ -1038,11 +1042,13 @@ describe('MultiplexFeature', () => {
             it('UniswapV3', async () => {
                 const uniV3 = await createUniswapV3PoolAsync(weth, zrx);
                 const uniswapV3Subcall = getUniswapV3BatchSubcall([weth, zrx]);
+                const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
-                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [uniswapV3Subcall], constants.ZERO_AMOUNT)
-                    ({ from: taker, value: uniswapV3Subcall.sellAmount });
+                    .connect(takerSigner)
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [uniswapV3Subcall], constants.ZERO_AMOUNT, { value: uniswapV3Subcall.sellAmount });
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
-                    tx.logs,
+                    receipt.logs,
                     [{ owner: await zeroEx.getAddress(), value: uniswapV3Subcall.sellAmount }],
                     TestWethEvents.Deposit,
                 );
@@ -1096,11 +1102,13 @@ describe('MultiplexFeature', () => {
             });
             it('TransformERC20', async () => {
                 const transformERC20Subcall = getTransformERC20Subcall(await weth.getAddress(), await zrx.getAddress());
+                const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
-                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [transformERC20Subcall], constants.ZERO_AMOUNT)
-                    ({ from: taker, value: transformERC20Subcall.sellAmount });
+                    .connect(takerSigner)
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [transformERC20Subcall], constants.ZERO_AMOUNT, { value: transformERC20Subcall.sellAmount });
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
-                    tx.logs,
+                    receipt.logs,
                     [{ owner: await zeroEx.getAddress(), value: transformERC20Subcall.sellAmount }],
                     TestWethEvents.Deposit,
                 );
@@ -1697,13 +1705,15 @@ describe('MultiplexFeature', () => {
                 const uniswapV2Subcall = getUniswapV2MultiHopSubcall([await weth.getAddress(), await zrx.getAddress()]);
                 await mintToAsync(weth, taker, sellAmount);
 
+                const takerSigner = await env.provider.getSigner(taker);
                 const tx = multiplex
+                    .connect(takerSigner)
                     .multiplexMultiHopSellEthForToken(
                         [await dai.getAddress(), await zrx.getAddress()],
                         [uniswapV2Subcall],
                         constants.ZERO_AMOUNT,
-                    )
-                    ({ from: taker, value: sellAmount });
+                        { value: sellAmount }
+                    );
                 return expect(tx).to.be.revertedWith('MultiplexFeature::multiplexMultiHopSellEthForToken/NOT_WETH');
             });
             it('UniswapV2 -> LiquidityProvider', async () => {
