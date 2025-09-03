@@ -201,7 +201,7 @@ describe('MultiplexFeature', () => {
         balance0: bigint = toBaseUnitAmount(10),
         balance1: bigint = toBaseUnitAmount(10),
     ): Promise<TestUniswapV2PoolContract> {
-        const r = await factory.createPool(await token0.getAddress(), await token1.getAddress())();
+        const r = await factory.createPool(await token0.getAddress(), await token1.getAddress());
         const pool = new TestUniswapV2PoolContract(
             (r.logs[0] as LogWithDecodedArgs<TestUniswapV2FactoryPoolCreatedEventArgs>).args.pool,
             env.provider,
@@ -224,8 +224,7 @@ describe('MultiplexFeature', () => {
         balance1: bigint = toBaseUnitAmount(10),
     ): Promise<TestUniswapV3PoolContract> {
         const r = await uniV3Factory
-            .createPool(await token0.getAddress(), await token1.getAddress(), BigInt(POOL_FEE))
-            ();
+            .createPool(await token0.getAddress(), await token1.getAddress(), BigInt(POOL_FEE));
         const pool = new TestUniswapV3PoolContract(
             (r.logs[0] as LogWithDecodedArgs<TestUniswapV3FactoryPoolCreatedEventArgs>).args.pool,
             env.provider,
@@ -388,12 +387,11 @@ describe('MultiplexFeature', () => {
         };
     }
 
-    function getLiquidityProviderMultiHopSubcall(): MultiHopSellSubcall {
+    async function getLiquidityProviderMultiHopSubcall(): Promise<MultiHopSellSubcall> {
         const abiCoder = ethers.AbiCoder.defaultAbiCoder();
         return {
             id: MultiplexSubcall.LiquidityProvider,
-            data: abiCoder.encode(["address", "bytes"], [await liquidityProvider.getAddress(), constants.NULL_BYTES,
-            ]),
+            data: abiCoder.encode(["address", "bytes"], [await liquidityProvider.getAddress(), constants.NULL_BYTES]),
         };
     }
     function getLiquidityProviderBatchSubcall(
