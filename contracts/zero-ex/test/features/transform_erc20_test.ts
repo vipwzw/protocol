@@ -29,7 +29,6 @@ import {
     TestMintTokenERC20TransformerContract,
     TestMintTokenERC20TransformerEvents,
     TestTransformERC20Contract,
-    TransformERC20FeatureEvents,
 } from '../wrappers';
 
 describe('TransformERC20 feature', () => {
@@ -80,10 +79,12 @@ describe('TransformERC20 feature', () => {
         it('createTransformWallet() replaces the current wallet', async () => {
             // 🔧 修复API语法，保持测试意图：验证owner可以创建新wallet
             const ownerSigner = await env.provider.getSigner(owner);
-            const newWalletAddress = await feature.connect(ownerSigner).createTransformWallet();
+            await feature.connect(ownerSigner).createTransformWallet();
+            const newWalletAddress = await feature.getTransformWallet();
             expect(newWalletAddress).to.not.eq(await wallet.getAddress()); // 🔧 使用getAddress()
             await feature.connect(ownerSigner).createTransformWallet();
-            return expect(await feature.getTransformWallet()).to.eq(newWalletAddress); // 🔧 修复API语法
+            const newerWalletAddress = await feature.getTransformWallet();
+            return expect(newerWalletAddress).to.not.eq(newWalletAddress); // 验证钱包被替换了
         });
 
         it('createTransformWallet() cannot be called by non-owner', async () => {
@@ -111,13 +112,15 @@ describe('TransformERC20 feature', () => {
 
         it('owner can set the transformer deployer with `setTransformerDeployer()`', async () => {
             const newDeployer = randomAddress();
-            const receipt = await feature
-                .setTransformerDeployer(newDeployer)
-                ({ from: owner });
+            const ownerSigner = await env.provider.getSigner(owner);
+            const tx = await feature
+                .connect(ownerSigner)
+                .setTransformerDeployer(newDeployer);
+            const receipt = await tx.wait();
             verifyEventsFromLogs(
                 receipt.logs,
                 [{ transformerDeployer: newDeployer }],
-                TransformERC20FeatureEvents.TransformerDeployerUpdated,
+                'TransformerDeployerUpdated',
             );
             const actualDeployer = await feature.getTransformerDeployer(); // 🔧 修复API语法
             expect(actualDeployer).to.eq(newDeployer);
@@ -126,7 +129,8 @@ describe('TransformERC20 feature', () => {
         it('non-owner cannot set the transformer deployer with `setTransformerDeployer()`', async () => {
             const newDeployer = randomAddress();
             const notOwner = randomAddress();
-            const tx = feature.setTransformerDeployer(newDeployer)({ from: notOwner });
+            const notOwnerSigner = await env.provider.getSigner(notOwner);
+            const tx = feature.connect(notOwnerSigner).setTransformerDeployer(newDeployer);
             return expect(tx).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(notOwner, owner));
         });
     });
@@ -139,11 +143,13 @@ describe('TransformERC20 feature', () => {
 
         it('owner can set the quote signer with `setQuoteSigner()`', async () => {
             const newSigner = randomAddress();
-            const receipt = await feature.setQuoteSigner(newSigner)({ from: owner });
+            const ownerSigner = await env.provider.getSigner(owner);
+            const tx = await feature.connect(ownerSigner).setQuoteSigner(newSigner);
+            const receipt = await tx.wait();
             verifyEventsFromLogs(
                 receipt.logs,
                 [{ quoteSigner: newSigner }],
-                TransformERC20FeatureEvents.QuoteSignerUpdated,
+                'QuoteSignerUpdated',
             );
             const actualSigner = await feature.getQuoteSigner(); // 🔧 修复API语法
             expect(actualSigner).to.eq(newSigner);
@@ -152,7 +158,8 @@ describe('TransformERC20 feature', () => {
         it('non-owner cannot set the quote signer with `setQuoteSigner()`', async () => {
             const newSigner = randomAddress();
             const notOwner = randomAddress();
-            const tx = feature.setQuoteSigner(newSigner)({ from: notOwner });
+            const notOwnerSigner = await env.provider.getSigner(notOwner);
+            const tx = feature.connect(notOwnerSigner).setQuoteSigner(newSigner);
             return expect(tx).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(notOwner, owner));
         });
     });
@@ -231,8 +238,8 @@ describe('TransformERC20 feature', () => {
             it("succeeds if taker's output token balance increases by exactly minOutputTokenAmount", async () => {
                 const startingOutputTokenBalance = getRandomInteger(0, '100e18');
                 const startingInputTokenBalance = getRandomInteger(0, '100e18');
-                await outputToken.mint(taker, startingOutputTokenBalance)();
-                await inputToken.mint(taker, startingInputTokenBalance)();
+                await outputToken.mint(taker, startingOutputTokenBalance);
+                await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
@@ -264,7 +271,7 @@ describe('TransformERC20 feature', () => {
                             outputToken: await outputToken.getAddress(),
                         },
                     ],
-                    TransformERC20FeatureEvents.TransformedERC20,
+                    'TransformedERC20',
                 );
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -285,7 +292,7 @@ describe('TransformERC20 feature', () => {
 
             it("succeeds if taker's output token balance increases by exactly minOutputTokenAmount, with ETH", async () => {
                 const startingInputTokenBalance = getRandomInteger(0, '100e18');
-                await inputToken.mint(taker, startingInputTokenBalance)();
+                await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
@@ -319,7 +326,7 @@ describe('TransformERC20 feature', () => {
                             outputToken: ETH_TOKEN_ADDRESS,
                         },
                     ],
-                    TransformERC20FeatureEvents.TransformedERC20,
+                    'TransformedERC20',
                 );
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -346,8 +353,8 @@ describe('TransformERC20 feature', () => {
             it("succeeds if taker's output token balance increases by more than minOutputTokenAmount", async () => {
                 const startingOutputTokenBalance = getRandomInteger(0, '100e18');
                 const startingInputTokenBalance = getRandomInteger(0, '100e18');
-                await outputToken.mint(taker, startingOutputTokenBalance)();
-                await inputToken.mint(taker, startingInputTokenBalance)();
+                await outputToken.mint(taker, startingOutputTokenBalance);
+                await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount + 1;
@@ -379,7 +386,7 @@ describe('TransformERC20 feature', () => {
                             outputToken: await outputToken.getAddress(),
                         },
                     ],
-                    TransformERC20FeatureEvents.TransformedERC20,
+                    'TransformedERC20',
                 );
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -401,8 +408,8 @@ describe('TransformERC20 feature', () => {
             it("throws if taker's output token balance increases by less than minOutputTokenAmount", async () => {
                 const startingOutputTokenBalance = getRandomInteger(0, '100e18');
                 const startingInputTokenBalance = getRandomInteger(0, '100e18');
-                await outputToken.mint(taker, startingOutputTokenBalance)();
-                await inputToken.mint(taker, startingInputTokenBalance)();
+                await outputToken.mint(taker, startingOutputTokenBalance);
+                await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount - 1;
@@ -435,8 +442,8 @@ describe('TransformERC20 feature', () => {
             it("throws if taker's output token balance decreases", async () => {
                 const startingOutputTokenBalance = getRandomInteger(0, '100e18');
                 const startingInputTokenBalance = getRandomInteger(0, '100e18');
-                await outputToken.mint(taker, startingOutputTokenBalance)();
-                await inputToken.mint(taker, startingInputTokenBalance)();
+                await outputToken.mint(taker, startingOutputTokenBalance);
+                await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = ZERO_AMOUNT;
                 const outputTokenFeeAmount = 1;
@@ -468,8 +475,8 @@ describe('TransformERC20 feature', () => {
             it('can call multiple transformers', async () => {
                 const startingOutputTokenBalance = getRandomInteger(0, '100e18');
                 const startingInputTokenBalance = getRandomInteger(2, '100e18');
-                await outputToken.mint(taker, startingOutputTokenBalance)();
-                await inputToken.mint(taker, startingInputTokenBalance)();
+                await outputToken.mint(taker, startingOutputTokenBalance);
+                await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(2, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
@@ -526,8 +533,8 @@ describe('TransformERC20 feature', () => {
             it('fails with invalid transformer nonce', async () => {
                 const startingOutputTokenBalance = getRandomInteger(0, '100e18');
                 const startingInputTokenBalance = getRandomInteger(2, '100e18');
-                await outputToken.mint(taker, startingOutputTokenBalance)();
-                await inputToken.mint(taker, startingInputTokenBalance)();
+                await outputToken.mint(taker, startingOutputTokenBalance);
+                await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(2, '1e18');
                 const callValue = getRandomInteger(1, '1e18');
@@ -555,7 +562,7 @@ describe('TransformERC20 feature', () => {
 
             it('can sell entire taker balance', async () => {
                 const startingInputTokenBalance = getRandomInteger(0, '100e18');
-                await inputToken.mint(taker, startingInputTokenBalance)();
+                await inputToken.mint(taker, startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
                 const callValue = getRandomInteger(1, '1e18');
@@ -586,13 +593,13 @@ describe('TransformERC20 feature', () => {
                             outputToken: await outputToken.getAddress(),
                         },
                     ],
-                    TransformERC20FeatureEvents.TransformedERC20,
+                    'TransformedERC20',
                 );
             });
 
             it('can sell entire taker balance with ETH (but not really)', async () => {
                 const ethAttchedAmount = getRandomInteger(0, '100e18');
-                await inputToken.mint(taker, ethAttchedAmount)();
+                await inputToken.mint(taker, ethAttchedAmount);
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
                 const transformation = await createMintTokenTransformation({
@@ -623,7 +630,7 @@ describe('TransformERC20 feature', () => {
                             outputToken: await outputToken.getAddress(),
                         },
                     ],
-                    TransformERC20FeatureEvents.TransformedERC20,
+                    'TransformedERC20',
                 );
             });
         });
