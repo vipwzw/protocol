@@ -245,7 +245,7 @@ describe('OtcOrdersFeature', () => {
 
         it('clamps fill amount to remaining available', async () => {
             const order = await getTestOtcOrder();
-            const fillAmount = order.takerAmount + 1;
+            const fillAmount = order.takerAmount + 1n;
             const receipt = await testUtils.fillOtcOrderAsync(order, fillAmount);
             verifyEventsFromLogs(
                 receipt.logs,
@@ -364,7 +364,7 @@ describe('OtcOrdersFeature', () => {
                 [testUtils.createOtcOrderFilledEventArgs(order1)],
                 IZeroExEvents.OtcOrderFilled,
             );
-            const order2 = getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce + 1 });
+            const order2 = getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce + 1n });
             const tx2 = await testUtils.fillOtcOrderAsync(order2);
             verifyEventsFromLogs(
                 tx2.logs,
@@ -549,7 +549,7 @@ describe('OtcOrdersFeature', () => {
         });
         it('Can refund excess ETH is msg.value > order.takerAmount (takerToken=WETH)', async () => {
             const order = await getTestOtcOrder({ takerToken: await wethToken.getAddress() });
-            const fillAmount = order.takerAmount + 420;
+            const fillAmount = order.takerAmount + 420n;
             const takerEthBalanceBefore = await ethers.provider.getBalance(taker);
             const receipt = await testUtils.fillOtcOrderWithEthAsync(order, fillAmount);
             verifyEventsFromLogs(
@@ -563,7 +563,7 @@ describe('OtcOrdersFeature', () => {
         });
         it('Can refund excess ETH is msg.value > order.takerAmount (takerToken=ETH)', async () => {
             const order = await getTestOtcOrder({ takerToken: ETH_TOKEN_ADDRESS });
-            const fillAmount = order.takerAmount + 420;
+            const fillAmount = order.takerAmount + 420n;
             const takerEthBalanceBefore = await ethers.provider.getBalance(taker);
             const makerEthBalanceBefore = await ethers.provider.getBalance(maker);
             const receipt = await testUtils.fillOtcOrderWithEthAsync(order, fillAmount);
@@ -735,7 +735,7 @@ describe('OtcOrdersFeature', () => {
                 taker,
                 txOrigin,
                 nonceBucket: order1.nonceBucket,
-                nonce: order1.nonce + 1,
+                nonce: order1.nonce + 1n,
             });
             const tx2 = await testUtils.fillTakerSignedOtcOrderAsync(order2);
             verifyEventsFromLogs(
@@ -797,7 +797,7 @@ describe('OtcOrdersFeature', () => {
                 taker: notTaker,
                 txOrigin,
                 nonceBucket: order1.nonceBucket,
-                nonce: order1.nonce + 1,
+                nonce: order1.nonce + 1n,
             });
             await testUtils.prepareBalancesForOrdersAsync([order1], taker);
             await testUtils.prepareBalancesForOrdersAsync([order2], notTaker);
@@ -827,7 +827,7 @@ describe('OtcOrdersFeature', () => {
                 taker: notTaker,
                 txOrigin,
                 nonceBucket: order1.nonceBucket,
-                nonce: order1.nonce + 1,
+                nonce: order1.nonce + 1n,
                 makerToken: await wethToken.getAddress(),
                 makerAmount: ethers.parseEther('1'),
             });
@@ -860,7 +860,7 @@ describe('OtcOrdersFeature', () => {
                 taker: notTaker,
                 txOrigin,
                 nonceBucket: order1.nonceBucket,
-                nonce: order1.nonce + 1,
+                nonce: order1.nonce + 1n,
             });
             await testUtils.prepareBalancesForOrdersAsync([order1], taker);
             await testUtils.prepareBalancesForOrdersAsync([order2], notTaker);

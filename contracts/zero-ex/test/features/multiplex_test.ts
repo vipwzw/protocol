@@ -7,7 +7,7 @@ import {
 } from '@0x/utils';
 import { expect } from 'chai';
 import { OtcOrder, RfqOrder, SIGNATURE_ABI } from '@0x/protocol-utils';
-import { AbiEncoder,  hexUtils } from '@0x/utils';
+import { hexUtils } from '@0x/utils';
 import { LogWithDecodedArgs } from 'ethereum-types';
 
 import { 
@@ -252,22 +252,38 @@ describe('MultiplexFeature', () => {
         rfqOrder: RfqOrder,
         sellAmount: bigint = rfqOrder.takerAmount,
     ): Promise<BatchSellSubcall> {
-        const rfqDataEncoder = AbiEncoder.create([
-            { name: 'order', type: 'tuple', components: RfqOrder.STRUCT_ABI },
-            { name: 'signature', type: 'tuple', components: SIGNATURE_ABI },
-        ]);
+        // 使用 ethers.AbiCoder 替代 AbiEncoder
+        const abiCoder = ethers.AbiCoder.defaultAbiCoder();
         const makerToken =
             rfqOrder.makerToken === weth.address
                 ? weth
                 : new TestMintableERC20TokenContract(rfqOrder.makerToken, env.provider, env.txDefaults);
         await mintToAsync(makerToken, rfqOrder.maker, rfqOrder.makerAmount);
+        const signature = await rfqOrder.getSignatureWithProviderAsync(env.provider);
         return {
             id: MultiplexSubcall.Rfq,
             sellAmount,
-            data: rfqDataEncoder.encode({
-                order: rfqOrder,
-                signature: await rfqOrder.getSignatureWithProviderAsync(env.provider),
-            }),
+            data: abiCoder.encode(
+                ['tuple(address,address,uint128,uint128,address,uint64,uint256,uint256)', 'tuple(uint8,uint8,bytes32,bytes32)'],
+                [
+                    [
+                        rfqOrder.makerToken,
+                        rfqOrder.takerToken,
+                        rfqOrder.makerAmount,
+                        rfqOrder.takerAmount,
+                        rfqOrder.maker,
+                        rfqOrder.expiry,
+                        rfqOrder.salt,
+                        rfqOrder.txOrigin
+                    ],
+                    [
+                        signature.signatureType,
+                        signature.v,
+                        signature.r,
+                        signature.s
+                    ]
+                ]
+            ),
         };
     }
 
@@ -289,33 +305,45 @@ describe('MultiplexFeature', () => {
         otcOrder: OtcOrder,
         sellAmount: bigint = otcOrder.takerAmount,
     ): Promise<BatchSellSubcall> {
-        const otcDataEncoder = AbiEncoder.create([
-            { name: 'order', type: 'tuple', components: OtcOrder.STRUCT_ABI },
-            { name: 'signature', type: 'tuple', components: SIGNATURE_ABI },
-        ]);
+        const abiCoder = ethers.AbiCoder.defaultAbiCoder();
         const makerToken =
             otcOrder.makerToken === weth.address
                 ? weth
                 : new TestMintableERC20TokenContract(otcOrder.makerToken, env.provider, env.txDefaults);
         await mintToAsync(makerToken, otcOrder.maker, otcOrder.makerAmount);
+        const signature = await otcOrder.getSignatureWithProviderAsync(env.provider);
         return {
             id: MultiplexSubcall.Otc,
             sellAmount,
-            data: otcDataEncoder.encode({
-                order: otcOrder,
-                signature: await otcOrder.getSignatureWithProviderAsync(env.provider),
-            }),
+            data: abiCoder.encode(
+                ['tuple(address,address,uint128,uint128,address,uint256,uint256,uint256)', 'tuple(uint8,uint8,bytes32,bytes32)'],
+                [
+                    [
+                        otcOrder.makerToken,
+                        otcOrder.takerToken,
+                        otcOrder.makerAmount,
+                        otcOrder.takerAmount,
+                        otcOrder.maker,
+                        otcOrder.nonceBucket,
+                        otcOrder.nonce,
+                        otcOrder.expiry
+                    ],
+                    [
+                        signature.signatureType,
+                        signature.v,
+                        signature.r,
+                        signature.s
+                    ]
+                ]
+            ),
         };
     }
 
     function getUniswapV2MultiHopSubcall(tokens: string[], isSushi = false): MultiHopSellSubcall {
-        const uniswapDataEncoder = AbiEncoder.create([
-            { name: 'tokens', type: 'address[]' },
-            { name: 'isSushi', type: 'bool' },
-        ]);
+        const abiCoder = ethers.AbiCoder.defaultAbiCoder();
         return {
             id: MultiplexSubcall.UniswapV2,
-            data: uniswapDataEncoder.encode({ tokens, isSushi }),
+            data: abiCoder.encode(['address[]', 'bool'], [tokens, isSushi]),
         };
     }
     function getUniswapV2BatchSubcall(
@@ -357,16 +385,11 @@ describe('MultiplexFeature', () => {
     }
 
     function getLiquidityProviderMultiHopSubcall(): MultiHopSellSubcall {
-        const plpDataEncoder = AbiEncoder.create([
-            { name: 'provider', type: 'address' },
-            { name: 'auxiliaryData', type: 'bytes' },
-        ]);
+        const abiCoder = ethers.AbiCoder.defaultAbiCoder();
         return {
             id: MultiplexSubcall.LiquidityProvider,
-            data: plpDataEncoder.encode({
-                provider: liquidityProvider.address,
-                auxiliaryData: constants.NULL_BYTES,
-            }),
+            data: abiCoder.encode(["address", "bytes"], [liquidityProvider.address, constants.NULL_BYTES,
+            ]),
         };
     }
     function getLiquidityProviderBatchSubcall(
@@ -384,66 +407,29 @@ describe('MultiplexFeature', () => {
         sellAmount: bigint = getRandomInteger(1, toBaseUnitAmount(1)),
         mintAmount: bigint = getRandomInteger(1, toBaseUnitAmount(1)),
     ): BatchSellSubcall {
-        const transformERC20Encoder = AbiEncoder.create([
-            {
-                name: 'transformations',
-                type: 'tuple[]',
-                components: [
-                    { name: 'deploymentNonce', type: 'uint32' },
-                    { name: 'data', type: 'bytes' },
-                ],
-            },
-        ]);
-        const transformDataEncoder = AbiEncoder.create([
-            {
-                name: 'data',
-                type: 'tuple',
-                components: [
-                    { name: 'inputToken', type: 'address' },
-                    { name: 'outputToken', type: 'address' },
-                    { name: 'burnAmount', type: 'uint256' },
-                    { name: 'mintAmount', type: 'uint256' },
-                    { name: 'feeAmount', type: 'uint256' },
-                ],
-            },
-        ]);
+        const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+        
+        // 编码内部 transform data
+        const transformData = abiCoder.encode(
+            ['tuple(address,address,uint256,uint256,uint256)'],
+            [[inputToken, outputToken, constants.ZERO_AMOUNT, mintAmount, constants.ZERO_AMOUNT]]
+        );
+        
         return {
             id: MultiplexSubcall.TransformERC20,
             sellAmount,
-            data: transformERC20Encoder.encode({
-                transformations: [
-                    {
-                        deploymentNonce: transformerNonce,
-                        data: transformDataEncoder.encode([
-                            {
-                                inputToken,
-                                outputToken,
-                                burnAmount: constants.ZERO_AMOUNT,
-                                mintAmount,
-                                feeAmount: constants.ZERO_AMOUNT,
-                            },
-                        ]),
-                    },
-                ],
-            }),
+            data: abiCoder.encode(
+                ['tuple(uint32,bytes)[]'],
+                [[[transformerNonce, transformData]]]
+            ),
         };
     }
 
     function getNestedBatchSellSubcall(calls: BatchSellSubcall[]): MultiHopSellSubcall {
-        const batchSellDataEncoder = AbiEncoder.create([
-            {
-                name: 'calls',
-                type: 'tuple[]',
-                components: [
-                    { name: 'id', type: 'uint8' },
-                    { name: 'sellAmount', type: 'uint256' },
-                    { name: 'data', type: 'bytes' },
-                ],
-            },
-        ]);
+        const abiCoder = ethers.AbiCoder.defaultAbiCoder();
         return {
             id: MultiplexSubcall.BatchSell,
-            data: batchSellDataEncoder.encode({ calls }),
+            data: abiCoder.encode(["tuple(uint8,uint256,bytes)[]"], [calls]),
         };
     }
 
@@ -452,24 +438,11 @@ describe('MultiplexFeature', () => {
         calls: MultiHopSellSubcall[],
         sellAmount: bigint = getRandomInteger(1, toBaseUnitAmount(1)),
     ): BatchSellSubcall {
-        const multiHopSellDataEncoder = AbiEncoder.create([
-            {
-                name: 'tokens',
-                type: 'address[]',
-            },
-            {
-                name: 'calls',
-                type: 'tuple[]',
-                components: [
-                    { name: 'id', type: 'uint8' },
-                    { name: 'data', type: 'bytes' },
-                ],
-            },
-        ]);
+        const abiCoder = ethers.AbiCoder.defaultAbiCoder();
         return {
             id: MultiplexSubcall.MultiHopSell,
             sellAmount,
-            data: multiHopSellDataEncoder.encode({ tokens, calls }),
+            data: abiCoder.encode(['address[]', 'tuple(uint8,bytes)[]'], [tokens, calls]),
         };
     }
 

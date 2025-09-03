@@ -13,9 +13,9 @@ import {
     TestMintableERC20TokenContract, // 🔧 添加类型导入
     TestWeth__factory,
     LiquidityProviderSandbox__factory,
-    LiquidityProviderFeature__factory,
-    TestLiquidityProvider__factory
+    LiquidityProviderFeature__factory
 } from '../../src/wrappers';
+import { TestLiquidityProvider__factory } from '../../src/typechain-types/factories/contracts/test/integration';
 import { artifacts } from '../artifacts';
 import { abis } from '../utils/abis'; // 🔧 添加abis导入
 import { fullMigrateAsync } from '../utils/migration';
