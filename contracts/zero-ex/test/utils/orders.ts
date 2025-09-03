@@ -98,12 +98,12 @@ export class NativeOrdersTestEnvironment {
         taker: string = this.taker,
     ): Promise<void> {
         await this.makerToken
-            .mint(this.maker, (orders as OrderBase[]).map(order => order.makerAmount).reduce((a, b) => a + b, 0n));
+            .mint(this.maker, (orders as OrderBase[]).map(order => BigInt(order.makerAmount || 0)).reduce((a, b) => a + b, 0n));
         await this.takerToken
             .mint(
                 taker,
                 (orders as OrderBase[]).map(order =>
-                    order.takerAmount + (order instanceof LimitOrder ? order.takerTokenFeeAmount : 0n)
+                    BigInt(order.takerAmount || 0) + (order instanceof LimitOrder ? BigInt(order.takerTokenFeeAmount || 0) : 0n)
                 ).reduce((a, b) => a + b, 0n)
             );
     }
