@@ -201,7 +201,28 @@ describe('MultiplexFeature', () => {
         balance0: bigint = toBaseUnitAmount(10),
         balance1: bigint = toBaseUnitAmount(10),
     ): Promise<TestUniswapV2PoolContract> {
-        const tx = await factory.createPool(await token0.getAddress(), await token1.getAddress());
+        // 首先检查 pool 是否已存在
+        const token0Address = await token0.getAddress();
+        const token1Address = await token1.getAddress();
+        
+        // 检查 pool 是否已存在 (getPool 是一个 mapping)
+        const existingPoolAddress = await factory.getPool(token0Address, token1Address);
+        if (existingPoolAddress !== ethers.ZeroAddress) {
+            // Pool 已存在，直接返回
+            const pool = await ethers.getContractAt('TestUniswapV2Pool', existingPoolAddress);
+            // 仍然需要为 pool 提供流动性
+            await mintToAsync(token0, await pool.getAddress(), balance0);
+            await mintToAsync(token1, await pool.getAddress(), balance1);
+            if (token0Address < token1Address) {
+                await pool.setReserves(balance0, balance1, 0n);
+            } else {
+                await pool.setReserves(balance1, balance0, 0n);
+            }
+            return pool;
+        }
+        
+        // 创建新 pool
+        const tx = await factory.createPool(token0Address, token1Address);
         const receipt = await tx.wait();
         if (!receipt.logs || receipt.logs.length === 0) {
             throw new Error('No logs found in pool creation transaction');
@@ -216,7 +237,7 @@ describe('MultiplexFeature', () => {
         );
         await mintToAsync(token0, await pool.getAddress(), balance0);
         await mintToAsync(token1, await pool.getAddress(), balance1);
-        if (await token0.getAddress() < await token1.getAddress()) {
+        if (token0Address < token1Address) {
             await pool.setReserves(balance0, balance1, 0n);
         } else {
             await pool.setReserves(balance1, balance0, 0n);
@@ -230,8 +251,23 @@ describe('MultiplexFeature', () => {
         balance0: bigint = toBaseUnitAmount(10),
         balance1: bigint = toBaseUnitAmount(10),
     ): Promise<TestUniswapV3PoolContract> {
-        const tx = await uniV3Factory
-            .createPool(await token0.getAddress(), await token1.getAddress(), BigInt(POOL_FEE));
+        // 首先检查 pool 是否已存在
+        const token0Address = await token0.getAddress();
+        const token1Address = await token1.getAddress();
+        
+        // 检查 pool 是否已存在 (getPool 是一个 mapping)
+        const existingPoolAddress = await uniV3Factory.getPool(token0Address, token1Address, BigInt(POOL_FEE));
+        if (existingPoolAddress !== ethers.ZeroAddress) {
+            // Pool 已存在，直接返回
+            const pool = await ethers.getContractAt('TestUniswapV3Pool', existingPoolAddress);
+            // 仍然需要为 pool 提供流动性
+            await mintToAsync(token0, await pool.getAddress(), balance0);
+            await mintToAsync(token1, await pool.getAddress(), balance1);
+            return pool;
+        }
+        
+        // 创建新 pool
+        const tx = await uniV3Factory.createPool(token0Address, token1Address, BigInt(POOL_FEE));
         const receipt = await tx.wait();
         if (!receipt.logs || receipt.logs.length === 0) {
             throw new Error('No logs found in pool creation transaction');
@@ -443,9 +479,11 @@ describe('MultiplexFeature', () => {
 
     function getNestedBatchSellSubcall(calls: BatchSellSubcall[]): MultiHopSellSubcall {
         const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+        // 将对象转换为数组格式 [id, sellAmount, data]
+        const encodedCalls = calls.map(call => [call.id, call.sellAmount, call.data]);
         return {
             id: MultiplexSubcall.BatchSell,
-            data: abiCoder.encode(["tuple(uint8,uint256,bytes)[]"], [calls]),
+            data: abiCoder.encode(["tuple(uint8,uint256,bytes)[]"], [encodedCalls]),
         };
     }
 
@@ -455,10 +493,12 @@ describe('MultiplexFeature', () => {
         sellAmount: bigint = getRandomInteger(1, toBaseUnitAmount(1)),
     ): BatchSellSubcall {
         const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+        // 将对象转换为数组格式 [id, data]
+        const encodedCalls = calls.map(call => [call.id, call.data]);
         return {
             id: MultiplexSubcall.MultiHopSell,
             sellAmount,
-            data: abiCoder.encode(['address[]', 'tuple(uint8,bytes)[]'], [tokens, calls]),
+            data: abiCoder.encode(['address[]', 'tuple(uint8,bytes)[]'], [tokens, encodedCalls]),
         };
     }
 
@@ -1592,7 +1632,7 @@ describe('MultiplexFeature', () => {
                 await mintToAsync(dai, taker, sellAmount);
                 const uniV3 = await createUniswapV3PoolAsync(dai, shib);
                 const uniV3Subcall = getUniswapV3MultiHopSubcall([dai, shib]);
-                const rfqOrder = getTestRfqOrder({ takerToken: await shib.getAddress(), makerToken: await zrx.getAddress() });
+                const rfqOrder = await getTestRfqOrder({ takerToken: await shib.getAddress(), makerToken: await zrx.getAddress() });
                 const rfqFillProportion = 0.42;
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, encodeFractionalFillAmount(rfqFillProportion));
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, shib, zrx);
@@ -1649,7 +1689,7 @@ describe('MultiplexFeature', () => {
                 );
             });
             it('BatchSell(RFQ, UniswapV2) -> UniswapV3', async () => {
-                const rfqOrder = getTestRfqOrder({ takerToken: await dai.getAddress(), makerToken: await shib.getAddress() });
+                const rfqOrder = await getTestRfqOrder({ takerToken: await dai.getAddress(), makerToken: await shib.getAddress() });
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, rfqOrder.takerAmount);
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, dai, shib);
                 const uniV2Subcall = getUniswapV2BatchSubcall([await dai.getAddress(), await shib.getAddress()]);
@@ -1809,7 +1849,7 @@ describe('MultiplexFeature', () => {
                 const sellAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const uniV3 = await createUniswapV3PoolAsync(weth, shib);
                 const uniV3Subcall = getUniswapV3MultiHopSubcall([weth, shib]);
-                const rfqOrder = getTestRfqOrder({ takerToken: await shib.getAddress(), makerToken: await zrx.getAddress() });
+                const rfqOrder = await getTestRfqOrder({ takerToken: await shib.getAddress(), makerToken: await zrx.getAddress() });
                 const rfqFillProportion = 0.42;
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, encodeFractionalFillAmount(rfqFillProportion));
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, shib, zrx);
@@ -1865,7 +1905,7 @@ describe('MultiplexFeature', () => {
                 );
             });
             it('BatchSell(RFQ, UniswapV2) -> UniswapV3', async () => {
-                const rfqOrder = getTestRfqOrder({ takerToken: await weth.getAddress(), makerToken: await shib.getAddress() });
+                const rfqOrder = await getTestRfqOrder({ takerToken: await weth.getAddress(), makerToken: await shib.getAddress() });
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, rfqOrder.takerAmount);
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, weth, shib);
                 const uniV2Subcall = getUniswapV2BatchSubcall([await weth.getAddress(), await shib.getAddress()]);
@@ -2028,7 +2068,7 @@ describe('MultiplexFeature', () => {
                 const sellAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const uniV3 = await createUniswapV3PoolAsync(dai, shib);
                 const uniV3Subcall = getUniswapV3MultiHopSubcall([dai, shib]);
-                const rfqOrder = getTestRfqOrder({ takerToken: await shib.getAddress(), makerToken: await weth.getAddress() });
+                const rfqOrder = await getTestRfqOrder({ takerToken: await shib.getAddress(), makerToken: await weth.getAddress() });
                 const rfqFillProportion = 0.42;
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, encodeFractionalFillAmount(rfqFillProportion));
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, shib, weth);
@@ -2087,7 +2127,7 @@ describe('MultiplexFeature', () => {
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress() }], 'Withdrawal');
             });
             it('BatchSell(RFQ, UniswapV2) -> UniswapV3', async () => {
-                const rfqOrder = getTestRfqOrder({ takerToken: await dai.getAddress(), makerToken: await shib.getAddress() });
+                const rfqOrder = await getTestRfqOrder({ takerToken: await dai.getAddress(), makerToken: await shib.getAddress() });
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, rfqOrder.takerAmount);
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, dai, shib);
                 const uniV2Subcall = getUniswapV2BatchSubcall([await dai.getAddress(), await shib.getAddress()]);
