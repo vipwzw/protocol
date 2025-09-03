@@ -228,7 +228,7 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             await assertExpectedFinalBalancesFromOtcOrderFillAsync(order);
         });
@@ -240,7 +240,7 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order, fillAmount)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             await assertExpectedFinalBalancesFromOtcOrderFillAsync(order, fillAmount);
         });
@@ -252,7 +252,7 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order, fillAmount)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             await assertExpectedFinalBalancesFromOtcOrderFillAsync(order, fillAmount);
         });
@@ -368,14 +368,14 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 tx1.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order1)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             const order2 = await getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce + 1n });
             const tx2 = await testUtils.fillOtcOrderAsync(order2);
             verifyEventsFromLogs(
                 tx2.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order2)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
         });
 
@@ -385,14 +385,14 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 tx1.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order1)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             const order2 = await getTestOtcOrder({ nonce: order1.nonce });
             const tx2 = await testUtils.fillOtcOrderAsync(order2);
             verifyEventsFromLogs(
                 tx2.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order2)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
         });
 
@@ -406,7 +406,7 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             const takerEthBalanceAfter = await ethers.provider.getBalance(taker);
             expect(takerEthBalanceAfter - takerEthBalanceBefore).to.equal(order.makerAmount);
@@ -440,7 +440,7 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             await assertExpectedFinalBalancesFromOtcOrderFillAsync(order);
         });
@@ -500,7 +500,7 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             await assertExpectedFinalBalancesFromOtcOrderFillAsync(order);
         });
@@ -511,7 +511,7 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             const takerBalance = await new TestMintableERC20TokenContract(order.makerToken, env.provider)
                 .balanceOf(taker)
@@ -529,7 +529,7 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order, fillAmount)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             await assertExpectedFinalBalancesFromOtcOrderFillAsync(order, fillAmount);
         });
@@ -541,7 +541,7 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order, fillAmount)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             const { makerTokenFilledAmount, takerTokenFilledAmount } = computeOtcOrderFilledAmounts(order, fillAmount);
             const takerBalance = await new TestMintableERC20TokenContract(order.makerToken, env.provider)
@@ -561,7 +561,7 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             const takerEthBalanceAfter = await ethers.provider.getBalance(taker);
             expect(takerEthBalanceBefore - takerEthBalanceAfter).to.equal(order.takerAmount);
@@ -576,7 +576,7 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             const takerEthBalanceAfter = await ethers.provider.getBalance(taker);
             expect(takerEthBalanceBefore - takerEthBalanceAfter, 'taker eth balance').to.equal(
@@ -605,7 +605,7 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             await assertExpectedFinalBalancesFromOtcOrderFillAsync(order);
         });
@@ -676,8 +676,7 @@ describe('OtcOrdersFeature', () => {
                     order,
                     await anotherOrder.getSignatureWithProviderAsync(env.provider),
                     await order.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, taker),
-                )
-                ({ from: txOrigin });
+                );
 
             return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.OrderNotSignedByMakerError(order.getHash(), undefined, order.maker),
@@ -687,13 +686,16 @@ describe('OtcOrdersFeature', () => {
         it('fails if ETH is attached', async () => {
             const order = await getTestOtcOrder({ taker, txOrigin });
             await testUtils.prepareBalancesForOrdersAsync([order], taker);
-            const tx = zeroEx
+            const otcOrdersFeature = await ethers.getContractAt('IOtcOrdersFeature', await zeroEx.getAddress());
+            const txOriginSigner = await env.provider.getSigner(txOrigin);
+            const tx = otcOrdersFeature
+                .connect(txOriginSigner)
                 .fillTakerSignedOtcOrder(
                     order,
                     await order.getSignatureWithProviderAsync(env.provider),
                     await order.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, taker),
-                )
-                ({ from: txOrigin, value: 1 });
+                    { value: 1 }
+                );
             // This will revert at the language level because the fill function is not payable.
             return expect(tx).to.be.rejectedWith('revert');
         });
@@ -738,7 +740,7 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 tx1.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order1)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             const order2 = await getTestOtcOrder({
                 taker,
@@ -750,7 +752,7 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 tx2.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order2)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
         });
 
@@ -760,14 +762,14 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 tx1.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order1)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             const order2 = await getTestOtcOrder({ taker, txOrigin, nonce: order1.nonce });
             const tx2 = await testUtils.fillTakerSignedOtcOrderAsync(order2);
             verifyEventsFromLogs(
                 tx2.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order2)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
         });
 
@@ -786,7 +788,7 @@ describe('OtcOrdersFeature', () => {
             verifyEventsFromLogs(
                 receipt.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
             const takerEthBalanceAfter = await ethers.provider.getBalance(taker);
             expect(takerEthBalanceAfter - takerEthBalanceBefore).to.equal(order.makerAmount);
@@ -823,12 +825,11 @@ describe('OtcOrdersFeature', () => {
                         await order2.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, notTaker),
                     ],
                     [false, false],
-                )
-                ({ from: txOrigin });
+                );
             verifyEventsFromLogs(
                 tx.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order1), testUtils.createOtcOrderFilledEventArgs(order2)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
         });
         it('Fills multiple orders and unwraps WETH', async () => {
@@ -858,12 +859,11 @@ describe('OtcOrdersFeature', () => {
                         await order2.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, notTaker),
                     ],
                     [false, true],
-                )
-                ({ from: txOrigin });
+                );
             verifyEventsFromLogs(
                 tx.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order1), testUtils.createOtcOrderFilledEventArgs(order2)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
         });
         it('Skips over unfillable orders', async () => {
@@ -889,12 +889,11 @@ describe('OtcOrdersFeature', () => {
                         await order2.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, taker), // Invalid signature for order2
                     ],
                     [false, false],
-                )
-                ({ from: txOrigin });
+                );
             verifyEventsFromLogs(
                 tx.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order1)],
-                IZeroExEvents.OtcOrderFilled,
+                'OtcOrderFilled',
             );
         });
     });
