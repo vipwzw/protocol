@@ -248,7 +248,10 @@ describe('TransformERC20 feature', () => {
                     outputTokenMintAmount,
                     inputTokenBurnAmunt: inputTokenAmount,
                 });
-                const receipt = await feature
+                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+                const takerSigner = await env.provider.getSigner(taker);
+                const tx = await transformERC20Feature
+                    .connect(takerSigner)
                     ._transformERC20({
                         taker,
                         inputToken: await inputToken.getAddress(),
@@ -258,8 +261,8 @@ describe('TransformERC20 feature', () => {
                         transformations: [transformation],
                         useSelfBalance: false,
                         recipient: taker,
-                    })
-                    ({ value: callValue });
+                    }, { value: callValue });
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
@@ -303,7 +306,10 @@ describe('TransformERC20 feature', () => {
                     outputTokenAddress: ETH_TOKEN_ADDRESS,
                 });
                 const startingOutputTokenBalance = await ethers.provider.getBalance(taker);
-                const receipt = await feature
+                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+                const takerSigner = await env.provider.getSigner(taker);
+                const tx = await transformERC20Feature
+                    .connect(takerSigner)
                     ._transformERC20({
                         taker,
                         inputToken: await inputToken.getAddress(),
@@ -313,8 +319,8 @@ describe('TransformERC20 feature', () => {
                         transformations: [transformation],
                         useSelfBalance: false,
                         recipient: taker,
-                    })
-                    ({ value: callValue });
+                    }, { value: callValue });
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
@@ -363,7 +369,10 @@ describe('TransformERC20 feature', () => {
                     outputTokenMintAmount,
                     inputTokenBurnAmunt: inputTokenAmount,
                 });
-                const receipt = await feature
+                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+                const takerSigner = await env.provider.getSigner(taker);
+                const tx = await transformERC20Feature
+                    .connect(takerSigner)
                     ._transformERC20({
                         taker,
                         inputToken: await inputToken.getAddress(),
@@ -373,8 +382,8 @@ describe('TransformERC20 feature', () => {
                         transformations: [transformation],
                         useSelfBalance: false,
                         recipient: taker,
-                    })
-                    ({ value: callValue });
+                    }, { value: callValue });
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
@@ -414,7 +423,10 @@ describe('TransformERC20 feature', () => {
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount - 1n;
                 const callValue = getRandomInteger(1, '1e18');
-                const tx = feature
+                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+                const takerSigner = await env.provider.getSigner(taker);
+                const tx = transformERC20Feature
+                    .connect(takerSigner)
                     ._transformERC20({
                         taker,
                         inputToken: await inputToken.getAddress(),
@@ -429,8 +441,7 @@ describe('TransformERC20 feature', () => {
                         ],
                         useSelfBalance: false,
                         recipient: taker,
-                    })
-                    ({ value: callValue });
+                    }, { value: callValue });
                 const expectedError = new ZeroExRevertErrors.TransformERC20.IncompleteTransformERC20Error(
                     await outputToken.getAddress(),
                     outputTokenMintAmount,
@@ -448,7 +459,10 @@ describe('TransformERC20 feature', () => {
                 const minOutputTokenAmount = ZERO_AMOUNT;
                 const outputTokenFeeAmount = 1;
                 const callValue = getRandomInteger(1, '1e18');
-                const tx = feature
+                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+                const takerSigner = await env.provider.getSigner(taker);
+                const tx = transformERC20Feature
+                    .connect(takerSigner)
                     ._transformERC20({
                         taker,
                         inputToken: await inputToken.getAddress(),
@@ -463,8 +477,7 @@ describe('TransformERC20 feature', () => {
                         ],
                         useSelfBalance: false,
                         recipient: taker,
-                    })
-                    ({ value: callValue });
+                    }, { value: callValue });
                 const expectedError = new ZeroExRevertErrors.TransformERC20.NegativeTransformERC20OutputError(
                     await outputToken.getAddress(),
                     outputTokenFeeAmount,
@@ -492,7 +505,10 @@ describe('TransformERC20 feature', () => {
                         outputTokenMintAmount: outputTokenMintAmount - 1n,
                     }),
                 ];
-                const receipt = await feature
+                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+                const takerSigner = await env.provider.getSigner(taker);
+                const tx = await transformERC20Feature
+                    .connect(takerSigner)
                     ._transformERC20({
                         taker,
                         inputToken: await inputToken.getAddress(),
@@ -502,8 +518,8 @@ describe('TransformERC20 feature', () => {
                         transformations,
                         useSelfBalance: false,
                         recipient: taker,
-                    })
-                    ({ value: callValue });
+                    }, { value: callValue });
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
@@ -539,7 +555,10 @@ describe('TransformERC20 feature', () => {
                 const minOutputTokenAmount = getRandomInteger(2, '1e18');
                 const callValue = getRandomInteger(1, '1e18');
                 const transformations = [await createMintTokenTransformation({ deploymentNonce: 1337 })];
-                const tx = feature
+                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+                const takerSigner = await env.provider.getSigner(taker);
+                const tx = transformERC20Feature
+                    .connect(takerSigner)
                     ._transformERC20({
                         taker,
                         inputToken: await inputToken.getAddress(),
@@ -549,8 +568,7 @@ describe('TransformERC20 feature', () => {
                         transformations,
                         useSelfBalance: false,
                         recipient: taker,
-                    })
-                    ({ value: callValue });
+                    }, { value: callValue });
                 return expect(tx).to.be.revertedWith(
                     new ZeroExRevertErrors.TransformERC20.TransformerFailedError(
                         undefined,
@@ -570,7 +588,10 @@ describe('TransformERC20 feature', () => {
                     outputTokenMintAmount,
                     inputTokenBurnAmunt: startingInputTokenBalance,
                 });
-                const receipt = await feature
+                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+                const takerSigner = await env.provider.getSigner(taker);
+                const tx = await transformERC20Feature
+                    .connect(takerSigner)
                     ._transformERC20({
                         taker,
                         inputToken: await inputToken.getAddress(),
@@ -580,8 +601,8 @@ describe('TransformERC20 feature', () => {
                         transformations: [transformation],
                         useSelfBalance: false,
                         recipient: taker,
-                    })
-                    ({ value: callValue });
+                    }, { value: callValue });
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
@@ -607,7 +628,10 @@ describe('TransformERC20 feature', () => {
                     inputTokenAddress: ETH_TOKEN_ADDRESS,
                     inputTokenBurnAmunt: ethAttchedAmount,
                 });
-                const receipt = await feature
+                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+                const takerSigner = await env.provider.getSigner(taker);
+                const tx = await transformERC20Feature
+                    .connect(takerSigner)
                     ._transformERC20({
                         taker,
                         inputToken: ETH_TOKEN_ADDRESS,
@@ -617,8 +641,8 @@ describe('TransformERC20 feature', () => {
                         transformations: [transformation],
                         useSelfBalance: false,
                         recipient: taker,
-                    })
-                    ({ value: ethAttchedAmount });
+                    }, { value: ethAttchedAmount });
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
