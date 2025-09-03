@@ -343,9 +343,9 @@ describe('OtcOrdersFeature', () => {
         });
 
         it('cannot fill two orders with the same nonceBucket and nonce', async () => {
-            const order1 = getTestOtcOrder();
+            const order1 = await getTestOtcOrder();
             await testUtils.fillOtcOrderAsync(order1);
-            const order2 = getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce });
+            const order2 = await getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce });
             const tx = testUtils.fillOtcOrderAsync(order2);
             return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.OrderNotFillableError(order2.getHash(), OrderStatus.Invalid),
@@ -353,9 +353,9 @@ describe('OtcOrdersFeature', () => {
         });
 
         it('cannot fill an order whose nonce is less than the nonce last used in that bucket', async () => {
-            const order1 = getTestOtcOrder();
+            const order1 = await getTestOtcOrder();
             await testUtils.fillOtcOrderAsync(order1);
-            const order2 = getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce - 1n });
+            const order2 = await getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce - 1n });
             const tx = testUtils.fillOtcOrderAsync(order2);
             return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.OrderNotFillableError(order2.getHash(), OrderStatus.Invalid),
@@ -363,14 +363,14 @@ describe('OtcOrdersFeature', () => {
         });
 
         it('can fill two orders that use the same nonce bucket and increasing nonces', async () => {
-            const order1 = getTestOtcOrder();
+            const order1 = await getTestOtcOrder();
             const tx1 = await testUtils.fillOtcOrderAsync(order1);
             verifyEventsFromLogs(
                 tx1.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order1)],
                 IZeroExEvents.OtcOrderFilled,
             );
-            const order2 = getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce + 1n });
+            const order2 = await getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce + 1n });
             const tx2 = await testUtils.fillOtcOrderAsync(order2);
             verifyEventsFromLogs(
                 tx2.logs,
@@ -380,14 +380,14 @@ describe('OtcOrdersFeature', () => {
         });
 
         it('can fill two orders that use the same nonce but different nonce buckets', async () => {
-            const order1 = getTestOtcOrder();
+            const order1 = await getTestOtcOrder();
             const tx1 = await testUtils.fillOtcOrderAsync(order1);
             verifyEventsFromLogs(
                 tx1.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order1)],
                 IZeroExEvents.OtcOrderFilled,
             );
-            const order2 = getTestOtcOrder({ nonce: order1.nonce });
+            const order2 = await getTestOtcOrder({ nonce: order1.nonce });
             const tx2 = await testUtils.fillOtcOrderAsync(order2);
             verifyEventsFromLogs(
                 tx2.logs,
@@ -666,7 +666,7 @@ describe('OtcOrdersFeature', () => {
 
         it('cannot fill order with bad maker signature', async () => {
             const order = await getTestOtcOrder({ taker, txOrigin });
-            const anotherOrder = getTestOtcOrder({ taker, txOrigin });
+            const anotherOrder = await getTestOtcOrder({ taker, txOrigin });
             await testUtils.prepareBalancesForOrdersAsync([order], taker);
             const tx = zeroEx
                 .fillTakerSignedOtcOrder(
@@ -705,9 +705,9 @@ describe('OtcOrdersFeature', () => {
         });
 
         it('cannot fill two orders with the same nonceBucket and nonce', async () => {
-            const order1 = getTestOtcOrder({ taker, txOrigin });
+            const order1 = await getTestOtcOrder({ taker, txOrigin });
             await testUtils.fillTakerSignedOtcOrderAsync(order1);
-            const order2 = getTestOtcOrder({ taker, txOrigin, nonceBucket: order1.nonceBucket, nonce: order1.nonce });
+            const order2 = await getTestOtcOrder({ taker, txOrigin, nonceBucket: order1.nonceBucket, nonce: order1.nonce });
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order2);
             return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.OrderNotFillableError(order2.getHash(), OrderStatus.Invalid),
@@ -715,9 +715,9 @@ describe('OtcOrdersFeature', () => {
         });
 
         it('cannot fill an order whose nonce is less than the nonce last used in that bucket', async () => {
-            const order1 = getTestOtcOrder({ taker, txOrigin });
+            const order1 = await getTestOtcOrder({ taker, txOrigin });
             await testUtils.fillTakerSignedOtcOrderAsync(order1);
-            const order2 = getTestOtcOrder({
+            const order2 = await getTestOtcOrder({
                 taker,
                 txOrigin,
                 nonceBucket: order1.nonceBucket,
@@ -730,14 +730,14 @@ describe('OtcOrdersFeature', () => {
         });
 
         it('can fill two orders that use the same nonce bucket and increasing nonces', async () => {
-            const order1 = getTestOtcOrder({ taker, txOrigin });
+            const order1 = await getTestOtcOrder({ taker, txOrigin });
             const tx1 = await testUtils.fillTakerSignedOtcOrderAsync(order1);
             verifyEventsFromLogs(
                 tx1.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order1)],
                 IZeroExEvents.OtcOrderFilled,
             );
-            const order2 = getTestOtcOrder({
+            const order2 = await getTestOtcOrder({
                 taker,
                 txOrigin,
                 nonceBucket: order1.nonceBucket,
@@ -752,14 +752,14 @@ describe('OtcOrdersFeature', () => {
         });
 
         it('can fill two orders that use the same nonce but different nonce buckets', async () => {
-            const order1 = getTestOtcOrder({ taker, txOrigin });
+            const order1 = await getTestOtcOrder({ taker, txOrigin });
             const tx1 = await testUtils.fillTakerSignedOtcOrderAsync(order1);
             verifyEventsFromLogs(
                 tx1.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order1)],
                 IZeroExEvents.OtcOrderFilled,
             );
-            const order2 = getTestOtcOrder({ taker, txOrigin, nonce: order1.nonce });
+            const order2 = await getTestOtcOrder({ taker, txOrigin, nonce: order1.nonce });
             const tx2 = await testUtils.fillTakerSignedOtcOrderAsync(order2);
             verifyEventsFromLogs(
                 tx2.logs,
@@ -798,8 +798,8 @@ describe('OtcOrdersFeature', () => {
 
     describe('batchFillTakerSignedOtcOrders()', () => {
         it('Fills multiple orders', async () => {
-            const order1 = getTestOtcOrder({ taker, txOrigin });
-            const order2 = getTestOtcOrder({
+            const order1 = await getTestOtcOrder({ taker, txOrigin });
+            const order2 = await getTestOtcOrder({
                 taker: notTaker,
                 txOrigin,
                 nonceBucket: order1.nonceBucket,
@@ -828,8 +828,8 @@ describe('OtcOrdersFeature', () => {
             );
         });
         it('Fills multiple orders and unwraps WETH', async () => {
-            const order1 = getTestOtcOrder({ taker, txOrigin });
-            const order2 = getTestOtcOrder({
+            const order1 = await getTestOtcOrder({ taker, txOrigin });
+            const order2 = await getTestOtcOrder({
                 taker: notTaker,
                 txOrigin,
                 nonceBucket: order1.nonceBucket,
@@ -861,8 +861,8 @@ describe('OtcOrdersFeature', () => {
             );
         });
         it('Skips over unfillable orders', async () => {
-            const order1 = getTestOtcOrder({ taker, txOrigin });
-            const order2 = getTestOtcOrder({
+            const order1 = await getTestOtcOrder({ taker, txOrigin });
+            const order2 = await getTestOtcOrder({
                 taker: notTaker,
                 txOrigin,
                 nonceBucket: order1.nonceBucket,

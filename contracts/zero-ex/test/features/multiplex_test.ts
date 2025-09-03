@@ -945,11 +945,13 @@ describe('MultiplexFeature', () => {
                 const order = await getTestRfqOrder({ takerToken: await weth.getAddress() });
                 const rfqSubcall = await getRfqSubcallAsync(order);
 
+                const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
-                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [rfqSubcall], constants.ZERO_AMOUNT)
-                    ({ from: taker, value: order.takerAmount });
+                    .connect(takerSigner)
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [rfqSubcall], constants.ZERO_AMOUNT, { value: order.takerAmount });
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
-                    tx.logs,
+                    receipt.logs,
                     [{ owner: await zeroEx.getAddress(), value: order.takerAmount }],
                     TestWethEvents.Deposit,
                 );
