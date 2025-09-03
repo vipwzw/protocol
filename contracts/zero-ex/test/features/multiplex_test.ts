@@ -201,18 +201,18 @@ describe('MultiplexFeature', () => {
         balance0: bigint = toBaseUnitAmount(10),
         balance1: bigint = toBaseUnitAmount(10),
     ): Promise<TestUniswapV2PoolContract> {
-        const r = await factory.createPool(await token0.getAddress(), await token1.getAddress());
-        const pool = new TestUniswapV2PoolContract(
-            (r.logs[0] as LogWithDecodedArgs<TestUniswapV2FactoryPoolCreatedEventArgs>).args.pool,
-            env.provider,
-            env.txDefaults,
+        const tx = await factory.createPool(await token0.getAddress(), await token1.getAddress());
+        const receipt = await tx.wait();
+        const pool = await ethers.getContractAt(
+            'TestUniswapV2Pool',
+            (receipt.logs[0] as LogWithDecodedArgs<TestUniswapV2FactoryPoolCreatedEventArgs>).args.pool
         );
         await mintToAsync(token0, await pool.getAddress(), balance0);
         await mintToAsync(token1, await pool.getAddress(), balance1);
         if (token0.address < await token1.getAddress()) {
-            await pool.setReserves(balance0, balance1, constants.ZERO_AMOUNT)();
+            await pool.setReserves(balance0, balance1, 0n);
         } else {
-            await pool.setReserves(balance1, balance0, constants.ZERO_AMOUNT)();
+            await pool.setReserves(balance1, balance0, 0n);
         }
         return pool;
     }
@@ -223,12 +223,12 @@ describe('MultiplexFeature', () => {
         balance0: bigint = toBaseUnitAmount(10),
         balance1: bigint = toBaseUnitAmount(10),
     ): Promise<TestUniswapV3PoolContract> {
-        const r = await uniV3Factory
+        const tx = await uniV3Factory
             .createPool(await token0.getAddress(), await token1.getAddress(), BigInt(POOL_FEE));
-        const pool = new TestUniswapV3PoolContract(
-            (r.logs[0] as LogWithDecodedArgs<TestUniswapV3FactoryPoolCreatedEventArgs>).args.pool,
-            env.provider,
-            env.txDefaults,
+        const receipt = await tx.wait();
+        const pool = await ethers.getContractAt(
+            'TestUniswapV3Pool',
+            (receipt.logs[0] as LogWithDecodedArgs<TestUniswapV3FactoryPoolCreatedEventArgs>).args.pool
         );
         await mintToAsync(token0, await pool.getAddress(), balance0);
         await mintToAsync(token1, await pool.getAddress(), balance1);
@@ -521,7 +521,7 @@ describe('MultiplexFeature', () => {
                         await zrx.getAddress(),
                         [rfqSubcall],
                         order.takerAmount,
-                        order.makerAmount + 1,
+                        order.makerAmount + 1n,
                     );
                 return expect(tx).to.be.revertedWith('MultiplexFeature::_multiplexBatchSell/UNDERBOUGHT');
             });
@@ -553,7 +553,7 @@ describe('MultiplexFeature', () => {
                     .multiplexBatchSellTokenForToken(await dai.getAddress(),
                         await zrx.getAddress(),
                         [rfqSubcall],
-                        order.takerAmount + 1,
+                        order.takerAmount + 1n,
                         order.makerAmount,
                     );
                 return expect(tx).to.be.revertedWith('MultiplexFeature::_executeBatchSell/INCORRECT_AMOUNT_SOLD');
