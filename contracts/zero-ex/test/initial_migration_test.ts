@@ -87,7 +87,7 @@ describe('Initial migration', () => {
         let ownable: IOwnableFeatureContract;
 
         before(async () => {
-            ownable = new IOwnableFeatureContract(await zeroEx.getAddress(), env.provider, env.txDefaults);
+            ownable = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress()) as IOwnableFeatureContract;
         });
 
         it('has the correct owner', async () => {
@@ -100,7 +100,7 @@ describe('Initial migration', () => {
         let registry: SimpleFunctionRegistryFeatureContract;
 
         before(async () => {
-            registry = new SimpleFunctionRegistryFeatureContract(await zeroEx.getAddress(), env.provider, env.txDefaults);
+            registry = await ethers.getContractAt('ISimpleFunctionRegistryFeature', await zeroEx.getAddress()) as SimpleFunctionRegistryFeatureContract;
         });
 
         it('_extendSelf() is deregistered', async () => {
