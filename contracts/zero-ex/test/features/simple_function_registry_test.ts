@@ -140,7 +140,9 @@ describe('SimpleFunctionRegistry feature', () => {
         const ownerSigner = await env.provider.getSigner(owner);
         await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl1.getAddress());
         await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl2.getAddress());
-        const r = await testFeature.testFn();
+        // 重新获取合约实例以包含新添加的函数
+        const testFeatureWithFn = await ethers.getContractAt('TestSimpleFunctionRegistryFeatureImpl2', await zeroEx.getAddress());
+        const r = await testFeatureWithFn.testFn();
         expect(r).to.eq(1338);
     });
 
@@ -148,7 +150,8 @@ describe('SimpleFunctionRegistry feature', () => {
         const ownerSigner = await env.provider.getSigner(owner);
         await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl1.getAddress());
         await registry.connect(ownerSigner).extend(testFnSelector, constants.NULL_ADDRESS);
-        return expect(testFeature.testFn()).to.be.revertedWith(
+        const testFeatureWithFn = await ethers.getContractAt('TestSimpleFunctionRegistryFeatureImpl1', await zeroEx.getAddress());
+        return expect(testFeatureWithFn.testFn()).to.be.revertedWith(
             'NotImplementedError',
         );
     });
@@ -183,38 +186,45 @@ describe('SimpleFunctionRegistry feature', () => {
         // );
         const rollbackLength = await registry.getRollbackLength(testFnSelector);
         expect(rollbackLength).to.eq(0);
-        return expect(testFeature.testFn()).to.be.revertedWith(
+        const testFeatureWithFn = await ethers.getContractAt('TestSimpleFunctionRegistryFeatureImpl1', await zeroEx.getAddress());
+        return expect(testFeatureWithFn.testFn()).to.be.revertedWith(
             'NotImplementedError',
         );
     });
 
     it('owner can rollback a function to the prior version', async () => {
-        await registry.extend(testFnSelector, await testFeatureImpl1.getAddress())();
-        await registry.extend(testFnSelector, await testFeatureImpl2.getAddress())();
-        await registry.rollback(testFnSelector, await testFeatureImpl1.getAddress())();
-        const r = await testFeature.testFn();
+        const ownerSigner = await env.provider.getSigner(owner);
+        await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl1.getAddress());
+        await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl2.getAddress());
+        await registry.connect(ownerSigner).rollback(testFnSelector, await testFeatureImpl1.getAddress());
+        const testFeatureWithFn = await ethers.getContractAt('TestSimpleFunctionRegistryFeatureImpl1', await zeroEx.getAddress());
+        const r = await testFeatureWithFn.testFn();
         expect(r).to.eq(1337);
         const rollbackLength = await registry.getRollbackLength(testFnSelector);
         expect(rollbackLength).to.eq(1);
     });
 
     it('owner can rollback a zero function to the prior version', async () => {
-        await registry.extend(testFnSelector, await testFeatureImpl2.getAddress())();
-        await registry.extend(testFnSelector, await testFeatureImpl1.getAddress())();
-        await registry.extend(testFnSelector, constants.NULL_ADDRESS)();
-        await registry.rollback(testFnSelector, await testFeatureImpl1.getAddress())();
-        const r = await testFeature.testFn();
+        const ownerSigner = await env.provider.getSigner(owner);
+        await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl2.getAddress());
+        await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl1.getAddress());
+        await registry.connect(ownerSigner).extend(testFnSelector, constants.NULL_ADDRESS);
+        await registry.connect(ownerSigner).rollback(testFnSelector, await testFeatureImpl1.getAddress());
+        const testFeatureWithFn = await ethers.getContractAt('TestSimpleFunctionRegistryFeatureImpl1', await zeroEx.getAddress());
+        const r = await testFeatureWithFn.testFn();
         expect(r).to.eq(1337);
         const rollbackLength = await registry.getRollbackLength(testFnSelector);
         expect(rollbackLength).to.eq(2);
     });
 
     it('owner can rollback a function to a much older version', async () => {
-        await registry.extend(testFnSelector, await testFeatureImpl1.getAddress())();
-        await registry.extend(testFnSelector, NULL_ADDRESS)();
-        await registry.extend(testFnSelector, await testFeatureImpl2.getAddress())();
-        await registry.rollback(testFnSelector, await testFeatureImpl1.getAddress())();
-        const r = await testFeature.testFn();
+        const ownerSigner = await env.provider.getSigner(owner);
+        await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl1.getAddress());
+        await registry.connect(ownerSigner).extend(testFnSelector, NULL_ADDRESS);
+        await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl2.getAddress());
+        await registry.connect(ownerSigner).rollback(testFnSelector, await testFeatureImpl1.getAddress());
+        const testFeatureWithFn = await ethers.getContractAt('TestSimpleFunctionRegistryFeatureImpl1', await zeroEx.getAddress());
+        const r = await testFeatureWithFn.testFn();
         expect(r).to.eq(1337);
         const rollbackLength = await registry.getRollbackLength(testFnSelector);
         expect(rollbackLength).to.eq(1);

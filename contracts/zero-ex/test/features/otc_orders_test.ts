@@ -276,17 +276,19 @@ describe('OtcOrdersFeature', () => {
         it('can fill an order from a different tx.origin if registered', async () => {
             const order = await getTestOtcOrder();
             // 🔧 修复API语法，保持测试意图：注册allowed RFQ origins
+            const nativeOrdersFeature = await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress());
             const takerSigner = await env.provider.getSigner(taker);
-            await zeroEx.connect(takerSigner).registerAllowedRfqOrigins([notTaker], true);
+            await nativeOrdersFeature.connect(takerSigner).registerAllowedRfqOrigins([notTaker], true);
             return testUtils.fillOtcOrderAsync(order, order.takerAmount, notTaker);
         });
 
         it('cannot fill an order with registered then unregistered tx.origin', async () => {
             const order = await getTestOtcOrder();
             // 🔧 修复API语法，保持测试意图：注册allowed RFQ origins
+            const nativeOrdersFeature = await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress());
             const takerSigner = await env.provider.getSigner(taker);
-            await zeroEx.connect(takerSigner).registerAllowedRfqOrigins([notTaker], true);
-            await zeroEx.connect(takerSigner).registerAllowedRfqOrigins([notTaker], false); // 🔧 修复API语法
+            await nativeOrdersFeature.connect(takerSigner).registerAllowedRfqOrigins([notTaker], true);
+            await nativeOrdersFeature.connect(takerSigner).registerAllowedRfqOrigins([notTaker], false); // 🔧 修复API语法
             const tx = testUtils.fillOtcOrderAsync(order, order.takerAmount, notTaker);
             return expect(tx).to.be.revertedWith(
                 new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), notTaker, taker),
@@ -322,9 +324,11 @@ describe('OtcOrdersFeature', () => {
         it('fails if ETH is attached', async () => {
             const order = await getTestOtcOrder();
             await testUtils.prepareBalancesForOrdersAsync([order], taker);
-            const tx = zeroEx
-                .fillOtcOrder(order, await order.getSignatureWithProviderAsync(env.provider), order.takerAmount)
-                ({ from: taker, value: 1 });
+            const otcOrdersFeature = await ethers.getContractAt('IOtcOrdersFeature', await zeroEx.getAddress());
+            const takerSigner = await env.provider.getSigner(taker);
+            const tx = otcOrdersFeature
+                .connect(takerSigner)
+                .fillOtcOrder(order, await order.getSignatureWithProviderAsync(env.provider), order.takerAmount, { value: 1 });
             // This will revert at the language level because the fill function is not payable.
             return expect(tx).to.be.rejectedWith('revert');
         });
