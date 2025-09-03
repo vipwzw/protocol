@@ -357,7 +357,7 @@ describe('TransformERC20 feature', () => {
                 await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
-                const outputTokenMintAmount = minOutputTokenAmount + 1;
+                const outputTokenMintAmount = minOutputTokenAmount + 1n;
                 const callValue = getRandomInteger(1, '1e18');
                 const transformation = await createMintTokenTransformation({
                     outputTokenMintAmount,
@@ -412,7 +412,7 @@ describe('TransformERC20 feature', () => {
                 await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
-                const outputTokenMintAmount = minOutputTokenAmount - 1;
+                const outputTokenMintAmount = minOutputTokenAmount - 1n;
                 const callValue = getRandomInteger(1, '1e18');
                 const tx = feature
                     ._transformERC20({
@@ -488,8 +488,8 @@ describe('TransformERC20 feature', () => {
                         outputTokenMintAmount: 1,
                     }),
                     await createMintTokenTransformation({
-                        inputTokenBurnAmunt: inputTokenAmount - 1,
-                        outputTokenMintAmount: outputTokenMintAmount - 1,
+                        inputTokenBurnAmunt: inputTokenAmount - 1n,
+                        outputTokenMintAmount: outputTokenMintAmount - 1n,
                     }),
                 ];
                 const receipt = await feature
@@ -522,7 +522,7 @@ describe('TransformERC20 feature', () => {
                             context: wallet.address,
                             caller: zeroEx.address,
                             data: transformations[1].data,
-                            inputTokenBalance: inputTokenAmount - 1,
+                            inputTokenBalance: inputTokenAmount - 1n,
                             ethBalance: callValue,
                         },
                     ],

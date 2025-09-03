@@ -819,7 +819,7 @@ describe('MultiplexFeature', () => {
                             token: await dai.getAddress(),
                             from: taker,
                             to: await sushiswap.getAddress(),
-                            value: sushiswapSubcall.sellAmount - 1,
+                            value: sushiswapSubcall.sellAmount - 1n,
                         },
                         {
                             token: await zrx.getAddress(),
