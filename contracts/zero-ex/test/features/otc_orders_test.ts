@@ -260,17 +260,15 @@ describe('OtcOrdersFeature', () => {
         it('cannot fill an order with wrong tx.origin', async () => {
             const order = await getTestOtcOrder();
             const tx = testUtils.fillOtcOrderAsync(order, order.takerAmount, notTaker);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), notTaker, taker),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), notTaker, taker);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('cannot fill an order with wrong taker', async () => {
             const order = await getTestOtcOrder({ taker: notTaker });
             const tx = testUtils.fillOtcOrderAsync(order);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableByTakerError(order.getHash(), taker, notTaker),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByTakerError(order.getHash(), taker, notTaker);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('can fill an order from a different tx.origin if registered', async () => {
@@ -290,25 +288,22 @@ describe('OtcOrdersFeature', () => {
             await nativeOrdersFeature.connect(takerSigner).registerAllowedRfqOrigins([notTaker], true);
             await nativeOrdersFeature.connect(takerSigner).registerAllowedRfqOrigins([notTaker], false); // 🔧 修复API语法
             const tx = testUtils.fillOtcOrderAsync(order, order.takerAmount, notTaker);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), notTaker, taker),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), notTaker, taker);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('cannot fill an order with a zero tx.origin', async () => {
             const order = await getTestOtcOrder({ txOrigin: NULL_ADDRESS });
             const tx = testUtils.fillOtcOrderAsync(order);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), taker, NULL_ADDRESS),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), taker, NULL_ADDRESS);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('cannot fill an expired order', async () => {
             const order = await getTestOtcOrder({ expiry: await createExpiry(-60) });
             const tx = testUtils.fillOtcOrderAsync(order);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Expired),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Expired);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('cannot fill order with bad signature', async () => {
