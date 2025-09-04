@@ -55,6 +55,7 @@ describe('OtcOrdersFeature', () => {
     let wethToken: TestWethContract;
     let contractWallet: TestOrderSignerRegistryWithContractWalletContract;
     let testUtils: NativeOrdersTestEnvironment;
+    let snapshotId: string;
 
     before(async () => {
         // Useful for ETH balance accounting
@@ -123,6 +124,17 @@ describe('OtcOrdersFeature', () => {
             .approveERC20(await takerToken.getAddress(), await zeroEx.getAddress(), MAX_UINT256);
 
         testUtils = new NativeOrdersTestEnvironment(maker, taker, makerToken, takerToken, zeroEx, ZERO, ZERO, env);
+        
+        // 创建初始快照
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
+    });
+
+    beforeEach(async () => {
+        // 🔄 状态重置：恢复到初始快照，完全重置所有状态
+        // 这包括区块链时间、合约状态、账户余额等所有状态
+        await ethers.provider.send('evm_revert', [snapshotId]);
+        // 重新创建快照供下次使用
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
 
     async function getTestOtcOrder(fields: Partial<OtcOrder> = {}): Promise<OtcOrder> {
