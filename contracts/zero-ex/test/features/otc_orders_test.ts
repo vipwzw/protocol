@@ -327,13 +327,12 @@ describe('OtcOrdersFeature', () => {
             return expect(tx).to.be.rejectedWith('revert');
         });
 
-        it('cannot fill the same order twice', async () => {
+        it('cannot fill the same order twice', async () => {
             const order = await getTestOtcOrder();
             await testUtils.fillOtcOrderAsync(order);
             const tx = testUtils.fillOtcOrderAsync(order);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Invalid),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Invalid);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('cannot fill two orders with the same nonceBucket and nonce', async () => {
@@ -341,9 +340,8 @@ describe('OtcOrdersFeature', () => {
             await testUtils.fillOtcOrderAsync(order1);
             const order2 = await getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce });
             const tx = testUtils.fillOtcOrderAsync(order2);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableError(order2.getHash(), OrderStatus.Invalid),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order2.getHash(), OrderStatus.Invalid);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('cannot fill an order whose nonce is less than the nonce last used in that bucket', async () => {
@@ -351,9 +349,8 @@ describe('OtcOrdersFeature', () => {
             await testUtils.fillOtcOrderAsync(order1);
             const order2 = await getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce - 1n });
             const tx = testUtils.fillOtcOrderAsync(order2);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableError(order2.getHash(), OrderStatus.Invalid),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order2.getHash(), OrderStatus.Invalid);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('can fill two orders that use the same nonce bucket and increasing nonces', async () => {
@@ -465,13 +462,12 @@ describe('OtcOrdersFeature', () => {
             // 🔧 修复API语法，保持测试意图：验证fillOtcOrder失败
             const takerSigner = await env.provider.getSigner(taker);
             const tx = zeroEx.connect(takerSigner).fillOtcOrder(order, sig, order.takerAmount);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotSignedByMakerError(
-                    order.getHash(),
-                    contractWalletSigner,
-                    order.maker,
-                ),
+            const expectedError = new RevertErrors.NativeOrders.OrderNotSignedByMakerError(
+                order.getHash(),
+                contractWalletSigner,
+                order.maker,
             );
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it(`doesn't allow fills with an unapproved signer`, async () => {
@@ -485,9 +481,8 @@ describe('OtcOrdersFeature', () => {
             // 🔧 修复API语法，保持测试意图：验证fillOtcOrder失败
             const takerSigner = await env.provider.getSigner(taker);
             const tx = zeroEx.connect(takerSigner).fillOtcOrder(order, sig, order.takerAmount);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotSignedByMakerError(order.getHash(), maker, order.maker),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotSignedByMakerError(order.getHash(), maker, order.maker);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
     });
     describe('fillOtcOrderWithEth()', () => {
@@ -610,9 +605,8 @@ describe('OtcOrdersFeature', () => {
         it('cannot fill an order with wrong tx.origin', async () => {
             const order = await getTestOtcOrder({ taker, txOrigin });
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order, notTxOrigin);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), notTxOrigin, txOrigin),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), notTxOrigin, txOrigin);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('can fill an order from a different tx.origin if registered', async () => {
@@ -635,33 +629,29 @@ describe('OtcOrdersFeature', () => {
                 .connect(txOriginSigner)
                 .registerAllowedRfqOrigins([notTxOrigin], false);
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order, notTxOrigin);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), notTxOrigin, txOrigin),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), notTxOrigin, txOrigin);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('cannot fill an order with a zero tx.origin', async () => {
             const order = await getTestOtcOrder({ taker, txOrigin: NULL_ADDRESS });
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order, txOrigin);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), txOrigin, NULL_ADDRESS),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), txOrigin, NULL_ADDRESS);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('cannot fill an expired order', async () => {
             const order = await getTestOtcOrder({ taker, txOrigin, expiry: await createExpiry(-60) });
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Expired),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Expired);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('cannot fill an order with bad taker signature', async () => {
             const order = await getTestOtcOrder({ taker, txOrigin });
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order, txOrigin, notTaker);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableByTakerError(order.getHash(), notTaker, taker),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByTakerError(order.getHash(), notTaker, taker);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('cannot fill order with bad maker signature', async () => {
@@ -675,9 +665,8 @@ describe('OtcOrdersFeature', () => {
                     await order.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, taker),
                 );
 
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotSignedByMakerError(order.getHash(), undefined, order.maker),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotSignedByMakerError(order.getHash(), undefined, order.maker);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('fails if ETH is attached', async () => {
@@ -701,9 +690,8 @@ describe('OtcOrdersFeature', () => {
             const order = await getTestOtcOrder({ taker, txOrigin });
             await testUtils.fillTakerSignedOtcOrderAsync(order);
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Invalid),
-            );
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Invalid);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
 
         it('cannot fill two orders with the same nonceBucket and nonce', async () => {

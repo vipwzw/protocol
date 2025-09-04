@@ -131,7 +131,8 @@ describe('TransformERC20 feature', () => {
             const notOwner = randomAddress();
             const notOwnerSigner = await env.provider.getSigner(notOwner);
             const tx = feature.connect(notOwnerSigner).setTransformerDeployer(newDeployer);
-            return expect(tx).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(notOwner, owner));
+            const expectedError = new OwnableRevertErrors.OnlyOwnerError(notOwner, owner);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
     });
 
@@ -160,7 +161,8 @@ describe('TransformERC20 feature', () => {
             const notOwner = randomAddress();
             const notOwnerSigner = await env.provider.getSigner(notOwner);
             const tx = feature.connect(notOwnerSigner).setQuoteSigner(newSigner);
-            return expect(tx).to.be.revertedWith(new OwnableRevertErrors.OnlyOwnerError(notOwner, owner));
+            const expectedError = new OwnableRevertErrors.OnlyOwnerError(notOwner, owner);
+            return expect(tx).to.be.revertedWith(expectedError.encode());
         });
     });
 
@@ -447,7 +449,7 @@ describe('TransformERC20 feature', () => {
                     outputTokenMintAmount,
                     minOutputTokenAmount,
                 );
-                return expect(tx).to.be.revertedWith(expectedError);
+                return expect(tx).to.be.revertedWith(expectedError.encode());
             });
 
             it("throws if taker's output token balance decreases", async () => {
@@ -482,7 +484,7 @@ describe('TransformERC20 feature', () => {
                     await outputToken.getAddress(),
                     outputTokenFeeAmount,
                 );
-                return expect(tx).to.be.revertedWith(expectedError);
+                return expect(tx).to.be.revertedWith(expectedError.encode());
             });
 
             it('can call multiple transformers', async () => {
@@ -569,13 +571,12 @@ describe('TransformERC20 feature', () => {
                         useSelfBalance: false,
                         recipient: taker,
                     }, { value: callValue });
-                return expect(tx).to.be.revertedWith(
-                    new ZeroExRevertErrors.TransformERC20.TransformerFailedError(
-                        undefined,
-                        transformations[0].data,
-                        constants.NULL_BYTES,
-                    ),
+                const expectedError = new ZeroExRevertErrors.TransformERC20.TransformerFailedError(
+                    undefined,
+                    transformations[0].data,
+                    constants.NULL_BYTES,
                 );
+                return expect(tx).to.be.revertedWith(expectedError.encode());
             });
 
             it('can sell entire taker balance', async () => {
