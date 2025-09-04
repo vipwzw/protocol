@@ -110,6 +110,7 @@ describe('MultiplexFeature', () => {
     let maker: string;
     let taker: string;
     let transformerNonce: number;
+    let snapshotId: string;
 
     //////////////// Deployment utility functions ////////////////
     async function migrateOtcOrdersFeatureAsync(): Promise<void> {
@@ -558,6 +559,17 @@ describe('MultiplexFeature', () => {
         await ownableFeature.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
         // 🔧 使用ethers.getContractAt替代constructor
         multiplex = await ethers.getContractAt('IMultiplexFeature', await zeroEx.getAddress()) as MultiplexFeatureContract;
+        
+        // 创建初始快照
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
+    });
+
+    beforeEach(async () => {
+        // 🔄 状态重置：恢复到初始快照，完全重置所有状态
+        // 这包括区块链时间、合约状态、账户余额等所有状态
+        await ethers.provider.send('evm_revert', [snapshotId]);
+        // 重新创建快照供下次使用
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
 
     describe('batch sells', () => {

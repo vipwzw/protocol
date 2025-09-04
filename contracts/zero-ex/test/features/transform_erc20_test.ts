@@ -46,6 +46,7 @@ describe('TransformERC20 feature', () => {
     let zeroEx: IZeroExContract;
     let feature: TransformERC20FeatureContract;
     let wallet: FlashWalletContract;
+    let snapshotId: string;
 
     before(async () => {
         [owner, taker, sender, transformerDeployer] = await env.getAccountAddressesAsync();
@@ -71,6 +72,17 @@ describe('TransformERC20 feature', () => {
         wallet = await ethers.getContractAt('IFlashWallet', flashWalletAddress) as FlashWalletContract;
         const ownerSigner = await env.provider.getSigner(owner);
         await feature.connect(ownerSigner).setQuoteSigner(callDataSigner);
+        
+        // 创建初始快照
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
+    });
+
+    beforeEach(async () => {
+        // 🔄 状态重置：恢复到初始快照，完全重置所有状态
+        // 这包括区块链时间、合约状态、账户余额等所有状态
+        await ethers.provider.send('evm_revert', [snapshotId]);
+        // 重新创建快照供下次使用
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
 
     const { MAX_UINT256, ZERO_AMOUNT } = constants;
