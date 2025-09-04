@@ -39,7 +39,6 @@ import {
     TestMintableERC20TokenContract,
     TestMintableERC20TokenEvents,
     TestMintTokenERC20TransformerContract,
-    TestMintTokenERC20TransformerEvents,
     TestUniswapV2FactoryContract,
     TestUniswapV2FactoryPoolCreatedEventArgs,
     TestUniswapV2PoolContract,
@@ -872,19 +871,19 @@ describe('MultiplexFeature', () => {
                     ],
                     'Transfer',
                 );
-                // TODO: 修复事件验证 - TestMintTokenERC20TransformerEvents.MintTransform 在 TypeChain v6 中的导出方式不同
-                // verifyEventsFromLogs(
-                //     receipt.logs,
-                //     [
-                //         {
-                //             caller: await zeroEx.getAddress(),
-                //             sender: await zeroEx.getAddress(),
-                //             taker,
-                //             inputTokenBalance: order.takerAmount,
-                //         },
-                //     ],
-                //     TestMintTokenERC20TransformerEvents.MintTransform,
-                // );
+                // 🔧 修复事件验证 - 使用正确的事件名称字符串
+                verifyEventsFromLogs(
+                    receipt.logs,
+                    [
+                        {
+                            caller: await zeroEx.getAddress(),
+                            sender: await zeroEx.getAddress(),
+                            taker,
+                            inputTokenBalance: order.takerAmount,
+                        },
+                    ],
+                    'MintTransform',
+                );
             });
             it('LiquidityProvider, UniV3, Sushiswap', async () => {
                 const sushiswap = await createUniswapV2PoolAsync(sushiFactory, dai, zrx);

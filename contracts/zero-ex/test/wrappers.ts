@@ -72,6 +72,7 @@ export type { TestFillQuoteTransformerHost as TestFillQuoteTransformerHostContra
 export type { TestTransformerBase as TestTransformerBaseContract } from '../src/typechain-types/contracts/test/TestTransformerBase';
 export type { TestDelegateCaller as TestDelegateCallerContract } from '../src/typechain-types/contracts/test/TestDelegateCaller';
 export type { TestMintTokenERC20Transformer as TestMintTokenERC20TransformerContract } from '../src/typechain-types/contracts/test/TestMintTokenERC20Transformer';
+export type { MintTransformEvent } from '../src/typechain-types/contracts/test/TestMintTokenERC20Transformer';
 export type { TestFillQuoteTransformerExchange as TestFillQuoteTransformerExchangeContract } from '../src/typechain-types/contracts/test/TestFillQuoteTransformerExchange';
 export type { TestFillQuoteTransformerBridge as TestFillQuoteTransformerBridgeContract } from '../src/typechain-types/contracts/test/TestFillQuoteTransformerBridge';
 export type { EthereumBridgeAdapter as EthereumBridgeAdapterContract } from '../src/typechain-types/contracts/src/transformers/bridges/EthereumBridgeAdapter';

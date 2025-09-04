@@ -27,7 +27,6 @@ import {
     FlashWalletContract,
     TestMintableERC20TokenContract,
     TestMintTokenERC20TransformerContract,
-    TestMintTokenERC20TransformerEvents,
     TestTransformERC20Contract,
 } from '../wrappers';
 
@@ -303,7 +302,7 @@ describe('TransformERC20 feature', () => {
                             ethBalance: callValue,
                         },
                     ],
-                    TestMintTokenERC20TransformerEvents.MintTransform,
+                    'MintTransform',
                 );
             });
 
@@ -361,7 +360,7 @@ describe('TransformERC20 feature', () => {
                             ethBalance: callValue,
                         },
                     ],
-                    TestMintTokenERC20TransformerEvents.MintTransform,
+                    'MintTransform',
                 );
                 // 🎯 使用closeTo进行精确的ETH余额检查
                 expect(await ethers.provider.getBalance(taker)).to.be.closeTo(
@@ -424,7 +423,7 @@ describe('TransformERC20 feature', () => {
                             ethBalance: callValue,
                         },
                     ],
-                    TestMintTokenERC20TransformerEvents.MintTransform,
+                    'MintTransform',
                 );
             });
 
@@ -556,7 +555,7 @@ describe('TransformERC20 feature', () => {
                             ethBalance: callValue,
                         },
                     ],
-                    TestMintTokenERC20TransformerEvents.MintTransform,
+                    'MintTransform',
                 );
             });
 
