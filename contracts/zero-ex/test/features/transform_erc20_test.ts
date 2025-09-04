@@ -263,9 +263,9 @@ describe('TransformERC20 feature', () => {
                     inputTokenBurnAmunt: inputTokenAmount,
                 });
                 const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
-                const takerSigner = await env.provider.getSigner(taker);
+                const ownerSigner = await env.provider.getSigner(owner);
                 const tx = await transformERC20Feature
-                    .connect(takerSigner)
+                    .connect(ownerSigner)
                     ._transformERC20({
                         taker,
                         inputToken: await inputToken.getAddress(),
@@ -321,9 +321,9 @@ describe('TransformERC20 feature', () => {
                 });
                 const startingOutputTokenBalance = await ethers.provider.getBalance(taker);
                 const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
-                const takerSigner = await env.provider.getSigner(taker);
+                const ownerSigner = await env.provider.getSigner(owner);
                 const tx = await transformERC20Feature
-                    .connect(takerSigner)
+                    .connect(ownerSigner)
                     ._transformERC20({
                         taker,
                         inputToken: await inputToken.getAddress(),
@@ -384,9 +384,9 @@ describe('TransformERC20 feature', () => {
                     inputTokenBurnAmunt: inputTokenAmount,
                 });
                 const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
-                const takerSigner = await env.provider.getSigner(taker);
+                const ownerSigner = await env.provider.getSigner(owner);
                 const tx = await transformERC20Feature
-                    .connect(takerSigner)
+                    .connect(ownerSigner)
                     ._transformERC20({
                         taker,
                         inputToken: await inputToken.getAddress(),
@@ -520,9 +520,9 @@ describe('TransformERC20 feature', () => {
                     }),
                 ];
                 const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
-                const takerSigner = await env.provider.getSigner(taker);
+                const ownerSigner = await env.provider.getSigner(owner);
                 const tx = await transformERC20Feature
-                    .connect(takerSigner)
+                    .connect(ownerSigner)
                     ._transformERC20({
                         taker,
                         inputToken: await inputToken.getAddress(),
@@ -602,9 +602,9 @@ describe('TransformERC20 feature', () => {
                     inputTokenBurnAmunt: startingInputTokenBalance,
                 });
                 const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
-                const takerSigner = await env.provider.getSigner(taker);
+                const ownerSigner = await env.provider.getSigner(owner);
                 const tx = await transformERC20Feature
-                    .connect(takerSigner)
+                    .connect(ownerSigner)
                     ._transformERC20({
                         taker,
                         inputToken: await inputToken.getAddress(),
@@ -642,9 +642,9 @@ describe('TransformERC20 feature', () => {
                     inputTokenBurnAmunt: ethAttchedAmount,
                 });
                 const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
-                const takerSigner = await env.provider.getSigner(taker);
+                const ownerSigner = await env.provider.getSigner(owner);
                 const tx = await transformERC20Feature
-                    .connect(takerSigner)
+                    .connect(ownerSigner)
                     ._transformERC20({
                         taker,
                         inputToken: ETH_TOKEN_ADDRESS,

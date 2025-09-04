@@ -21,7 +21,7 @@ import {
     MetaTransactionsFeature__factory,
 } from './typechain-types/factories/contracts/src/features';
 import { ZeroEx__factory } from './typechain-types/factories/contracts/src';
-import { TestNativeOrdersFeatureLite__factory } from './typechain-types/factories/contracts/test/lite/TestNativeOrdersFeatureLite__factory';
+import { TestNativeOrdersFeatureLite__factory } from './typechain-types/factories/contracts/test/lite';
 import { TestOtcOrdersFeatureLite__factory } from './typechain-types/factories/contracts/test/lite/TestOtcOrdersFeatureLite__factory';
 import { FeeCollectorController__factory } from './typechain-types/factories/contracts/src/external';
 import { TestWeth__factory } from './typechain-types/factories/contracts/test/tokens';

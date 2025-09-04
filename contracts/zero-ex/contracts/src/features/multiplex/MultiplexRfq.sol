@@ -51,7 +51,7 @@ abstract contract MultiplexRfq is FixinEIP712 {
                 order,
                 signature,
                 LibMath.safeDowncastToUint128(sellAmount),
-                params.payer,
+                order.taker, // 🔧 使用订单指定的 taker 而不是 params.payer
                 params.useSelfBalance,
                 params.recipient
             )

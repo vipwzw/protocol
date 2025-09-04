@@ -290,6 +290,7 @@ describe('MultiplexFeature', () => {
     async function getTestRfqOrder(overrides: Partial<RfqOrder> = {}): Promise<RfqOrder> {
         return getRandomRfqOrder({
             maker,
+            taker: taker, // 🔧 明确设置 taker
             verifyingContract: await zeroEx.getAddress(),
             chainId: (await ethers.provider.getNetwork()).chainId,
             takerToken: await dai.getAddress(),
@@ -556,9 +557,24 @@ describe('MultiplexFeature', () => {
         
         const ownerSigner = await env.provider.getSigner(owner);
         const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
+        
+        // 🔧 先部署完整的 NativeOrdersFeature 以支持 RFQ 功能
+        const { TestNativeOrdersFeature__factory } = await import('../wrappers');
+        const nativeOrdersImpl = await new TestNativeOrdersFeature__factory(ownerSigner).deploy(
+            await zeroEx.getAddress(),
+            await weth.getAddress(),
+            ethers.ZeroAddress, // staking - 使用零地址作为测试
+            ethers.ZeroAddress, // feeCollectorController - 使用零地址作为测试
+            0, // protocolFeeMultiplier
+        );
+        await nativeOrdersImpl.waitForDeployment();
+        await ownableFeature.migrate(await nativeOrdersImpl.getAddress(), nativeOrdersImpl.interface.encodeFunctionData('migrate'), owner);
+        
+        // 🔧 然后部署 MultiplexFeature
         await ownableFeature.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
         // 🔧 使用ethers.getContractAt替代constructor
         multiplex = await ethers.getContractAt('IMultiplexFeature', await zeroEx.getAddress()) as MultiplexFeatureContract;
+        
         
         // 创建初始快照
         snapshotId = await ethers.provider.send('evm_snapshot', []);
@@ -572,12 +588,15 @@ describe('MultiplexFeature', () => {
         snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
 
+
     describe('batch sells', () => {
         describe('multiplexBatchSellTokenForToken', () => {
             it('reverts if minBuyAmount is not satisfied', async () => {
                 const order = await getTestRfqOrder();
                 const rfqSubcall = await getRfqSubcallAsync(order);
                 await mintToAsync(dai, taker, rfqSubcall.sellAmount);
+                // 授权 MultiplexFeature 转移 DAI
+                await dai.connect(await env.provider.getSigner(taker)).approve(await multiplex.getAddress(), rfqSubcall.sellAmount);
 
                 const tx = multiplex
                     .connect(await env.provider.getSigner(taker))
@@ -628,6 +647,8 @@ describe('MultiplexFeature', () => {
                 const rfqSubcall = await getRfqSubcallAsync(order);
                 await createUniswapV2PoolAsync(uniV2Factory, dai, zrx);
                 await mintToAsync(dai, taker, rfqSubcall.sellAmount);
+                // 授权 MultiplexFeature 转移 DAI
+                await dai.connect(await env.provider.getSigner(taker)).approve(await multiplex.getAddress(), rfqSubcall.sellAmount);
 
                 const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
@@ -639,6 +660,7 @@ describe('MultiplexFeature', () => {
                         order.takerAmount,
                         constants.ZERO_AMOUNT,
                     );
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
@@ -670,6 +692,7 @@ describe('MultiplexFeature', () => {
                         order.takerAmount,
                         constants.ZERO_AMOUNT,
                     );
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
@@ -700,6 +723,7 @@ describe('MultiplexFeature', () => {
                         order.takerAmount,
                         constants.ZERO_AMOUNT,
                     );
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
@@ -733,7 +757,10 @@ describe('MultiplexFeature', () => {
                 const order = await getTestOtcOrder({ expiry: constants.ZERO_AMOUNT });
                 const otcSubcall = await getOtcSubcallAsync(order);
                 const uniswap = await createUniswapV2PoolAsync(uniV2Factory, dai, zrx);
-                await mintToAsync(dai, taker, otcSubcall.sellAmount);
+                // OTC 过期，所以 UniswapV2 需要处理全部数量
+                await mintToAsync(dai, taker, order.takerAmount);
+                // 授权 MultiplexFeature 转移 DAI
+                await dai.connect(await env.provider.getSigner(taker)).approve(await multiplex.getAddress(), order.takerAmount);
 
                 const tx = await multiplex
                     .multiplexBatchSellTokenForToken(
@@ -743,6 +770,7 @@ describe('MultiplexFeature', () => {
                         order.takerAmount,
                         constants.ZERO_AMOUNT,
                     );
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
@@ -787,6 +815,7 @@ describe('MultiplexFeature', () => {
                         order.takerAmount,
                         constants.ZERO_AMOUNT,
                     );
+                const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
                     [
