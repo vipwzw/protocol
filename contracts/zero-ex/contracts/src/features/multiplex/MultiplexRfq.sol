@@ -19,6 +19,7 @@ import "../../fixins/FixinEIP712.sol";
 import "../interfaces/IMultiplexFeature.sol";
 import "../interfaces/INativeOrdersFeature.sol";
 import "../libs/LibNativeOrder.sol";
+// import "hardhat/console.sol"; // 🔍 调试完成，注释掉
 
 abstract contract MultiplexRfq is FixinEIP712 {
     event ExpiredRfqOrder(bytes32 orderHash, address maker, uint64 expiry);
@@ -34,13 +35,16 @@ abstract contract MultiplexRfq is FixinEIP712 {
             wrappedCallData,
             (LibNativeOrder.RfqOrder, LibSignature.Signature)
         );
+        
         // Pre-emptively check if the order is expired.
         if (order.expiry <= uint64(block.timestamp)) {
             bytes32 orderHash = _getEIP712Hash(LibNativeOrder.getRfqOrderStructHash(order));
             emit ExpiredRfqOrder(orderHash, order.maker, order.expiry);
             return;
         }
+        
         // Validate tokens.
+        
         require(
             order.takerToken == params.inputToken && order.makerToken == params.outputToken,
             "MultiplexRfq::_batchSellRfqOrder/RFQ_ORDER_INVALID_TOKENS"

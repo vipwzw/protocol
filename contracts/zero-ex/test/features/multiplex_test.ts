@@ -317,7 +317,7 @@ describe('MultiplexFeature', () => {
             id: MultiplexSubcall.Rfq,
             sellAmount,
             data: abiCoder.encode(
-                ['tuple(address,address,uint128,uint128,address,uint64,uint256,uint256)', 'tuple(uint8,uint8,bytes32,bytes32)'],
+                ['tuple(address,address,uint128,uint128,address,address,address,bytes32,uint64,uint256)', 'tuple(uint8,uint8,bytes32,bytes32)'],
                 [
                     [
                         rfqOrder.makerToken,
@@ -325,9 +325,11 @@ describe('MultiplexFeature', () => {
                         rfqOrder.makerAmount,
                         rfqOrder.takerAmount,
                         rfqOrder.maker,
+                        rfqOrder.taker, // 🔧 添加缺少的 taker 字段
+                        rfqOrder.txOrigin,
+                        rfqOrder.pool, // 🔧 添加缺少的 pool 字段
                         rfqOrder.expiry,
-                        rfqOrder.salt,
-                        rfqOrder.txOrigin
+                        rfqOrder.salt
                     ],
                     [
                         signature.signatureType,
