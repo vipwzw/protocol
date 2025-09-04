@@ -467,7 +467,7 @@ describe('MultiplexFeature', () => {
         // 编码内部 transform data
         const transformData = abiCoder.encode(
             ['tuple(address,address,uint256,uint256,uint256)'],
-            [[inputToken, outputToken, constants.ZERO_AMOUNT, mintAmount, constants.ZERO_AMOUNT]]
+            [[inputToken, outputToken, sellAmount, mintAmount, constants.ZERO_AMOUNT]] // 🔧 使用 sellAmount 作为 burnAmount
         );
         
         return {
@@ -539,10 +539,20 @@ describe('MultiplexFeature', () => {
         await migrateLiquidityProviderContractsAsync();
         await migrateUniswapV2ContractsAsync();
         await migrateUniswapV3ContractsAsync();
-        transformerNonce = await ethers.provider.getTransactionCount(owner);
         
+        // 🔧 部署 transformer 并获取其部署 nonce
         const transformerFactory = new TestMintTokenERC20Transformer__factory(signer);
-        await transformerFactory.deploy();
+        const transformer = await transformerFactory.deploy();
+        await transformer.waitForDeployment();
+        
+        // 获取 transformer 的部署 nonce（从交易回执中获取）
+        const deployTx = transformer.deploymentTransaction();
+        if (deployTx) {
+            transformerNonce = deployTx.nonce;
+        } else {
+            // 备用方案：使用当前 nonce - 1（因为已经部署了一个合约）
+            transformerNonce = (await ethers.provider.getTransactionCount(owner)) - 1;
+        }
 
         // 🔧 使用ethers.getContractFactory替代可能不存在的factory
         const featureFactory = await ethers.getContractFactory('MultiplexFeature');
