@@ -371,7 +371,7 @@ describe('MultiplexFeature', () => {
             id: MultiplexSubcall.Otc,
             sellAmount,
             data: abiCoder.encode(
-                ['tuple(address,address,uint128,uint128,address,uint256,uint256,uint256)', 'tuple(uint8,uint8,bytes32,bytes32)'],
+                ['tuple(address,address,uint128,uint128,address,address,address,uint256)', 'tuple(uint8,uint8,bytes32,bytes32)'],
                 [
                     [
                         otcOrder.makerToken,
@@ -379,9 +379,9 @@ describe('MultiplexFeature', () => {
                         otcOrder.makerAmount,
                         otcOrder.takerAmount,
                         otcOrder.maker,
-                        otcOrder.nonceBucket,
-                        otcOrder.nonce,
-                        otcOrder.expiry
+                        otcOrder.taker, // 🔧 添加缺少的 taker 字段
+                        otcOrder.txOrigin, // 🔧 添加缺少的 txOrigin 字段
+                        otcOrder.expiryAndNonce // 🔧 使用完整的 expiryAndNonce 而不是分解的字段
                     ],
                     [
                         signature.signatureType,
@@ -963,7 +963,7 @@ describe('MultiplexFeature', () => {
                             token: await dai.getAddress(),
                             from: taker,
                             to: order.maker,
-                            value: sellAmount * rfqFillProportion,
+                            value: sellAmount * BigInt(Math.floor(rfqFillProportion * 1e18)) / BigInt(1e18),
                         },
                         {
                             token: await zrx.getAddress(),
@@ -974,7 +974,7 @@ describe('MultiplexFeature', () => {
                             token: await dai.getAddress(),
                             from: taker,
                             to: await uniswap.getAddress(),
-                            value: sellAmount - sellAmount * rfqFillProportion,
+                            value: sellAmount - sellAmount * BigInt(Math.floor(rfqFillProportion * 1e18)) / BigInt(1e18),
                         },
                         {
                             token: await zrx.getAddress(),
@@ -1833,6 +1833,7 @@ describe('MultiplexFeature', () => {
                         [await weth.getAddress(), await shib.getAddress(), await zrx.getAddress()],
                         [uniswapV2Subcall, liquidityProviderSubcall],
                         buyAmount,
+                        { value: sellAmount }
                     );
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress(), value: sellAmount }], 'Deposit');
                 verifyEventsFromLogs<TransferEvent>(
