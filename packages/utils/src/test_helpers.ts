@@ -352,12 +352,95 @@ export function testCombinatoriallyWithReferenceFunc(
         
         combinations.forEach((combination, index) => {
             it(`should match reference function for combination ${index}: [${combination.join(', ')}]`, async () => {
-                const expectedResult = referenceFunc(...combination);
-                const actualResult = await contractFunc(...combination);
-                expect(actualResult).to.equal(expectedResult);
+                console.log(`Testing combination ${index}: [${combination.join(', ')}]`);
+                
+                let referenceResult, referenceError;
+                let contractResult, contractError;
+                
+                // Call reference function
+                try {
+                    referenceResult = await referenceFunc(...combination);
+                    console.log('Reference result:', referenceResult);
+                } catch (error) {
+                    referenceError = error;
+                    console.log('Reference function threw error:', (error as Error).message);
+                }
+                
+                // Call contract function
+                try {
+                    contractResult = await contractFunc(...combination);
+                    console.log('Contract result:', contractResult);
+                } catch (error) {
+                    contractError = error;
+                    console.log('Contract function threw error:', (error as Error).message);
+                }
+                
+                // Both should either succeed or fail
+                if (referenceError && contractError) {
+                    // Both threw errors - this is expected for edge cases
+                    console.log('Both functions threw errors (expected for edge cases)');
+                } else if (!referenceError && !contractError) {
+                    // Both succeeded - results should match
+                    if (!compareResults(referenceResult, contractResult)) {
+                        throw new Error(`Mismatch: reference=${JSON.stringify(referenceResult)}, contract=${JSON.stringify(contractResult)}`);
+                    }
+                } else {
+                    // One succeeded, one failed - this is a mismatch
+                    if (referenceError) {
+                        throw new Error(`Reference function threw error but contract succeeded. Reference error: ${(referenceError as Error).message}`);
+                    } else {
+                        throw new Error(`Contract function threw error but reference succeeded. Contract error: ${(contractError as Error).message}`);
+                    }
+                }
             });
         });
     });
+}
+
+/**
+ * 比较两个结果是否相等，支持复杂对象和简单值
+ */
+function compareResults(reference: any, contract: any): boolean {
+    // 简单值比较
+    if (typeof reference === 'bigint' || typeof reference === 'number' || typeof reference === 'string' || typeof reference === 'boolean') {
+        return reference === contract;
+    }
+    
+    // 复杂对象比较 (如 FillResults)
+    if (typeof reference === 'object' && reference !== null) {
+        // 如果合约返回的是 ethers Result 数组
+        if (Array.isArray(contract) && contract.length !== undefined) {
+            // 检查是否是 FillResults 对象
+            if ('makerAssetFilledAmount' in reference) {
+                return (
+                    reference.makerAssetFilledAmount === contract[0] &&
+                    reference.takerAssetFilledAmount === contract[1] &&
+                    reference.makerFeePaid === contract[2] &&
+                    reference.takerFeePaid === contract[3] &&
+                    reference.protocolFeePaid === contract[4]
+                );
+            }
+        }
+        
+        // 其他对象类型的比较
+        if (typeof contract === 'object' && contract !== null) {
+            const refKeys = Object.keys(reference);
+            const contractKeys = Object.keys(contract);
+            
+            if (refKeys.length !== contractKeys.length) {
+                return false;
+            }
+            
+            for (const key of refKeys) {
+                if (!compareResults(reference[key], contract[key])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 /**

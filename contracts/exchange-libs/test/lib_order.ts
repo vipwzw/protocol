@@ -13,7 +13,11 @@ import { artifacts } from './artifacts';
 describe('LibOrder', () => {
     let libOrderContract: any;
 
-    const randomAddress = () => hexUtils.random(constants.ADDRESS_LENGTH);
+    const randomAddress = () => {
+        // Generate a valid Ethereum address (20 bytes = 40 hex chars)
+        const randomBytes = Array.from({length: 20}, () => Math.floor(Math.random() * 256));
+        return '0x' + randomBytes.map(b => b.toString(16).padStart(2, '0')).join('');
+    };
     const randomHash = () => hexUtils.random(constants.WORD_LENGTH);
     const randomUint256 = () => BigInt('0x' + randomHash().slice(2));
     const randomAssetData = () => hexUtils.random(36);
@@ -51,8 +55,8 @@ describe('LibOrder', () => {
             signTypedDataUtils.generateDomainHash({
                 chainId: order.chainId,
                 verifyingContract: order.exchangeAddress,
-                name: constants.EIP712_DOMAIN_NAME,
-                version: constants.EIP712_DOMAIN_VERSION,
+                name: '0x Protocol',
+                version: '3.0.0',
             }),
         );
         // Just test that the function executes without error - hash comparison is complex with ethers v6
@@ -95,15 +99,15 @@ describe('LibOrder', () => {
                 signTypedDataUtils.generateDomainHash({
                     chainId: EMPTY_ORDER.chainId,
                     verifyingContract: EMPTY_ORDER.exchangeAddress,
-                    name: constants.EIP712_DOMAIN_NAME,
-                    version: constants.EIP712_DOMAIN_VERSION,
+                    name: '0x Protocol',
+                    version: '3.0.0',
                 }),
             );
             const domainHash2 = ethUtil.bufferToHex(
                 signTypedDataUtils.generateDomainHash({
                     verifyingContract: EMPTY_ORDER.exchangeAddress,
-                    name: constants.EIP712_DOMAIN_NAME,
-                    version: constants.EIP712_DOMAIN_VERSION,
+                    name: '0x Protocol',
+                    version: '3.0.0',
                     chainId: 1337,
                 }),
             );

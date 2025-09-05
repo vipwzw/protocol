@@ -2,6 +2,12 @@ import { ethers } from "hardhat";
 import { constants, verifyEventsFromLogs, NULL_ADDRESS } from '@0x/utils';
 import { expect } from 'chai';
 import { OrderStatus, OtcOrder, RevertErrors, SignatureType } from '@0x/protocol-utils';
+import { 
+    expectOrderNotFillableByOriginError, 
+    expectOrderNotFillableByTakerError,
+    expectOrderNotFillableError,
+    expectOrderNotSignedByMakerError
+} from '../utils/rich_error_matcher';
 
 
 import { 
@@ -80,15 +86,28 @@ describe('OtcOrdersFeature', () => {
         await wethToken.waitForDeployment();
         zeroEx = await fullMigrateAsync(owner, env.provider, txDefaults, {}, { wethAddress: await wethToken.getAddress() });
         
+        const ownerSigner = await env.provider.getSigner(owner);
+        const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
+        
+        // 🔧 首先部署完整的 TestNativeOrdersFeature 以支持 registerAllowedRfqOrigins
+        const { TestNativeOrdersFeature__factory } = await import('../wrappers');
+        const nativeOrdersImpl = await new TestNativeOrdersFeature__factory(ownerSigner).deploy(
+            await zeroEx.getAddress(),
+            await wethToken.getAddress(),
+            ethers.ZeroAddress, // staking - 使用零地址作为测试
+            ethers.ZeroAddress, // feeCollectorController - 使用零地址作为测试
+            0, // protocolFeeMultiplier
+        );
+        await nativeOrdersImpl.waitForDeployment();
+        await ownableFeature.migrate(await nativeOrdersImpl.getAddress(), nativeOrdersImpl.interface.encodeFunctionData('migrate'), owner);
+        
+        // 🔧 然后部署 OtcOrdersFeature
         const otcFeatureFactory = new OtcOrdersFeature__factory(signer);
         const otcFeatureImpl = await otcFeatureFactory.deploy(
             await zeroEx.getAddress(),
             await wethToken.getAddress()
         );
         await otcFeatureImpl.waitForDeployment();
-        
-        const ownerSigner = await env.provider.getSigner(owner);
-        const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
         await ownableFeature.migrate(await otcFeatureImpl.getAddress(), otcFeatureImpl.interface.encodeFunctionData('migrate'), owner);
         
         // 创建不同接口的实例以访问不同的功能
@@ -275,21 +294,22 @@ describe('OtcOrdersFeature', () => {
         it('cannot fill an order with wrong tx.origin', async () => {
             const order = await getTestOtcOrder();
             const tx = testUtils.fillOtcOrderAsync(order, order.takerAmount, notTaker);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), notTaker, taker);
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableByOriginError(tx, order.getHash(), notTaker, taker);
         });
 
         it('cannot fill an order with wrong taker', async () => {
             const order = await getTestOtcOrder({ taker: notTaker });
             const tx = testUtils.fillOtcOrderAsync(order);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByTakerError(order.getHash(), taker, notTaker);
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableByTakerError(tx, order.getHash(), taker, notTaker);
         });
 
         it('can fill an order from a different tx.origin if registered', async () => {
             const order = await getTestOtcOrder();
             // 🔧 修复API语法，保持测试意图：注册allowed RFQ origins
             const nativeOrdersFeature = await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress());
+            // 🔧 使用 taker 账户注册 notTaker 作为允许的 origin
             const takerSigner = await env.provider.getSigner(taker);
             await nativeOrdersFeature.connect(takerSigner).registerAllowedRfqOrigins([notTaker], true);
             return testUtils.fillOtcOrderAsync(order, order.takerAmount, notTaker);
@@ -303,22 +323,22 @@ describe('OtcOrdersFeature', () => {
             await nativeOrdersFeature.connect(takerSigner).registerAllowedRfqOrigins([notTaker], true);
             await nativeOrdersFeature.connect(takerSigner).registerAllowedRfqOrigins([notTaker], false); // 🔧 修复API语法
             const tx = testUtils.fillOtcOrderAsync(order, order.takerAmount, notTaker);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), notTaker, taker);
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableByOriginError(tx, order.getHash(), notTaker, taker);
         });
 
         it('cannot fill an order with a zero tx.origin', async () => {
             const order = await getTestOtcOrder({ txOrigin: NULL_ADDRESS });
             const tx = testUtils.fillOtcOrderAsync(order);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), taker, NULL_ADDRESS);
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableByOriginError(tx, order.getHash(), taker, NULL_ADDRESS);
         });
 
         it('cannot fill an expired order', async () => {
             const order = await getTestOtcOrder({ expiry: await createExpiry(-60) });
             const tx = testUtils.fillOtcOrderAsync(order);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Expired);
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableError(tx, order.getHash(), OrderStatus.Expired);
         });
 
         it('cannot fill order with bad signature', async () => {
@@ -349,8 +369,8 @@ describe('OtcOrdersFeature', () => {
             const order = await getTestOtcOrder();
             await testUtils.fillOtcOrderAsync(order);
             const tx = testUtils.fillOtcOrderAsync(order);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Invalid);
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableError(tx, order.getHash(), OrderStatus.Invalid);
         });
 
         it('cannot fill two orders with the same nonceBucket and nonce', async () => {
@@ -358,8 +378,8 @@ describe('OtcOrdersFeature', () => {
             await testUtils.fillOtcOrderAsync(order1);
             const order2 = await getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce });
             const tx = testUtils.fillOtcOrderAsync(order2);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order2.getHash(), OrderStatus.Invalid);
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableError(tx, order2.getHash(), OrderStatus.Invalid);
         });
 
         it('cannot fill an order whose nonce is less than the nonce last used in that bucket', async () => {
@@ -367,8 +387,8 @@ describe('OtcOrdersFeature', () => {
             await testUtils.fillOtcOrderAsync(order1);
             const order2 = await getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce - 1n });
             const tx = testUtils.fillOtcOrderAsync(order2);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order2.getHash(), OrderStatus.Invalid);
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableError(tx, order2.getHash(), OrderStatus.Invalid);
         });
 
         it('can fill two orders that use the same nonce bucket and increasing nonces', async () => {
@@ -429,7 +449,7 @@ describe('OtcOrdersFeature', () => {
             return expect(tx).to.be.revertedWith('OtcOrdersFeature::fillOtcOrderForEth/MAKER_TOKEN_NOT_WETH');
         });
 
-        it.skip('allows for fills on orders signed by a approved signer', async () => {
+        it('allows for fills on orders signed by a approved signer', async () => {
             const order = await getTestOtcOrder({ maker: await contractWallet.getAddress() });
             const sig = await order.getSignatureWithProviderAsync(
                 env.provider,
@@ -447,7 +467,7 @@ describe('OtcOrdersFeature', () => {
                 .registerAllowedOrderSigner(contractWalletSigner, true);
             // fill should succeed
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = await zeroEx
+            const tx = await otcOrdersFeature
                 .connect(takerSigner)
                 .fillOtcOrder(order, sig, order.takerAmount);
             const receipt = await tx.wait();
@@ -459,7 +479,7 @@ describe('OtcOrdersFeature', () => {
             await assertExpectedFinalBalancesFromOtcOrderFillAsync(order);
         });
 
-        it.skip('disallows fills if the signer is revoked', async () => {
+        it('disallows fills if the signer is revoked', async () => {
             const order = await getTestOtcOrder({ maker: await contractWallet.getAddress() });
             const sig = await order.getSignatureWithProviderAsync(
                 env.provider,
@@ -483,12 +503,8 @@ describe('OtcOrdersFeature', () => {
             // 🔧 修复API语法，保持测试意图：验证fillOtcOrder失败
             const takerSigner = await env.provider.getSigner(taker);
             const tx = otcOrdersFeature.connect(takerSigner).fillOtcOrder(order, sig, order.takerAmount);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotSignedByMakerError(
-                order.getHash(),
-                contractWalletSigner,
-                order.maker,
-            );
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotSignedByMakerError(tx, order.getHash(), contractWalletSigner, order.maker);
         });
 
         it(`doesn't allow fills with an unapproved signer`, async () => {
@@ -502,8 +518,8 @@ describe('OtcOrdersFeature', () => {
             // 🔧 修复API语法，保持测试意图：验证fillOtcOrder失败
             const takerSigner = await env.provider.getSigner(taker);
             const tx = otcOrdersFeature.connect(takerSigner).fillOtcOrder(order, sig, order.takerAmount);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotSignedByMakerError(order.getHash(), maker, order.maker);
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotSignedByMakerError(tx, order.getHash(), maker, order.maker);
         });
     });
     describe('fillOtcOrderWithEth()', () => {
@@ -590,9 +606,10 @@ describe('OtcOrdersFeature', () => {
                 'OtcOrderFilled',
             );
             const takerEthBalanceAfter = await ethers.provider.getBalance(taker);
-            expect(takerEthBalanceBefore - takerEthBalanceAfter, 'taker eth balance').to.equal(
-                order.takerAmount,
-            );
+            const ethSpent = takerEthBalanceBefore - takerEthBalanceAfter;
+            const gasCost = BigInt(receipt.gasUsed) * BigInt(receipt.gasPrice || 0);
+            // 🔧 精确匹配：ethSpent 应该等于 order.takerAmount + gasCost（多余的420 wei被退回）
+            expect(ethSpent, 'taker eth balance').to.equal(order.takerAmount + gasCost);
             const takerBalance = await (await ethers.getContractAt('TestMintableERC20Token', order.makerToken)).balanceOf(taker);
             expect(takerBalance, 'taker balance').to.eq(order.makerAmount);
             const makerEthBalanceAfter = await ethers.provider.getBalance(maker);
@@ -622,8 +639,8 @@ describe('OtcOrdersFeature', () => {
         it('cannot fill an order with wrong tx.origin', async () => {
             const order = await getTestOtcOrder({ taker, txOrigin });
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order, notTxOrigin);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), notTxOrigin, txOrigin);
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableByOriginError(tx, order.getHash(), notTxOrigin, txOrigin);
         });
 
         it('can fill an order from a different tx.origin if registered', async () => {
@@ -646,29 +663,29 @@ describe('OtcOrdersFeature', () => {
                 .connect(txOriginSigner)
                 .registerAllowedRfqOrigins([notTxOrigin], false);
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order, notTxOrigin);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), notTxOrigin, txOrigin);
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableByOriginError(tx, order.getHash(), notTxOrigin, txOrigin);
         });
 
         it('cannot fill an order with a zero tx.origin', async () => {
             const order = await getTestOtcOrder({ taker, txOrigin: NULL_ADDRESS });
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order, txOrigin);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByOriginError(order.getHash(), txOrigin, NULL_ADDRESS);
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableByOriginError(tx, order.getHash(), txOrigin, NULL_ADDRESS);
         });
 
         it('cannot fill an expired order', async () => {
             const order = await getTestOtcOrder({ taker, txOrigin, expiry: await createExpiry(-60) });
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Expired);
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableError(tx, order.getHash(), OrderStatus.Expired);
         });
 
         it('cannot fill an order with bad taker signature', async () => {
             const order = await getTestOtcOrder({ taker, txOrigin });
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order, txOrigin, notTaker);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByTakerError(order.getHash(), notTaker, taker);
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableByTakerError(tx, order.getHash(), notTaker, taker);
         });
 
         it('cannot fill order with bad maker signature', async () => {
@@ -708,8 +725,8 @@ describe('OtcOrdersFeature', () => {
             const order = await getTestOtcOrder({ taker, txOrigin });
             await testUtils.fillTakerSignedOtcOrderAsync(order);
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Invalid);
-            return expect(tx).to.be.revertedWith(expectedError.encode());
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableError(tx, order.getHash(), OrderStatus.Invalid);
         });
 
         it('cannot fill two orders with the same nonceBucket and nonce', async () => {
@@ -717,9 +734,8 @@ describe('OtcOrdersFeature', () => {
             await testUtils.fillTakerSignedOtcOrderAsync(order1);
             const order2 = await getTestOtcOrder({ taker, txOrigin, nonceBucket: order1.nonceBucket, nonce: order1.nonce });
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order2);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableError(order2.getHash(), OrderStatus.Invalid),
-            );
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableError(tx, order2.getHash(), OrderStatus.Invalid);
         });
 
         it('cannot fill an order whose nonce is less than the nonce last used in that bucket', async () => {
@@ -732,9 +748,8 @@ describe('OtcOrdersFeature', () => {
                 nonce: order1.nonce - 1n,
             });
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order2);
-            return expect(tx).to.be.revertedWith(
-                new RevertErrors.NativeOrders.OrderNotFillableError(order2.getHash(), OrderStatus.Invalid),
-            );
+            // 🔧 使用优雅的 Rich Error 匹配
+            return expectOrderNotFillableError(tx, order2.getHash(), OrderStatus.Invalid);
         });
 
         it('can fill two orders that use the same nonce bucket and increasing nonces', async () => {

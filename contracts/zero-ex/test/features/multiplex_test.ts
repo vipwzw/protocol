@@ -342,6 +342,11 @@ describe('MultiplexFeature', () => {
     }
 
     async function getTestOtcOrder(fields: Partial<OtcOrder> = {}): Promise<OtcOrder> {
+        // 🔧 使用区块链时间而不是真实世界时间，防止时间状态干扰
+        const currentBlock = await ethers.provider.getBlock('latest');
+        const blockTimestamp = Number(currentBlock?.timestamp || 0);
+        const expiry = fields.expiry ?? BigInt(blockTimestamp + 300); // 区块时间 + 5分钟
+        
         return getRandomOtcOrder({
             maker,
             verifyingContract: await zeroEx.getAddress(),
@@ -352,6 +357,7 @@ describe('MultiplexFeature', () => {
             takerAmount: toBaseUnitAmount(1),
             taker,
             txOrigin: taker,
+            expiry, // 使用基于区块链时间的过期时间
             ...fields,
         });
     }
@@ -365,7 +371,43 @@ describe('MultiplexFeature', () => {
                 ? weth
                 : await ethers.getContractAt('TestMintableERC20Token', otcOrder.makerToken);
         await mintToAsync(makerToken, otcOrder.maker, otcOrder.makerAmount);
+        // 🔧 强制重新授权 ZeroEx 合约转移 maker 的 token（解决状态干扰问题）
+        const makerSigner = await env.provider.getSigner(otcOrder.maker);
+        // 先重置授权为0，再设置为最大值，确保授权生效
+        await makerToken.connect(makerSigner).approve(await zeroEx.getAddress(), 0);
+        await makerToken.connect(makerSigner).approve(await zeroEx.getAddress(), constants.MAX_UINT256);
+        
+        // 🔍 验证授权是否成功
+        const allowance = await makerToken.allowance(otcOrder.maker, await zeroEx.getAddress());
+        console.log(`🔧 getOtcSubcallAsync 授权检查:
+  maker: ${otcOrder.maker}
+  makerToken: ${await makerToken.getAddress()}
+  zeroEx: ${await zeroEx.getAddress()}
+  allowance: ${allowance}
+  required: ${otcOrder.makerAmount}
+  sufficient: ${allowance >= otcOrder.makerAmount}`);
+        
+        if (allowance < otcOrder.makerAmount) {
+            throw new Error(`Insufficient allowance: ${allowance} < ${otcOrder.makerAmount}`);
+        }
         const signature = await otcOrder.getSignatureWithProviderAsync(env.provider);
+                        // 🔍 检查时间相关状态
+                const currentTimestamp = Math.floor(Date.now() / 1000);
+                const blockTimestamp = Number((await ethers.provider.getBlock('latest'))?.timestamp || 0);
+                const orderExpiry = Number(otcOrder.expiry);
+                console.log(`⏰ 时间状态检查:
+  currentTimestamp: ${currentTimestamp}
+  blockTimestamp: ${blockTimestamp}
+  order.expiry: ${orderExpiry}
+  timeUntilExpiry: ${orderExpiry - blockTimestamp}s`);
+
+                console.log(`🔐 OTC Order 签名和数据:
+  signature: ${signature}
+  order.salt: ${otcOrder.salt}
+  order.expiry: ${otcOrder.expiry}
+  sellAmount: ${sellAmount}
+  MultiplexSubcall.Otc: ${MultiplexSubcall.Otc}`);
+        
         return {
             id: MultiplexSubcall.Otc,
             sellAmount,
@@ -508,10 +550,7 @@ describe('MultiplexFeature', () => {
         [owner, maker, taker] = await env.getAccountAddressesAsync();
         env.txDefaults.from = owner;
         zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {}, { transformerDeployer: owner });
-        // 🔧 使用ITransformERC20Feature接口调用getTransformWallet
-        const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
-        flashWalletAddress = await transformERC20Feature.getTransformWallet();
-
+        
         const signer = await env.provider.getSigner(owner);
         const tokenFactories = [...new Array(3)].map(() => new TestMintableERC20Token__factory(signer));
         const tokenDeployments = await Promise.all(
@@ -523,6 +562,25 @@ describe('MultiplexFeature', () => {
         const wethFactory = new TestWeth__factory(signer);
         weth = await wethFactory.deploy();
         await weth.waitForDeployment();
+
+        // 🔧 部署完整的 TestNativeOrdersFeature 以支持 OTC orders（在 weth 初始化之后）
+        const ownerSignerForNative = await env.provider.getSigner(owner);
+        const ownableFeatureForNative = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSignerForNative);
+        
+        const { TestNativeOrdersFeature__factory: TestNativeOrdersFeatureFactory } = await import('../wrappers');
+        const nativeOrdersImplForOtc = await new TestNativeOrdersFeatureFactory(ownerSignerForNative).deploy(
+            await zeroEx.getAddress(),
+            await weth.getAddress(), // weth - 使用正确的 WETH 地址
+            ethers.ZeroAddress, // staking - 使用零地址作为测试
+            ethers.ZeroAddress, // feeCollectorController - 使用零地址作为测试
+            70000, // protocolFeeMultiplier - 使用标准值
+        );
+        await nativeOrdersImplForOtc.waitForDeployment();
+        await ownableFeatureForNative.migrate(await nativeOrdersImplForOtc.getAddress(), nativeOrdersImplForOtc.interface.encodeFunctionData('migrate'), owner);
+        
+        // 🔧 使用ITransformERC20Feature接口调用getTransformWallet
+        const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+        flashWalletAddress = await transformERC20Feature.getTransformWallet();
 
         await Promise.all([
             ...[dai, shib, zrx, weth].map(async t => {
@@ -592,11 +650,116 @@ describe('MultiplexFeature', () => {
     });
 
     beforeEach(async () => {
-        // 🔄 状态重置：恢复到初始快照，完全重置所有状态
-        // 这包括区块链时间、合约状态、账户余额等所有状态
+        // 🔄 第一步：恢复区块链状态
         await ethers.provider.send('evm_revert', [snapshotId]);
         // 重新创建快照供下次使用
         snapshotId = await ethers.provider.send('evm_snapshot', []);
+        
+        // 🔄 第二步：彻底重置 JavaScript 变量状态
+        console.log('🔄 开始彻底重置所有变量状态...');
+        
+        // 重新获取账户地址（防止地址引用污染）
+        [owner, maker, taker] = await env.getAccountAddressesAsync();
+        env.txDefaults.from = owner;
+        
+        // 🔄 重新部署所有合约实例，确保地址完全独立
+        zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {}, { transformerDeployer: owner });
+        
+        const signer = await env.provider.getSigner(owner);
+        
+        // 重新部署所有 token 合约
+        const tokenFactories = [...new Array(3)].map(() => new TestMintableERC20Token__factory(signer));
+        const tokenDeployments = await Promise.all(
+            tokenFactories.map(factory => factory.deploy())
+        );
+        await Promise.all(tokenDeployments.map(token => token.waitForDeployment()));
+        [dai, shib, zrx] = tokenDeployments;
+        
+        const wethFactory = new TestWeth__factory(signer);
+        weth = await wethFactory.deploy();
+        await weth.waitForDeployment();
+
+        // 重新部署完整的 TestNativeOrdersFeature
+        const ownerSignerForReset = await env.provider.getSigner(owner);
+        const ownableFeatureForReset = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSignerForReset);
+        
+        const { TestNativeOrdersFeature__factory: TestNativeOrdersFeatureFactoryForReset } = await import('../wrappers');
+        const nativeOrdersImplForReset = await new TestNativeOrdersFeatureFactoryForReset(ownerSignerForReset).deploy(
+            await zeroEx.getAddress(),
+            await weth.getAddress(), // 使用新部署的 WETH 地址
+            ethers.ZeroAddress, // staking - 使用零地址作为测试
+            ethers.ZeroAddress, // feeCollectorController - 使用零地址作为测试
+            70000, // protocolFeeMultiplier - 使用标准值
+        );
+        await nativeOrdersImplForReset.waitForDeployment();
+        await ownableFeatureForReset.migrate(await nativeOrdersImplForReset.getAddress(), nativeOrdersImplForReset.interface.encodeFunctionData('migrate'), owner);
+        
+        // 重新获取 multiplex feature 引用
+        multiplex = await ethers.getContractAt('IMultiplexFeature', await zeroEx.getAddress()) as MultiplexFeatureContract;
+        
+        // 重新获取 flashWalletAddress
+        const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+        flashWalletAddress = await transformERC20Feature.getTransformWallet();
+
+        // 重新设置所有 token 授权
+        await Promise.all([
+            ...[dai, shib, zrx, weth].map(async t => {
+                const takerSigner = await env.provider.getSigner(taker);
+                return t.connect(takerSigner).approve(await zeroEx.getAddress(), constants.MAX_UINT256);
+            }),
+            ...[dai, shib, zrx, weth].map(async t => {
+                const makerSigner = await env.provider.getSigner(maker);
+                return t.connect(makerSigner).approve(await zeroEx.getAddress(), constants.MAX_UINT256);
+            }),
+        ]);
+        
+        // 重新迁移其他必要的合约
+        await migrateOtcOrdersFeatureAsync();
+        await migrateLiquidityProviderContractsAsync();
+        await migrateUniswapV2ContractsAsync();
+        await migrateUniswapV3ContractsAsync();
+        
+        // 🔧 重新部署 transformer
+        const transformerFactory = new TestMintTokenERC20Transformer__factory(signer);
+        const transformer = await transformerFactory.deploy();
+        await transformer.waitForDeployment();
+        
+        // 获取 transformer 的部署 nonce
+        const deployTx = transformer.deploymentTransaction();
+        if (deployTx) {
+            transformerNonce = deployTx.nonce;
+        } else {
+            transformerNonce = (await ethers.provider.getTransactionCount(owner)) - 1;
+        }
+
+        // 🔧 重新部署 MultiplexFeature（关键！）
+        const featureFactory = await ethers.getContractFactory('MultiplexFeature');
+        const featureImpl = await featureFactory.deploy(
+            await zeroEx.getAddress(),
+            await weth.getAddress(),
+            await sandbox.getAddress(),
+            await uniV2Factory.getAddress(),
+            await sushiFactory.getAddress(),
+            await uniV2Factory.POOL_INIT_CODE_HASH(),
+            await sushiFactory.POOL_INIT_CODE_HASH()
+        );
+        await featureImpl.waitForDeployment();
+        
+        // 迁移 MultiplexFeature
+        const ownableFeatureForMultiplex = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), signer);
+        await ownableFeatureForMultiplex.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
+        
+                        console.log(`✅ 变量状态重置完成！新的 zeroEx 地址: ${await zeroEx.getAddress()}`);
+                
+                // 🔍 验证所有关键变量都已重新赋值
+                console.log(`🔍 重置后的关键变量:
+  dai: ${await dai.getAddress()}
+  shib: ${await shib.getAddress()}
+  zrx: ${await zrx.getAddress()}
+  weth: ${await weth.getAddress()}
+  multiplex: ${await multiplex.getAddress()}
+  flashWalletAddress: ${flashWalletAddress}
+  transformerNonce: ${transformerNonce}`);
     });
 
 
@@ -1089,10 +1252,99 @@ describe('MultiplexFeature', () => {
                 );
             });
             it('OTC', async () => {
+                console.log('\n🔍 === multiplexBatchSellEthForToken OTC 测试开始 ===');
+                
+                // 🔍 检查环境状态
+                console.log(`🌍 环境检查:
+  owner: ${owner}
+  maker: ${maker}
+  taker: ${taker}
+  zeroEx: ${await zeroEx.getAddress()}
+  multiplex: ${await multiplex.getAddress()}
+  env.txDefaults.from: ${env.txDefaults.from}`);
+                
+                // 🔍 检查合约状态
+                const zeroExOwner = await (await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress())).owner();
+                console.log(`🏢 合约状态:
+  zeroEx.owner: ${zeroExOwner}
+  expected owner: ${owner}`);
+                
+                // 🔍 检查账户 nonce
+                const ownerNonce = await env.provider.getTransactionCount(owner);
+                const makerNonce = await env.provider.getTransactionCount(maker);
+                const takerNonce = await env.provider.getTransactionCount(taker);
+                console.log(`🔢 账户 Nonce:
+  owner: ${ownerNonce}
+  maker: ${makerNonce}
+  taker: ${takerNonce}`);
+
+                // 🔍 检查区块链状态
+                const blockNumber = await env.provider.getBlockNumber();
+                const latestBlock = await env.provider.getBlock(blockNumber);
+                console.log(`⛓️ 区块链状态:
+  blockNumber: ${blockNumber}
+  timestamp: ${latestBlock?.timestamp}
+  gasLimit: ${latestBlock?.gasLimit}`);
+
+                // 🔍 检查关键合约的内部状态
+                try {
+                    const nativeOrdersFeature = await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress());
+                    const protocolFeeMultiplier = await nativeOrdersFeature.getProtocolFeeMultiplier();
+                    console.log(`🏢 NativeOrdersFeature 状态:
+  protocolFeeMultiplier: ${protocolFeeMultiplier}`);
+                } catch (e) {
+                    console.log(`⚠️ 无法获取 NativeOrdersFeature 状态: ${e.message}`);
+                }
+
+                // 🔍 检查 MultiplexFeature 的状态
+                try {
+                    const multiplexImpl = await ethers.getContractAt('IMultiplexFeature', await zeroEx.getAddress());
+                    console.log(`🔀 MultiplexFeature 状态:
+  address: ${await multiplexImpl.getAddress()}`);
+                } catch (e) {
+                    console.log(`⚠️ 无法获取 MultiplexFeature 状态: ${e.message}`);
+                }
+
+                // 🔍 检查合约存储状态（关键！）
+                const storageSlot0 = await env.provider.getStorage(await zeroEx.getAddress(), 0);
+                const storageSlot1 = await env.provider.getStorage(await zeroEx.getAddress(), 1);
+                console.log(`💾 合约存储状态:
+  slot0: ${storageSlot0}
+  slot1: ${storageSlot1}`);
+
+                // 🔍 检查是否有之前测试留下的状态
+                const makerEthBalance = await env.provider.getBalance(maker);
+                const takerEthBalance = await env.provider.getBalance(taker);
+                console.log(`💰 ETH 余额状态:
+  maker: ${makerEthBalance}
+  taker: ${takerEthBalance}`);
+                
                 const order = await getTestOtcOrder({ takerToken: await weth.getAddress() });
+                console.log(`📋 OTC Order:
+  maker: ${order.maker}
+  taker: ${order.taker}  
+  makerToken: ${order.makerToken} (ZRX)
+  takerToken: ${order.takerToken} (WETH)
+  makerAmount: ${order.makerAmount}
+  takerAmount: ${order.takerAmount}`);
+                
                 const otcSubcall = await getOtcSubcallAsync(order);
+                console.log(`📦 OTC Subcall:
+  id: ${otcSubcall.id}
+  sellAmount: ${otcSubcall.sellAmount}
+  data length: ${otcSubcall.data.length}`);
+
+                // 检查关键状态
+                const makerTokenContract = await ethers.getContractAt('TestMintableERC20Token', order.makerToken);
+                const makerBalance = await makerTokenContract.balanceOf(order.maker);
+                const makerAllowance = await makerTokenContract.allowance(order.maker, await zeroEx.getAddress());
+                console.log(`💰 Maker 状态:
+  balance: ${makerBalance}
+  allowance: ${makerAllowance}
+  required: ${order.makerAmount}`);
 
                 const takerSigner = await env.provider.getSigner(taker);
+                console.log(`🚀 执行 multiplexBatchSellEthForToken...`);
                 const tx = await multiplex
                     .connect(takerSigner)
                     .multiplexBatchSellEthForToken(await zrx.getAddress(), [otcSubcall], constants.ZERO_AMOUNT, { value: order.takerAmount });
@@ -1335,12 +1587,44 @@ describe('MultiplexFeature', () => {
                 );
             });
             it('OTC', async () => {
+                console.log('\n🔍 === multiplexBatchSellTokenForEth OTC 测试开始 ===');
+                
                 const order = await getTestOtcOrder({ makerToken: await weth.getAddress() });
+                console.log(`📋 OTC Order:
+  maker: ${order.maker}
+  taker: ${order.taker}  
+  makerToken: ${order.makerToken} (WETH)
+  takerToken: ${order.takerToken} (DAI)
+  makerAmount: ${order.makerAmount}
+  takerAmount: ${order.takerAmount}`);
+                
                 const otcSubcall = await getOtcSubcallAsync(order);
+                console.log(`📦 OTC Subcall:
+  id: ${otcSubcall.id}
+  sellAmount: ${otcSubcall.sellAmount}
+  data length: ${otcSubcall.data.length}`);
+
                 await mintToAsync(dai, taker, order.takerAmount);
+                
+                // 检查关键状态
+                const makerTokenContract = await ethers.getContractAt('TestWeth', order.makerToken);
+                const makerBalance = await makerTokenContract.balanceOf(order.maker);
+                const makerAllowance = await makerTokenContract.allowance(order.maker, await zeroEx.getAddress());
+                console.log(`💰 Maker 状态:
+  balance: ${makerBalance}
+  allowance: ${makerAllowance}
+  required: ${order.makerAmount}`);
+
+                const takerBalance = await dai.balanceOf(taker);
+                const takerAllowance = await dai.allowance(taker, await zeroEx.getAddress());
+                console.log(`💰 Taker 状态:
+  balance: ${takerBalance}
+  allowance: ${takerAllowance}
+  required: ${order.takerAmount}`);
+
+                console.log(`🚀 执行 multiplexBatchSellTokenForEth...`);
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
-
                     .multiplexBatchSellTokenForEth(await dai.getAddress(), [otcSubcall], order.takerAmount, constants.ZERO_AMOUNT);
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress() }], 'Withdrawal');
                 verifyEventsFromLogs<TransferEvent>(

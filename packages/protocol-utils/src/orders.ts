@@ -221,6 +221,7 @@ export class LimitOrder extends OrderBase {
         return {
             types: {
                 [LimitOrder.STRUCT_NAME]: LimitOrder.STRUCT_ABI,
+                EIP712Domain: EIP712_DOMAIN_PARAMETERS,
             },
             domain: createExchangeProxyEIP712Domain(this.chainId, this.verifyingContract) as any,
             primaryType: LimitOrder.STRUCT_NAME,
@@ -318,6 +319,7 @@ export class RfqOrder extends OrderBase {
         return {
             types: {
                 [RfqOrder.STRUCT_NAME]: RfqOrder.STRUCT_ABI,
+                EIP712Domain: EIP712_DOMAIN_PARAMETERS,
             },
             domain: createExchangeProxyEIP712Domain(this.chainId, this.verifyingContract) as any,
             primaryType: RfqOrder.STRUCT_NAME,

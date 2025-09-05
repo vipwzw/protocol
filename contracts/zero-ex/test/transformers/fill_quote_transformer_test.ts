@@ -831,7 +831,12 @@ describe('FillQuoteTransformer', () => {
         });
 
         it('can partial sell to a single limit order', async () => {
-            const limitOrders = [await createLimitOrder()];
+            // 🔧 使用固定数量确保可以被2整除，避免精度问题
+            const limitOrders = [await createLimitOrder({
+                makerAmount: ethers.parseEther('2'), // 固定数量
+                takerAmount: ethers.parseEther('2'), // 固定数量
+                takerTokenFeeAmount: ethers.parseEther('0.2'), // 固定费用
+            })];
             
             // 🔧 关键修复：为limit order设置maker状态
             await fundLimitOrderMaker(limitOrders);
@@ -993,9 +998,18 @@ describe('FillQuoteTransformer', () => {
         });
 
         it('can partially sell to one of each order type', async () => {
-            const rfqOrders = [createRfqOrder()];
-            const limitOrders = [await createLimitOrder()];
-            const bridgeOrders = [createBridgeOrder()];
+            // 🔧 使用固定数量确保可以被2整除，避免精度问题
+            const rfqOrders = [createRfqOrder({
+                takerAmount: ethers.parseEther('2'), // 固定数量
+            })];
+            const limitOrders = [await createLimitOrder({
+                makerAmount: ethers.parseEther('2'), // 固定数量
+                takerAmount: ethers.parseEther('2'), // 固定数量
+                takerTokenFeeAmount: ethers.parseEther('0.2'), // 固定费用
+            })];
+            const bridgeOrders = [createBridgeOrder({
+                takerTokenAmount: ethers.parseEther('2'), // 固定数量
+            })];
             
             // 🔧 关键修复：为limit order设置maker状态
             await fundLimitOrderMaker(limitOrders);

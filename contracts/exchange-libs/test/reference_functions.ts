@@ -56,7 +56,7 @@ const ZERO_AMOUNT = 0n;
                         numerator * target,
                         denominator,
                     );
-                    return expect(() => getPartialAmountFloor(numerator, denominator, target)).to.throw('Division by zero');
+                    return expect(() => getPartialAmountFloor(numerator, denominator, target)).to.throw('DivisionByZeroError');
                 });
 
                 it('reverts if `numerator * target` overflows', () => {
@@ -86,7 +86,7 @@ const ZERO_AMOUNT = 0n;
                         denominator,
                         1n,
                     );
-                    return expect(() => getPartialAmountCeil(numerator, denominator, target)).to.throw('Division by zero');
+                    return expect(() => getPartialAmountCeil(numerator, denominator, target)).to.throw('DivisionByZeroError');
                 });
 
                 it('reverts if `numerator * target` overflows', () => {
@@ -206,8 +206,8 @@ const ZERO_AMOUNT = 0n;
                         numerator,
                         target,
                     );
-                    // Skip: BigInt in JavaScript handles large numbers without overflow errors
-                    expect(() => isRoundingErrorFloor(numerator, denominator, target)).not.to.throw();
+                    // Now reference function also throws overflow errors to match Solidity behavior
+                    expect(() => isRoundingErrorFloor(numerator, denominator, target)).to.throw('Arithmetic operation overflowed');
                 });
             });
         });
@@ -248,8 +248,8 @@ const ZERO_AMOUNT = 0n;
                         numerator,
                         target,
                     );
-                    // Skip: BigInt in JavaScript handles large numbers without overflow errors
-                    expect(() => isRoundingErrorCeil(numerator, denominator, target)).not.to.throw();
+                    // Now reference function also throws overflow errors to match Solidity behavior
+                    expect(() => isRoundingErrorCeil(numerator, denominator, target)).to.throw('Arithmetic operation overflowed');
                 });
             });
         });

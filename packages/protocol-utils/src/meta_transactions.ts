@@ -121,6 +121,7 @@ export class MetaTransaction {
         return {
             types: {
                 [MetaTransaction.STRUCT_NAME]: MetaTransaction.STRUCT_ABI,
+                EIP712Domain: EIP712_DOMAIN_PARAMETERS,
             },
             domain: createExchangeProxyEIP712Domain(this.chainId, this.verifyingContract) as any,
             primaryType: MetaTransaction.STRUCT_NAME,

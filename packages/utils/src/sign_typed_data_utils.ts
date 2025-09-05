@@ -71,7 +71,9 @@ export const signTypedDataUtils = {
         deps = [primaryType].concat(deps.sort());
         let result = '';
         for (const dep of deps) {
-            result += `${dep}(${types[dep].map(({ name, type }: { name: string; type: string }) => `${type} ${name}`).join(',')})`;
+            if (types[dep] && Array.isArray(types[dep])) {
+                result += `${dep}(${types[dep].map(({ name, type }: { name: string; type: string }) => `${type} ${name}`).join(',')})`;
+            }
         }
         return result;
     },

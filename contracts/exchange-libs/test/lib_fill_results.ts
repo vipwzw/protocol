@@ -24,27 +24,28 @@ describe('LibFillResults', () => {
         profitInRightMakerAsset?: BigNumber;
     }
 
-    const { ONE_ETHER, MAX_UINT256 } = constants;
+    const ONE_ETHER = ethers.parseEther('1');
+    const MAX_UINT256 = 2n ** 256n - 1n;
     const EMPTY_ORDER: Order = {
         senderAddress: constants.NULL_ADDRESS,
         makerAddress: constants.NULL_ADDRESS,
         takerAddress: constants.NULL_ADDRESS,
-        makerFee: constants.ZERO_AMOUNT,
-        takerFee: constants.ZERO_AMOUNT,
-        makerAssetAmount: constants.ZERO_AMOUNT,
-        takerAssetAmount: constants.ZERO_AMOUNT,
+        makerFee: 0n,
+        takerFee: 0n,
+        makerAssetAmount: 0n,
+        takerAssetAmount: 0n,
         makerAssetData: constants.NULL_BYTES,
         takerAssetData: constants.NULL_BYTES,
         makerFeeAssetData: constants.NULL_BYTES,
         takerFeeAssetData: constants.NULL_BYTES,
-        salt: constants.ZERO_AMOUNT,
+        salt: 0n,
         feeRecipientAddress: constants.NULL_ADDRESS,
-        expirationTimeSeconds: constants.ZERO_AMOUNT,
+        expirationTimeSeconds: 0n,
         chainId: 1,
         exchangeAddress: constants.NULL_ADDRESS,
     };
 
-    const randomAddress = () => hexUtils.random(constants.ADDRESS_LENGTH);
+    const randomAddress = () => '0x' + hexUtils.random(20).slice(2);
     const randomAssetData = () => hexUtils.random(36);
     const randomUint256 = () => BigInt('0x' + hexUtils.random(constants.WORD_LENGTH).slice(2));
 
@@ -53,21 +54,22 @@ describe('LibFillResults', () => {
     let makerAddressRight: string;
 
     before(async () => {
-        makerAddressLeft = env.accounts[0];
-        makerAddressRight = env.accounts[1];
-
         const { ethers } = require('hardhat');
-        const signer = (await ethers.getSigners())[0];
+        const signers = await ethers.getSigners();
+        makerAddressLeft = await signers[0].getAddress();
+        makerAddressRight = await signers[1].getAddress();
+
+        const signer = signers[0];
         libsContract = await new TestLibFillResults__factory(signer).deploy();
     });
 
     describe('calculateFillResults', () => {
-        describe.optional('combinatorial tests', () => {
+        describe('combinatorial tests', () => {
             function makeOrder(
-                makerAssetAmount: BigNumber,
-                takerAssetAmount: BigNumber,
-                makerFee: BigNumber,
-                takerFee: BigNumber,
+                makerAssetAmount: bigint,
+                takerAssetAmount: bigint,
+                makerFee: bigint,
+                takerFee: bigint,
             ): Order {
                 return {
                     ...EMPTY_ORDER,
@@ -79,9 +81,9 @@ describe('LibFillResults', () => {
             }
 
             async function referenceCalculateFillResultsAsync(
-                orderTakerAssetAmount: BigNumber,
-                takerAssetFilledAmount: BigNumber,
-                otherAmount: BigNumber,
+                orderTakerAssetAmount: bigint,
+                takerAssetFilledAmount: bigint,
+                otherAmount: bigint,
             ): Promise<FillResults> {
                 // Note(albrow): Here we are re-using the same value (otherAmount)
                 // for order.makerAssetAmount, order.makerFee, and order.takerFee.
@@ -98,19 +100,25 @@ describe('LibFillResults', () => {
             }
 
             async function testCalculateFillResultsAsync(
-                orderTakerAssetAmount: BigNumber,
-                takerAssetFilledAmount: BigNumber,
-                otherAmount: BigNumber,
+                orderTakerAssetAmount: bigint,
+                takerAssetFilledAmount: bigint,
+                otherAmount: bigint,
             ): Promise<FillResults> {
                 const order = makeOrder(otherAmount, orderTakerAssetAmount, otherAmount, otherAmount);
-                return libsContract
-                    .calculateFillResults(
-                        order,
-                        takerAssetFilledAmount,
-                        takerAssetFilledAmount, // Using this so that the gas price is distinct from protocolFeeMultiplier
-                        otherAmount,
-                    )
-                    ;
+                const result = await libsContract.calculateFillResults(
+                    order,
+                    takerAssetFilledAmount,
+                    takerAssetFilledAmount, // Using this so that the gas price is distinct from protocolFeeMultiplier
+                    otherAmount,
+                );
+                // Convert ethers Result to FillResults object
+                return {
+                    makerAssetFilledAmount: result[0],
+                    takerAssetFilledAmount: result[1],
+                    makerFeePaid: result[2],
+                    takerFeePaid: result[3],
+                    protocolFeePaid: result[4],
+                };
             }
 
             testCombinatoriallyWithReferenceFunc(
@@ -122,7 +130,7 @@ describe('LibFillResults', () => {
         });
 
         describe('explicit tests', () => {
-            const MAX_UINT256_ROOT = constants.MAX_UINT256_ROOT;
+            const MAX_UINT256_ROOT = 340282366920938463463374607431768211455n; // 2^128 - 1
             const DEFAULT_GAS_PRICE = 200000n;
             const DEFAULT_PROTOCOL_FEE_MULTIPLIER = 150000n;
 
@@ -133,11 +141,11 @@ describe('LibFillResults', () => {
             it('matches the output of the reference function', async () => {
                 const order = makeOrder({
                     makerAssetAmount: ONE_ETHER,
-                                takerAssetAmount: ONE_ETHER * 2n,
+                                takerAssetAmount: ethers.parseEther('2'),
             makerFee: ethers.parseEther('0.0023'),
             takerFee: ethers.parseEther('0.0025'),
                 });
-                const takerAssetFilledAmount = ONE_ETHER/ 3n;
+                const takerAssetFilledAmount = ethers.parseEther('1') / 3n;
                 const expected = calculateFillResults(
                     order,
                     takerAssetFilledAmount,
@@ -188,7 +196,7 @@ describe('LibFillResults', () => {
                     takerAssetAmount: MAX_UINT256_ROOT,
                     makerFee: MAX_UINT256_ROOT * 11n,
                 });
-                const takerAssetFilledAmount = MAX_UINT256_ROOT/ 10n;
+                const takerAssetFilledAmount = MAX_UINT256_ROOT / 10n;
                 const makerAssetFilledAmount = getPartialAmountFloor(
                     takerAssetFilledAmount,
                     order.takerAssetAmount,
@@ -212,7 +220,7 @@ describe('LibFillResults', () => {
                     takerAssetAmount: MAX_UINT256_ROOT,
                     takerFee: MAX_UINT256_ROOT * 11n,
                 });
-                const takerAssetFilledAmount = MAX_UINT256_ROOT/ 10n;
+                const takerAssetFilledAmount = MAX_UINT256_ROOT / 10n;
                 await expect(
                     libsContract
                         .calculateFillResults(
@@ -317,11 +325,11 @@ describe('LibFillResults', () => {
             it('reverts if computing `fillResults.protocolFeePaid` overflows', async () => {
                 const order = makeOrder({
                     makerAssetAmount: ONE_ETHER,
-                                takerAssetAmount: ONE_ETHER * 2n,
+                                takerAssetAmount: ethers.parseEther('2'),
             makerFee: ethers.parseEther('0.0023'),
             takerFee: ethers.parseEther('0.0025'),
                 });
-                const takerAssetFilledAmount = ONE_ETHER/ 3n;
+                const takerAssetFilledAmount = ethers.parseEther('1') / 3n;
                 await expect(
                     libsContract
                         .calculateFillResults(order, takerAssetFilledAmount, MAX_UINT256, DEFAULT_GAS_PRICE)
@@ -362,8 +370,8 @@ describe('LibFillResults', () => {
         describe('explicit tests', () => {
             const DEFAULT_FILL_RESULTS = [
                 {
-                    makerAssetFilledAmount: ONE_ETHER,
-                    takerAssetFilledAmount: ONE_ETHER * 2n,
+                    makerAssetFilledAmount: ethers.parseEther('1'),
+                    takerAssetFilledAmount: ethers.parseEther('2'),
                     makerFeePaid: ethers.parseEther('0.001'),
                     takerFeePaid: ethers.parseEther('0.002'),
                     protocolFeePaid: ethers.parseEther('0.003'),
@@ -400,18 +408,18 @@ describe('LibFillResults', () => {
     });
 
     const EMPTY_FILL_RESULTS: FillResults = {
-        makerAssetFilledAmount: constants.ZERO_AMOUNT,
-        takerAssetFilledAmount: constants.ZERO_AMOUNT,
-        makerFeePaid: constants.ZERO_AMOUNT,
-        takerFeePaid: constants.ZERO_AMOUNT,
-        protocolFeePaid: constants.ZERO_AMOUNT,
+        makerAssetFilledAmount: 0n,
+        takerAssetFilledAmount: 0n,
+        makerFeePaid: 0n,
+        takerFeePaid: 0n,
+        protocolFeePaid: 0n,
     };
 
     const EMPTY_MATCHED_FILL_RESULTS: MatchedFillResults = {
         left: EMPTY_FILL_RESULTS,
         right: EMPTY_FILL_RESULTS,
-        profitInLeftMakerAsset: constants.ZERO_AMOUNT,
-        profitInRightMakerAsset: constants.ZERO_AMOUNT,
+        profitInLeftMakerAsset: 0n,
+        profitInRightMakerAsset: 0n,
     };
 
     const COMMON_MATCHED_FILL_RESULTS = {
@@ -438,9 +446,9 @@ describe('LibFillResults', () => {
         matchedFillResults.left = _.assign({}, EMPTY_FILL_RESULTS, partialMatchedFillResults.left);
         matchedFillResults.right = _.assign({}, EMPTY_FILL_RESULTS, partialMatchedFillResults.right);
         matchedFillResults.profitInLeftMakerAsset =
-            partialMatchedFillResults.profitInLeftMakerAsset || constants.ZERO_AMOUNT;
+            partialMatchedFillResults.profitInLeftMakerAsset || 0n;
         matchedFillResults.profitInRightMakerAsset =
-            partialMatchedFillResults.profitInRightMakerAsset || constants.ZERO_AMOUNT;
+            partialMatchedFillResults.profitInRightMakerAsset || 0n;
         return matchedFillResults;
     }
 
@@ -493,7 +501,10 @@ describe('LibFillResults', () => {
         }
 
         const ORDER_DEFAULTS = {
-            ...constants.STATIC_ORDER_PARAMS,
+            makerAssetAmount: 0n,
+            takerAssetAmount: 0n,
+            makerFee: ethers.parseEther('1'), // 1 ETH default fee
+            takerFee: ethers.parseEther('1'), // 1 ETH default fee
             makerAddress: randomAddress(),
             takerAddress: randomAddress(),
             senderAddress: randomAddress(),
@@ -513,17 +524,17 @@ describe('LibFillResults', () => {
         }
 
         before(async () => {
-            ORDER_DEFAULTS.exchangeAddress = libsContract.address;
+            ORDER_DEFAULTS.exchangeAddress = await libsContract.getAddress();
         });
 
         it('should correctly calculate the results when only the right order is fully filled', async () => {
             const leftOrder = makeOrder({
-                makerAssetAmount: ethers.parseUnits(String(17), 0),
-                takerAssetAmount: ethers.parseUnits(String(98), 0),
+                makerAssetAmount: 17n,
+                takerAssetAmount: 98n,
             });
             const rightOrder = makeOrder({
-                makerAssetAmount: ethers.parseUnits(String(75), 0),
-                takerAssetAmount: ethers.parseUnits(String(13), 0),
+                makerAssetAmount: 75n,
+                takerAssetAmount: 13n,
             });
             const expectedMatchedFillResults = createMatchedFillResults({
                 left: {
@@ -1185,7 +1196,10 @@ describe('LibFillResults', () => {
         }
 
         const ORDER_DEFAULTS = {
-            ...constants.STATIC_ORDER_PARAMS,
+            makerAssetAmount: 0n,
+            takerAssetAmount: 0n,
+            makerFee: ethers.parseEther('1'), // 1 ETH default fee
+            takerFee: ethers.parseEther('1'), // 1 ETH default fee
             makerAddress: randomAddress(),
             takerAddress: randomAddress(),
             senderAddress: randomAddress(),
@@ -1205,7 +1219,7 @@ describe('LibFillResults', () => {
         }
 
         before(async () => {
-            ORDER_DEFAULTS.exchangeAddress = libsContract.address;
+            ORDER_DEFAULTS.exchangeAddress = await libsContract.getAddress();
         });
 
         it('should transfer correct amounts when right order is fully filled', async () => {

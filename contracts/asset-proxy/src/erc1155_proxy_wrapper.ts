@@ -2,9 +2,16 @@ import { ERC1155Mintable, ERC1155Mintable__factory } from '@0x/contracts-erc1155
 // 使用原生 bigint 类型
 import {
     constants,
-    LogDecoder,
     txDefaults,
 } from '@0x/utils';
+
+// ERC1155 测试常量
+const ERC1155_CONSTANTS = {
+    NUM_DUMMY_ERC1155_CONTRACTS_TO_DEPLOY: 2, // Deploy 2 contracts for multi-contract tests
+    NUM_ERC1155_FUNGIBLE_TOKENS_MINT: 3,
+    INITIAL_ERC1155_FUNGIBLE_BALANCE: 1000000n,
+    NUM_ERC1155_NON_FUNGIBLE_TOKENS_MINT: 2,
+};
 import { ZeroExProvider } from 'ethereum-types';
 import { ethers } from 'hardhat';
 import * as _ from 'lodash';
@@ -43,7 +50,6 @@ export class ERC1155ProxyWrapper {
     private readonly _nfts: Array<{ id: bigint; tokenId: bigint }>;
     private readonly _contractOwnerAddress: string;
     private readonly _provider: ZeroExProvider;
-    private readonly _logDecoder: LogDecoder;
     private readonly _dummyTokenContracts: ERC1155Mintable[];
     private readonly _assetProxyInterface: IAssetProxy;
     private readonly _assetDataInterface: IAssetData;
@@ -53,9 +59,7 @@ export class ERC1155ProxyWrapper {
 
     constructor(provider: ZeroExProvider, tokenOwnerAddresses: string[], contractOwnerAddress: string) {
         this._provider = provider;
-        // Extract ABIs from artifacts for LogDecoder
-        const abis = Object.values(artifacts).map((artifact: any) => artifact.abi);
-        this._logDecoder = new LogDecoder(abis);
+        // LogDecoder is no longer needed in ethers v6 - use contract interfaces directly
         this._dummyTokenContracts = [];
         this._assetProxyInterface = IAssetProxy__factory.connect(constants.NULL_ADDRESS, provider as any);
         this._assetDataInterface = IAssetData__factory.connect(constants.NULL_ADDRESS, provider as any);
@@ -73,7 +77,7 @@ export class ERC1155ProxyWrapper {
         const signers = await ethers.getSigners();
         const deployer = signers[0];
         
-        for (const i of _.times(constants.NUM_DUMMY_ERC1155_CONTRACTS_TO_DEPLOY)) {
+        for (const i of _.times(ERC1155_CONSTANTS.NUM_DUMMY_ERC1155_CONTRACTS_TO_DEPLOY)) {
             try {
                 // 部署 ERC1155Mintable 合约
                 const factory = new ERC1155Mintable__factory(deployer);
@@ -253,9 +257,9 @@ export class ERC1155ProxyWrapper {
             const dummyAddress = await dummyContract.getAddress();
             
             // 创建可同质化代币
-            for (const i of _.times(constants.NUM_ERC1155_FUNGIBLE_TOKENS_MINT)) {
+            for (const i of _.times(ERC1155_CONSTANTS.NUM_ERC1155_FUNGIBLE_TOKENS_MINT)) {
                 // 为每个地址创建等量的可同质化代币 - 使用测试期望的值
-                const amounts = this._tokenOwnerAddresses.map(() => constants.INITIAL_ERC1155_FUNGIBLE_BALANCE);
+                const amounts = this._tokenOwnerAddresses.map(() => ERC1155_CONSTANTS.INITIAL_ERC1155_FUNGIBLE_BALANCE);
                 const tokenId = await this._mintFungibleTokensAsync(
                     dummyContract,
                     this._tokenOwnerAddresses,
@@ -273,7 +277,7 @@ export class ERC1155ProxyWrapper {
                         fungibleHoldingsByOwner[tokenOwnerAddress][dummyAddress] = {};
                     }
                     fungibleHoldingsByOwner[tokenOwnerAddress][dummyAddress][tokenIdAsString] =
-                        constants.INITIAL_ERC1155_FUNGIBLE_BALANCE;
+                        ERC1155_CONSTANTS.INITIAL_ERC1155_FUNGIBLE_BALANCE;
                 }
                 
                 // 为每个代币持有者设置代理合约的授权
@@ -295,7 +299,7 @@ export class ERC1155ProxyWrapper {
             }
             
             // 创建非同质化代币
-            for (const j of _.times(constants.NUM_ERC1155_NONFUNGIBLE_TOKENS_MINT)) {
+            for (const j of _.times(ERC1155_CONSTANTS.NUM_ERC1155_NON_FUNGIBLE_TOKENS_MINT)) {
                 const [tokenId, nftIds] = await this._mintNonFungibleTokensAsync(dummyContract, this._tokenOwnerAddresses);
                 const tokenIdAsString = tokenId.toString();
                 this._nonFungibleTokenIds.push(tokenIdAsString);

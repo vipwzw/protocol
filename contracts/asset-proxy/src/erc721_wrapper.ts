@@ -1,6 +1,13 @@
 import { artifacts as erc721Artifacts, DummyERC721Token, DummyERC721Token__factory } from '@0x/contracts-erc721';
 import { constants, txDefaults } from '@0x/utils';
 import { generatePseudoRandomSalt } from '@0x/order-utils';
+
+// ERC721 测试常量
+const ERC721_CONSTANTS = {
+    NUM_DUMMY_ERC721_TO_DEPLOY: 2,
+    DUMMY_TOKEN_NAME: 'DummyERC721Token',
+    DUMMY_TOKEN_SYMBOL: 'DUMMY',
+};
 import { ZeroExProvider } from 'ethereum-types';
 import * as _ from 'lodash';
 
@@ -35,11 +42,11 @@ export class ERC721Wrapper {
         const { ethers } = require('hardhat');
         const [signer] = await ethers.getSigners();
         
-        for (let i = 0; i < constants.NUM_DUMMY_ERC721_TO_DEPLOY; i++) {
+        for (let i = 0; i < ERC721_CONSTANTS.NUM_DUMMY_ERC721_TO_DEPLOY; i++) {
             const factory = new DummyERC721Token__factory(signer);
             const contract = await factory.deploy(
-                `${constants.DUMMY_TOKEN_NAME} ${i}`,
-                `${constants.DUMMY_TOKEN_SYMBOL}${i}`,
+                `${ERC721_CONSTANTS.DUMMY_TOKEN_NAME} ${i}`,
+                `${ERC721_CONSTANTS.DUMMY_TOKEN_SYMBOL}${i}`,
             );
             await contract.waitForDeployment();
             const contractAddress = await contract.getAddress();
@@ -98,7 +105,7 @@ export class ERC721Wrapper {
             const dummyTokenContract = this._dummyTokenContracts[contractIndex];
             for (const tokenOwnerAddress of this._tokenOwnerAddresses) {
                 // tslint:disable-next-line:no-unused-variable
-                for (const i of _.times(constants.NUM_ERC721_TOKENS_TO_MINT)) {
+                for (const i of _.times(3)) { // Mint 3 tokens per owner
                     // 为每个合约使用不同的token ID范围，避免冲突
                     const baseTokenId = generatePseudoRandomSalt();
                     const tokenId = baseTokenId + BigInt(contractIndex * 1000000);

@@ -1,11 +1,26 @@
 import { LibMathRevertErrors } from '@0x/contracts-exchange-libs';
-import { constants, verifyEventsFromLogs, filterLogs, verifyEvents } from '@0x/utils';
+import { constants, verifyEventsFromLogs, filterLogs } from '@0x/utils';
 import { expect } from 'chai';
 import { AssetProxyId, RevertReason } from '@0x/utils';
 import { ethers } from 'hardhat';
 import { Signer } from 'ethers';
 
 import * as _ from 'lodash';
+
+// 简单的事件验证函数 - 适配 filterLogs 返回的参数对象
+function verifyEvents(actualEventArgs: any[], expectedEvents: any[]): void {
+    expect(actualEventArgs).to.have.length(expectedEvents.length);
+    for (let i = 0; i < expectedEvents.length; i++) {
+        const actualArgs = actualEventArgs[i];
+        const expected = expectedEvents[i];
+        // actualArgs 是事件参数对象，expected.args 是期望的参数
+        if (expected.args) {
+            for (const [key, value] of Object.entries(expected.args)) {
+                expect(actualArgs[key]).to.equal(value);
+            }
+        }
+    }
+}
 
 // 导入通用事件验证工具
 import {
@@ -146,7 +161,7 @@ describe('DydxBridge unit tests', () => {
                 });
             }
             // 从日志中过滤 OperateAccount 事件
-            const operateAccountLogs = txReceipt ? filterLogs(txReceipt.logs, testContract as any, TestDydxBridgeEvents.OperateAccount) : [];
+            const operateAccountLogs = txReceipt ? filterLogs(txReceipt.logs, TestDydxBridgeEvents.OperateAccount, testContract.interface) : [];
             verifyEvents(
                 operateAccountLogs,
                 expectedOperateAccountEvents.map(args => ({
@@ -177,7 +192,7 @@ describe('DydxBridge unit tests', () => {
                 });
             }
             // 从日志中过滤 OperateAction 事件
-            const operateActionLogs = txReceipt ? filterLogs(txReceipt.logs, testContract as any, TestDydxBridgeEvents.OperateAction) : [];
+            const operateActionLogs = txReceipt ? filterLogs(txReceipt.logs, TestDydxBridgeEvents.OperateAction, testContract.interface) : [];
             verifyEvents(
                 operateActionLogs,
                 expectedOperateActionEvents.map(args => ({

@@ -12,13 +12,23 @@ export async function getProxyId(contractAddress: string, provider: any): Promis
     const getProxyIdSelector = '0xae25532e'; // bytes4(keccak256("getProxyId()"))
     
     // Handle both ethers.Provider and ZeroExProvider
-    const actualProvider = provider.provider || provider;
+    const actualProvider = provider?.provider || provider;
     
-    // Make the call
-    const result = await actualProvider.call({
-        to: contractAddress,
-        data: getProxyIdSelector,
-    });
+    // Make the call using ethers provider
+    let result: string;
+    if (actualProvider && typeof actualProvider.call === 'function') {
+        result = await actualProvider.call({
+            to: contractAddress,
+            data: getProxyIdSelector,
+        });
+    } else {
+        // Fallback to ethers provider
+        const { ethers } = await import('hardhat');
+        result = await ethers.provider.call({
+            to: contractAddress,
+            data: getProxyIdSelector,
+        });
+    }
     
     // The result should be 32 bytes with the proxy ID in the first 4 bytes
     if (result.length < 66) { // 0x + 64 chars

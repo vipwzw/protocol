@@ -47,9 +47,9 @@ describe('StaticCallProxy', () => {
         await ethers.provider.send('evm_revert', [snapshotId]);
     });
     before(async () => {
-        const accounts = await web3Wrapper.getAvailableAddressesAsync();
-        [fromAddress, toAddress] = accounts.slice(0, 2);
         const signers = await ethers.getSigners();
+        const accounts = signers.map(s => s.address);
+        [fromAddress, toAddress] = accounts.slice(0, 2);
         const deployer = signers[0];
         const staticCallProxyWithoutTransferFrom = await new StaticCallProxy__factory(deployer).deploy();
         assetDataInterface = IAssetData__factory.connect(constants.NULL_ADDRESS, provider);
@@ -71,14 +71,15 @@ describe('StaticCallProxy', () => {
     describe('general', () => {
         it('should revert if undefined function is called', async () => {
             const undefinedSelector = '0x01020304';
-            await expectTransactionFailedWithoutReasonAsync(
-                web3Wrapper.sendTransactionAsync({
-                    from: fromAddress,
-                    to: staticCallProxy.address,
-                    value: constants.ZERO_AMOUNT,
+            await expectTransactionFailedWithoutReasonAsync(async () => {
+                const signer = await ethers.getSigner(fromAddress);
+                const contractAddress = await staticCallProxy.getAddress();
+                await signer.sendTransaction({
+                    to: contractAddress,
+                    value: 0,
                     data: undefinedSelector,
-                }),
-            );
+                });
+            });
         });
         it('should have an id of 0xc339d10a', async () => {
             const { getProxyId } = await import('../src/proxy_utils');
@@ -101,13 +102,14 @@ describe('StaticCallProxy', () => {
             const invalidOffsetToAssetData = ethUtil.bufferToHex(paddedTxDataEndBuffer).slice(2);
             const newAssetData = '0000000000000000000000000000000000000000000000000000000000000304';
             const badTxData = `${txData.replace(offsetToAssetData, invalidOffsetToAssetData)}${newAssetData}`;
-            await expectTransactionFailedWithoutReasonAsync(
-                web3Wrapper.sendTransactionAsync({
-                    to: staticCallProxy.address,
-                    from: fromAddress,
+            await expectTransactionFailedWithoutReasonAsync(async () => {
+                const signer = await ethers.getSigner(fromAddress);
+                const contractAddress = await staticCallProxy.getAddress();
+                await signer.sendTransaction({
+                    to: contractAddress,
                     data: badTxData,
-                }),
-            );
+                });
+            });
         });
         it('should revert if the length of assetData is less than 100 bytes', async () => {
             const staticCallData = constants.NULL_BYTES;

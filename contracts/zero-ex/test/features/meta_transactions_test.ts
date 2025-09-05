@@ -548,45 +548,63 @@ describe('MetaTransactions feature', () => {
             );
         });
 
-        // Ganache gasPrice opcode is returning 0, cannot influence it up to test this case
-        it.skip('fails if gas price too low', async () => {
+        it('fails if gas price too low', async () => {
+            // 🔧 设置一个明确的 gas price 范围来测试
+            const minGasPrice = ethers.parseUnits('10', 'gwei'); // 10 Gwei
+            const maxGasPrice = ethers.parseUnits('50', 'gwei'); // 50 Gwei
+            const lowGasPrice = ethers.parseUnits('5', 'gwei');  // 5 Gwei (过低)
+            
             const mtx = await getRandomMetaTransaction({
-                sender: NULL_ADDRESS, // 🔧 允许任何人调用
+                sender: NULL_ADDRESS,
+                minGasPrice,
+                maxGasPrice,
             });
             const mtxHash = mtx.getHash();
             const signature = await mtx.getSignatureWithProviderAsync(env.provider);
+            
+            // 🔧 关键：在交易选项中设置 gasPrice，这会影响 tx.gasprice
             const callOpts = {
-                gasPrice: mtx.minGasPrice - 1n,
+                gasPrice: lowGasPrice, // 设置过低的 gas price
                 value: mtx.value,
             };
-            // ✅ 基于业务逻辑构造错误：所有 gas price 参数都是测试中已知的
+            
+            // ✅ 期望 MetaTransactionGasPriceError
             await CorrectMetaTransactionsMatcher.expectMetaTransactionGasPriceError(
                 feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts),
                 mtxHash,
-                callOpts.gasPrice, // 实际使用的 gas price（过低）
-                mtx.minGasPrice,   // MetaTransaction 的最小 gas price
-                mtx.maxGasPrice    // MetaTransaction 的最大 gas price
+                lowGasPrice,    // 实际使用的 gas price（过低）
+                minGasPrice,    // MetaTransaction 的最小 gas price
+                maxGasPrice     // MetaTransaction 的最大 gas price
             );
         });
 
-        // Ganache gasPrice opcode is returning 0, cannot influence it up to test this case
-        it.skip('fails if gas price too high', async () => {
+        it('fails if gas price too high', async () => {
+            // 🔧 设置一个明确的 gas price 范围来测试
+            const minGasPrice = ethers.parseUnits('10', 'gwei'); // 10 Gwei
+            const maxGasPrice = ethers.parseUnits('50', 'gwei'); // 50 Gwei
+            const highGasPrice = ethers.parseUnits('100', 'gwei'); // 100 Gwei (过高)
+            
             const mtx = await getRandomMetaTransaction({
-                sender: NULL_ADDRESS, // 🔧 允许任何人调用
+                sender: NULL_ADDRESS,
+                minGasPrice,
+                maxGasPrice,
             });
             const mtxHash = mtx.getHash();
             const signature = await mtx.getSignatureWithProviderAsync(env.provider);
+            
+            // 🔧 关键：在交易选项中设置 gasPrice，这会影响 tx.gasprice
             const callOpts = {
-                gasPrice: mtx.maxGasPrice + 1n,
+                gasPrice: highGasPrice, // 设置过高的 gas price
                 value: mtx.value,
             };
-            // ✅ 基于业务逻辑构造错误：所有 gas price 参数都是测试中已知的
+            
+            // ✅ 期望 MetaTransactionGasPriceError
             await CorrectMetaTransactionsMatcher.expectMetaTransactionGasPriceError(
                 feature.executeMetaTransaction(mtxToStruct(mtx), signature, callOpts),
                 mtxHash,
-                callOpts.gasPrice, // 实际使用的 gas price（过高）
-                mtx.minGasPrice,   // MetaTransaction 的最小 gas price
-                mtx.maxGasPrice    // MetaTransaction 的最大 gas price
+                highGasPrice,   // 实际使用的 gas price（过高）
+                minGasPrice,    // MetaTransaction 的最小 gas price
+                maxGasPrice     // MetaTransaction 的最大 gas price
             );
         });
 

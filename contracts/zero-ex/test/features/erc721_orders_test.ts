@@ -3,6 +3,7 @@ import { constants, getRandomInteger, randomAddress, verifyEventsFromLogs } from
 import { expect } from 'chai';
 import { ERC721Order, NFTOrder, RevertErrors, SIGNATURE_ABI, SignatureType } from '@0x/protocol-utils';
 import { hexUtils, NULL_BYTES, StringRevertError } from '@0x/utils';
+import { expectPropertyValidationFailedError } from '../utils/rich_error_matcher';
 
 import {
     IZeroExERC721OrderFilledEventArgs,
@@ -555,7 +556,7 @@ describe('ERC721OrdersFeature', () => {
         });
     });
 
-    describe.skip('sellERC721', () => {
+    describe('sellERC721', () => {
         it('can fill a ERC721 buy order', async () => {
             // 使用唯一的 nonce 避免测试间冲突
             const fixedNonce = BigInt(Date.now()) * 1000000n + 54321n;
@@ -606,13 +607,20 @@ describe('ERC721OrdersFeature', () => {
             await mintAssetsAsync(order2);
             await erc721Feature.connect(takerSigner).sellERC721(order2, signature2, order2.erc721TokenId, false, NULL_BYTES);
             // 检查两个订单都已被标记为已填充
-            const bitVector1 = await erc721Feature.getERC721OrderStatusBitVector(maker, order1.nonce / 256n);
+            const bitVector = await erc721Feature.getERC721OrderStatusBitVector(maker, order1.nonce / 256n);
             const flag1 = 2n ** (order1.nonce % 256n);
-            expect(bitVector1).to.equal(flag1);
-            
-            const bitVector2 = await erc721Feature.getERC721OrderStatusBitVector(maker, order2.nonce / 256n);
             const flag2 = 2n ** (order2.nonce % 256n);
-            expect(bitVector2).to.equal(flag2);
+            
+            // 🔧 修复：两个连续nonce在同一个BitVector中，应该检查两个位都被设置
+            if (order1.nonce / 256n === order2.nonce / 256n) {
+                // 两个订单在同一个BitVector中
+                expect(bitVector).to.equal(flag1 | flag2);
+            } else {
+                // 两个订单在不同的BitVector中
+                expect(bitVector).to.equal(flag1);
+                const bitVector2 = await erc721Feature.getERC721OrderStatusBitVector(maker, order2.nonce / 256n);
+                expect(bitVector2).to.equal(flag2);
+            }
         });
         it('cannot fill a cancelled order', async () => {
             const order = await getTestERC721Order({
@@ -672,7 +680,7 @@ describe('ERC721OrdersFeature', () => {
             // 注意：理想情况下应该匹配具体的 OnlyTakerError，但由于技术限制暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });
-        it.skip('succeeds if the taker is the taker address specified in the order', async () => {
+        it('succeeds if the taker is the taker address specified in the order', async () => {
             // 使用唯一的 nonce 避免测试间冲突
             const fixedNonce = BigInt(Date.now()) * 1000000n + 98765n;
             const order = await getTestERC721Order({
@@ -708,7 +716,7 @@ describe('ERC721OrdersFeature', () => {
             // 注意：理想情况下应该匹配具体的 ERC20TokenMismatchError，但由于技术限制暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });
-        it.skip('sends ETH to taker if `unwrapNativeToken` is true and `erc20Token` is WETH', async () => {
+        it('sends ETH to taker if `unwrapNativeToken` is true and `erc20Token` is WETH', async () => {
             const order = await getTestERC721Order({
                 direction: NFTOrder.TradeDirection.BuyNFT,
                 erc20Token: await weth.getAddress(),
@@ -724,7 +732,7 @@ describe('ERC721OrdersFeature', () => {
             expect(erc721Owner).to.equal(maker);
         });
         describe('fees', () => {
-            it.skip('single fee to EOA', async () => {
+            it('single fee to EOA', async () => {
                 const order = await getTestERC721Order({
                     direction: NFTOrder.TradeDirection.BuyNFT,
                     fees: [
@@ -771,11 +779,10 @@ describe('ERC721OrdersFeature', () => {
                 });
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
-                const tx = zeroEx
-                    .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES)
-                    ({
-                        from: taker,
-                    });
+                const takerSigner = await env.provider.getSigner(taker);
+                const tx = erc721Feature
+                    .connect(takerSigner)
+                    .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
                 return expect(tx).to.be.revertedWith('TestFeeRecipient::receiveZeroExFeeCallback/REVERT');
             });
             it('single fee, callback returns invalid value', async () => {
@@ -791,11 +798,10 @@ describe('ERC721OrdersFeature', () => {
                 });
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
-                const tx = zeroEx
-                    .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES)
-                    ({
-                        from: taker,
-                    });
+                const takerSigner = await env.provider.getSigner(taker);
+                const tx = erc721Feature
+                    .connect(takerSigner)
+                    .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
                 return expect(tx).to.be.revertedWith('NFTOrders::_payFees/CALLBACK_FAILED');
             });
             it('multiple fees to EOAs', async () => {
@@ -816,11 +822,10 @@ describe('ERC721OrdersFeature', () => {
                 });
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
-                await zeroEx
-                    .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES)
-                    ({
-                        from: taker,
-                    });
+                const takerSigner = await env.provider.getSigner(taker);
+                await erc721Feature
+                    .connect(takerSigner)
+                    .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
                 await assertBalancesAsync(order);
             });
         });
@@ -879,19 +884,18 @@ describe('ERC721OrdersFeature', () => {
                 const tokenId = getRandomInteger(0, MAX_UINT256);
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order, tokenId);
-                const tx = zeroEx
-                    .sellERC721(order, signature, tokenId, false, NULL_BYTES)
-                    ({
-                        from: taker,
-                    });
-                return expect(tx).to.be.revertedWith(
-                    new RevertErrors.NFTOrders.PropertyValidationFailedError(
-                        await propertyValidator.getAddress(),
-                        order.erc721Token,
-                        tokenId,
-                        NULL_BYTES,
-                        new StringRevertError('TestPropertyValidator::validateProperty/REVERT').encode(),
-                    ),
+                const takerSigner = await env.provider.getSigner(taker);
+                const tx = erc721Feature
+                    .connect(takerSigner)
+                    .sellERC721(order, signature, tokenId, false, NULL_BYTES);
+                // 🔧 使用 RichErrorMatcher 匹配 PropertyValidationFailedError
+                return expectPropertyValidationFailedError(
+                    tx,
+                    await propertyValidator.getAddress(),
+                    order.erc721Token,
+                    BigInt(tokenId),
+                    NULL_BYTES,
+                    '0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002e54657374507726f706572747956616c696461746f723a3a76616c696461746550726f70657274792f52455645525400000000000000000000000000000000' // encoded "TestPropertyValidator::validateProperty/REVERT"
                 );
             });
             it('Successful property validation', async () => {
