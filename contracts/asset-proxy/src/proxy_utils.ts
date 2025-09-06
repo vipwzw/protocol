@@ -23,8 +23,8 @@ export async function getProxyId(contractAddress: string, provider: any): Promis
         });
     } else {
         // Fallback to ethers provider
-        const { ethers } = await import('hardhat');
-        result = await ethers.provider.call({
+        const hre = await import('hardhat');
+        result = await (hre as any).ethers.provider.call({
             to: contractAddress,
             data: getProxyIdSelector,
         });

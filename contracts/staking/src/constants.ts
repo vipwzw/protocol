@@ -1,10 +1,11 @@
-import { constants as testConstants } from '@0x/utils';
+// 移除对 @0x/utils 的依赖，使用本地常量
+// import { constants as testConstants } from '@0x/utils';
 
 const TEN_DAYS = 10 * 24 * 60 * 60;
 const PPM = 10 ** 6;
 
 // All constants using bigint for ethers v6 compatibility
-const DUMMY_TOKEN_DECIMALS = testConstants.DUMMY_TOKEN_DECIMALS; // Already bigint from test-utils
+const DUMMY_TOKEN_DECIMALS = 18n; // Standard ERC20 decimals
 const ZERO_AMOUNT = 0n;
 const INITIAL_EPOCH = 1n;
 

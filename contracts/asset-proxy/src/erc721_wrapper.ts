@@ -1,6 +1,21 @@
+// 使用包名导入
 import { artifacts as erc721Artifacts, DummyERC721Token, DummyERC721Token__factory } from '@0x/contracts-erc721';
-import { constants, txDefaults } from '@0x/utils';
-import { generatePseudoRandomSalt } from '@0x/order-utils';
+
+// 使用本地常量替代 @0x/utils
+const constants = {
+    NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
+    ZERO_AMOUNT: 0n,
+};
+
+const txDefaults = {
+    gasPrice: 20000000000n,
+    gas: 6000000n,
+};
+
+const generatePseudoRandomSalt = (): bigint => {
+    const hex = Math.random().toString(16).slice(2).padStart(64, '0');
+    return BigInt('0x' + hex);
+};
 
 // ERC721 测试常量
 const ERC721_CONSTANTS = {
@@ -108,11 +123,11 @@ export class ERC721Wrapper {
                 for (const i of _.times(3)) { // Mint 3 tokens per owner
                     // 为每个合约使用不同的token ID范围，避免冲突
                     const baseTokenId = generatePseudoRandomSalt();
-                    const tokenId = baseTokenId + BigInt(contractIndex * 1000000);
+                    const tokenId: bigint = baseTokenId + BigInt(contractIndex * 1000000);
                     try {
                         const contractAddress = await dummyTokenContract.getAddress();
                         
-                        await this.mintAsync(contractAddress, tokenId, tokenOwnerAddress);
+                        await this.mintAsync(contractAddress, BigInt(tokenId), tokenOwnerAddress);
                         
                         // 验证 token 是否真的被铸造了
                         try {

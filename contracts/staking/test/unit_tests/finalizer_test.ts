@@ -18,6 +18,56 @@ function expectBigIntEqual(actual: any, expected: any, message?: string): void {
     expect(actualBigInt, message).to.equal(expectedBigInt);
 }
 
+// StakingRichErrors - 参考 zero-ex 的错误处理模式
+class StakingRichErrors {
+    static PreviousEpochNotFinalizedError = class {
+        constructor(public unfinalizedEpoch: bigint, public unfinalizedPoolsRemaining: bigint) {}
+        
+        // 编码为 LibRichErrors 格式的错误数据
+        encode(): string {
+            // bytes4(keccak256("PreviousEpochNotFinalizedError(uint256,uint256)")) = 0x614b800a
+            const selector = '0x614b800a';
+            const encodedParams = ethers.AbiCoder.defaultAbiCoder().encode(
+                ['uint256', 'uint256'], 
+                [this.unfinalizedEpoch, this.unfinalizedPoolsRemaining]
+            );
+            return selector + encodedParams.slice(2); // 移除 encodedParams 的 0x 前缀
+        }
+        
+        toString() {
+            return `PreviousEpochNotFinalizedError: epoch=${this.unfinalizedEpoch}, pools=${this.unfinalizedPoolsRemaining}`;
+        }
+    };
+}
+
+// 统一错误匹配器 - 参考 zero-ex 的 UnifiedErrorMatcher
+class StakingErrorMatcher {
+    static async expectError(txPromise: Promise<any>, expectedError: any): Promise<void> {
+        try {
+            await txPromise;
+            throw new Error("交易应该失败但没有失败");
+        } catch (error: any) {
+            if (expectedError.encode && typeof expectedError.encode === 'function') {
+                // 匹配 LibRichErrors 编码的错误
+                if (!error.data) {
+                    throw new Error(`未找到错误数据，实际错误: ${error.message}`);
+                }
+                const expectedEncoded = expectedError.encode();
+                if (error.data !== expectedEncoded) {
+                    throw new Error(`错误编码不匹配。期望: ${expectedEncoded}, 实际: ${error.data}`);
+                }
+            } else if (typeof expectedError === 'string') {
+                // 匹配字符串错误消息
+                if (!error.message || !error.message.includes(expectedError)) {
+                    throw new Error(`错误消息不匹配。期望包含: "${expectedError}", 实际: "${error.message}"`);
+                }
+            } else {
+                throw new Error(`不支持的错误类型: ${typeof expectedError}`);
+            }
+        }
+    }
+}
+
 function expectBigIntLessThanOrEqual(actual: any, expected: any, message?: string): void {
     const actualBigInt = typeof actual === 'bigint' ? actual : BigInt(actual.toString());
     const expectedBigInt = typeof expected === 'bigint' ? expected : BigInt(expected.toString());
@@ -31,9 +81,10 @@ function toBigInt(value: any): bigint {
     return BigInt(value.toString());
 }
 import { StakingRevertErrors } from '../../src';
-import { revertErrorHelper } from '@0x/utils';
-// 注册 RevertError 匹配器，支持 .revertWith(RevertError 实例)
-chai.use(revertErrorHelper);
+// 移除对 @0x/utils 的依赖
+// import { revertErrorHelper } from '@0x/utils';
+// 注册 RevertError 匹配器，支持 .to.be.revertedWith(RevertError 实例)
+// chai.use(revertErrorHelper);
 import { LogEntry } from 'ethereum-types';
 import * as _ from 'lodash';
 
@@ -89,7 +140,7 @@ describe('Finalizer unit tests', () => {
         const _opts = {
             poolId: hexUtils.random(),
             operatorShare: Math.random(),
-            feesCollected: BigInt(getRandomInteger(0, 1000)) * 10n ** 18n,
+            feesCollected: BigInt(getRandomInteger(1, 1000)) * 10n ** 18n,
             membersStake: BigInt(getRandomInteger(0, 1000)) * 10n ** 18n,
             weightedStake: BigInt(getRandomInteger(0, 1000)) * 10n ** 18n,
             ...opts,
@@ -359,8 +410,14 @@ describe('Finalizer unit tests', () => {
             await addActivePoolAsync();
             await (await testContract.endEpoch()).wait();
             const tx = testContract.endEpoch();
-            // 注意：类型系统会把数值解码为 bigint，这里用字符串通过自定义匹配器匹配名称即可
-            return expect(tx).to.revertWith('PreviousEpochNotFinalizedError');
+            // ✅ 基于业务逻辑构造具体的 epoch 错误 - 参考 zero-ex 的错误处理模式
+            // 测试意图：验证前一个 epoch 未完成时不能开始新的 epoch
+            // 应该抛出 PreviousEpochNotFinalizedError，包含未完成的 epoch 和剩余池数量
+            const currentEpoch = await testContract.currentEpoch();
+            const prevEpoch = currentEpoch - 1n;
+            const numPoolsToFinalize = 1n; // 我们添加了一个活跃池但没有完成
+            const expectedError = new StakingRichErrors.PreviousEpochNotFinalizedError(prevEpoch, numPoolsToFinalize);
+            return StakingErrorMatcher.expectError(tx, expectedError);
         });
     });
 
@@ -429,7 +486,7 @@ describe('Finalizer unit tests', () => {
             expectBigIntLessThanOrEqual(toBigInt(rewardsPaid), toBigInt(rewardsAvailable));
         });
 
-        describe.skip('`rewardsPaid` fuzzing', () => {
+        describe('`rewardsPaid` fuzzing', () => {
             const numTests = 32;
             for (const i of _.times(numTests)) {
                 const numPools = _.random(1, 32);

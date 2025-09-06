@@ -1,5 +1,59 @@
-import { AbiDecoder, intervalUtils, logUtils 
-} from '@0x/utils';
+// Local utility implementations to replace @0x/utils dependencies
+
+// Simple log utility replacement
+const logUtils = {
+    warn: (message: any) => {
+        console.warn('[SubscriptionManager]', message);
+    }
+};
+
+// Simple interval utility replacement
+const intervalUtils = {
+    clearAsyncExcludingInterval: (intervalId: NodeJS.Timeout) => {
+        clearInterval(intervalId);
+    }
+};
+
+// Simple ABI decoder replacement using ethers
+class AbiDecoder {
+    private _interfaces: ethers.Interface[] = [];
+
+    constructor(abis: any[]) {
+        abis.forEach(abi => this.addABI(abi));
+    }
+
+    addABI(abi: any): void {
+        try {
+            const iface = new ethers.Interface(abi);
+            this._interfaces.push(iface);
+        } catch (error) {
+            // Ignore invalid ABIs
+        }
+    }
+
+    tryToDecodeLogOrNoop(log: any): any {
+        for (const iface of this._interfaces) {
+            try {
+                const parsed = iface.parseLog({
+                    topics: log.topics,
+                    data: log.data
+                });
+                if (parsed) {
+                    return {
+                        ...log,
+                        event: parsed.name,
+                        args: parsed.args
+                    };
+                }
+            } catch (error) {
+                // Continue to next interface
+            }
+        }
+        // Return original log if no decoder worked
+        return log;
+    }
+}
+
 import { ethers } from 'ethers';
 import {
     BlockParamLiteral,

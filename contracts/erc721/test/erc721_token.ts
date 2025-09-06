@@ -26,6 +26,31 @@ describe('ERC721Token', () => {
     let tokenId = 1n;
     let tokenIdCounter = 1n;
     
+    // Helper function to parse logs and verify ERC721 Transfer events
+    function verifyERC721TransferEventFromReceipt(receipt: any, from: string, to: string, tokenId: bigint) {
+        const parsedLogs = receipt.logs
+            .map((log: any) => {
+                try {
+                    const parsed = token.interface.parseLog(log);
+                    return parsed;
+                } catch {
+                    return null;
+                }
+            })
+            .filter((log: any) => log !== null);
+        
+        // Find Transfer events
+        const transferEvents = parsedLogs.filter(log => log && log.name === 'Transfer');
+        expect(transferEvents).to.have.length.at.least(1);
+        
+        const transferEvent = transferEvents[0];
+        
+        // Event args are in array format: [from, to, tokenId]
+        expect(transferEvent.args[0]).to.equal(from);
+        expect(transferEvent.args[1]).to.equal(to);
+        expect(transferEvent.args[2]).to.equal(tokenId);
+    }
+    
     before(async () => {
         const signers = await ethers.getSigners();
         owner = signers[0].address;
@@ -33,8 +58,8 @@ describe('ERC721Token', () => {
         
         const tokenFactory = new DummyERC721Token__factory(signers[0]);
         token = await tokenFactory.deploy(
-            constants.DUMMY_TOKEN_NAME,
-            constants.DUMMY_TOKEN_SYMBOL,
+            'DummyNFT',
+            'DNFT',
         );
         
         const receiverFactory = new DummyERC721Receiver__factory(signers[0]);
@@ -99,7 +124,7 @@ describe('ERC721Token', () => {
             expect(newOwner).to.be.equal(to);
             
             // 验证 Transfer 事件
-            verifyERC721TransferEvent(receipt!, token, from, to, tokenId);
+            verifyERC721TransferEventFromReceipt(receipt!, from, to, tokenId);
         });
         it('should transfer the token if spender is individually approved', async () => {
             await token.approve(spender, tokenId);
@@ -118,7 +143,7 @@ describe('ERC721Token', () => {
             expect(approvedAddress).to.be.equal(constants.NULL_ADDRESS);
             
             // 验证 Transfer 事件
-            verifyERC721TransferEvent(receipt!, token, from, to, tokenId);
+            verifyERC721TransferEventFromReceipt(receipt!, from, to, tokenId);
         });
     });
     describe('safeTransferFrom without data', () => {
@@ -140,14 +165,14 @@ describe('ERC721Token', () => {
             expect(newOwner).to.be.equal(to);
             
             // 验证 Transfer 事件
-            verifyERC721TransferEvent(receipt!, token, from, to, tokenId);
+            verifyERC721TransferEventFromReceipt(receipt!, from, to, tokenId);
         });
         it('should revert if transferring to a contract address without onERC721Received', async () => {
             const signers = await ethers.getSigners();
             const contractFactory = new DummyERC721Token__factory(signers[0]);
             const contract = await contractFactory.deploy(
-                constants.DUMMY_TOKEN_NAME,
-                constants.DUMMY_TOKEN_SYMBOL,
+                'DummyNFT',
+                'DNFT',
             );
             const from = owner;
             const to = await contract.getAddress();
@@ -177,7 +202,7 @@ describe('ERC721Token', () => {
             expect(receipt?.logs.length).to.equal(1); // 只应该有一个 Transfer 事件
             
             // 验证 Transfer 事件
-            verifyERC721TransferEvent(receipt!, token, from, to, tokenId);
+            verifyERC721TransferEventFromReceipt(receipt!, from, to, tokenId);
         });
     });
     describe('safeTransferFrom with data', () => {
@@ -201,14 +226,14 @@ describe('ERC721Token', () => {
             expect(newOwner).to.be.equal(to);
             
             // 验证 Transfer 事件
-            verifyERC721TransferEvent(receipt!, token, from, to, tokenId);
+            verifyERC721TransferEventFromReceipt(receipt!, from, to, tokenId);
         });
         it('should revert if transferring to a contract address without onERC721Received', async () => {
             const signers = await ethers.getSigners();
             const contractFactory = new DummyERC721Token__factory(signers[0]);
             const contract = await contractFactory.deploy(
-                constants.DUMMY_TOKEN_NAME,
-                constants.DUMMY_TOKEN_SYMBOL,
+                'DummyNFT',
+                'DNFT',
             );
             const from = owner;
             const to = await contract.getAddress();
@@ -238,7 +263,7 @@ describe('ERC721Token', () => {
             expect(receipt?.logs.length).to.equal(1); // 只应该有一个 Transfer 事件
             
             // 验证 Transfer 事件
-            verifyERC721TransferEvent(receipt!, token, from, to, tokenId);
+            verifyERC721TransferEventFromReceipt(receipt!, from, to, tokenId);
         });
     });
 });

@@ -18,7 +18,8 @@ export {
 } from './wrappers';
 
 export { artifacts } from './artifacts';
-export { StakingRevertErrors, FixedMathRevertErrors } from '@0x/utils';
+// 移除对 @0x/utils 的依赖
+// export { StakingRevertErrors, FixedMathRevertErrors } from '@0x/utils';
 export { constants } from './constants';
 
 // Export types that actually exist in types.ts

@@ -94,7 +94,7 @@ export const fillQuoteTransformerDataEncoder = {
     },
     decode: (encoded: string): [FillQuoteTransformerData] => {
         // 添加正确的函数选择器进行解码
-        const funcSelector = fillQuoteInterface.getFunction('encodeFillQuoteData').selector;
+        const funcSelector = fillQuoteInterface.getFunction('encodeFillQuoteData')!.selector;
         const withSelector = funcSelector + encoded.slice(2);
         const decoded = fillQuoteInterface.decodeFunctionData('encodeFillQuoteData', withSelector);
         return [decoded[0] as FillQuoteTransformerData];
@@ -167,7 +167,7 @@ export const wethTransformerDataEncoder = {
     },
     decode: (encoded: string): { data: WethTransformerData } => {
         // 添加正确的函数选择器进行解码
-        const funcSelector = wethInterface.getFunction('encodeWethData').selector;
+        const funcSelector = wethInterface.getFunction('encodeWethData')!.selector;
         const withSelector = funcSelector + encoded.slice(2);
         const decoded = wethInterface.decodeFunctionData('encodeWethData', withSelector);
         return { data: decoded[0] as WethTransformerData };
@@ -225,7 +225,7 @@ export const payTakerTransformerDataEncoder = {
     },
     decode: (encoded: string): { data: PayTakerTransformerData } => {
         // 添加正确的函数选择器进行解码
-        const funcSelector = payTakerInterface.getFunction('encodePayTakerData').selector;
+        const funcSelector = payTakerInterface.getFunction('encodePayTakerData')!.selector;
         const withSelector = funcSelector + encoded.slice(2);
         const decoded = payTakerInterface.decodeFunctionData('encodePayTakerData', withSelector);
         return { data: decoded[0] as PayTakerTransformerData };
@@ -290,7 +290,7 @@ export const affiliateFeeTransformerDataEncoder = {
     },
     decode: (encoded: string): AffiliateFeeTransformerData => {
         // 添加正确的函数选择器进行解码
-        const funcSelector = affiliateFeeInterface.getFunction('encodeAffiliateFeeData').selector;
+        const funcSelector = affiliateFeeInterface.getFunction('encodeAffiliateFeeData')!.selector;
         const withSelector = funcSelector + encoded.slice(2);
         const decoded = affiliateFeeInterface.decodeFunctionData('encodeAffiliateFeeData', withSelector);
         return decoded[0] as AffiliateFeeTransformerData;
@@ -352,7 +352,7 @@ export const positiveSlippageFeeTransformerDataEncoder = {
     },
     decode: (encoded: string): PositiveSlippageFeeTransformerData => {
         // 添加正确的函数选择器进行解码
-        const funcSelector = positiveSlippageFeeInterface.getFunction('encodePositiveSlippageFeeData').selector;
+        const funcSelector = positiveSlippageFeeInterface.getFunction('encodePositiveSlippageFeeData')!.selector;
         const withSelector = funcSelector + encoded.slice(2);
         const decoded = positiveSlippageFeeInterface.decodeFunctionData('encodePositiveSlippageFeeData', withSelector);
         return decoded[0] as PositiveSlippageFeeTransformerData;

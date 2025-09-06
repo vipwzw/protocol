@@ -181,7 +181,7 @@ contract StakingTest is Test {
         vm.stopPrank();
     }
     
-    function testInitialState() public view {
+    function testInitialState() public {
         assertEq(staking.currentEpoch(), 1);
         assertEq(staking.epochDurationInSeconds(), 7 days);
         assertEq(address(staking.stakingToken()), address(zrxToken));

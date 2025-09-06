@@ -11,6 +11,22 @@ const getRandomPortion = (max: Numberish): Numberish => {
 // BigNumber 已移除，使用原生 bigint
 import * as _ from 'lodash';
 
+// 实现 assertRoughlyEquals 函数
+function assertRoughlyEquals(actual: bigint, expected: bigint, precision: number): void {
+    const actualNum = Number(actual);
+    const expectedNum = Number(expected);
+    const tolerance = 10 ** (-precision);
+    
+    if (expectedNum === 0) {
+        expect(Math.abs(actualNum)).to.be.lessThan(tolerance, 
+            `Expected ${actualNum} to be roughly equal to ${expectedNum} with precision ${precision}`);
+    } else {
+        const relativeError = Math.abs((actualNum - expectedNum) / expectedNum);
+        expect(relativeError).to.be.lessThan(tolerance, 
+            `Expected ${actualNum} to be roughly equal to ${expectedNum} with precision ${precision}. Relative error: ${relativeError}`);
+    }
+}
+
 import { TestCobbDouglas__factory, TestCobbDouglas } from '../../src/typechain-types';
 
 describe('LibCobbDouglas unit tests', () => {
@@ -188,7 +204,7 @@ describe('LibCobbDouglas unit tests', () => {
             expect(Number(r)).to.be.closeTo(Number(expected), 10 ** (PRECISION));
         });
 
-        describe.skip('fuzzing', () => {
+        describe('fuzzing', () => {
             const inputs = _.times(FUZZ_COUNT, () => getRandomParams());
             for (const params of inputs) {
                 it(`cobbDouglas(${JSON.stringify(params, (key, value) => typeof value === 'bigint' ? value.toString() : value)})`, async () => {

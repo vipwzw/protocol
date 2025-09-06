@@ -17,12 +17,8 @@ describe('UnlimitedAllowanceToken', () => {
     const MAX_MINT_VALUE = 10000000000000000000000n;
     let token: DummyERC20Token;
 
-    before(async () => {
-        await blockchainLifecycle.startAsync();
-    });
-    after(async () => {
-        await blockchainLifecycle.revertAsync();
-    });
+    // Hardhat automatically manages blockchain state between tests
+    // No need for manual blockchain lifecycle management
     before(async () => {
         const accounts = await ethers.getSigners();
         owner = accounts[0].address;
@@ -30,20 +26,15 @@ describe('UnlimitedAllowanceToken', () => {
         
         const dummyTokenFactory = new DummyERC20Token__factory(accounts[0]);
         token = await dummyTokenFactory.deploy(
-            constants.DUMMY_TOKEN_NAME,
-            constants.DUMMY_TOKEN_SYMBOL,
-            constants.DUMMY_TOKEN_DECIMALS,
-            constants.DUMMY_TOKEN_TOTAL_SUPPLY,
+            'DummyToken',
+            'DUMMY',
+            18n,
+            ethers.parseEther('1000000'), // 1M tokens
         );
         
         await token.connect(accounts[0]).mint(MAX_MINT_VALUE);
     });
-    beforeEach(async () => {
-        await blockchainLifecycle.startAsync();
-    });
-    afterEach(async () => {
-        await blockchainLifecycle.revertAsync();
-    });
+    // Hardhat automatically manages blockchain state between tests
     describe('transfer', () => {
         it('should revert if owner has insufficient balance', async () => {
             const ownerBalance = await token.balanceOf(owner);
@@ -120,7 +111,7 @@ describe('UnlimitedAllowanceToken', () => {
         it('should not modify spender allowance if spender allowance is 2^256 - 1', async () => {
             const initOwnerBalance = await token.balanceOf(owner);
             const amountToTransfer = initOwnerBalance;
-            const initSpenderAllowance = constants.UNLIMITED_ALLOWANCE_IN_BASE_UNITS;
+            const initSpenderAllowance = 2n ** 256n - 1n; // Max uint256 value
             
             const [ownerSigner, spenderSigner] = await ethers.getSigners();
             

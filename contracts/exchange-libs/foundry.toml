@@ -4,7 +4,7 @@ out = 'out'
 test = 'tests'
 # Include test contracts for ABI generation
 extra_output_files = ["abi"]
-libs = ['../../lib', "../utils"]
+libs = ['../../lib', '../../lib/openzeppelin-contracts/lib', "../utils"]
 remappings = [
     '@0x/contracts-utils/=../utils/',
 ]

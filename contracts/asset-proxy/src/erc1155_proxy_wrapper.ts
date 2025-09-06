@@ -1,9 +1,15 @@
+// 使用包名导入
 import { ERC1155Mintable, ERC1155Mintable__factory } from '@0x/contracts-erc1155';
-// 使用原生 bigint 类型
-import {
-    constants,
-    txDefaults,
-} from '@0x/utils';
+
+const constants = {
+    NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
+    ZERO_AMOUNT: 0n,
+};
+
+const txDefaults = {
+    gasPrice: 20000000000n,
+    gas: 6000000n,
+};
 
 // ERC1155 测试常量
 const ERC1155_CONSTANTS = {
@@ -13,7 +19,9 @@ const ERC1155_CONSTANTS = {
     NUM_ERC1155_NON_FUNGIBLE_TOKENS_MINT: 2,
 };
 import { ZeroExProvider } from 'ethereum-types';
-import { ethers } from 'hardhat';
+// 修复 ethers 导入
+import { ethers } from 'ethers';
+import hre from 'hardhat';
 import * as _ from 'lodash';
 import { getProxyId } from './proxy_utils';
 
@@ -74,7 +82,7 @@ export class ERC1155ProxyWrapper {
      * @return An array of ERC1155 contracts; one for each deployed contract.
      */
     public async deployDummyContractsAsync(): Promise<ERC1155Mintable[]> {
-        const signers = await ethers.getSigners();
+        const signers = await (hre as any).ethers.getSigners();
         const deployer = signers[0];
         
         for (const i of _.times(ERC1155_CONSTANTS.NUM_DUMMY_ERC1155_CONTRACTS_TO_DEPLOY)) {
@@ -100,7 +108,7 @@ export class ERC1155ProxyWrapper {
      * @return Deployed ERC1155 proxy contract instance
      */
     public async deployProxyAsync(): Promise<ERC1155Proxy> {
-        const signers = await ethers.getSigners();
+        const signers = await (hre as any).ethers.getSigners();
         const deployer = signers[0];
         this._proxyContract = await new ERC1155Proxy__factory(deployer).deploy();
         await this._proxyContract.waitForDeployment();
@@ -167,8 +175,8 @@ export class ERC1155ProxyWrapper {
         authorizedSender: string,
     ): Promise<any> {
         // 获取 signer
-        const signers = await ethers.getSigners();
-        const signer = signers.find(s => s.address.toLowerCase() === authorizedSender.toLowerCase()) || signers[0];
+        const signers = await (hre as any).ethers.getSigners();
+        const signer = signers.find((s: any) => s.address.toLowerCase() === authorizedSender.toLowerCase()) || signers[0];
         
         // 使用现代 ethers v6 方式发送交易
         const proxyAddress = await this._proxyContract!.getAddress();
@@ -208,8 +216,8 @@ export class ERC1155ProxyWrapper {
         
 
         // 获取 signer
-        const signers = await ethers.getSigners();
-        const signer = signers.find(s => s.address.toLowerCase() === authorizedSender.toLowerCase()) || signers[0];
+        const signers = await (hre as any).ethers.getSigners();
+        const signer = signers.find((s: any) => s.address.toLowerCase() === authorizedSender.toLowerCase()) || signers[0];
         
         // 生成 asset data
         const assetData =
@@ -281,11 +289,11 @@ export class ERC1155ProxyWrapper {
                 }
                 
                 // 为每个代币持有者设置代理合约的授权
-                const signers = await ethers.getSigners();
+                const signers = await (hre as any).ethers.getSigners();
                 for (const tokenOwnerAddress of this._tokenOwnerAddresses) {
                     try {
                         // 找到对应的 signer
-                        const ownerSigner = signers.find(s => s.address.toLowerCase() === tokenOwnerAddress.toLowerCase());
+                        const ownerSigner = signers.find((s: any) => s.address.toLowerCase() === tokenOwnerAddress.toLowerCase());
                         if (ownerSigner) {
                             // 使用持有者的签名者连接合约并授权
                             const contractWithSigner = dummyContract.connect(ownerSigner);
@@ -415,8 +423,8 @@ export class ERC1155ProxyWrapper {
         const operator = await this._proxyContract!.getAddress();
         
         // 获取用户的 signer
-        const signers = await ethers.getSigners();
-        const userSigner = signers.find(s => s.address.toLowerCase() === userAddress.toLowerCase()) || signers[0];
+        const signers = await (hre as any).ethers.getSigners();
+        const userSigner = signers.find((s: any) => s.address.toLowerCase() === userAddress.toLowerCase()) || signers[0];
         const contractWithSigner = tokenContract.connect(userSigner);
         
         await contractWithSigner.setApprovalForAll(operator, isApproved);
@@ -480,8 +488,8 @@ export class ERC1155ProxyWrapper {
         const tokenIsNonFungible = false;
         
         // 获取 signer
-        const signers = await ethers.getSigners();
-        const ownerSigner = signers.find(s => s.address.toLowerCase() === this._contractOwnerAddress.toLowerCase()) || signers[0];
+        const signers = await (hre as any).ethers.getSigners();
+        const ownerSigner = signers.find((s: any) => s.address.toLowerCase() === this._contractOwnerAddress.toLowerCase()) || signers[0];
         const contractWithSigner = contract.connect(ownerSigner);
         
         // 创建代币类型
@@ -518,8 +526,8 @@ export class ERC1155ProxyWrapper {
         const tokenIsNonFungible = true;
         
         // 获取 signer
-        const signers = await ethers.getSigners();
-        const ownerSigner = signers.find(s => s.address.toLowerCase() === this._contractOwnerAddress.toLowerCase()) || signers[0];
+        const signers = await (hre as any).ethers.getSigners();
+        const ownerSigner = signers.find((s: any) => s.address.toLowerCase() === this._contractOwnerAddress.toLowerCase()) || signers[0];
         const contractWithSigner = contract.connect(ownerSigner);
         
         // 创建非同质化代币类型
@@ -564,7 +572,7 @@ export class ERC1155ProxyWrapper {
         tokens: bigint[],
     ): Promise<bigint[]> {
         const balances = await contract.balanceOfBatch(owners, tokens.map(t => t.toString()));
-        return balances.map(balance => BigInt(balance.toString()));
+        return balances.map((balance: any) => BigInt(balance.toString()));
     }
     
     private _validateDummyTokenContractsExistOrThrow(): void {

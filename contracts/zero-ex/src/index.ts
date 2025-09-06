@@ -1,4 +1,5 @@
-export { ZeroExRevertErrors } from '@0x/utils';
+// 移除对 @0x/utils 的依赖
+// export { ZeroExRevertErrors } from '@0x/utils';
 export {
     AbiDefinition,
     CompilerOpts,

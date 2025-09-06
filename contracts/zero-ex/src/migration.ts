@@ -1,4 +1,6 @@
-import { NULL_ADDRESS } from '@0x/utils';
+// 移除对 @0x/utils 的依赖，使用本地常量
+// import { NULL_ADDRESS } from '@0x/utils';
+const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 import { TxData, SupportedProvider } from 'ethereum-types';
 import { ethers } from 'ethers';
 import * as _ from 'lodash';

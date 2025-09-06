@@ -1,4 +1,34 @@
-import { hexUtils } from '@0x/utils';
+// 移除对 @0x/utils 的依赖，使用本地实现
+// import { hexUtils } from '@0x/utils';
+import { ethers } from 'ethers';
+
+const hexUtils = {
+    toHex: (value: string | number | Buffer | bigint): string => {
+        if (typeof value === 'string') {
+            return value.startsWith('0x') ? value : '0x' + value;
+        }
+        if (typeof value === 'number') {
+            return '0x' + value.toString(16);
+        }
+        if (typeof value === 'bigint') {
+            return '0x' + value.toString(16);
+        }
+        if (Buffer.isBuffer(value)) {
+            return '0x' + value.toString('hex');
+        }
+        return '0x' + String(value);
+    },
+    leftPad: (value: string | number | bigint, length: number = 64): string => {
+        let hex = hexUtils.toHex(value).replace('0x', '');
+        return '0x' + hex.padStart(length, '0');
+    },
+    hash: (value: string): string => {
+        return ethers.keccak256(value);
+    },
+    concat: (...values: (string | number | Buffer)[]): string => {
+        return '0x' + values.map(v => hexUtils.toHex(v).replace('0x', '')).join('');
+    }
+};
 
 /**
  * Compute the bloom filter for a list of tokens.

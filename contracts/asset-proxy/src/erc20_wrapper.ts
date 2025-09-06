@@ -1,5 +1,22 @@
-import { artifacts as erc20Artifacts, DummyERC20Token__factory, DummyERC20Token } from '@0x/contracts-erc20';
-import { constants, ERC20BalancesByOwner, txDefaults } from '@0x/utils';
+// 使用包名导入
+import { artifacts as erc20Artifacts, DummyERC20Token, DummyERC20Token__factory } from '@0x/contracts-erc20';
+// 使用本地类型定义替代 @0x/utils
+const constants = {
+    NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
+    ZERO_AMOUNT: 0n,
+    UNLIMITED_ALLOWANCE_IN_BASE_UNITS: 2n ** 256n - 1n,
+};
+
+const txDefaults = {
+    gasPrice: 20000000000n,
+    gas: 6000000n,
+};
+
+export interface ERC20BalancesByOwner {
+    [ownerAddress: string]: {
+        [tokenAddress: string]: bigint;
+    };
+}
 import { ZeroExProvider } from 'ethereum-types';
 import * as _ from 'lodash';
 

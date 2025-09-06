@@ -5,16 +5,6 @@ import '@typechain/hardhat';
 import '@typechain/ethers-v6';
 
 const config: HardhatUserConfig = {
-    solidity: {
-        version: '0.8.28',
-        settings: {
-            optimizer: {
-                enabled: true,
-                runs: 1000000,
-            },
-            evmVersion: 'shanghai',
-        },
-    },
     networks: {
         hardhat: {
             chainId: 1337,
@@ -29,6 +19,16 @@ const config: HardhatUserConfig = {
         tests: './test',
         cache: './cache/hardhat',
         artifacts: './artifacts',
+    },
+    solidity: {
+        version: '0.8.28',
+        settings: {
+            optimizer: {
+                enabled: true,
+                runs: 1000000,
+            },
+            evmVersion: 'shanghai',
+        },
     },
     typechain: {
         outDir: 'src/typechain-types',

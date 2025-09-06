@@ -101,21 +101,21 @@ describe('MixinStake unit tests', env => {
         }
 
         it('throws if not enough undelegated stake in the current epoch', async () => {
-            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
+            const amount = BigInt(getRandomInteger(1, 100)) * 10n ** 18n;
             await setUndelegatedStakeAsync(amount - 1n, amount);
             const tx = testContract.unstake(amount);
             return expect(tx).to.be.reverted;
         });
 
         it('throws if not enough undelegated stake in the next epoch', async () => {
-            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
+            const amount = BigInt(getRandomInteger(1, 100)) * 10n ** 18n;
             await setUndelegatedStakeAsync(amount, amount - 1n);
             const tx = testContract.unstake(amount);
             return expect(tx).to.be.reverted;
         });
 
         it('throws if not enough undelegated stake in both epochs', async () => {
-            const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
+            const amount = BigInt(getRandomInteger(1, 100)) * 10n ** 18n;
             await setUndelegatedStakeAsync(amount - 1n, amount - 1n);
             const tx = testContract.unstake(amount);
             return expect(tx).to.be.reverted;

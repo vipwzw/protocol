@@ -1,9 +1,12 @@
-import { constants, Numberish } from '@0x/utils';
+// 移除对 @0x/utils 的依赖，定义本地类型
+// import { constants, Numberish } from '@0x/utils';
 import { DecodedLogArgs, LogWithDecodedArgs } from 'ethereum-types';
 
 import { constants as stakingConstants } from './constants';
 
-export { Numberish } from '@0x/utils';
+// 定义本地的 Numberish 类型
+export type Numberish = string | number | bigint;
+// export { Numberish } from '@0x/utils';
 // tslint:disable:max-classes-per-file
 
 export interface StakingParams {

@@ -1,5 +1,12 @@
 // AbiEncoder 已移除，使用 ethers AbiCoder
-import { AssetProxyId } from '@0x/utils';
+// 使用本地类型定义替代 @0x/utils
+enum AssetProxyId {
+    ERC20 = 0,
+    ERC721 = 1,
+    ERC1155 = 2,
+    MultiAsset = 3,
+    StaticCall = 4,
+}
 import { keccak256 } from 'ethereum-cryptography/keccak';
 import { ethers } from 'ethers';
 // TODO: Re-enable when TypeChain compilation is successful

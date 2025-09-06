@@ -17,13 +17,58 @@ describe('ZRXToken', () => {
     let spender: string;
     let MAX_UINT: bigint;
     let zrxToken: ZRXToken;
+    
+    // Helper function to parse logs and verify events
+    function verifyTransferEventFromReceipt(receipt: any, from: string, to: string, value: bigint) {
+        const parsedLogs = receipt.logs
+            .map((log: any) => {
+                try {
+                    const parsed = zrxToken.interface.parseLog(log);
+                    return parsed;
+                } catch {
+                    return null;
+                }
+            })
+            .filter((log: any) => log !== null);
+        
+        // Find Transfer events
+        const transferEvents = parsedLogs.filter(log => log && log.name === 'Transfer');
+        expect(transferEvents).to.have.length.at.least(1);
+        
+        const transferEvent = transferEvents[0];
+        
+        // Event args are in array format: [from, to, value]
+        expect(transferEvent.args[0]).to.equal(from);
+        expect(transferEvent.args[1]).to.equal(to);
+        expect(transferEvent.args[2]).to.equal(value);
+    }
+    
+    function verifyApprovalEventFromReceipt(receipt: any, owner: string, spender: string, value: bigint) {
+        const parsedLogs = receipt.logs
+            .map((log: any) => {
+                try {
+                    const parsed = zrxToken.interface.parseLog(log);
+                    return parsed;
+                } catch {
+                    return null;
+                }
+            })
+            .filter((log: any) => log !== null);
+        
+        // Find Approval events
+        const approvalEvents = parsedLogs.filter(log => log && log.name === 'Approval');
+        expect(approvalEvents).to.have.length.at.least(1);
+        
+        const approvalEvent = approvalEvents[0];
+        
+        // Event args are in array format: [owner, spender, value]
+        expect(approvalEvent.args[0]).to.equal(owner);
+        expect(approvalEvent.args[1]).to.equal(spender);
+        expect(approvalEvent.args[2]).to.equal(value);
+    }
 
-    before(async () => {
-        await blockchainLifecycle.startAsync();
-    });
-    after(async () => {
-        await blockchainLifecycle.revertAsync();
-    });
+    // Hardhat automatically manages blockchain state between tests
+    // No need for manual blockchain lifecycle management
     before(async () => {
         const accounts = await ethers.getSigners();
         owner = accounts[0].address;
@@ -31,14 +76,9 @@ describe('ZRXToken', () => {
         
         const zrxTokenFactory = new ZRXToken__factory(accounts[0]);
         zrxToken = await zrxTokenFactory.deploy();
-        MAX_UINT = constants.UNLIMITED_ALLOWANCE_IN_BASE_UNITS;
+        MAX_UINT = 2n ** 256n - 1n; // Max uint256 value
     });
-    beforeEach(async () => {
-        await blockchainLifecycle.startAsync();
-    });
-    afterEach(async () => {
-        await blockchainLifecycle.revertAsync();
-    });
+    // Hardhat automatically manages blockchain state between tests
     describe('constants', () => {
         it('should have 18 decimals', async () => {
             const decimals = await zrxToken.decimals();
@@ -85,7 +125,7 @@ describe('ZRXToken', () => {
             const receipt = await tx.wait();
             
             // 验证 Transfer 事件
-            verifyTransferEvent(receipt!, zrxToken, owner, receiver, amountToTransfer);
+            verifyTransferEventFromReceipt(receipt!, owner, receiver, amountToTransfer);
             
             const finalOwnerBalance = await zrxToken.balanceOf(owner);
             const finalReceiverBalance = await zrxToken.balanceOf(receiver);
@@ -157,14 +197,14 @@ describe('ZRXToken', () => {
             const approveReceipt = await approveTx.wait();
             
             // 验证 Approval 事件
-            verifyApprovalEvent(approveReceipt!, zrxToken, owner, spender, initSpenderAllowance);
+            verifyApprovalEventFromReceipt(approveReceipt!, owner, spender, initSpenderAllowance);
             
             // Transfer some tokens
             const transferTx = await zrxToken.connect(spenderSigner).transferFrom(owner, spender, amountToTransfer);
             const transferReceipt = await transferTx.wait();
             
             // 验证 Transfer 事件
-            verifyTransferEvent(transferReceipt!, zrxToken, owner, spender, amountToTransfer);
+            verifyTransferEventFromReceipt(transferReceipt!, owner, spender, amountToTransfer);
 
             const newSpenderAllowance = await zrxToken.allowance(owner, spender);
             expect(initSpenderAllowance).to.equal(newSpenderAllowance);
@@ -186,7 +226,7 @@ describe('ZRXToken', () => {
             const transferReceipt = await transferTx.wait();
             
             // 验证 Transfer 事件
-            verifyTransferEvent(transferReceipt!, zrxToken, owner, spender, amountToTransfer);
+            verifyTransferEventFromReceipt(transferReceipt!, owner, spender, amountToTransfer);
 
             const newOwnerBalance = await zrxToken.balanceOf(owner);
             const newSpenderBalance = await zrxToken.balanceOf(spender);

@@ -16,9 +16,10 @@
         "./generated-wrappers/**/*"
     ],
     "references": [
-        { "path": "../asset-proxy" },
-        { "path": "../erc20" },
-        { "path": "../exchange-libs" },
-        { "path": "../utils" }
+        // 暂时移除依赖引用，避免编译依赖模块的错误
+        // { "path": "../asset-proxy" },
+        // { "path": "../erc20" },
+        // { "path": "../exchange-libs" },
+        // { "path": "../utils" }
     ]
 }
