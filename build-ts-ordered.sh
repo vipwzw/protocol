@@ -29,15 +29,28 @@ build_package() {
         
         # 检查是否有 tsconfig.json
         if [ -f "tsconfig.json" ]; then
+            # 对于 contract-wrappers，需要先生成 TypeChain 文件
+            if [ "$package_name" = "contract-wrappers" ]; then
+                echo -e "${BLUE}🔧 生成 TypeChain 文件...${NC}"
+                if yarn typechain:generate 2>/dev/null; then
+                    echo -e "${GREEN}✅ TypeChain 文件生成成功${NC}"
+                else
+                    echo -e "${RED}❌ TypeChain 文件生成失败${NC}"
+                    cd - > /dev/null
+                    return 1
+                fi
+            fi
+            
             # 使用 TypeScript 编译器
             if npx tsc -b --verbose 2>/dev/null; then
                 echo -e "${GREEN}✅ ${package_name} 编译成功${NC}"
             else
-                echo -e "${YELLOW}⚠️  ${package_name} TypeScript 编译失败，尝试 yarn build:ts...${NC}"
-                if yarn build:ts 2>/dev/null; then
-                    echo -e "${GREEN}✅ ${package_name} yarn build:ts 成功${NC}"
+                echo -e "${YELLOW}⚠️  ${package_name} TypeScript 编译失败，尝试 yarn build...${NC}"
+                if yarn build 2>/dev/null; then
+                    echo -e "${GREEN}✅ ${package_name} yarn build 成功${NC}"
                 else
                     echo -e "${RED}❌ ${package_name} 编译失败${NC}"
+                    cd - > /dev/null
                     return 1
                 fi
             fi
