@@ -23,16 +23,12 @@ describe('Epochs', () => {
         const signers = await ethers.getSigners();
         accounts = signers.map((s: any) => s.address);
         owner = accounts[0];
-        
+
         // set up ERC20Wrapper for each test
         erc20Wrapper = new ERC20Wrapper(ethers.provider, accounts, owner);
-        
+
         // deploy fresh staking contracts for each test
-        stakingApiWrapper = await deployAndConfigureContractsAsync(
-            { provider: ethers.provider }, 
-            owner, 
-            erc20Wrapper
-        );
+        stakingApiWrapper = await deployAndConfigureContractsAsync({ provider: ethers.provider }, owner, erc20Wrapper);
     });
     describe('Epochs & TimeLocks', () => {
         it('basic epochs & timeLock periods', async () => {

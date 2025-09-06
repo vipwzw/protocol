@@ -51,19 +51,19 @@ export const artifacts = {
     // 核心合约
     ZeroEx: ZeroEx as ContractArtifact,
     IZeroEx: IZeroEx as ContractArtifact,
-    
+
     // 基础测试合约
     TestFullMigration: TestFullMigration as ContractArtifact,
     TestInitialMigration: TestInitialMigration as ContractArtifact,
     TestFixinProtocolFees: TestFixinProtocolFees as ContractArtifact,
     TestStaking: TestStaking as ContractArtifact,
     TestMigrator: TestMigrator as ContractArtifact,
-    
+
     // 代币测试合约
     TestMintableERC20Token: TestMintableERC20Token as ContractArtifact,
     TestWeth: TestWeth as ContractArtifact,
     DummyERC20Token: DummyERC20Token as ContractArtifact,
-    
+
     // Feature 合约
     FundRecoveryFeature: FundRecoveryFeature as ContractArtifact,
     BatchFillNativeOrdersFeature: BatchFillNativeOrdersFeature as ContractArtifact,
@@ -75,20 +75,21 @@ export const artifacts = {
     UniswapV3Feature: UniswapV3Feature as ContractArtifact,
     ERC721OrdersFeature: ERC721OrdersFeature as ContractArtifact,
     ERC1155OrdersFeature: ERC1155OrdersFeature as ContractArtifact,
-    
+
     // 部署器相关
     TransformerDeployer: TransformerDeployer as ContractArtifact,
     TestTransformerDeployerTransformer: TestTransformerDeployerTransformer as ContractArtifact,
     PermissionlessTransformerDeployer: PermissionlessTransformerDeployer as ContractArtifact,
-    TestPermissionlessTransformerDeployerTransformer: TestPermissionlessTransformerDeployerTransformer as ContractArtifact,
-    
+    TestPermissionlessTransformerDeployerTransformer:
+        TestPermissionlessTransformerDeployerTransformer as ContractArtifact,
+
     // 库合约
     TestLibNativeOrder: TestLibNativeOrder as ContractArtifact,
     TestLibSignature: TestLibSignature as ContractArtifact,
-    
+
     // 费用和控制器
     FeeCollectorController: FeeCollectorController as ContractArtifact,
-    
+
     // 迁移相关
     InitialMigration: InitialMigration as ContractArtifact,
 };

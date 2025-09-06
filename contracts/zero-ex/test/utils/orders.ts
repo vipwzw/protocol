@@ -1,10 +1,5 @@
-import { ethers } from "hardhat";
-import {
-    BlockchainTestsEnvironment,
-    constants,
-    getRandomInteger,
-    randomAddress,
-} from '@0x/utils';
+import { ethers } from 'hardhat';
+import { BlockchainTestsEnvironment, constants, getRandomInteger, randomAddress } from '@0x/utils';
 import { expect } from 'chai';
 import {
     LimitOrder,
@@ -57,12 +52,10 @@ export class NativeOrdersTestEnvironment {
     ): Promise<NativeOrdersTestEnvironment> {
         const [owner, maker, taker] = await env.getAccountAddressesAsync();
         const signer = await env.provider.getSigner(owner);
-        
+
         // Deploy tokens
         const tokenFactories = [...new Array(2)].map(() => new TestMintableERC20Token__factory(signer));
-        const tokenDeployments = await Promise.all(
-            tokenFactories.map(factory => factory.deploy())
-        );
+        const tokenDeployments = await Promise.all(tokenFactories.map(factory => factory.deploy()));
         await Promise.all(tokenDeployments.map(token => token.waitForDeployment()));
         const [makerToken, takerToken] = tokenDeployments;
         const zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {}, { protocolFeeMultiplier });
@@ -97,15 +90,20 @@ export class NativeOrdersTestEnvironment {
         orders: LimitOrder[] | RfqOrder[] | OtcOrder[],
         taker: string = this.taker,
     ): Promise<void> {
-        await this.makerToken
-            .mint(this.maker, (orders as OrderBase[]).map(order => BigInt(order.makerAmount || 0)).reduce((a, b) => a + b, 0n));
-        await this.takerToken
-            .mint(
-                taker,
-                (orders as OrderBase[]).map(order =>
-                    BigInt(order.takerAmount || 0) + (order instanceof LimitOrder ? BigInt(order.takerTokenFeeAmount || 0) : 0n)
-                ).reduce((a, b) => a + b, 0n)
-            );
+        await this.makerToken.mint(
+            this.maker,
+            (orders as OrderBase[]).map(order => BigInt(order.makerAmount || 0)).reduce((a, b) => a + b, 0n),
+        );
+        await this.takerToken.mint(
+            taker,
+            (orders as OrderBase[])
+                .map(
+                    order =>
+                        BigInt(order.takerAmount || 0) +
+                        (order instanceof LimitOrder ? BigInt(order.takerTokenFeeAmount || 0) : 0n),
+                )
+                .reduce((a, b) => a + b, 0n),
+        );
     }
 
     public async fillLimitOrderAsync(
@@ -124,17 +122,14 @@ export class NativeOrdersTestEnvironment {
         await this.prepareBalancesForOrdersAsync([order], taker);
         const value = protocolFee === undefined ? this.protocolFee : protocolFee;
         const takerSigner = await this._env.provider.getSigner(taker);
-        
+
         // 使用 INativeOrdersFeature 接口调用
         const nativeOrdersFeature = await ethers.getContractAt('INativeOrdersFeature', await this.zeroEx.getAddress());
         const tx = await nativeOrdersFeature
             .connect(takerSigner)
-            .fillLimitOrder(
-                order,
-                await order.getSignatureWithProviderAsync(this._env.provider),
-                BigInt(fillAmount),
-                { value }
-            );
+            .fillLimitOrder(order, await order.getSignatureWithProviderAsync(this._env.provider), BigInt(fillAmount), {
+                value,
+            });
         return await tx.wait();
     }
 
@@ -145,16 +140,12 @@ export class NativeOrdersTestEnvironment {
     ): Promise<TransactionReceiptWithDecodedLogs> {
         await this.prepareBalancesForOrdersAsync([order], taker);
         const takerSigner = await this._env.provider.getSigner(taker);
-        
+
         // 使用 INativeOrdersFeature 接口调用
         const nativeOrdersFeature = await ethers.getContractAt('INativeOrdersFeature', await this.zeroEx.getAddress());
         const tx = await nativeOrdersFeature
             .connect(takerSigner)
-            .fillRfqOrder(
-                order,
-                await order.getSignatureWithProviderAsync(this._env.provider),
-                BigInt(fillAmount),
-            );
+            .fillRfqOrder(order, await order.getSignatureWithProviderAsync(this._env.provider), BigInt(fillAmount));
         return await tx.wait();
     }
 
@@ -178,11 +169,7 @@ export class NativeOrdersTestEnvironment {
         } else {
             const tx = await this.zeroEx
                 .connect(takerSigner)
-                .fillOtcOrder(
-                    order,
-                    await order.getSignatureWithProviderAsync(this._env.provider),
-                    BigInt(fillAmount),
-                );
+                .fillOtcOrder(order, await order.getSignatureWithProviderAsync(this._env.provider), BigInt(fillAmount));
             return await tx.wait();
         }
     }
@@ -226,7 +213,9 @@ export class NativeOrdersTestEnvironment {
         const takerSigner = await this._env.provider.getSigner(taker);
         const tx = await this.zeroEx
             .connect(takerSigner)
-            .fillOtcOrderWithEth(order, await order.getSignatureWithProviderAsync(this._env.provider), { value: fillAmount });
+            .fillOtcOrderWithEth(order, await order.getSignatureWithProviderAsync(this._env.provider), {
+                value: fillAmount,
+            });
         return await tx.wait();
     }
 
@@ -362,14 +351,12 @@ export function getRandomOtcOrder(fields: Partial<OtcOrder> = {}): OtcOrder {
 export function assertOrderInfoEquals(actual: OrderInfo, expected: OrderInfo): void {
     expect(actual.status, 'Order status').to.eq(expected.status);
     expect(actual.orderHash, 'Order hash').to.eq(expected.orderHash);
-    expect(actual.takerTokenFilledAmount, 'Order takerTokenFilledAmount').to.eq(
-        expected.takerTokenFilledAmount,
-    );
+    expect(actual.takerTokenFilledAmount, 'Order takerTokenFilledAmount').to.eq(expected.takerTokenFilledAmount);
 }
 
 /**
  * Creates an order expiry field.
- * Uses blockchain time instead of JavaScript time to avoid issues 
+ * Uses blockchain time instead of JavaScript time to avoid issues
  * when previous tests have advanced blockchain time with increaseTimeAsync.
  */
 export async function createExpiry(deltaSeconds = 60): Promise<bigint> {
@@ -387,11 +374,7 @@ export function computeLimitOrderFilledAmounts(
     takerTokenFillAmount: bigint = order.takerAmount,
     takerTokenAlreadyFilledAmount: bigint = ZERO,
 ): LimitOrderFilledAmounts {
-    const candidates = [
-        order.takerAmount,
-        takerTokenFillAmount,
-        order.takerAmount - takerTokenAlreadyFilledAmount,
-    ];
+    const candidates = [order.takerAmount, takerTokenFillAmount, order.takerAmount - takerTokenAlreadyFilledAmount];
     const fillAmount = candidates.reduce((min, v) => (v < min ? v : min));
     const makerTokenFilledAmount = (fillAmount * order.makerAmount) / order.takerAmount;
     const takerTokenFeeFilledAmount = (fillAmount * order.takerTokenFeeAmount) / order.takerAmount;
@@ -410,11 +393,7 @@ export function computeRfqOrderFilledAmounts(
     takerTokenFillAmount: bigint = order.takerAmount,
     takerTokenAlreadyFilledAmount: bigint = ZERO,
 ): RfqOrderFilledAmounts {
-    const candidates = [
-        order.takerAmount,
-        takerTokenFillAmount,
-        order.takerAmount - takerTokenAlreadyFilledAmount,
-    ];
+    const candidates = [order.takerAmount, takerTokenFillAmount, order.takerAmount - takerTokenAlreadyFilledAmount];
     const fillAmount = candidates.reduce((min, v) => (v < min ? v : min));
     const makerTokenFilledAmount = (fillAmount * order.makerAmount) / order.takerAmount;
     return {
@@ -446,9 +425,7 @@ export function getFillableMakerTokenAmount(
     order: LimitOrder | RfqOrder,
     takerTokenFilledAmount: bigint = ZERO,
 ): bigint {
-    return (order.takerAmount - takerTokenFilledAmount)
-        * order.makerAmount
-        / order.takerAmount;
+    return ((order.takerAmount - takerTokenFilledAmount) * order.makerAmount) / order.takerAmount;
 }
 
 /**
@@ -462,18 +439,17 @@ export function getActualFillableTakerTokenAmount(
     takerTokenFilledAmount: bigint = ZERO,
 ): bigint {
     // 实现与合约相同的计算逻辑，包括正确的舍入方式
-    
+
     // 1. 计算 fillableMakerTokenAmount (使用 Floor 舍入，与合约 getPartialAmountFloor 一致)
     const remainingTakerAmount = order.takerAmount - takerTokenFilledAmount;
     const fillableMakerTokenAmount = (remainingTakerAmount * order.makerAmount) / order.takerAmount;
-    
+
     // 2. 限制到实际可用的余额和授权 (取最小值)
-    const minCap = [fillableMakerTokenAmount, makerBalance, makerAllowance]
-        .reduce((min, v) => (v < min ? v : min));
-    
+    const minCap = [fillableMakerTokenAmount, makerBalance, makerAllowance].reduce((min, v) => (v < min ? v : min));
+
     // 3. 转换回 taker token 数量 (使用 Ceil 舍入，与合约 getPartialAmountCeil 一致)
     // ceil(a / b) = floor((a + b - 1) / b)
     const result = (minCap * order.takerAmount + (order.makerAmount - 1n)) / order.makerAmount;
-    
+
     return result;
 }

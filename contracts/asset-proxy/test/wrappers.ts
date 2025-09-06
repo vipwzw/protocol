@@ -56,7 +56,7 @@ export { UniswapV2Bridge__factory } from '../src/typechain-types/factories/contr
 // Re-export common types
 export * from '../src/typechain-types/common';
 
-// Re-export interfaces  
+// Re-export interfaces
 export * from '../src/typechain-types/contracts/src/interfaces/IAssetProxy';
 export * from '../src/typechain-types/contracts/src/interfaces/IAssetData';
 

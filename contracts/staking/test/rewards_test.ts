@@ -1,13 +1,20 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { constants, shortZip, toBaseUnitAmount, expectBigIntEqual, expectBigIntEqualWithMessage, toBigInt } from './test_constants';
+import {
+    constants,
+    shortZip,
+    toBaseUnitAmount,
+    expectBigIntEqual,
+    expectBigIntEqualWithMessage,
+    toBigInt,
+} from './test_constants';
 
 // StakingRevertErrors replacement
 export class StakingRevertErrors {
     static OperatorShareError(): Error {
         return new Error('Staking: operator share error');
     }
-    
+
     static PoolNotFinalizedError(): Error {
         return new Error('Staking: pool not finalized');
     }
@@ -93,70 +100,65 @@ describe('Testing Rewards', () => {
         const validateEndBalances = async (_expectedEndBalances: EndBalances): Promise<void> => {
             const expectedEndBalances = {
                 // staker 1
-                stakerRewardBalance_1:
-                    _expectedEndBalances.stakerRewardBalance_1 ?? constants.ZERO_AMOUNT,
-                stakerWethBalance_1:
-                    _expectedEndBalances.stakerWethBalance_1 ?? constants.ZERO_AMOUNT,
+                stakerRewardBalance_1: _expectedEndBalances.stakerRewardBalance_1 ?? constants.ZERO_AMOUNT,
+                stakerWethBalance_1: _expectedEndBalances.stakerWethBalance_1 ?? constants.ZERO_AMOUNT,
                 // staker 2
-                stakerRewardBalance_2:
-                    _expectedEndBalances.stakerRewardBalance_2 ?? constants.ZERO_AMOUNT,
-                stakerWethBalance_2:
-                    _expectedEndBalances.stakerWethBalance_2 ?? constants.ZERO_AMOUNT,
+                stakerRewardBalance_2: _expectedEndBalances.stakerRewardBalance_2 ?? constants.ZERO_AMOUNT,
+                stakerWethBalance_2: _expectedEndBalances.stakerWethBalance_2 ?? constants.ZERO_AMOUNT,
                 // operator
-                operatorWethBalance:
-                    _expectedEndBalances.operatorWethBalance ?? constants.ZERO_AMOUNT,
+                operatorWethBalance: _expectedEndBalances.operatorWethBalance ?? constants.ZERO_AMOUNT,
                 // undivided balance in reward pool
-                poolRewardBalance:
-                    _expectedEndBalances.poolRewardBalance ?? constants.ZERO_AMOUNT,
+                poolRewardBalance: _expectedEndBalances.poolRewardBalance ?? constants.ZERO_AMOUNT,
             };
             const finalEndBalancesAsArray = await Promise.all([
                 // staker 1
-                stakingApiWrapper.stakingContract
-                    .computeRewardBalanceOfDelegator(poolId, stakers[0].getOwner())
-                    ,
+                stakingApiWrapper.stakingContract.computeRewardBalanceOfDelegator(poolId, stakers[0].getOwner()),
                 stakingApiWrapper.wethContract.balanceOf(stakers[0].getOwner()),
                 // staker 2
-                stakingApiWrapper.stakingContract
-                    .computeRewardBalanceOfDelegator(poolId, stakers[1].getOwner())
-                    ,
+                stakingApiWrapper.stakingContract.computeRewardBalanceOfDelegator(poolId, stakers[1].getOwner()),
                 stakingApiWrapper.wethContract.balanceOf(stakers[1].getOwner()),
                 // operator
                 stakingApiWrapper.wethContract.balanceOf(poolOperator.getOwner()),
                 // undivided balance in reward pool
                 stakingApiWrapper.stakingContract.rewardsByPoolId(poolId),
             ]);
-            expectBigIntEqualWithMessage(BigInt(finalEndBalancesAsArray[0]), expectedEndBalances.stakerRewardBalance_1, 'stakerRewardBalance_1');
+            expectBigIntEqualWithMessage(
+                BigInt(finalEndBalancesAsArray[0]),
+                expectedEndBalances.stakerRewardBalance_1,
+                'stakerRewardBalance_1',
+            );
             expectBigIntEqualWithMessage(
                 BigInt(finalEndBalancesAsArray[1]),
                 expectedEndBalances.stakerWethBalance_1,
-                'stakerWethBalance_1'
+                'stakerWethBalance_1',
             );
             expectBigIntEqualWithMessage(
                 BigInt(finalEndBalancesAsArray[2]),
                 expectedEndBalances.stakerRewardBalance_2,
-                'stakerRewardBalance_2'
+                'stakerRewardBalance_2',
             );
             expectBigIntEqualWithMessage(
                 BigInt(finalEndBalancesAsArray[3]),
                 expectedEndBalances.stakerWethBalance_2,
-                'stakerWethBalance_2'
+                'stakerWethBalance_2',
             );
             expectBigIntEqualWithMessage(
                 BigInt(finalEndBalancesAsArray[4]),
                 expectedEndBalances.operatorWethBalance,
-                'operatorWethBalance'
+                'operatorWethBalance',
             );
             expectBigIntEqualWithMessage(
                 BigInt(finalEndBalancesAsArray[5]),
                 expectedEndBalances.poolRewardBalance,
-                'poolRewardBalance'
+                'poolRewardBalance',
             );
         };
         const payProtocolFeeAndFinalize = async (_fee?: bigint) => {
             const fee = _fee ?? constants.ZERO_AMOUNT;
             if (fee !== constants.ZERO_AMOUNT) {
                 const signers = await ethers.getSigners();
-                const exchangeSigner = signers.find(s => s.address.toLowerCase() === exchangeAddress.toLowerCase()) || signers[0];
+                const exchangeSigner =
+                    signers.find(s => s.address.toLowerCase() === exchangeAddress.toLowerCase()) || signers[0];
                 const txPay = await stakingApiWrapper.stakingContract
                     .connect(exchangeSigner)
                     .payProtocolFee(poolOperator.getOwner(), takerAddress, fee, { value: fee });
@@ -301,7 +303,8 @@ describe('Testing Rewards', () => {
             await payProtocolFeeAndFinalize(rewardForBothDelegators);
             // sanity check final balances
             await validateEndBalances({
-                stakerRewardBalance_1: rewardForOnlyFirstDelegator + ((rewardForBothDelegators * stakeAmounts[0]) / totalStakeAmount),
+                stakerRewardBalance_1:
+                    rewardForOnlyFirstDelegator + (rewardForBothDelegators * stakeAmounts[0]) / totalStakeAmount,
                 stakerRewardBalance_2: (rewardForBothDelegators * stakeAmounts[1]) / totalStakeAmount,
                 poolRewardBalance: rewardForOnlyFirstDelegator + rewardForBothDelegators,
                 membersRewardBalance: rewardForOnlyFirstDelegator + rewardForBothDelegators,
@@ -334,7 +337,8 @@ describe('Testing Rewards', () => {
             }
             // sanity check final balances
             await validateEndBalances({
-                stakerRewardBalance_1: rewardForOnlyFirstDelegator + ((totalSharedRewards * stakeAmounts[0]) / totalStakeAmount),
+                stakerRewardBalance_1:
+                    rewardForOnlyFirstDelegator + (totalSharedRewards * stakeAmounts[0]) / totalStakeAmount,
                 stakerRewardBalance_2: (totalSharedRewards * stakeAmounts[1]) / totalStakeAmount,
                 poolRewardBalance: rewardForOnlyFirstDelegator + totalSharedRewards,
                 membersRewardBalance: rewardForOnlyFirstDelegator + totalSharedRewards,
@@ -405,7 +409,8 @@ describe('Testing Rewards', () => {
             }
             // sanity check final balances
             await validateEndBalances({
-                stakerRewardBalance_1: rewardBeforeAddingMoreStake + ((totalRewardsAfterAddingMoreStake * stakeAmounts[0]) / totalStake),
+                stakerRewardBalance_1:
+                    rewardBeforeAddingMoreStake + (totalRewardsAfterAddingMoreStake * stakeAmounts[0]) / totalStake,
                 stakerRewardBalance_2: (totalRewardsAfterAddingMoreStake * stakeAmounts[1]) / totalStake,
                 poolRewardBalance: rewardBeforeAddingMoreStake + totalRewardsAfterAddingMoreStake,
                 membersRewardBalance: rewardBeforeAddingMoreStake + totalRewardsAfterAddingMoreStake,
@@ -562,7 +567,9 @@ describe('Testing Rewards', () => {
             await payProtocolFeeAndFinalize();
             // this should go to the delegator
             await payProtocolFeeAndFinalize(rewardForDelegator);
-            const txW = await stakingApiWrapper.stakingContract.connect(await ethers.getSigner(stakers[0].getOwner())).withdrawDelegatorRewards(poolId);
+            const txW = await stakingApiWrapper.stakingContract
+                .connect(await ethers.getSigner(stakers[0].getOwner()))
+                .withdrawDelegatorRewards(poolId);
             await txW.wait();
             // sanity check final balances
             await validateEndBalances({
@@ -581,41 +588,62 @@ describe('Testing Rewards', () => {
                 new StakeInfo(StakeStatus.Delegated, poolId),
                 stakeAmount,
             );
- 
+
             // 先推进并结束一个纪元，让委托的质押在当前纪元生效
             await stakingApiWrapper.utils.fastForwardToNextEpochAsync();
             await stakingApiWrapper.utils.endEpochAsync();
-             
+
             // 调试信息
             console.log('🔍 Debug info:');
             console.log('- Pool ID:', poolId);
             console.log('- Pool operator:', poolOperator.getOwner());
-            console.log('- Pool stake (current epoch):', (await stakingApiWrapper.stakingContract.getTotalStakeDelegatedToPool(poolId)).currentEpochBalance.toString());
-            console.log('- Minimum pool stake:', (await stakingApiWrapper.stakingContract.minimumPoolStake()).toString());
- 
+            console.log(
+                '- Pool stake (current epoch):',
+                (
+                    await stakingApiWrapper.stakingContract.getTotalStakeDelegatedToPool(poolId)
+                ).currentEpochBalance.toString(),
+            );
+            console.log(
+                '- Minimum pool stake:',
+                (await stakingApiWrapper.stakingContract.minimumPoolStake()).toString(),
+            );
+
             const signers = await ethers.getSigners();
-            const exchangeSigner = signers.find(s => s.address.toLowerCase() === exchangeAddress.toLowerCase()) || signers[0];
+            const exchangeSigner =
+                signers.find(s => s.address.toLowerCase() === exchangeAddress.toLowerCase()) || signers[0];
             const txP = await stakingApiWrapper.stakingContract
                 .connect(exchangeSigner)
-                .payProtocolFee(poolOperator.getOwner(), takerAddress, rewardForDelegator, { value: rewardForDelegator });
+                .payProtocolFee(poolOperator.getOwner(), takerAddress, rewardForDelegator, {
+                    value: rewardForDelegator,
+                });
             await txP.wait();
- 
+
             // 更多调试信息
             const currentEpoch = await stakingApiWrapper.stakingContract.currentEpoch();
             console.log('- Current epoch before fast forward:', currentEpoch.toString());
-            console.log('- Pool stats this epoch (feesCollected):', (await stakingApiWrapper.stakingContract.getStakingPoolStatsThisEpoch(poolId)).feesCollected.toString());
- 
+            console.log(
+                '- Pool stats this epoch (feesCollected):',
+                (await stakingApiWrapper.stakingContract.getStakingPoolStatsThisEpoch(poolId)).feesCollected.toString(),
+            );
+
             // 再推进一个纪元但不 finalize 任何池，使上一纪元带有未最终化的 fees
             await stakingApiWrapper.utils.fastForwardToNextEpochAsync();
             await stakingApiWrapper.utils.endEpochAsync();
- 
+
             // 调试上一纪元状态
             const newEpoch = await stakingApiWrapper.stakingContract.currentEpoch();
             console.log('- New epoch after fast forward:', newEpoch.toString());
-            console.log('- Pool stats previous epoch (feesCollected):', (await stakingApiWrapper.stakingContract.poolStatsByEpoch(poolId, newEpoch - 1n)).feesCollected.toString());
- 
+            console.log(
+                '- Pool stats previous epoch (feesCollected):',
+                (
+                    await stakingApiWrapper.stakingContract.poolStatsByEpoch(poolId, newEpoch - 1n)
+                ).feesCollected.toString(),
+            );
+
             await expect(
-                stakingApiWrapper.stakingContract.connect(await ethers.getSigner(stakers[0].getOwner())).withdrawDelegatorRewards(poolId)
+                stakingApiWrapper.stakingContract
+                    .connect(await ethers.getSigner(stakers[0].getOwner()))
+                    .withdrawDelegatorRewards(poolId),
             ).to.be.reverted;
         });
         it(`payout should be based on stake at the time of rewards`, async () => {
@@ -697,12 +725,20 @@ describe('Testing Rewards', () => {
             await sneakyStaker.withdrawDelegatorRewardsAsync(poolId);
             // Should have been credited the correct amount of rewards.
             let sneakyStakerWethBalance = await stakingApiWrapper.wethContract.balanceOf(sneakyStaker.getOwner());
-            expectBigIntEqual(BigInt(sneakyStakerWethBalance), sneakyStakerExpectedWethBalance, 'WETH balance after first undelegate');
+            expectBigIntEqual(
+                BigInt(sneakyStakerWethBalance),
+                sneakyStakerExpectedWethBalance,
+                'WETH balance after first undelegate',
+            );
             // Now he'll try to do it again to see if he gets credited twice.
             await sneakyStaker.withdrawDelegatorRewardsAsync(poolId);
             /// The total amount credited should remain the same.
             sneakyStakerWethBalance = await stakingApiWrapper.wethContract.balanceOf(sneakyStaker.getOwner());
-            expectBigIntEqual(BigInt(sneakyStakerWethBalance), sneakyStakerExpectedWethBalance, 'WETH balance after second undelegate');
+            expectBigIntEqual(
+                BigInt(sneakyStakerWethBalance),
+                sneakyStakerExpectedWethBalance,
+                'WETH balance after second undelegate',
+            );
         });
     });
 });

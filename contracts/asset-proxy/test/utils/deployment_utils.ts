@@ -15,11 +15,11 @@ export async function deployContractAsync<T>(
         const signers = await ethers.getSigners();
         deployer = signers[0];
     }
-    
+
     const ContractFactory = await ethers.getContractFactory(contractName, deployer);
     const contract = await ContractFactory.deploy(...constructorArgs);
     await contract.waitForDeployment();
-    
+
     return contract as T;
 }
 

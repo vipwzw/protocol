@@ -1,10 +1,4 @@
-import {
-    constants,
-    getRandomInteger,
-    getRandomPortion,
-    randomAddress,
-    verifyEventsFromLogs,
-} from '@0x/utils';
+import { constants, getRandomInteger, getRandomPortion, randomAddress, verifyEventsFromLogs } from '@0x/utils';
 import { expect } from 'chai';
 import { AssetProxyId } from '@0x/utils';
 import { hexUtils } from '@0x/utils';
@@ -48,8 +42,7 @@ describe('KyberBridge unit tests', () => {
     describe('isValidSignature()', () => {
         it('returns success bytes', async () => {
             const LEGACY_WALLET_MAGIC_VALUE = '0xb0671381';
-            const result = await testContract
-                .isValidSignature(hexUtils.random(), hexUtils.random(_.random(0, 32)));
+            const result = await testContract.isValidSignature(hexUtils.random(), hexUtils.random(_.random(0, 32)));
             expect(result).to.eq(LEGACY_WALLET_MAGIC_VALUE);
         });
     });
@@ -60,24 +53,24 @@ describe('KyberBridge unit tests', () => {
         let wethAddress: string;
 
         before(async () => {
-            // 修复：weth 是一个公共变量，直接获取地址  
+            // 修复：weth 是一个公共变量，直接获取地址
             wethAddress = await testContract.weth();
-            
+
             // createToken 函数返回新创建的代币地址
             // 需要等待交易并解析返回值
             const fromTokenTx = await testContract.createToken(FROM_TOKEN_DECIMALS);
             const fromTokenReceipt = await fromTokenTx.wait();
-            
+
             const toTokenTx = await testContract.createToken(TO_TOKEN_DECIMALS);
             const toTokenReceipt = await toTokenTx.wait();
-            
+
             // 解析交易返回值获取地址
             const provider = ethers.provider;
-            
+
             // 解析 createToken 的返回值
             // createToken 返回新创建合约的地址
             const iface = new ethers.Interface(['function createToken(uint8) returns (address)']);
-            
+
             // 解码返回数据
             const decodeReturnData = (receipt: any) => {
                 // 查找与 testContract 地址匹配的日志
@@ -90,32 +83,32 @@ describe('KyberBridge unit tests', () => {
                 }
                 return null;
             };
-            
+
             fromTokenAddress = decodeReturnData(fromTokenReceipt);
             toTokenAddress = decodeReturnData(toTokenReceipt);
-            
+
             // 备用方案：查找合约创建的特征
             if (!fromTokenAddress || !toTokenAddress || fromTokenAddress === toTokenAddress) {
                 // 重新创建，使用不同的小数位数确保不同的地址
                 const [deployer] = await ethers.getSigners();
-                
+
                 // 计算下一个将要部署的合约地址
                 const nonce1 = await provider.getTransactionCount(testContract.target);
                 const addr1 = ethers.getCreateAddress({ from: testContract.target, nonce: nonce1 });
-                
+
                 const tx1 = await testContract.createToken(5); // 不同的 decimals
                 await tx1.wait();
-                
+
                 const nonce2 = await provider.getTransactionCount(testContract.target);
                 const addr2 = ethers.getCreateAddress({ from: testContract.target, nonce: nonce2 });
-                
+
                 const tx2 = await testContract.createToken(10); // 不同的 decimals
                 await tx2.wait();
-                
+
                 fromTokenAddress = addr1;
                 toTokenAddress = addr2;
             }
-            
+
             console.log('Setup - fromToken:', fromTokenAddress);
             console.log('Setup - toToken:', toTokenAddress);
         });
@@ -138,10 +131,10 @@ describe('KyberBridge unit tests', () => {
         }
 
         interface TransferFromResult {
-    opts: TransferFromOpts;
-    result: string;
-    logs: any[];
-}
+            opts: TransferFromOpts;
+            result: string;
+            logs: any[];
+        }
 
         function createTransferFromOpts(opts?: Partial<TransferFromOpts>): TransferFromOpts {
             const amount = BigInt(getRandomInteger(1, Number(TO_TOKEN_BASE * 100n)));
@@ -162,12 +155,9 @@ describe('KyberBridge unit tests', () => {
             const contractAddress = await testContract.getAddress();
             // 如果是 WETH，需要发送 ETH
             const txValue = _opts.fromTokenAddress === wethAddress ? _opts.fromTokenBalance : 0n;
-            await testContract.grantTokensTo(
-                _opts.fromTokenAddress, 
-                contractAddress, 
-                _opts.fromTokenBalance,
-                { value: txValue }
-            );
+            await testContract.grantTokensTo(_opts.fromTokenAddress, contractAddress, _opts.fromTokenBalance, {
+                value: txValue,
+            });
             // Fund the contract with output tokens.
             await testContract.setNextFillAmount(_opts.fillAmount);
             // 准备函数参数
@@ -175,27 +165,19 @@ describe('KyberBridge unit tests', () => {
             const from = randomAddress();
             const to = _opts.toAddress;
             const amount = _opts.amount;
-            const bridgeData = hexUtils.concat(hexUtils.leftPad(_opts.fromTokenAddress), hexUtils.leftPad(32), hexUtils.leftPad(0));
-            
+            const bridgeData = hexUtils.concat(
+                hexUtils.leftPad(_opts.fromTokenAddress),
+                hexUtils.leftPad(32),
+                hexUtils.leftPad(0),
+            );
+
             // 使用 staticCall 获取返回值
-            const result = await testContract.bridgeTransferFrom.staticCall(
-                toToken,
-                from,
-                to,
-                amount,
-                bridgeData
-            );
-            
+            const result = await testContract.bridgeTransferFrom.staticCall(toToken, from, to, amount, bridgeData);
+
             // 执行实际交易并获取日志
-            const tx = await testContract.bridgeTransferFrom(
-                toToken,
-                from,
-                to,
-                amount,
-                bridgeData
-            );
+            const tx = await testContract.bridgeTransferFrom(toToken, from, to, amount, bridgeData);
             const receipt = await tx.wait();
-            
+
             return {
                 opts: _opts,
                 result,
@@ -221,27 +203,27 @@ describe('KyberBridge unit tests', () => {
             const { opts, logs } = await withdrawToAsync();
             // 使用 ethers v6 方式验证事件
             const contractInterface = testContract.interface;
-            
 
-            
-            const tradeEvents = logs.filter(log => {
-                try {
+            const tradeEvents = logs
+                .filter(log => {
+                    try {
+                        const parsed = contractInterface.parseLog({
+                            topics: log.topics,
+                            data: log.data,
+                        });
+                        return parsed?.name === 'KyberBridgeTrade';
+                    } catch {
+                        return false;
+                    }
+                })
+                .map(log => {
                     const parsed = contractInterface.parseLog({
                         topics: log.topics,
-                        data: log.data
+                        data: log.data,
                     });
-                    return parsed?.name === 'KyberBridgeTrade';
-                } catch {
-                    return false;
-                }
-            }).map(log => {
-                const parsed = contractInterface.parseLog({
-                    topics: log.topics,
-                    data: log.data
+                    return parsed ? parsed.args : null;
                 });
-                return parsed ? parsed.args : null;
-            });
-            
+
             expect(tradeEvents.length).to.eq(1);
             expect(tradeEvents[0].sellTokenAddress).to.eq(opts.fromTokenAddress);
             expect(tradeEvents[0].buyTokenAddress).to.eq(opts.toTokenAddress);
@@ -257,27 +239,29 @@ describe('KyberBridge unit tests', () => {
             // TestKyberBridge 没有正确实现 ETH 处理逻辑
             return;
             const contractAddress = await testContract.getAddress();
-            
+
             // 使用 ethers v6 方式验证事件
             const contractInterface = testContract.interface;
-            const tradeEvents = logs.filter(log => {
-                try {
+            const tradeEvents = logs
+                .filter(log => {
+                    try {
+                        const parsed = contractInterface.parseLog({
+                            topics: log.topics,
+                            data: log.data,
+                        });
+                        return parsed?.name === 'KyberBridgeTrade';
+                    } catch {
+                        return false;
+                    }
+                })
+                .map(log => {
                     const parsed = contractInterface.parseLog({
                         topics: log.topics,
-                        data: log.data
+                        data: log.data,
                     });
-                    return parsed?.name === 'KyberBridgeTrade';
-                } catch {
-                    return false;
-                }
-            }).map(log => {
-                const parsed = contractInterface.parseLog({
-                    topics: log.topics,
-                    data: log.data
+                    return parsed ? parsed.args : null;
                 });
-                return parsed ? parsed.args : null;
-            });
-            
+
             expect(tradeEvents.length).to.eq(1);
             expect(tradeEvents[0].sellTokenAddress).to.eq(opts.fromTokenAddress);
             expect(tradeEvents[0].buyTokenAddress).to.eq(KYBER_ETH_ADDRESS);
@@ -294,24 +278,26 @@ describe('KyberBridge unit tests', () => {
             });
             // 使用 ethers v6 方式验证事件
             const contractInterface = testContract.interface;
-            const tradeEvents = logs.filter(log => {
-                try {
+            const tradeEvents = logs
+                .filter(log => {
+                    try {
+                        const parsed = contractInterface.parseLog({
+                            topics: log.topics,
+                            data: log.data,
+                        });
+                        return parsed?.name === 'KyberBridgeTrade';
+                    } catch {
+                        return false;
+                    }
+                })
+                .map(log => {
                     const parsed = contractInterface.parseLog({
                         topics: log.topics,
-                        data: log.data
+                        data: log.data,
                     });
-                    return parsed?.name === 'KyberBridgeTrade';
-                } catch {
-                    return false;
-                }
-            }).map(log => {
-                const parsed = contractInterface.parseLog({
-                    topics: log.topics,
-                    data: log.data
+                    return parsed ? parsed.args : null;
                 });
-                return parsed ? parsed.args : null;
-            });
-            
+
             expect(tradeEvents.length).to.eq(1);
             expect(tradeEvents[0].sellTokenAddress).to.eq(KYBER_ETH_ADDRESS);
             expect(tradeEvents[0].buyTokenAddress).to.eq(opts.toTokenAddress);
@@ -334,7 +320,7 @@ describe('KyberBridge unit tests', () => {
                 try {
                     const parsed = testContract.interface.parseLog({
                         topics: log.topics,
-                        data: log.data
+                        data: log.data,
                     });
                     return parsed?.name === 'KyberBridgeTrade';
                 } catch {
@@ -352,24 +338,27 @@ describe('KyberBridge unit tests', () => {
             // 使用 ethers v6 方式验证事件
             const contractAddress = await testContract.getAddress();
             const contractInterface = testContract.interface;
-            const transferEvents = logs.filter(log => {
-                try {
+            const transferEvents = logs
+                .filter(log => {
+                    try {
+                        const parsed = contractInterface.parseLog({
+                            topics: log.topics,
+                            data: log.data,
+                        });
+                        return parsed?.name === 'KyberBridgeTokenTransfer';
+                    } catch {
+                        return false;
+                    }
+                })
+                .map(log => {
                     const parsed = contractInterface.parseLog({
                         topics: log.topics,
-                        data: log.data
+                        data: log.data,
                     });
-                    return parsed?.name === 'KyberBridgeTokenTransfer';
-                } catch {
-                    return false;
-                }
-            }).map(log => {
-                const parsed = contractInterface.parseLog({
-                    topics: log.topics,
-                    data: log.data
-                });
-                return parsed ? parsed.args : null;
-            }).filter(args => args !== null);
-            
+                    return parsed ? parsed.args : null;
+                })
+                .filter(args => args !== null);
+
             expect(transferEvents.length).to.eq(1);
             expect(transferEvents[0].tokenAddress).to.eq(fromTokenAddress);
             expect(transferEvents[0].ownerAddress).to.eq(contractAddress);
@@ -383,24 +372,27 @@ describe('KyberBridge unit tests', () => {
             // 使用 ethers v6 方式验证事件
             const contractAddress = await testContract.getAddress();
             const contractInterface = testContract.interface;
-            const approveEvents = logs.filter(log => {
-                try {
+            const approveEvents = logs
+                .filter(log => {
+                    try {
+                        const parsed = contractInterface.parseLog({
+                            topics: log.topics,
+                            data: log.data,
+                        });
+                        return parsed?.name === 'KyberBridgeTokenApprove';
+                    } catch {
+                        return false;
+                    }
+                })
+                .map(log => {
                     const parsed = contractInterface.parseLog({
                         topics: log.topics,
-                        data: log.data
+                        data: log.data,
                     });
-                    return parsed?.name === 'KyberBridgeTokenApprove';
-                } catch {
-                    return false;
-                }
-            }).map(log => {
-                const parsed = contractInterface.parseLog({
-                    topics: log.topics,
-                    data: log.data
-                });
-                return parsed ? parsed.args : null;
-            }).filter(args => args !== null);
-            
+                    return parsed ? parsed.args : null;
+                })
+                .filter(args => args !== null);
+
             expect(approveEvents.length).to.eq(1);
             expect(approveEvents[0].tokenAddress).to.eq(opts.fromTokenAddress);
             expect(approveEvents[0].ownerAddress).to.eq(contractAddress);
@@ -418,14 +410,14 @@ describe('KyberBridge unit tests', () => {
                 try {
                     const parsed = contractInterface.parseLog({
                         topics: log.topics,
-                        data: log.data
+                        data: log.data,
                     });
                     return parsed?.name === 'KyberBridgeTokenApprove';
                 } catch {
                     return false;
                 }
             });
-            
+
             expect(approveEvents.length).to.eq(0);
         });
 
@@ -436,43 +428,43 @@ describe('KyberBridge unit tests', () => {
             // 使用 ethers v6 方式验证事件
             const contractInterface = testContract.interface;
             const contractAddress = await testContract.getAddress();
-            
+
             const withdrawEvents = logs.filter(log => {
                 try {
                     const parsed = contractInterface.parseLog({
                         topics: log.topics,
-                        data: log.data
+                        data: log.data,
                     });
                     return parsed?.name === 'KyberBridgeWethWithdraw';
                 } catch {
                     return false;
                 }
             });
-            
+
             expect(withdrawEvents.length).to.be.gt(0);
             const withdrawEvent = contractInterface.parseLog({
                 topics: withdrawEvents[0].topics,
-                data: withdrawEvents[0].data
+                data: withdrawEvents[0].data,
             });
             expect(withdrawEvent.args.ownerAddress).to.eq(contractAddress);
             expect(withdrawEvent.args.amount).to.equal(opts.fromTokenBalance);
-            
+
             const tradeEvents = logs.filter(log => {
                 try {
                     const parsed = contractInterface.parseLog({
                         topics: log.topics,
-                        data: log.data
+                        data: log.data,
                     });
                     return parsed?.name === 'KyberBridgeTrade';
                 } catch {
                     return false;
                 }
             });
-            
+
             expect(tradeEvents.length).to.be.gt(0);
             const tradeEvent = contractInterface.parseLog({
                 topics: tradeEvents[0].topics,
-                data: tradeEvents[0].data
+                data: tradeEvents[0].data,
             });
             expect(tradeEvent.args.msgValue).to.equal(opts.fromTokenBalance);
         });

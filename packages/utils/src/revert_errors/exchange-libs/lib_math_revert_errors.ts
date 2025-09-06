@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+// lodash import removed as it's not used
 
 // BigNumber removed - using bigint
 import { RevertError } from '../../revert_error';

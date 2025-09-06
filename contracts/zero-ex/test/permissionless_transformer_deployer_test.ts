@@ -21,12 +21,12 @@ describe('PermissionlessTransformerDeployer', () => {
 
     before(async () => {
         [, sender] = await env.getAccountAddressesAsync();
-        
+
         // 使用 TypeChain 工厂部署合约
         const accounts = await env.getAccountAddressesAsync();
         env.txDefaults.from = accounts[0];
         const signer = await env.provider.getSigner(accounts[0]);
-        
+
         const factory = new PermissionlessTransformerDeployer__factory(signer);
         deployer = await factory.deploy();
         await deployer.waitForDeployment();
@@ -38,13 +38,13 @@ describe('PermissionlessTransformerDeployer', () => {
             const targetAddress = await deployer.deploy.staticCall(deployBytes, salt);
             const tx = await deployer.deploy(deployBytes, salt);
             const receipt = await tx.wait();
-            
+
             const target = TestPermissionlessTransformerDeployerTransformer__factory.connect(
-                targetAddress, 
-                await env.provider.getSigner(sender)
+                targetAddress,
+                await env.provider.getSigner(sender),
             );
             expect(await target.deployer()).to.eq(await deployer.getAddress());
-            
+
             // 暂时简化事件验证
             expect(receipt.status).to.eq(1);
         });
@@ -69,18 +69,18 @@ describe('PermissionlessTransformerDeployer', () => {
 
         it('can deploy safe contract with value', async () => {
             const salt = hexUtils.random();
-            const value = ethers.parseEther("0.001");
-            
+            const value = ethers.parseEther('0.001');
+
             const targetAddress = await deployer.deploy.staticCall(deployBytes, salt, { value });
             const tx = await deployer.deploy(deployBytes, salt, { value });
             const receipt = await tx.wait();
-            
+
             const target = TestPermissionlessTransformerDeployerTransformer__factory.connect(
-                targetAddress, 
-                await env.provider.getSigner(sender)
+                targetAddress,
+                await env.provider.getSigner(sender),
             );
             expect(await target.deployer()).to.eq(await deployer.getAddress());
-            
+
             // 🎯 使用closeTo进行精确的ETH余额检查
             const balance = await env.provider.getBalance(targetAddress);
             expect(balance).to.be.closeTo(value, ethers.parseEther('0.0001')); // 允许小额差异
@@ -103,9 +103,7 @@ describe('PermissionlessTransformerDeployer', () => {
             const salt = hexUtils.random();
             const targetAddress = await deployer.deploy.staticCall(deployBytes, salt);
             await deployer.deploy(deployBytes, salt);
-            expect(hexUtils.toHex(await deployer.toInitCodeHash(targetAddress))).to.eq(
-                hexUtils.hash(deployBytes),
-            );
+            expect(hexUtils.toHex(await deployer.toInitCodeHash(targetAddress))).to.eq(hexUtils.hash(deployBytes));
         });
     });
 });

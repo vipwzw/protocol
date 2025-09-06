@@ -15,10 +15,7 @@ import { LogWithDecodedArgs } from 'ethereum-types';
 import { constants as stakingConstants } from '../../src/constants';
 import { TestMixinScheduler__factory, TestMixinScheduler } from '../../src/typechain-types';
 import { ethers } from 'hardhat';
-import {
-    TestMixinSchedulerEvents,
-    TestMixinSchedulerGoToNextEpochTestInfoEventArgs,
-} from '../wrappers';
+import { TestMixinSchedulerEvents, TestMixinSchedulerGoToNextEpochTestInfoEventArgs } from '../wrappers';
 
 describe('MixinScheduler unit tests', () => {
     let testContract: TestMixinScheduler;
@@ -27,10 +24,7 @@ describe('MixinScheduler unit tests', () => {
         // Deploy contracts
         const [deployer] = await ethers.getSigners();
         const factory = new TestMixinScheduler__factory(deployer);
-        testContract = await factory.deploy(
-            stakingConstants.NIL_ADDRESS,
-            stakingConstants.NIL_ADDRESS,
-        );
+        testContract = await factory.deploy(stakingConstants.NIL_ADDRESS, stakingConstants.NIL_ADDRESS);
     });
 
     describe('getCurrentEpochEarliestEndTimeInSeconds', () => {
@@ -38,11 +32,8 @@ describe('MixinScheduler unit tests', () => {
             const testDeployedTimestamp = await testContract.testDeployedTimestamp();
             const epochDurationInSeconds = await testContract.epochDurationInSeconds();
             const expectedCurrentEpochEarliestEndTimeInSeconds = testDeployedTimestamp + epochDurationInSeconds;
-            const currentEpochEarliestEndTimeInSeconds = await testContract
-                .getCurrentEpochEarliestEndTimeInSeconds();
-            expect(currentEpochEarliestEndTimeInSeconds).to.equal(
-                expectedCurrentEpochEarliestEndTimeInSeconds,
-            );
+            const currentEpochEarliestEndTimeInSeconds = await testContract.getCurrentEpochEarliestEndTimeInSeconds();
+            expect(currentEpochEarliestEndTimeInSeconds).to.equal(expectedCurrentEpochEarliestEndTimeInSeconds);
         });
     });
 

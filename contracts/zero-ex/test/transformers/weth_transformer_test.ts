@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers } from 'hardhat';
 import { constants, getRandomInteger, randomAddress, ZeroExRevertErrors } from '@0x/utils';
 import { encodeWethTransformerData, ETH_TOKEN_ADDRESS } from '@0x/protocol-utils';
 import { expect } from 'chai';
@@ -21,35 +21,35 @@ describe('WethTransformer', () => {
 
     before(async () => {
         const WethFactory = await ethers.getContractFactory('TestWeth');
-        weth = await WethFactory.deploy() as TestWethContract;
-        
+        weth = (await WethFactory.deploy()) as TestWethContract;
+
         const TransformerFactory = await ethers.getContractFactory('WethTransformer');
-        transformer = await TransformerFactory.deploy(await weth.getAddress()) as WethTransformerContract;
-        
+        transformer = (await TransformerFactory.deploy(await weth.getAddress())) as WethTransformerContract;
+
         const HostFactory = await ethers.getContractFactory('TestWethTransformerHost');
-        host = await HostFactory.deploy(await weth.getAddress()) as TestWethTransformerHostContract;
+        host = (await HostFactory.deploy(await weth.getAddress())) as TestWethTransformerHostContract;
     });
 
     // 🔧 状态重置机制：防止测试间干扰
     let snapshotId: string;
-    
+
     before(async () => {
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
-    
+
     beforeEach(async () => {
-        await ethers.provider.send("evm_revert", [snapshotId]);
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
-        
+        await ethers.provider.send('evm_revert', [snapshotId]);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
+
         // 重新创建合约实例
         const WethFactory = await ethers.getContractFactory('TestWeth');
-        weth = await WethFactory.attach(await weth.getAddress()) as TestWethContract;
-        
+        weth = (await WethFactory.attach(await weth.getAddress())) as TestWethContract;
+
         const TransformerFactory = await ethers.getContractFactory('WethTransformer');
-        transformer = await TransformerFactory.attach(await transformer.getAddress()) as WethTransformerContract;
-        
+        transformer = (await TransformerFactory.attach(await transformer.getAddress())) as WethTransformerContract;
+
         const HostFactory = await ethers.getContractFactory('TestWethTransformerHost');
-        host = await HostFactory.attach(await host.getAddress()) as TestWethTransformerHostContract;
+        host = (await HostFactory.attach(await host.getAddress())) as TestWethTransformerHostContract;
     });
 
     interface Balances {
@@ -76,41 +76,41 @@ describe('WethTransformer', () => {
 
     it('can unwrap WETH', async () => {
         const amount = BigInt(getRandomInteger(1, '1e18'));
-        
+
         // 🔧 为Host提供足够的ETH（Host会自动deposit为WETH）
         const hostAddress = await host.getAddress();
         const [deployer] = await ethers.getSigners();
         const totalEth = amount + ethers.parseEther('0.1'); // amount + gas费用
         await (await deployer.sendTransaction({ to: hostAddress, value: totalEth })).wait();
-        
+
         const data = encodeWethTransformerData({
             amount,
             token: await weth.getAddress(),
         });
-        
+
         // 🎯 使用精确的余额变化断言：unwrap WETH测试
         const transformerAddress = await transformer.getAddress();
-        
+
         // unwrap WETH的完整流程：Host先deposit ETH→WETH，然后transformer unwrap WETH→ETH
         // 净效果：ETH余额不变（gas费用自动过滤），WETH余额减少amount
         const transaction = () => host.executeTransform(amount, transformerAddress, data);
-        
+
         // 🎯 精确断言：changeEtherBalance自动过滤gas费用
         await expect(transaction).to.changeEtherBalance(host, 0); // 净变化为0（自动过滤gas）
-        
+
         // 🎯 精确断言：WETH余额变化
         await expect(transaction).to.changeTokenBalance(weth, host, 0); // WETH: deposit amount然后unwrap amount，净变化0
     });
 
     it('can unwrap all WETH', async () => {
         const amount = BigInt(getRandomInteger(1, '1e18'));
-        
+
         // 🔧 为Host提供足够的ETH
         const hostAddress = await host.getAddress();
         const [deployer] = await ethers.getSigners();
         const totalEth = amount + ethers.parseEther('0.1');
         await (await deployer.sendTransaction({ to: hostAddress, value: totalEth })).wait();
-        
+
         const data = encodeWethTransformerData({
             amount: MAX_UINT256,
             token: await weth.getAddress(),
@@ -123,13 +123,13 @@ describe('WethTransformer', () => {
 
     it('can unwrap some WETH', async () => {
         const amount = BigInt(getRandomInteger(1, '1e18'));
-        
+
         // 🔧 为Host提供足够的ETH
         const hostAddress = await host.getAddress();
         const [deployer] = await ethers.getSigners();
         const totalEth = amount + ethers.parseEther('0.1');
         await (await deployer.sendTransaction({ to: hostAddress, value: totalEth })).wait();
-        
+
         const data = encodeWethTransformerData({
             amount: amount / 2n,
             token: await weth.getAddress(),
@@ -137,23 +137,23 @@ describe('WethTransformer', () => {
         await host.executeTransform(amount, await transformer.getAddress(), data);
         const balances = await getHostBalancesAsync();
         expect(balances.ethBalance).to.be.gte(amount / 2n); // 🎯 对于可能有gas费用影响的ETH，使用gte
-        expect(balances.wethBalance).to.be.closeTo(amount - (amount / 2n), ethers.parseEther('0.0001')); // 🎯 使用closeTo精确检查
+        expect(balances.wethBalance).to.be.closeTo(amount - amount / 2n, ethers.parseEther('0.0001')); // 🎯 使用closeTo精确检查
     });
 
     it('can wrap ETH', async () => {
         const amount = BigInt(getRandomInteger(1, '1e18'));
-        
+
         // 🔧 为Host提供足够的ETH来wrap
         const hostAddress = await host.getAddress();
         const [deployer] = await ethers.getSigners();
         const totalEth = amount + ethers.parseEther('0.1');
         await (await deployer.sendTransaction({ to: hostAddress, value: totalEth })).wait();
-        
+
         const data = encodeWethTransformerData({
             amount,
             token: ETH_TOKEN_ADDRESS,
         });
-        
+
         await host.executeTransform(ZERO_AMOUNT, await transformer.getAddress(), data);
         const balances = await getHostBalancesAsync();
         expect(balances.wethBalance).to.be.closeTo(amount, ethers.parseEther('0.0001')); // 🎯 使用closeTo精确检查
@@ -162,13 +162,13 @@ describe('WethTransformer', () => {
 
     it('can wrap all ETH', async () => {
         const amount = BigInt(getRandomInteger(1, '1e18'));
-        
+
         // 🔧 为Host提供足够的ETH来wrap
         const hostAddress = await host.getAddress();
         const [deployer] = await ethers.getSigners();
         const totalEth = amount + ethers.parseEther('0.1');
         await (await deployer.sendTransaction({ to: hostAddress, value: totalEth })).wait();
-        
+
         const data = encodeWethTransformerData({
             amount: MAX_UINT256,
             token: ETH_TOKEN_ADDRESS,
@@ -182,13 +182,13 @@ describe('WethTransformer', () => {
 
     it('can wrap some ETH', async () => {
         const amount = BigInt(getRandomInteger(1, '1e18'));
-        
+
         // 🔧 为Host提供足够的ETH来wrap
         const hostAddress = await host.getAddress();
         const [deployer] = await ethers.getSigners();
         const totalEth = amount + ethers.parseEther('0.1');
         await (await deployer.sendTransaction({ to: hostAddress, value: totalEth })).wait();
-        
+
         const data = encodeWethTransformerData({
             amount: amount / 2n,
             token: ETH_TOKEN_ADDRESS,
@@ -196,6 +196,6 @@ describe('WethTransformer', () => {
         await host.executeTransform(ZERO_AMOUNT, await transformer.getAddress(), data);
         const balances = await getHostBalancesAsync();
         expect(balances.wethBalance).to.be.closeTo(amount / 2n, ethers.parseEther('0.0001')); // 🎯 使用closeTo精确检查
-        expect(balances.ethBalance).to.be.gte(amount - (amount / 2n)); // 🎯 ETH保留gte处理gas影响
+        expect(balances.ethBalance).to.be.gte(amount - amount / 2n); // 🎯 ETH保留gte处理gas影响
     });
 });

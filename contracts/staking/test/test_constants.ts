@@ -126,21 +126,19 @@ export const hexUtils = {
         const hex = BigInt(value).toString(16);
         return '0x' + hex.padStart(size, '0');
     },
-    
+
     random(): string {
         const { ethers } = require('hardhat');
         return ethers.hexlify(ethers.randomBytes(32));
     },
-    
+
     hash(value: string): string {
         const { ethers } = require('hardhat');
         // If it's hex, hash as bytes; otherwise hash utf8 bytes
-        const data = typeof value === 'string' && value.startsWith('0x')
-            ? value
-            : ethers.toUtf8Bytes(value);
+        const data = typeof value === 'string' && value.startsWith('0x') ? value : ethers.toUtf8Bytes(value);
         return ethers.keccak256(data);
     },
-    
+
     slice(hexString: string, bytes: number): string {
         // Supports negative bytes to slice from the end, e.g., -20 for last 20 bytes
         if (typeof hexString !== 'string' || !hexString.startsWith('0x')) {
@@ -158,22 +156,24 @@ export const hexUtils = {
         const sliced = hex.slice(startByteIndex * 2);
         return '0x' + sliced;
     },
-    
+
     concat(...args: string[]): string {
         const { ethers } = require('hardhat');
         return ethers.concat(args);
     },
-    
+
     size(hexString: string): number {
         return (hexString.length - 2) / 2; // Remove '0x' and divide by 2
-    }
+    },
 };
 
 // Verify events helper compatible with ethers v6 logs
 export function verifyEventsFromLogs(logs: any[], expected: Array<Record<string, any>>, eventName: string): void {
     const { expect } = require('chai');
     const actual = filterLogsToArguments(logs, eventName);
-    expect(actual.length, `Expected ${expected.length} '${eventName}' events, got ${actual.length}`).to.equal(expected.length);
+    expect(actual.length, `Expected ${expected.length} '${eventName}' events, got ${actual.length}`).to.equal(
+        expected.length,
+    );
     for (let i = 0; i < expected.length; i++) {
         const exp = expected[i];
         const act = actual[i] ?? {};

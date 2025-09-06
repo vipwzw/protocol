@@ -48,19 +48,19 @@ describe('Ownable feature', () => {
 
     // 🔧 状态重置机制：防止测试间干扰
     let snapshotId: string;
-    
+
     before(async () => {
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
-    
+
     beforeEach(async () => {
-        await ethers.provider.send("evm_revert", [snapshotId]);
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
-        
+        await ethers.provider.send('evm_revert', [snapshotId]);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
+
         // 重新获取账户地址
         [owner, notOwner] = await env.getAccountAddressesAsync();
         env.txDefaults.from = owner;
-        
+
         // 重新创建合约实例
         ownable = IOwnableFeature__factory.connect(await ownable.getAddress(), await env.provider.getSigner(owner));
     });
@@ -72,7 +72,7 @@ describe('Ownable feature', () => {
             // ✅ 使用具体的错误匹配：OnlyOwnerError
             await UnifiedErrorMatcher.expectError(
                 ownable.connect(notOwnerSigner).transferOwnership(newOwner),
-                new OwnableRevertErrors.OnlyOwnerError(notOwner, owner)
+                new OwnableRevertErrors.OnlyOwnerError(notOwner, owner),
             );
         });
 
@@ -105,7 +105,7 @@ describe('Ownable feature', () => {
                 ownable
                     .connect(notOwnerSigner)
                     .migrate(await testMigrator.getAddress(), succeedingMigrateFnCallData, newOwner),
-                new OwnableRevertErrors.OnlyOwnerError(notOwner, owner)
+                new OwnableRevertErrors.OnlyOwnerError(notOwner, owner),
             );
         });
 
@@ -138,7 +138,10 @@ describe('Ownable feature', () => {
                 ownable
                     .connect(ownerSigner)
                     .migrate(await testMigrator.getAddress(), failingMigrateFnCallData, newOwner),
-                new ZeroExRevertErrors.Ownable.MigrateCallFailedError(await testMigrator.getAddress(), expectedReturnData)
+                new ZeroExRevertErrors.Ownable.MigrateCallFailedError(
+                    await testMigrator.getAddress(),
+                    expectedReturnData,
+                ),
             );
         });
 
@@ -153,7 +156,10 @@ describe('Ownable feature', () => {
                 ownable
                     .connect(ownerSigner)
                     .migrate(await testMigrator.getAddress(), revertingMigrateFnCallData, newOwner),
-                new ZeroExRevertErrors.Ownable.MigrateCallFailedError(await testMigrator.getAddress(), expectedReturnData)
+                new ZeroExRevertErrors.Ownable.MigrateCallFailedError(
+                    await testMigrator.getAddress(),
+                    expectedReturnData,
+                ),
             );
         });
     });

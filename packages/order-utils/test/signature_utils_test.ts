@@ -9,7 +9,13 @@ import 'mocha';
 import { generatePseudoRandomSalt } from '../src';
 import { constants } from '../src/constants';
 import { orderHashUtils } from '../src/order_hash_utils';
-import { isValidECSignature, parseSignatureHexAsVRS, parseSignatureWithType, isValidEIP712Signature, signatureUtils } from '../src/signature_utils';
+import {
+    isValidECSignature,
+    parseSignatureHexAsVRS,
+    parseSignatureWithType,
+    isValidEIP712Signature,
+    signatureUtils,
+} from '../src/signature_utils';
 import { transactionHashUtils } from '../src/transaction_hash_utils';
 
 import { chaiSetup } from './utils/chai_setup';
@@ -33,14 +39,14 @@ describe('Signature utils', () => {
         // 初始化 Hardhat 环境
         console.log('🔧 初始化 Hardhat 测试环境...');
         const hardhatEnv = await setupHardhatEnvironment();
-        
+
         provider = hardhatEnv.provider;
         web3Wrapper = createWeb3Wrapper();
         accounts = hardhatEnv.accounts;
         makerAddress = hardhatEnv.defaultAccount;
-        
+
         console.log(`✅ 使用测试账户: ${makerAddress}`);
-        
+
         order = {
             makerAddress,
             takerAddress: constants.NULL_ADDRESS,
@@ -131,11 +137,11 @@ describe('Signature utils', () => {
     describe('#ecSignOrderAsync', () => {
         it('should successfully sign order using hardhat provider', async () => {
             const signedOrder = await signatureUtils.ecSignOrderAsync(provider, order, makerAddress);
-            
+
             // 验证签名是否有效，而不是比较固定值（签名包含随机数，每次都不同）
             expect(signedOrder.signature).to.be.a('string');
             expect(signedOrder.signature).to.match(/^0x[0-9a-fA-F]{132}$/); // 66字节的十六进制签名（65字节签名+1字节类型）
-            
+
             // 验证签名功能正常工作（eth_sign 回退机制被使用）
             // 签名应该包含正确的长度和格式，具体验证由其他专门的测试负责
         });
@@ -166,11 +172,7 @@ describe('Signature utils', () => {
     });
     describe('#ecSignTransactionAsync', () => {
         it('should successfully sign transaction using hardhat provider', async () => {
-            const signedTransaction = await signatureUtils.ecSignTransactionAsync(
-                provider,
-                transaction,
-                makerAddress,
-            );
+            const signedTransaction = await signatureUtils.ecSignTransactionAsync(provider, transaction, makerAddress);
             assert.isHexString('signedTransaction.signature', signedTransaction.signature);
         });
         it('should throw if the user denies the signing request', async () => {
@@ -204,16 +206,16 @@ describe('Signature utils', () => {
             const ecSignature = await signatureUtils.ecSignHashAsync(provider, orderHash, makerAddress);
             // 验证签名格式（134字符 = 0x + 132字符）
             expect(ecSignature).to.match(/^0x[0-9a-fA-F]{132}$/);
-            
+
             // 验证签名类型和有效性
             const { signature: parsedSignature, signatureType } = parseSignatureWithType(ecSignature);
             expect(signatureType).to.equal(SignatureType.EthSign);
-            
+
             // 验证签名是否有效（ETH_SIGN 可能使用前缀消息或原始消息）
             const prefixedMsgHash = signatureUtils.addSignedMessagePrefix(orderHash);
             const isValidWithPrefix = isValidECSignature(prefixedMsgHash, parsedSignature, makerAddress);
             const isValidWithoutPrefix = isValidECSignature(orderHash, parsedSignature, makerAddress);
-            
+
             // ETH_SIGN 标准应该任一验证成功
             expect(isValidWithPrefix || isValidWithoutPrefix).to.be.true;
         });
@@ -222,16 +224,16 @@ describe('Signature utils', () => {
             const ecSignature = await signatureUtils.ecSignHashAsync(provider, orderHash, makerAddress);
             // 验证签名格式（134字符 = 0x + 132字符）
             expect(ecSignature).to.match(/^0x[0-9a-fA-F]{132}$/);
-            
+
             // 验证签名类型和有效性
             const { signature: parsedSignature, signatureType } = parseSignatureWithType(ecSignature);
             expect(signatureType).to.equal(SignatureType.EthSign);
-            
+
             // 验证签名是否有效（ETH_SIGN 可能使用前缀消息或原始消息）
             const prefixedMsgHash = signatureUtils.addSignedMessagePrefix(orderHash);
             const isValidWithPrefix = isValidECSignature(prefixedMsgHash, parsedSignature, makerAddress);
             const isValidWithoutPrefix = isValidECSignature(orderHash, parsedSignature, makerAddress);
-            
+
             // ETH_SIGN 标准应该任一验证成功
             expect(isValidWithPrefix || isValidWithoutPrefix).to.be.true;
         });
@@ -241,12 +243,12 @@ describe('Signature utils', () => {
             //这里返回的是 signatureWithType 格式，需要转换为 ECSignature 格式
             const { signature: parsedSignature, signatureType } = parseSignatureWithType(ecSignature);
             expect(signatureType).to.equal(SignatureType.EthSign);
-            
+
             // 验证签名是否有效（ETH_SIGN 可能使用前缀消息或原始消息）
             const prefixedMsgHash = signatureUtils.addSignedMessagePrefix(orderHash);
             const isValidWithPrefix = isValidECSignature(prefixedMsgHash, parsedSignature, makerAddress);
             const isValidWithoutPrefix = isValidECSignature(orderHash, parsedSignature, makerAddress);
-            
+
             // ETH_SIGN 标准应该任一验证成功
             expect(isValidWithPrefix || isValidWithoutPrefix).to.be.true;
         });
@@ -255,16 +257,16 @@ describe('Signature utils', () => {
             const ecSignature = await signatureUtils.ecSignHashAsync(provider, orderHash, makerAddress);
             // 验证签名格式（134字符 = 0x + 132字符）
             expect(ecSignature).to.match(/^0x[0-9a-fA-F]{132}$/);
-            
+
             // 验证签名类型和有效性
             const { signature: parsedSignature, signatureType } = parseSignatureWithType(ecSignature);
             expect(signatureType).to.equal(SignatureType.EthSign);
-            
+
             // 验证签名是否有效（ETH_SIGN 可能使用前缀消息或原始消息）
             const prefixedMsgHash = signatureUtils.addSignedMessagePrefix(orderHash);
             const isValidWithPrefix = isValidECSignature(prefixedMsgHash, parsedSignature, makerAddress);
             const isValidWithoutPrefix = isValidECSignature(orderHash, parsedSignature, makerAddress);
-            
+
             // ETH_SIGN 标准应该任一验证成功
             expect(isValidWithPrefix || isValidWithoutPrefix).to.be.true;
         });
@@ -274,11 +276,11 @@ describe('Signature utils', () => {
             const signedOrder = await signatureUtils.ecSignTypedDataOrderAsync(provider, order, makerAddress);
             // 验证签名格式（134字符 = 0x + 132字符）
             expect(signedOrder.signature).to.match(/^0x[0-9a-fA-F]{132}$/);
-            
+
             // 验证签名类型和有效性
             const { signature: parsedSignature, signatureType } = parseSignatureWithType(signedOrder.signature);
             expect(signatureType).to.equal(SignatureType.EIP712);
-            
+
             // 使用 EIP-712 哈希验证签名
             const orderHash = orderHashUtils.getOrderHash(order);
             const isValid = isValidEIP712Signature(orderHash, signedOrder.signature, makerAddress);
@@ -288,11 +290,11 @@ describe('Signature utils', () => {
             const signedOrder = await signatureUtils.ecSignTypedDataOrderAsync(provider, order, makerAddress);
             // 验证签名格式（132字符 = VRS + SignatureType）
             expect(signedOrder.signature).to.match(/^0x[0-9a-fA-F]{132}$/);
-            
+
             // 验证签名类型和有效性
             const { signature: parsedSignature, signatureType } = parseSignatureWithType(signedOrder.signature);
             expect(signatureType).to.equal(SignatureType.EIP712);
-            
+
             // 使用 EIP-712 哈希验证签名
             const orderHash = orderHashUtils.getOrderHash(order);
             const isValid = isValidEIP712Signature(orderHash, signedOrder.signature, makerAddress);
@@ -305,18 +307,18 @@ describe('Signature utils', () => {
             // While exact signature matching is not guaranteed due to nonce randomness,
             // both signatures should recover to the same address
             const transactionHashHex = transactionHashUtils.getTransactionHash(transaction);
-            
+
             const signedTransaction = await signatureUtils.ecSignTypedDataTransactionAsync(
                 provider,
                 transaction,
                 makerAddress,
             );
-            
+
             // 验证签名格式和类型
             expect(signedTransaction.signature).to.match(/^0x[0-9a-fA-F]{132}$/);
             const { signature: parsedSignature, signatureType } = parseSignatureWithType(signedTransaction.signature);
             expect(signatureType).to.equal(SignatureType.EIP712);
-            
+
             // 验证签名的有效性
             const isValid = isValidEIP712Signature(transactionHashHex, signedTransaction.signature, makerAddress);
             expect(isValid).to.be.true;
@@ -329,11 +331,11 @@ describe('Signature utils', () => {
             );
             // 验证签名格式（132字符 = VRS + SignatureType）
             expect(signedTransaction.signature).to.match(/^0x[0-9a-fA-F]{132}$/);
-            
+
             // 验证签名类型和有效性
             const { signature: parsedSignature, signatureType } = parseSignatureWithType(signedTransaction.signature);
             expect(signatureType).to.equal(SignatureType.EIP712);
-            
+
             // 使用 EIP-712 哈希验证签名
             const transactionHash = transactionHashUtils.getTransactionHash(transaction);
             const isValid = isValidEIP712Signature(transactionHash, signedTransaction.signature, makerAddress);
@@ -351,8 +353,12 @@ describe('Signature utils', () => {
             // 验证签名格式正确（132个字符：0x + 130个十六进制字符）
             expect(signatureWithSignatureType).to.match(/^0x[0-9a-fA-F]{132}$/);
             // 验证包含 r 和 s 值
-            expect(signatureWithSignatureType).to.include('aca7da997ad177f040240cdccf6905b71ab16b74434388c3a72f34fd25d64393');
-            expect(signatureWithSignatureType).to.include('46b2bac274ff29b48b3ea6e2d04c1336eaceafda3c53ab483fc3ff12fac3ebf2');
+            expect(signatureWithSignatureType).to.include(
+                'aca7da997ad177f040240cdccf6905b71ab16b74434388c3a72f34fd25d64393',
+            );
+            expect(signatureWithSignatureType).to.include(
+                '46b2bac274ff29b48b3ea6e2d04c1336eaceafda3c53ab483fc3ff12fac3ebf2',
+            );
             // 验证以正确的签名类型结尾（03 = EthSign）
             expect(signatureWithSignatureType).to.match(/03$/);
         });

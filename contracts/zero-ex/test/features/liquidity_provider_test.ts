@@ -1,29 +1,25 @@
-import { ethers } from "hardhat";
+import { ethers } from 'hardhat';
 // 🔧 使用TestMintableERC20Token替代DummyERC20Token
 // import { artifacts as erc20Artifacts, DummyERC20TokenContract } from '@0x/contracts-erc20';
 import { constants, verifyEventsFromLogs } from '@0x/utils';
 import { expect } from 'chai';
 import { OwnableRevertErrors, ZeroExRevertErrors } from '@0x/utils';
 
-import { 
-    IOwnableFeatureContract, 
-    IZeroExContract, 
+import {
+    IOwnableFeatureContract,
+    IZeroExContract,
     LiquidityProviderFeatureContract,
     TestMintableERC20Token__factory, // 🔧 使用TestMintableERC20Token
     TestMintableERC20TokenContract, // 🔧 添加类型导入
     TestWeth__factory,
     LiquidityProviderSandbox__factory,
-    LiquidityProviderFeature__factory
+    LiquidityProviderFeature__factory,
 } from '../../src/wrappers';
 import { TestLiquidityProvider__factory } from '../../src/typechain-types/factories/contracts/test/integration';
 import { artifacts } from '../artifacts';
 import { abis } from '../utils/abis'; // 🔧 添加abis导入
 import { fullMigrateAsync } from '../utils/migration';
-import {
-    LiquidityProviderSandboxContract,
-    TestLiquidityProviderContract,
-    TestWethContract,
-} from '../wrappers';
+import { LiquidityProviderSandboxContract, TestLiquidityProviderContract, TestWethContract } from '../wrappers';
 
 describe('LiquidityProvider feature', () => {
     const env = {
@@ -50,20 +46,21 @@ describe('LiquidityProvider feature', () => {
         token = await tokenFactory.deploy(); // 🔧 TestMintableERC20Token不需要构造参数
         await token.waitForDeployment();
         // 🔧 使用正确的mint语法：mint(recipient, amount)
-        await token.mint(taker, ethers.parseEther("1000"));
+        await token.mint(taker, ethers.parseEther('1000'));
         const wethFactory = new TestWeth__factory(signer);
         weth = await wethFactory.deploy();
         await weth.waitForDeployment();
-        
+
         // 🔧 设置token授权
         const takerSigner = await env.provider.getSigner(taker);
-        await token
-            .connect(takerSigner)
-            .approve(await zeroEx.getAddress(), ethers.parseEther("10000")); // 🔧 使用简单值
+        await token.connect(takerSigner).approve(await zeroEx.getAddress(), ethers.parseEther('10000')); // 🔧 使用简单值
 
         // 🔧 使用ethers.getContractAt替代constructor
-        feature = await ethers.getContractAt('ILiquidityProviderFeature', await zeroEx.getAddress()) as LiquidityProviderFeatureContract;
-        
+        feature = (await ethers.getContractAt(
+            'ILiquidityProviderFeature',
+            await zeroEx.getAddress(),
+        )) as LiquidityProviderFeatureContract;
+
         const sandboxFactory = new LiquidityProviderSandbox__factory(signer);
         sandbox = await sandboxFactory.deploy(await zeroEx.getAddress());
         await sandbox.waitForDeployment();
@@ -74,7 +71,11 @@ describe('LiquidityProvider feature', () => {
 
         const ownerSigner = await env.provider.getSigner(owner);
         const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
-        await ownableFeature.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
+        await ownableFeature.migrate(
+            await featureImpl.getAddress(),
+            featureImpl.interface.encodeFunctionData('migrate'),
+            owner,
+        );
 
         const liquidityProviderFactory = new TestLiquidityProvider__factory(signer);
         liquidityProvider = await liquidityProviderFactory.deploy();
@@ -93,7 +94,7 @@ describe('LiquidityProvider feature', () => {
                     constants.ZERO_AMOUNT,
                     constants.NULL_BYTES,
                 );
-            
+
             try {
                 await tx;
                 expect.fail('Transaction should have reverted');
@@ -113,7 +114,7 @@ describe('LiquidityProvider feature', () => {
                     constants.ZERO_AMOUNT,
                     constants.NULL_BYTES,
                 );
-            
+
             try {
                 await tx;
                 expect.fail('Transaction should have reverted');
@@ -133,7 +134,7 @@ describe('LiquidityProvider feature', () => {
                     constants.ZERO_AMOUNT,
                     constants.NULL_BYTES,
                 );
-            
+
             try {
                 await tx;
                 expect.fail('Transaction should have reverted');
@@ -148,17 +149,15 @@ describe('LiquidityProvider feature', () => {
 
         it('Successfully executes an ERC20-ERC20 swap', async () => {
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = await feature
-                .connect(takerSigner)
-                .sellToLiquidityProvider(
-                    await token.getAddress(),
-                    await weth.getAddress(),
-                    await liquidityProvider.getAddress(),
-                    '0x0000000000000000000000000000000000000000', // NULL_ADDRESS
-                    ethers.parseEther('1'), // ONE_ETHER
-                    0n, // ZERO_AMOUNT
-                    '0x', // NULL_BYTES
-                );
+            const tx = await feature.connect(takerSigner).sellToLiquidityProvider(
+                await token.getAddress(),
+                await weth.getAddress(),
+                await liquidityProvider.getAddress(),
+                '0x0000000000000000000000000000000000000000', // NULL_ADDRESS
+                ethers.parseEther('1'), // ONE_ETHER
+                0n, // ZERO_AMOUNT
+                '0x', // NULL_BYTES
+            );
             const receipt = await tx.wait();
             verifyEventsFromLogs(
                 receipt.logs,
@@ -177,17 +176,15 @@ describe('LiquidityProvider feature', () => {
         it('Reverts if cannot fulfill the minimum buy amount', async () => {
             const minBuyAmount = 1n;
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = feature
-                .connect(takerSigner)
-                .sellToLiquidityProvider(
-                    await token.getAddress(),
-                    await weth.getAddress(),
-                    await liquidityProvider.getAddress(),
-                    '0x0000000000000000000000000000000000000000', // NULL_ADDRESS
-                    ethers.parseEther('1'), // ONE_ETHER
-                    minBuyAmount,
-                    '0x', // NULL_BYTES
-                );
+            const tx = feature.connect(takerSigner).sellToLiquidityProvider(
+                await token.getAddress(),
+                await weth.getAddress(),
+                await liquidityProvider.getAddress(),
+                '0x0000000000000000000000000000000000000000', // NULL_ADDRESS
+                ethers.parseEther('1'), // ONE_ETHER
+                minBuyAmount,
+                '0x', // NULL_BYTES
+            );
             try {
                 await tx;
                 expect.fail('Transaction should have reverted');
@@ -198,18 +195,16 @@ describe('LiquidityProvider feature', () => {
         });
         it('Successfully executes an ETH-ERC20 swap', async () => {
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = await feature
-                .connect(takerSigner)
-                .sellToLiquidityProvider(
-                    ETH_TOKEN_ADDRESS,
-                    await token.getAddress(),
-                    await liquidityProvider.getAddress(),
-                    '0x0000000000000000000000000000000000000000', // NULL_ADDRESS
-                    ethers.parseEther('1'), // ONE_ETHER
-                    0n, // ZERO_AMOUNT
-                    '0x', // NULL_BYTES
-                    { value: ethers.parseEther('1') } // ETH value
-                );
+            const tx = await feature.connect(takerSigner).sellToLiquidityProvider(
+                ETH_TOKEN_ADDRESS,
+                await token.getAddress(),
+                await liquidityProvider.getAddress(),
+                '0x0000000000000000000000000000000000000000', // NULL_ADDRESS
+                ethers.parseEther('1'), // ONE_ETHER
+                0n, // ZERO_AMOUNT
+                '0x', // NULL_BYTES
+                { value: ethers.parseEther('1') }, // ETH value
+            );
             const receipt = await tx.wait();
             verifyEventsFromLogs(
                 receipt.logs,
@@ -226,17 +221,15 @@ describe('LiquidityProvider feature', () => {
         });
         it('Successfully executes an ERC20-ETH swap', async () => {
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = await feature
-                .connect(takerSigner)
-                .sellToLiquidityProvider(
-                    await token.getAddress(),
-                    ETH_TOKEN_ADDRESS,
-                    await liquidityProvider.getAddress(),
-                    '0x0000000000000000000000000000000000000000', // NULL_ADDRESS
-                    ethers.parseEther('1'), // ONE_ETHER
-                    0n, // ZERO_AMOUNT
-                    '0x', // NULL_BYTES
-                );
+            const tx = await feature.connect(takerSigner).sellToLiquidityProvider(
+                await token.getAddress(),
+                ETH_TOKEN_ADDRESS,
+                await liquidityProvider.getAddress(),
+                '0x0000000000000000000000000000000000000000', // NULL_ADDRESS
+                ethers.parseEther('1'), // ONE_ETHER
+                0n, // ZERO_AMOUNT
+                '0x', // NULL_BYTES
+            );
             const receipt = await tx.wait();
             verifyEventsFromLogs(
                 receipt.logs,

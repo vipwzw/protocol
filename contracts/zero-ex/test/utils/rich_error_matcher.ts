@@ -3,7 +3,7 @@ import { expect } from 'chai';
 
 /**
  * Rich Errors 匹配工具 - 优雅地处理 Solidity Rich Errors
- * 
+ *
  * 🎯 **设计原则**：
  * - 基于错误选择器进行精确匹配
  * - 支持常见的 0x Protocol Rich Errors
@@ -11,10 +11,9 @@ import { expect } from 'chai';
  * - 与 Hardhat chai matchers 兼容
  */
 export class RichErrorMatcher {
-    
     /**
      * 通用 Rich Error 匹配方法
-     * 
+     *
      * @param txPromise 要测试的交易 Promise
      * @param errorSignature 错误签名，如 "NotImplementedError(bytes4)"
      * @param expectedParams 期望的参数（可选，用于更精确的验证）
@@ -22,7 +21,7 @@ export class RichErrorMatcher {
     static async expectRichError(
         txPromise: Promise<any>,
         errorSignature: string,
-        expectedParams?: any[]
+        expectedParams?: any[],
     ): Promise<void> {
         try {
             await txPromise;
@@ -30,14 +29,14 @@ export class RichErrorMatcher {
         } catch (error: any) {
             // 计算错误选择器
             const expectedSelector = ethers.id(errorSignature).slice(0, 10);
-            
+
             if (!error.message.includes(expectedSelector)) {
                 throw new Error(
                     `Rich Error 不匹配。期望选择器: ${expectedSelector} (${errorSignature}), ` +
-                    `实际错误: ${error.message}`
+                        `实际错误: ${error.message}`,
                 );
             }
-            
+
             // 如果提供了参数，进行更详细的验证
             if (expectedParams && error.data) {
                 try {
@@ -46,15 +45,13 @@ export class RichErrorMatcher {
                     if (paramTypes.length > 0) {
                         const decodedParams = ethers.AbiCoder.defaultAbiCoder().decode(
                             paramTypes,
-                            '0x' + error.data.slice(10) // 跳过选择器
+                            '0x' + error.data.slice(10), // 跳过选择器
                         );
-                        
+
                         // 验证参数匹配
                         for (let i = 0; i < expectedParams.length && i < decodedParams.length; i++) {
                             if (decodedParams[i] !== expectedParams[i]) {
-                                console.warn(
-                                    `参数 ${i} 不匹配: 期望 ${expectedParams[i]}, 实际 ${decodedParams[i]}`
-                                );
+                                console.warn(`参数 ${i} 不匹配: 期望 ${expectedParams[i]}, 实际 ${decodedParams[i]}`);
                             }
                         }
                     }
@@ -65,111 +62,104 @@ export class RichErrorMatcher {
             }
         }
     }
-    
+
     /**
      * 常见的 0x Protocol Rich Errors 快捷方法
      */
-    
-    static async expectNotImplementedError(
-        txPromise: Promise<any>,
-        selector?: string
-    ): Promise<void> {
-        return this.expectRichError(
-            txPromise,
-            "NotImplementedError(bytes4)",
-            selector ? [selector] : undefined
-        );
+
+    static async expectNotImplementedError(txPromise: Promise<any>, selector?: string): Promise<void> {
+        return this.expectRichError(txPromise, 'NotImplementedError(bytes4)', selector ? [selector] : undefined);
     }
-    
+
     static async expectOnlyOwnerError(txPromise: Promise<any>): Promise<void> {
-        return this.expectRichError(txPromise, "OnlyOwnerError()");
+        return this.expectRichError(txPromise, 'OnlyOwnerError()');
     }
-    
+
     static async expectNotInRollbackHistoryError(
         txPromise: Promise<any>,
         selector?: string,
-        targetImpl?: string
+        targetImpl?: string,
     ): Promise<void> {
         return this.expectRichError(
             txPromise,
-            "NotInRollbackHistoryError(bytes4,address)",
-            selector && targetImpl ? [selector, targetImpl] : undefined
+            'NotInRollbackHistoryError(bytes4,address)',
+            selector && targetImpl ? [selector, targetImpl] : undefined,
         );
     }
-    
+
     static async expectOrderNotFillableError(
         txPromise: Promise<any>,
         orderHash?: string,
-        orderStatus?: number
+        orderStatus?: number,
     ): Promise<void> {
         return this.expectRichError(
             txPromise,
-            "OrderNotFillableError(bytes32,uint8)",
-            orderHash && orderStatus !== undefined ? [orderHash, orderStatus] : undefined
+            'OrderNotFillableError(bytes32,uint8)',
+            orderHash && orderStatus !== undefined ? [orderHash, orderStatus] : undefined,
         );
     }
-    
+
     static async expectTransformerFailedError(
         txPromise: Promise<any>,
         transformer?: string,
         transformerData?: string,
-        resultData?: string
+        resultData?: string,
     ): Promise<void> {
         return this.expectRichError(
             txPromise,
-            "TransformerFailedError(address,bytes,bytes)",
-            transformer && transformerData && resultData ? [transformer, transformerData, resultData] : undefined
+            'TransformerFailedError(address,bytes,bytes)',
+            transformer && transformerData && resultData ? [transformer, transformerData, resultData] : undefined,
         );
     }
-    
+
     static async expectOnlyCallableByDeployerError(
         txPromise: Promise<any>,
         caller?: string,
-        deployer?: string
+        deployer?: string,
     ): Promise<void> {
         return this.expectRichError(
             txPromise,
-            "OnlyCallableByDeployerError(address,address)",
-            caller && deployer ? [caller, deployer] : undefined
+            'OnlyCallableByDeployerError(address,address)',
+            caller && deployer ? [caller, deployer] : undefined,
         );
     }
-    
+
     static async expectOrderNotFillableByOriginError(
         txPromise: Promise<any>,
         orderHash?: string,
         origin?: string,
-        sender?: string
+        sender?: string,
     ): Promise<void> {
         return this.expectRichError(
             txPromise,
-            "OrderNotFillableByOriginError(bytes32,address,address)",
-            orderHash && origin && sender ? [orderHash, origin, sender] : undefined
+            'OrderNotFillableByOriginError(bytes32,address,address)',
+            orderHash && origin && sender ? [orderHash, origin, sender] : undefined,
         );
     }
-    
+
     static async expectOrderNotFillableByTakerError(
         txPromise: Promise<any>,
         orderHash?: string,
         taker?: string,
-        sender?: string
+        sender?: string,
     ): Promise<void> {
         return this.expectRichError(
             txPromise,
-            "OrderNotFillableByTakerError(bytes32,address,address)",
-            orderHash && taker && sender ? [orderHash, taker, sender] : undefined
+            'OrderNotFillableByTakerError(bytes32,address,address)',
+            orderHash && taker && sender ? [orderHash, taker, sender] : undefined,
         );
     }
-    
+
     static async expectOrderNotSignedByMakerError(
         txPromise: Promise<any>,
         orderHash?: string,
         signer?: string,
-        maker?: string
+        maker?: string,
     ): Promise<void> {
         return this.expectRichError(
             txPromise,
-            "OrderNotSignedByMakerError(bytes32,address,address)",
-            orderHash && signer && maker ? [orderHash, signer, maker] : undefined
+            'OrderNotSignedByMakerError(bytes32,address,address)',
+            orderHash && signer && maker ? [orderHash, signer, maker] : undefined,
         );
     }
 
@@ -205,7 +195,7 @@ export class RichErrorMatcher {
             expectedArgs.length > 0 ? expectedArgs : undefined,
         );
     }
-    
+
     /**
      * 匹配 PropertyValidationFailedError
      */
@@ -215,13 +205,15 @@ export class RichErrorMatcher {
         token: string,
         tokenId: bigint,
         propertyData: string,
-        errorData: string
+        errorData: string,
     ): Promise<void> {
-        return this.expectRichError(
-            txPromise,
-            'PropertyValidationFailedError(address,address,uint256,bytes,bytes)',
-            [propertyValidator, token, tokenId, propertyData, errorData]
-        );
+        return this.expectRichError(txPromise, 'PropertyValidationFailedError(address,address,uint256,bytes,bytes)', [
+            propertyValidator,
+            token,
+            tokenId,
+            propertyData,
+            errorData,
+        ]);
     }
 
     /**
@@ -233,7 +225,7 @@ export class RichErrorMatcher {
         if (!match || !match[1]) {
             return [];
         }
-        
+
         return match[1]
             .split(',')
             .map(type => type.trim())
@@ -250,10 +242,17 @@ export const expectOnlyOwnerError = RichErrorMatcher.expectOnlyOwnerError.bind(R
 export const expectNotInRollbackHistoryError = RichErrorMatcher.expectNotInRollbackHistoryError.bind(RichErrorMatcher);
 export const expectOrderNotFillableError = RichErrorMatcher.expectOrderNotFillableError.bind(RichErrorMatcher);
 export const expectTransformerFailedError = RichErrorMatcher.expectTransformerFailedError.bind(RichErrorMatcher);
-export const expectOnlyCallableByDeployerError = RichErrorMatcher.expectOnlyCallableByDeployerError.bind(RichErrorMatcher);
-export const expectOrderNotFillableByOriginError = RichErrorMatcher.expectOrderNotFillableByOriginError.bind(RichErrorMatcher);
-export const expectOrderNotFillableByTakerError = RichErrorMatcher.expectOrderNotFillableByTakerError.bind(RichErrorMatcher);
-export const expectOrderNotSignedByMakerError = RichErrorMatcher.expectOrderNotSignedByMakerError.bind(RichErrorMatcher);
-export const expectIncompleteTransformERC20Error = RichErrorMatcher.expectIncompleteTransformERC20Error.bind(RichErrorMatcher);
-export const expectNegativeTransformERC20OutputError = RichErrorMatcher.expectNegativeTransformERC20OutputError.bind(RichErrorMatcher);
-export const expectPropertyValidationFailedError = RichErrorMatcher.expectPropertyValidationFailedError.bind(RichErrorMatcher);
+export const expectOnlyCallableByDeployerError =
+    RichErrorMatcher.expectOnlyCallableByDeployerError.bind(RichErrorMatcher);
+export const expectOrderNotFillableByOriginError =
+    RichErrorMatcher.expectOrderNotFillableByOriginError.bind(RichErrorMatcher);
+export const expectOrderNotFillableByTakerError =
+    RichErrorMatcher.expectOrderNotFillableByTakerError.bind(RichErrorMatcher);
+export const expectOrderNotSignedByMakerError =
+    RichErrorMatcher.expectOrderNotSignedByMakerError.bind(RichErrorMatcher);
+export const expectIncompleteTransformERC20Error =
+    RichErrorMatcher.expectIncompleteTransformERC20Error.bind(RichErrorMatcher);
+export const expectNegativeTransformERC20OutputError =
+    RichErrorMatcher.expectNegativeTransformERC20OutputError.bind(RichErrorMatcher);
+export const expectPropertyValidationFailedError =
+    RichErrorMatcher.expectPropertyValidationFailedError.bind(RichErrorMatcher);

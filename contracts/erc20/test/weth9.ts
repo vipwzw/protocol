@@ -31,10 +31,10 @@ describe('EtherToken', () => {
     let snapshotId: string;
     beforeEach(async () => {
         // 使用 Hardhat 快照功能替代 BlockchainLifecycle
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
     afterEach(async () => {
-        await ethers.provider.send("evm_revert", [snapshotId]);
+        await ethers.provider.send('evm_revert', [snapshotId]);
     });
     describe('deposit', () => {
         it('should revert if caller attempts to deposit more Ether than caller balance', async () => {
@@ -42,8 +42,7 @@ describe('EtherToken', () => {
             const ethToDeposit = initEthBalance + 1n;
 
             const [signer] = await ethers.getSigners();
-            await expect(etherToken.connect(signer).deposit({ value: ethToDeposit }))
-                .to.be.rejected;
+            await expect(etherToken.connect(signer).deposit({ value: ethToDeposit })).to.be.rejected;
         });
 
         it('should convert deposited Ether to wrapped Ether tokens', async () => {
@@ -115,7 +114,7 @@ describe('EtherToken', () => {
 
             // 检查 ETH 余额减少（考虑到 gas 费用，应该少于初始余额）
             expect(finalEthBalance).to.be.lessThan(initEthBalance);
-            // 检查 EtherToken 余额增加了正确的数量  
+            // 检查 EtherToken 余额增加了正确的数量
             expect(finalEthTokenBalance).to.equal(initEthTokenBalance + ethToDeposit);
         });
     });

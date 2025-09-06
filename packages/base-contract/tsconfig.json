@@ -17,8 +17,5 @@
     },
     "include": ["src/**/*", "src/types.d.ts", "test/**/*"],
     "exclude": ["node_modules", "lib"],
-    "references": [
-        { "path": "../utils" },
-        { "path": "../json-schemas" }
-    ]
+    "references": [{ "path": "../utils" }, { "path": "../json-schemas" }]
 }

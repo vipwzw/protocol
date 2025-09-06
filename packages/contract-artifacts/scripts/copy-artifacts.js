@@ -13,13 +13,13 @@ const pkgNames = pkgJson.config.contractsPackages.split(' ');
 const artifactsToPublish = [
     // 基础 ERC20 合约
     'DummyERC20Token',
-    'ERC20Token', 
+    'ERC20Token',
     'MintableERC20Token',
     'UnlimitedAllowanceERC20Token',
     'WETH9',
     'ZRXToken',
     'ZRXWrappedToken',
-    
+
     // 基础接口
     'IERC20Token',
     'IEtherToken',
@@ -28,7 +28,7 @@ const artifactsToPublish = [
     'IZeroEx',
     'IStaking',
     'IZrxTreasury',
-    
+
     // 核心 ZeroEx 合约
     'ZeroEx',
     'ZeroExOptimized',
@@ -36,7 +36,7 @@ const artifactsToPublish = [
     'InitialMigration',
     'FlashWallet',
     'IFlashWallet',
-    
+
     // 库合约
     'LibERC20Token',
     'LibBytes',
@@ -50,7 +50,7 @@ const artifactsToPublish = [
     'Authorizable',
     'Ownable',
     'ReentrancyGuard',
-    
+
     // 功能特性
     'OwnableFeature',
     'IOwnableFeature',
@@ -82,7 +82,7 @@ const artifactsToPublish = [
     'IERC1155OrdersFeature',
     'ERC721OrdersFeature',
     'IERC721OrdersFeature',
-    
+
     // Transformers
     'IERC20Transformer',
     'FillQuoteTransformer',
@@ -91,14 +91,14 @@ const artifactsToPublish = [
     'WethTransformer',
     'AffiliateFeeTransformer',
     'LogMetadataTransformer',
-    
+
     // 流动性提供者
     'CurveLiquidityProvider',
     'MooniswapLiquidityProvider',
     'LiquidityProviderSandbox',
     'ILiquidityProvider',
     'ILiquidityProviderSandbox',
-    
+
     // 桥接适配器
     'AbstractBridgeAdapter',
     'EthereumBridgeAdapter',
@@ -112,17 +112,17 @@ const artifactsToPublish = [
     'CeloBridgeAdapter',
     'IBridgeAdapter',
     'BridgeProtocols',
-    
+
     // 费用收集器
     'FeeCollector',
     'FeeCollectorController',
     'LibFeeCollector',
-    
+
     // 国库合约
     'ZrxTreasury',
     'TreasuryStaking',
     'DefaultPoolOperator',
-    
+
     // 多重复用器
     'MultiplexLiquidityProvider',
     'MultiplexOtc',
@@ -130,18 +130,18 @@ const artifactsToPublish = [
     'MultiplexTransformERC20',
     'MultiplexUniswapV2',
     'MultiplexUniswapV3',
-    
+
     // 原生订单
     'NativeOrdersCancellation',
     'NativeOrdersInfo',
     'NativeOrdersProtocolFees',
     'NativeOrdersSettlement',
     'INativeOrdersEvents',
-    
+
     // NFT 订单
     'NFTOrders',
     'LibNFTOrder',
-    
+
     // Fixins
     'FixinCommon',
     'FixinEIP712',
@@ -150,11 +150,11 @@ const artifactsToPublish = [
     'FixinProtocolFees',
     'FixinReentrancyGuard',
     'FixinTokenSpender',
-    
+
     // 部署器
     'TransformerDeployer',
     'PermissionlessTransformerDeployer',
-    
+
     // 错误库
     'LibCommonRichErrors',
     'LibLiquidityProviderRichErrors',
@@ -172,7 +172,7 @@ const artifactsToPublish = [
     'LibReentrancyGuardRichErrors',
     'LibSafeMathRichErrors',
     'LibSimpleFunctionRegistryRichErrors',
-    
+
     // 存储库
     'LibERC1155OrdersStorage',
     'LibERC721OrdersStorage',
@@ -185,7 +185,7 @@ const artifactsToPublish = [
     'LibReentrancyGuardStorage',
     'LibSimpleFunctionRegistryStorage',
     'LibStorage',
-    'LibTransformERC20Storage'
+    'LibTransformERC20Storage',
 ];
 
 console.log(`📦 直接复制 Hardhat artifacts (无转换)...`);
@@ -205,17 +205,17 @@ const allArtifactPaths = [];
 
 function findArtifactsInDirectory(baseDir, targetNames) {
     const found = [];
-    
+
     function searchRecursive(dir) {
         if (!fs.existsSync(dir)) {
             return;
         }
-        
+
         const items = fs.readdirSync(dir);
         for (const item of items) {
             const itemPath = path.join(dir, item);
             const stat = fs.statSync(itemPath);
-            
+
             if (stat.isDirectory()) {
                 searchRecursive(itemPath);
             } else if (item.endsWith('.json') && !item.endsWith('.dbg.json')) {
@@ -226,14 +226,14 @@ function findArtifactsInDirectory(baseDir, targetNames) {
             }
         }
     }
-    
+
     searchRecursive(baseDir);
     return found;
 }
 
 for (const dir of contractsDirs) {
     console.log(`🔍 处理目录: ${dir}`);
-    
+
     // 直接使用 Hardhat artifacts (TypeChain 标准格式)
     const hardhatArtifactsDir = path.join(contractsPath, dir, 'artifacts');
     if (fs.existsSync(hardhatArtifactsDir)) {
@@ -267,7 +267,7 @@ console.log(`\n📄 开始复制 artifacts...`);
 for (const _path of allArtifactPaths) {
     const fileName = _path.split('/').slice(-1)[0];
     const targetPath = path.join(outputDir, fileName);
-    
+
     try {
         // 直接复制，保持 Hardhat 原生格式
         fs.copyFileSync(_path, targetPath);
@@ -281,4 +281,4 @@ for (const _path of allArtifactPaths) {
 console.log(`\n🎉 成功复制 ${copiedCount} 个 Hardhat artifacts！`);
 console.log(`📂 输出目录: ${outputDir}`);
 console.log(`💡 这些 artifacts 已经是 TypeChain 和 ethers v6 的标准格式！`);
-console.log(`🚀 无需转换，直接可用于 TypeChain 生成类型！`); 
+console.log(`🚀 无需转换，直接可用于 TypeChain 生成类型！`);

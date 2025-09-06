@@ -110,22 +110,24 @@ describe('🧪 Protocol-Utils 真实合约验证测试', () => {
                 fillSequence: [],
                 fillAmount: 1000000000000000000n,
                 refundReceiver: taker.address,
-                otcOrders: []
+                otcOrders: [],
             };
 
             const encoded = encodeFillQuoteTransformerData(transformData);
-            
+
             // 使用 ethers 的 AbiCoder 模拟合约解码
             const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-            
+
             try {
                 // 尝试部分解码以验证结构正确性
                 // 这模拟了合约中的解码过程
                 const decoded = abiCoder.decode(
-                    ['tuple(uint8,address,address,tuple(bytes32,uint256,uint256,bytes)[],bytes,bytes,uint8[],uint256,address,bytes)'],
-                    encoded
+                    [
+                        'tuple(uint8,address,address,tuple(bytes32,uint256,uint256,bytes)[],bytes,bytes,uint8[],uint256,address,bytes)',
+                    ],
+                    encoded,
                 );
-                
+
                 console.log('🔍 合约级别解码验证:');
                 console.log(`- 解码成功: ✅`);
                 console.log(`- side: ${decoded[0][0]} (预期: ${transformData.side})`);
@@ -133,13 +135,13 @@ describe('🧪 Protocol-Utils 真实合约验证测试', () => {
                 console.log(`- buyToken: ${decoded[0][2]} (预期: ${transformData.buyToken})`);
                 console.log(`- fillAmount: ${decoded[0][7]} (预期: ${transformData.fillAmount})`);
                 console.log(`- refundReceiver: ${decoded[0][8]} (预期: ${transformData.refundReceiver})`);
-                
-                                 expect(Number(decoded[0][0])).to.equal(transformData.side); // side
-                 expect(decoded[0][1].toLowerCase()).to.equal(transformData.sellToken.toLowerCase()); // sellToken
-                 expect(decoded[0][2].toLowerCase()).to.equal(transformData.buyToken.toLowerCase()); // buyToken
-                 expect(decoded[0][7]).to.equal(transformData.fillAmount); // fillAmount
-                 expect(decoded[0][8].toLowerCase()).to.equal(transformData.refundReceiver.toLowerCase()); // refundReceiver
-                
+
+                expect(Number(decoded[0][0])).to.equal(transformData.side); // side
+                expect(decoded[0][1].toLowerCase()).to.equal(transformData.sellToken.toLowerCase()); // sellToken
+                expect(decoded[0][2].toLowerCase()).to.equal(transformData.buyToken.toLowerCase()); // buyToken
+                expect(decoded[0][7]).to.equal(transformData.fillAmount); // fillAmount
+                expect(decoded[0][8].toLowerCase()).to.equal(transformData.refundReceiver.toLowerCase()); // refundReceiver
+
                 console.log('✅ 合约级别解码验证通过');
             } catch (error) {
                 console.log('❌ 合约级别解码失败:', error.message);
@@ -152,7 +154,7 @@ describe('🧪 Protocol-Utils 真实合约验证测试', () => {
                 source: '0x' + '01'.repeat(32),
                 takerTokenAmount: 1000000000000000000n,
                 makerTokenAmount: 2000000000000000000n,
-                bridgeData: '0x1234567890abcdef'
+                bridgeData: '0x1234567890abcdef',
             };
 
             const transformData: FillQuoteTransformerData = {
@@ -165,40 +167,42 @@ describe('🧪 Protocol-Utils 真实合约验证测试', () => {
                 fillSequence: [FillQuoteTransformerOrderType.Bridge],
                 fillAmount: 1000000000000000000n,
                 refundReceiver: owner.address,
-                otcOrders: []
+                otcOrders: [],
             };
 
             const encoded = encodeFillQuoteTransformerData(transformData);
-            
+
             const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-            
+
             try {
                 const decoded = abiCoder.decode(
-                    ['tuple(uint8,address,address,tuple(bytes32,uint256,uint256,bytes)[],bytes,bytes,uint8[],uint256,address,bytes)'],
-                    encoded
+                    [
+                        'tuple(uint8,address,address,tuple(bytes32,uint256,uint256,bytes)[],bytes,bytes,uint8[],uint256,address,bytes)',
+                    ],
+                    encoded,
                 );
-                
+
                 console.log('🔍 桥接订单合约解码验证:');
                 console.log(`- 桥接订单数量: ${decoded[0][3].length} (预期: 1)`);
                 console.log(`- fillSequence长度: ${decoded[0][6].length} (预期: 1)`);
-                
+
                 if (decoded[0][3].length > 0) {
                     const bridgeOrderDecoded = decoded[0][3][0];
                     console.log(`- source: ${bridgeOrderDecoded[0]}`);
                     console.log(`- takerTokenAmount: ${bridgeOrderDecoded[1]}`);
                     console.log(`- makerTokenAmount: ${bridgeOrderDecoded[2]}`);
                     console.log(`- bridgeData: ${bridgeOrderDecoded[3]}`);
-                    
+
                     expect(bridgeOrderDecoded[0]).to.equal(bridgeOrder.source);
                     expect(bridgeOrderDecoded[1]).to.equal(bridgeOrder.takerTokenAmount);
                     expect(bridgeOrderDecoded[2]).to.equal(bridgeOrder.makerTokenAmount);
                     expect(bridgeOrderDecoded[3]).to.equal(bridgeOrder.bridgeData);
                 }
-                
-                                 expect(decoded[0][3].length).to.equal(1); // 一个桥接订单
-                 expect(decoded[0][6].length).to.equal(1); // 一个 fillSequence 项
-                 expect(Number(decoded[0][6][0])).to.equal(FillQuoteTransformerOrderType.Bridge);
-                
+
+                expect(decoded[0][3].length).to.equal(1); // 一个桥接订单
+                expect(decoded[0][6].length).to.equal(1); // 一个 fillSequence 项
+                expect(Number(decoded[0][6][0])).to.equal(FillQuoteTransformerOrderType.Bridge);
+
                 console.log('✅ 桥接订单合约解码验证通过');
             } catch (error) {
                 console.log('❌ 桥接订单合约解码失败:', error.message);
@@ -211,7 +215,7 @@ describe('🧪 Protocol-Utils 真实合约验证测试', () => {
             const abiCoder = ethers.AbiCoder.defaultAbiCoder();
             const boughtAmount = 5000000000000000000n; // 5 ETH
             const bridgeAddress = '0x48BaCB9266a570d521063EF5dD96e61686DbE788';
-            
+
             // 创建嵌套编码的 bridgeData
             const lpData = abiCoder.encode(['uint256'], [boughtAmount]);
             const complexBridgeData = abiCoder.encode(['address', 'bytes'], [bridgeAddress, lpData]);
@@ -220,7 +224,7 @@ describe('🧪 Protocol-Utils 真实合约验证测试', () => {
                 source: '0x0000000000000000000000000000000000000000000000000000000000000000',
                 takerTokenAmount: 3000000000000000000n, // 3 ETH
                 makerTokenAmount: 5000000000000000000n, // 5 ETH
-                bridgeData: complexBridgeData
+                bridgeData: complexBridgeData,
             };
 
             const transformData: FillQuoteTransformerData = {
@@ -233,36 +237,38 @@ describe('🧪 Protocol-Utils 真实合约验证测试', () => {
                 fillSequence: [FillQuoteTransformerOrderType.Bridge],
                 fillAmount: 3000000000000000000n,
                 refundReceiver: taker.address,
-                otcOrders: []
+                otcOrders: [],
             };
 
             const encoded = encodeFillQuoteTransformerData(transformData);
-            
+
             console.log('🔍 复杂桥接数据合约验证:');
             console.log(`- 编码长度: ${encoded.length} 字符`);
             console.log(`- complexBridgeData 长度: ${complexBridgeData.length} 字符`);
-            
+
             try {
                 const decoded = abiCoder.decode(
-                    ['tuple(uint8,address,address,tuple(bytes32,uint256,uint256,bytes)[],bytes,bytes,uint8[],uint256,address,bytes)'],
-                    encoded
+                    [
+                        'tuple(uint8,address,address,tuple(bytes32,uint256,uint256,bytes)[],bytes,bytes,uint8[],uint256,address,bytes)',
+                    ],
+                    encoded,
                 );
-                
+
                 const bridgeOrderDecoded = decoded[0][3][0];
                 const decodedBridgeData = bridgeOrderDecoded[3];
-                
+
                 console.log(`- 解码的 bridgeData: ${decodedBridgeData}`);
-                
+
                 // 验证我们可以进一步解码嵌套的 bridgeData
                 const [decodedBridgeAddress, decodedLpData] = abiCoder.decode(['address', 'bytes'], decodedBridgeData);
                 const [decodedBoughtAmount] = abiCoder.decode(['uint256'], decodedLpData);
-                
+
                 console.log(`- 解码的桥接地址: ${decodedBridgeAddress}`);
                 console.log(`- 解码的购买金额: ${decodedBoughtAmount}`);
-                
+
                 expect(decodedBridgeAddress.toLowerCase()).to.equal(bridgeAddress.toLowerCase());
                 expect(decodedBoughtAmount).to.equal(boughtAmount);
-                
+
                 console.log('✅ 复杂桥接数据解码验证通过');
             } catch (error) {
                 console.log('❌ 复杂桥接数据解码失败:', error.message);
@@ -285,8 +291,8 @@ describe('🧪 Protocol-Utils 真实合约验证测试', () => {
                         fillSequence: [],
                         fillAmount: 1000000000000000000n,
                         refundReceiver: taker.address,
-                        otcOrders: []
-                    }
+                        otcOrders: [],
+                    },
                 },
                 {
                     name: '带桥接订单',
@@ -294,55 +300,58 @@ describe('🧪 Protocol-Utils 真实合约验证测试', () => {
                         side: FillQuoteTransformerSide.Buy,
                         sellToken: maker.address,
                         buyToken: taker.address,
-                        bridgeOrders: [{
-                            source: '0x' + 'ff'.repeat(32),
-                            takerTokenAmount: 1000000000000000000n,
-                            makerTokenAmount: 1000000000000000000n,
-                            bridgeData: '0xdeadbeef'
-                        }],
+                        bridgeOrders: [
+                            {
+                                source: '0x' + 'ff'.repeat(32),
+                                takerTokenAmount: 1000000000000000000n,
+                                makerTokenAmount: 1000000000000000000n,
+                                bridgeData: '0xdeadbeef',
+                            },
+                        ],
                         limitOrders: [],
                         rfqOrders: [],
                         fillSequence: [FillQuoteTransformerOrderType.Bridge],
                         fillAmount: 1000000000000000000n,
                         refundReceiver: owner.address,
-                        otcOrders: []
-                    }
-                }
+                        otcOrders: [],
+                    },
+                },
             ];
 
             console.log('🔍 真实合约环境兼容性测试:');
-            
+
             testData.forEach((testCase, index) => {
                 console.log(`\n测试 ${index + 1}: ${testCase.name}`);
-                
+
                 const encoded = encodeFillQuoteTransformerData(testCase.data);
                 console.log(`- 编码长度: ${encoded.length} 字符`);
-                
+
                 // 验证编码格式
                 expect(encoded).to.match(/^0x[0-9a-fA-F]+$/);
                 expect(encoded.length).to.be.greaterThan(700);
-                
+
                 // 验证可以解码
                 const abiCoder = ethers.AbiCoder.defaultAbiCoder();
                 try {
                     const decoded = abiCoder.decode(
-                        ['tuple(uint8,address,address,tuple(bytes32,uint256,uint256,bytes)[],bytes,bytes,uint8[],uint256,address,bytes)'],
-                        encoded
+                        [
+                            'tuple(uint8,address,address,tuple(bytes32,uint256,uint256,bytes)[],bytes,bytes,uint8[],uint256,address,bytes)',
+                        ],
+                        encoded,
                     );
-                    
+
                     console.log(`- 解码成功: ✅`);
                     console.log(`- 桥接订单数量: ${decoded[0][3].length}`);
-                    
-                                         expect(Number(decoded[0][0])).to.equal(testCase.data.side);
-                     expect(decoded[0][3].length).to.equal(testCase.data.bridgeOrders.length);
-                    
+
+                    expect(Number(decoded[0][0])).to.equal(testCase.data.side);
+                    expect(decoded[0][3].length).to.equal(testCase.data.bridgeOrders.length);
                 } catch (error) {
                     console.log(`- 解码失败: ❌ ${error.message}`);
                     throw error;
                 }
             });
-            
+
             console.log('✅ 所有真实合约环境兼容性测试通过');
         });
     });
-}); 
+});

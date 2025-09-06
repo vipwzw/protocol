@@ -19,4 +19,9 @@ export { ERC721Proxy as ERC721ProxyContract } from './typechain-types/contracts/
 export { MultiAssetProxy as MultiAssetProxyContract } from './typechain-types/contracts/src/MultiAssetProxy';
 
 // Re-export factories
-export { ERC1155Proxy__factory, ERC20Proxy__factory, ERC721Proxy__factory, MultiAssetProxy__factory } from './typechain-types/factories/contracts/src';
+export {
+    ERC1155Proxy__factory,
+    ERC20Proxy__factory,
+    ERC721Proxy__factory,
+    MultiAssetProxy__factory,
+} from './typechain-types/factories/contracts/src';

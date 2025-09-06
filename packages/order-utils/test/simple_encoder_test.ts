@@ -7,7 +7,7 @@ import {
     PayTakerTransformerData,
     AffiliateFeeTransformerData,
     PositiveSlippageFeeTransformerData,
-    jsonUtils
+    jsonUtils,
 } from '../src';
 
 // 将对象按照 ABI 组件顺序转换为数组
@@ -73,20 +73,20 @@ describe('简化编码器等价性测试', () => {
                         makerAssetData: '0xabcd',
                         takerAssetData: '0xefab',
                         makerFeeAssetData: '0x1234',
-                        takerFeeAssetData: '0x5678'
-                    }
+                        takerFeeAssetData: '0x5678',
+                    },
                 ],
                 signatures: ['0x1234', '0x5678'],
                 maxOrderFillAmounts: [500n, 1000n],
                 fillAmount: 1500n,
                 refundReceiver: '0x5555555555555555555555555555555555555555',
-                rfqtTakerAddress: '0x6666666666666666666666666666666666666666'
+                rfqtTakerAddress: '0x6666666666666666666666666666666666666666',
             };
 
             // 方式 1：旧的硬编码字符串方式
             const orderTypeString = ORDER_ABI_COMPONENTS.map(c => c.type).join(',');
             const oldTypeString = `tuple(uint8,address,address,tuple(${orderTypeString})[],bytes[],uint256[],uint256,address,address)`;
-            
+
             // 定义组件用于对象到数组的转换
             const fillQuoteComponents = [
                 { name: 'side', type: 'uint8' },
@@ -97,7 +97,7 @@ describe('简化编码器等价性测试', () => {
                 { name: 'maxOrderFillAmounts', type: 'uint256[]' },
                 { name: 'fillAmount', type: 'uint256' },
                 { name: 'refundReceiver', type: 'address' },
-                { name: 'rfqtTakerAddress', type: 'address' }
+                { name: 'rfqtTakerAddress', type: 'address' },
             ];
             const arrayData1 = convertToArrayFormat(testData, fillQuoteComponents);
             const oldEncoded = abiCoder.encode([oldTypeString], [arrayData1]);
@@ -106,7 +106,7 @@ describe('简化编码器等价性测试', () => {
             // 方式 2：新的 JSON ABI 方式（直接使用 AbiCoder）
             const ORDER_ABI = {
                 type: 'tuple',
-                components: ORDER_ABI_COMPONENTS
+                components: ORDER_ABI_COMPONENTS,
             };
 
             const FILL_QUOTE_ABI = {
@@ -120,8 +120,8 @@ describe('简化编码器等价性测试', () => {
                     { name: 'maxOrderFillAmounts', type: 'uint256[]' },
                     { name: 'fillAmount', type: 'uint256' },
                     { name: 'refundReceiver', type: 'address' },
-                    { name: 'rfqtTakerAddress', type: 'address' }
-                ]
+                    { name: 'rfqtTakerAddress', type: 'address' },
+                ],
             };
 
             // 使用 ParamType 创建正确的类型
@@ -136,21 +136,23 @@ describe('简化编码器等价性测试', () => {
             // 验证解码结果一致
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([fillQuoteParamType], newEncoded);
-            
-            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
+
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(
+                JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer),
+            );
         });
 
         it('WethTransformerData - 新旧编码方式对比', () => {
             const testData: WethTransformerData = {
                 token: '0x1234567890123456789012345678901234567890',
-                amount: 1000000000000000000n
+                amount: 1000000000000000000n,
             };
 
             // 旧方式
             const oldTypeString = 'tuple(address,uint256)';
             const wethComponents = [
                 { name: 'token', type: 'address' },
-                { name: 'amount', type: 'uint256' }
+                { name: 'amount', type: 'uint256' },
             ];
             const wethArrayData = convertToArrayFormat(testData, wethComponents);
             const oldEncoded = abiCoder.encode([oldTypeString], [wethArrayData]);
@@ -161,8 +163,8 @@ describe('简化编码器等价性测试', () => {
                 type: 'tuple',
                 components: [
                     { name: 'token', type: 'address' },
-                    { name: 'amount', type: 'uint256' }
-                ]
+                    { name: 'amount', type: 'uint256' },
+                ],
             };
             const wethParamType = ParamType.from(WETH_ABI);
             const arrayData = convertToArrayFormat(testData, WETH_ABI.components);
@@ -173,23 +175,22 @@ describe('简化编码器等价性测试', () => {
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([wethParamType], newEncoded);
-            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(
+                JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer),
+            );
         });
 
         it('PayTakerTransformerData - 新旧编码方式对比', () => {
             const testData: PayTakerTransformerData = {
-                tokens: [
-                    '0x1234567890123456789012345678901234567890',
-                    '0x0987654321098765432109876543210987654321'
-                ],
-                amounts: [1000n, 2000n]
+                tokens: ['0x1234567890123456789012345678901234567890', '0x0987654321098765432109876543210987654321'],
+                amounts: [1000n, 2000n],
             };
 
             // 旧方式
             const oldTypeString = 'tuple(address[],uint256[])';
             const payTakerComponents = [
                 { name: 'tokens', type: 'address[]' },
-                { name: 'amounts', type: 'uint256[]' }
+                { name: 'amounts', type: 'uint256[]' },
             ];
             const payTakerArrayData = convertToArrayFormat(testData, payTakerComponents);
             const oldEncoded = abiCoder.encode([oldTypeString], [payTakerArrayData]);
@@ -200,8 +201,8 @@ describe('简化编码器等价性测试', () => {
                 type: 'tuple',
                 components: [
                     { name: 'tokens', type: 'address[]' },
-                    { name: 'amounts', type: 'uint256[]' }
-                ]
+                    { name: 'amounts', type: 'uint256[]' },
+                ],
             };
             const payTakerParamType = ParamType.from(PAY_TAKER_ABI);
             const arrayData = convertToArrayFormat(testData, PAY_TAKER_ABI.components);
@@ -212,7 +213,9 @@ describe('简化编码器等价性测试', () => {
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([payTakerParamType], newEncoded);
-            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(
+                JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer),
+            );
         });
 
         it('AffiliateFeeTransformerData - 新旧编码方式对比', () => {
@@ -221,14 +224,14 @@ describe('简化编码器等价性测试', () => {
                     {
                         token: '0x1234567890123456789012345678901234567890',
                         amount: 100n,
-                        recipient: '0x1111111111111111111111111111111111111111'
+                        recipient: '0x1111111111111111111111111111111111111111',
                     },
                     {
                         token: '0x0987654321098765432109876543210987654321',
                         amount: 200n,
-                        recipient: '0x2222222222222222222222222222222222222222'
-                    }
-                ]
+                        recipient: '0x2222222222222222222222222222222222222222',
+                    },
+                ],
             };
 
             // 旧方式 - 需要传递 fees 数组，并转换每个 fee 对象为数组格式
@@ -236,7 +239,7 @@ describe('简化编码器等价性测试', () => {
             const feeComponents = [
                 { name: 'token', type: 'address' },
                 { name: 'amount', type: 'uint256' },
-                { name: 'recipient', type: 'address' }
+                { name: 'recipient', type: 'address' },
             ];
             const feesAsArrays = testData.fees.map(fee => convertToArrayFormat(fee, feeComponents));
             const oldEncoded = abiCoder.encode([oldTypeString], [[feesAsArrays]]);
@@ -252,10 +255,10 @@ describe('简化编码器等价性测试', () => {
                         components: [
                             { name: 'token', type: 'address' },
                             { name: 'amount', type: 'uint256' },
-                            { name: 'recipient', type: 'address' }
-                        ]
-                    }
-                ]
+                            { name: 'recipient', type: 'address' },
+                        ],
+                    },
+                ],
             };
             const affiliateFeeParamType = ParamType.from(AFFILIATE_FEE_ABI);
             const arrayData = convertToArrayFormat(testData, AFFILIATE_FEE_ABI.components);
@@ -266,19 +269,24 @@ describe('简化编码器等价性测试', () => {
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([affiliateFeeParamType], newEncoded);
-            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(
+                JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer),
+            );
         });
 
         it('PositiveSlippageFeeTransformerData - 新旧编码方式对比', () => {
             const testData: PositiveSlippageFeeTransformerData = {
                 token: '0x1234567890123456789012345678901234567890',
                 bestCaseAmount: 1500000000000000000n,
-                recipient: '0x1111111111111111111111111111111111111111'
+                recipient: '0x1111111111111111111111111111111111111111',
             };
 
             // 旧方式 - 需要传递属性值数组
             const oldTypeString = 'tuple(address,uint256,address)';
-            const oldEncoded = abiCoder.encode([oldTypeString], [[testData.token, testData.bestCaseAmount, testData.recipient]]);
+            const oldEncoded = abiCoder.encode(
+                [oldTypeString],
+                [[testData.token, testData.bestCaseAmount, testData.recipient]],
+            );
             console.log('PositiveSlippageFee 旧方式编码:', oldEncoded);
 
             // 新方式
@@ -287,8 +295,8 @@ describe('简化编码器等价性测试', () => {
                 components: [
                     { name: 'token', type: 'address' },
                     { name: 'bestCaseAmount', type: 'uint256' },
-                    { name: 'recipient', type: 'address' }
-                ]
+                    { name: 'recipient', type: 'address' },
+                ],
             };
             const positiveSlippageParamType = ParamType.from(POSITIVE_SLIPPAGE_ABI);
             const arrayData = convertToArrayFormat(testData, POSITIVE_SLIPPAGE_ABI.components);
@@ -299,9 +307,11 @@ describe('简化编码器等价性测试', () => {
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([positiveSlippageParamType], newEncoded);
-            
+
             // 使用 BigInt 安全的序列化方法
-            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(
+                JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer),
+            );
         });
     });
 
@@ -309,7 +319,7 @@ describe('简化编码器等价性测试', () => {
         it('应该从 JSON ABI 生成正确的类型字符串', () => {
             const ORDER_ABI = {
                 type: 'tuple',
-                components: ORDER_ABI_COMPONENTS
+                components: ORDER_ABI_COMPONENTS,
             };
 
             // 手动构建的类型字符串
@@ -319,11 +329,15 @@ describe('简化编码器等价性测试', () => {
             // 从 JSON ABI 生成的类型字符串（模拟）
             function generateTypeString(abi: any): string {
                 if (abi.type === 'tuple') {
-                    const componentTypes = abi.components.map((c: any) => 
-                        c.type === 'tuple[]' ? `tuple(${c.components.map((sc: any) => sc.type).join(',')})[]` :
-                        c.type === 'tuple' ? `tuple(${c.components.map((sc: any) => sc.type).join(',')})` :
-                        c.type
-                    ).join(',');
+                    const componentTypes = abi.components
+                        .map((c: any) =>
+                            c.type === 'tuple[]'
+                                ? `tuple(${c.components.map((sc: any) => sc.type).join(',')})[]`
+                                : c.type === 'tuple'
+                                  ? `tuple(${c.components.map((sc: any) => sc.type).join(',')})`
+                                  : c.type,
+                        )
+                        .join(',');
                     return `tuple(${componentTypes})`;
                 }
                 return abi.type;
@@ -340,8 +354,8 @@ describe('简化编码器等价性测试', () => {
                     { name: 'maxOrderFillAmounts', type: 'uint256[]' },
                     { name: 'fillAmount', type: 'uint256' },
                     { name: 'refundReceiver', type: 'address' },
-                    { name: 'rfqtTakerAddress', type: 'address' }
-                ]
+                    { name: 'rfqtTakerAddress', type: 'address' },
+                ],
             };
 
             const generatedType = generateTypeString(FILL_QUOTE_ABI);

@@ -137,7 +137,7 @@ export abstract class NFTOrder {
     public willExpire(secondsFromNow = 0): boolean {
         const millisecondsInSecond = 1000;
         const currentUnixTimestampSec = BigInt(Math.floor(Date.now() / millisecondsInSecond));
-        return this.expiry < (currentUnixTimestampSec + BigInt(secondsFromNow));
+        return this.expiry < currentUnixTimestampSec + BigInt(secondsFromNow);
     }
 
     public getHash(): string {

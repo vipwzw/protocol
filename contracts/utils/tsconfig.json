@@ -15,7 +15,13 @@
         "skipLibCheck": true,
         "composite": true
     },
-    "files": ["./src/artifacts.ts", "./src/index.ts", "./src/wrappers.ts", "./src/reference_functions.ts", "./src/types.ts"],
+    "files": [
+        "./src/artifacts.ts",
+        "./src/index.ts",
+        "./src/wrappers.ts",
+        "./src/reference_functions.ts",
+        "./src/types.ts"
+    ],
     "include": ["src/**/*", "src/typechain-types/**/*", "artifacts/**/*.json"],
     "exclude": ["lib/**/*", "test/**/*", "out/**/*"]
 }

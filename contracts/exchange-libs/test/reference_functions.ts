@@ -16,10 +16,10 @@ import {
 
 describe('Reference Functions', () => {
     // 使用 bigint 版本的常量以避免类型混合
-const ONE_ETHER = 1000000000000000000n; // 1e18
-const MAX_UINT256 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn;
-const MAX_UINT256_ROOT = 340282366920938463463374607431768211455n; // sqrt(2^256 - 1)
-const ZERO_AMOUNT = 0n;
+    const ONE_ETHER = 1000000000000000000n; // 1e18
+    const MAX_UINT256 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn;
+    const MAX_UINT256_ROOT = 340282366920938463463374607431768211455n; // sqrt(2^256 - 1)
+    const ZERO_AMOUNT = 0n;
     describe('LibFillResults', () => {
         describe('addFillResults', () => {
             const DEFAULT_FILL_RESULTS = [
@@ -56,7 +56,9 @@ const ZERO_AMOUNT = 0n;
                         numerator * target,
                         denominator,
                     );
-                    return expect(() => getPartialAmountFloor(numerator, denominator, target)).to.throw('DivisionByZeroError');
+                    return expect(() => getPartialAmountFloor(numerator, denominator, target)).to.throw(
+                        'DivisionByZeroError',
+                    );
                 });
 
                 it('reverts if `numerator * target` overflows', () => {
@@ -68,7 +70,7 @@ const ZERO_AMOUNT = 0n;
                         numerator,
                         target,
                     );
-                    // JavaScript BigInt doesn't overflow, so skip this test  
+                    // JavaScript BigInt doesn't overflow, so skip this test
                     return;
                 });
             });
@@ -86,7 +88,9 @@ const ZERO_AMOUNT = 0n;
                         denominator,
                         1n,
                     );
-                    return expect(() => getPartialAmountCeil(numerator, denominator, target)).to.throw('DivisionByZeroError');
+                    return expect(() => getPartialAmountCeil(numerator, denominator, target)).to.throw(
+                        'DivisionByZeroError',
+                    );
                 });
 
                 it('reverts if `numerator * target` overflows', () => {
@@ -98,7 +102,7 @@ const ZERO_AMOUNT = 0n;
                         numerator,
                         target,
                     );
-                    // JavaScript BigInt doesn't overflow, so skip this test  
+                    // JavaScript BigInt doesn't overflow, so skip this test
                     return;
                 });
             });
@@ -119,7 +123,9 @@ const ZERO_AMOUNT = 0n;
                     const denominator = ZERO_AMOUNT;
                     const target = ethers.parseEther('0.01');
                     const expectedError = new LibMathRevertErrors.DivisionByZeroError();
-                    expect(() => safeGetPartialAmountFloor(numerator, denominator, target)).to.throw('DivisionByZeroError');
+                    expect(() => safeGetPartialAmountFloor(numerator, denominator, target)).to.throw(
+                        'DivisionByZeroError',
+                    );
                 });
 
                 it('reverts if `numerator * target` overflows', () => {
@@ -131,7 +137,7 @@ const ZERO_AMOUNT = 0n;
                         numerator,
                         target,
                     );
-                    // JavaScript BigInt doesn't overflow, so skip this test  
+                    // JavaScript BigInt doesn't overflow, so skip this test
                     return;
                 });
             });
@@ -152,7 +158,9 @@ const ZERO_AMOUNT = 0n;
                     const denominator = ZERO_AMOUNT;
                     const target = ethers.parseEther('0.01');
                     const expectedError = new LibMathRevertErrors.DivisionByZeroError();
-                    expect(() => safeGetPartialAmountCeil(numerator, denominator, target)).to.throw('DivisionByZeroError');
+                    expect(() => safeGetPartialAmountCeil(numerator, denominator, target)).to.throw(
+                        'DivisionByZeroError',
+                    );
                 });
 
                 it('reverts if `numerator * target` overflows', () => {
@@ -164,7 +172,7 @@ const ZERO_AMOUNT = 0n;
                         numerator,
                         target,
                     );
-                    // JavaScript BigInt doesn't overflow, so skip this test  
+                    // JavaScript BigInt doesn't overflow, so skip this test
                     return;
                 });
             });
@@ -207,7 +215,9 @@ const ZERO_AMOUNT = 0n;
                         target,
                     );
                     // Now reference function also throws overflow errors to match Solidity behavior
-                    expect(() => isRoundingErrorFloor(numerator, denominator, target)).to.throw('Arithmetic operation overflowed');
+                    expect(() => isRoundingErrorFloor(numerator, denominator, target)).to.throw(
+                        'Arithmetic operation overflowed',
+                    );
                 });
             });
         });
@@ -249,7 +259,9 @@ const ZERO_AMOUNT = 0n;
                         target,
                     );
                     // Now reference function also throws overflow errors to match Solidity behavior
-                    expect(() => isRoundingErrorCeil(numerator, denominator, target)).to.throw('Arithmetic operation overflowed');
+                    expect(() => isRoundingErrorCeil(numerator, denominator, target)).to.throw(
+                        'Arithmetic operation overflowed',
+                    );
                 });
             });
         });

@@ -11,13 +11,12 @@ import { verifyTransferEvent, verifyApprovalEvent } from '@0x/utils';
 // chaiSetup 已废弃，Hardhat 自动配置 chai
 const expect = chai.expect;
 
-
 describe('ZRXToken', () => {
     let owner: string;
     let spender: string;
     let MAX_UINT: bigint;
     let zrxToken: ZRXToken;
-    
+
     // Helper function to parse logs and verify events
     function verifyTransferEventFromReceipt(receipt: any, from: string, to: string, value: bigint) {
         const parsedLogs = receipt.logs
@@ -30,19 +29,19 @@ describe('ZRXToken', () => {
                 }
             })
             .filter((log: any) => log !== null);
-        
+
         // Find Transfer events
         const transferEvents = parsedLogs.filter(log => log && log.name === 'Transfer');
         expect(transferEvents).to.have.length.at.least(1);
-        
+
         const transferEvent = transferEvents[0];
-        
+
         // Event args are in array format: [from, to, value]
         expect(transferEvent.args[0]).to.equal(from);
         expect(transferEvent.args[1]).to.equal(to);
         expect(transferEvent.args[2]).to.equal(value);
     }
-    
+
     function verifyApprovalEventFromReceipt(receipt: any, owner: string, spender: string, value: bigint) {
         const parsedLogs = receipt.logs
             .map((log: any) => {
@@ -54,13 +53,13 @@ describe('ZRXToken', () => {
                 }
             })
             .filter((log: any) => log !== null);
-        
+
         // Find Approval events
         const approvalEvents = parsedLogs.filter(log => log && log.name === 'Approval');
         expect(approvalEvents).to.have.length.at.least(1);
-        
+
         const approvalEvent = approvalEvents[0];
-        
+
         // Event args are in array format: [owner, spender, value]
         expect(approvalEvent.args[0]).to.equal(owner);
         expect(approvalEvent.args[1]).to.equal(spender);
@@ -73,7 +72,7 @@ describe('ZRXToken', () => {
         const accounts = await ethers.getSigners();
         owner = accounts[0].address;
         spender = accounts[1].address;
-        
+
         const zrxTokenFactory = new ZRXToken__factory(accounts[0]);
         zrxToken = await zrxTokenFactory.deploy();
         MAX_UINT = 2n ** 256n - 1n; // Max uint256 value
@@ -118,15 +117,15 @@ describe('ZRXToken', () => {
             const receiver = spender;
             const initOwnerBalance = await zrxToken.balanceOf(owner);
             const amountToTransfer = 1n;
-            
+
             // Get owner signer for transaction
             const [ownerSigner] = await ethers.getSigners();
             const tx = await zrxToken.connect(ownerSigner).transfer(receiver, amountToTransfer);
             const receipt = await tx.wait();
-            
+
             // 验证 Transfer 事件
             verifyTransferEventFromReceipt(receipt!, owner, receiver, amountToTransfer);
-            
+
             const finalOwnerBalance = await zrxToken.balanceOf(owner);
             const finalReceiverBalance = await zrxToken.balanceOf(receiver);
 
@@ -138,10 +137,9 @@ describe('ZRXToken', () => {
 
         it('should return true on a 0 value transfer', async () => {
             const [ownerSigner] = await ethers.getSigners();
-            // Modern ERC20 transfers don't return values in the same way, 
+            // Modern ERC20 transfers don't return values in the same way,
             // but successful execution means it worked
-            await expect(zrxToken.connect(ownerSigner).transfer(spender, 0n))
-                .to.not.be.reverted;
+            await expect(zrxToken.connect(ownerSigner).transfer(spender, 0n)).to.not.be.reverted;
         });
     });
 
@@ -149,60 +147,62 @@ describe('ZRXToken', () => {
         it('should revert if owner has insufficient balance', async () => {
             const ownerBalance = await zrxToken.balanceOf(owner);
             const amountToTransfer = ownerBalance + 1n;
-            
+
             const [ownerSigner, spenderSigner] = await ethers.getSigners();
-            
+
             // First approve the transfer
             await zrxToken.connect(ownerSigner).approve(spender, amountToTransfer);
-            
+
             // Then try to transfer more than balance - should revert
-            await expect(zrxToken.connect(spenderSigner).transferFrom(owner, spender, amountToTransfer))
-                .to.be.revertedWith("Insufficient balance");
+            await expect(
+                zrxToken.connect(spenderSigner).transferFrom(owner, spender, amountToTransfer),
+            ).to.be.revertedWith('Insufficient balance');
         });
 
         it('should revert if spender has insufficient allowance', async () => {
             const ownerBalance = await zrxToken.balanceOf(owner);
-            
+
             // 重置 allowance 为 0
             const [ownerSigner, spenderSigner] = await ethers.getSigners();
             await zrxToken.connect(ownerSigner).approve(spender, 0);
-            
+
             const amountToTransfer = ownerBalance;
             const spenderAllowance = await zrxToken.allowance(owner, spender);
             const isSpenderAllowanceInsufficient = spenderAllowance < amountToTransfer;
             expect(isSpenderAllowanceInsufficient).to.be.true;
 
-            await expect(zrxToken.connect(spenderSigner).transferFrom(owner, spender, amountToTransfer))
-                .to.be.revertedWith("Insufficient allowance");
+            await expect(
+                zrxToken.connect(spenderSigner).transferFrom(owner, spender, amountToTransfer),
+            ).to.be.revertedWith('Insufficient allowance');
         });
 
         it('should return true on a 0 value transfer', async () => {
             const amountToTransfer = 0n;
             const [, spenderSigner] = await ethers.getSigners();
-            
+
             // Modern ERC20 transfers don't return values, but successful execution means it worked
-            await expect(zrxToken.connect(spenderSigner).transferFrom(owner, spender, amountToTransfer))
-                .to.not.be.reverted;
+            await expect(zrxToken.connect(spenderSigner).transferFrom(owner, spender, amountToTransfer)).to.not.be
+                .reverted;
         });
 
         it('should not modify spender allowance if spender allowance is 2^256 - 1', async () => {
             const initOwnerBalance = await zrxToken.balanceOf(owner);
             const amountToTransfer = initOwnerBalance;
             const initSpenderAllowance = MAX_UINT;
-            
+
             const [ownerSigner, spenderSigner] = await ethers.getSigners();
-            
+
             // Approve unlimited allowance
             const approveTx = await zrxToken.connect(ownerSigner).approve(spender, initSpenderAllowance);
             const approveReceipt = await approveTx.wait();
-            
+
             // 验证 Approval 事件
             verifyApprovalEventFromReceipt(approveReceipt!, owner, spender, initSpenderAllowance);
-            
+
             // Transfer some tokens
             const transferTx = await zrxToken.connect(spenderSigner).transferFrom(owner, spender, amountToTransfer);
             const transferReceipt = await transferTx.wait();
-            
+
             // 验证 Transfer 事件
             verifyTransferEventFromReceipt(transferReceipt!, owner, spender, amountToTransfer);
 
@@ -215,16 +215,16 @@ describe('ZRXToken', () => {
             const initSpenderBalance = await zrxToken.balanceOf(spender);
             const amountToTransfer = initOwnerBalance;
             const initSpenderAllowance = initOwnerBalance;
-            
+
             const [ownerSigner, spenderSigner] = await ethers.getSigners();
-            
+
             // Approve the allowance
             await zrxToken.connect(ownerSigner).approve(spender, initSpenderAllowance);
-            
+
             // Transfer tokens via transferFrom
             const transferTx = await zrxToken.connect(spenderSigner).transferFrom(owner, spender, amountToTransfer);
             const transferReceipt = await transferTx.wait();
-            
+
             // 验证 Transfer 事件
             verifyTransferEventFromReceipt(transferReceipt!, owner, spender, amountToTransfer);
 
@@ -238,12 +238,12 @@ describe('ZRXToken', () => {
         it('should modify allowance if spender has sufficient allowance less than 2^256 - 1', async () => {
             const initOwnerBalance = await zrxToken.balanceOf(owner);
             const amountToTransfer = initOwnerBalance;
-            
+
             const [ownerSigner, spenderSigner] = await ethers.getSigners();
-            
+
             // Approve exact amount (not unlimited)
             await zrxToken.connect(ownerSigner).approve(spender, amountToTransfer);
-            
+
             // Transfer the approved amount
             await zrxToken.connect(spenderSigner).transferFrom(owner, spender, amountToTransfer);
 

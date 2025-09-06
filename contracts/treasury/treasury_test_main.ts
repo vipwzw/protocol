@@ -8,14 +8,7 @@ import {
     StakingProxyContract,
     ZrxVaultContract,
 } from '@0x/contracts-staking';
-import {
-
-    constants,
-    expect,
-    getRandomInteger,
-    randomAddress,
-    verifyEventsFromLogs,
-} from '@0x/utils';
+import { constants, expect, getRandomInteger, randomAddress, verifyEventsFromLogs } from '@0x/utils';
 
 // Local bigint assertion helper
 function expectBigIntEqual(actual: any, expected: any): void {
@@ -111,7 +104,9 @@ describe('Treasury governance', () => {
         staking = new (require('ethers').Contract)(
             stakingProxyContract.address,
             stakingArtifacts.TestStaking.compilerOutput.abi,
-            await (require('hardhat').ethers).getSigners().then((s: any[]) => s[0]),
+            await require('hardhat')
+                .ethers.getSigners()
+                .then((s: any[]) => s[0]),
         );
     }
 

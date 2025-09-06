@@ -18,7 +18,8 @@ describe('FundRecovery', async () => {
         web3Wrapper: {
             getBalanceInWeiAsync: async (addr: string) => ethers.provider.getBalance(addr),
             awaitTransactionMinedAsync: async (hash: string) => ethers.provider.waitForTransaction(hash),
-            sendTransactionAsync: async (tx: any) => (await ethers.getSigner(tx.from)).sendTransaction(tx).then(r => r.hash),
+            sendTransactionAsync: async (tx: any) =>
+                (await ethers.getSigner(tx.from)).sendTransaction(tx).then(r => r.hash),
         },
     } as any;
     let owner: string;
@@ -32,7 +33,7 @@ describe('FundRecovery', async () => {
         zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {});
         // 使用 TypeChain factory 部署合约
         const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
-        token = await TokenFactory.deploy() as TestMintableERC20Token;
+        token = (await TokenFactory.deploy()) as TestMintableERC20Token;
         await token.mint(await zeroEx.getAddress(), INITIAL_ERC20_BALANCE);
         const signer = await env.provider.getSigner(owner);
         const featureFactory = new FundRecoveryFeature__factory(signer);
@@ -48,23 +49,23 @@ describe('FundRecovery', async () => {
 
     // 🔧 状态重置机制：防止测试间干扰，确保每个测试都有正确的初始状态
     let snapshotId: string;
-    
+
     before(async () => {
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
-    
+
     beforeEach(async () => {
-        await ethers.provider.send("evm_revert", [snapshotId]);
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
-        
+        await ethers.provider.send('evm_revert', [snapshotId]);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
+
         // 重新获取账户地址
         [owner] = await env.getAccountAddressesAsync();
         env.txDefaults.from = owner;
-        
+
         // 重新创建合约实例
         const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
-        token = await TokenFactory.attach(await token.getAddress()) as TestMintableERC20Token;
-        
+        token = (await TokenFactory.attach(await token.getAddress())) as TestMintableERC20Token;
+
         // 确保zeroEx有正确的初始token余额
         const currentBalance = await token.balanceOf(await zeroEx.getAddress());
         if (currentBalance < ethers.parseUnits('1000', 18)) {
@@ -79,14 +80,14 @@ describe('FundRecovery', async () => {
         it('Tranfers an arbitrary ERC-20 Token', async () => {
             // 🔧 使用ethers.parseUnits替代Web3Wrapper.toBaseUnitAmount
             const amountOut = ethers.parseUnits('100', 18);
-            
+
             // 🔧 使用FundRecoveryFeature接口和现代语法
             const fundRecoveryFeature = await ethers.getContractAt('IFundRecoveryFeature', await zeroEx.getAddress());
             const ownerSigner = await env.provider.getSigner(owner);
             await fundRecoveryFeature
                 .connect(ownerSigner)
                 .transferTrappedTokensTo(await token.getAddress(), amountOut, recipientAddress);
-            
+
             // 🔧 使用现代ethers v6语法
             const recipientAddressBalanceAferTransfer = await token.balanceOf(recipientAddress);
             return expect(recipientAddressBalanceAferTransfer).to.be.closeTo(amountOut, 100n);
@@ -94,14 +95,14 @@ describe('FundRecovery', async () => {
         it('Amount -1 transfers entire balance of ERC-20', async () => {
             // 🔧 使用现代ethers v6语法
             const balanceOwner = await token.balanceOf(await zeroEx.getAddress());
-            
+
             // 🔧 使用FundRecoveryFeature接口
             const fundRecoveryFeature = await ethers.getContractAt('IFundRecoveryFeature', await zeroEx.getAddress());
             const ownerSigner = await env.provider.getSigner(owner);
             await fundRecoveryFeature
                 .connect(ownerSigner)
                 .transferTrappedTokensTo(await token.getAddress(), constants.MAX_UINT256, recipientAddress);
-            
+
             const recipientAddressBalanceAferTransfer = await token.balanceOf(recipientAddress);
             // 🔧 精确验证：recipient应该收到所有的zeroEx token余额
             return expect(recipientAddressBalanceAferTransfer).to.be.closeTo(balanceOwner, 100n);
@@ -116,13 +117,13 @@ describe('FundRecovery', async () => {
             await tx.wait();
             // 🔧 使用现代ethers v6语法
             const balanceOwner = await ethers.provider.getBalance(await zeroEx.getAddress());
-            
+
             // 🔧 使用FundRecoveryFeature接口
             const fundRecoveryFeature = await ethers.getContractAt('IFundRecoveryFeature', await zeroEx.getAddress());
             await fundRecoveryFeature
                 .connect(ownerSigner)
                 .transferTrappedTokensTo(ETH_TOKEN_ADDRESS, constants.MAX_UINT256, recipientAddress);
-            
+
             const recipientAddressBalanceAferTransfer = await ethers.provider.getBalance(recipientAddress);
             return expect(recipientAddressBalanceAferTransfer).to.be.closeTo(balanceOwner, ethers.parseEther('0.001'));
         });
@@ -148,12 +149,12 @@ describe('FundRecovery', async () => {
             const fundRecoveryFeature = await ethers.getContractAt('IFundRecoveryFeature', await zeroEx.getAddress());
             const [, notOwnerAccount] = await ethers.getSigners(); // 使用实际账户
             const notOwnerSigner = notOwnerAccount;
-            
+
             // 🔧 使用try-catch验证权限错误
             const tx = fundRecoveryFeature
                 .connect(notOwnerSigner)
                 .transferTrappedTokensTo(ETH_TOKEN_ADDRESS, constants.MAX_UINT256, recipientAddress);
-            
+
             try {
                 await tx;
                 expect.fail('Transaction should have reverted');

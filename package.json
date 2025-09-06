@@ -14,7 +14,6 @@
         "prettier:ci": "./scripts/lint-prettier.sh",
         "install:all": "yarn install",
         "submodule:init": "./scripts/init-submodules.sh",
-
         "wsrun": "wsrun",
         "build": "yarn install && yarn submodule:init && yarn build:step1 && yarn build:step2 && yarn build:step3 && yarn build:step4 && yarn build:step5",
         "build:step1": "yarn compile:contracts",
@@ -32,7 +31,6 @@
         "build:forge": "wsrun -p ${npm_package_config_contractsPackages} --fast-exit --serial --exclude-missing -c build:forge",
         "build:ts": "yarn build:packages && yarn build:contracts",
         "watch:ts": "yarn tsc -b -w",
-        
         "build:ordered": "./build-order.sh",
         "build:ordered:ts": "./build-ts-ordered.sh",
         "build:core": "./build-core.sh",
@@ -51,7 +49,6 @@
         "clean:node-modules:all": "wsrun --fast-exit -r --parallel --exclude-missing -p ${npm_package_config_contractsPackages},${npm_package_config_nonContractPackages} -c clean:node-modules",
         "clean:super": "yarn clean:all && yarn clean:node",
         "contracts:watch": "wsrun --parallel --exclude-missing -p $PKG -c watch",
-
         "compile:all": "./scripts/compile-all.sh",
         "lint:contracts": "./scripts/lint-contracts.sh",
         "remove_node_modules": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",

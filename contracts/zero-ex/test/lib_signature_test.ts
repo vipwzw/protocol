@@ -24,12 +24,12 @@ describe('LibSignature library', () => {
     before(async () => {
         signerKey = hexUtils.random();
         signer = ethjs.bufferToHex(ethjs.privateToAddress(ethjs.toBuffer(signerKey)));
-        
+
         // 使用测试环境中的 provider 和账户
         const accounts = await env.getAccountAddressesAsync();
         env.txDefaults.from = accounts[0];
         const ethersProvider = await env.provider.getSigner(accounts[0]);
-        
+
         const factory = new TestLibSignature__factory(ethersProvider);
         testLib = await factory.deploy();
         await testLib.waitForDeployment();

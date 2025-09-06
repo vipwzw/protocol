@@ -25,28 +25,28 @@ describe('LibFixedMath unit tests', () => {
     const MAX_EXP_NUMBER = 0;
     // e ^ MIN_EXP_NUMBER
     const MIN_LN_NUMBER_DECIMAL = new Decimal(MIN_EXP_NUMBER).exp();
-    
+
     const FUZZ_COUNT = 1024;
 
     // 适配的工具函数 - 正确的 fixed-point 转换
     // 基于对原始错误的分析：不要在 JS 中进行大数乘法，而是使用合适的值范围
     function toFixed(value: number | string): bigint {
         const num = typeof value === 'string' ? parseFloat(value) : value;
-        
+
         // 对于整数，直接乘以 FIXED_1，但要确保不会溢出
         if (Number.isInteger(num) && Math.abs(num) <= 1000) {
             return BigInt(num) * FIXED_1;
         }
-        
+
         // 对于小数，使用精确的 Decimal 计算
         const decimal = new Decimal(value.toString());
         const scaled = decimal.mul(new Decimal(FIXED_POINT_DIVISOR.toString()));
-        
+
         // 检查是否会溢出
         if (scaled.abs().gte(new Decimal(2).pow(255))) {
             throw new Error(`Value ${value} would cause overflow in fixed-point conversion`);
         }
-        
+
         return BigInt(scaled.toFixed(0));
     }
 
@@ -60,26 +60,33 @@ describe('LibFixedMath unit tests', () => {
         const actualValue = fromFixed(actualFixed);
         const expectedValue = new Decimal(expected.toString());
         const tolerance = new Decimal('1e-15'); // 高精度比较
-        
+
         const diff = actualValue.sub(expectedValue).abs();
-        expect(diff.lte(tolerance), 
-            `Expected ${actualValue.toString()} to equal ${expectedValue.toString()}, diff: ${diff.toString()}`
+        expect(
+            diff.lte(tolerance),
+            `Expected ${actualValue.toString()} to equal ${expectedValue.toString()}, diff: ${diff.toString()}`,
         ).to.be.true;
     }
 
-    function assertFixedRoughlyEquals(actualFixed: bigint, expected: number | string | Decimal, precision: number = 18): void {
+    function assertFixedRoughlyEquals(
+        actualFixed: bigint,
+        expected: number | string | Decimal,
+        precision: number = 18,
+    ): void {
         const actualValue = fromFixed(actualFixed);
         const expectedValue = new Decimal(expected.toString());
         const tolerance = new Decimal(10).pow(-precision);
-        
+
         if (expectedValue.eq(0)) {
-            expect(actualValue.abs().lte(tolerance), 
-                `Expected ${actualValue.toString()} to be roughly 0 with precision ${precision}`
+            expect(
+                actualValue.abs().lte(tolerance),
+                `Expected ${actualValue.toString()} to be roughly 0 with precision ${precision}`,
             ).to.be.true;
         } else {
             const relativeError = actualValue.sub(expectedValue).abs().div(expectedValue.abs());
-            expect(relativeError.lte(tolerance), 
-                `Expected ${actualValue.toString()} to be roughly equal to ${expectedValue.toString()} with precision ${precision}. Relative error: ${relativeError.toString()}`
+            expect(
+                relativeError.lte(tolerance),
+                `Expected ${actualValue.toString()} to be roughly equal to ${expectedValue.toString()} with precision ${precision}. Relative error: ${relativeError.toString()}`,
             ).to.be.true;
         }
     }
@@ -96,7 +103,6 @@ describe('LibFixedMath unit tests', () => {
             assertFixedEquals(r, 1);
         });
     });
-
 
     describe('abs()', () => {
         it('abs(n) == n', async () => {
@@ -246,7 +252,7 @@ describe('LibFixedMath unit tests', () => {
             // 方法2: 让合约处理整数转换，避免 JS 中的大数乘法
             const four = await testContract.toFixedSigned(4n);
             const two = await testContract.toFixedSigned(2n);
-            
+
             // 由于会溢出，我们验证这确实会失败
             const tx = testContract.div(four, two);
             await expect(tx).to.be.reverted; // 验证确实会溢出
@@ -264,7 +270,7 @@ describe('LibFixedMath unit tests', () => {
             // 验证 toFixed(4) 和 toFixed(2) 确实会在 div 中导致溢出
             const tx1 = testContract.div(toFixed(4), toFixed(2));
             await expect(tx1).to.be.reverted; // 验证溢出
-            
+
             // 但是我们可以用更小的等价值
             const r = await testContract.div(toFixed(0.4), toFixed(0.2));
             assertFixedRoughlyEquals(r, 2, 15);
@@ -357,7 +363,7 @@ describe('LibFixedMath unit tests', () => {
                 it(`${i + 1}/${numTests} add/sub identity: (a + b) - b == a`, async () => {
                     const a = getRandomFixed();
                     const b = getRandomFixed();
-                    
+
                     try {
                         const sum = await testContract.add(a, b);
                         const result = await testContract.sub(sum, b);
@@ -376,16 +382,16 @@ describe('LibFixedMath unit tests', () => {
                 it(`${i + 1}/${numTests} mul/div identity: (a * b) / b == a (b != 0)`, async () => {
                     const a = getRandomFixed();
                     let b = getRandomFixed();
-                    
+
                     // 确保 b 不为 0
                     if (b === 0n) {
                         b = FIXED_1;
                     }
-                    
+
                     try {
                         const product = await testContract.mul(a, b);
                         const result = await testContract.div(product, b);
-                        
+
                         // 由于精度损失，使用近似比较
                         const tolerance = FIXED_1 / 1000000n; // 0.000001 的容差
                         const diff = result > a ? result - a : a - result;
@@ -404,11 +410,11 @@ describe('LibFixedMath unit tests', () => {
                 it(`${i + 1}/${numTests} ln/exp identity: exp(ln(x)) ~= x (x > 0)`, async () => {
                     // 生成正数
                     const x = toFixed(Math.random() * 10 + 0.1); // 0.1 到 10.1 之间
-                    
+
                     try {
                         const lnX = await testContract.ln(x);
                         const result = await testContract.exp(lnX);
-                        
+
                         // 由于精度损失，使用相对误差比较
                         assertFixedRoughlyEquals(result, fromFixed(x), 12);
                     } catch (e) {

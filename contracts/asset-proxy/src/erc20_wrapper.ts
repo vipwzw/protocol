@@ -46,23 +46,15 @@ export class ERC20Wrapper {
         this._contractOwnerAddress = contractOwnerAddress;
         this._assetDataInterface = IAssetData__factory.connect(constants.NULL_ADDRESS, provider as any);
     }
-    public async deployDummyTokensAsync(
-        numberToDeploy: number,
-        decimals: bigint = 18n,
-    ): Promise<DummyERC20Token[]> {
+    public async deployDummyTokensAsync(numberToDeploy: number, decimals: bigint = 18n): Promise<DummyERC20Token[]> {
         const { ethers } = require('hardhat');
         const [signer] = await ethers.getSigners();
-        
+
         for (let i = 0; i < numberToDeploy; i++) {
             const factory = new DummyERC20Token__factory(signer);
             // Use minimal supply to avoid any overflow issues
             const safeTotalSupply = ethers.parseUnits('1000000000', Number(decimals)); // 1,000,000,000 tokens total
-            const contract = await factory.deploy(
-                `Dummy Token ${i}`,
-                `DUM${i}`,
-                decimals, 
-                safeTotalSupply,
-            );
+            const contract = await factory.deploy(`Dummy Token ${i}`, `DUM${i}`, decimals, safeTotalSupply);
             await contract.waitForDeployment();
             this._dummyTokenContracts.push(contract);
         }
@@ -73,7 +65,7 @@ export class ERC20Wrapper {
         const { ethers } = require('hardhat');
         const [signer] = await ethers.getSigners();
         const factory = new ERC20Proxy__factory(signer);
-        this._proxyContract = await factory.deploy() as ERC20Proxy;
+        this._proxyContract = (await factory.deploy()) as ERC20Proxy;
         await this._proxyContract.waitForDeployment();
         const proxyAddress = await this._proxyContract.getAddress();
         this._proxyIdIfExists = await getProxyId(proxyAddress, this._provider);
@@ -86,30 +78,32 @@ export class ERC20Wrapper {
     public async setBalancesAndAllowancesAsync(): Promise<void> {
         this._validateDummyTokenContractsExistOrThrow();
         this._validateProxyContractExistsOrThrow();
-        
+
         const { ethers } = require('hardhat');
         const signers = await ethers.getSigners();
         const proxyAddress = await this._proxyContract!.getAddress();
-        
+
         // Provide reasonable balances and allowances to each owner
         const initialBalance = ethers.parseUnits('1000', 18); // 1,000 tokens per user
         const allowanceAmount = ethers.parseUnits('1000', 18); // 1,000 tokens allowance
-        
+
         for (const dummyTokenContract of this._dummyTokenContracts) {
             // 确保使用合约的 owner (部署者) 来调用 setBalance
             const [ownerSigner] = signers; // 第一个 signer 是部署者，也是合约的 owner
             const contractWithOwner = dummyTokenContract.connect(ownerSigner);
-            
+
             for (let i = 0; i < this._tokenOwnerAddresses.length; i++) {
                 const tokenOwnerAddress = this._tokenOwnerAddresses[i];
-                
+
                 try {
                     // Set user balance directly on the dummy token
                     const setBalTx = await contractWithOwner.setBalance(tokenOwnerAddress, initialBalance);
                     await setBalTx.wait();
 
                     // Approve proxy from the user's signer
-                    const userSigner = signers.find((s: any) => s.address.toLowerCase() === tokenOwnerAddress.toLowerCase()) || signers[i % signers.length];
+                    const userSigner =
+                        signers.find((s: any) => s.address.toLowerCase() === tokenOwnerAddress.toLowerCase()) ||
+                        signers[i % signers.length];
                     const contractWithSigner = dummyTokenContract.connect(userSigner);
                     const approveTx = await contractWithSigner.approve(proxyAddress, allowanceAmount);
                     await approveTx.wait();
@@ -178,7 +172,7 @@ export class ERC20Wrapper {
     }
     public async getTokenAddresses(): Promise<string[]> {
         const tokenAddresses = await Promise.all(
-            this._dummyTokenContracts.map(async dummyTokenContract => await dummyTokenContract.getAddress())
+            this._dummyTokenContracts.map(async dummyTokenContract => await dummyTokenContract.getAddress()),
         );
         return tokenAddresses;
     }
@@ -189,10 +183,10 @@ export class ERC20Wrapper {
         const tokenContractIfExists = await Promise.all(
             this._dummyTokenContracts.map(async c => ({
                 contract: c,
-                address: await c.getAddress()
-            }))
+                address: await c.getAddress(),
+            })),
         ).then(contracts => contracts.find(c => c.address.toLowerCase() === tokenAddress.toLowerCase())?.contract);
-        
+
         if (tokenContractIfExists === undefined) {
             throw new Error(`Token: ${tokenAddress} was not deployed through ERC20Wrapper`);
         }

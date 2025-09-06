@@ -12,7 +12,10 @@ export { InitialMigration } from './typechain-types/contracts/src/migrations/Ini
 
 // Export factory classes (flatten common ones to avoid deep import issues)
 export { ZeroEx__factory } from './typechain-types/factories/contracts/src';
-export { InitialMigration__factory, FullMigration__factory } from './typechain-types/factories/contracts/src/migrations';
+export {
+    InitialMigration__factory,
+    FullMigration__factory,
+} from './typechain-types/factories/contracts/src/migrations';
 export * from './typechain-types/factories/contracts/src/features';
 export * from './typechain-types/factories/contracts/test';
 export * from './typechain-types/factories/contracts/test/tokens';

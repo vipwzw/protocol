@@ -8,11 +8,7 @@ const MAX_UINT256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffff
 export function safeAdd(a: bigint, b: bigint): bigint {
     const r = a + b;
     if (r > MAX_UINT256) {
-        throw new SafeMathRevertErrors.Uint256BinOpError(
-            SafeMathRevertErrors.BinOpErrorCodes.AdditionOverflow,
-            a,
-            b,
-        );
+        throw new SafeMathRevertErrors.Uint256BinOpError(SafeMathRevertErrors.BinOpErrorCodes.AdditionOverflow, a, b);
     }
     return r;
 }
@@ -51,11 +47,7 @@ export function safeMul(a: bigint, b: bigint): bigint {
  */
 export function safeDiv(a: bigint, b: bigint): bigint {
     if (b === BigInt(0)) {
-        throw new SafeMathRevertErrors.Uint256BinOpError(
-            SafeMathRevertErrors.BinOpErrorCodes.DivisionByZero,
-            a,
-            b,
-        );
+        throw new SafeMathRevertErrors.Uint256BinOpError(SafeMathRevertErrors.BinOpErrorCodes.DivisionByZero, a, b);
     }
     return a / b;
 }

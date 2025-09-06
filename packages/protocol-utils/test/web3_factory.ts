@@ -9,14 +9,15 @@ export const web3Factory = {
     getRpcProvider(): any {
         // Use Hardhat's built-in provider instead of external connection
         const provider = ethers.provider;
-        
+
         // Create a Web3 provider compatible object with getSigner support
         return {
             send: async (method: string, params: any[]): Promise<any> => {
                 return await provider.send(method, params);
             },
             sendAsync: (payload: any, callback: (error: any, result: any) => void): void => {
-                provider.send(payload.method, payload.params || [])
+                provider
+                    .send(payload.method, payload.params || [])
                     .then((result: any) => {
                         callback(null, { jsonrpc: '2.0', id: payload.id, result });
                     })
@@ -36,7 +37,7 @@ export const web3Factory = {
                 return signers[0];
             },
         };
-    }
+    },
 };
 
-// Web3Wrapper removed - using ethers.js directly 
+// Web3Wrapper removed - using ethers.js directly

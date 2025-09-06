@@ -61,11 +61,11 @@ function convertToArrayFormat(obj: any, components: any[]): any {
     if (Array.isArray(obj)) {
         return obj.map(item => convertToArrayFormat(item, components));
     }
-    
+
     if (typeof obj === 'object' && obj !== null) {
         return components.map(component => {
             const value = obj[component.name];
-            
+
             // 处理 bytes 类型（string）
             if (component.type === 'bytes') {
                 // 如果值是空数组或 undefined/null，返回 '0x'
@@ -74,7 +74,7 @@ function convertToArrayFormat(obj: any, components: any[]): any {
                 }
                 return value || '0x'; // 确保 bytes 类型至少是 '0x'
             }
-            
+
             if (component.components && Array.isArray(value)) {
                 // 处理嵌套的 tuple 数组
                 return value.map(item => convertToArrayFormat(item, component.components));
@@ -82,7 +82,7 @@ function convertToArrayFormat(obj: any, components: any[]): any {
                 // 处理嵌套的 tuple 对象
                 return convertToArrayFormat(value, component.components);
             }
-            
+
             // 🔧 处理 null/undefined 值 - 为不同类型提供默认值
             if (value === null || value === undefined) {
                 if (component.type.startsWith('uint') || component.type.startsWith('int')) {
@@ -100,11 +100,11 @@ function convertToArrayFormat(obj: any, components: any[]): any {
                     return '0';
                 }
             }
-            
+
             return value;
         });
     }
-    
+
     return obj;
 }
 
@@ -127,8 +127,8 @@ const FILL_QUOTE_TRANSFORMER_DATA_ABI = {
         { name: 'fillSequence', type: 'uint8[]' },
         { name: 'fillAmount', type: 'uint256' },
         { name: 'refundReceiver', type: 'address' },
-        { name: 'otcOrders', type: 'tuple[]', components: OTC_ORDER_INFO_ABI_COMPONENTS } // 修复：使用正确的 OTC 结构
-    ]
+        { name: 'otcOrders', type: 'tuple[]', components: OTC_ORDER_INFO_ABI_COMPONENTS }, // 修复：使用正确的 OTC 结构
+    ],
 };
 
 // 创建 ethers Interface 用于编码/解码
@@ -136,8 +136,8 @@ const fillQuoteInterface = new ethers.Interface([
     {
         type: 'function',
         name: 'encodeFillQuoteData',
-        inputs: [FILL_QUOTE_TRANSFORMER_DATA_ABI]
-    }
+        inputs: [FILL_QUOTE_TRANSFORMER_DATA_ABI],
+    },
 ]);
 
 export const fillQuoteTransformerDataEncoder = {
@@ -158,7 +158,7 @@ export const fillQuoteTransformerDataEncoder = {
         const withSelector = funcSelector + encoded.slice(2);
         const decoded = fillQuoteInterface.decodeFunctionData('encodeFillQuoteData', withSelector);
         return decoded[0] as FillQuoteTransformerData;
-    }
+    },
 };
 
 /**
@@ -189,11 +189,11 @@ export interface FillQuoteTransformerData {
     buyToken: string;
     bridgeOrders: FillQuoteTransformerBridgeOrder[];
     limitOrders: FillQuoteTransformerLimitOrderInfo[]; // 数组，匹配合约
-    rfqOrders: FillQuoteTransformerRfqOrderInfo[];      // 数组，匹配合约
+    rfqOrders: FillQuoteTransformerRfqOrderInfo[]; // 数组，匹配合约
     fillSequence: FillQuoteTransformerOrderType[];
     fillAmount: bigint;
     refundReceiver: string;
-    otcOrders: FillQuoteTransformerOtcOrderInfo[];      // 数组，匹配合约
+    otcOrders: FillQuoteTransformerOtcOrderInfo[]; // 数组，匹配合约
 }
 
 /**
@@ -300,7 +300,7 @@ export function decodeFillQuoteTransformerData(encoded: string): FillQuoteTransf
 // WETH Transformer Data ABI 组件
 const WETH_TRANSFORMER_DATA_ABI_COMPONENTS = [
     { name: 'token', type: 'address' },
-    { name: 'amount', type: 'uint256' }
+    { name: 'amount', type: 'uint256' },
 ];
 
 export const wethTransformerDataEncoder = {
@@ -312,7 +312,7 @@ export const wethTransformerDataEncoder = {
     decode: (encoded: string): [WethTransformerData] => {
         const [decoded] = abiCoder.decode(['tuple(address,uint256)'], encoded);
         return [decoded as WethTransformerData];
-    }
+    },
 };
 
 /**
@@ -344,7 +344,7 @@ export function decodeWethTransformerData(encoded: string): WethTransformerData 
 // PayTaker Transformer Data ABI 组件
 const PAY_TAKER_TRANSFORMER_DATA_ABI_COMPONENTS = [
     { name: 'tokens', type: 'address[]' },
-    { name: 'amounts', type: 'uint256[]' }
+    { name: 'amounts', type: 'uint256[]' },
 ];
 
 export const payTakerTransformerDataEncoder = {
@@ -356,7 +356,7 @@ export const payTakerTransformerDataEncoder = {
     decode: (encoded: string): [PayTakerTransformerData] => {
         const [decoded] = abiCoder.decode(['tuple(address[],uint256[])'], encoded);
         return [decoded as PayTakerTransformerData];
-    }
+    },
 };
 
 /**
@@ -387,15 +387,15 @@ export function decodePayTakerTransformerData(encoded: string): PayTakerTransfor
  */
 // AffiliateFee Transformer Data ABI 组件
 const AFFILIATE_FEE_TRANSFORMER_DATA_ABI_COMPONENTS = [
-    { 
-        name: 'fees', 
-        type: 'tuple[]', 
+    {
+        name: 'fees',
+        type: 'tuple[]',
         components: [
             { name: 'token', type: 'address' },
             { name: 'amount', type: 'uint256' },
-            { name: 'recipient', type: 'address' }
-        ]
-    }
+            { name: 'recipient', type: 'address' },
+        ],
+    },
 ];
 
 export const affiliateFeeTransformerDataEncoder = {
@@ -407,7 +407,7 @@ export const affiliateFeeTransformerDataEncoder = {
     decode: (encoded: string): AffiliateFeeTransformerData => {
         const [decoded] = abiCoder.decode(['tuple(tuple(address,uint256,address)[])'], encoded);
         return decoded as AffiliateFeeTransformerData;
-    }
+    },
 };
 
 /**
@@ -469,7 +469,7 @@ export function getTransformerAddress(deployer: string, nonce: number): string {
 const POSITIVE_SLIPPAGE_FEE_TRANSFORMER_DATA_ABI_COMPONENTS = [
     { name: 'token', type: 'address' },
     { name: 'bestCaseAmount', type: 'uint256' },
-    { name: 'recipient', type: 'address' }
+    { name: 'recipient', type: 'address' },
 ];
 
 export const positiveSlippageFeeTransformerDataEncoder = {
@@ -481,7 +481,7 @@ export const positiveSlippageFeeTransformerDataEncoder = {
     decode: (encoded: string): PositiveSlippageFeeTransformerData => {
         const [decoded] = abiCoder.decode(['tuple(address,uint256,address)'], encoded);
         return decoded as PositiveSlippageFeeTransformerData;
-    }
+    },
 };
 
 /**

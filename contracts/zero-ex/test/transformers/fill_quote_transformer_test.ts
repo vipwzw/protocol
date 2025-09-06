@@ -106,30 +106,27 @@ describe('FillQuoteTransformer', () => {
         const deployer = maker; // Use first account as deployer
         const signer = await env.provider.getSigner(deployer);
         const senderSigner = await env.provider.getSigner(sender);
-        
+
         // Deploy exchange
         const exchangeFactory = new TestFillQuoteTransformerExchange__factory(signer);
         exchange = await exchangeFactory.deploy();
         await exchange.waitForDeployment();
-        
+
         // Deploy bridge adapter
         const bridgeAdapterFactory = new EthereumBridgeAdapter__factory(signer);
         const bridgeAdapter = await bridgeAdapterFactory.deploy(NULL_ADDRESS);
         await bridgeAdapter.waitForDeployment();
-        
+
         // Deploy transformer
         const transformerFactory = new FillQuoteTransformer__factory(signer);
-        transformer = await transformerFactory.deploy(
-            await bridgeAdapter.getAddress(),
-            await exchange.getAddress()
-        );
+        transformer = await transformerFactory.deploy(await bridgeAdapter.getAddress(), await exchange.getAddress());
         await transformer.waitForDeployment();
-        
+
         // Deploy host
         const hostFactory = new TestFillQuoteTransformerHost__factory(signer);
         host = await hostFactory.deploy();
         await host.waitForDeployment();
-        
+
         // Deploy bridge (using sender as deployer)
         const bridgeFactory = new TestFillQuoteTransformerBridge__factory(senderSigner);
         bridge = await bridgeFactory.deploy();
@@ -137,9 +134,7 @@ describe('FillQuoteTransformer', () => {
         BRIDGE_ADDRESS = await bridge.getAddress();
         // Deploy tokens
         const tokenFactories = _.times(3, () => new TestMintableERC20Token__factory(signer));
-        const tokenDeployments = await Promise.all(
-            tokenFactories.map(factory => factory.deploy())
-        );
+        const tokenDeployments = await Promise.all(tokenFactories.map(factory => factory.deploy()));
         await Promise.all(tokenDeployments.map(token => token.waitForDeployment()));
         [makerToken, takerToken, takerFeeToken] = tokenDeployments;
         makerTokenAddress = await makerToken.getAddress();
@@ -149,37 +144,39 @@ describe('FillQuoteTransformer', () => {
 
     // 🔧 关键状态重置：防止测试间干扰
     let snapshotId: string;
-    
+
     before(async () => {
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
-    
+
     beforeEach(async () => {
-        await ethers.provider.send("evm_revert", [snapshotId]);
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
-        
+        await ethers.provider.send('evm_revert', [snapshotId]);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
+
         // 🔧 重新获取账户地址，清除缓存
         [maker, feeRecipient, sender, taker] = await env.getAccountAddressesAsync();
-        
+
         // 🔧 重新创建合约实例，清除对象状态
         const ExchangeFactory = await ethers.getContractFactory('TestFillQuoteTransformerExchange');
-        exchange = await ExchangeFactory.attach(await exchange.getAddress()) as TestFillQuoteTransformerExchangeContract;
-        
+        exchange = (await ExchangeFactory.attach(
+            await exchange.getAddress(),
+        )) as TestFillQuoteTransformerExchangeContract;
+
         const TransformerFactory = await ethers.getContractFactory('FillQuoteTransformer');
-        transformer = await TransformerFactory.attach(await transformer.getAddress()) as FillQuoteTransformerContract;
-        
+        transformer = (await TransformerFactory.attach(await transformer.getAddress())) as FillQuoteTransformerContract;
+
         const HostFactory = await ethers.getContractFactory('TestFillQuoteTransformerHost');
-        host = await HostFactory.attach(await host.getAddress()) as TestFillQuoteTransformerHostContract;
-        
+        host = (await HostFactory.attach(await host.getAddress())) as TestFillQuoteTransformerHostContract;
+
         const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
-        makerToken = await TokenFactory.attach(await makerToken.getAddress()) as TestMintableERC20TokenContract;
-        takerToken = await TokenFactory.attach(await takerToken.getAddress()) as TestMintableERC20TokenContract;
-        takerFeeToken = await TokenFactory.attach(await takerFeeToken.getAddress()) as TestMintableERC20TokenContract;
-        
+        makerToken = (await TokenFactory.attach(await makerToken.getAddress())) as TestMintableERC20TokenContract;
+        takerToken = (await TokenFactory.attach(await takerToken.getAddress())) as TestMintableERC20TokenContract;
+        takerFeeToken = (await TokenFactory.attach(await takerFeeToken.getAddress())) as TestMintableERC20TokenContract;
+
         // 🔧 重新获取地址，确保同步
         makerTokenAddress = await makerToken.getAddress();
         takerTokenAddress = await takerToken.getAddress();
-        
+
         // 🔧 重新计算协议费
         singleProtocolFee = BigInt(await exchange.getProtocolFeeMultiplier()) * BigInt(GAS_PRICE);
     });
@@ -188,23 +185,23 @@ describe('FillQuoteTransformer', () => {
     async function fundLimitOrderMaker(limitOrders: LimitOrder[]): Promise<void> {
         const totalMakerAmount = sumBigInt(limitOrders.map(o => o.makerAmount));
         const hostAddress = await host.getAddress(); // 🔧 在delegatecall中，Maker需要授权Host地址
-        
+
         // 精确设置：先清空，再mint确切数量
         await makerToken.burn(maker, await makerToken.balanceOf(maker));
         await makerToken.mint(maker, totalMakerAmount);
-        
+
         // 🔧 关键修复：设置正确的授权
-        await ethers.provider.send("hardhat_impersonateAccount", [maker]);
+        await ethers.provider.send('hardhat_impersonateAccount', [maker]);
         const makerSigner = await ethers.getSigner(maker);
-        
+
         // 先清空所有授权，再设置新的授权
         await makerToken.connect(makerSigner).approve(hostAddress, 0);
-        
+
         // 使用足够大的授权量以处理精度计算差异
-        const generousMakerAllowance = totalMakerAmount * 1000n; 
+        const generousMakerAllowance = totalMakerAmount * 1000n;
         await makerToken.connect(makerSigner).approve(hostAddress, generousMakerAllowance);
-        
-        await ethers.provider.send("hardhat_stopImpersonatingAccount", [maker]);
+
+        await ethers.provider.send('hardhat_stopImpersonatingAccount', [maker]);
     }
 
     async function createLimitOrder(fields: Partial<LimitOrderFields> = {}): Promise<LimitOrder> {
@@ -467,7 +464,7 @@ describe('FillQuoteTransformer', () => {
     function assertBalances(actual: Balances, expected: Balances): void {
         // 🎯 统一使用chai matchers的closeTo进行精确断言
         expect(actual.makerTokenBalance).to.be.closeTo(expected.makerTokenBalance, 100n);
-        
+
         // 🎯 精确的takerToken余额检查：使用chai matchers处理代币余量差异
         if (actual.takerTokensBalance > ethers.parseEther('1') && expected.takerTokensBalance === 0n) {
             // 买入测试：Host的takerToken余额是配置副作用，完全跳过检查
@@ -477,9 +474,9 @@ describe('FillQuoteTransformer', () => {
             // 标准测试：使用closeTo替代assertIntegerRoughlyEquals
             expect(actual.takerTokensBalance).to.be.closeTo(expected.takerTokensBalance, 100n);
         }
-        
+
         expect(actual.takerFeeBalance).to.be.closeTo(expected.takerFeeBalance, 100n);
-        
+
         // 🎯 精确的ETH余额检查：使用chai matchers的closeTo处理gas费用差异
         if (actual.ethBalance > ethers.parseEther('0.001')) {
             // 大额ETH使用closeTo匹配，允许合理的gas费用差异（0.001 ETH容差）
@@ -560,9 +557,7 @@ describe('FillQuoteTransformer', () => {
     function encodeTupleComponents(components: any[]): string {
         return `(${components
             .map((c: any) =>
-                c.type === 'tuple'
-                    ? encodeTupleComponents(c.components)
-                    : `${c.type}${c.name ? ' ' + c.name : ''}`,
+                c.type === 'tuple' ? encodeTupleComponents(c.components) : `${c.type}${c.name ? ' ' + c.name : ''}`,
             )
             .join(',')})`;
     }
@@ -583,7 +578,11 @@ describe('FillQuoteTransformer', () => {
             { name: 'maxTakerTokenFillAmount', type: 'uint256' },
         ];
         const typeStr = `tuple(${components
-            .map(c => (c.type === 'tuple' ? encodeTupleComponents((c as any).components) : `${c.type}${c.name ? ' ' + c.name : ''}`))
+            .map(c =>
+                c.type === 'tuple'
+                    ? encodeTupleComponents((c as any).components)
+                    : `${c.type}${c.name ? ' ' + c.name : ''}`,
+            )
             .join(',')})[]`;
         const values = infos.map(i => [
             valuesFromComponents((LimitOrder as any).STRUCT_ABI, i.order),
@@ -601,7 +600,11 @@ describe('FillQuoteTransformer', () => {
             { name: 'maxTakerTokenFillAmount', type: 'uint256' },
         ];
         const typeStr = `tuple(${components
-            .map(c => (c.type === 'tuple' ? encodeTupleComponents((c as any).components) : `${c.type}${c.name ? ' ' + c.name : ''}`))
+            .map(c =>
+                c.type === 'tuple'
+                    ? encodeTupleComponents((c as any).components)
+                    : `${c.type}${c.name ? ' ' + c.name : ''}`,
+            )
             .join(',')})[]`;
         const [decoded] = abiCoder.decode([typeStr], encoded);
         // decoded is Result[]; each item is [order(tuple Result), signature(tuple), max]
@@ -635,7 +638,11 @@ describe('FillQuoteTransformer', () => {
             { name: 'maxTakerTokenFillAmount', type: 'uint256' },
         ];
         const typeStr = `tuple(${components
-            .map(c => (c.type === 'tuple' ? encodeTupleComponents((c as any).components) : `${c.type}${c.name ? ' ' + c.name : ''}`))
+            .map(c =>
+                c.type === 'tuple'
+                    ? encodeTupleComponents((c as any).components)
+                    : `${c.type}${c.name ? ' ' + c.name : ''}`,
+            )
             .join(',')})[]`;
         const values = infos.map(i => [
             valuesFromComponents(RFQ_STRUCT_ABI, i.order),
@@ -654,7 +661,11 @@ describe('FillQuoteTransformer', () => {
             { name: 'maxTakerTokenFillAmount', type: 'uint256' },
         ];
         const typeStr = `tuple(${components
-            .map(c => (c.type === 'tuple' ? encodeTupleComponents((c as any).components) : `${c.type}${c.name ? ' ' + c.name : ''}`))
+            .map(c =>
+                c.type === 'tuple'
+                    ? encodeTupleComponents((c as any).components)
+                    : `${c.type}${c.name ? ' ' + c.name : ''}`,
+            )
             .join(',')})[]`;
         const [decoded] = abiCoder.decode([typeStr], encoded);
         return (decoded as any[]).map(item => {
@@ -698,7 +709,7 @@ describe('FillQuoteTransformer', () => {
                 _params.sender,
                 _params.taker,
                 encodeFillQuoteTransformerData(_params.data),
-                { value: _params.ethBalance }
+                { value: _params.ethBalance },
             );
         const receipt = await tx.wait();
         return receipt! as any;
@@ -716,12 +727,15 @@ describe('FillQuoteTransformer', () => {
         const exchangeEthBalance = await ethers.provider.getBalance(await exchange.getAddress());
         if (exchangeEthBalance >= qfr.protocolFeePaid) {
             // ETH余额足够支付协议费就算成功
-            await assertCurrentBalancesAsync(await exchange.getAddress(), { 
-                ...ZERO_BALANCES, 
-                ethBalance: exchangeEthBalance 
+            await assertCurrentBalancesAsync(await exchange.getAddress(), {
+                ...ZERO_BALANCES,
+                ethBalance: exchangeEthBalance,
             });
         } else {
-            await assertCurrentBalancesAsync(await exchange.getAddress(), { ...ZERO_BALANCES, ethBalance: qfr.protocolFeePaid });
+            await assertCurrentBalancesAsync(await exchange.getAddress(), {
+                ...ZERO_BALANCES,
+                ethBalance: qfr.protocolFeePaid,
+            });
         }
     }
 
@@ -802,10 +816,10 @@ describe('FillQuoteTransformer', () => {
 
         it('can fully sell to a single limit order', async () => {
             const limitOrders = [await createLimitOrder()];
-            
+
             // 🔧 关键修复：为limit order设置maker状态
             await fundLimitOrderMaker(limitOrders);
-            
+
             const data = createTransformData({
                 limitOrders: limitOrders.map(o => ({
                     order: o,
@@ -832,15 +846,17 @@ describe('FillQuoteTransformer', () => {
 
         it('can partial sell to a single limit order', async () => {
             // 🔧 使用固定数量确保可以被2整除，避免精度问题
-            const limitOrders = [await createLimitOrder({
-                makerAmount: ethers.parseEther('2'), // 固定数量
-                takerAmount: ethers.parseEther('2'), // 固定数量
-                takerTokenFeeAmount: ethers.parseEther('0.2'), // 固定费用
-            })];
-            
+            const limitOrders = [
+                await createLimitOrder({
+                    makerAmount: ethers.parseEther('2'), // 固定数量
+                    takerAmount: ethers.parseEther('2'), // 固定数量
+                    takerTokenFeeAmount: ethers.parseEther('0.2'), // 固定费用
+                }),
+            ];
+
             // 🔧 关键修复：为limit order设置maker状态
             await fundLimitOrderMaker(limitOrders);
-            
+
             const data = createTransformData({
                 limitOrders: limitOrders.map(o => ({
                     order: o,
@@ -866,10 +882,10 @@ describe('FillQuoteTransformer', () => {
 
         it('can fully sell to a single limit order without fees', async () => {
             const limitOrders = [await createLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })];
-            
+
             // 🔧 关键修复：为limit order设置maker状态
             await fundLimitOrderMaker(limitOrders);
-            
+
             const data = createTransformData({
                 limitOrders: limitOrders.map(o => ({
                     order: o,
@@ -895,10 +911,10 @@ describe('FillQuoteTransformer', () => {
 
         it('can partial sell to a single limit order without fees', async () => {
             const limitOrders = [await createLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })];
-            
+
             // 🔧 关键修复：为limit order设置maker状态
             await fundLimitOrderMaker(limitOrders);
-            
+
             const data = createTransformData({
                 limitOrders: limitOrders.map(o => ({
                     order: o,
@@ -964,14 +980,22 @@ describe('FillQuoteTransformer', () => {
             const rfqOrders = [createRfqOrder()];
             const limitOrders = [await createLimitOrder()];
             const bridgeOrders = [createBridgeOrder()];
-            
+
             // 🔧 关键修复：为limit order设置maker状态
             await fundLimitOrderMaker(limitOrders);
-            
+
             const data = createTransformData({
                 bridgeOrders,
-                rfqOrders: rfqOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() })),
-                limitOrders: limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() })),
+                rfqOrders: rfqOrders.map(o => ({
+                    order: o,
+                    maxTakerTokenFillAmount: MAX_UINT256,
+                    signature: createOrderSignature(),
+                })),
+                limitOrders: limitOrders.map(o => ({
+                    order: o,
+                    maxTakerTokenFillAmount: MAX_UINT256,
+                    signature: createOrderSignature(),
+                })),
                 fillAmount: sumBigInt([
                     ...rfqOrders.map(o => o.takerAmount),
                     ...limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount),
@@ -999,21 +1023,27 @@ describe('FillQuoteTransformer', () => {
 
         it('can partially sell to one of each order type', async () => {
             // 🔧 使用固定数量确保可以被2整除，避免精度问题
-            const rfqOrders = [createRfqOrder({
-                takerAmount: ethers.parseEther('2'), // 固定数量
-            })];
-            const limitOrders = [await createLimitOrder({
-                makerAmount: ethers.parseEther('2'), // 固定数量
-                takerAmount: ethers.parseEther('2'), // 固定数量
-                takerTokenFeeAmount: ethers.parseEther('0.2'), // 固定费用
-            })];
-            const bridgeOrders = [createBridgeOrder({
-                takerTokenAmount: ethers.parseEther('2'), // 固定数量
-            })];
-            
+            const rfqOrders = [
+                createRfqOrder({
+                    takerAmount: ethers.parseEther('2'), // 固定数量
+                }),
+            ];
+            const limitOrders = [
+                await createLimitOrder({
+                    makerAmount: ethers.parseEther('2'), // 固定数量
+                    takerAmount: ethers.parseEther('2'), // 固定数量
+                    takerTokenFeeAmount: ethers.parseEther('0.2'), // 固定费用
+                }),
+            ];
+            const bridgeOrders = [
+                createBridgeOrder({
+                    takerTokenAmount: ethers.parseEther('2'), // 固定数量
+                }),
+            ];
+
             // 🔧 关键修复：为limit order设置maker状态
             await fundLimitOrderMaker(limitOrders);
-            
+
             const data = createTransformData({
                 bridgeOrders,
                 rfqOrders: rfqOrders.map(o => ({
@@ -1021,12 +1051,17 @@ describe('FillQuoteTransformer', () => {
                     maxTakerTokenFillAmount: MAX_UINT256,
                     signature: createOrderSignature(),
                 })),
-                limitOrders: limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() })),
-                fillAmount: sumBigInt([
-                    ...rfqOrders.map(o => o.takerAmount),
-                    ...limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount),
-                    ...bridgeOrders.map(o => o.takerTokenAmount),
-                ]) / 2n,
+                limitOrders: limitOrders.map(o => ({
+                    order: o,
+                    maxTakerTokenFillAmount: MAX_UINT256,
+                    signature: createOrderSignature(),
+                })),
+                fillAmount:
+                    sumBigInt([
+                        ...rfqOrders.map(o => o.takerAmount),
+                        ...limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount),
+                        ...bridgeOrders.map(o => o.takerTokenAmount),
+                    ]) / 2n,
                 fillSequence: _.shuffle([
                     ...bridgeOrders.map(() => OrderType.Bridge),
                     ...rfqOrders.map(() => OrderType.Rfq),
@@ -1051,10 +1086,10 @@ describe('FillQuoteTransformer', () => {
             const rfqOrders = _.times(2, () => createRfqOrder());
             const limitOrders = await Promise.all(_.times(3, () => createLimitOrder()));
             const bridgeOrders = _.times(4, () => createBridgeOrder());
-            
+
             // 🔧 关键修复：为limit order设置maker状态
             await fundLimitOrderMaker(limitOrders);
-            
+
             const data = createTransformData({
                 bridgeOrders,
                 rfqOrders: rfqOrders.map(o => ({
@@ -1062,7 +1097,11 @@ describe('FillQuoteTransformer', () => {
                     maxTakerTokenFillAmount: MAX_UINT256,
                     signature: createOrderSignature(),
                 })),
-                limitOrders: limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() })),
+                limitOrders: limitOrders.map(o => ({
+                    order: o,
+                    maxTakerTokenFillAmount: MAX_UINT256,
+                    signature: createOrderSignature(),
+                })),
                 fillAmount: sumBigInt([
                     ...rfqOrders.map(o => o.takerAmount),
                     ...limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount),
@@ -1176,9 +1215,7 @@ describe('FillQuoteTransformer', () => {
                         maxTakerTokenFillAmount: MAX_UINT256,
                         // If slipped, set half the order to filled.
                         signature: createOrderSignature(
-                            slippedOrderType === OrderType.Rfq
-                                ? rfqOrder.takerAmount / 2n
-                                : ZERO_AMOUNT,
+                            slippedOrderType === OrderType.Rfq ? rfqOrder.takerAmount / 2n : ZERO_AMOUNT,
                         ),
                     },
                 ],
@@ -1188,9 +1225,7 @@ describe('FillQuoteTransformer', () => {
                         maxTakerTokenFillAmount: MAX_UINT256,
                         // If slipped, set half the order to filled.
                         signature: createOrderSignature(
-                            slippedOrderType === OrderType.Limit
-                                ? limitOrder.takerAmount / 2n
-                                : ZERO_AMOUNT,
+                            slippedOrderType === OrderType.Limit ? limitOrder.takerAmount / 2n : ZERO_AMOUNT,
                         ),
                     },
                 ],
@@ -1298,34 +1333,38 @@ describe('FillQuoteTransformer', () => {
 
         it('can fully buy to a single limit order', async () => {
             const limitOrders = [await createLimitOrder()];
-            
+
             // 🔧 关键修复：为limit order设置maker状态
             await fundLimitOrderMaker(limitOrders);
-            
+
             const totalTakerTokens = sumBigInt(limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount));
             const data = createTransformData({
                 side: Side.Buy,
-                limitOrders: limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() })),
+                limitOrders: limitOrders.map(o => ({
+                    order: o,
+                    maxTakerTokenFillAmount: MAX_UINT256,
+                    signature: createOrderSignature(),
+                })),
                 fillAmount: sumBigInt(limitOrders.map(o => o.makerAmount)) - 100n, // 🔧 精度容差
                 fillSequence: limitOrders.map(() => OrderType.Limit),
             });
             // 🔧 买入测试修复：为Host配置ETH和代币
             const exchangeAddress = await exchange.getAddress();
             const hostAddress = await host.getAddress();
-            
+
             // 为Host提供ETH支付协议费
             const [deployer] = await ethers.getSigners();
             await (await deployer.sendTransaction({ to: hostAddress, value: ethers.parseEther('1.0') })).wait();
-            
+
             // Host授权和mint代币
-            await ethers.provider.send("hardhat_impersonateAccount", [hostAddress]);
+            await ethers.provider.send('hardhat_impersonateAccount', [hostAddress]);
             const hostSigner = await ethers.getSigner(hostAddress);
             const ultimateAllowance = totalTakerTokens * 100n;
             await takerToken.connect(hostSigner).approve(exchangeAddress, ultimateAllowance);
-            await ethers.provider.send("hardhat_stopImpersonatingAccount", [hostAddress]);
-            
+            await ethers.provider.send('hardhat_stopImpersonatingAccount', [hostAddress]);
+
             await takerToken.mint(hostAddress, ultimateAllowance);
-            
+
             const qfr = getExpectedQuoteFillResults(
                 data,
                 createSimulationState({
@@ -1343,18 +1382,22 @@ describe('FillQuoteTransformer', () => {
 
         it('can partial buy to a single limit order', async () => {
             const limitOrders = [await createLimitOrder()];
-            
+
             // 🔧 关键修复：为limit order设置maker状态
             await fundLimitOrderMaker(limitOrders);
-            
+
             const totalTakerTokens = sumBigInt(limitOrders.map(o => o.takerAmount + o.takerTokenFeeAmount));
             const data = createTransformData({
                 side: Side.Buy,
-                limitOrders: limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() })),
+                limitOrders: limitOrders.map(o => ({
+                    order: o,
+                    maxTakerTokenFillAmount: MAX_UINT256,
+                    signature: createOrderSignature(),
+                })),
                 fillAmount: sumBigInt(limitOrders.map(o => o.makerAmount)) / 2n - 100n, // 🔧 精度容差
                 fillSequence: limitOrders.map(() => OrderType.Limit),
             });
-            
+
             const qfr = getExpectedQuoteFillResults(
                 data,
                 createSimulationState({
@@ -1372,18 +1415,22 @@ describe('FillQuoteTransformer', () => {
 
         it('can fully buy to a single limit order without fees', async () => {
             const limitOrders = [await createLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })];
-            
+
             // 🔧 关键修复：为limit order设置maker状态
             await fundLimitOrderMaker(limitOrders);
-            
+
             const totalTakerTokens = sumBigInt(limitOrders.map(o => o.takerAmount));
             const data = createTransformData({
                 side: Side.Buy,
-                limitOrders: limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() })),
+                limitOrders: limitOrders.map(o => ({
+                    order: o,
+                    maxTakerTokenFillAmount: MAX_UINT256,
+                    signature: createOrderSignature(),
+                })),
                 fillAmount: sumBigInt(limitOrders.map(o => o.makerAmount)) - 100n, // 🔧 精度容差
                 fillSequence: limitOrders.map(() => OrderType.Limit),
             });
-            
+
             const qfr = getExpectedQuoteFillResults(
                 data,
                 createSimulationState({
@@ -1401,14 +1448,18 @@ describe('FillQuoteTransformer', () => {
 
         it('can partial buy to a single limit order without fees', async () => {
             const limitOrders = [await createLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })];
-            
+
             // 🔧 关键修复：为limit order设置maker状态
             await fundLimitOrderMaker(limitOrders);
-            
+
             const totalTakerTokens = sumBigInt(limitOrders.map(o => o.takerAmount));
             const data = createTransformData({
                 side: Side.Buy,
-                limitOrders: limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() })),
+                limitOrders: limitOrders.map(o => ({
+                    order: o,
+                    maxTakerTokenFillAmount: MAX_UINT256,
+                    signature: createOrderSignature(),
+                })),
                 fillAmount: sumBigInt(limitOrders.map(o => o.makerAmount)) / 2n,
                 fillSequence: limitOrders.map(() => OrderType.Limit),
             });
@@ -1492,7 +1543,11 @@ describe('FillQuoteTransformer', () => {
                     maxTakerTokenFillAmount: MAX_UINT256,
                     signature: createOrderSignature(),
                 })),
-                limitOrders: limitOrders.map(o => ({ order: o, maxTakerTokenFillAmount: MAX_UINT256, signature: createOrderSignature() })),
+                limitOrders: limitOrders.map(o => ({
+                    order: o,
+                    maxTakerTokenFillAmount: MAX_UINT256,
+                    signature: createOrderSignature(),
+                })),
                 fillAmount: sumBigInt([
                     ...rfqOrders.map(o => o.makerAmount),
                     ...limitOrders.map(o => o.makerAmount),
@@ -1524,7 +1579,10 @@ describe('FillQuoteTransformer', () => {
             const limitOrder = await createLimitOrder();
             const bridgeOrder = createBridgeOrder();
             const fillSequence = _.shuffle([OrderType.Bridge, OrderType.Rfq, OrderType.Limit]);
-            const totalTakerTokens = rfqOrder.takerAmount + (limitOrder.takerAmount + limitOrder.takerTokenFeeAmount) + bridgeOrder.takerTokenAmount;
+            const totalTakerTokens =
+                rfqOrder.takerAmount +
+                (limitOrder.takerAmount + limitOrder.takerTokenFeeAmount) +
+                bridgeOrder.takerTokenAmount;
             // Fail the first order in the sequence.
             const failedOrderType = fillSequence[0];
             const data = createTransformData({
@@ -1559,7 +1617,9 @@ describe('FillQuoteTransformer', () => {
                 ],
                 // Only require the last two orders to be filled.
                 fillAmount:
-                    rfqOrder.makerAmount + limitOrder.makerAmount + bridgeOrder.makerTokenAmount -
+                    rfqOrder.makerAmount +
+                    limitOrder.makerAmount +
+                    bridgeOrder.makerTokenAmount -
                     (failedOrderType === OrderType.Bridge ? bridgeOrder.makerTokenAmount : 0n) -
                     (failedOrderType === OrderType.Rfq ? rfqOrder.makerAmount : 0n) -
                     (failedOrderType === OrderType.Limit ? limitOrder.makerAmount : 0n),
@@ -1584,7 +1644,10 @@ describe('FillQuoteTransformer', () => {
             const limitOrder = await createLimitOrder();
             const bridgeOrder = createBridgeOrder();
             const fillSequence = _.shuffle([OrderType.Bridge, OrderType.Rfq, OrderType.Limit]);
-            const totalTakerTokens = rfqOrder.takerAmount + (limitOrder.takerAmount + limitOrder.takerTokenFeeAmount) + bridgeOrder.takerTokenAmount;
+            const totalTakerTokens =
+                rfqOrder.takerAmount +
+                (limitOrder.takerAmount + limitOrder.takerTokenFeeAmount) +
+                bridgeOrder.takerTokenAmount;
             // Slip the first order in the sequence.
             const slippedOrderType = fillSequence[0];
             const data = createTransformData({
@@ -1594,7 +1657,7 @@ describe('FillQuoteTransformer', () => {
                     {
                         ...bridgeOrder,
                         // If slipped, produce half the tokens.
-                bridgeData:
+                        bridgeData:
                             slippedOrderType === OrderType.Bridge
                                 ? encodeBridgeData(bridgeOrder.makerTokenAmount / 2n)
                                 : bridgeOrder.bridgeData,
@@ -1606,9 +1669,7 @@ describe('FillQuoteTransformer', () => {
                         maxTakerTokenFillAmount: MAX_UINT256,
                         // If slipped, set half the order to filled.
                         signature: createOrderSignature(
-                            slippedOrderType === OrderType.Rfq
-                                ? rfqOrder.takerAmount / 2n
-                                : ZERO_AMOUNT,
+                            slippedOrderType === OrderType.Rfq ? rfqOrder.takerAmount / 2n : ZERO_AMOUNT,
                         ),
                     },
                 ],
@@ -1618,15 +1679,15 @@ describe('FillQuoteTransformer', () => {
                         maxTakerTokenFillAmount: MAX_UINT256,
                         // If slipped, set half the order to filled.
                         signature: createOrderSignature(
-                            slippedOrderType === OrderType.Limit
-                                ? limitOrder.takerAmount / 2n
-                                : ZERO_AMOUNT,
+                            slippedOrderType === OrderType.Limit ? limitOrder.takerAmount / 2n : ZERO_AMOUNT,
                         ),
                     },
                 ],
                 // Only require half the first order to be filled.
                 fillAmount:
-                    rfqOrder.makerAmount + limitOrder.makerAmount + bridgeOrder.makerTokenAmount -
+                    rfqOrder.makerAmount +
+                    limitOrder.makerAmount +
+                    bridgeOrder.makerTokenAmount -
                     (slippedOrderType === OrderType.Bridge ? (bridgeOrder.makerTokenAmount + 1n) / 2n : 0n) -
                     (slippedOrderType === OrderType.Rfq ? (rfqOrder.makerAmount + 1n) / 2n : 0n) -
                     (slippedOrderType === OrderType.Limit ? (limitOrder.makerAmount + 1n) / 2n : 0n),

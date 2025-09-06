@@ -47,17 +47,17 @@ describe('ZrxVault unit tests', () => {
         erc20ProxyContract = await erc20Wrapper.deployProxyAsync();
         zrxProxyAddress = await erc20ProxyContract.getAddress();
         // deploy zrx token
-        const [zrxTokenContract] = await erc20Wrapper.deployDummyTokensAsync(1, Number(testUtilsConstants.DUMMY_TOKEN_DECIMALS));
+        const [zrxTokenContract] = await erc20Wrapper.deployDummyTokensAsync(
+            1,
+            Number(testUtilsConstants.DUMMY_TOKEN_DECIMALS),
+        );
         zrxTokenAddress = await zrxTokenContract.getAddress();
         zrxAssetData = assetDataUtils.encodeERC20AssetData(zrxTokenAddress);
 
         await erc20Wrapper.setBalancesAndAllowancesAsync();
 
         const deployer = await ethers.getSigners().then(signers => signers[0]);
-        zrxVault = await new ZrxVault__factory(deployer).deploy(
-            zrxProxyAddress,
-            zrxTokenAddress,
-        );
+        zrxVault = await new ZrxVault__factory(deployer).deploy(zrxProxyAddress, zrxTokenAddress);
         await (await zrxVault.addAuthorizedAddress(owner)).wait();
 
         // configure erc20 proxy to accept calls from zrx vault
@@ -66,20 +66,14 @@ describe('ZrxVault unit tests', () => {
 
     async function deployFreshVault(): Promise<void> {
         const deployer = await ethers.getSigners().then(signers => signers[0]);
-        zrxVault = await new ZrxVault__factory(deployer).deploy(
-            zrxProxyAddress,
-            zrxTokenAddress,
-        );
+        zrxVault = await new ZrxVault__factory(deployer).deploy(zrxProxyAddress, zrxTokenAddress);
         await (await zrxVault.addAuthorizedAddress(owner)).wait();
         await erc20ProxyContract.addAuthorizedAddress(await zrxVault.getAddress());
     }
 
     async function redeployZrxVault(): Promise<void> {
         const deployer = await ethers.getSigners().then(signers => signers[0]);
-        zrxVault = await new ZrxVault__factory(deployer).deploy(
-            zrxProxyAddress,
-            zrxTokenAddress,
-        );
+        zrxVault = await new ZrxVault__factory(deployer).deploy(zrxProxyAddress, zrxTokenAddress);
         await (await zrxVault.addAuthorizedAddress(owner)).wait();
         // configure erc20 proxy to accept calls from zrx vault
         const erc20ProxyAddress = zrxProxyAddress;
@@ -113,8 +107,14 @@ describe('ZrxVault unit tests', () => {
         const newTokenBalance = await token.balanceOf(staker);
         const [expectedVaultBalance, expectedTokenBalance] =
             transferType === ZrxTransfer.Deposit
-                ? [BigInt(initialVaultBalance.toString()) + BigInt(amount.toString()), BigInt(initialTokenBalance.toString()) - BigInt(amount.toString())]
-                : [BigInt(initialVaultBalance.toString()) - BigInt(amount.toString()), BigInt(initialTokenBalance.toString()) + BigInt(amount.toString())];
+                ? [
+                      BigInt(initialVaultBalance.toString()) + BigInt(amount.toString()),
+                      BigInt(initialTokenBalance.toString()) - BigInt(amount.toString()),
+                  ]
+                : [
+                      BigInt(initialVaultBalance.toString()) - BigInt(amount.toString()),
+                      BigInt(initialTokenBalance.toString()) + BigInt(amount.toString()),
+                  ];
         expectBigIntEqual(newVaultBalance, expectedVaultBalance);
         expectBigIntEqual(newTokenBalance, expectedTokenBalance);
     }
@@ -193,7 +193,10 @@ describe('ZrxVault unit tests', () => {
                 // Ensure token balance and allowance for staker towards ERC20Proxy
                 // Ensure wrapper knows about this token by constructing asset data it created
                 // If wrapper cannot find token by assetData, fall back to direct mint via token contract
-                const token = DummyERC20Token__factory.connect(zrxTokenAddress, await ethers.getSigners().then(s => s[0]));
+                const token = DummyERC20Token__factory.connect(
+                    zrxTokenAddress,
+                    await ethers.getSigners().then(s => s[0]),
+                );
                 await (await token.setBalance(staker, 1000n * 10n ** 18n)).wait();
                 const stakerSigner = await ethers.getSigner(staker);
                 await (await token.connect(stakerSigner).approve(zrxProxyAddress, 1000n * 10n ** 18n)).wait();
@@ -203,7 +206,10 @@ describe('ZrxVault unit tests', () => {
 
             beforeEach(async () => {
                 initialVaultBalance = await zrxVault.balanceOf(staker);
-                const token = DummyERC20Token__factory.connect(zrxTokenAddress, await ethers.getSigners().then(s => s[0]));
+                const token = DummyERC20Token__factory.connect(
+                    zrxTokenAddress,
+                    await ethers.getSigners().then(s => s[0]),
+                );
                 initialTokenBalance = await token.balanceOf(staker);
             });
 
@@ -248,9 +254,11 @@ describe('ZrxVault unit tests', () => {
                     );
                 });
                 it("Reverts if attempting to deposit more than staker's ZRX balance", async () => {
-                const stakingProxySigner = await ethers.getSigner(stakingProxy);
-                const tx = zrxVault.connect(stakingProxySigner).depositFrom(staker, BigInt(initialTokenBalance.toString()) + 1n);
-                return expect(tx).to.be.reverted;
+                    const stakingProxySigner = await ethers.getSigner(stakingProxy);
+                    const tx = zrxVault
+                        .connect(stakingProxySigner)
+                        .depositFrom(staker, BigInt(initialTokenBalance.toString()) + 1n);
+                    return expect(tx).to.be.reverted;
                 });
             });
             describe('Withdrawal', () => {
@@ -295,7 +303,9 @@ describe('ZrxVault unit tests', () => {
                 });
                 it("Reverts if attempting to withdraw more than staker's vault balance", async () => {
                     const stakingProxySigner = await ethers.getSigner(stakingProxy);
-                    const tx = zrxVault.connect(stakingProxySigner).withdrawFrom(staker, BigInt(initialVaultBalance.toString()) + 1n);
+                    const tx = zrxVault
+                        .connect(stakingProxySigner)
+                        .withdrawFrom(staker, BigInt(initialVaultBalance.toString()) + 1n);
                     return expect(tx).to.be.reverted;
                 });
             });
@@ -307,14 +317,8 @@ describe('ZrxVault unit tests', () => {
             beforeEach(async () => {
                 await deployFreshVault();
             });
-            async function verifyCatastrophicFailureModeAsync(
-                sender: string,
-                receipt: any,
-            ): Promise<void> {
-                const eventArgs = filterLogsToArguments(
-                    receipt.logs,
-                    'InCatastrophicFailureMode',
-                );
+            async function verifyCatastrophicFailureModeAsync(sender: string, receipt: any): Promise<void> {
+                const eventArgs = filterLogsToArguments(receipt.logs, 'InCatastrophicFailureMode');
                 expect(eventArgs.length).to.equal(1);
                 expect(eventArgs[0].sender).to.equal(sender);
                 expect(await zrxVault.isInCatastrophicFailure()).to.equal(true);
@@ -371,7 +375,10 @@ describe('ZrxVault unit tests', () => {
 
             beforeEach(async () => {
                 initialVaultBalance = await zrxVault.balanceOf(staker);
-                const token = DummyERC20Token__factory.connect(zrxTokenAddress, await ethers.getSigners().then(s => s[0]));
+                const token = DummyERC20Token__factory.connect(
+                    zrxTokenAddress,
+                    await ethers.getSigners().then(s => s[0]),
+                );
                 initialTokenBalance = await token.balanceOf(staker);
             });
 
@@ -402,7 +409,7 @@ describe('ZrxVault unit tests', () => {
                 });
                 it('Staker can withdraw all their ZRX', async () => {
                     const tx = await zrxVault.withdrawAllFrom(staker);
-                const receipt = await tx.wait();
+                    const receipt = await tx.wait();
                     await verifyTransferPostconditionsAsync(
                         ZrxTransfer.Withdrawal,
                         staker,
@@ -414,7 +421,7 @@ describe('ZrxVault unit tests', () => {
                 });
                 it('Owner can withdraw ZRX on behalf of a staker', async () => {
                     const tx = await zrxVault.withdrawAllFrom(staker);
-                const receipt = await tx.wait();
+                    const receipt = await tx.wait();
                     await verifyTransferPostconditionsAsync(
                         ZrxTransfer.Withdrawal,
                         staker,
@@ -426,7 +433,7 @@ describe('ZrxVault unit tests', () => {
                 });
                 it('Non-owner address can withdraw ZRX on behalf of a staker', async () => {
                     const tx = await zrxVault.withdrawAllFrom(staker);
-                const receipt = await tx.wait();
+                    const receipt = await tx.wait();
                     await verifyTransferPostconditionsAsync(
                         ZrxTransfer.Withdrawal,
                         staker,

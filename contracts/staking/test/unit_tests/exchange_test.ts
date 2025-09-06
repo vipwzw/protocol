@@ -13,7 +13,7 @@ export class StakingRevertErrors {
     static ExchangeManagerError(): Error {
         return new Error('Staking: exchange manager error');
     }
-    
+
     static OnlyCallableByExchangeError(): Error {
         return new Error('Staking: only callable by exchange');
     }
@@ -35,7 +35,9 @@ describe('Exchange Unit Tests', () => {
 
     before(async () => {
         // Set up addresses for testing.
-        [, owner, nonExchange, exchange, nonAuthority, authority] = await ethers.getSigners().then(signers => signers.map(s => s.address));
+        [, owner, nonExchange, exchange, nonAuthority, authority] = await ethers
+            .getSigners()
+            .then(signers => signers.map(s => s.address));
 
         // Deploy the Exchange Manager contract.
         exchangeManager = await TestExchangeManagerContract.deployFrom0xArtifactAsync(

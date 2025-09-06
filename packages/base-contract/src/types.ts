@@ -3,7 +3,7 @@ import type {
     TransactionResponse,
     TransactionRequest,
     ContractRunner,
-    Provider
+    Provider,
 } from 'ethers';
 
 // Legacy type mappings for backward compatibility

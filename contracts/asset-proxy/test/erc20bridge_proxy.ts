@@ -8,7 +8,7 @@ const constants = {
 };
 
 const AssetProxyId = {
-    ERC20Bridge: '0xdc1600f3'
+    ERC20Bridge: '0xdc1600f3',
 };
 
 // 工具函数
@@ -23,7 +23,7 @@ function randomAddress(): string {
 // 字符串错误处理
 class StringRevertError {
     constructor(public message: string) {}
-    
+
     encode(): string {
         // 简单的错误编码，返回错误消息的 bytes
         return ethers.toUtf8Bytes(this.message);
@@ -46,7 +46,7 @@ const hexUtils = {
         const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex;
         const targetLength = length || 64; // 默认32字节 = 64 hex 字符
         return '0x' + cleanHex.padStart(targetLength, '0');
-    }
+    },
 };
 
 type Numberish = string | number | bigint;
@@ -57,11 +57,11 @@ type DecodedLogs = any[];
 import * as _ from 'lodash';
 
 // 导入合约工厂和类型（假设这些已经生成）
-import { 
-    ERC20BridgeProxyContract, 
-    TestERC20Bridge, 
-    ERC20BridgeProxy__factory, 
-    TestERC20Bridge__factory 
+import {
+    ERC20BridgeProxyContract,
+    TestERC20Bridge,
+    ERC20BridgeProxy__factory,
+    TestERC20Bridge__factory,
 } from '../src/typechain-types';
 
 describe('ERC20BridgeProxy unit tests', () => {
@@ -77,16 +77,16 @@ describe('ERC20BridgeProxy unit tests', () => {
         const signers = await ethers.getSigners();
         const deployer = signers[0];
         const signer1 = signers[1];
-        
+
         owner = await deployer.getAddress();
         badCaller = await signer1.getAddress();
-        
+
         assetProxy = await new ERC20BridgeProxy__factory(deployer).deploy();
         await assetProxy.waitForDeployment();
-        
+
         bridgeContract = await new TestERC20Bridge__factory(deployer).deploy();
         await bridgeContract.waitForDeployment();
-        
+
         testTokenAddress = await bridgeContract.testToken();
         await assetProxy.addAuthorizedAddress(owner);
     });
@@ -129,7 +129,7 @@ describe('ERC20BridgeProxy unit tests', () => {
         const abiCoder = ethers.AbiCoder.defaultAbiCoder();
         const encodedData = abiCoder.encode(
             ['address', 'address', 'bytes'],
-            [opts.tokenAddress, opts.bridgeAddress, encodeBridgeData(opts.bridgeData)]
+            [opts.tokenAddress, opts.bridgeAddress, encodeBridgeData(opts.bridgeData)],
         );
         // 在前面加上 PROXY_ID (4 bytes)
         return PROXY_ID + encodedData.slice(2); // 移除 '0x' 前缀
@@ -142,7 +142,7 @@ describe('ERC20BridgeProxy unit tests', () => {
             opts.revertError !== undefined ? new StringRevertError(opts.revertError).encode() : '0x';
         return abiCoder.encode(
             ['int256', 'bytes', 'bytes'],
-            [BigInt(opts.transferAmount.toString()), revertErrorBytes, opts.returnData]
+            [BigInt(opts.transferAmount.toString()), revertErrorBytes, opts.returnData],
         );
     }
 
@@ -178,32 +178,39 @@ describe('ERC20BridgeProxy unit tests', () => {
 
         async function transferFromAsync(opts?: Partial<TransferFromOpts>, caller?: string): Promise<DecodedLogs> {
             const _opts = await createTransferFromOpts(opts);
-            
+
             // 如果指定了调用者，需要使用不同的签名者
             let contractToUse = assetProxy;
             if (caller && caller !== owner) {
                 // 使用 impersonateAccount 功能来模拟调用者
                 await ethers.provider.send('hardhat_impersonateAccount', [caller]);
                 await ethers.provider.send('hardhat_setBalance', [caller, '0x1000000000000000000']);
-                
+
                 const callerSigner = await ethers.getSigner(caller);
                 contractToUse = assetProxy.connect(callerSigner);
             }
-            
+
             try {
-                const tx = await contractToUse.transferFrom(encodeAssetData(_opts.assetData), _opts.from, _opts.to, _opts.amount);
+                const tx = await contractToUse.transferFrom(
+                    encodeAssetData(_opts.assetData),
+                    _opts.from,
+                    _opts.to,
+                    _opts.amount,
+                );
                 const receipt = await tx.wait();
-                
+
                 // Parse logs using the bridge contract interface
-                const parsedLogs = receipt.logs.map(log => {
-                    try {
-                        return bridgeContract.interface.parseLog(log);
-                    } catch (e) {
-                        // If log doesn't match bridge contract interface, return as is
-                        return log;
-                    }
-                }).filter(Boolean);
-                
+                const parsedLogs = receipt.logs
+                    .map(log => {
+                        try {
+                            return bridgeContract.interface.parseLog(log);
+                        } catch (e) {
+                            // If log doesn't match bridge contract interface, return as is
+                            return log;
+                        }
+                    })
+                    .filter(Boolean);
+
                 return parsedLogs as any as DecodedLogs;
             } finally {
                 // 清理 impersonation
@@ -238,7 +245,7 @@ describe('ERC20BridgeProxy unit tests', () => {
             // BridgeWithdrawTo event args: [tokenAddress, from, to, amount, bridgeData]
             expect(args[0]).to.eq(opts.assetData.tokenAddress); // tokenAddress
             expect(args[1]).to.eq(opts.from); // from
-            expect(args[2]).to.eq(opts.to); // to  
+            expect(args[2]).to.eq(opts.to); // to
             expect(args[3]).to.equal(opts.amount); // amount
             expect(args[4]).to.eq(encodeBridgeData(opts.assetData.bridgeData)); // bridgeData
         });

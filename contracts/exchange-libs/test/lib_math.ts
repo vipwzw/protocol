@@ -1,8 +1,4 @@
-import {
-    constants,
-    testCombinatoriallyWithReferenceFunc,
-    uint256Values,
-} from '@0x/utils';
+import { constants, testCombinatoriallyWithReferenceFunc, uint256Values } from '@0x/utils';
 import { expect } from 'chai';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { LibMathRevertErrors } from '@0x/utils';
@@ -50,7 +46,7 @@ describe('LibMath', () => {
         return async (...args: any[]): Promise<T> => {
             const result = await (libsContract as any)[name](...args);
             console.log('Contract raw result:', result, 'Type:', typeof result);
-            
+
             // Convert ethers BigNumber to native BigInt for comparison
             if (typeof result === 'object' && result !== null) {
                 if ('toBigInt' in result) {
@@ -102,9 +98,7 @@ describe('LibMath', () => {
                 const denominator = ZERO_AMOUNT;
                 const target = ethers.parseEther('0.01');
                 // In Solidity 0.8.28, division by zero results in panic code 0x12
-                await expect(
-                    libsContract.getPartialAmountFloor(numerator, denominator, target)
-                ).to.be.reverted;
+                await expect(libsContract.getPartialAmountFloor(numerator, denominator, target)).to.be.reverted;
             });
 
             it('reverts if `numerator * target` overflows', async () => {
@@ -113,7 +107,7 @@ describe('LibMath', () => {
                 const target = MAX_UINT256_ROOT * 2n;
                 // In Solidity 0.8.28, multiplication overflow results in panic code 0x11
                 await expect(
-                    libsContract.getPartialAmountFloor(numerator, denominator, target)
+                    libsContract.getPartialAmountFloor(numerator, denominator, target),
                 ).to.be.revertedWithPanic(0x11); // Arithmetic operation overflowed
             });
         });
@@ -143,7 +137,7 @@ describe('LibMath', () => {
                 const numerator = ethers.parseEther('0.6');
                 const denominator = ethers.parseEther('1.8');
                 const target = ONE_ETHER;
-                const expected = ONE_ETHER / 3n+ 1n;
+                const expected = ONE_ETHER / 3n + 1n;
                 const actual = await libsContract.getPartialAmountCeil(numerator, denominator, target);
                 expect(actual).to.equal(expected);
             });
@@ -158,9 +152,9 @@ describe('LibMath', () => {
                     denominator,
                     1n,
                 );
-                await expect(
-                    libsContract.getPartialAmountCeil(numerator, denominator, target)
-                ).to.be.revertedWithPanic(0x12); // Division by zero
+                await expect(libsContract.getPartialAmountCeil(numerator, denominator, target)).to.be.revertedWithPanic(
+                    0x12,
+                ); // Division by zero
             });
 
             it('reverts if `numerator * target` overflows', async () => {
@@ -168,9 +162,9 @@ describe('LibMath', () => {
                 const denominator = ethers.parseEther('0.5');
                 const target = MAX_UINT256_ROOT * 2n;
                 // In Solidity 0.8.28, multiplication overflow results in panic code 0x11
-                await expect(
-                    libsContract.getPartialAmountCeil(numerator, denominator, target)
-                ).to.be.revertedWithPanic(0x11); // Arithmetic operation overflowed
+                await expect(libsContract.getPartialAmountCeil(numerator, denominator, target)).to.be.revertedWithPanic(
+                    0x11,
+                ); // Arithmetic operation overflowed
             });
         });
     });
@@ -208,18 +202,14 @@ describe('LibMath', () => {
                 const numerator = 1000n;
                 const denominator = 10000n;
                 const target = 333n;
-                await expect(
-                    libsContract.safeGetPartialAmountFloor(numerator, denominator, target)
-                ).to.be.reverted;
+                await expect(libsContract.safeGetPartialAmountFloor(numerator, denominator, target)).to.be.reverted;
             });
 
             it('reverts if `denominator` is zero', async () => {
                 const numerator = ethers.parseEther('1');
                 const denominator = ZERO_AMOUNT;
                 const target = ethers.parseEther('0.01');
-                await expect(
-                    libsContract.safeGetPartialAmountFloor(numerator, denominator, target)
-                ).to.be.reverted;
+                await expect(libsContract.safeGetPartialAmountFloor(numerator, denominator, target)).to.be.reverted;
             });
 
             it('reverts if `numerator * target` overflows', async () => {
@@ -227,9 +217,7 @@ describe('LibMath', () => {
                 const denominator = ethers.parseEther('0.5');
                 const target = MAX_UINT256_ROOT * 2n;
                 // In Solidity 0.8.28, multiplication overflow results in panic code 0x11
-                await expect(
-                    libsContract.safeGetPartialAmountFloor(numerator, denominator, target)
-                ).to.be.reverted;
+                await expect(libsContract.safeGetPartialAmountFloor(numerator, denominator, target)).to.be.reverted;
             });
         });
     });
@@ -258,7 +246,7 @@ describe('LibMath', () => {
                 const numerator = ethers.parseEther('0.6');
                 const denominator = ethers.parseEther('1.8');
                 const target = ONE_ETHER;
-                const expected = ONE_ETHER / 3n+ 1n;
+                const expected = ONE_ETHER / 3n + 1n;
                 const actual = await libsContract.safeGetPartialAmountCeil(numerator, denominator, target);
                 expect(actual).to.equal(expected);
             });
@@ -267,18 +255,14 @@ describe('LibMath', () => {
                 const numerator = 1000n;
                 const denominator = 10000n;
                 const target = 333n;
-                await expect(
-                    libsContract.safeGetPartialAmountCeil(numerator, denominator, target)
-                ).to.be.reverted;
+                await expect(libsContract.safeGetPartialAmountCeil(numerator, denominator, target)).to.be.reverted;
             });
 
             it('reverts if `denominator` is zero', async () => {
                 const numerator = ethers.parseEther('1');
                 const denominator = ZERO_AMOUNT;
                 const target = ethers.parseEther('0.01');
-                await expect(
-                    libsContract.safeGetPartialAmountCeil(numerator, denominator, target)
-                ).to.be.reverted;
+                await expect(libsContract.safeGetPartialAmountCeil(numerator, denominator, target)).to.be.reverted;
             });
 
             it('reverts if `numerator * target` overflows', async () => {
@@ -286,9 +270,7 @@ describe('LibMath', () => {
                 const denominator = ethers.parseEther('0.5');
                 const target = MAX_UINT256_ROOT * 2n;
                 // In Solidity 0.8.28, multiplication overflow results in panic code 0x11
-                await expect(
-                    libsContract.safeGetPartialAmountCeil(numerator, denominator, target)
-                ).to.be.reverted;
+                await expect(libsContract.safeGetPartialAmountCeil(numerator, denominator, target)).to.be.reverted;
             });
         });
     });
@@ -337,9 +319,7 @@ describe('LibMath', () => {
                 const numerator = ethers.parseEther('1');
                 const denominator = ZERO_AMOUNT;
                 const target = ethers.parseEther('0.01');
-                await expect(
-                    libsContract.isRoundingErrorFloor(numerator, denominator, target)
-                ).to.be.reverted;
+                await expect(libsContract.isRoundingErrorFloor(numerator, denominator, target)).to.be.reverted;
             });
 
             it('reverts if `numerator * target` overflows', async () => {
@@ -347,9 +327,9 @@ describe('LibMath', () => {
                 const denominator = ethers.parseEther('0.5');
                 const target = MAX_UINT256_ROOT * 2n;
                 // In Solidity 0.8.28, multiplication overflow results in panic code 0x11
-                await expect(
-                    libsContract.isRoundingErrorFloor(numerator, denominator, target)
-                ).to.be.revertedWithPanic(0x11); // Arithmetic operation overflowed
+                await expect(libsContract.isRoundingErrorFloor(numerator, denominator, target)).to.be.revertedWithPanic(
+                    0x11,
+                ); // Arithmetic operation overflowed
             });
         });
     });
@@ -398,9 +378,7 @@ describe('LibMath', () => {
                 const numerator = ethers.parseEther('1');
                 const denominator = ZERO_AMOUNT;
                 const target = ethers.parseEther('0.01');
-                await expect(
-                    libsContract.isRoundingErrorCeil(numerator, denominator, target)
-                ).to.be.reverted;
+                await expect(libsContract.isRoundingErrorCeil(numerator, denominator, target)).to.be.reverted;
             });
 
             it('reverts if `numerator * target` overflows', async () => {
@@ -408,9 +386,9 @@ describe('LibMath', () => {
                 const denominator = ethers.parseEther('0.5');
                 const target = MAX_UINT256_ROOT * 2n;
                 // In Solidity 0.8.28, multiplication overflow results in panic code 0x11
-                await expect(
-                    libsContract.isRoundingErrorCeil(numerator, denominator, target)
-                ).to.be.revertedWithPanic(0x11); // Arithmetic operation overflowed
+                await expect(libsContract.isRoundingErrorCeil(numerator, denominator, target)).to.be.revertedWithPanic(
+                    0x11,
+                ); // Arithmetic operation overflowed
             });
         });
     });

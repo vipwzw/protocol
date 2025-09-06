@@ -1,7 +1,6 @@
 import {
     AbiDefinition,
     AbiType,
-    DataItem,
     DecodedLogArgs,
     EventAbi,
     LogEntry,
@@ -9,7 +8,7 @@ import {
     MethodAbi,
     RawLog,
 } from 'ethereum-types';
-import { ethers, Interface } from 'ethers';
+import { Interface } from 'ethers';
 import * as _ from 'lodash';
 
 // AbiEncoder 已移除，直接使用 ethers Interface
@@ -64,11 +63,11 @@ export class AbiDecoder {
         // Decode using ethers Interface
         const ethersInterface = new Interface([event]);
         const decodedEvent = ethersInterface.decodeEventLog(event.name, log.data, log.topics);
-        
+
         // Split into indexed and non-indexed data for compatibility
         const decodedIndexedData: any[] = [];
         const decodedNonIndexedData: any[] = [];
-        
+
         event.inputs.forEach((input, index) => {
             if (input.indexed) {
                 decodedIndexedData.push(decodedEvent[index]);
@@ -129,7 +128,7 @@ export class AbiDecoder {
         const functionName = functionInfo.methodAbi.name;
         const functionSignature = functionInfo.functionSignature;
         const decodedData = functionInfo.ethersInterface.decodeFunctionData(functionInfo.methodAbi.name, calldata);
-        
+
         // 将 ethers.js v6 的 Result 对象转换为带参数名称的普通对象
         const functionArguments: { [key: string]: any } = {};
         functionInfo.methodAbi.inputs?.forEach((input, index) => {
@@ -137,7 +136,7 @@ export class AbiDecoder {
                 functionArguments[input.name] = decodedData[index];
             }
         });
-        
+
         const decodedCalldata = {
             functionName,
             functionSignature,

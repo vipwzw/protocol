@@ -6,13 +6,13 @@ import { expectNotImplementedError, expectNotInRollbackHistoryError } from '../u
 
 import { artifacts } from '../artifacts';
 import { initialMigrateAsync } from '../utils/migration';
-import { 
+import {
     TestSimpleFunctionRegistryFeatureImpl1__factory,
-    TestSimpleFunctionRegistryFeatureImpl2__factory 
+    TestSimpleFunctionRegistryFeatureImpl2__factory,
 } from '../../src/typechain-types/factories/contracts/test';
-import type { 
+import type {
     TestSimpleFunctionRegistryFeatureImpl1,
-    TestSimpleFunctionRegistryFeatureImpl2 
+    TestSimpleFunctionRegistryFeatureImpl2,
 } from '../../src/typechain-types/contracts/test';
 
 describe('SimpleFunctionRegistry feature', () => {
@@ -53,18 +53,18 @@ describe('SimpleFunctionRegistry feature', () => {
 
     // 🔧 状态重置机制：防止测试间干扰
     let snapshotId: string;
-    
+
     before(async () => {
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
-    
+
     beforeEach(async () => {
-        await ethers.provider.send("evm_revert", [snapshotId]);
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
-        
+        await ethers.provider.send('evm_revert', [snapshotId]);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
+
         // 重新获取账户地址
         [owner, notOwner] = await env.getAccountAddressesAsync();
-        
+
         // 重新创建合约实例
         registry = await ethers.getContractAt('ISimpleFunctionRegistryFeature', await zeroEx.getAddress());
         testFeature = zeroEx;
@@ -73,7 +73,7 @@ describe('SimpleFunctionRegistry feature', () => {
     it('`extend()` cannot be called by a non-owner', async () => {
         const notOwnerSigner = await env.provider.getSigner(notOwner);
         const tx = registry.connect(notOwnerSigner).extend(hexUtils.random(4), randomAddress());
-        
+
         // 🔧 验证正确的OnlyOwnerError
         try {
             await tx;
@@ -87,7 +87,7 @@ describe('SimpleFunctionRegistry feature', () => {
     it('`rollback()` cannot be called by a non-owner', async () => {
         const notOwnerSigner = await env.provider.getSigner(notOwner);
         const tx = registry.connect(notOwnerSigner).rollback(hexUtils.random(4), NULL_ADDRESS);
-        
+
         // 🔧 验证正确的OnlyOwnerError
         try {
             await tx;
@@ -102,7 +102,7 @@ describe('SimpleFunctionRegistry feature', () => {
         const rollbackAddress = randomAddress();
         const ownerSigner = await env.provider.getSigner(owner);
         const tx = registry.connect(ownerSigner).rollback(testFnSelector, rollbackAddress);
-        
+
         // 🔧 验证正确的NotInRollbackHistoryError - 使用更宽松的匹配
         return expect(tx).to.be.reverted;
     });
@@ -126,7 +126,10 @@ describe('SimpleFunctionRegistry feature', () => {
         //     ISimpleFunctionRegistryFeatureEvents.ProxyFunctionUpdated,
         // );
         // 重新获取合约实例以包含新添加的函数
-        const testFeatureWithFn = await ethers.getContractAt('TestSimpleFunctionRegistryFeatureImpl1', await zeroEx.getAddress());
+        const testFeatureWithFn = await ethers.getContractAt(
+            'TestSimpleFunctionRegistryFeatureImpl1',
+            await zeroEx.getAddress(),
+        );
         const r = await testFeatureWithFn.testFn();
         expect(r).to.eq(1337);
     });
@@ -136,7 +139,10 @@ describe('SimpleFunctionRegistry feature', () => {
         await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl1.getAddress());
         await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl2.getAddress());
         // 重新获取合约实例以包含新添加的函数
-        const testFeatureWithFn = await ethers.getContractAt('TestSimpleFunctionRegistryFeatureImpl2', await zeroEx.getAddress());
+        const testFeatureWithFn = await ethers.getContractAt(
+            'TestSimpleFunctionRegistryFeatureImpl2',
+            await zeroEx.getAddress(),
+        );
         const r = await testFeatureWithFn.testFn();
         expect(r).to.eq(1338);
     });
@@ -145,7 +151,10 @@ describe('SimpleFunctionRegistry feature', () => {
         const ownerSigner = await env.provider.getSigner(owner);
         await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl1.getAddress());
         await registry.connect(ownerSigner).extend(testFnSelector, constants.NULL_ADDRESS);
-        const testFeatureWithFn = await ethers.getContractAt('TestSimpleFunctionRegistryFeatureImpl1', await zeroEx.getAddress());
+        const testFeatureWithFn = await ethers.getContractAt(
+            'TestSimpleFunctionRegistryFeatureImpl1',
+            await zeroEx.getAddress(),
+        );
         // 🔧 修复错误匹配 - 使用更宽松的匹配
         return expect(testFeatureWithFn.testFn()).to.be.reverted;
     });
@@ -158,11 +167,18 @@ describe('SimpleFunctionRegistry feature', () => {
         const rollbackLength = await registry.getRollbackLength(testFnSelector);
         expect(rollbackLength).to.eq(3);
         const entries = await Promise.all(
-            [...new Array(Number(rollbackLength))].map((v, i) => // 🔧 使用Number()转换BigInt
-                registry.getRollbackEntryAtIndex(testFnSelector, BigInt(i)),
+            [...new Array(Number(rollbackLength))].map(
+                (
+                    v,
+                    i, // 🔧 使用Number()转换BigInt
+                ) => registry.getRollbackEntryAtIndex(testFnSelector, BigInt(i)),
             ),
         );
-        expect(entries).to.deep.eq([NULL_ADDRESS, await testFeatureImpl1.getAddress(), await testFeatureImpl2.getAddress()]);
+        expect(entries).to.deep.eq([
+            NULL_ADDRESS,
+            await testFeatureImpl1.getAddress(),
+            await testFeatureImpl2.getAddress(),
+        ]);
     });
 
     it('owner can rollback a function to zero', async () => {
@@ -180,7 +196,10 @@ describe('SimpleFunctionRegistry feature', () => {
         // );
         const rollbackLength = await registry.getRollbackLength(testFnSelector);
         expect(rollbackLength).to.eq(0);
-        const testFeatureWithFn = await ethers.getContractAt('TestSimpleFunctionRegistryFeatureImpl1', await zeroEx.getAddress());
+        const testFeatureWithFn = await ethers.getContractAt(
+            'TestSimpleFunctionRegistryFeatureImpl1',
+            await zeroEx.getAddress(),
+        );
         // 🔧 优雅的 Rich Error 匹配
         return expectNotImplementedError(testFeatureWithFn.testFn());
     });
@@ -190,7 +209,10 @@ describe('SimpleFunctionRegistry feature', () => {
         await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl1.getAddress());
         await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl2.getAddress());
         await registry.connect(ownerSigner).rollback(testFnSelector, await testFeatureImpl1.getAddress());
-        const testFeatureWithFn = await ethers.getContractAt('TestSimpleFunctionRegistryFeatureImpl1', await zeroEx.getAddress());
+        const testFeatureWithFn = await ethers.getContractAt(
+            'TestSimpleFunctionRegistryFeatureImpl1',
+            await zeroEx.getAddress(),
+        );
         const r = await testFeatureWithFn.testFn();
         expect(r).to.eq(1337);
         const rollbackLength = await registry.getRollbackLength(testFnSelector);
@@ -203,7 +225,10 @@ describe('SimpleFunctionRegistry feature', () => {
         await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl1.getAddress());
         await registry.connect(ownerSigner).extend(testFnSelector, constants.NULL_ADDRESS);
         await registry.connect(ownerSigner).rollback(testFnSelector, await testFeatureImpl1.getAddress());
-        const testFeatureWithFn = await ethers.getContractAt('TestSimpleFunctionRegistryFeatureImpl1', await zeroEx.getAddress());
+        const testFeatureWithFn = await ethers.getContractAt(
+            'TestSimpleFunctionRegistryFeatureImpl1',
+            await zeroEx.getAddress(),
+        );
         const r = await testFeatureWithFn.testFn();
         expect(r).to.eq(1337);
         const rollbackLength = await registry.getRollbackLength(testFnSelector);
@@ -216,7 +241,10 @@ describe('SimpleFunctionRegistry feature', () => {
         await registry.connect(ownerSigner).extend(testFnSelector, NULL_ADDRESS);
         await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl2.getAddress());
         await registry.connect(ownerSigner).rollback(testFnSelector, await testFeatureImpl1.getAddress());
-        const testFeatureWithFn = await ethers.getContractAt('TestSimpleFunctionRegistryFeatureImpl1', await zeroEx.getAddress());
+        const testFeatureWithFn = await ethers.getContractAt(
+            'TestSimpleFunctionRegistryFeatureImpl1',
+            await zeroEx.getAddress(),
+        );
         const r = await testFeatureWithFn.testFn();
         expect(r).to.eq(1337);
         const rollbackLength = await registry.getRollbackLength(testFnSelector);
@@ -228,7 +256,7 @@ describe('SimpleFunctionRegistry feature', () => {
         await registry.connect(ownerSigner).extend(testFnSelector, NULL_ADDRESS);
         await registry.connect(ownerSigner).extend(testFnSelector, await testFeatureImpl2.getAddress());
         const tx = registry.connect(ownerSigner).rollback(testFnSelector, await testFeatureImpl1.getAddress());
-        
+
         // 🔧 优雅的 Rich Error 匹配
         return expectNotInRollbackHistoryError(tx, testFnSelector, await testFeatureImpl1.getAddress());
     });

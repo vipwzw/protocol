@@ -17,10 +17,9 @@ interface CliOptions {
 }
 
 class ErrorHandlingCli {
-    
     static async main() {
         const options = this.parseArgs();
-        
+
         if (options.help) {
             this.showHelp();
             return;
@@ -47,20 +46,22 @@ class ErrorHandlingCli {
      */
     private static async scanCommand() {
         console.log('🔍 扫描测试文件中的错误处理问题...\n');
-        
+
         const testDir = path.join(__dirname, '../test');
         const scanResult = await ErrorFixAutomation.scanTestDirectory(testDir);
-        
+
         console.log('📊 扫描结果:');
         console.log(`- 总文件数: ${scanResult.totalFiles}`);
         console.log(`- 有问题的文件: ${scanResult.filesWithErrors}`);
-        console.log(`- 修复率: ${((scanResult.totalFiles - scanResult.filesWithErrors) / scanResult.totalFiles * 100).toFixed(1)}%\n`);
-        
+        console.log(
+            `- 修复率: ${(((scanResult.totalFiles - scanResult.filesWithErrors) / scanResult.totalFiles) * 100).toFixed(1)}%\n`,
+        );
+
         console.log('🔍 错误模式分布:');
         for (const [pattern, count] of Object.entries(scanResult.errorPatterns)) {
             console.log(`- ${pattern}: ${count} 个`);
         }
-        
+
         if (scanResult.filesWithErrors > 0) {
             console.log('\n📝 需要修复的文件:');
             for (const fileAnalysis of scanResult.fixSuggestions) {
@@ -76,20 +77,20 @@ class ErrorHandlingCli {
      */
     private static async fixCommand(filePath: string, dryRun: boolean = false) {
         console.log(`🔧 ${dryRun ? '预览' : '修复'} 文件: ${filePath}\n`);
-        
+
         if (!fs.existsSync(filePath)) {
             throw new Error(`文件不存在: ${filePath}`);
         }
 
         // 应用自动修复
         const fixResult = await ErrorFixAutomation.autoFix(filePath, dryRun);
-        
+
         if (fixResult.hasChanges) {
             console.log('✅ 发现并修复了以下问题:');
             fixResult.appliedFixes.forEach(fix => {
                 console.log(`- ${fix}`);
             });
-            
+
             if (dryRun) {
                 console.log('\n📄 修复后的内容预览:');
                 console.log('--- 差异 ---');
@@ -108,14 +109,14 @@ class ErrorHandlingCli {
      */
     private static async reportCommand() {
         console.log('📊 生成错误处理修复报告...\n');
-        
+
         const testDir = path.join(__dirname, '../test');
         const scanResult = await ErrorFixAutomation.scanTestDirectory(testDir);
         const report = ErrorFixAutomation.generateFixReport(scanResult);
-        
+
         const reportPath = path.join(__dirname, '../ERROR_HANDLING_FIX_REPORT.md');
         fs.writeFileSync(reportPath, report);
-        
+
         console.log(`✅ 报告已生成: ${reportPath}`);
         console.log('\n📋 报告摘要:');
         console.log(report.split('\n').slice(0, 20).join('\n'));
@@ -128,21 +129,21 @@ class ErrorHandlingCli {
     private static showDiff(original: string, fixed: string) {
         const originalLines = original.split('\n');
         const fixedLines = fixed.split('\n');
-        
+
         const maxLines = Math.max(originalLines.length, fixedLines.length);
         let diffCount = 0;
-        
+
         for (let i = 0; i < maxLines && diffCount < 20; i++) {
             const origLine = originalLines[i] || '';
             const fixedLine = fixedLines[i] || '';
-            
+
             if (origLine !== fixedLine) {
                 console.log(`${(i + 1).toString().padStart(3)}: - ${origLine}`);
                 console.log(`${(i + 1).toString().padStart(3)}: + ${fixedLine}`);
                 diffCount++;
             }
         }
-        
+
         if (diffCount >= 20) {
             console.log('... (更多差异请查看文件)');
         }
@@ -154,10 +155,10 @@ class ErrorHandlingCli {
     private static parseArgs(): CliOptions {
         const args = process.argv.slice(2);
         const options: CliOptions = {};
-        
+
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
-            
+
             switch (arg) {
                 case '--scan':
                     options.scan = true;
@@ -181,7 +182,7 @@ class ErrorHandlingCli {
                     }
             }
         }
-        
+
         return options;
     }
 

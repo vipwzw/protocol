@@ -13,7 +13,7 @@ function convertToArrayFormat(obj: any, components: any[]): any {
     if (Array.isArray(obj)) {
         return obj.map(item => convertToArrayFormat(item, components));
     }
-    
+
     if (typeof obj === 'object' && obj !== null) {
         return components.map(component => {
             const value = obj[component.name];
@@ -27,7 +27,7 @@ function convertToArrayFormat(obj: any, components: any[]): any {
             return value;
         });
     }
-    
+
     return obj;
 }
 
@@ -56,7 +56,7 @@ const ORDER_ABI_COMPONENTS = [
 // 定义 Order 结构的 ABI
 const ORDER_ABI = {
     type: 'tuple',
-    components: ORDER_ABI_COMPONENTS
+    components: ORDER_ABI_COMPONENTS,
 };
 
 // 定义 FillQuoteTransformerData 结构的完整 ABI
@@ -71,8 +71,8 @@ const FILL_QUOTE_TRANSFORMER_DATA_ABI = {
         { name: 'maxOrderFillAmounts', type: 'uint256[]' },
         { name: 'fillAmount', type: 'uint256' },
         { name: 'refundReceiver', type: 'address' },
-        { name: 'rfqtTakerAddress', type: 'address' }
-    ]
+        { name: 'rfqtTakerAddress', type: 'address' },
+    ],
 };
 
 // 创建 ethers Interface 用于编码/解码
@@ -80,8 +80,8 @@ const fillQuoteInterface = new ethers.Interface([
     {
         type: 'function',
         name: 'encodeFillQuoteData',
-        inputs: [FILL_QUOTE_TRANSFORMER_DATA_ABI]
-    }
+        inputs: [FILL_QUOTE_TRANSFORMER_DATA_ABI],
+    },
 ]);
 
 export const fillQuoteTransformerDataEncoder = {
@@ -98,7 +98,7 @@ export const fillQuoteTransformerDataEncoder = {
         const withSelector = funcSelector + encoded.slice(2);
         const decoded = fillQuoteInterface.decodeFunctionData('encodeFillQuoteData', withSelector);
         return [decoded[0] as FillQuoteTransformerData];
-    }
+    },
 };
 
 /**
@@ -146,16 +146,16 @@ const WETH_TRANSFORMER_DATA_ABI = {
     type: 'tuple',
     components: [
         { name: 'token', type: 'address' },
-        { name: 'amount', type: 'uint256' }
-    ]
+        { name: 'amount', type: 'uint256' },
+    ],
 };
 
 const wethInterface = new ethers.Interface([
     {
         type: 'function',
         name: 'encodeWethData',
-        inputs: [WETH_TRANSFORMER_DATA_ABI]
-    }
+        inputs: [WETH_TRANSFORMER_DATA_ABI],
+    },
 ]);
 
 export const wethTransformerDataEncoder = {
@@ -171,7 +171,7 @@ export const wethTransformerDataEncoder = {
         const withSelector = funcSelector + encoded.slice(2);
         const decoded = wethInterface.decodeFunctionData('encodeWethData', withSelector);
         return { data: decoded[0] as WethTransformerData };
-    }
+    },
 };
 
 /**
@@ -204,16 +204,16 @@ const PAY_TAKER_TRANSFORMER_DATA_ABI = {
     type: 'tuple',
     components: [
         { name: 'tokens', type: 'address[]' },
-        { name: 'amounts', type: 'uint256[]' }
-    ]
+        { name: 'amounts', type: 'uint256[]' },
+    ],
 };
 
 const payTakerInterface = new ethers.Interface([
     {
         type: 'function',
         name: 'encodePayTakerData',
-        inputs: [PAY_TAKER_TRANSFORMER_DATA_ABI]
-    }
+        inputs: [PAY_TAKER_TRANSFORMER_DATA_ABI],
+    },
 ]);
 
 export const payTakerTransformerDataEncoder = {
@@ -229,7 +229,7 @@ export const payTakerTransformerDataEncoder = {
         const withSelector = funcSelector + encoded.slice(2);
         const decoded = payTakerInterface.decodeFunctionData('encodePayTakerData', withSelector);
         return { data: decoded[0] as PayTakerTransformerData };
-    }
+    },
 };
 
 /**
@@ -267,18 +267,18 @@ const AFFILIATE_FEE_TRANSFORMER_DATA_ABI = {
             components: [
                 { name: 'token', type: 'address' },
                 { name: 'amount', type: 'uint256' },
-                { name: 'recipient', type: 'address' }
-            ]
-        }
-    ]
+                { name: 'recipient', type: 'address' },
+            ],
+        },
+    ],
 };
 
 const affiliateFeeInterface = new ethers.Interface([
     {
         type: 'function',
         name: 'encodeAffiliateFeeData',
-        inputs: [AFFILIATE_FEE_TRANSFORMER_DATA_ABI]
-    }
+        inputs: [AFFILIATE_FEE_TRANSFORMER_DATA_ABI],
+    },
 ]);
 
 export const affiliateFeeTransformerDataEncoder = {
@@ -294,7 +294,7 @@ export const affiliateFeeTransformerDataEncoder = {
         const withSelector = funcSelector + encoded.slice(2);
         const decoded = affiliateFeeInterface.decodeFunctionData('encodeAffiliateFeeData', withSelector);
         return decoded[0] as AffiliateFeeTransformerData;
-    }
+    },
 };
 
 /**
@@ -331,16 +331,16 @@ const POSITIVE_SLIPPAGE_FEE_TRANSFORMER_DATA_ABI = {
     components: [
         { name: 'token', type: 'address' },
         { name: 'bestCaseAmount', type: 'uint256' },
-        { name: 'recipient', type: 'address' }
-    ]
+        { name: 'recipient', type: 'address' },
+    ],
 };
 
 const positiveSlippageFeeInterface = new ethers.Interface([
     {
         type: 'function',
         name: 'encodePositiveSlippageFeeData',
-        inputs: [POSITIVE_SLIPPAGE_FEE_TRANSFORMER_DATA_ABI]
-    }
+        inputs: [POSITIVE_SLIPPAGE_FEE_TRANSFORMER_DATA_ABI],
+    },
 ]);
 
 export const positiveSlippageFeeTransformerDataEncoder = {
@@ -356,7 +356,7 @@ export const positiveSlippageFeeTransformerDataEncoder = {
         const withSelector = funcSelector + encoded.slice(2);
         const decoded = positiveSlippageFeeInterface.decodeFunctionData('encodePositiveSlippageFeeData', withSelector);
         return decoded[0] as PositiveSlippageFeeTransformerData;
-    }
+    },
 };
 
 /**

@@ -15,15 +15,19 @@ import * as _ from 'lodash';
 function assertRoughlyEquals(actual: bigint, expected: bigint, precision: number): void {
     const actualNum = Number(actual);
     const expectedNum = Number(expected);
-    const tolerance = 10 ** (-precision);
-    
+    const tolerance = 10 ** -precision;
+
     if (expectedNum === 0) {
-        expect(Math.abs(actualNum)).to.be.lessThan(tolerance, 
-            `Expected ${actualNum} to be roughly equal to ${expectedNum} with precision ${precision}`);
+        expect(Math.abs(actualNum)).to.be.lessThan(
+            tolerance,
+            `Expected ${actualNum} to be roughly equal to ${expectedNum} with precision ${precision}`,
+        );
     } else {
         const relativeError = Math.abs((actualNum - expectedNum) / expectedNum);
-        expect(relativeError).to.be.lessThan(tolerance, 
-            `Expected ${actualNum} to be roughly equal to ${expectedNum} with precision ${precision}. Relative error: ${relativeError}`);
+        expect(relativeError).to.be.lessThan(
+            tolerance,
+            `Expected ${actualNum} to be roughly equal to ${expectedNum} with precision ${precision}. Relative error: ${relativeError}`,
+        );
     }
 }
 
@@ -72,7 +76,7 @@ describe('LibCobbDouglas unit tests', () => {
                 ...params,
             };
             const toBigIntSafe = (value: any): bigint => BigInt(value);
-            
+
             const result = await testContract.cobbDouglas(
                 toBigIntSafe(_params.totalRewards),
                 toBigIntSafe(_params.ownerFees),
@@ -121,63 +125,67 @@ describe('LibCobbDouglas unit tests', () => {
         it('computes the correct reward', async () => {
             const expected = cobbDouglas();
             const r = await callCobbDouglasAsync();
-            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** (PRECISION));
+            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** PRECISION);
         });
 
         it('computes the correct reward with zero stake ratio', async () => {
             const ownerStake = 0;
             const expected = cobbDouglas({ ownerStake });
             const r = await callCobbDouglasAsync({ ownerStake });
-            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** (PRECISION));
+            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** PRECISION);
         });
 
         it('computes the correct reward with full stake ratio', async () => {
             const ownerStake = DEFAULT_COBB_DOUGLAS_PARAMS.totalStake;
             const expected = cobbDouglas({ ownerStake });
             const r = await callCobbDouglasAsync({ ownerStake });
-            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** (PRECISION));
+            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** PRECISION);
         });
 
         it('computes the correct reward with a very low stake ratio', async () => {
-            const ownerStake = BigInt(DEFAULT_COBB_DOUGLAS_PARAMS.totalStake) / (10n ** 18n);
+            const ownerStake = BigInt(DEFAULT_COBB_DOUGLAS_PARAMS.totalStake) / 10n ** 18n;
             const expected = cobbDouglas({ ownerStake });
             const r = await callCobbDouglasAsync({ ownerStake });
-            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** (PRECISION));
+            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** PRECISION);
         });
 
         it('computes the correct reward with a very high stake ratio', async () => {
-            const ownerStake = BigInt(DEFAULT_COBB_DOUGLAS_PARAMS.totalStake) - (BigInt(DEFAULT_COBB_DOUGLAS_PARAMS.totalStake) / (10n ** 18n));
+            const ownerStake =
+                BigInt(DEFAULT_COBB_DOUGLAS_PARAMS.totalStake) -
+                BigInt(DEFAULT_COBB_DOUGLAS_PARAMS.totalStake) / 10n ** 18n;
             const expected = cobbDouglas({ ownerStake });
             const r = await callCobbDouglasAsync({ ownerStake });
-            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** (PRECISION));
+            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** PRECISION);
         });
 
         it('computes the correct reward with zero fee ratio', async () => {
             const ownerFees = 0;
             const expected = cobbDouglas({ ownerFees });
             const r = await callCobbDouglasAsync({ ownerFees });
-            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** (PRECISION));
+            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** PRECISION);
         });
 
         it('computes the correct reward with full fee ratio', async () => {
             const ownerFees = DEFAULT_COBB_DOUGLAS_PARAMS.totalFees;
             const expected = cobbDouglas({ ownerFees });
             const r = await callCobbDouglasAsync({ ownerFees });
-            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** (PRECISION));
+            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** PRECISION);
         });
 
         it('computes the correct reward with a very low fee ratio', async () => {
-            const ownerFees = BigInt(DEFAULT_COBB_DOUGLAS_PARAMS.totalFees) / (10n ** 18n);
+            const ownerFees = BigInt(DEFAULT_COBB_DOUGLAS_PARAMS.totalFees) / 10n ** 18n;
             const expected = cobbDouglas({ ownerFees });
             const r = await callCobbDouglasAsync({ ownerFees });
-            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** (PRECISION));
+            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** PRECISION);
         });
 
         it('computes the correct reward with a very high fee ratio', async () => {
-            const ownerFees = BigInt(DEFAULT_COBB_DOUGLAS_PARAMS.totalFees) - (BigInt(DEFAULT_COBB_DOUGLAS_PARAMS.totalFees) / (10n ** 18n));
+            const ownerFees =
+                BigInt(DEFAULT_COBB_DOUGLAS_PARAMS.totalFees) -
+                BigInt(DEFAULT_COBB_DOUGLAS_PARAMS.totalFees) / 10n ** 18n;
             const expected = cobbDouglas({ ownerFees });
             const r = await callCobbDouglasAsync({ ownerFees });
-            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** (PRECISION));
+            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** PRECISION);
         });
 
         it('computes the correct reward with equal fee and stake ratios', async () => {
@@ -185,7 +193,7 @@ describe('LibCobbDouglas unit tests', () => {
             const ownerStake = BigInt(DEFAULT_COBB_DOUGLAS_PARAMS.totalStake) / 2n;
             const expected = cobbDouglas({ ownerFees, ownerStake });
             const r = await callCobbDouglasAsync({ ownerFees, ownerStake });
-            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** (PRECISION));
+            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** PRECISION);
         });
 
         it('computes the correct reward with full fee and stake ratios', async () => {
@@ -193,7 +201,7 @@ describe('LibCobbDouglas unit tests', () => {
             const ownerStake = BigInt(DEFAULT_COBB_DOUGLAS_PARAMS.totalStake);
             const expected = cobbDouglas({ ownerFees, ownerStake });
             const r = await callCobbDouglasAsync({ ownerFees, ownerStake });
-            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** (PRECISION));
+            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** PRECISION);
         });
 
         it('computes the correct reward with zero fee and stake ratios', async () => {
@@ -201,13 +209,13 @@ describe('LibCobbDouglas unit tests', () => {
             const ownerStake = 0;
             const expected = cobbDouglas({ ownerFees, ownerStake });
             const r = await callCobbDouglasAsync({ ownerFees, ownerStake });
-            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** (PRECISION));
+            expect(Number(r)).to.be.closeTo(Number(expected), 10 ** PRECISION);
         });
 
         describe('fuzzing', () => {
             const inputs = _.times(FUZZ_COUNT, () => getRandomParams());
             for (const params of inputs) {
-                it(`cobbDouglas(${JSON.stringify(params, (key, value) => typeof value === 'bigint' ? value.toString() : value)})`, async () => {
+                it(`cobbDouglas(${JSON.stringify(params, (key, value) => (typeof value === 'bigint' ? value.toString() : value))})`, async () => {
                     const expected = cobbDouglas(params);
                     const r = await callCobbDouglasAsync(params);
                     assertRoughlyEquals(r, expected, PRECISION);

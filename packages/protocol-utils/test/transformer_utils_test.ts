@@ -30,11 +30,11 @@ describe('Transformer Utils', () => {
                 fillSequence: [],
                 fillAmount: 0n,
                 refundReceiver: taker,
-                otcOrders: []
+                otcOrders: [],
             };
 
             const encoded = encodeFillQuoteTransformerData(transformData);
-            
+
             // 验证编码结果
             expect(encoded).to.be.a('string');
             expect(encoded).to.match(/^0x[0-9a-fA-F]+$/);
@@ -47,7 +47,7 @@ describe('Transformer Utils', () => {
                 source: '0x' + '01'.repeat(32), // 32字节的source
                 takerTokenAmount: 1000000000000000000n, // 1 ether
                 makerTokenAmount: 1000000000000000000n, // 1 ether
-                bridgeData: '0x1234567890abcdef' // 示例数据
+                bridgeData: '0x1234567890abcdef', // 示例数据
             };
 
             const transformData: FillQuoteTransformerData = {
@@ -60,11 +60,11 @@ describe('Transformer Utils', () => {
                 fillSequence: [FillQuoteTransformerOrderType.Bridge],
                 fillAmount: 1000000000000000000n,
                 refundReceiver: taker,
-                otcOrders: []
+                otcOrders: [],
             };
 
             const encoded = encodeFillQuoteTransformerData(transformData);
-            
+
             // 验证编码结果
             expect(encoded).to.be.a('string');
             expect(encoded).to.match(/^0x[0-9a-fA-F]+$/);
@@ -83,11 +83,11 @@ describe('Transformer Utils', () => {
                 fillSequence: [],
                 fillAmount: 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn, // MAX_UINT256
                 refundReceiver: taker,
-                otcOrders: []
+                otcOrders: [],
             };
 
             const encoded = encodeFillQuoteTransformerData(transformData);
-            
+
             // 验证编码结果
             expect(encoded).to.be.a('string');
             expect(encoded).to.match(/^0x[0-9a-fA-F]+$/);
@@ -102,7 +102,7 @@ describe('Transformer Utils', () => {
                 source: '0x' + '02'.repeat(16).padEnd(64, '0'), // 16字节source + 16字节padding
                 takerTokenAmount: 1000000000000000000n, // 1 ether
                 makerTokenAmount: 1000000000000000000n, // 1 ether
-                bridgeData: '0x' + '1234567890abcdef'.repeat(8) // 更长的测试数据
+                bridgeData: '0x' + '1234567890abcdef'.repeat(8), // 更长的测试数据
             };
 
             const transformData: FillQuoteTransformerData = {
@@ -115,16 +115,16 @@ describe('Transformer Utils', () => {
                 fillSequence: [FillQuoteTransformerOrderType.Bridge],
                 fillAmount: 1000000000000000000n,
                 refundReceiver: taker,
-                otcOrders: []
+                otcOrders: [],
             };
 
             const encoded = encodeFillQuoteTransformerData(transformData);
-            
+
             // 验证编码结果
             expect(encoded).to.be.a('string');
             expect(encoded).to.match(/^0x[0-9a-fA-F]+$/);
             console.log(`🎯 复杂桥接订单编码长度: ${encoded.length}`);
-            
+
             // 验证编码数据包含预期的组件
             expect(encoded.length).to.be.greaterThan(100);
         });
@@ -134,14 +134,14 @@ describe('Transformer Utils', () => {
                 source: '0x' + '01'.repeat(16).padEnd(64, '0'),
                 takerTokenAmount: 500000000000000000n, // 0.5 ether
                 makerTokenAmount: 500000000000000000n,
-                bridgeData: '0x1111'
+                bridgeData: '0x1111',
             };
 
             const bridgeOrder2: FillQuoteTransformerBridgeOrder = {
                 source: '0x' + '02'.repeat(16).padEnd(64, '0'),
                 takerTokenAmount: 500000000000000000n, // 0.5 ether
                 makerTokenAmount: 500000000000000000n,
-                bridgeData: '0x2222'
+                bridgeData: '0x2222',
             };
 
             const transformData: FillQuoteTransformerData = {
@@ -154,11 +154,11 @@ describe('Transformer Utils', () => {
                 fillSequence: [FillQuoteTransformerOrderType.Bridge, FillQuoteTransformerOrderType.Bridge],
                 fillAmount: 1000000000000000000n,
                 refundReceiver: owner,
-                otcOrders: []
+                otcOrders: [],
             };
 
             const encoded = encodeFillQuoteTransformerData(transformData);
-            
+
             expect(encoded).to.be.a('string');
             expect(encoded).to.match(/^0x[0-9a-fA-F]+$/);
             console.log(`🎯 多个桥接订单编码长度: ${encoded.length}`);
@@ -177,16 +177,16 @@ describe('Transformer Utils', () => {
                 fillSequence: [],
                 fillAmount: 1000000000000000000n, // bigint literal
                 refundReceiver: taker,
-                otcOrders: []
+                otcOrders: [],
             };
 
             // 验证我们的编码器能正确处理 bigint
             const encoding = encodeFillQuoteTransformerData(transformData);
-            
+
             console.log(`📊 Bigint 编码结果:`);
             console.log(`  编码长度: ${encoding.length}`);
             console.log(`  编码数据: ${encoding.substring(0, 200)}...`);
-            
+
             expect(encoding).to.be.a('string');
             expect(encoding.length).to.be.greaterThan(0);
             expect(encoding).to.match(/^0x[0-9a-fA-F]+$/);
@@ -194,32 +194,34 @@ describe('Transformer Utils', () => {
 
         it('should handle max uint256 values', () => {
             const maxUint256 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn;
-            
+
             const transformData: FillQuoteTransformerData = {
                 side: FillQuoteTransformerSide.Buy,
                 sellToken: maker,
                 buyToken: taker,
-                bridgeOrders: [{
-                    source: '0x' + 'ff'.repeat(32),
-                    takerTokenAmount: maxUint256,
-                    makerTokenAmount: maxUint256,
-                    bridgeData: '0x'
-                }],
+                bridgeOrders: [
+                    {
+                        source: '0x' + 'ff'.repeat(32),
+                        takerTokenAmount: maxUint256,
+                        makerTokenAmount: maxUint256,
+                        bridgeData: '0x',
+                    },
+                ],
                 limitOrders: [],
                 rfqOrders: [],
                 fillSequence: [FillQuoteTransformerOrderType.Bridge],
                 fillAmount: maxUint256,
                 refundReceiver: owner,
-                otcOrders: []
+                otcOrders: [],
             };
 
             const encoding = encodeFillQuoteTransformerData(transformData);
-            
+
             console.log(`📊 Max uint256 编码结果:`);
             console.log(`  编码长度: ${encoding.length}`);
-            
+
             expect(encoding).to.be.a('string');
             expect(encoding).to.match(/^0x[0-9a-fA-F]+$/);
         });
     });
-}); 
+});

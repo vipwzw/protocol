@@ -38,16 +38,16 @@ export class StakingApiWrapper {
     // 从 asset-proxy 借鉴的事件日志解析方法
     public async parseContractLogs(contract: any, receipt: any): Promise<any[]> {
         const decodedLogs: any[] = [];
-        
+
         if (receipt && receipt.logs) {
             for (const log of receipt.logs) {
                 try {
                     // 尝试使用合约接口解析日志
                     const parsed = contract.interface.parseLog({
                         topics: log.topics,
-                        data: log.data
+                        data: log.data,
                     });
-                    
+
                     if (parsed) {
                         // 将解析的参数展开到顶层对象，方便访问
                         const eventData = {
@@ -67,7 +67,7 @@ export class StakingApiWrapper {
                 }
             }
         }
-        
+
         return decodedLogs;
     }
 
@@ -77,17 +77,17 @@ export class StakingApiWrapper {
             // increase timestamp of next block by how many seconds we need to
             // get to the next epoch.
             const epochEndTime = await this.stakingContract.getCurrentEpochEarliestEndTimeInSeconds();
-            
+
             // Use ethers.js to get block timestamp
             const { ethers } = require('hardhat');
             const latestBlock = await ethers.provider.getBlock('latest');
             const lastBlockTime = BigInt(latestBlock!.timestamp);
             const dt = Math.max(0, Number(epochEndTime - lastBlockTime));
-            
+
             // Use Hardhat's network provider to manipulate time
-            await ethers.provider.send("evm_increaseTime", [dt]);
+            await ethers.provider.send('evm_increaseTime', [dt]);
             // mine next block
-            await ethers.provider.send("evm_mine", []);
+            await ethers.provider.send('evm_mine', []);
         },
 
         skipToNextEpochAndFinalizeAsync: async (): Promise<DecodedLogs> => {
@@ -147,48 +147,56 @@ export class StakingApiWrapper {
             const { ethers } = require('hardhat');
             const signers = await ethers.getSigners();
             const operatorSigner = signers.find((s: any) => s.address.toLowerCase() === operatorAddress.toLowerCase());
-            
+
             if (!operatorSigner) {
                 throw new Error(`Could not find signer for operator address: ${operatorAddress}`);
             }
-            
-            const tx = await this.stakingContract.connect(operatorSigner).createStakingPool(operatorShare, addOperatorAsMaker);
+
+            const tx = await this.stakingContract
+                .connect(operatorSigner)
+                .createStakingPool(operatorShare, addOperatorAsMaker);
             const txReceipt = await tx.wait();
             if (!txReceipt) {
                 throw new Error('Transaction receipt is null');
             }
-            
+
             console.log('🔍 Transaction details:');
             console.log('- Hash:', txReceipt.hash);
             console.log('- Status:', txReceipt.status);
             console.log('- Gas used:', txReceipt.gasUsed?.toString());
             console.log('- Raw logs count:', txReceipt.logs?.length || 0);
-            
+
             // 使用 asset-proxy 的事件解析模式
             const decodedLogs = await this.parseContractLogs(this.stakingContract, txReceipt);
             console.log('- Decoded logs count:', decodedLogs.length);
-            
+
             if (decodedLogs.length > 0) {
-                console.log('- Decoded logs:', decodedLogs.map(log => ({
-                    event: log.event,
-                    args: Object.keys(log.args || {}),
-                    directProps: Object.keys(log).filter(k => !['event', 'address', 'blockNumber', 'transactionHash', 'logIndex', 'args'].includes(k))
-                })));
+                console.log(
+                    '- Decoded logs:',
+                    decodedLogs.map(log => ({
+                        event: log.event,
+                        args: Object.keys(log.args || {}),
+                        directProps: Object.keys(log).filter(
+                            k =>
+                                !['event', 'address', 'blockNumber', 'transactionHash', 'logIndex', 'args'].includes(k),
+                        ),
+                    })),
+                );
             }
-            
+
             // 由于没有事件日志，尝试直接获取最后创建的 poolId
             // 这假设 createStakingPool 成功执行并递增了 lastPoolId
             try {
                 const lastPoolId = await this.stakingContract.lastPoolId();
                 console.log('- Last pool ID from contract:', lastPoolId?.toString());
-                
+
                 if (lastPoolId && lastPoolId !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
                     return lastPoolId;
                 }
             } catch (error) {
                 console.log('- Error getting lastPoolId:', error);
             }
-            
+
             // 查找包含 poolId 的事件（可能是 StakingPoolCreated 或类似事件）
             for (const log of decodedLogs) {
                 if (log.args && log.args.poolId !== undefined) {
@@ -199,8 +207,10 @@ export class StakingApiWrapper {
                     return log.poolId;
                 }
             }
-            
-            throw new Error(`Could not find poolId in any event logs or from lastPoolId(). Found ${decodedLogs.length} decoded logs.`);
+
+            throw new Error(
+                `Could not find poolId in any event logs or from lastPoolId(). Found ${decodedLogs.length} decoded logs.`,
+            );
         },
 
         getZrxTokenBalanceOfZrxVaultAsync: async (): Promise<bigint> => {
@@ -231,7 +241,7 @@ export class StakingApiWrapper {
                 this.wethContract.balanceOf(stakingProxyAddress),
                 this.stakingContract.wethReservedForPoolRewards(),
             ]);
-            
+
             return ethBalance + wethBalance - reservedRewards;
         },
 
@@ -300,7 +310,7 @@ export class StakingApiWrapper {
  * Deploys and configures all staking contracts and returns a StakingApiWrapper instance, which
  * holds the deployed contracts and serves as the entry point for their public functions.
  */
-    export async function deployAndConfigureContractsAsync(
+export async function deployAndConfigureContractsAsync(
     env: any,
     ownerAddress: string,
     erc20Wrapper: ERC20Wrapper,
@@ -340,9 +350,7 @@ export class StakingApiWrapper {
 
     // deploy staking proxy
     const stakingProxyFactory = new StakingProxy__factory(deployer);
-    const stakingProxyContract = await stakingProxyFactory.deploy(
-        await stakingContract.getAddress(),
-    );
+    const stakingProxyContract = await stakingProxyFactory.deploy(await stakingContract.getAddress());
 
     const tx2 = await stakingProxyContract.addAuthorizedAddress(ownerAddress);
     await tx2.wait();
@@ -362,11 +370,8 @@ export class StakingApiWrapper {
     await tx5.wait();
     // 创建一个通过 proxy 调用的 staking 合约实例
     // 这使用 TestStaking 的 ABI 但连接到 proxy 的地址
-    const stakingContractViaProxy = TestStaking__factory.connect(
-        await stakingProxyContract.getAddress(),
-        deployer
-    );
-    
+    const stakingContractViaProxy = TestStaking__factory.connect(await stakingProxyContract.getAddress(), deployer);
+
     return new StakingApiWrapper(
         env,
         ownerAddress,

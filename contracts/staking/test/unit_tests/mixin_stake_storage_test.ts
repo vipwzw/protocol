@@ -103,8 +103,11 @@ describe('MixinStakeStorage unit tests', () => {
             let tx = await testContract.setStoredBalance(defaultSyncedBalance, INDEX_ZERO);
             await tx.wait();
             // If the pointers weren't equal, this would revert with InsufficientBalanceError
-            tx = await testContract
-                .moveStake(INDEX_ZERO, INDEX_ZERO, BigInt(defaultSyncedBalance.nextEpochBalance.toString()) + 1n);
+            tx = await testContract.moveStake(
+                INDEX_ZERO,
+                INDEX_ZERO,
+                BigInt(defaultSyncedBalance.nextEpochBalance.toString()) + 1n,
+            );
             await tx.wait();
             const actualBalance = await getTestBalancesAsync(INDEX_ZERO);
             expect(actualBalance).to.deep.equal(defaultSyncedBalance);

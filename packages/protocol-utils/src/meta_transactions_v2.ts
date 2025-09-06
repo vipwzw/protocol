@@ -10,8 +10,8 @@ import {
 } from './eip712_utils';
 
 export interface MetaTransactionV2Fee {
-    recipient: string,
-    amount: bigint,
+    recipient: string;
+    amount: bigint;
 }
 
 const MTX_DEFAULT_VALUES = {
@@ -29,12 +29,15 @@ const MTX_DEFAULT_VALUES = {
 export type MetaTransactionV2Fields = typeof MTX_DEFAULT_VALUES;
 
 export class MetaTransactionV2 {
-	public static readonly FEE_STRUCT_NAME = 'MetaTransactionFeeData';
+    public static readonly FEE_STRUCT_NAME = 'MetaTransactionFeeData';
     public static readonly FEE_STRUCT_ABI = [
         { type: 'address', name: 'recipient' },
         { type: 'uint256', name: 'amount' },
     ];
-    public static readonly FEE_TYPE_HASH = getTypeHash(MetaTransactionV2.FEE_STRUCT_NAME, MetaTransactionV2.FEE_STRUCT_ABI);
+    public static readonly FEE_TYPE_HASH = getTypeHash(
+        MetaTransactionV2.FEE_STRUCT_NAME,
+        MetaTransactionV2.FEE_STRUCT_ABI,
+    );
 
     public static readonly MTX_STRUCT_NAME = 'MetaTransactionDataV2';
     public static readonly MTX_STRUCT_ABI = [
@@ -49,7 +52,7 @@ export class MetaTransactionV2 {
     public static readonly MTX_TYPE_HASH = getTypeHash(
         MetaTransactionV2.MTX_STRUCT_NAME,
         MetaTransactionV2.MTX_STRUCT_ABI,
-        { [MetaTransactionV2.FEE_STRUCT_NAME]: MetaTransactionV2.FEE_STRUCT_ABI }
+        { [MetaTransactionV2.FEE_STRUCT_NAME]: MetaTransactionV2.FEE_STRUCT_ABI },
     );
 
     public signer: string;
@@ -91,13 +94,19 @@ export class MetaTransactionV2 {
     }
 
     public getStructHash(): string {
-        const feesHash = hexUtils.hash(hexUtils.concat(
-            ...this.fees.map((fee) => hexUtils.hash(hexUtils.concat(
-                hexUtils.leftPad(MetaTransactionV2.FEE_TYPE_HASH),
-                hexUtils.leftPad(fee.recipient),
-                hexUtils.leftPad(fee.amount.toString()),
-            )))
-        ));
+        const feesHash = hexUtils.hash(
+            hexUtils.concat(
+                ...this.fees.map(fee =>
+                    hexUtils.hash(
+                        hexUtils.concat(
+                            hexUtils.leftPad(MetaTransactionV2.FEE_TYPE_HASH),
+                            hexUtils.leftPad(fee.recipient),
+                            hexUtils.leftPad(fee.amount.toString()),
+                        ),
+                    ),
+                ),
+            ),
+        );
 
         return hexUtils.hash(
             hexUtils.concat(
@@ -128,7 +137,7 @@ export class MetaTransactionV2 {
                 salt: this.salt.toString(10),
                 callData: this.callData,
                 feeToken: this.feeToken,
-                fees: this.fees.map(({recipient, amount}) => ({
+                fees: this.fees.map(({ recipient, amount }) => ({
                     recipient,
                     amount: amount.toString(10),
                 })) as any,

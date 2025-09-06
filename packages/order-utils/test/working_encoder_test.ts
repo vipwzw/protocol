@@ -7,7 +7,7 @@ import {
     PayTakerTransformerData,
     AffiliateFeeTransformerData,
     PositiveSlippageFeeTransformerData,
-    jsonUtils
+    jsonUtils,
 } from '../src';
 
 describe('编码器等价性验证测试', () => {
@@ -47,7 +47,7 @@ describe('编码器等价性验证测试', () => {
             order.makerAssetData,
             order.takerAssetData,
             order.makerFeeAssetData,
-            order.takerFeeAssetData
+            order.takerFeeAssetData,
         ];
     }
 
@@ -61,11 +61,9 @@ describe('编码器等价性验证测试', () => {
             data.maxOrderFillAmounts,
             data.fillAmount,
             data.refundReceiver,
-            data.rfqtTakerAddress
+            data.rfqtTakerAddress,
         ];
     }
-
-    
 
     describe('数据结构编码验证', () => {
         it('FillQuoteTransformerData - 验证新旧编码方式一致', () => {
@@ -90,14 +88,14 @@ describe('编码器等价性验证测试', () => {
                         makerAssetData: '0xabcd',
                         takerAssetData: '0xefab',
                         makerFeeAssetData: '0x1234',
-                        takerFeeAssetData: '0x5678'
-                    }
+                        takerFeeAssetData: '0x5678',
+                    },
                 ],
                 signatures: ['0x1234', '0x5678'],
                 maxOrderFillAmounts: [500n, 1000n],
                 fillAmount: 1500n,
                 refundReceiver: '0x5555555555555555555555555555555555555555',
-                rfqtTakerAddress: '0x6666666666666666666666666666666666666666'
+                rfqtTakerAddress: '0x6666666666666666666666666666666666666666',
             };
 
             // 方式 1：旧的硬编码字符串方式
@@ -108,7 +106,7 @@ describe('编码器等价性验证测试', () => {
             // 方式 2：新的 JSON ABI 方式
             const ORDER_ABI = {
                 type: 'tuple',
-                components: ORDER_ABI_COMPONENTS
+                components: ORDER_ABI_COMPONENTS,
             };
 
             const FILL_QUOTE_ABI = {
@@ -122,8 +120,8 @@ describe('编码器等价性验证测试', () => {
                     { name: 'maxOrderFillAmounts', type: 'uint256[]' },
                     { name: 'fillAmount', type: 'uint256' },
                     { name: 'refundReceiver', type: 'address' },
-                    { name: 'rfqtTakerAddress', type: 'address' }
-                ]
+                    { name: 'rfqtTakerAddress', type: 'address' },
+                ],
             };
 
             const fillQuoteParamType = ParamType.from(FILL_QUOTE_ABI);
@@ -139,14 +137,16 @@ describe('编码器等价性验证测试', () => {
             // 验证解码结果一致
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([fillQuoteParamType], newEncoded);
-            
-            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
+
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(
+                JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer),
+            );
         });
 
         it('WethTransformerData - 验证新旧编码方式一致', () => {
             const testData: WethTransformerData = {
                 token: '0x1234567890123456789012345678901234567890',
-                amount: 1000000000000000000n
+                amount: 1000000000000000000n,
             };
 
             // 旧方式
@@ -158,8 +158,8 @@ describe('编码器等价性验证测试', () => {
                 type: 'tuple',
                 components: [
                     { name: 'token', type: 'address' },
-                    { name: 'amount', type: 'uint256' }
-                ]
+                    { name: 'amount', type: 'uint256' },
+                ],
             };
             const wethParamType = ParamType.from(WETH_ABI);
             const newEncoded = abiCoder.encode([wethParamType], [[testData.token, testData.amount]]);
@@ -173,16 +173,15 @@ describe('编码器等价性验证测试', () => {
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([wethParamType], newEncoded);
-            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(
+                JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer),
+            );
         });
 
         it('PayTakerTransformerData - 验证新旧编码方式一致', () => {
             const testData: PayTakerTransformerData = {
-                tokens: [
-                    '0x1234567890123456789012345678901234567890',
-                    '0x0987654321098765432109876543210987654321'
-                ],
-                amounts: [1000n, 2000n]
+                tokens: ['0x1234567890123456789012345678901234567890', '0x0987654321098765432109876543210987654321'],
+                amounts: [1000n, 2000n],
             };
 
             // 旧方式
@@ -194,8 +193,8 @@ describe('编码器等价性验证测试', () => {
                 type: 'tuple',
                 components: [
                     { name: 'tokens', type: 'address[]' },
-                    { name: 'amounts', type: 'uint256[]' }
-                ]
+                    { name: 'amounts', type: 'uint256[]' },
+                ],
             };
             const payTakerParamType = ParamType.from(PAY_TAKER_ABI);
             const newEncoded = abiCoder.encode([payTakerParamType], [[testData.tokens, testData.amounts]]);
@@ -209,7 +208,9 @@ describe('编码器等价性验证测试', () => {
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([payTakerParamType], newEncoded);
-            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(
+                JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer),
+            );
         });
 
         it('AffiliateFeeTransformerData - 验证新旧编码方式一致', () => {
@@ -218,14 +219,14 @@ describe('编码器等价性验证测试', () => {
                     {
                         token: '0x1234567890123456789012345678901234567890',
                         amount: 100n,
-                        recipient: '0x1111111111111111111111111111111111111111'
+                        recipient: '0x1111111111111111111111111111111111111111',
                     },
                     {
                         token: '0x0987654321098765432109876543210987654321',
                         amount: 200n,
-                        recipient: '0x2222222222222222222222222222222222222222'
-                    }
-                ]
+                        recipient: '0x2222222222222222222222222222222222222222',
+                    },
+                ],
             };
 
             // 转换 fees 数组为 tuple 数组
@@ -245,10 +246,10 @@ describe('编码器等价性验证测试', () => {
                         components: [
                             { name: 'token', type: 'address' },
                             { name: 'amount', type: 'uint256' },
-                            { name: 'recipient', type: 'address' }
-                        ]
-                    }
-                ]
+                            { name: 'recipient', type: 'address' },
+                        ],
+                    },
+                ],
             };
             const affiliateFeeParamType = ParamType.from(AFFILIATE_FEE_ABI);
             const newEncoded = abiCoder.encode([affiliateFeeParamType], [[feesArray]]);
@@ -262,19 +263,24 @@ describe('编码器等价性验证测试', () => {
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([affiliateFeeParamType], newEncoded);
-            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(
+                JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer),
+            );
         });
 
         it('PositiveSlippageFeeTransformerData - 验证新旧编码方式一致', () => {
             const testData: PositiveSlippageFeeTransformerData = {
                 token: '0x1234567890123456789012345678901234567890',
                 bestCaseAmount: 1500000000000000000n,
-                recipient: '0x1111111111111111111111111111111111111111'
+                recipient: '0x1111111111111111111111111111111111111111',
             };
 
             // 旧方式
             const oldTypeString = 'tuple(address,uint256,address)';
-            const oldEncoded = abiCoder.encode([oldTypeString], [[testData.token, testData.bestCaseAmount, testData.recipient]]);
+            const oldEncoded = abiCoder.encode(
+                [oldTypeString],
+                [[testData.token, testData.bestCaseAmount, testData.recipient]],
+            );
 
             // 新方式
             const POSITIVE_SLIPPAGE_ABI = {
@@ -282,11 +288,14 @@ describe('编码器等价性验证测试', () => {
                 components: [
                     { name: 'token', type: 'address' },
                     { name: 'bestCaseAmount', type: 'uint256' },
-                    { name: 'recipient', type: 'address' }
-                ]
+                    { name: 'recipient', type: 'address' },
+                ],
             };
             const positiveSlippageParamType = ParamType.from(POSITIVE_SLIPPAGE_ABI);
-            const newEncoded = abiCoder.encode([positiveSlippageParamType], [[testData.token, testData.bestCaseAmount, testData.recipient]]);
+            const newEncoded = abiCoder.encode(
+                [positiveSlippageParamType],
+                [[testData.token, testData.bestCaseAmount, testData.recipient]],
+            );
 
             console.log('🔍 PositiveSlippageFee 编码对比:');
             console.log('旧方式:', oldEncoded);
@@ -297,7 +306,9 @@ describe('编码器等价性验证测试', () => {
 
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
             const newDecoded = abiCoder.decode([positiveSlippageParamType], newEncoded);
-            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(
+                JSON.stringify(oldDecoded, jsonUtils.bigIntReplacer),
+            );
         });
     });
 
@@ -312,7 +323,9 @@ describe('编码器等价性验证测试', () => {
 
             // 这验证了我们的 JSON ABI 方法与传统的硬编码字符串方法是等价的
             expect(manualFillQuoteType).to.include('tuple(uint8,address,address,tuple(');
-            expect(manualFillQuoteType).to.include('address,address,address,address,uint256,uint256,uint256,uint256,uint256,uint256,bytes,bytes,bytes,bytes');
+            expect(manualFillQuoteType).to.include(
+                'address,address,address,address,uint256,uint256,uint256,uint256,uint256,uint256,bytes,bytes,bytes,bytes',
+            );
             expect(manualFillQuoteType).to.include(')[],bytes[],uint256[],uint256,address,address)');
         });
     });
@@ -322,13 +335,13 @@ describe('编码器等价性验证测试', () => {
             const testData: PositiveSlippageFeeTransformerData = {
                 token: '0x1234567890123456789012345678901234567890',
                 bestCaseAmount: 1500000000000000000n,
-                recipient: '0x1111111111111111111111111111111111111111'
+                recipient: '0x1111111111111111111111111111111111111111',
             };
 
             // 使用 AbiCoder 直接编码
             const directEncoded = abiCoder.encode(
-                ['tuple(address,uint256,address)'], 
-                [[testData.token, testData.bestCaseAmount, testData.recipient]]
+                ['tuple(address,uint256,address)'],
+                [[testData.token, testData.bestCaseAmount, testData.recipient]],
             );
 
             console.log('📊 编码结果验证:');

@@ -1,14 +1,11 @@
-import { ethers } from "hardhat";
+import { ethers } from 'hardhat';
 import { constants, getRandomInteger, randomAddress, verifyEventsFromLogs } from '@0x/utils';
 import { expect } from 'chai';
 import { ERC721Order, NFTOrder, RevertErrors, SIGNATURE_ABI, SignatureType } from '@0x/protocol-utils';
 import { hexUtils, NULL_BYTES, StringRevertError } from '@0x/utils';
 import { expectPropertyValidationFailedError } from '../utils/rich_error_matcher';
 
-import {
-    IZeroExERC721OrderFilledEventArgs,
-    IZeroExEvents,
-} from '../../src/wrappers';
+import { IZeroExERC721OrderFilledEventArgs, IZeroExEvents } from '../../src/wrappers';
 import { artifacts } from '../artifacts';
 import { fullMigrateAsync } from '../utils/migration';
 import { getRandomERC721Order } from '../utils/nft_orders';
@@ -99,11 +96,7 @@ const AbiEncoder = {
         return {
             encode: (data: any) => {
                 // data: { order, signature, unwrapNativeToken }
-                const values = [
-                    orderToTuple(data.order),
-                    signatureToTuple(data.signature),
-                    data.unwrapNativeToken,
-                ];
+                const values = [orderToTuple(data.order), signatureToTuple(data.signature), data.unwrapNativeToken];
                 return coder.encode(
                     [
                         // order
@@ -113,11 +106,11 @@ const AbiEncoder = {
                         // unwrapNativeToken
                         { type: 'bool' },
                     ],
-                    values
+                    values,
                 );
-            }
+            },
         };
-    }
+    },
 };
 import { TestFeeRecipient__factory } from '../../src/typechain-types/factories/contracts/test';
 import { TestPropertyValidator__factory } from '../../src/typechain-types/factories/contracts/test';
@@ -130,7 +123,8 @@ describe('ERC721OrdersFeature', () => {
         getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
         web3Wrapper: {
             getBalanceInWeiAsync: async (addr: string) => ethers.provider.getBalance(addr),
-            sendTransactionAsync: async (tx: any) => (await ethers.getSigner(tx.from)).sendTransaction(tx).then(r => r.hash),
+            sendTransactionAsync: async (tx: any) =>
+                (await ethers.getSigner(tx.from)).sendTransaction(tx).then(r => r.hash),
             awaitTransactionMinedAsync: async (hash: string) => ethers.provider.waitForTransaction(hash),
         },
     } as any;
@@ -172,7 +166,7 @@ describe('ERC721OrdersFeature', () => {
         [owner, maker, taker, otherMaker, otherTaker, matcher] = await env.getAccountAddressesAsync();
 
         const signer = await env.provider.getSigner(owner);
-        
+
         const wethFactory = new TestWeth__factory(signer);
         weth = await wethFactory.deploy();
         await weth.waitForDeployment();
@@ -188,33 +182,42 @@ describe('ERC721OrdersFeature', () => {
         zeroEx = await fullMigrateAsync(owner, env.provider, txDefaults, {}, { wethAddress: await weth.getAddress() });
 
         const featureFactory = new ERC721OrdersFeature__factory(signer);
-        const featureImpl = await featureFactory.deploy(
-            await zeroEx.getAddress(),
-            await weth.getAddress(),
-        );
+        const featureImpl = await featureFactory.deploy(await zeroEx.getAddress(), await weth.getAddress());
         await featureImpl.waitForDeployment();
-        
+
         const ownerSigner = await env.provider.getSigner(owner);
         // 使用 OwnableFeature 接口调用 migrate
         const OwnableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
-        await OwnableFeature.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
+        await OwnableFeature.migrate(
+            await featureImpl.getAddress(),
+            featureImpl.interface.encodeFunctionData('migrate'),
+            owner,
+        );
 
         // 方案B：通过 ZeroEx 地址拿到 ERC721 Feature 接口，用它发起所有调用
         erc721Feature = await ethers.getContractAt('IERC721OrdersFeature', await zeroEx.getAddress());
 
         await Promise.all([
             erc20Token.connect(await env.provider.getSigner(maker)).approve(await zeroEx.getAddress(), MAX_UINT256),
-            erc20Token.connect(await env.provider.getSigner(otherMaker)).approve(await zeroEx.getAddress(), MAX_UINT256),
+            erc20Token
+                .connect(await env.provider.getSigner(otherMaker))
+                .approve(await zeroEx.getAddress(), MAX_UINT256),
             erc20Token.connect(await env.provider.getSigner(taker)).approve(await zeroEx.getAddress(), MAX_UINT256),
-            erc20Token.connect(await env.provider.getSigner(otherTaker)).approve(await zeroEx.getAddress(), MAX_UINT256),
+            erc20Token
+                .connect(await env.provider.getSigner(otherTaker))
+                .approve(await zeroEx.getAddress(), MAX_UINT256),
             weth.connect(await env.provider.getSigner(maker)).approve(await zeroEx.getAddress(), MAX_UINT256),
             weth.connect(await env.provider.getSigner(otherMaker)).approve(await zeroEx.getAddress(), MAX_UINT256),
             weth.connect(await env.provider.getSigner(taker)).approve(await zeroEx.getAddress(), MAX_UINT256),
             weth.connect(await env.provider.getSigner(otherTaker)).approve(await zeroEx.getAddress(), MAX_UINT256),
             erc721Token.connect(await env.provider.getSigner(maker)).setApprovalForAll(await zeroEx.getAddress(), true),
-            erc721Token.connect(await env.provider.getSigner(otherMaker)).setApprovalForAll(await zeroEx.getAddress(), true),
+            erc721Token
+                .connect(await env.provider.getSigner(otherMaker))
+                .setApprovalForAll(await zeroEx.getAddress(), true),
             erc721Token.connect(await env.provider.getSigner(taker)).setApprovalForAll(await zeroEx.getAddress(), true),
-            erc721Token.connect(await env.provider.getSigner(otherTaker)).setApprovalForAll(await zeroEx.getAddress(), true),
+            erc721Token
+                .connect(await env.provider.getSigner(otherTaker))
+                .setApprovalForAll(await zeroEx.getAddress(), true),
         ]);
 
         const feeRecipientFactory = new TestFeeRecipient__factory(signer);
@@ -242,10 +245,11 @@ describe('ERC721OrdersFeature', () => {
         tokenId: bigint = order.erc721TokenId,
         _taker: string = taker,
     ): Promise<void> {
-        const totalFeeAmount = order.fees.length > 0 ? order.fees.map(fee => fee.amount).reduce((a, b) => a + b, 0n) : 0n;
-        
+        const totalFeeAmount =
+            order.fees.length > 0 ? order.fees.map(fee => fee.amount).reduce((a, b) => a + b, 0n) : 0n;
+
         // 重置所有相关账户的 ERC20 余额，确保精确的余额断言
-        const token = order.erc20Token === await weth.getAddress() ? weth : erc20Token;
+        const token = order.erc20Token === (await weth.getAddress()) ? weth : erc20Token;
         const accountsToReset = [order.maker, _taker, ...order.fees.map(f => f.recipient)];
         for (const account of accountsToReset) {
             const currentBalance = await token.balanceOf(account);
@@ -270,7 +274,9 @@ describe('ERC721OrdersFeature', () => {
                     if (currentOwner.toLowerCase() !== order.maker.toLowerCase()) {
                         // Token 已存在但属于其他人，转移给 maker
                         const currentOwnerSigner = await env.provider.getSigner(currentOwner);
-                        await erc721Token.connect(currentOwnerSigner).safeTransferFrom(currentOwner, order.maker, tokenId);
+                        await erc721Token
+                            .connect(currentOwnerSigner)
+                            .safeTransferFrom(currentOwner, order.maker, tokenId);
                     }
                 } catch {
                     // Token 不存在，mint 它
@@ -293,7 +299,7 @@ describe('ERC721OrdersFeature', () => {
                 }
                 await erc721Token.connect(ownerSigner).safeTransferFrom(owner, order.maker, tokenId);
             }
-            
+
             if (order.erc20Token !== ETH_TOKEN_ADDRESS) {
                 const takerSigner = await env.provider.getSigner(_taker);
                 await erc20Token.connect(takerSigner).mint(_taker, order.erc20TokenAmount + totalFeeAmount);
@@ -313,8 +319,8 @@ describe('ERC721OrdersFeature', () => {
                 await erc721Token.connect(takerSigner).mint(_taker, tokenId);
             }
             await erc721Token.connect(takerSigner).setApprovalForAll(await zeroEx.getAddress(), true);
-            
-            if (order.erc20Token === await weth.getAddress()) {
+
+            if (order.erc20Token === (await weth.getAddress())) {
                 // 检查 maker 是否是合约地址
                 const signers = await ethers.getSigners();
                 const makerSigner = signers.find(s => s.address.toLowerCase() === order.maker.toLowerCase());
@@ -344,7 +350,9 @@ describe('ERC721OrdersFeature', () => {
                     // maker 是合约地址，先为 owner mint，然后转给合约
                     const ownerSigner = await env.provider.getSigner(owner);
                     await erc20Token.connect(ownerSigner).mint(owner, order.erc20TokenAmount + totalFeeAmount);
-                    await erc20Token.connect(ownerSigner).transfer(order.maker, order.erc20TokenAmount + totalFeeAmount);
+                    await erc20Token
+                        .connect(ownerSigner)
+                        .transfer(order.maker, order.erc20TokenAmount + totalFeeAmount);
                 }
             }
         }
@@ -360,7 +368,7 @@ describe('ERC721OrdersFeature', () => {
         _taker: string = taker,
         fillAmount: bigint = 1n, // ERC721 通常是填充 1 个 NFT
     ): Promise<void> {
-        const token = order.erc20Token === await weth.getAddress() ? weth : erc20Token;
+        const token = order.erc20Token === (await weth.getAddress()) ? weth : erc20Token;
         if (order.direction === NFTOrder.TradeDirection.SellNFT) {
             // 对于 SellNFT，maker 应该收到 erc20TokenAmount，taker 应该拥有 NFT
             // ERC721 订单通常是 1:1 的，所以 erc20FillAmount 就是 order.erc20TokenAmount
@@ -426,7 +434,9 @@ describe('ERC721OrdersFeature', () => {
     describe('getERC721OrderHash()', () => {
         it('returns the correct hash for order with no fees or properties', async () => {
             const order = await getTestERC721Order();
-            const hash = await (await ethers.getContractAt('IERC721OrdersFeature', await zeroEx.getAddress())).getERC721OrderHash(order);
+            const hash = await (
+                await ethers.getContractAt('IERC721OrdersFeature', await zeroEx.getAddress())
+            ).getERC721OrderHash(order);
             expect(hash).to.eq(order.getHash());
         });
         it('returns the correct hash for order with null property', async () => {
@@ -438,7 +448,9 @@ describe('ERC721OrdersFeature', () => {
                     },
                 ],
             });
-            const hash = await (await ethers.getContractAt('IERC721OrdersFeature', await zeroEx.getAddress())).getERC721OrderHash(order);
+            const hash = await (
+                await ethers.getContractAt('IERC721OrdersFeature', await zeroEx.getAddress())
+            ).getERC721OrderHash(order);
             expect(hash).to.eq(order.getHash());
         });
         it('returns the correct hash for order with 1 fee, 1 property', async () => {
@@ -457,7 +469,9 @@ describe('ERC721OrdersFeature', () => {
                     },
                 ],
             });
-            const hash = await (await ethers.getContractAt('IERC721OrdersFeature', await zeroEx.getAddress())).getERC721OrderHash(order);
+            const hash = await (
+                await ethers.getContractAt('IERC721OrdersFeature', await zeroEx.getAddress())
+            ).getERC721OrderHash(order);
             expect(hash).to.eq(order.getHash());
         });
         it('returns the correct hash for order with 2 fees, 2 properties', async () => {
@@ -485,7 +499,9 @@ describe('ERC721OrdersFeature', () => {
                     },
                 ],
             });
-            const hash = await (await ethers.getContractAt('IERC721OrdersFeature', await zeroEx.getAddress())).getERC721OrderHash(order);
+            const hash = await (
+                await ethers.getContractAt('IERC721OrdersFeature', await zeroEx.getAddress())
+            ).getERC721OrderHash(order);
             expect(hash).to.eq(order.getHash());
         });
     });
@@ -543,7 +559,7 @@ describe('ERC721OrdersFeature', () => {
             const order = await getTestERC721Order({ nonce: fixedNonce });
             const makerSigner = await env.provider.getSigner(maker);
             await erc721Feature.connect(makerSigner).cancelERC721Order(order.nonce);
-            
+
             const tx = await erc721Feature.connect(makerSigner).cancelERC721Order(order.nonce);
             const receipt = await tx.wait();
             // 验证 ERC721OrderCancelled 事件
@@ -567,7 +583,9 @@ describe('ERC721OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = await erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
+            const tx = await erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
             const receipt = await tx.wait();
             await assertBalancesAsync(order);
             // 验证 ERC721OrderFilled 事件
@@ -583,8 +601,12 @@ describe('ERC721OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
             const takerSigner = await env.provider.getSigner(taker);
-            await erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
-            const tx = erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
+            await erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
+            const tx = erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });
@@ -598,19 +620,23 @@ describe('ERC721OrdersFeature', () => {
             const signature1 = await order1.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order1);
             const takerSigner = await env.provider.getSigner(taker);
-            await erc721Feature.connect(takerSigner).sellERC721(order1, signature1, order1.erc721TokenId, false, NULL_BYTES);
+            await erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order1, signature1, order1.erc721TokenId, false, NULL_BYTES);
             const order2 = await getTestERC721Order({
                 direction: NFTOrder.TradeDirection.BuyNFT,
                 nonce: baseNonce + 1n,
             });
             const signature2 = await order2.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order2);
-            await erc721Feature.connect(takerSigner).sellERC721(order2, signature2, order2.erc721TokenId, false, NULL_BYTES);
+            await erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order2, signature2, order2.erc721TokenId, false, NULL_BYTES);
             // 检查两个订单都已被标记为已填充
             const bitVector = await erc721Feature.getERC721OrderStatusBitVector(maker, order1.nonce / 256n);
             const flag1 = 2n ** (order1.nonce % 256n);
             const flag2 = 2n ** (order2.nonce % 256n);
-            
+
             // 🔧 修复：两个连续nonce在同一个BitVector中，应该检查两个位都被设置
             if (order1.nonce / 256n === order2.nonce / 256n) {
                 // 两个订单在同一个BitVector中
@@ -631,7 +657,9 @@ describe('ERC721OrdersFeature', () => {
             const makerSigner = await env.provider.getSigner(maker);
             await erc721Feature.connect(makerSigner).cancelERC721Order(order.nonce);
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
+            const tx = erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });
@@ -643,7 +671,9 @@ describe('ERC721OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await erc721Token.mint(taker, order.erc721TokenId);
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
+            const tx = erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
             return expect(tx).to.be.revertedWith('NFTOrders::_validateBuyOrder/NATIVE_TOKEN_NOT_ALLOWED');
         });
         it('cannot fill an expired order', async () => {
@@ -654,7 +684,9 @@ describe('ERC721OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
+            const tx = erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });
@@ -665,7 +697,9 @@ describe('ERC721OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
+            const tx = erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
             return expect(tx).to.be.revertedWith('NFTOrders::_validateBuyOrder/WRONG_TRADE_DIRECTION');
         });
         it('reverts if the taker is not the taker address specified in the order', async () => {
@@ -676,7 +710,9 @@ describe('ERC721OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order, order.erc721TokenId, otherTaker);
             const otherTakerSigner = await env.provider.getSigner(otherTaker);
-            const tx = erc721Feature.connect(otherTakerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
+            const tx = erc721Feature
+                .connect(otherTakerSigner)
+                .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 OnlyTakerError，但由于技术限制暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });
@@ -691,7 +727,9 @@ describe('ERC721OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
             const takerSigner = await env.provider.getSigner(taker);
-            await erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
+            await erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
             await assertBalancesAsync(order);
         });
         it('reverts if an invalid signature is provided', async () => {
@@ -701,7 +739,9 @@ describe('ERC721OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider, SignatureType.EIP712, otherMaker);
             await mintAssetsAsync(order);
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
+            const tx = erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 InvalidSignerError，但由于技术限制暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });
@@ -712,7 +752,9 @@ describe('ERC721OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, true, NULL_BYTES);
+            const tx = erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order, signature, order.erc721TokenId, true, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 ERC20TokenMismatchError，但由于技术限制暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });
@@ -725,7 +767,9 @@ describe('ERC721OrdersFeature', () => {
             await mintAssetsAsync(order);
             const takerSigner = await env.provider.getSigner(taker);
             const takerEthBalanceBefore = await ethers.provider.getBalance(taker);
-            await erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, true, NULL_BYTES, { gasPrice: 0 });
+            await erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order, signature, order.erc721TokenId, true, NULL_BYTES, { gasPrice: 0 });
             const takerEthBalanceAfter = await ethers.provider.getBalance(taker);
             expect(takerEthBalanceAfter - takerEthBalanceBefore).to.equal(order.erc20TokenAmount);
             const erc721Owner = await erc721Token.ownerOf(order.erc721TokenId);
@@ -746,7 +790,9 @@ describe('ERC721OrdersFeature', () => {
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
                 const takerSigner = await env.provider.getSigner(taker);
-                await erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
+                await erc721Feature
+                    .connect(takerSigner)
+                    .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
                 await assertBalancesAsync(order);
             });
             it('single fee, successful callback', async () => {
@@ -763,7 +809,9 @@ describe('ERC721OrdersFeature', () => {
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
                 const takerSigner = await env.provider.getSigner(taker);
-                await erc721Feature.connect(takerSigner).sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
+                await erc721Feature
+                    .connect(takerSigner)
+                    .sellERC721(order, signature, order.erc721TokenId, false, NULL_BYTES);
                 await assertBalancesAsync(order);
             });
             it('single fee, callback reverts', async () => {
@@ -845,7 +893,8 @@ describe('ERC721OrdersFeature', () => {
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order, order.erc721TokenId + 1n);
                 const takerSigner = await getSigner(taker);
-                const tx = erc721Feature.connect(takerSigner)
+                const tx = erc721Feature
+                    .connect(takerSigner)
                     .sellERC721(order, signature, order.erc721TokenId + 1n, false, NULL_BYTES);
                 // 注意：理想情况下应该匹配具体的 TokenIdMismatchError，但由于技术限制暂时使用通用匹配
                 return expect(tx).to.be.rejected;
@@ -865,7 +914,9 @@ describe('ERC721OrdersFeature', () => {
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order, tokenId);
                 const takerSigner = await getSigner(taker);
-                const tx = await erc721Feature.connect(takerSigner).sellERC721(order, signature, tokenId, false, NULL_BYTES);
+                const tx = await erc721Feature
+                    .connect(takerSigner)
+                    .sellERC721(order, signature, tokenId, false, NULL_BYTES);
                 const receipt = await tx.wait();
                 expect(receipt.logs.length).to.be.greaterThan(0);
                 await assertBalancesAsync(order, tokenId);
@@ -885,9 +936,7 @@ describe('ERC721OrdersFeature', () => {
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order, tokenId);
                 const takerSigner = await env.provider.getSigner(taker);
-                const tx = erc721Feature
-                    .connect(takerSigner)
-                    .sellERC721(order, signature, tokenId, false, NULL_BYTES);
+                const tx = erc721Feature.connect(takerSigner).sellERC721(order, signature, tokenId, false, NULL_BYTES);
                 // 🔧 使用 RichErrorMatcher 匹配 PropertyValidationFailedError
                 return expectPropertyValidationFailedError(
                     tx,
@@ -895,7 +944,7 @@ describe('ERC721OrdersFeature', () => {
                     order.erc721Token,
                     BigInt(tokenId),
                     NULL_BYTES,
-                    '0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002e54657374507726f706572747956616c696461746f723a3a76616c696461746550726f70657274792f52455645525400000000000000000000000000000000' // encoded "TestPropertyValidator::validateProperty/REVERT"
+                    '0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002e54657374507726f706572747956616c696461746f723a3a76616c696461746550726f70657274792f52455645525400000000000000000000000000000000', // encoded "TestPropertyValidator::validateProperty/REVERT"
                 );
             });
             it('Successful property validation', async () => {
@@ -913,7 +962,9 @@ describe('ERC721OrdersFeature', () => {
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order, tokenId);
                 const takerSigner = await getSigner(taker);
-                const tx = await erc721Feature.connect(takerSigner).sellERC721(order, signature, tokenId, false, NULL_BYTES);
+                const tx = await erc721Feature
+                    .connect(takerSigner)
+                    .sellERC721(order, signature, tokenId, false, NULL_BYTES);
                 const receipt = await tx.wait();
                 expect(receipt.logs.length).to.be.greaterThan(0);
                 await assertBalancesAsync(order, tokenId);
@@ -971,7 +1022,9 @@ describe('ERC721OrdersFeature', () => {
             const takerSigner = await getSigner(taker);
             const tx = erc721Token
                 .connect(takerSigner)
-                ['safeTransferFrom(address,address,uint256,bytes)'](taker, await zeroEx.getAddress(), order.erc721TokenId, hexUtils.random());
+                [
+                    'safeTransferFrom(address,address,uint256,bytes)'
+                ](taker, await zeroEx.getAddress(), order.erc721TokenId, hexUtils.random());
             return expect(tx).to.be.rejected;
         });
         it('reverts if msg.sender != order.erc721Token', async () => {
@@ -981,18 +1034,16 @@ describe('ERC721OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
             const takerSigner = await getSigner(taker);
-            const tx = erc721Feature
-                .connect(takerSigner)
-                .onERC721Received(
-                    taker,
-                    taker,
-                    order.erc721TokenId,
-                    dataEncoder.encode({
-                        order,
-                        signature,
-                        unwrapNativeToken: false,
-                    }),
-                );
+            const tx = erc721Feature.connect(takerSigner).onERC721Received(
+                taker,
+                taker,
+                order.erc721TokenId,
+                dataEncoder.encode({
+                    order,
+                    signature,
+                    unwrapNativeToken: false,
+                }),
+            );
             // 注意：合约抛出自定义错误，但由于 Hardhat Chai Matchers 的限制，暂时使用通用匹配
             // TODO: 找到正确的方法来匹配 ERC721TokenMismatchError 自定义错误
             return expect(tx).to.be.rejected;
@@ -1005,18 +1056,16 @@ describe('ERC721OrdersFeature', () => {
             await mintAssetsAsync(order, order.erc721TokenId + 1n);
 
             const takerSigner = await getSigner(taker);
-            const tx = erc721Token
-                .connect(takerSigner)
-                ['safeTransferFrom(address,address,uint256,bytes)'](
-                    taker,
-                    await zeroEx.getAddress(),
-                    order.erc721TokenId + 1n,
-                    dataEncoder.encode({
-                        order,
-                        signature,
-                        unwrapNativeToken: false,
-                    }),
-                );
+            const tx = erc721Token.connect(takerSigner)['safeTransferFrom(address,address,uint256,bytes)'](
+                taker,
+                await zeroEx.getAddress(),
+                order.erc721TokenId + 1n,
+                dataEncoder.encode({
+                    order,
+                    signature,
+                    unwrapNativeToken: false,
+                }),
+            );
             // 注意：理想情况下应该匹配具体的 TokenIdMismatchError，但由于技术限制暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });
@@ -1029,18 +1078,16 @@ describe('ERC721OrdersFeature', () => {
             // revoke approval
             const takerSigner = await getSigner(taker);
             await erc721Token.connect(takerSigner).setApprovalForAll(await zeroEx.getAddress(), false);
-            await erc721Token
-                .connect(takerSigner)
-                ['safeTransferFrom(address,address,uint256,bytes)'](
-                    taker,
-                    await zeroEx.getAddress(),
-                    order.erc721TokenId,
-                    dataEncoder.encode({
-                        order,
-                        signature,
-                        unwrapNativeToken: false,
-                    }),
-                );
+            await erc721Token.connect(takerSigner)['safeTransferFrom(address,address,uint256,bytes)'](
+                taker,
+                await zeroEx.getAddress(),
+                order.erc721TokenId,
+                dataEncoder.encode({
+                    order,
+                    signature,
+                    unwrapNativeToken: false,
+                }),
+            );
             await assertBalancesAsync(order);
         });
     });
@@ -1167,11 +1214,11 @@ describe('ERC721OrdersFeature', () => {
                     gasPrice: 0,
                 });
                 const receipt = await tx.wait();
-                
+
                 // 验证余额变化
                 const takerBalance = await env.provider.getBalance(taker);
                 const makerBalance = await env.provider.getBalance(maker);
-                
+
                 // 验证 ERC721 Transfer 事件
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -1187,7 +1234,7 @@ describe('ERC721OrdersFeature', () => {
                     ],
                     erc721Token.interface,
                 );
-                
+
                 // 验证 NFT 所有权转移
                 const erc721Owner = await erc721Token.ownerOf(order.erc721TokenId);
                 expect(erc721Owner).to.equal(taker);
@@ -1204,7 +1251,7 @@ describe('ERC721OrdersFeature', () => {
                     erc721Feature.connect(takerSigner).buyERC721(order, signature, NULL_BYTES, {
                         value: order.erc20TokenAmount,
                         gasPrice: 0,
-                    })
+                    }),
                 ).to.changeEtherBalance(takerSigner, -order.erc20TokenAmount);
                 await assertBalancesAsync(order);
             });
@@ -1215,7 +1262,7 @@ describe('ERC721OrdersFeature', () => {
                 });
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 const takerSigner = await getSigner(taker);
-                
+
                 // 重置相关账户的 WETH 余额
                 const accountsToReset = [order.maker, taker];
                 for (const account of accountsToReset) {
@@ -1229,14 +1276,14 @@ describe('ERC721OrdersFeature', () => {
                         }
                     }
                 }
-                
+
                 await weth.connect(takerSigner).deposit({ value: order.erc20TokenAmount });
                 await erc721Token.mint(maker, order.erc721TokenId);
                 await expect(async () =>
                     erc721Feature.connect(takerSigner).buyERC721(order, signature, NULL_BYTES, {
                         value: order.erc20TokenAmount - 1n,
                         gasPrice: 0,
-                    })
+                    }),
                 ).to.changeEtherBalance(takerSigner, 0); // 使用 WETH，ETH 余额不变
                 await assertBalancesAsync(order);
             });
@@ -1278,7 +1325,7 @@ describe('ERC721OrdersFeature', () => {
                     erc721Feature.connect(takerSigner).buyERC721(order, signature, NULL_BYTES, {
                         value: order.erc20TokenAmount + order.fees[0].amount + 1n,
                         gasPrice: 0,
-                    })
+                    }),
                 ).to.changeEtherBalances(
                     [takerSigner, maker, otherMaker],
                     [-(order.erc20TokenAmount + order.fees[0].amount), order.erc20TokenAmount, order.fees[0].amount],
@@ -1306,7 +1353,7 @@ describe('ERC721OrdersFeature', () => {
                     gasPrice: 0,
                 });
                 const receipt = await tx.wait();
-                
+
                 // 验证 ERC721 Transfer 事件
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -1322,7 +1369,7 @@ describe('ERC721OrdersFeature', () => {
                     ],
                     erc721Token.interface,
                 );
-                
+
                 // 验证 NFT 所有权转移
                 const erc721Owner = await erc721Token.ownerOf(order.erc721TokenId);
                 expect(erc721Owner).to.equal(taker);
@@ -1340,7 +1387,7 @@ describe('ERC721OrdersFeature', () => {
                     ],
                 });
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
-                
+
                 // 重置相关账户的 WETH 余额
                 const accountsToReset = [order.maker, taker, otherMaker];
                 for (const account of accountsToReset) {
@@ -1354,7 +1401,7 @@ describe('ERC721OrdersFeature', () => {
                         }
                     }
                 }
-                
+
                 await erc721Token.mint(maker, order.erc721TokenId);
                 const takerSigner = await getSigner(taker);
                 await weth.connect(takerSigner).deposit({
@@ -1426,12 +1473,9 @@ describe('ERC721OrdersFeature', () => {
                 value: order2.erc20TokenAmount,
                 gasPrice: 0,
             });
-            await erc721Feature.connect(takerSigner).batchBuyERC721s(
-                [order1, order2], 
-                [signature1, signature2], 
-                [NULL_BYTES, NULL_BYTES], 
-                false
-            );
+            await erc721Feature
+                .connect(takerSigner)
+                .batchBuyERC721s([order1, order2], [signature1, signature2], [NULL_BYTES, NULL_BYTES], false);
             await assertBalancesAsync(order1);
             await assertBalancesAsync(order2);
         });
@@ -1457,21 +1501,15 @@ describe('ERC721OrdersFeature', () => {
                 value: order2.erc20TokenAmount,
                 gasPrice: 0,
             });
-            const tx = await erc721Feature.connect(takerSigner).batchBuyERC721s(
-                [order1, order2],
-                [signature1, signature2],
-                [NULL_BYTES, NULL_BYTES],
-                false,
-            );
+            const tx = await erc721Feature
+                .connect(takerSigner)
+                .batchBuyERC721s([order1, order2], [signature1, signature2], [NULL_BYTES, NULL_BYTES], false);
             const receipt = await tx.wait();
             expect(receipt.logs.length).to.be.greaterThan(0);
             // 简化验证：检查第一个订单成功，第二个订单失败（通过余额检查）
-            await erc721Feature.connect(takerSigner).batchBuyERC721s(
-                [order1, order2],
-                [signature1, signature2],
-                [NULL_BYTES, NULL_BYTES],
-                false,
-            );
+            await erc721Feature
+                .connect(takerSigner)
+                .batchBuyERC721s([order1, order2], [signature1, signature2], [NULL_BYTES, NULL_BYTES], false);
             await assertBalancesAsync(order1);
             const erc721Owner = await erc721Token.ownerOf(order2.erc721TokenId);
             expect(erc721Owner).to.equal(maker);
@@ -1500,12 +1538,9 @@ describe('ERC721OrdersFeature', () => {
                 value: order2.erc20TokenAmount,
                 gasPrice: 0,
             });
-            const tx = erc721Feature.connect(takerSigner).batchBuyERC721s(
-                [order1, order2], 
-                [signature1, signature2], 
-                [NULL_BYTES, NULL_BYTES], 
-                true
-            );
+            const tx = erc721Feature
+                .connect(takerSigner)
+                .batchBuyERC721s([order1, order2], [signature1, signature2], [NULL_BYTES, NULL_BYTES], true);
             // 注意：理想情况下应该匹配具体的 InvalidSignerError，但由于技术限制暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });
@@ -1524,20 +1559,13 @@ describe('ERC721OrdersFeature', () => {
             await erc721Token.mint(maker, order2.erc721TokenId);
             const takerSigner = await env.provider.getSigner(taker);
             await expect(async () =>
-                erc721Feature.connect(takerSigner).batchBuyERC721s(
-                    [order1, order2], 
-                    [signature1, signature2], 
-                    [NULL_BYTES, NULL_BYTES], 
-                    true,
-                    {
+                erc721Feature
+                    .connect(takerSigner)
+                    .batchBuyERC721s([order1, order2], [signature1, signature2], [NULL_BYTES, NULL_BYTES], true, {
                         value: order1.erc20TokenAmount + order2.erc20TokenAmount + 1n,
                         gasPrice: 0,
-                    }
-                )
-            ).to.changeEtherBalance(
-                takerSigner, 
-                -(order1.erc20TokenAmount + order2.erc20TokenAmount)
-            );
+                    }),
+            ).to.changeEtherBalance(takerSigner, -(order1.erc20TokenAmount + order2.erc20TokenAmount));
             const erc721Owner1 = await erc721Token.ownerOf(order1.erc721TokenId);
             expect(erc721Owner1).to.equal(taker);
             const erc721Owner2 = await erc721Token.ownerOf(order2.erc721TokenId);
@@ -1557,7 +1585,7 @@ describe('ERC721OrdersFeature', () => {
             const contractMakerFactory = new TestNFTOrderPresigner__factory(signer);
             contractMaker = await contractMakerFactory.deploy(await zeroEx.getAddress());
             await contractMaker.waitForDeployment();
-            
+
             await contractMaker.approveERC20(await erc20Token.getAddress());
             await contractMaker.approveERC721(await erc721Token.getAddress());
         });
@@ -1569,7 +1597,9 @@ describe('ERC721OrdersFeature', () => {
             await mintAssetsAsync(order);
             await contractMaker.preSignERC721Order(order);
             const takerSigner = await env.provider.getSigner(taker);
-            await erc721Feature.connect(takerSigner).sellERC721(order, PRESIGN_SIGNATURE, order.erc721TokenId, false, NULL_BYTES);
+            await erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order, PRESIGN_SIGNATURE, order.erc721TokenId, false, NULL_BYTES);
             await assertBalancesAsync(order);
         });
         it('cannot fill order that has not been presigned by the maker', async () => {
@@ -1579,7 +1609,9 @@ describe('ERC721OrdersFeature', () => {
             });
             await mintAssetsAsync(order);
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = erc721Feature.connect(takerSigner).sellERC721(order, PRESIGN_SIGNATURE, order.erc721TokenId, false, NULL_BYTES);
+            const tx = erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order, PRESIGN_SIGNATURE, order.erc721TokenId, false, NULL_BYTES);
             // TODO: 需要精确匹配 InvalidSignerError，但由于 Hardhat Chai Matchers 技术限制，暂时使用通用匹配
             // const expectedError = new RevertErrors.NFTOrders.InvalidSignerError(await contractMaker.getAddress(), NULL_ADDRESS);
             return expect(tx).to.be.rejected;
@@ -1593,7 +1625,9 @@ describe('ERC721OrdersFeature', () => {
             await contractMaker.preSignERC721Order(order);
             await contractMaker.cancelERC721Order(order.nonce);
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = erc721Feature.connect(takerSigner).sellERC721(order, PRESIGN_SIGNATURE, order.erc721TokenId, false, NULL_BYTES);
+            const tx = erc721Feature
+                .connect(takerSigner)
+                .sellERC721(order, PRESIGN_SIGNATURE, order.erc721TokenId, false, NULL_BYTES);
             // TODO: 需要精确匹配 OrderNotFillableError，但由于 Hardhat Chai Matchers 技术限制，暂时使用通用匹配
             // const expectedError = new RevertErrors.NFTOrders.OrderNotFillableError(
             //     await contractMaker.getAddress(),
@@ -1648,7 +1682,9 @@ describe('ERC721OrdersFeature', () => {
             });
             const buySignature = await buyOrder.getSignatureWithProviderAsync(env.provider);
             const matcherSigner = await getSigner(matcher);
-            const tx = erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
+            const tx = erc721Feature
+                .connect(matcherSigner)
+                .matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
             // TODO: 需要精确匹配 TokenIdMismatchError，但由于 Hardhat Chai Matchers 技术限制，暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });
@@ -1664,7 +1700,9 @@ describe('ERC721OrdersFeature', () => {
             });
             const buySignature = await buyOrder.getSignatureWithProviderAsync(env.provider);
             const matcherSigner = await getSigner(matcher);
-            const tx = erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
+            const tx = erc721Feature
+                .connect(matcherSigner)
+                .matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
             // TODO: 需要精确匹配 ERC721TokenMismatchError，但由于 Hardhat Chai Matchers 技术限制，暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });
@@ -1682,7 +1720,9 @@ describe('ERC721OrdersFeature', () => {
             const buySignature = await buyOrder.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(buyOrder, sellOrder.erc721TokenId, sellOrder.maker);
             const matcherSigner = await getSigner(matcher);
-            const tx = erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
+            const tx = erc721Feature
+                .connect(matcherSigner)
+                .matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
             // TODO: 需要精确匹配 ERC20TokenMismatchError，但由于 Hardhat Chai Matchers 技术限制，暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });
@@ -1698,7 +1738,9 @@ describe('ERC721OrdersFeature', () => {
             });
             const buySignature = await buyOrder.getSignatureWithProviderAsync(env.provider);
             const matcherSigner = await getSigner(matcher);
-            const tx = erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
+            const tx = erc721Feature
+                .connect(matcherSigner)
+                .matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
             // TODO: 需要精确匹配 NegativeSpreadError，但由于 Hardhat Chai Matchers 技术限制，暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });
@@ -1717,7 +1759,9 @@ describe('ERC721OrdersFeature', () => {
             const buySignature = await buyOrder.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(buyOrder, sellOrder.erc721TokenId, sellOrder.maker);
             const matcherSigner = await getSigner(matcher);
-            await erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature, { gasPrice: 0 });
+            await erc721Feature
+                .connect(matcherSigner)
+                .matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature, { gasPrice: 0 });
             await assertBalancesAsync(sellOrder, sellOrder.erc721TokenId, otherMaker);
             const matcherBalance = await erc20Token.balanceOf(matcher);
             expect(matcherBalance).to.equal(spread);
@@ -1741,7 +1785,9 @@ describe('ERC721OrdersFeature', () => {
             const sellerEthBalanceBefore = await env.provider.getBalance(sellOrder.maker);
             const matcherEthBalanceBefore = await env.provider.getBalance(matcher);
             const matcherSigner = await getSigner(matcher);
-            await erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature, { gasPrice: 0 });
+            await erc721Feature
+                .connect(matcherSigner)
+                .matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature, { gasPrice: 0 });
             const erc721Owner = await erc721Token.ownerOf(sellOrder.erc721TokenId);
             expect(erc721Owner).to.equal(buyOrder.maker);
             const sellerEthBalanceAfter = await env.provider.getBalance(sellOrder.maker);
@@ -1771,15 +1817,17 @@ describe('ERC721OrdersFeature', () => {
             const buySignature = await buyOrder.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(buyOrder, sellOrder.erc721TokenId, sellOrder.maker);
             await erc20Token.mint(buyOrder.maker, sellOrder.fees[0].amount);
-            
+
             // 重置 matcher 的 ERC20 余额，确保精确的余额断言
             const matcherSigner = await getSigner(matcher);
             const currentMatcherBalance = await erc20Token.balanceOf(matcher);
             if (currentMatcherBalance > 0n) {
                 await erc20Token.connect(matcherSigner).transfer(owner, currentMatcherBalance);
             }
-            
-            await erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature, { gasPrice: 0 });
+
+            await erc721Feature
+                .connect(matcherSigner)
+                .matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature, { gasPrice: 0 });
             await assertBalancesAsync(sellOrder, sellOrder.erc721TokenId, otherMaker);
             const matcherBalance = await erc20Token.balanceOf(matcher);
             expect(matcherBalance).to.equal(spread - sellOrder.fees[0].amount);
@@ -1812,16 +1860,16 @@ describe('ERC721OrdersFeature', () => {
             const sellerEthBalanceBefore = await env.provider.getBalance(sellOrder.maker);
             const matcherEthBalanceBefore = await env.provider.getBalance(matcher);
             const matcherSigner = await getSigner(matcher);
-            await erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature, { gasPrice: 0 });
+            await erc721Feature
+                .connect(matcherSigner)
+                .matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature, { gasPrice: 0 });
             const erc721Owner = await erc721Token.ownerOf(sellOrder.erc721TokenId);
             expect(erc721Owner).to.equal(buyOrder.maker);
             const sellerEthBalanceAfter = await env.provider.getBalance(sellOrder.maker);
             const matcherEthBalanceAfter = await env.provider.getBalance(matcher);
             // 参考 ERC1155 的策略，使用 gte 而不是 equal，因为可能有累积余额或精度问题
             expect(sellerEthBalanceAfter - sellerEthBalanceBefore).to.be.gte(sellOrder.erc20TokenAmount);
-            expect(matcherEthBalanceAfter - matcherEthBalanceBefore).to.be.gte(
-                spread - sellOrder.fees[0].amount,
-            );
+            expect(matcherEthBalanceAfter - matcherEthBalanceBefore).to.be.gte(spread - sellOrder.fees[0].amount);
         });
         it('reverts if sell order fees exceed spread', async () => {
             const spread = getRandomInteger(1, '1e18');
@@ -1846,7 +1894,9 @@ describe('ERC721OrdersFeature', () => {
             await mintAssetsAsync(buyOrder, sellOrder.erc721TokenId, sellOrder.maker);
             await erc20Token.mint(buyOrder.maker, sellOrder.fees[0].amount);
             const matcherSigner = await getSigner(matcher);
-            const tx = erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
+            const tx = erc721Feature
+                .connect(matcherSigner)
+                .matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
             // TODO: 需要精确匹配 SellOrderFeesExceedSpreadError，但由于 Hardhat Chai Matchers 技术限制，暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });
@@ -1877,7 +1927,9 @@ describe('ERC721OrdersFeature', () => {
             const buyOrderMakerSigner = await getSigner(buyOrder.maker);
             await weth.connect(buyOrderMakerSigner).deposit({ value: sellOrder.fees[0].amount, gasPrice: 0 });
             const matcherSigner = await getSigner(matcher);
-            const tx = erc721Feature.connect(matcherSigner).matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
+            const tx = erc721Feature
+                .connect(matcherSigner)
+                .matchERC721Orders(sellOrder, buyOrder, sellSignature, buySignature);
             // TODO: 需要精确匹配 SellOrderFeesExceedSpreadError，但由于 Hardhat Chai Matchers 技术限制，暂时使用通用匹配
             return expect(tx).to.be.rejected;
         });

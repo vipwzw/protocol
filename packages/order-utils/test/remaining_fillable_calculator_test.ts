@@ -11,7 +11,7 @@ const expect = chai.expect;
 
 // 替代 Web3Wrapper.toBaseUnitAmount 的函数
 function toBaseUnitAmount(amount: bigint, decimals: number): bigint {
-    return amount * (10n ** BigInt(decimals));
+    return amount * 10n ** BigInt(decimals);
 }
 
 describe('RemainingFillableCalculator', () => {
@@ -113,8 +113,8 @@ describe('RemainingFillableCalculator', () => {
         it('calculates the correct amount when balance is less than remaining fillable', () => {
             signedOrder = buildSignedOrder();
             const partiallyFilledAmount = toBaseUnitAmount(BigInt(2), decimals);
-            remainingMakeAssetAmount = signedOrder.makerAssetAmount - (partiallyFilledAmount);
-            transferrableMakeAssetAmount = remainingMakeAssetAmount - (partiallyFilledAmount);
+            remainingMakeAssetAmount = signedOrder.makerAssetAmount - partiallyFilledAmount;
+            transferrableMakeAssetAmount = remainingMakeAssetAmount - partiallyFilledAmount;
             calculator = new RemainingFillableCalculator(
                 signedOrder.makerFee,
                 signedOrder.makerAssetAmount,
@@ -137,7 +137,7 @@ describe('RemainingFillableCalculator', () => {
                 signedOrder = buildSignedOrder();
                 remainingMakeAssetAmount = signedOrder.makerAssetAmount;
                 const transferredAmount = toBaseUnitAmount(BigInt(2), decimals);
-                transferrableMakeAssetAmount = remainingMakeAssetAmount - (transferredAmount);
+                transferrableMakeAssetAmount = remainingMakeAssetAmount - transferredAmount;
                 calculator = new RemainingFillableCalculator(
                     signedOrder.makerFee,
                     signedOrder.makerAssetAmount,
@@ -161,7 +161,7 @@ describe('RemainingFillableCalculator', () => {
                 signedOrder = buildSignedOrder();
                 remainingMakeAssetAmount = signedOrder.makerAssetAmount;
                 const transferredAmount = toBaseUnitAmount(BigInt(2), decimals);
-                transferrableMakeAssetAmount = remainingMakeAssetAmount - (transferredAmount);
+                transferrableMakeAssetAmount = remainingMakeAssetAmount - transferredAmount;
                 calculator = new RemainingFillableCalculator(
                     signedOrder.makerFee,
                     signedOrder.makerAssetAmount,
@@ -173,11 +173,12 @@ describe('RemainingFillableCalculator', () => {
                 const calculatedFillableAmount = calculator.computeRemainingFillable();
                 expect(calculatedFillableAmount).to.be.at.most(transferrableMakeAssetAmount);
                 expect(calculatedFillableAmount).to.be.above(0n);
-                const orderToFeeRatio = signedOrder.makerAssetAmount / (signedOrder.makerFee);
+                const orderToFeeRatio = signedOrder.makerAssetAmount / signedOrder.makerFee;
                 // 当 orderToFeeRatio 为 0 时（费用大于资产），使用交叉相乘计算费用
-                const calculatedFeeAmount = orderToFeeRatio === 0n 
-                    ? (calculatedFillableAmount * signedOrder.makerFee) / signedOrder.makerAssetAmount
-                    : calculatedFillableAmount / orderToFeeRatio;
+                const calculatedFeeAmount =
+                    orderToFeeRatio === 0n
+                        ? (calculatedFillableAmount * signedOrder.makerFee) / signedOrder.makerAssetAmount
+                        : calculatedFillableAmount / orderToFeeRatio;
                 expect(calculatedFeeAmount).to.be.below(transferrableMakerFeeTokenAmount);
             });
         });
@@ -232,11 +233,11 @@ describe('RemainingFillableCalculator', () => {
         it('calculates the correct amount when balance is less than remaining fillable', () => {
             signedOrder = buildSignedOrder();
             const partiallyFilledAmount = toBaseUnitAmount(BigInt(2), decimals);
-            remainingMakeAssetAmount = signedOrder.makerAssetAmount - (partiallyFilledAmount);
-            transferrableMakeAssetAmount = remainingMakeAssetAmount - (partiallyFilledAmount);
+            remainingMakeAssetAmount = signedOrder.makerAssetAmount - partiallyFilledAmount;
+            transferrableMakeAssetAmount = remainingMakeAssetAmount - partiallyFilledAmount;
             transferrableMakerFeeTokenAmount = transferrableMakeAssetAmount;
 
-            const orderToFeeRatio = signedOrder.makerAssetAmount / (signedOrder.makerFee);
+            const orderToFeeRatio = signedOrder.makerAssetAmount / signedOrder.makerFee;
             const expectedFillableAmount = BigInt(450980);
             calculator = new RemainingFillableCalculator(
                 signedOrder.makerFee,
@@ -247,7 +248,7 @@ describe('RemainingFillableCalculator', () => {
                 remainingMakeAssetAmount,
             );
             const calculatedFillableAmount = calculator.computeRemainingFillable();
-            const numberOfFillsInRatio = calculatedFillableAmount / (orderToFeeRatio);
+            const numberOfFillsInRatio = calculatedFillableAmount / orderToFeeRatio;
             const calculatedFillableAmountPlusFees = calculatedFillableAmount + numberOfFillsInRatio;
             expect(calculatedFillableAmountPlusFees).to.be.below(transferrableMakeAssetAmount);
             expect(calculatedFillableAmountPlusFees).to.be.below(remainingMakeAssetAmount);

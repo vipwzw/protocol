@@ -56,7 +56,7 @@ export class ERC721Wrapper {
     public async deployDummyTokensAsync(): Promise<DummyERC721Token[]> {
         const { ethers } = require('hardhat');
         const [signer] = await ethers.getSigners();
-        
+
         for (let i = 0; i < ERC721_CONSTANTS.NUM_DUMMY_ERC721_TO_DEPLOY; i++) {
             const factory = new DummyERC721Token__factory(signer);
             const contract = await factory.deploy(
@@ -65,7 +65,7 @@ export class ERC721Wrapper {
             );
             await contract.waitForDeployment();
             const contractAddress = await contract.getAddress();
-            
+
             // 验证合约基本功能
             try {
                 const name = await contract.name();
@@ -73,7 +73,7 @@ export class ERC721Wrapper {
             } catch (error) {
                 throw error;
             }
-            
+
             // Cache the address mapping for quick lookup
             this._contractAddressToInstance.set(contractAddress.toLowerCase(), contract);
             this._dummyTokenContracts.push(contract);
@@ -83,20 +83,20 @@ export class ERC721Wrapper {
     public async deployProxyAsync(): Promise<ERC721Proxy> {
         const { ethers } = require('hardhat');
         const [signer] = await ethers.getSigners();
-        
+
         try {
             // 现在 ERC721Proxy 是具体实现，可以直接部署
             const factory = new ERC721Proxy__factory(signer);
             this._proxyContract = await factory.deploy();
             await this._proxyContract.waitForDeployment();
             const proxyAddress = await this._proxyContract.getAddress();
-        this._proxyIdIfExists = await getProxyId(proxyAddress, this._provider);
+            this._proxyIdIfExists = await getProxyId(proxyAddress, this._provider);
             return this._proxyContract;
         } catch (error) {
             throw new Error(`Failed to deploy ERC721Proxy: ${error.message}`);
         }
     }
-    
+
     /**
      * 连接到现有的 ERC721Proxy 合约
      * @param proxyAddress 已部署的代理合约地址
@@ -120,20 +120,23 @@ export class ERC721Wrapper {
             const dummyTokenContract = this._dummyTokenContracts[contractIndex];
             for (const tokenOwnerAddress of this._tokenOwnerAddresses) {
                 // tslint:disable-next-line:no-unused-variable
-                for (const i of _.times(3)) { // Mint 3 tokens per owner
+                for (const i of _.times(3)) {
+                    // Mint 3 tokens per owner
                     // 为每个合约使用不同的token ID范围，避免冲突
                     const baseTokenId = generatePseudoRandomSalt();
                     const tokenId: bigint = baseTokenId + BigInt(contractIndex * 1000000);
                     try {
                         const contractAddress = await dummyTokenContract.getAddress();
-                        
+
                         await this.mintAsync(contractAddress, BigInt(tokenId), tokenOwnerAddress);
-                        
+
                         // 验证 token 是否真的被铸造了
                         try {
                             const actualOwner = await dummyTokenContract.ownerOf(tokenId);
                             if (actualOwner.toLowerCase() !== tokenOwnerAddress.toLowerCase()) {
-                                throw new Error(`Token owner mismatch: expected ${tokenOwnerAddress}, got ${actualOwner}`);
+                                throw new Error(
+                                    `Token owner mismatch: expected ${tokenOwnerAddress}, got ${actualOwner}`,
+                                );
                             }
                         } catch (verifyError) {
                             throw verifyError;
@@ -277,7 +280,7 @@ export class ERC721Wrapper {
     }
     public async getTokenAddresses(): Promise<string[]> {
         const tokenAddresses = await Promise.all(
-            this._dummyTokenContracts.map(async dummyTokenContract => await dummyTokenContract.getAddress())
+            this._dummyTokenContracts.map(async dummyTokenContract => await dummyTokenContract.getAddress()),
         );
         return tokenAddresses;
     }
@@ -285,11 +288,13 @@ export class ERC721Wrapper {
         // Use cached address mapping for exact match
         const normalizedAddress = tokenAddress.toLowerCase();
         const tokenContractIfExists = this._contractAddressToInstance.get(normalizedAddress);
-        
+
         if (tokenContractIfExists === undefined) {
             // If exact match fails, provide debugging info
             const availableAddresses = Array.from(this._contractAddressToInstance.keys()).join(', ');
-            throw new Error(`Token: ${tokenAddress} was not deployed through ERC721Wrapper. Available addresses: ${availableAddresses}`);
+            throw new Error(
+                `Token: ${tokenAddress} was not deployed through ERC721Wrapper. Available addresses: ${availableAddresses}`,
+            );
         }
         return tokenContractIfExists;
     }

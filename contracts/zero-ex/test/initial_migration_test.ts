@@ -32,7 +32,7 @@ describe('Initial migration', () => {
         features = await deployBootstrapFeaturesAsync(env.provider, env.txDefaults);
         // 使用 TypeChain 工厂部署合约
         const signer = await env.provider.getSigner(owner);
-        
+
         const migratorFactory = new TestInitialMigration__factory(signer);
         migrator = await migratorFactory.deploy(owner);
         await migrator.waitForDeployment();
@@ -52,7 +52,7 @@ describe('Initial migration', () => {
     it('Non-deployer cannot call initializeZeroEx()', async () => {
         const notDeployerSigner = await env.provider.getSigner(notDeployer); // 🔧 使用实际账户
         return expect(
-            migrator.connect(notDeployerSigner).initializeZeroEx(owner, await zeroEx.getAddress(), features)
+            migrator.connect(notDeployerSigner).initializeZeroEx(owner, await zeroEx.getAddress(), features),
         ).to.be.revertedWith('InitialMigration/INVALID_SENDER'); // 🔧 匹配具体的错误信息
     });
 
@@ -61,7 +61,7 @@ describe('Initial migration', () => {
         const migratorFactory = new TestInitialMigration__factory(signer);
         const _migrator = await migratorFactory.deploy(env.txDefaults.from as string);
         await _migrator.waitForDeployment();
-        
+
         // 🔧 在Solidity 0.8.28中，selfdestruct行为变化，die()调用现在可能成功
         const tx = _migrator.die(owner);
         return expect(tx).to.not.be.reverted; // 现在期望成功
@@ -71,9 +71,7 @@ describe('Initial migration', () => {
         it('Migrator cannot call bootstrap() again', async () => {
             // 直接使用已生成接口的 selector 计算
             const selector = '0x9e5be3e6';
-            return expect(
-                migrator.callBootstrap(await zeroEx.getAddress())
-            ).to.be.reverted;
+            return expect(migrator.callBootstrap(await zeroEx.getAddress())).to.be.reverted;
         });
 
         it('Bootstrap feature self destructs after deployment', async () => {
@@ -87,7 +85,10 @@ describe('Initial migration', () => {
         let ownable: IOwnableFeatureContract;
 
         before(async () => {
-            ownable = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress()) as IOwnableFeatureContract;
+            ownable = (await ethers.getContractAt(
+                'IOwnableFeature',
+                await zeroEx.getAddress(),
+            )) as IOwnableFeatureContract;
         });
 
         it('has the correct owner', async () => {
@@ -100,25 +101,28 @@ describe('Initial migration', () => {
         let registry: SimpleFunctionRegistryFeatureContract;
 
         before(async () => {
-            registry = await ethers.getContractAt('ISimpleFunctionRegistryFeature', await zeroEx.getAddress()) as SimpleFunctionRegistryFeatureContract;
+            registry = (await ethers.getContractAt(
+                'ISimpleFunctionRegistryFeature',
+                await zeroEx.getAddress(),
+            )) as SimpleFunctionRegistryFeatureContract;
         });
 
         it('_extendSelf() is deregistered', async () => {
             // 计算 _extendSelf() 函数的选择器
             const selector = ethers.id('_extendSelf(bytes4,address)').slice(0, 10); // 取前4字节 (8个十六进制字符 + 0x)
             const ownerSigner = await env.provider.getSigner(owner);
-            
+
             // 直接调用 ZeroEx 代理合约，因为 _extendSelf 不在公共接口中
             const calldata = ethers.concat([
                 selector,
-                ethers.AbiCoder.defaultAbiCoder().encode(['bytes4', 'address'], [hexUtils.random(4), randomAddress()])
+                ethers.AbiCoder.defaultAbiCoder().encode(['bytes4', 'address'], [hexUtils.random(4), randomAddress()]),
             ]);
-            
+
             return expect(
                 ownerSigner.sendTransaction({
                     to: await zeroEx.getAddress(),
-                    data: calldata
-                })
+                    data: calldata,
+                }),
             ).to.be.reverted; // 简化为检查是否 revert，因为 _extendSelf 应该已经被注销
         });
     });

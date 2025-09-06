@@ -1,11 +1,5 @@
 import { expect } from 'chai';
-import {
-    constants,
-    filterLogsToArguments,
-    verifyEventsFromLogs,
-    expectBigIntEqual,
-    toBigInt,
-} from '../test_constants';
+import { constants, filterLogsToArguments, verifyEventsFromLogs, expectBigIntEqual, toBigInt } from '../test_constants';
 import { hexUtils } from '../test_constants';
 import * as _ from 'lodash';
 
@@ -54,11 +48,10 @@ describe('MixinStakingPool unit tests', () => {
             operatorShare: randomOperatorShare(),
             ...opts,
         };
-        const tx = await testContract
-            .setPoolById(_opts.poolId, {
-                operator: _opts.operator,
-                operatorShare: _opts.operatorShare,
-            });
+        const tx = await testContract.setPoolById(_opts.poolId, {
+            operator: _opts.operator,
+            operatorShare: _opts.operatorShare,
+        });
         await tx.wait();
         return _opts;
     }
@@ -71,7 +64,9 @@ describe('MixinStakingPool unit tests', () => {
     describe('onlyStakingPoolOperator modifier', () => {
         it('fails if not called by the pool operator', async () => {
             const { poolId } = await createPoolAsync();
-            const tx = testContract.connect(await ethers.getSigner(notOperatorOrMaker)).testOnlyStakingPoolOperatorModifier(poolId);
+            const tx = testContract
+                .connect(await ethers.getSigner(notOperatorOrMaker))
+                .testOnlyStakingPoolOperatorModifier(poolId);
             return expect(tx).to.be.reverted;
         });
         it('fails if called by a pool maker', async () => {
@@ -119,9 +114,7 @@ describe('MixinStakingPool unit tests', () => {
             expect(createEvents).to.be.length(2);
             const poolIds = createEvents.map(e => e.poolId);
             expect(poolIds[0]).to.not.eq(poolIds[1]);
-            const pools = await Promise.all(
-                poolIds.map(async poolId => testContract.getStakingPool(poolId)),
-            );
+            const pools = await Promise.all(poolIds.map(async poolId => testContract.getStakingPool(poolId)));
             expect(pools[0].operator).to.eq(pools[1].operator);
         });
         it('operator can only be maker of one pool', async () => {
@@ -174,7 +167,9 @@ describe('MixinStakingPool unit tests', () => {
         });
         it('returns the next pool ID', async () => {
             const opSigner = await ethers.getSigner(operator);
-            const poolId = await testContract.connect(opSigner).createStakingPool.staticCall(randomOperatorShare(), false);
+            const poolId = await testContract
+                .connect(opSigner)
+                .createStakingPool.staticCall(randomOperatorShare(), false);
             expect(poolId).to.eq(nextPoolId);
         });
         it('can add operator as a maker', async () => {
@@ -221,14 +216,18 @@ describe('MixinStakingPool unit tests', () => {
         it('fails if not called by operator', async () => {
             const { poolId, operatorShare } = await createPoolAsync();
             const signer = await ethers.getSigner(notOperatorOrMaker);
-            const tx = testContract.connect(signer).decreaseStakingPoolOperatorShare(poolId, Math.max(0, operatorShare - 1));
+            const tx = testContract
+                .connect(signer)
+                .decreaseStakingPoolOperatorShare(poolId, Math.max(0, operatorShare - 1));
             return expect(tx).to.be.reverted;
         });
         it('fails if called by maker', async () => {
             const { poolId, operatorShare } = await createPoolAsync();
             await addMakerToPoolAsync(poolId, maker);
             const signer = await ethers.getSigner(maker);
-            const tx = testContract.connect(signer).decreaseStakingPoolOperatorShare(poolId, Math.max(0, operatorShare - 1));
+            const tx = testContract
+                .connect(signer)
+                .decreaseStakingPoolOperatorShare(poolId, Math.max(0, operatorShare - 1));
             return expect(tx).to.be.reverted;
         });
         it('fails if operator share is greater than current', async () => {
@@ -240,7 +239,9 @@ describe('MixinStakingPool unit tests', () => {
         it('fails if operator share is greater than PPM_100_PERCENT', async () => {
             const { poolId } = await createPoolAsync();
             const opSigner = await ethers.getSigner(operator);
-            const tx = testContract.connect(opSigner).decreaseStakingPoolOperatorShare(poolId, constants.PPM_100_PERCENT + 1);
+            const tx = testContract
+                .connect(opSigner)
+                .decreaseStakingPoolOperatorShare(poolId, constants.PPM_100_PERCENT + 1);
             return expect(tx).to.be.reverted;
         });
         it('records new operator share', async () => {
@@ -261,14 +262,20 @@ describe('MixinStakingPool unit tests', () => {
         it('does not modify operator', async () => {
             const { poolId, operatorShare } = await createPoolAsync();
             const opSigner = await ethers.getSigner(operator);
-            await (await testContract.connect(opSigner).decreaseStakingPoolOperatorShare(poolId, operatorShare - 1)).wait();
+            await (
+                await testContract.connect(opSigner).decreaseStakingPoolOperatorShare(poolId, operatorShare - 1)
+            ).wait();
             const pool = await testContract.getStakingPool(poolId);
             expect(pool.operator).to.eq(operator);
         });
         it('emits an `OperatorShareDecreased` event', async () => {
             const { poolId, operatorShare } = await createPoolAsync();
             const opSigner = await ethers.getSigner(operator);
-            const receipt = await (await testContract.connect(opSigner).decreaseStakingPoolOperatorShare(poolId, Math.max(0, operatorShare - 1))).wait();
+            const receipt = await (
+                await testContract
+                    .connect(opSigner)
+                    .decreaseStakingPoolOperatorShare(poolId, Math.max(0, operatorShare - 1))
+            ).wait();
             verifyEventsFromLogs(
                 receipt?.logs ?? [],
                 [

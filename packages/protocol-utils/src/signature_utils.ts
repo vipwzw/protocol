@@ -62,7 +62,7 @@ export async function ethSignHashWithProviderAsync(
                 };
             }
         }
-        
+
         // 检查直接的 ethers provider with getSigners
         if (provider && typeof provider === 'object' && 'getSigners' in provider) {
             const signers = await (provider as any).getSigners();
@@ -78,10 +78,10 @@ export async function ethSignHashWithProviderAsync(
     } catch (hardhatError: any) {
         console.warn(`Hardhat signing failed: ${hardhatError.message}`);
     }
-    
+
     // 处理其他类型的 provider (保持向后兼容)
     let ethersProvider: ethers.JsonRpcProvider;
-    
+
     if (typeof provider === 'string') {
         ethersProvider = new ethers.JsonRpcProvider(provider);
     } else if (provider && typeof provider === 'object' && 'host' in provider) {
@@ -90,7 +90,7 @@ export async function ethSignHashWithProviderAsync(
     } else {
         ethersProvider = new ethers.JsonRpcProvider('http://localhost:8545');
     }
-    
+
     const ethersigner = await ethersProvider.getSigner(signer);
     const rpcSig = await ethersigner.signMessage(ethers.getBytes(hash));
     return {
@@ -133,7 +133,7 @@ export async function eip712SignTypedDataWithProviderAsync(
                 };
             }
         }
-        
+
         // 检查直接的 ethers provider with getSigners
         if (provider && typeof provider === 'object' && 'getSigners' in provider) {
             const signers = await (provider as any).getSigners();
@@ -149,10 +149,10 @@ export async function eip712SignTypedDataWithProviderAsync(
     } catch (hardhatError: any) {
         console.warn(`Hardhat EIP712 signing failed: ${hardhatError.message}`);
     }
-    
+
     // 处理其他类型的 provider (保持向后兼容)
     let ethersProvider: ethers.JsonRpcProvider;
-    
+
     if (typeof provider === 'string') {
         ethersProvider = new ethers.JsonRpcProvider(provider);
     } else if (provider && typeof provider === 'object' && 'host' in provider) {
@@ -161,7 +161,7 @@ export async function eip712SignTypedDataWithProviderAsync(
     } else {
         ethersProvider = new ethers.JsonRpcProvider('http://localhost:8545');
     }
-    
+
     const ethersigner = await ethersProvider.getSigner(signer);
     const rpcSig = await ethersigner.signTypedData(data.domain, data.types, data.message);
     return {

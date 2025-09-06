@@ -10,7 +10,7 @@ import {
     ValidatorSignature,
     ZeroExTransaction,
 } from '@0x/utils';
-import { hexUtils } from "./utils";;
+import { hexUtils } from './utils';
 import { ethers } from 'ethers';
 import * as ethUtil from 'ethereumjs-util';
 import * as _ from 'lodash';
@@ -22,7 +22,7 @@ import { orderHashUtils } from './order_hash_utils';
 import { transactionHashUtils } from './transaction_hash_utils';
 import { TypedDataError } from './types';
 
-// 类型声明  
+// 类型声明
 type SupportedProvider = ethers.Provider | ethers.Signer;
 
 // 创建 providerUtils 替代
@@ -48,11 +48,11 @@ const providerUtils = {
 class Web3Wrapper {
     public isZeroExWeb3Wrapper = false;
     private provider: SupportedProvider;
-    
+
     constructor(provider: SupportedProvider) {
         this.provider = provider;
     }
-    
+
     /**
      * 使用 ethers v6 实现 signTypedData 功能
      * 替代原来的 @0x/web3-wrapper signTypedDataAsync
@@ -64,20 +64,23 @@ class Web3Wrapper {
             if (currentAddress.toLowerCase() !== signerAddress.toLowerCase()) {
                 throw new Error(`Signer address ${currentAddress} does not match expected ${signerAddress}`);
             }
-            
+
             // 使用 ethers v6 的 signTypedData 方法
             // 参数格式: domain, types, value
             return await this.provider.signTypedData(
                 typedData.domain,
-                typedData.types, 
-                typedData.message || typedData.value || typedData
+                typedData.types,
+                typedData.message || typedData.value || typedData,
             );
         } else {
             // 对于非 Signer 的 provider，尝试通过 RPC 调用 eth_signTypedData_v4
             try {
                 // 优先尝试 send 方法，回退到 sendAsync
                 if (typeof (this.provider as any).send === 'function') {
-                    return await (this.provider as any).send('eth_signTypedData_v4', [signerAddress, JSON.stringify(typedData)]);
+                    return await (this.provider as any).send('eth_signTypedData_v4', [
+                        signerAddress,
+                        JSON.stringify(typedData),
+                    ]);
                 } else if (typeof (this.provider as any).sendAsync === 'function') {
                     return new Promise((resolve, reject) => {
                         (this.provider as any).sendAsync(
@@ -85,7 +88,7 @@ class Web3Wrapper {
                                 method: 'eth_signTypedData_v4',
                                 params: [signerAddress, JSON.stringify(typedData)],
                                 id: 42,
-                                jsonrpc: '2.0'
+                                jsonrpc: '2.0',
                             },
                             (error: any, result: any) => {
                                 if (error) {
@@ -93,20 +96,22 @@ class Web3Wrapper {
                                 } else {
                                     resolve(result.result);
                                 }
-                            }
+                            },
                         );
                     });
                 } else {
                     throw new Error('Provider does not have send or sendAsync method');
                 }
             } catch (error) {
-                throw new Error(`Provider does not support typed data signing. ${error instanceof Error ? error.message : 'Unknown error'}`);
+                throw new Error(
+                    `Provider does not support typed data signing. ${error instanceof Error ? error.message : 'Unknown error'}`,
+                );
             }
         }
     }
-    
+
     /**
-     * 使用 ethers v6 实现 signMessage 功能  
+     * 使用 ethers v6 实现 signMessage 功能
      * 替代原来的 @0x/web3-wrapper signMessageAsync
      */
     async signMessageAsync(signerAddress: string, message: string): Promise<string> {
@@ -116,7 +121,7 @@ class Web3Wrapper {
             if (currentAddress.toLowerCase() !== signerAddress.toLowerCase()) {
                 throw new Error(`Signer address ${currentAddress} does not match expected ${signerAddress}`);
             }
-            
+
             // 使用 ethers v6 的 signMessage 方法
             // 这会自动添加以太坊消息前缀并签名
             return await this.provider.signMessage(ethers.getBytes(message));
@@ -133,7 +138,7 @@ class Web3Wrapper {
                                 method: 'eth_sign',
                                 params: [signerAddress, message],
                                 id: 42,
-                                jsonrpc: '2.0'
+                                jsonrpc: '2.0',
                             },
                             (error: any, result: any) => {
                                 if (error) {
@@ -141,18 +146,20 @@ class Web3Wrapper {
                                 } else {
                                     resolve(result.result);
                                 }
-                            }
+                            },
                         );
                     });
                 } else {
                     throw new Error('Provider does not have send or sendAsync method');
                 }
             } catch (error) {
-                throw new Error(`Provider does not support signing. ${error instanceof Error ? error.message : 'Unknown error'}`);
+                throw new Error(
+                    `Provider does not support signing. ${error instanceof Error ? error.message : 'Unknown error'}`,
+                );
             }
         }
     }
-    
+
     /**
      * 获取账户地址列表
      * 用于验证签名者权限
@@ -162,7 +169,7 @@ class Web3Wrapper {
             const address = await this.provider.getAddress();
             return [address];
         }
-        
+
         // 对于普通 Provider，尝试通过 eth_accounts 获取
         try {
             const accounts = await (this.provider as any).send('eth_accounts', []);
@@ -171,7 +178,7 @@ class Web3Wrapper {
             return [];
         }
     }
-    
+
     /**
      * 获取网络信息
      */
@@ -469,34 +476,34 @@ export const signatureUtils = {
         // return the signature params in different orders. In order to support all client implementations,
         // we parse the signature in both ways, and evaluate if either one is a valid signature.
         // r + s + v is the most prevalent format from eth_sign, so we attempt this first.
-        
+
         // 首先尝试 RSV 格式解析 (ethers.js 标准格式)
         const ecSignatureRSV = parseSignatureHexAsRSV(signature);
-        
+
         // 尝试使用前缀消息验证
         let isValidRSVSignature = isValidECSignature(prefixedMsgHashHex, ecSignatureRSV, normalizedSignerAddress);
-        
+
         // 如果前缀验证失败，尝试不带前缀的原始消息
         if (!isValidRSVSignature) {
             isValidRSVSignature = isValidECSignature(msgHash, ecSignatureRSV, normalizedSignerAddress);
         }
-        
+
         if (isValidRSVSignature) {
             const convertedSignatureHex = signatureUtils.convertECSignatureToSignatureHex(ecSignatureRSV);
             return convertedSignatureHex;
         }
-        
+
         // 然后尝试 VRS 格式解析 (旧格式)
         const ecSignatureVRS = parseSignatureHexAsVRS(signature);
-        
+
         // 尝试使用前缀消息验证
         let isValidVRSSignature = isValidECSignature(prefixedMsgHashHex, ecSignatureVRS, normalizedSignerAddress);
-        
+
         // 如果前缀验证失败，尝试不带前缀的原始消息
         if (!isValidVRSSignature) {
             isValidVRSSignature = isValidECSignature(msgHash, ecSignatureVRS, normalizedSignerAddress);
         }
-        
+
         if (isValidVRSSignature) {
             const convertedSignatureHex = signatureUtils.convertECSignatureToSignatureHex(ecSignatureVRS);
             return convertedSignatureHex;
@@ -564,12 +571,12 @@ export const signatureUtils = {
  */
 export function parseSignatureHexAsVRS(signatureHex: string): ECSignature {
     const signatureBuffer = ethUtil.toBuffer(signatureHex);
-    
+
     // VRS format: 1 byte V + 32 bytes R + 32 bytes S
     let v = signatureBuffer[0];
     const r = signatureBuffer.slice(1, 33);
     const s = signatureBuffer.slice(33, 65);
-    
+
     // Handle different V value formats:
     // - Legacy format: [0, 1] -> convert to [27, 28]
     // - Standard format: [27, 28] -> use as is
@@ -577,7 +584,7 @@ export function parseSignatureHexAsVRS(signatureHex: string): ECSignature {
     if (v < 27) {
         v += 27;
     }
-    
+
     const ecSignature: ECSignature = {
         v,
         r: ethUtil.bufferToHex(r),
@@ -605,22 +612,22 @@ export function parseSignatureWithType(signatureHex: string): { signature: ECSig
     if (signatureHex.length !== 134) {
         throw new Error(`Invalid signature length: expected 134 characters, got ${signatureHex.length}`);
     }
-    
+
     // 验证 0x 前缀
     if (!signatureHex.startsWith('0x')) {
         throw new Error(`Invalid signature format: expected 0x prefix`);
     }
-    
+
     // 提取 SignatureType（最后一个字节）
     const signatureTypeHex = signatureHex.slice(-2);
     const signatureType = parseInt(signatureTypeHex, 16);
-    
+
     // 提取 VRS 部分（去掉 0x 前缀和最后一个字节）
     const vrsHex = '0x' + signatureHex.slice(2, -2);
-    
+
     // 解析 VRS 签名
     const signature = parseSignatureHexAsVRS(vrsHex);
-    
+
     return { signature, signatureType };
 }
 
@@ -638,12 +645,12 @@ export function isValidEIP712Signature(
 ): boolean {
     try {
         const { signature, signatureType } = parseSignatureWithType(signatureWithType);
-        
+
         // 验证签名类型是否为 EIP712
         if (signatureType !== SignatureType.EIP712) {
             return false;
         }
-        
+
         // 使用 EIP-712 哈希验证签名
         return isValidECSignature(typedDataHash, signature, signerAddress);
     } catch (err) {
@@ -667,37 +674,37 @@ export function isValidECSignature(data: string, signature: ECSignature, signerA
 
     try {
         const msgHashBuff = ethUtil.toBuffer(data);
-        
+
         // 根据 EIP-155 规范正确处理 v 值
         let recoveryId: number;
         let vType: string;
-        
+
         if (signature.v === 27 || signature.v === 28) {
             // 经典值：27 或 28，转换为 0 或 1
             // 注意：对于 chainId > 109，某些环境（如 Hardhat）可能仍使用传统格式
-            recoveryId = signature.v - 27;  // 27->0, 28->1
+            recoveryId = signature.v - 27; // 27->0, 28->1
             vType = 'legacy';
         } else if (signature.v === 0 || signature.v === 1) {
             // 特殊场景值：底层库的恢复标识符，直接使用
-            recoveryId = signature.v;  // 0->0, 1->1
+            recoveryId = signature.v; // 0->0, 1->1
             vType = 'raw';
         } else if (signature.v >= 35) {
             // EIP-155 扩展值：v = chainId * 2 + 35 + recoveryId
             // 提取 recoveryId：recoveryId = (v - 35) % 2
             const extractedRecoveryId = (signature.v - 35) % 2;
-            recoveryId = extractedRecoveryId;  // 直接使用 0 或 1
-            
+            recoveryId = extractedRecoveryId; // 直接使用 0 或 1
+
             // 验证 chainId 一致性（用于调试）
             const chainId = Math.floor((signature.v - 35) / 2);
             vType = `EIP-155 (chainId=${chainId})`;
         } else {
             // 无效值，尝试模运算作为最后手段
-            recoveryId = signature.v % 2;  // 确保结果是 0 或 1
+            recoveryId = signature.v % 2; // 确保结果是 0 或 1
             vType = 'fallback';
         }
-        
+
         // V 值处理完成，类型: ${vType}
-        
+
         try {
             // 使用规范化的 recoveryId 进行椭圆曲线恢复
             const pubKey = ethUtil.ecrecover(
@@ -706,10 +713,10 @@ export function isValidECSignature(data: string, signature: ECSignature, signerA
                 ethUtil.toBuffer(signature.r),
                 ethUtil.toBuffer(signature.s),
             );
-            
+
             const retrievedAddress = ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey));
             const normalizedRetrievedAddress = retrievedAddress.toLowerCase();
-            
+
             return normalizedRetrievedAddress === normalizedSignerAddress;
         } catch (ecrecoverError) {
             throw ecrecoverError;
@@ -720,12 +727,12 @@ export function isValidECSignature(data: string, signature: ECSignature, signerA
             const ethersSignature = ethers.Signature.from({
                 r: signature.r,
                 s: signature.s,
-                v: signature.v
+                v: signature.v,
             });
-            
+
             const recoveredAddress = ethers.verifyMessage(ethers.getBytes(data), ethersSignature);
             const normalizedRecoveredAddress = recoveredAddress.toLowerCase();
-            
+
             return normalizedRecoveredAddress === normalizedSignerAddress;
         } catch (ethersErr) {
             return false;

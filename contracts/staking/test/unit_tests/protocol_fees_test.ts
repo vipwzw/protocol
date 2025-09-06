@@ -20,7 +20,7 @@ export class StakingRevertErrors {
     }
 }
 
-// TODO: Fix BigNumber usage throughout this file  
+// TODO: Fix BigNumber usage throughout this file
 /*
 import { LogEntry } from 'ethereum-types';
 import * as _ from 'lodash';
@@ -510,7 +510,9 @@ describe('Protocol Fees unit tests', () => {
         await tx1.wait();
         const exchangeSigner = await ethers.getSigner(exchange);
         const fee = 150_000n * 1_000_000_000n; // 150k gwei
-        const receipt = await (await testContract.connect(exchangeSigner).payProtocolFee(maker, payer, fee, { value: fee })).wait();
+        const receipt = await (
+            await testContract.connect(exchangeSigner).payProtocolFee(maker, payer, fee, { value: fee })
+        ).wait();
         const logs = receipt?.logs ?? [];
         const erc20Transfers = filterLogsToArguments(logs, 'ERC20ProxyTransferFrom');
         expect(erc20Transfers).to.deep.equal([]);

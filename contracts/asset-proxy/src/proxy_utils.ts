@@ -10,10 +10,10 @@ import { expect } from 'chai';
 export async function getProxyId(contractAddress: string, provider: any): Promise<string> {
     // Encode the function selector for getProxyId()
     const getProxyIdSelector = '0xae25532e'; // bytes4(keccak256("getProxyId()"))
-    
+
     // Handle both ethers.Provider and ZeroExProvider
     const actualProvider = provider?.provider || provider;
-    
+
     // Make the call using ethers provider
     let result: string;
     if (actualProvider && typeof actualProvider.call === 'function') {
@@ -29,12 +29,13 @@ export async function getProxyId(contractAddress: string, provider: any): Promis
             data: getProxyIdSelector,
         });
     }
-    
+
     // The result should be 32 bytes with the proxy ID in the first 4 bytes
-    if (result.length < 66) { // 0x + 64 chars
+    if (result.length < 66) {
+        // 0x + 64 chars
         throw new Error('Invalid response from getProxyId');
     }
-    
+
     // Extract the first 4 bytes (8 hex chars after 0x)
     return '0x' + result.slice(2, 10);
 }
@@ -47,16 +48,11 @@ export async function getProxyId(contractAddress: string, provider: any): Promis
  * @param amount The amount to transfer
  * @returns The encoded call data
  */
-export function encodeTransferFrom(
-    assetData: string,
-    from: string,
-    to: string,
-    amount: bigint | string
-): string {
+export function encodeTransferFrom(assetData: string, from: string, to: string, amount: bigint | string): string {
     const iface = new ethers.Interface([
-        'function transferFrom(bytes assetData, address from, address to, uint256 amount)'
+        'function transferFrom(bytes assetData, address from, address to, uint256 amount)',
     ]);
-    
+
     return iface.encodeFunctionData('transferFrom', [assetData, from, to, amount]);
 }
 
@@ -75,10 +71,10 @@ export async function transferFromViaFallback(
     from: string,
     to: string,
     amount: bigint | string,
-    signer: ethers.Signer
+    signer: ethers.Signer,
 ): Promise<ethers.TransactionResponse> {
     const callData = encodeTransferFrom(assetData, from, to, amount);
-    
+
     return await signer.sendTransaction({
         to: proxyAddress,
         data: callData,
@@ -91,11 +87,7 @@ export async function transferFromViaFallback(
  * @param expectedId The expected proxy ID
  * @param provider The ethers provider or ZeroExProvider
  */
-export async function assertProxyId(
-    proxyAddress: string,
-    expectedId: string,
-    provider: any
-): Promise<void> {
+export async function assertProxyId(proxyAddress: string, expectedId: string, provider: any): Promise<void> {
     const actualId = await getProxyId(proxyAddress, provider);
     expect(actualId).to.equal(expectedId);
 }

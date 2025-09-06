@@ -10,10 +10,10 @@ let _globalValidator: any;
 function getOrCreateValidator(): any {
     if (!_globalValidator) {
         _globalValidator = new Ajv({ allErrors: true, loadSchema: false });
-        
+
         // 只添加一次所有的 schemas
         const allSchemas = values(schemas).filter((s: any) => s !== undefined && s.id !== undefined);
-        
+
         // 先添加所有基础 schema
         for (const schema of allSchemas) {
             try {
@@ -39,7 +39,7 @@ export class SchemaValidator {
      */
     constructor(newSchemas: object[] = []) {
         this._validator = getOrCreateValidator();
-        
+
         // 只添加新的 schemas
         for (const schema of newSchemas.filter(s => s !== undefined)) {
             try {
@@ -75,19 +75,21 @@ export class SchemaValidator {
     // sub-types (e.g BigNumber, BigInt) with a simpler string representation. Since BigNumber and other
     // complex types implement the `toString` method, we can stringify the object and
     // then parse it. The resultant object can then be checked using jsonschema.
-    
+
     /**
      * 转换包含 BigInt 的对象为可 JSON 序列化的对象
      */
     private _convertBigIntToString(obj: any): any {
-        return JSON.parse(JSON.stringify(obj, (key, value) => {
-            if (typeof value === 'bigint') {
-                return value.toString();
-            }
-            return value;
-        }));
+        return JSON.parse(
+            JSON.stringify(obj, (key, value) => {
+                if (typeof value === 'bigint') {
+                    return value.toString();
+                }
+                return value;
+            }),
+        );
     }
-    
+
     /**
      * Validate the JS object conforms to a specific JSON schema
      * @param instance JS object in question

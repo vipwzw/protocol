@@ -18,7 +18,7 @@ export const curveLiquidityProviderDataEncoder = {
     decode: (encoded: string): [string, string, bigint, bigint] => {
         const decoded = abiCoder.decode(curveLiquidityProviderDataTypes, encoded);
         return [decoded[0], decoded[1], decoded[2], decoded[3]];
-    }
+    },
 };
 
 /**

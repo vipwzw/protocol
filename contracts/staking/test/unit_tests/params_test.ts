@@ -27,15 +27,15 @@ describe('Configurable Parameters unit tests', () => {
     });
 
     describe('setParams()', () => {
-        async function setParamsAndAssertAsync(
-            params: Partial<StakingParams>,
-            from?: 'authorized' | 'unauthorized',
-        ) {
+        async function setParamsAndAssertAsync(params: Partial<StakingParams>, from?: 'authorized' | 'unauthorized') {
             const _params = {
                 ...stakingConstants.DEFAULT_PARAMS,
                 ...params,
             };
-            const contract = from === 'unauthorized' ? testContract.connect(notAuthorizedSigner) : testContract.connect(authorizedSigner);
+            const contract =
+                from === 'unauthorized'
+                    ? testContract.connect(notAuthorizedSigner)
+                    : testContract.connect(authorizedSigner);
             const tx = await contract.setParams(
                 BigInt(_params.epochDurationInSeconds),
                 BigInt(_params.rewardDelegatedStakeWeight),

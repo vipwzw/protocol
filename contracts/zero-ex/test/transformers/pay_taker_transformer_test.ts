@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers } from 'hardhat';
 import { constants, getRandomInteger, randomAddress } from '@0x/utils';
 import { encodePayTakerTransformerData, ETH_TOKEN_ADDRESS } from '@0x/protocol-utils';
 import { expect } from 'chai';
@@ -14,7 +14,7 @@ describe('PayTakerTransformer', () => {
         provider: ethers.provider,
         getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
     };
-    
+
     const taker = randomAddress();
     let caller: string;
     let token: TestMintableERC20TokenContract;
@@ -23,40 +23,40 @@ describe('PayTakerTransformer', () => {
 
     before(async () => {
         [caller] = await env.getAccountAddressesAsync();
-        
+
         const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
-        token = await TokenFactory.deploy() as TestMintableERC20TokenContract;
-        
+        token = (await TokenFactory.deploy()) as TestMintableERC20TokenContract;
+
         const TransformerFactory = await ethers.getContractFactory('PayTakerTransformer');
-        transformer = await TransformerFactory.deploy() as PayTakerTransformerContract;
-        
+        transformer = (await TransformerFactory.deploy()) as PayTakerTransformerContract;
+
         const HostFactory = await ethers.getContractFactory('TestTransformerHost');
-        host = await HostFactory.deploy() as TestTransformerHostContract;
+        host = (await HostFactory.deploy()) as TestTransformerHostContract;
     });
 
     // 🔧 状态重置机制：防止测试间干扰
     let snapshotId: string;
-    
+
     before(async () => {
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
-    
+
     beforeEach(async () => {
-        await ethers.provider.send("evm_revert", [snapshotId]);
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
-        
+        await ethers.provider.send('evm_revert', [snapshotId]);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
+
         // 重新获取账户地址
         [caller] = await env.getAccountAddressesAsync();
-        
+
         // 重新创建合约实例
         const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
-        token = await TokenFactory.attach(await token.getAddress()) as TestMintableERC20TokenContract;
-        
+        token = (await TokenFactory.attach(await token.getAddress())) as TestMintableERC20TokenContract;
+
         const TransformerFactory = await ethers.getContractFactory('PayTakerTransformer');
-        transformer = await TransformerFactory.attach(await transformer.getAddress()) as PayTakerTransformerContract;
-        
+        transformer = (await TransformerFactory.attach(await transformer.getAddress())) as PayTakerTransformerContract;
+
         const HostFactory = await ethers.getContractFactory('TestTransformerHost');
-        host = await HostFactory.attach(await host.getAddress()) as TestTransformerHostContract;
+        host = (await HostFactory.attach(await host.getAddress())) as TestTransformerHostContract;
     });
 
     interface Balances {
@@ -101,12 +101,12 @@ describe('PayTakerTransformer', () => {
             recipient: taker,
             sender: randomAddress(),
         });
-        
+
         // 🎯 使用精确的余额检查：分别验证ETH和代币余额
         const hostBalances = await getBalancesAsync(await host.getAddress());
         expect(hostBalances.ethBalance).to.be.closeTo(ZERO_BALANCES.ethBalance, ethers.parseEther('0.0001'));
         expect(hostBalances.tokenBalance).to.be.closeTo(ZERO_BALANCES.tokenBalance, 100n);
-        
+
         const takerBalances = await getBalancesAsync(taker);
         expect(takerBalances.tokenBalance).to.be.closeTo(amounts[0], 100n);
         expect(takerBalances.ethBalance).to.be.closeTo(amounts[1], ethers.parseEther('0.0001'));
@@ -129,7 +129,7 @@ describe('PayTakerTransformer', () => {
         const hostBalances = await getBalancesAsync(await host.getAddress());
         expect(hostBalances.ethBalance).to.be.closeTo(ZERO_BALANCES.ethBalance, ethers.parseEther('0.0001'));
         expect(hostBalances.tokenBalance).to.be.closeTo(ZERO_BALANCES.tokenBalance, 100n);
-        
+
         const takerBalances = await getBalancesAsync(taker);
         expect(takerBalances.tokenBalance).to.be.closeTo(amounts[0], 100n);
         expect(takerBalances.ethBalance).to.be.closeTo(amounts[1], ethers.parseEther('0.0001'));
@@ -152,7 +152,7 @@ describe('PayTakerTransformer', () => {
         const hostBalances = await getBalancesAsync(await host.getAddress());
         expect(hostBalances.ethBalance).to.be.closeTo(ZERO_BALANCES.ethBalance, ethers.parseEther('0.0001'));
         expect(hostBalances.tokenBalance).to.be.closeTo(ZERO_BALANCES.tokenBalance, 100n);
-        
+
         const takerBalances = await getBalancesAsync(taker);
         expect(takerBalances.tokenBalance).to.be.closeTo(amounts[0], 100n);
         expect(takerBalances.ethBalance).to.be.closeTo(amounts[1], ethers.parseEther('0.0001'));
@@ -173,9 +173,9 @@ describe('PayTakerTransformer', () => {
         });
         // 🎯 使用精确的余额检查：分别验证ETH和代币余额
         const hostBalances = await getBalancesAsync(await host.getAddress());
-        expect(hostBalances.tokenBalance).to.be.closeTo(amounts[0] - (amounts[0] / 2n), 100n);
-        expect(hostBalances.ethBalance).to.be.closeTo(amounts[1] - (amounts[1] / 2n), ethers.parseEther('0.0001'));
-        
+        expect(hostBalances.tokenBalance).to.be.closeTo(amounts[0] - amounts[0] / 2n, 100n);
+        expect(hostBalances.ethBalance).to.be.closeTo(amounts[1] - amounts[1] / 2n, ethers.parseEther('0.0001'));
+
         const takerBalances = await getBalancesAsync(taker);
         expect(takerBalances.tokenBalance).to.be.closeTo(amounts[0] / 2n, 100n);
         expect(takerBalances.ethBalance).to.be.closeTo(amounts[1] / 2n, ethers.parseEther('0.0001'));

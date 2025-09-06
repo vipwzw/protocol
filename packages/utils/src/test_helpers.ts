@@ -13,33 +13,33 @@ export const testConstants = {
     NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
     NULL_BYTES: '0x',
     NULL_BYTES32: '0x0000000000000000000000000000000000000000000000000000000000000000',
-    
+
     // 数值常量
     ZERO_AMOUNT: 0n,
     MAX_UINT256: 2n ** 256n - 1n,
     MAX_UINT128: 2n ** 128n - 1n,
     MAX_UINT64: 2n ** 64n - 1n,
     MAX_UINT32: 2n ** 32n - 1n,
-    
+
     // 时间常量（以秒为单位）
     ONE_SECOND_MS: 1000,
     ONE_MINUTE_MS: 60 * 1000,
     ONE_HOUR_MS: 60 * 60 * 1000,
     ONE_DAY_MS: 24 * 60 * 60 * 1000,
-    
+
     // 以太坊常量
     KECCAK256_NULL: '0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470',
     WETH_ASSET_DATA: '0xf47261b0000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    
+
     // Gas 常量
     DEFAULT_GAS_PRICE: 20000000000n, // 20 gwei
     DEFAULT_GAS_LIMIT: 6721975n,
-    
+
     // 网络相关
     GANACHE_NETWORK_ID: 50,
     KOVAN_NETWORK_ID: 42,
     MAINNET_NETWORK_ID: 1,
-    
+
     // 测试钱包助记词
     TEST_MNEMONIC: 'concert load couple harbor equip island argue ramp clarify fence smart topic',
 };
@@ -94,11 +94,12 @@ export function assertIntegerRoughlyEquals(
     const actualBig = typeof actual === 'bigint' ? actual : BigInt(actual);
     const expectedBig = typeof expected === 'bigint' ? expected : BigInt(expected);
     const deltaBig = typeof delta === 'bigint' ? delta : BigInt(delta);
-    
+
     const diff = actualBig > expectedBig ? actualBig - expectedBig : expectedBig - actualBig;
-    
+
     if (diff > deltaBig) {
-        const errorMessage = message || 
+        const errorMessage =
+            message ||
             `Expected ${actualBig.toString()} to be roughly equal to ${expectedBig.toString()} (within ${deltaBig.toString()})`;
         throw new Error(errorMessage);
     }
@@ -111,7 +112,7 @@ export function assertIntegerRoughlyEquals(
  */
 export function toBaseUnitAmount(amount: bigint | number | string, decimals: number = 18): bigint {
     const amountBig = typeof amount === 'bigint' ? amount : BigInt(amount);
-    return amountBig * (10n ** BigInt(decimals));
+    return amountBig * 10n ** BigInt(decimals);
 }
 
 /**
@@ -119,7 +120,7 @@ export function toBaseUnitAmount(amount: bigint | number | string, decimals: num
  */
 export function fromBaseUnitAmount(amount: bigint | number | string, decimals: number = 18): bigint {
     const amountBig = typeof amount === 'bigint' ? amount : BigInt(amount);
-    return amountBig / (10n ** BigInt(decimals));
+    return amountBig / 10n ** BigInt(decimals);
 }
 
 // ========== 事件日志工具 ==========
@@ -156,7 +157,7 @@ export async function verifyEventsFromLogs(
     expectedEvents.forEach((expectedEvent, index) => {
         const actualEvent = decodedLogs[index];
         expect(actualEvent?.name).to.equal(expectedEvent.event);
-        
+
         if (expectedEvent.args) {
             for (const [key, expectedValue] of Object.entries(expectedEvent.args)) {
                 expect(actualEvent?.args[key]).to.equal(expectedValue);
@@ -172,12 +173,7 @@ export async function verifyEventsFromLogs(
  * @param eventName 事件名称
  * @param contract 合约实例（用于解析事件）
  */
-export function verifyEventFromReceipt(
-    receipt: any, 
-    expectedEvents: any[], 
-    eventName: string,
-    contract: any
-): void {
+export function verifyEventFromReceipt(receipt: any, expectedEvents: any[], eventName: string, contract: any): void {
     // 使用 ethers v6 的事件解析
     const parsedLogs = receipt.logs
         .map((log: any) => {
@@ -188,14 +184,14 @@ export function verifyEventFromReceipt(
             }
         })
         .filter((log: any) => log && log.name === eventName);
-    
+
     expect(parsedLogs.length).to.be.greaterThanOrEqual(expectedEvents.length);
-    
+
     // 验证每个预期事件
     expectedEvents.forEach((expectedEvent, index) => {
         const actualEvent = parsedLogs[index];
         expect(actualEvent).to.exist;
-        
+
         // 验证事件参数
         Object.keys(expectedEvent).forEach(key => {
             if (typeof expectedEvent[key] === 'bigint') {
@@ -214,12 +210,7 @@ export function verifyEventFromReceipt(
  * @param contract 合约实例
  * @param expectedCount 预期事件数量（默认为1）
  */
-export function verifyEventEmitted(
-    receipt: any,
-    eventName: string,
-    contract: any,
-    expectedCount: number = 1
-): any[] {
+export function verifyEventEmitted(receipt: any, eventName: string, contract: any, expectedCount: number = 1): any[] {
     const parsedLogs = receipt.logs
         .map((log: any) => {
             try {
@@ -229,7 +220,7 @@ export function verifyEventEmitted(
             }
         })
         .filter((log: any) => log && log.name === eventName);
-    
+
     expect(parsedLogs.length).to.equal(expectedCount);
     return parsedLogs;
 }
@@ -237,16 +228,12 @@ export function verifyEventEmitted(
 /**
  * 过滤日志并返回特定事件的参数
  */
-export function filterLogs<T>(
-    logs: any[],
-    eventName: string,
-    contractInterface: ethers.Interface,
-): T[] {
+export function filterLogs<T>(logs: any[], eventName: string, contractInterface: ethers.Interface): T[] {
     return logs
         .map(log => {
             try {
                 const parsed = contractInterface.parseLog(log);
-                return parsed?.name === eventName ? parsed.args as T : null;
+                return parsed?.name === eventName ? (parsed.args as T) : null;
             } catch (e) {
                 return null;
             }
@@ -349,14 +336,14 @@ export function testCombinatoriallyWithReferenceFunc(
 ): void {
     describe(description, () => {
         const combinations = generateCombinations(valueArrays);
-        
+
         combinations.forEach((combination, index) => {
             it(`should match reference function for combination ${index}: [${combination.join(', ')}]`, async () => {
                 console.log(`Testing combination ${index}: [${combination.join(', ')}]`);
-                
+
                 let referenceResult, referenceError;
                 let contractResult, contractError;
-                
+
                 // Call reference function
                 try {
                     referenceResult = await referenceFunc(...combination);
@@ -365,7 +352,7 @@ export function testCombinatoriallyWithReferenceFunc(
                     referenceError = error;
                     console.log('Reference function threw error:', (error as Error).message);
                 }
-                
+
                 // Call contract function
                 try {
                     contractResult = await contractFunc(...combination);
@@ -374,7 +361,7 @@ export function testCombinatoriallyWithReferenceFunc(
                     contractError = error;
                     console.log('Contract function threw error:', (error as Error).message);
                 }
-                
+
                 // Both should either succeed or fail
                 if (referenceError && contractError) {
                     // Both threw errors - this is expected for edge cases
@@ -382,14 +369,20 @@ export function testCombinatoriallyWithReferenceFunc(
                 } else if (!referenceError && !contractError) {
                     // Both succeeded - results should match
                     if (!compareResults(referenceResult, contractResult)) {
-                        throw new Error(`Mismatch: reference=${JSON.stringify(referenceResult)}, contract=${JSON.stringify(contractResult)}`);
+                        throw new Error(
+                            `Mismatch: reference=${JSON.stringify(referenceResult)}, contract=${JSON.stringify(contractResult)}`,
+                        );
                     }
                 } else {
                     // One succeeded, one failed - this is a mismatch
                     if (referenceError) {
-                        throw new Error(`Reference function threw error but contract succeeded. Reference error: ${(referenceError as Error).message}`);
+                        throw new Error(
+                            `Reference function threw error but contract succeeded. Reference error: ${(referenceError as Error).message}`,
+                        );
                     } else {
-                        throw new Error(`Contract function threw error but reference succeeded. Contract error: ${(contractError as Error).message}`);
+                        throw new Error(
+                            `Contract function threw error but reference succeeded. Contract error: ${(contractError as Error).message}`,
+                        );
                     }
                 }
             });
@@ -402,10 +395,15 @@ export function testCombinatoriallyWithReferenceFunc(
  */
 function compareResults(reference: any, contract: any): boolean {
     // 简单值比较
-    if (typeof reference === 'bigint' || typeof reference === 'number' || typeof reference === 'string' || typeof reference === 'boolean') {
+    if (
+        typeof reference === 'bigint' ||
+        typeof reference === 'number' ||
+        typeof reference === 'string' ||
+        typeof reference === 'boolean'
+    ) {
         return reference === contract;
     }
-    
+
     // 复杂对象比较 (如 FillResults)
     if (typeof reference === 'object' && reference !== null) {
         // 如果合约返回的是 ethers Result 数组
@@ -421,16 +419,16 @@ function compareResults(reference: any, contract: any): boolean {
                 );
             }
         }
-        
+
         // 其他对象类型的比较
         if (typeof contract === 'object' && contract !== null) {
             const refKeys = Object.keys(reference);
             const contractKeys = Object.keys(contract);
-            
+
             if (refKeys.length !== contractKeys.length) {
                 return false;
             }
-            
+
             for (const key of refKeys) {
                 if (!compareResults(reference[key], contract[key])) {
                     return false;
@@ -439,7 +437,7 @@ function compareResults(reference: any, contract: any): boolean {
             return true;
         }
     }
-    
+
     return false;
 }
 
@@ -449,17 +447,17 @@ function compareResults(reference: any, contract: any): boolean {
 function generateCombinations(arrays: any[][]): any[][] {
     if (arrays.length === 0) return [[]];
     if (arrays.length === 1) return arrays[0].map(item => [item]);
-    
+
     const combinations: any[][] = [];
     const firstArray = arrays[0];
     const restCombinations = generateCombinations(arrays.slice(1));
-    
+
     firstArray.forEach(firstItem => {
         restCombinations.forEach(restCombination => {
             combinations.push([firstItem, ...restCombination]);
         });
     });
-    
+
     return combinations;
 }
 
@@ -483,10 +481,7 @@ export const orderHashUtils = {
 /**
  * 期望交易失败但没有原因的断言
  */
-export async function expectTransactionFailedAsync(
-    func: () => Promise<any>,
-    reason?: string,
-): Promise<void> {
+export async function expectTransactionFailedAsync(func: () => Promise<any>, reason?: string): Promise<void> {
     try {
         await func();
         expect.fail('Expected transaction to fail');
@@ -500,9 +495,7 @@ export async function expectTransactionFailedAsync(
 /**
  * 期望交易失败且没有返回原因
  */
-export async function expectTransactionFailedWithoutReasonAsync(
-    func: () => Promise<any>,
-): Promise<void> {
+export async function expectTransactionFailedWithoutReasonAsync(func: () => Promise<any>): Promise<void> {
     try {
         await func();
         expect.fail('Expected transaction to fail without reason');
@@ -514,9 +507,7 @@ export async function expectTransactionFailedWithoutReasonAsync(
 /**
  * 期望资金不足错误
  */
-export async function expectInsufficientFundsAsync(
-    func: () => Promise<any>,
-): Promise<void> {
+export async function expectInsufficientFundsAsync(func: () => Promise<any>): Promise<void> {
     try {
         await func();
         expect.fail('Expected insufficient funds error');
@@ -536,13 +527,11 @@ export function verifyERC721TransferEvent(
         tokenId: bigint;
     },
 ): void {
-    const transferEvents = logs.filter(log => 
-        log.fragment && log.fragment.name === 'Transfer'
-    );
-    
+    const transferEvents = logs.filter(log => log.fragment && log.fragment.name === 'Transfer');
+
     expect(transferEvents).to.have.length.at.least(1);
     const transferEvent = transferEvents[0];
-    
+
     expect(transferEvent.args.from).to.equal(expectedArgs.from);
     expect(transferEvent.args.to).to.equal(expectedArgs.to);
     expect(transferEvent.args.tokenId).to.equal(expectedArgs.tokenId);
@@ -559,13 +548,11 @@ export function verifyTransferEvent(
         value: bigint;
     },
 ): void {
-    const transferEvents = logs.filter(log => 
-        log.fragment && log.fragment.name === 'Transfer'
-    );
-    
+    const transferEvents = logs.filter(log => log.fragment && log.fragment.name === 'Transfer');
+
     expect(transferEvents).to.have.length.at.least(1);
     const transferEvent = transferEvents[0];
-    
+
     expect(transferEvent.args.from).to.equal(expectedArgs.from);
     expect(transferEvent.args.to).to.equal(expectedArgs.to);
     expect(transferEvent.args.value).to.equal(expectedArgs.value);
@@ -582,13 +569,11 @@ export function verifyApprovalEvent(
         value: bigint;
     },
 ): void {
-    const approvalEvents = logs.filter(log => 
-        log.fragment && log.fragment.name === 'Approval'
-    );
-    
+    const approvalEvents = logs.filter(log => log.fragment && log.fragment.name === 'Approval');
+
     expect(approvalEvents).to.have.length.at.least(1);
     const approvalEvent = approvalEvents[0];
-    
+
     expect(approvalEvent.args.owner).to.equal(expectedArgs.owner);
     expect(approvalEvent.args.spender).to.equal(expectedArgs.spender);
     expect(approvalEvent.args.value).to.equal(expectedArgs.value);
@@ -597,13 +582,8 @@ export function verifyApprovalEvent(
 /**
  * 过滤日志到参数
  */
-export function filterLogsToArguments<T>(
-    logs: any[],
-    eventName: string,
-): T[] {
-    return logs
-        .filter(log => log.fragment && log.fragment.name === eventName)
-        .map(log => log.args as T);
+export function filterLogsToArguments<T>(logs: any[], eventName: string): T[] {
+    return logs.filter(log => log.fragment && log.fragment.name === eventName).map(log => log.args as T);
 }
 
 // ========== Hardhat 测试辅助函数 ==========
@@ -625,10 +605,7 @@ export async function getHardhatSigners(hreOrEthers: any): Promise<any[]> {
  * @param hreOrEthers 传入 hardhat 的 hre 或 hardhat 中的 ethers 对象
  * @param addressOrIndex 地址（string）或索引（number），为空则返回第一个 signer
  */
-export async function getHardhatSigner(
-    hreOrEthers: any,
-    addressOrIndex?: string | number,
-): Promise<any> {
+export async function getHardhatSigner(hreOrEthers: any, addressOrIndex?: string | number): Promise<any> {
     const signers = await getHardhatSigners(hreOrEthers);
     if (addressOrIndex === undefined) {
         return signers[0];

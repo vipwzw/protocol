@@ -14,7 +14,7 @@ class StringRevertError {
 class AuthorizableRevertErrors {
     static SenderNotAuthorizedError = class {
         constructor(public sender: string) {}
-        
+
         // 编码为 LibRichErrors 格式的错误数据
         encode(): string {
             // bytes4(keccak256("SenderNotAuthorizedError(address)")) = 0xb65a25b9
@@ -22,7 +22,7 @@ class AuthorizableRevertErrors {
             const encodedParams = ethers.AbiCoder.defaultAbiCoder().encode(['address'], [this.sender]);
             return selector + encodedParams.slice(2); // 移除 encodedParams 的 0x 前缀
         }
-        
+
         toString() {
             return `SenderNotAuthorizedError: ${this.sender}`;
         }
@@ -34,7 +34,7 @@ class StakingErrorMatcher {
     static async expectError(txPromise: Promise<any>, expectedError: any): Promise<void> {
         try {
             await txPromise;
-            throw new Error("交易应该失败但没有失败");
+            throw new Error('交易应该失败但没有失败');
         } catch (error: any) {
             if (expectedError.encode && typeof expectedError.encode === 'function') {
                 // 匹配 LibRichErrors 编码的错误
@@ -89,7 +89,7 @@ describe('Migration tests', () => {
     before(async () => {
         const signers = await ethers.getSigners();
         [authorizedAddress, notAuthorizedAddress] = [signers[0].address, signers[1].address];
-        
+
         stakingContract = await StakingContract.deployFrom0xArtifactAsync(
             artifacts.TestStakingNoWETH,
             signers[0],
@@ -180,17 +180,17 @@ describe('Migration tests', () => {
                     artifacts,
                     await stakingContract.getAddress(),
                 );
-            const stakingViaProxy = new ethers.Contract(
-                await stakingProxy.getAddress(),
-                artifacts.TestStaking.abi || artifacts.TestStaking.compilerOutput?.abi,
-                await ethers.getSigners().then(signers => signers[0]),
-            );
+                const stakingViaProxy = new ethers.Contract(
+                    await stakingProxy.getAddress(),
+                    artifacts.TestStaking.abi || artifacts.TestStaking.compilerOutput?.abi,
+                    await ethers.getSigners().then(signers => signers[0]),
+                );
                 const params = await stakingViaProxy.getParams();
-                            expect(Number(params[0])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.epochDurationInSeconds));
-            expect(Number(params[1])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.rewardDelegatedStakeWeight));
-            expect(Number(params[2])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.minimumPoolStake));
-            expect(Number(params[3])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.cobbDouglasAlphaNumerator));
-            expect(Number(params[4])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.cobbDouglasAlphaDenominator));
+                expect(Number(params[0])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.epochDurationInSeconds));
+                expect(Number(params[1])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.rewardDelegatedStakeWeight));
+                expect(Number(params[2])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.minimumPoolStake));
+                expect(Number(params[3])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.cobbDouglasAlphaNumerator));
+                expect(Number(params[4])).to.equal(Number(stakingConstants.DEFAULT_PARAMS.cobbDouglasAlphaDenominator));
             });
         });
 
@@ -202,8 +202,10 @@ describe('Migration tests', () => {
             });
 
             it('throws if not called by an authorized address', async () => {
-            const tx = proxyContract.connect(await ethers.getSigner(notAuthorizedAddress)).attachStakingContract(await initTargetContract.getAddress());
-            return expect(tx).to.be.reverted;
+                const tx = proxyContract
+                    .connect(await ethers.getSigner(notAuthorizedAddress))
+                    .attachStakingContract(await initTargetContract.getAddress());
+                return expect(tx).to.be.reverted;
             });
 
             it('calls init() and attaches the contract', async () => {
@@ -293,86 +295,76 @@ describe('Migration tests', () => {
         });
 
         it('reverts if epoch duration is < 5 days', async () => {
-            const tx = proxyContract
-                .setAndAssertParams({
-                    ...stakingConstants.DEFAULT_PARAMS,
-                    epochDurationInSeconds: fiveDays - 1n,
-                });
+            const tx = proxyContract.setAndAssertParams({
+                ...stakingConstants.DEFAULT_PARAMS,
+                epochDurationInSeconds: fiveDays - 1n,
+            });
             return expect(tx).to.be.reverted;
         });
         it('reverts if epoch duration is > 30 days', async () => {
-            const tx = proxyContract
-                .setAndAssertParams({
-                    ...stakingConstants.DEFAULT_PARAMS,
-                    epochDurationInSeconds: thirtyDays + 1n,
-                });
+            const tx = proxyContract.setAndAssertParams({
+                ...stakingConstants.DEFAULT_PARAMS,
+                epochDurationInSeconds: thirtyDays + 1n,
+            });
             return expect(tx).to.be.reverted;
         });
         it('succeeds if epoch duration is 5 days', async () => {
-            const tx = await proxyContract
-                .setAndAssertParams({
-                    ...stakingConstants.DEFAULT_PARAMS,
-                    epochDurationInSeconds: fiveDays,
-                });
+            const tx = await proxyContract.setAndAssertParams({
+                ...stakingConstants.DEFAULT_PARAMS,
+                epochDurationInSeconds: fiveDays,
+            });
             await tx.wait();
         });
         it('succeeds if epoch duration is 30 days', async () => {
-            const tx = await proxyContract
-                .setAndAssertParams({
-                    ...stakingConstants.DEFAULT_PARAMS,
-                    epochDurationInSeconds: thirtyDays,
-                });
+            const tx = await proxyContract.setAndAssertParams({
+                ...stakingConstants.DEFAULT_PARAMS,
+                epochDurationInSeconds: thirtyDays,
+            });
             await tx.wait();
         });
         it('reverts if alpha denominator is 0', async () => {
-            const tx = proxyContract
-                .setAndAssertParams({
-                    ...stakingConstants.DEFAULT_PARAMS,
-                    cobbDouglasAlphaDenominator: constants.ZERO_AMOUNT,
-                });
+            const tx = proxyContract.setAndAssertParams({
+                ...stakingConstants.DEFAULT_PARAMS,
+                cobbDouglasAlphaDenominator: constants.ZERO_AMOUNT,
+            });
             return expect(tx).to.be.reverted;
         });
         it('reverts if alpha > 1', async () => {
-            const tx = proxyContract
-                .setAndAssertParams({
-                    ...stakingConstants.DEFAULT_PARAMS,
-                                    cobbDouglasAlphaNumerator: 101n,
+            const tx = proxyContract.setAndAssertParams({
+                ...stakingConstants.DEFAULT_PARAMS,
+                cobbDouglasAlphaNumerator: 101n,
                 cobbDouglasAlphaDenominator: 100n,
-                });
+            });
             return expect(tx).to.be.reverted;
         });
         it('succeeds if alpha == 1', async () => {
-            const tx = await proxyContract
-                .setAndAssertParams({
-                    ...stakingConstants.DEFAULT_PARAMS,
-                                    cobbDouglasAlphaNumerator: 1n,
+            const tx = await proxyContract.setAndAssertParams({
+                ...stakingConstants.DEFAULT_PARAMS,
+                cobbDouglasAlphaNumerator: 1n,
                 cobbDouglasAlphaDenominator: 1n,
-                });
+            });
             await tx.wait();
         });
         it('succeeds if alpha == 0', async () => {
-            const tx = await proxyContract
-                .setAndAssertParams({
-                    ...stakingConstants.DEFAULT_PARAMS,
-                    cobbDouglasAlphaNumerator: constants.ZERO_AMOUNT,
-                    cobbDouglasAlphaDenominator: 1n,
-                });
+            const tx = await proxyContract.setAndAssertParams({
+                ...stakingConstants.DEFAULT_PARAMS,
+                cobbDouglasAlphaNumerator: constants.ZERO_AMOUNT,
+                cobbDouglasAlphaDenominator: 1n,
+            });
             await tx.wait();
         });
         it('reverts if delegation weight is > 100%', async () => {
-            const tx = proxyContract
-                .setAndAssertParams({
-                    ...stakingConstants.DEFAULT_PARAMS,
-                    rewardDelegatedStakeWeight: BigInt(stakingConstants.PPM) + 1n,
-                });
+            const tx = proxyContract.setAndAssertParams({
+                ...stakingConstants.DEFAULT_PARAMS,
+                rewardDelegatedStakeWeight: BigInt(stakingConstants.PPM) + 1n,
+            });
             return expect(tx).to.be.reverted;
         });
         it('succeeds if delegation weight is 100%', async () => {
-            const tx = await proxyContract
-                .setAndAssertParams({
-                    ...stakingConstants.DEFAULT_PARAMS,
-                    rewardDelegatedStakeWeight: BigInt(stakingConstants.PPM),
-                });
+            const tx = await proxyContract.setAndAssertParams({
+                ...stakingConstants.DEFAULT_PARAMS,
+                rewardDelegatedStakeWeight: BigInt(stakingConstants.PPM),
+            });
             await tx.wait();
         });
     });

@@ -1,9 +1,12 @@
 import { expect } from 'chai';
-import { AuthorizableRevertErrors,  hexUtils } from '@0x/utils';
+import { AuthorizableRevertErrors, hexUtils } from '@0x/utils';
 import { ethers } from 'hardhat';
 
 import { artifacts } from './artifacts';
-import { FeeCollectorController__factory, FeeCollector__factory } from '../src/typechain-types/factories/contracts/src/external';
+import {
+    FeeCollectorController__factory,
+    FeeCollector__factory,
+} from '../src/typechain-types/factories/contracts/src/external';
 import { TestFixinProtocolFees__factory, TestStaking__factory } from '../src/typechain-types/factories/contracts/test';
 import { TestWeth__factory } from '../src/typechain-types/factories/contracts/test/tokens';
 import type { FeeCollectorController } from '../src/typechain-types/contracts/src/external/FeeCollectorController';
@@ -42,28 +45,28 @@ describe('ProtocolFees', () => {
         env.txDefaults.from = accounts[0];
         [taker, unauthorized] = await env.getAccountAddressesAsync();
         const signer = await env.provider.getSigner(taker);
-        
+
         const wethFactory = new TestWeth__factory(signer);
         weth = await wethFactory.deploy();
         await weth.waitForDeployment();
-        
+
         const stakingFactory = new TestStaking__factory(signer);
         staking = await stakingFactory.deploy(await weth.getAddress());
         await staking.waitForDeployment();
-        
+
         const feeCollectorControllerFactory = new FeeCollectorController__factory(signer);
         feeCollectorController = await feeCollectorControllerFactory.deploy(
             await weth.getAddress(),
-            await staking.getAddress()
+            await staking.getAddress(),
         );
         await feeCollectorController.waitForDeployment();
-        
+
         const protocolFeesFactory = new TestFixinProtocolFees__factory(signer);
         protocolFees = await protocolFeesFactory.deploy(
             await weth.getAddress(),
             await staking.getAddress(),
             await feeCollectorController.getAddress(),
-            70_000
+            70_000,
         );
         await protocolFees.waitForDeployment();
 

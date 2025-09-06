@@ -139,10 +139,7 @@ export class InvalidParamValueError extends RevertError {
 }
 
 export class InvalidProtocolFeePaymentError extends RevertError {
-    constructor(
-        expectedProtocolFeePaid?: bigint | number | string,
-        actualProtocolFeePaid?: bigint | number | string,
-    ) {
+    constructor(expectedProtocolFeePaid?: bigint | number | string, actualProtocolFeePaid?: bigint | number | string) {
         super(
             'InvalidProtocolFeePaymentError',
             'InvalidProtocolFeePaymentError(uint256 expectedProtocolFeePaid, uint256 actualProtocolFeePaid)',

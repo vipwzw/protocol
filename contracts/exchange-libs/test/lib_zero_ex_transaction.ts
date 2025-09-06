@@ -15,7 +15,7 @@ describe('LibZeroExTransaction', () => {
 
     const randomAddress = () => {
         // Generate a valid Ethereum address (20 bytes = 40 hex chars)
-        const randomBytes = Array.from({length: 20}, () => Math.floor(Math.random() * 256));
+        const randomBytes = Array.from({ length: 20 }, () => Math.floor(Math.random() * 256));
         return '0x' + randomBytes.map(b => b.toString(16).padStart(2, '0')).join('');
     };
     const randomHash = () => hexUtils.random(constants.WORD_LENGTH);
@@ -97,10 +97,14 @@ describe('LibZeroExTransaction', () => {
                     chainId: 1337,
                 }),
             );
-            const transactionHashHex1 = await libZeroExTransactionContract
-                .getTypedDataHash(EMPTY_TRANSACTION, domainHash1);
-            const transactionHashHex2 = await libZeroExTransactionContract
-                .getTypedDataHash(EMPTY_TRANSACTION, domainHash2);
+            const transactionHashHex1 = await libZeroExTransactionContract.getTypedDataHash(
+                EMPTY_TRANSACTION,
+                domainHash1,
+            );
+            const transactionHashHex2 = await libZeroExTransactionContract.getTypedDataHash(
+                EMPTY_TRANSACTION,
+                domainHash2,
+            );
             expect(transactionHashHex1).to.be.not.equal(transactionHashHex2);
         });
     });

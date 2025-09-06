@@ -15,7 +15,7 @@ const config: HardhatUserConfig = {
         tests: './test',
         cache: './cache/hardhat',
         artifacts: './artifacts',
-    }
+    },
 };
 
 export default config;

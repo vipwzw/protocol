@@ -68,22 +68,24 @@ export {
 export * from './typechain-types';
 
 // Re-export commonly used TypeChain types for easier access
-export type {
-    IERC20Token, 
-    IEtherToken,
-    WETH9,
-    IZeroEx,
-    ZRXToken,
-} from './typechain-types';
+export type { IERC20Token, IEtherToken, WETH9, IZeroEx, ZRXToken } from './typechain-types';
 
 export type {
     IERC20Token__factory,
-    IEtherToken__factory, 
+    IEtherToken__factory,
     WETH9__factory,
     IZeroEx__factory,
     ZRXToken__factory,
 } from './typechain-types/factories';
 
 // Legacy types and configuration
-export { ContractError, ContractWrappersConfig, ForwarderError, OrderInfo, OrderStatus, TraderInfo, OrderAndTraderInfo } from './types';
+export {
+    ContractError,
+    ContractWrappersConfig,
+    ForwarderError,
+    OrderInfo,
+    OrderStatus,
+    TraderInfo,
+    OrderAndTraderInfo,
+} from './types';
 export { ContractWrappers } from './contract_wrappers';

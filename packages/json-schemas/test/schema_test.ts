@@ -11,7 +11,7 @@ const expect = chai.expect;
 // 替代 BigNumber，使用 bigint 和兼容的接口
 class BigNumber {
     private _value: string;
-    
+
     constructor(value: string | number | bigint) {
         if (typeof value === 'bigint') {
             this._value = value.toString();
@@ -25,7 +25,7 @@ class BigNumber {
             throw new Error('Invalid BigNumber value');
         }
     }
-    
+
     private normalizeNumberString(str: string): string {
         // 转换为数字然后转回字符串，这会移除前导零和多余的小数点
         const num = parseFloat(str);
@@ -38,15 +38,15 @@ class BigNumber {
         }
         return num.toString();
     }
-    
+
     toString(): string {
         return this._value;
     }
-    
+
     toJSON(): string {
         return this._value;
     }
-    
+
     static isBigNumber(value: any): boolean {
         return value instanceof BigNumber || typeof value === 'bigint';
     }

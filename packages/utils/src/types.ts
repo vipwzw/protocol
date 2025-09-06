@@ -690,20 +690,24 @@ export function isValidAddress(address: string): boolean {
 }
 
 export function isValidOrder(obj: any): obj is Order {
-    return obj && 
-           typeof obj.chainId === 'number' &&
-           typeof obj.exchangeAddress === 'string' &&
-           typeof obj.makerAddress === 'string' &&
-           typeof obj.takerAddress === 'string' &&
-           isValidAddress(obj.exchangeAddress) &&
-           isValidAddress(obj.makerAddress) &&
-           isValidAddress(obj.takerAddress);
+    return (
+        obj &&
+        typeof obj.chainId === 'number' &&
+        typeof obj.exchangeAddress === 'string' &&
+        typeof obj.makerAddress === 'string' &&
+        typeof obj.takerAddress === 'string' &&
+        isValidAddress(obj.exchangeAddress) &&
+        isValidAddress(obj.makerAddress) &&
+        isValidAddress(obj.takerAddress)
+    );
 }
 
 export function isSignedOrder(obj: any): obj is SignedOrder {
-    return isValidOrder(obj) && 
-           typeof (obj as SignedOrder).signature === 'string' &&
-           (obj as SignedOrder).signature.length > 0;
+    return (
+        isValidOrder(obj) &&
+        typeof (obj as SignedOrder).signature === 'string' &&
+        (obj as SignedOrder).signature.length > 0
+    );
 }
 
 export function createEmptyIndexedFilterValues(): IndexedFilterValues {
@@ -750,12 +754,12 @@ export function normalizeAddress(address: string): string {
     if (!address || typeof address !== 'string') {
         return TYPES_NULL_ADDRESS;
     }
-    
+
     const cleanAddress = address.toLowerCase().replace(/^0x/, '');
     if (cleanAddress.length !== 40) {
         return TYPES_NULL_ADDRESS;
     }
-    
+
     return `0x${cleanAddress}`;
 }
 
@@ -772,7 +776,7 @@ export function generateRandomSalt(): bigint {
             randomBytes[i] = Math.floor(Math.random() * 256);
         }
     }
-    
+
     let result = 0n;
     for (let i = 0; i < randomBytes.length; i++) {
         result = (result << 8n) | BigInt(randomBytes[i]);
@@ -782,12 +786,12 @@ export function generateRandomSalt(): bigint {
 
 export function bigIntToHex(value: bigint, padToBytes?: number): string {
     let hex = value.toString(16);
-    
+
     if (padToBytes) {
         const targetLength = padToBytes * 2;
         hex = hex.padStart(targetLength, '0');
     }
-    
+
     return `0x${hex}`;
 }
 

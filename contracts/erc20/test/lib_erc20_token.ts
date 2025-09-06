@@ -37,7 +37,7 @@ const hexUtils = {
         const hex = BigInt(value).toString(16);
         const padded = hex.padStart(bytes * 2, '0');
         return '0x' + padded;
-    }
+    },
 };
 
 describe('LibERC20Token', () => {
@@ -119,9 +119,7 @@ describe('LibERC20Token', () => {
         it('fails if the target reverts with no data', async () => {
             const spender = randomAddress();
             const allowance = getRandomInteger(0, 100e18);
-            const tx = testContract
-                .testApprove(true, constants.NULL_BYTES, ENCODED_TRUE, spender, allowance)
-                ;
+            const tx = testContract.testApprove(true, constants.NULL_BYTES, ENCODED_TRUE, spender, allowance);
             return expect(tx).to.be.rejectedWith('revert');
         });
     });
@@ -139,25 +137,19 @@ describe('LibERC20Token', () => {
         it('succeeds if the target returns true', async () => {
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            await testContract
-                .testTransfer(false, ENCODED_REVERT, ENCODED_TRUE, to, amount)
-                ;
+            await testContract.testTransfer(false, ENCODED_REVERT, ENCODED_TRUE, to, amount);
         });
 
         it('succeeds if the target returns nothing', async () => {
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            await testContract
-                .testTransfer(false, ENCODED_REVERT, constants.NULL_BYTES, to, amount)
-                ;
+            await testContract.testTransfer(false, ENCODED_REVERT, constants.NULL_BYTES, to, amount);
         });
 
         it('fails if the target returns false', async () => {
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            const tx = testContract
-                .testTransfer(false, ENCODED_REVERT, ENCODED_FALSE, to, amount)
-                ;
+            const tx = testContract.testTransfer(false, ENCODED_REVERT, ENCODED_FALSE, to, amount);
             const expectedError = new RawRevertError(ENCODED_FALSE);
             await expect(tx).to.be.reverted;
         });
@@ -165,9 +157,7 @@ describe('LibERC20Token', () => {
         it('fails if the target returns nonzero and not true', async () => {
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            const tx = testContract
-                .testTransfer(false, ENCODED_REVERT, ENCODED_TWO, to, amount)
-                ;
+            const tx = testContract.testTransfer(false, ENCODED_REVERT, ENCODED_TWO, to, amount);
             const expectedError = new RawRevertError(ENCODED_TWO);
             await expect(tx).to.be.reverted;
         });
@@ -175,9 +165,7 @@ describe('LibERC20Token', () => {
         it('fails if the target returns less than 32 bytes', async () => {
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            const tx = testContract
-                .testTransfer(false, ENCODED_REVERT, ENCODED_SHORT_TRUE, to, amount)
-                ;
+            const tx = testContract.testTransfer(false, ENCODED_REVERT, ENCODED_SHORT_TRUE, to, amount);
             const expectedError = new RawRevertError(ENCODED_SHORT_TRUE);
             await expect(tx).to.be.reverted;
         });
@@ -185,9 +173,7 @@ describe('LibERC20Token', () => {
         it('fails if the target returns greater than 32 bytes', async () => {
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            const tx = testContract
-                .testTransfer(false, ENCODED_REVERT, ENCODED_LONG_TRUE, to, amount)
-                ;
+            const tx = testContract.testTransfer(false, ENCODED_REVERT, ENCODED_LONG_TRUE, to, amount);
             const expectedError = new RawRevertError(ENCODED_LONG_TRUE);
             await expect(tx).to.be.reverted;
         });
@@ -195,18 +181,14 @@ describe('LibERC20Token', () => {
         it('fails if the target reverts', async () => {
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            const tx = testContract
-                .testTransfer(true, ENCODED_REVERT, ENCODED_TRUE, to, amount)
-                ;
+            const tx = testContract.testTransfer(true, ENCODED_REVERT, ENCODED_TRUE, to, amount);
             await expect(tx).to.be.reverted;
         });
 
         it('fails if the target reverts with no data', async () => {
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            const tx = testContract
-                .testTransfer(true, constants.NULL_BYTES, ENCODED_TRUE, to, amount)
-                ;
+            const tx = testContract.testTransfer(true, constants.NULL_BYTES, ENCODED_TRUE, to, amount);
             return expect(tx).to.be.rejectedWith('revert');
         });
     });
@@ -226,27 +208,21 @@ describe('LibERC20Token', () => {
             const owner = randomAddress();
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            await testContract
-                .testTransferFrom(false, ENCODED_REVERT, ENCODED_TRUE, owner, to, amount)
-                ;
+            await testContract.testTransferFrom(false, ENCODED_REVERT, ENCODED_TRUE, owner, to, amount);
         });
 
         it('succeeds if the target returns nothing', async () => {
             const owner = randomAddress();
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            await testContract
-                .testTransferFrom(false, ENCODED_REVERT, constants.NULL_BYTES, owner, to, amount)
-                ;
+            await testContract.testTransferFrom(false, ENCODED_REVERT, constants.NULL_BYTES, owner, to, amount);
         });
 
         it('fails if the target returns false', async () => {
             const owner = randomAddress();
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            const tx = testContract
-                .testTransferFrom(false, ENCODED_REVERT, ENCODED_FALSE, owner, to, amount)
-                ;
+            const tx = testContract.testTransferFrom(false, ENCODED_REVERT, ENCODED_FALSE, owner, to, amount);
             const expectedError = new RawRevertError(ENCODED_FALSE);
             await expect(tx).to.be.reverted;
         });
@@ -255,9 +231,7 @@ describe('LibERC20Token', () => {
             const owner = randomAddress();
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            const tx = testContract
-                .testTransferFrom(false, ENCODED_REVERT, ENCODED_TWO, owner, to, amount)
-                ;
+            const tx = testContract.testTransferFrom(false, ENCODED_REVERT, ENCODED_TWO, owner, to, amount);
             const expectedError = new RawRevertError(ENCODED_TWO);
             await expect(tx).to.be.reverted;
         });
@@ -266,9 +240,7 @@ describe('LibERC20Token', () => {
             const owner = randomAddress();
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            const tx = testContract
-                .testTransferFrom(false, ENCODED_REVERT, ENCODED_SHORT_TRUE, owner, to, amount)
-                ;
+            const tx = testContract.testTransferFrom(false, ENCODED_REVERT, ENCODED_SHORT_TRUE, owner, to, amount);
             const expectedError = new RawRevertError(ENCODED_SHORT_TRUE);
             await expect(tx).to.be.reverted;
         });
@@ -277,9 +249,7 @@ describe('LibERC20Token', () => {
             const owner = randomAddress();
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            const tx = testContract
-                .testTransferFrom(false, ENCODED_REVERT, ENCODED_LONG_TRUE, owner, to, amount)
-                ;
+            const tx = testContract.testTransferFrom(false, ENCODED_REVERT, ENCODED_LONG_TRUE, owner, to, amount);
             const expectedError = new RawRevertError(ENCODED_LONG_TRUE);
             await expect(tx).to.be.reverted;
         });
@@ -288,9 +258,7 @@ describe('LibERC20Token', () => {
             const owner = randomAddress();
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            const tx = testContract
-                .testTransferFrom(true, ENCODED_REVERT, ENCODED_TRUE, owner, to, amount)
-                ;
+            const tx = testContract.testTransferFrom(true, ENCODED_REVERT, ENCODED_TRUE, owner, to, amount);
             await expect(tx).to.be.reverted;
         });
 
@@ -298,9 +266,7 @@ describe('LibERC20Token', () => {
             const owner = randomAddress();
             const to = randomAddress();
             const amount = getRandomInteger(0, 100e18);
-            const tx = testContract
-                .testTransferFrom(true, constants.NULL_BYTES, ENCODED_TRUE, owner, to, amount)
-                ;
+            const tx = testContract.testTransferFrom(true, constants.NULL_BYTES, ENCODED_TRUE, owner, to, amount);
             return expect(tx).to.be.rejectedWith('revert');
         });
     });

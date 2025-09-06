@@ -3,7 +3,6 @@ import { SupportedProvider } from 'ethereum-types';
 import { ethers } from 'ethers';
 import { expect } from 'chai';
 
-
 import { WETH9__factory, IZeroEx__factory } from './typechain-types/factories';
 import { ContractWrappersConfig } from './types';
 import { _getDefaultContractAddresses } from './utils/contract_addresses';
@@ -21,13 +20,13 @@ export class ContractWrappers {
      */
     public weth9Factory: typeof WETH9__factory;
     /**
-     * IZeroEx contract factory for creating contract instances  
+     * IZeroEx contract factory for creating contract instances
      */
     public exchangeProxyFactory: typeof IZeroEx__factory;
 
     private readonly _ethersProvider: ethers.Provider;
     private readonly _supportedProvider: SupportedProvider;
-    
+
     /**
      * Instantiates a new ContractWrappers instance.
      * @param   supportedProvider    The Provider instance you would like the contract-wrappers library to use for interacting with
@@ -39,14 +38,14 @@ export class ContractWrappers {
         // Validate config using simple checks instead of JSON schema
         expect(config).to.be.an('object');
         expect(config.chainId).to.be.a('number');
-        
+
         this._supportedProvider = supportedProvider;
         this.contractAddresses = config.contractAddresses || _getDefaultContractAddresses(config.chainId);
-        
+
         // Create ethers provider from the supported provider
         // Note: We cast to unknown first to handle the type conversion safely
         this._ethersProvider = new ethers.BrowserProvider(supportedProvider as unknown as ethers.Eip1193Provider);
-        
+
         // Initialize contract factories
         this.weth9Factory = WETH9__factory;
         this.exchangeProxyFactory = IZeroEx__factory;
@@ -60,7 +59,7 @@ export class ContractWrappers {
     }
 
     /**
-     * Get an IZeroEx contract instance  
+     * Get an IZeroEx contract instance
      */
     public getExchangeProxyContract(address: string) {
         return this.exchangeProxyFactory.connect(address, this._ethersProvider);

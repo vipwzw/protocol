@@ -15,7 +15,7 @@ describe('ContractWrappers', () => {
             const contractWrappers = new ContractWrappers(provider, {
                 chainId: 1,
             });
-            
+
             expect(contractWrappers.contractAddresses).to.be.an('object');
             expect(contractWrappers.contractAddresses.etherToken).to.be.a('string');
         });
@@ -24,7 +24,7 @@ describe('ContractWrappers', () => {
             const contractWrappers = new ContractWrappers(provider, {
                 chainId: 1,
             });
-            
+
             expect(contractWrappers.weth9Factory).to.exist;
             expect(contractWrappers.exchangeProxyFactory).to.exist;
         });
@@ -35,7 +35,7 @@ describe('ContractWrappers', () => {
             const contractWrappers = new ContractWrappers(provider, {
                 chainId: 1,
             });
-            
+
             const wethContract = contractWrappers.getWETH9Contract(TEST_ADDRESSES.WETH);
             expect(wethContract).to.exist;
             expect(wethContract.target).to.equal(TEST_ADDRESSES.WETH);
@@ -45,7 +45,7 @@ describe('ContractWrappers', () => {
             const contractWrappers = new ContractWrappers(provider, {
                 chainId: 1,
             });
-            
+
             const zeroExContract = contractWrappers.getExchangeProxyContract(TEST_ADDRESSES.WETH);
             expect(zeroExContract).to.exist;
             expect(zeroExContract.target).to.equal(TEST_ADDRESSES.WETH);
@@ -57,7 +57,7 @@ describe('ContractWrappers', () => {
             const contractWrappers = new ContractWrappers(provider, {
                 chainId: 1,
             });
-            
+
             const returnedProvider = contractWrappers.getProvider();
             expect(returnedProvider).to.equal(provider);
         });
@@ -66,7 +66,7 @@ describe('ContractWrappers', () => {
             const contractWrappers = new ContractWrappers(provider, {
                 chainId: 1,
             });
-            
+
             const ethersProvider = contractWrappers.getEthersProvider();
             expect(ethersProvider).to.exist;
         });
@@ -77,7 +77,7 @@ describe('ContractWrappers', () => {
             const contractWrappers = new ContractWrappers(provider, {
                 chainId: 1,
             });
-            
+
             expect(() => contractWrappers.unsubscribeAll()).to.not.throw();
         });
     });
@@ -87,9 +87,9 @@ describe('ContractWrappers', () => {
             // Test the gasPrice conversion logic separately
             const bigintGasPrice = TEST_VALUES.ONE_ETH;
             const stringGasPrice = bigintGasPrice.toString();
-            
+
             expect(stringGasPrice).to.equal('1000000000000000000');
             expect(typeof stringGasPrice).to.equal('string');
         });
     });
-}); 
+});

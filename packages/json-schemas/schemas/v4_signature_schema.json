@@ -14,11 +14,6 @@
             "$ref": "/hexSchema"
         }
     },
-    "required": [
-        "signatureType",
-        "v",
-        "r",
-        "s"
-    ],
+    "required": ["signatureType", "v", "r", "s"],
     "type": "object"
 }

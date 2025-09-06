@@ -25,11 +25,11 @@ function convertToArrayFormat(obj: any, components: any[]): any {
     if (Array.isArray(obj)) {
         return obj.map(item => convertToArrayFormat(item, components));
     }
-    
+
     if (typeof obj === 'object' && obj !== null) {
         return components.map(component => {
             const value = obj[component.name];
-            
+
             // 处理 null 或 undefined 值
             if (value === null || value === undefined) {
                 // 根据组件类型返回默认值
@@ -45,7 +45,7 @@ function convertToArrayFormat(obj: any, components: any[]): any {
                     return 0; // 其他类型默认为 0
                 }
             }
-            
+
             if (component.components && Array.isArray(value)) {
                 // 处理嵌套的 tuple 数组
                 return value.map(item => convertToArrayFormat(item, component.components));
@@ -56,7 +56,7 @@ function convertToArrayFormat(obj: any, components: any[]): any {
             return value;
         });
     }
-    
+
     return obj;
 }
 
@@ -74,14 +74,12 @@ const DYDX_BRIDGE_DATA_ABI_COMPONENTS = [
             { name: 'accountIdx', type: 'uint256' },
             { name: 'marketId', type: 'uint256' },
             { name: 'conversionRateNumerator', type: 'uint256' },
-            { name: 'conversionRateDenominator', type: 'uint256' }
-        ]
-    }
+            { name: 'conversionRateDenominator', type: 'uint256' },
+        ],
+    },
 ];
 
-const dydxBridgeDataTypes = [
-    'tuple(uint256[],tuple(uint8,uint256,uint256,uint256,uint256)[])'
-];
+const dydxBridgeDataTypes = ['tuple(uint256[],tuple(uint8,uint256,uint256,uint256,uint256)[])'];
 
 export const dydxBridgeDataEncoder = {
     encode: (data: DydxBridgeData): string => {
@@ -92,5 +90,5 @@ export const dydxBridgeDataEncoder = {
     decode: (encoded: string): DydxBridgeData => {
         const [decoded] = abiCoder.decode(dydxBridgeDataTypes, encoded);
         return decoded as DydxBridgeData;
-    }
+    },
 };

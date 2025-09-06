@@ -54,10 +54,7 @@ describe('StaticCallProxy', () => {
         const staticCallProxyWithoutTransferFrom = await new StaticCallProxy__factory(deployer).deploy();
         assetDataInterface = IAssetData__factory.connect(constants.NULL_ADDRESS, provider);
         const contractAddress = await staticCallProxyWithoutTransferFrom.getAddress();
-        staticCallProxy = IAssetProxy__factory.connect(
-            contractAddress,
-            deployer
-        );
+        staticCallProxy = IAssetProxy__factory.connect(contractAddress, deployer);
         staticCallTarget = await new TestStaticCallTarget__factory(deployer).deploy();
         await staticCallTarget.waitForDeployment();
     });
@@ -94,8 +91,17 @@ describe('StaticCallProxy', () => {
             const staticCallData = staticCallTarget.interface.encodeFunctionData('noInputFunction');
             const expectedResultHash = constants.KECCAK256_NULL;
             const staticCallTargetAddress = await staticCallTarget.getAddress();
-            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
-            const txData = staticCallProxy.interface.encodeFunctionData('transferFrom', [assetData, fromAddress, toAddress, amount]);
+            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [
+                staticCallTargetAddress,
+                staticCallData,
+                expectedResultHash,
+            ]);
+            const txData = staticCallProxy.interface.encodeFunctionData('transferFrom', [
+                assetData,
+                fromAddress,
+                toAddress,
+                amount,
+            ]);
             const offsetToAssetData = '0000000000000000000000000000000000000000000000000000000000000080';
             const txDataEndBuffer = ethUtil.toBuffer((txData.length - 2) / 2 - 4);
             const paddedTxDataEndBuffer = ethUtil.setLengthLeft(txDataEndBuffer, 32);
@@ -115,7 +121,8 @@ describe('StaticCallProxy', () => {
             const staticCallData = constants.NULL_BYTES;
             const expectedResultHash = constants.KECCAK256_NULL;
             const staticCallTargetAddress = await staticCallTarget.getAddress();
-            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash])
+            const assetData = assetDataInterface.interface
+                .encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash])
                 .slice(0, -128);
             const assetDataByteLen = (assetData.length - 2) / 2;
             expect((assetDataByteLen - 4) % 32).to.equal(0);
@@ -127,7 +134,11 @@ describe('StaticCallProxy', () => {
             const staticCallData = staticCallTarget.interface.encodeFunctionData('noInputFunction');
             const expectedResultHash = constants.KECCAK256_NULL;
             const staticCallTargetAddress = await staticCallTarget.getAddress();
-            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
+            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [
+                staticCallTargetAddress,
+                staticCallData,
+                expectedResultHash,
+            ]);
             const offsetToStaticCallData = '0000000000000000000000000000000000000000000000000000000000000060';
             const assetDataEndBuffer = ethUtil.toBuffer((assetData.length - 2) / 2 - 4);
             const paddedAssetDataEndBuffer = ethUtil.setLengthLeft(assetDataEndBuffer, 32);
@@ -145,7 +156,11 @@ describe('StaticCallProxy', () => {
             const staticCallData = staticCallTarget.interface.encodeFunctionData('updateState');
             const expectedResultHash = constants.KECCAK256_NULL;
             const staticCallTargetAddress = await staticCallTarget.getAddress();
-            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
+            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [
+                staticCallTargetAddress,
+                staticCallData,
+                expectedResultHash,
+            ]);
             await expectTransactionFailedWithoutReasonAsync(
                 staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount),
             );
@@ -154,7 +169,11 @@ describe('StaticCallProxy', () => {
             const staticCallData = staticCallTarget.interface.encodeFunctionData('assertEvenNumber', [1n]);
             const expectedResultHash = constants.KECCAK256_NULL;
             const staticCallTargetAddress = await staticCallTarget.getAddress();
-            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
+            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [
+                staticCallTargetAddress,
+                staticCallData,
+                expectedResultHash,
+            ]);
             const tx = staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount);
             return expect(tx).to.be.revertedWith(RevertReason.TargetNotEven);
         });
@@ -163,7 +182,11 @@ describe('StaticCallProxy', () => {
             const trueAsBuffer = ethUtil.toBuffer('0x0000000000000000000000000000000000000000000000000000000000000001');
             const expectedResultHash = ethUtil.bufferToHex(ethUtil.keccak256(trueAsBuffer));
             const staticCallTargetAddress = await staticCallTarget.getAddress();
-            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
+            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [
+                staticCallTargetAddress,
+                staticCallData,
+                expectedResultHash,
+            ]);
             const tx = staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount);
             return expect(tx).to.be.revertedWith(RevertReason.UnexpectedStaticCallResult);
         });
@@ -171,14 +194,22 @@ describe('StaticCallProxy', () => {
             const staticCallData = staticCallTarget.interface.encodeFunctionData('noInputFunction');
             const expectedResultHash = constants.KECCAK256_NULL;
             const staticCallTargetAddress = await staticCallTarget.getAddress();
-            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
+            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [
+                staticCallTargetAddress,
+                staticCallData,
+                expectedResultHash,
+            ]);
             const tx = await staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount);
             await tx.wait();
         });
         it('should be successful if the staticCallTarget is not a contract and no return value is expected', async () => {
             const staticCallData = '0x0102030405060708';
             const expectedResultHash = constants.KECCAK256_NULL;
-            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [toAddress, staticCallData, expectedResultHash]);
+            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [
+                toAddress,
+                staticCallData,
+                expectedResultHash,
+            ]);
             const tx = await staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount);
             await tx.wait();
         });
@@ -187,16 +218,26 @@ describe('StaticCallProxy', () => {
             const trueAsBuffer = ethUtil.toBuffer('0x0000000000000000000000000000000000000000000000000000000000000001');
             const expectedResultHash = ethUtil.bufferToHex(ethUtil.keccak256(trueAsBuffer));
             const staticCallTargetAddress = await staticCallTarget.getAddress();
-            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
+            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [
+                staticCallTargetAddress,
+                staticCallData,
+                expectedResultHash,
+            ]);
             const tx = await staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount);
             await tx.wait();
         });
         it('should be successful if a function with one dynamic input is successful', async () => {
             const dynamicInput = '0x0102030405060708';
-            const staticCallData = staticCallTarget.interface.encodeFunctionData('dynamicInputFunction', [dynamicInput]);
+            const staticCallData = staticCallTarget.interface.encodeFunctionData('dynamicInputFunction', [
+                dynamicInput,
+            ]);
             const expectedResultHash = constants.KECCAK256_NULL;
             const staticCallTargetAddress = await staticCallTarget.getAddress();
-            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [staticCallTargetAddress, staticCallData, expectedResultHash]);
+            const assetData = assetDataInterface.interface.encodeFunctionData('StaticCall', [
+                staticCallTargetAddress,
+                staticCallData,
+                expectedResultHash,
+            ]);
             const tx = await staticCallProxy.transferFrom(assetData, fromAddress, toAddress, amount);
             await tx.wait();
         });

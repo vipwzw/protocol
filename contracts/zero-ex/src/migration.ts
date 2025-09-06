@@ -15,9 +15,12 @@ import {
     ZeroEx as ZeroExContract,
 } from './wrappers';
 
-import { FullMigration__factory, InitialMigration__factory } from './typechain-types/factories/contracts/src/migrations';
-import { 
-    SimpleFunctionRegistryFeature__factory, 
+import {
+    FullMigration__factory,
+    InitialMigration__factory,
+} from './typechain-types/factories/contracts/src/migrations';
+import {
+    SimpleFunctionRegistryFeature__factory,
     OwnableFeature__factory,
     TransformERC20Feature__factory,
     MetaTransactionsFeature__factory,
@@ -80,22 +83,26 @@ export async function deployBootstrapFeaturesAsync(
     };
 
     // 部署 SimpleFunctionRegistryFeature
-    const registry = features.registry || await (async () => {
-        const signer = await (provider as any).getSigner(txDefaults.from as string);
-        const factory = new SimpleFunctionRegistryFeature__factory(signer);
-        const contract = await factory.deploy();
-        await contract.waitForDeployment();
-        return await contract.getAddress();
-    })();
+    const registry =
+        features.registry ||
+        (await (async () => {
+            const signer = await (provider as any).getSigner(txDefaults.from as string);
+            const factory = new SimpleFunctionRegistryFeature__factory(signer);
+            const contract = await factory.deploy();
+            await contract.waitForDeployment();
+            return await contract.getAddress();
+        })());
 
     // 部署 OwnableFeature
-    const ownable = features.ownable || await (async () => {
-        const signer = await (provider as any).getSigner(txDefaults.from as string);
-        const factory = new OwnableFeature__factory(signer);
-        const contract = await factory.deploy();
-        await contract.waitForDeployment();
-        return await contract.getAddress();
-    })();
+    const ownable =
+        features.ownable ||
+        (await (async () => {
+            const signer = await (provider as any).getSigner(txDefaults.from as string);
+            const factory = new OwnableFeature__factory(signer);
+            const contract = await factory.deploy();
+            await contract.waitForDeployment();
+            return await contract.getAddress();
+        })());
 
     return {
         registry,
@@ -191,63 +198,81 @@ export async function deployAllFeaturesAsync(
     const signer = await (provider as any).getSigner(txDefaults.from as string);
 
     // 如缺失依赖，则在本地部署测试版本依赖（WETH/Staking/FeeCollectorController）
-    const wethAddress = config.wethAddress || await (async () => {
-        const c = await new TestWeth__factory(signer).deploy();
-        await c.waitForDeployment();
-        return await c.getAddress();
-    })();
+    const wethAddress =
+        config.wethAddress ||
+        (await (async () => {
+            const c = await new TestWeth__factory(signer).deploy();
+            await c.waitForDeployment();
+            return await c.getAddress();
+        })());
 
-    const stakingAddress = config.stakingAddress || await (async () => {
-        const c = await new TestStaking__factory(signer).deploy(wethAddress);
-        await c.waitForDeployment();
-        return await c.getAddress();
-    })();
+    const stakingAddress =
+        config.stakingAddress ||
+        (await (async () => {
+            const c = await new TestStaking__factory(signer).deploy(wethAddress);
+            await c.waitForDeployment();
+            return await c.getAddress();
+        })());
 
-    const feeCollectorControllerAddress = config.feeCollectorController || await (async () => {
-        const c = await new FeeCollectorController__factory(signer).deploy(wethAddress, stakingAddress);
-        await c.waitForDeployment();
-        return await c.getAddress();
-    })();
+    const feeCollectorControllerAddress =
+        config.feeCollectorController ||
+        (await (async () => {
+            const c = await new FeeCollectorController__factory(signer).deploy(wethAddress, stakingAddress);
+            await c.waitForDeployment();
+            return await c.getAddress();
+        })());
 
     // 引导特性
-    const registry = features.registry || await (async () => {
-        const c = await new SimpleFunctionRegistryFeature__factory(signer).deploy();
-        await c.waitForDeployment();
-        return await c.getAddress();
-    })();
+    const registry =
+        features.registry ||
+        (await (async () => {
+            const c = await new SimpleFunctionRegistryFeature__factory(signer).deploy();
+            await c.waitForDeployment();
+            return await c.getAddress();
+        })());
 
-    const ownable = features.ownable || await (async () => {
-        const c = await new OwnableFeature__factory(signer).deploy();
-        await c.waitForDeployment();
-        return await c.getAddress();
-    })();
+    const ownable =
+        features.ownable ||
+        (await (async () => {
+            const c = await new OwnableFeature__factory(signer).deploy();
+            await c.waitForDeployment();
+            return await c.getAddress();
+        })());
 
     // 完整特性
-    const transformERC20 = features.transformERC20 || await (async () => {
-        const c = await new TransformERC20Feature__factory(signer).deploy();
-        await c.waitForDeployment();
-        return await c.getAddress();
-    })();
+    const transformERC20 =
+        features.transformERC20 ||
+        (await (async () => {
+            const c = await new TransformERC20Feature__factory(signer).deploy();
+            await c.waitForDeployment();
+            return await c.getAddress();
+        })());
 
-    const metaTransactions = features.metaTransactions || await (async () => {
-        const zeroExAddress = (config && config.zeroExAddress) || NULL_ADDRESS;
-        const c = await new MetaTransactionsFeature__factory(signer).deploy(zeroExAddress);
-        await c.waitForDeployment();
-        return await c.getAddress();
-    })();
+    const metaTransactions =
+        features.metaTransactions ||
+        (await (async () => {
+            const zeroExAddress = (config && config.zeroExAddress) || NULL_ADDRESS;
+            const c = await new MetaTransactionsFeature__factory(signer).deploy(zeroExAddress);
+            await c.waitForDeployment();
+            return await c.getAddress();
+        })());
 
     // 使用轻量版测试特性，避免代码尺寸超限，仅注册函数选择器满足测试
-    const nativeOrders = features.nativeOrders || await (async () => {
-        const c = await new TestNativeOrdersFeatureLite__factory(signer).deploy();
-        await c.waitForDeployment();
-        return await c.getAddress();
-    })();
+    const nativeOrders =
+        features.nativeOrders ||
+        (await (async () => {
+            const c = await new TestNativeOrdersFeatureLite__factory(signer).deploy();
+            await c.waitForDeployment();
+            return await c.getAddress();
+        })());
 
-    const otcOrders = features.otcOrders || await (async () => {
-        const c = await new TestOtcOrdersFeatureLite__factory(signer).deploy();
-        await c.waitForDeployment();
-        return await c.getAddress();
-    })();
+    const otcOrders =
+        features.otcOrders ||
+        (await (async () => {
+            const c = await new TestOtcOrdersFeatureLite__factory(signer).deploy();
+            await c.waitForDeployment();
+            return await c.getAddress();
+        })());
 
     return {
         registry,

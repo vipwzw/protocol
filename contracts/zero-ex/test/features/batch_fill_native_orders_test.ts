@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers } from 'hardhat';
 import { constants, getRandomPortion, verifyEventsFromLogs } from '@0x/utils';
 import { expect } from 'chai';
 import { LimitOrder, LimitOrderFields, OrderStatus, RevertErrors, RfqOrder, RfqOrderFields } from '@0x/protocol-utils';
@@ -7,11 +7,11 @@ import { TransactionReceiptWithDecodedLogs } from 'ethereum-types';
 import * as _ from 'lodash';
 import { UnifiedErrorMatcher } from '../utils/unified_error_matcher';
 
-import { 
-    BatchFillNativeOrdersFeatureContract, 
-    IZeroExContract, 
+import {
+    BatchFillNativeOrdersFeatureContract,
+    IZeroExContract,
     IZeroExEvents,
-    BatchFillNativeOrdersFeature__factory
+    BatchFillNativeOrdersFeature__factory,
 } from '../../src/wrappers';
 import { artifacts } from '../artifacts';
 import { abis } from '../utils/abis';
@@ -32,7 +32,8 @@ describe('BatchFillNativeOrdersFeature', () => {
         txDefaults: { from: '' as string },
         getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
         web3Wrapper: {
-            getBalanceInWeiAsync: async (addr: string, blockTag?: number) => ethers.provider.getBalance(addr, blockTag as any),
+            getBalanceInWeiAsync: async (addr: string, blockTag?: number) =>
+                ethers.provider.getBalance(addr, blockTag as any),
         },
     } as any;
     const { NULL_ADDRESS, ZERO_AMOUNT } = constants;
@@ -58,14 +59,14 @@ describe('BatchFillNativeOrdersFeature', () => {
         verifyingContract = await zeroEx.getAddress();
         const [owner] = await env.getAccountAddressesAsync();
         const ownerSigner = await env.provider.getSigner(owner);
-        
+
         // 首先部署完整的 NativeOrdersFeature 来替换轻量版
         const { TestNativeOrdersFeature__factory, TestWeth__factory } = await import('../wrappers');
-        
+
         // 部署 WETH 合约用于测试
         const wethContract = await new TestWeth__factory(ownerSigner).deploy();
         await wethContract.waitForDeployment();
-        
+
         const nativeOrdersFeatureImpl = await new TestNativeOrdersFeature__factory(ownerSigner).deploy(
             await zeroEx.getAddress(),
             await wethContract.getAddress(), // weth address
@@ -74,19 +75,31 @@ describe('BatchFillNativeOrdersFeature', () => {
             70000, // protocolFeeMultiplier - using default value
         );
         await nativeOrdersFeatureImpl.waitForDeployment();
-        
+
         // 迁移完整的 NativeOrdersFeature
         const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
-        await ownableFeature.migrate(await nativeOrdersFeatureImpl.getAddress(), nativeOrdersFeatureImpl.interface.encodeFunctionData('migrate'), owner);
-        
+        await ownableFeature.migrate(
+            await nativeOrdersFeatureImpl.getAddress(),
+            nativeOrdersFeatureImpl.interface.encodeFunctionData('migrate'),
+            owner,
+        );
+
         // 然后部署 BatchFillNativeOrdersFeature
         const featureFactory = new BatchFillNativeOrdersFeature__factory(ownerSigner);
         const featureImpl = await featureFactory.deploy(await zeroEx.getAddress());
         await featureImpl.waitForDeployment();
-        
-        await ownableFeature.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
-            
-        feature = await ethers.getContractAt('BatchFillNativeOrdersFeature', await zeroEx.getAddress(), ownerSigner) as BatchFillNativeOrdersFeatureContract;
+
+        await ownableFeature.migrate(
+            await featureImpl.getAddress(),
+            featureImpl.interface.encodeFunctionData('migrate'),
+            owner,
+        );
+
+        feature = (await ethers.getContractAt(
+            'BatchFillNativeOrdersFeature',
+            await zeroEx.getAddress(),
+            ownerSigner,
+        )) as BatchFillNativeOrdersFeatureContract;
     });
 
     async function getTestLimitOrder(fields: Partial<LimitOrderFields> = {}): Promise<LimitOrder> {
@@ -138,13 +151,13 @@ describe('BatchFillNativeOrdersFeature', () => {
             // 重置代币余额以避免测试间的状态干扰
             const [owner] = await env.getAccountAddressesAsync();
             const ownerSigner = await env.provider.getSigner(owner);
-            
+
             // 将 maker 和 taker 的所有代币余额转移给 owner
             const makerBalance = await makerToken.balanceOf(maker);
             const takerBalance = await takerToken.balanceOf(taker);
             const makerTakerTokenBalance = await takerToken.balanceOf(maker);
             const takerMakerTokenBalance = await makerToken.balanceOf(taker);
-            
+
             if (makerBalance > 0n) {
                 const makerSigner = await env.provider.getSigner(maker);
                 await makerToken.connect(makerSigner).transfer(owner, makerBalance);
@@ -204,7 +217,9 @@ describe('BatchFillNativeOrdersFeature', () => {
         }
 
         it('Fully fills multiple orders', async () => {
-            const orders = await Promise.all([...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
+            const orders = await Promise.all(
+                [...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })),
+            );
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
@@ -216,9 +231,11 @@ describe('BatchFillNativeOrdersFeature', () => {
                 signatures,
                 orders.map(order => order.takerAmount),
                 false,
-                { value }
+                { value },
             );
-            const [orderInfos] = await (await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())).batchGetLimitOrderRelevantStates(orders, signatures);
+            const [orderInfos] = await (
+                await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())
+            ).batchGetLimitOrderRelevantStates(orders, signatures);
             orderInfos.map((orderInfo, i) =>
                 assertOrderInfoEquals(orderInfo, {
                     status: OrderStatus.Filled,
@@ -243,8 +260,12 @@ describe('BatchFillNativeOrdersFeature', () => {
             const value = testUtils.protocolFee * BigInt(orders.length);
             const fillAmounts = orders.map(order => getRandomPortion(order.takerAmount));
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = await feature.connect(takerSigner).batchFillLimitOrders(orders, signatures, fillAmounts, false, { value });
-            const [orderInfos] = await (await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())).batchGetLimitOrderRelevantStates(orders, signatures);
+            const tx = await feature
+                .connect(takerSigner)
+                .batchFillLimitOrders(orders, signatures, fillAmounts, false, { value });
+            const [orderInfos] = await (
+                await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())
+            ).batchGetLimitOrderRelevantStates(orders, signatures);
             orderInfos.map((orderInfo, i) =>
                 assertOrderInfoEquals(orderInfo, {
                     status: OrderStatus.Fillable,
@@ -261,7 +282,9 @@ describe('BatchFillNativeOrdersFeature', () => {
             return assertExpectedFinalBalancesAsync(orders, fillAmounts);
         });
         it('Fills multiple orders and refunds excess ETH', async () => {
-            const orders = await Promise.all([...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
+            const orders = await Promise.all(
+                [...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })),
+            );
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
@@ -273,9 +296,11 @@ describe('BatchFillNativeOrdersFeature', () => {
                 signatures,
                 orders.map(order => order.takerAmount),
                 false,
-                { value }
+                { value },
             );
-            const [orderInfos] = await (await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())).batchGetLimitOrderRelevantStates(orders, signatures);
+            const [orderInfos] = await (
+                await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())
+            ).batchGetLimitOrderRelevantStates(orders, signatures);
             orderInfos.map((orderInfo, i) =>
                 assertOrderInfoEquals(orderInfo, {
                     status: OrderStatus.Filled,
@@ -292,8 +317,13 @@ describe('BatchFillNativeOrdersFeature', () => {
             return assertExpectedFinalBalancesAsync(orders);
         });
         it('Skips over unfillable orders and refunds excess ETH', async () => {
-            const fillableOrders = await Promise.all([...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
-            const expiredOrder = await getTestLimitOrder({ expiry: await createExpiry(-1), takerTokenFeeAmount: ZERO_AMOUNT });
+            const fillableOrders = await Promise.all(
+                [...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })),
+            );
+            const expiredOrder = await getTestLimitOrder({
+                expiry: await createExpiry(-1),
+                takerTokenFeeAmount: ZERO_AMOUNT,
+            });
             const orders = [expiredOrder, ...fillableOrders];
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
@@ -306,9 +336,11 @@ describe('BatchFillNativeOrdersFeature', () => {
                 signatures,
                 orders.map(order => order.takerAmount),
                 false,
-                { value }
+                { value },
             );
-            const [orderInfos] = await (await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())).batchGetLimitOrderRelevantStates(orders, signatures);
+            const [orderInfos] = await (
+                await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())
+            ).batchGetLimitOrderRelevantStates(orders, signatures);
             const [expiredOrderInfo, ...filledOrderInfos] = orderInfos;
             assertOrderInfoEquals(expiredOrderInfo, {
                 status: OrderStatus.Expired,
@@ -331,7 +363,9 @@ describe('BatchFillNativeOrdersFeature', () => {
             return assertExpectedFinalBalancesAsync(fillableOrders);
         });
         it('Fills multiple orders with revertIfIncomplete=true', async () => {
-            const orders = await Promise.all([...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
+            const orders = await Promise.all(
+                [...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })),
+            );
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
@@ -343,9 +377,11 @@ describe('BatchFillNativeOrdersFeature', () => {
                 signatures,
                 orders.map(order => order.takerAmount),
                 true,
-                { value }
+                { value },
             );
-            const [orderInfos] = await (await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())).batchGetLimitOrderRelevantStates(orders, signatures);
+            const [orderInfos] = await (
+                await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())
+            ).batchGetLimitOrderRelevantStates(orders, signatures);
             orderInfos.map((orderInfo, i) =>
                 assertOrderInfoEquals(orderInfo, {
                     status: OrderStatus.Filled,
@@ -362,8 +398,13 @@ describe('BatchFillNativeOrdersFeature', () => {
             return assertExpectedFinalBalancesAsync(orders);
         });
         it('If revertIfIncomplete==true, reverts on an unfillable order', async () => {
-            const fillableOrders = await Promise.all([...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
-            const expiredOrder = await getTestLimitOrder({ expiry: await createExpiry(-1), takerTokenFeeAmount: ZERO_AMOUNT });
+            const fillableOrders = await Promise.all(
+                [...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })),
+            );
+            const expiredOrder = await getTestLimitOrder({
+                expiry: await createExpiry(-1),
+                takerTokenFeeAmount: ZERO_AMOUNT,
+            });
             const orders = [expiredOrder, ...fillableOrders];
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
@@ -376,7 +417,7 @@ describe('BatchFillNativeOrdersFeature', () => {
                 signatures,
                 orders.map(order => order.takerAmount),
                 true,
-                { value }
+                { value },
             );
             // ✅ 使用具体的错误匹配：BatchFillIncompleteError
             await UnifiedErrorMatcher.expectNativeOrdersError(
@@ -384,12 +425,14 @@ describe('BatchFillNativeOrdersFeature', () => {
                 new RevertErrors.NativeOrders.BatchFillIncompleteError(
                     expiredOrder.getHash(),
                     0n, // takerTokenFilledAmount (expired order can't be filled)
-                    expiredOrder.takerAmount // takerTokenFillAmount
-                )
+                    expiredOrder.takerAmount, // takerTokenFillAmount
+                ),
             );
         });
         it('If revertIfIncomplete==true, reverts on an incomplete fill ', async () => {
-            const fillableOrders = await Promise.all([...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })));
+            const fillableOrders = await Promise.all(
+                [...new Array(3)].map(async () => getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT })),
+            );
             const partiallyFilledOrder = await getTestLimitOrder({ takerTokenFeeAmount: ZERO_AMOUNT });
             const partialFillAmount = getRandomPortion(partiallyFilledOrder.takerAmount);
             await testUtils.fillLimitOrderAsync(partiallyFilledOrder, { fillAmount: partialFillAmount });
@@ -405,7 +448,7 @@ describe('BatchFillNativeOrdersFeature', () => {
                 signatures,
                 orders.map(order => order.takerAmount),
                 true,
-                { value }
+                { value },
             );
             // ✅ 使用具体的错误匹配：BatchFillIncompleteError (部分填充的订单)
             // 业务逻辑：订单已部分填充，尝试填充完整数量时只能填充剩余部分
@@ -415,8 +458,8 @@ describe('BatchFillNativeOrdersFeature', () => {
                 new RevertErrors.NativeOrders.BatchFillIncompleteError(
                     partiallyFilledOrder.getHash(),
                     remainingAmount, // takerTokenFilledAmount: 实际填充的剩余数量
-                    partiallyFilledOrder.takerAmount // takerTokenFillAmount: 请求填充的完整数量
-                )
+                    partiallyFilledOrder.takerAmount, // takerTokenFillAmount: 请求填充的完整数量
+                ),
             );
         });
     });
@@ -446,20 +489,22 @@ describe('BatchFillNativeOrdersFeature', () => {
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
-            
+
             // 重置余额确保测试独立性
             await resetBalancesAsync([maker, taker], makerToken);
             await resetBalancesAsync([maker, taker], takerToken);
-            
+
             await testUtils.prepareBalancesForOrdersAsync(orders);
             const takerSigner = await env.provider.getSigner(taker);
             const tx = await feature.connect(takerSigner).batchFillRfqOrders(
                 orders,
                 signatures,
                 orders.map(order => order.takerAmount),
-                false
+                false,
             );
-            const [orderInfos] = await (await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())).batchGetRfqOrderRelevantStates(orders, signatures);
+            const [orderInfos] = await (
+                await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())
+            ).batchGetRfqOrderRelevantStates(orders, signatures);
             orderInfos.map((orderInfo, i) =>
                 assertOrderInfoEquals(orderInfo, {
                     status: OrderStatus.Filled,
@@ -481,15 +526,17 @@ describe('BatchFillNativeOrdersFeature', () => {
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
             const fillAmounts = orders.map(order => getRandomPortion(order.takerAmount));
-            
+
             // 重置余额确保测试独立性
             await resetBalancesAsync([maker, taker], makerToken);
             await resetBalancesAsync([maker, taker], takerToken);
-            
+
             await testUtils.prepareBalancesForOrdersAsync(orders);
             const takerSigner = await env.provider.getSigner(taker);
             const tx = await feature.connect(takerSigner).batchFillRfqOrders(orders, signatures, fillAmounts, false);
-            const [orderInfos] = await (await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())).batchGetRfqOrderRelevantStates(orders, signatures);
+            const [orderInfos] = await (
+                await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())
+            ).batchGetRfqOrderRelevantStates(orders, signatures);
             orderInfos.map((orderInfo, i) =>
                 assertOrderInfoEquals(orderInfo, {
                     status: OrderStatus.Fillable,
@@ -512,20 +559,22 @@ describe('BatchFillNativeOrdersFeature', () => {
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
-            
+
             // 重置余额确保测试独立性
             await resetBalancesAsync([maker, taker], makerToken);
             await resetBalancesAsync([maker, taker], takerToken);
-            
+
             await testUtils.prepareBalancesForOrdersAsync(orders);
             const takerSigner = await env.provider.getSigner(taker);
             const tx = await feature.connect(takerSigner).batchFillRfqOrders(
                 orders,
                 signatures,
                 orders.map(order => order.takerAmount),
-                false
+                false,
             );
-            const [orderInfos] = await (await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())).batchGetRfqOrderRelevantStates(orders, signatures);
+            const [orderInfos] = await (
+                await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())
+            ).batchGetRfqOrderRelevantStates(orders, signatures);
             const [expiredOrderInfo, ...filledOrderInfos] = orderInfos;
             assertOrderInfoEquals(expiredOrderInfo, {
                 status: OrderStatus.Expired,
@@ -552,20 +601,22 @@ describe('BatchFillNativeOrdersFeature', () => {
             const signatures = await Promise.all(
                 orders.map(order => order.getSignatureWithProviderAsync(env.provider)),
             );
-            
+
             // 重置余额确保测试独立性
             await resetBalancesAsync([maker, taker], makerToken);
             await resetBalancesAsync([maker, taker], takerToken);
-            
+
             await testUtils.prepareBalancesForOrdersAsync(orders);
             const takerSigner = await env.provider.getSigner(taker);
             const tx = await feature.connect(takerSigner).batchFillRfqOrders(
                 orders,
                 signatures,
                 orders.map(order => order.takerAmount),
-                true
+                true,
             );
-            const [orderInfos] = await (await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())).batchGetRfqOrderRelevantStates(orders, signatures);
+            const [orderInfos] = await (
+                await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())
+            ).batchGetRfqOrderRelevantStates(orders, signatures);
             orderInfos.map((orderInfo, i) =>
                 assertOrderInfoEquals(orderInfo, {
                     status: OrderStatus.Filled,
@@ -594,7 +645,7 @@ describe('BatchFillNativeOrdersFeature', () => {
                 orders,
                 signatures,
                 orders.map(order => order.takerAmount),
-                true
+                true,
             );
             // ✅ 使用具体的错误匹配：BatchFillIncompleteError (RFQ 过期订单)
             await UnifiedErrorMatcher.expectNativeOrdersError(
@@ -602,8 +653,8 @@ describe('BatchFillNativeOrdersFeature', () => {
                 new RevertErrors.NativeOrders.BatchFillIncompleteError(
                     expiredOrder.getHash(),
                     0n, // takerTokenFilledAmount (expired order can't be filled)
-                    expiredOrder.takerAmount // takerTokenFillAmount
-                )
+                    expiredOrder.takerAmount, // takerTokenFillAmount
+                ),
             );
         });
         it('If revertIfIncomplete==true, reverts on an incomplete fill ', async () => {
@@ -621,7 +672,7 @@ describe('BatchFillNativeOrdersFeature', () => {
                 orders,
                 signatures,
                 orders.map(order => order.takerAmount),
-                true
+                true,
             );
             // ✅ 使用具体的错误匹配：BatchFillIncompleteError (RFQ 部分填充订单)
             // 业务逻辑：订单已部分填充，尝试填充完整数量时只能填充剩余部分
@@ -631,8 +682,8 @@ describe('BatchFillNativeOrdersFeature', () => {
                 new RevertErrors.NativeOrders.BatchFillIncompleteError(
                     partiallyFilledOrder.getHash(),
                     remainingAmount, // takerTokenFilledAmount: 实际填充的剩余数量
-                    partiallyFilledOrder.takerAmount // takerTokenFillAmount: 请求填充的完整数量
-                )
+                    partiallyFilledOrder.takerAmount, // takerTokenFillAmount: 请求填充的完整数量
+                ),
             );
         });
     });

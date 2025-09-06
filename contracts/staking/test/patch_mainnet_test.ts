@@ -13,7 +13,10 @@ import * as _ from 'lodash';
 import { artifacts } from './artifacts';
 import { StakingPatchContract, StakingProxyContract, filterLogsToArguments } from './wrappers';
 
-const abis = _.mapValues(_.pickBy(artifacts, v => v && v.compilerOutput), v => v.compilerOutput.abi);
+const abis = _.mapValues(
+    _.pickBy(artifacts, v => v && v.compilerOutput),
+    v => v.compilerOutput.abi,
+);
 const STAKING_PROXY = '0xa26e80e7dea86279c6d778d702cc413e6cffa777';
 const STAKING_OWNER = '0x7d3455421bbc5ed534a83c88fd80387dc8271392';
 const EXCHANGE_PROXY = '0xdef1c0ded9bec7f1a1670819833240f027b25eff';
@@ -24,7 +27,11 @@ describe('Staking patch mainnet fork tests', () => {
 
     before(async () => {
         const [signer] = await ethers.getSigners();
-        stakingProxyContract = new ethers.Contract(STAKING_PROXY, artifacts.StakingProxy.abi || artifacts.StakingProxy.compilerOutput?.abi, signer);
+        stakingProxyContract = new ethers.Contract(
+            STAKING_PROXY,
+            artifacts.StakingProxy.abi || artifacts.StakingProxy.compilerOutput?.abi,
+            signer,
+        );
         const factory = new ethers.ContractFactory(
             artifacts.Staking.abi || artifacts.Staking.compilerOutput?.abi,
             artifacts.Staking.bytecode || artifacts.Staking.compilerOutput?.evm?.bytecode?.object,
@@ -43,7 +50,11 @@ describe('Staking patch mainnet fork tests', () => {
 
     it('Patched staking handles 0 gas protocol fees', async () => {
         const [signer] = await ethers.getSigners();
-        const staking = new ethers.Contract(STAKING_PROXY, artifacts.Staking.abi || artifacts.Staking.compilerOutput?.abi, signer);
+        const staking = new ethers.Contract(
+            STAKING_PROXY,
+            artifacts.Staking.abi || artifacts.Staking.compilerOutput?.abi,
+            signer,
+        );
         const maker = '0x7b1886e49ab5433bb46f7258548092dc8cdca28b';
         const zeroFeeTx = await staking.payProtocolFee(maker, constants.NULL_ADDRESS, constants.ZERO_AMOUNT);
         const zeroFeeReceipt = await zeroFeeTx.wait();

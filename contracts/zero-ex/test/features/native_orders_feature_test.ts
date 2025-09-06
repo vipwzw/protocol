@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers } from 'hardhat';
 import { constants, getRandomPortion, randomAddress, verifyEventsFromLogs } from '@0x/utils';
 import { expect } from 'chai';
 import {
@@ -13,12 +13,12 @@ import {
 import { AnyRevertError } from '@0x/utils';
 import { TransactionReceiptWithDecodedLogs } from 'ethereum-types';
 
-import { 
-    IZeroExContract, 
+import {
+    IZeroExContract,
     IZeroExEvents,
     TestMintableERC20Token__factory,
     TestRfqOriginRegistration__factory,
-    TestOrderSignerRegistryWithContractWallet__factory
+    TestOrderSignerRegistryWithContractWallet__factory,
 } from '../../src/wrappers';
 import { artifacts } from '../artifacts';
 import { fullMigrateAsync } from '../utils/migration';
@@ -45,13 +45,15 @@ describe('NativeOrdersFeature', () => {
         txDefaults: { from: '' as string },
         getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
         web3Wrapper: {
-            getBalanceInWeiAsync: async (addr: string, blockTag?: number) => ethers.provider.getBalance(addr, blockTag as any),
+            getBalanceInWeiAsync: async (addr: string, blockTag?: number) =>
+                ethers.provider.getBalance(addr, blockTag as any),
             increaseTimeAsync: async (secs: number) => {
                 await ethers.provider.send('evm_increaseTime', [secs]);
                 await ethers.provider.send('evm_mine', []);
             },
             awaitTransactionMinedAsync: async (hash: string) => ethers.provider.waitForTransaction(hash),
-            sendTransactionAsync: async (tx: any) => (await ethers.getSigner(tx.from)).sendTransaction(tx).then(r => r.hash),
+            sendTransactionAsync: async (tx: any) =>
+                (await ethers.getSigner(tx.from)).sendTransaction(tx).then(r => r.hash),
         },
     } as any;
     const { NULL_ADDRESS, MAX_UINT256, NULL_BYTES32, ZERO_AMOUNT } = constants;
@@ -79,15 +81,13 @@ describe('NativeOrdersFeature', () => {
         env.txDefaults.from = accounts[0];
         [owner, maker, taker, notMaker, notTaker, contractWalletOwner, contractWalletSigner] =
             await env.getAccountAddressesAsync();
-        
+
         const signer = await env.provider.getSigner(owner);
         const tokenFactories = [...new Array(3)].map(() => new TestMintableERC20Token__factory(signer));
-        const tokenDeployments = await Promise.all(
-            tokenFactories.map(factory => factory.deploy())
-        );
+        const tokenDeployments = await Promise.all(tokenFactories.map(factory => factory.deploy()));
         await Promise.all(tokenDeployments.map(token => token.waitForDeployment()));
         [makerToken, takerToken, wethToken] = tokenDeployments;
-        
+
         // 首先进行标准迁移（不包含 NativeOrdersFeature）
         zeroEx = await fullMigrateAsync(
             owner,
@@ -108,12 +108,16 @@ describe('NativeOrdersFeature', () => {
             PROTOCOL_FEE_MULTIPLIER,
         );
         await featureImpl.waitForDeployment();
-        
+
         // 使用 OwnableFeature 接口调用 migrate
         const OwnableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
-        await OwnableFeature.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
+        await OwnableFeature.migrate(
+            await featureImpl.getAddress(),
+            featureImpl.interface.encodeFunctionData('migrate'),
+            owner,
+        );
         verifyingContract = await zeroEx.getAddress();
-        
+
         await Promise.all(
             [maker, notMaker].map(async a => {
                 const aSigner = await env.provider.getSigner(a);
@@ -126,11 +130,11 @@ describe('NativeOrdersFeature', () => {
                 return takerToken.connect(aSigner).approve(await zeroEx.getAddress(), MAX_UINT256);
             }),
         );
-        
+
         const testRfqOriginRegistrationFactory = new TestRfqOriginRegistration__factory(signer);
         testRfqOriginRegistration = await testRfqOriginRegistrationFactory.deploy();
         await testRfqOriginRegistration.waitForDeployment();
-        
+
         // contract wallet for signer delegation
         const contractWalletOwnerSigner = await env.provider.getSigner(contractWalletOwner);
         const contractWalletFactory = new TestOrderSignerRegistryWithContractWallet__factory(contractWalletOwnerSigner);
@@ -153,7 +157,7 @@ describe('NativeOrdersFeature', () => {
         );
 
         // 在所有合约部署完成后创建快照，确保快照包含完整的合约状态
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
 
     async function getTestLimitOrder(fields: Partial<LimitOrderFields> = {}): Promise<LimitOrder> {
@@ -189,8 +193,8 @@ describe('NativeOrdersFeature', () => {
 
     // 辅助函数：强制状态重置
     async function forceStateReset() {
-        await ethers.provider.send("evm_revert", [snapshotId]);
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
+        await ethers.provider.send('evm_revert', [snapshotId]);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     }
 
     // 余额重置函数，用于需要精确余额断言的测试（借鉴 ERC1155/ERC721 成功经验）
@@ -214,14 +218,17 @@ describe('NativeOrdersFeature', () => {
     // 全局状态重置：解决测试间状态干扰问题（订单状态、nonce等）
     beforeEach(async () => {
         // 恢复到初始快照状态，重置所有合约状态
-        await ethers.provider.send("evm_revert", [snapshotId]);
-        snapshotId = await ethers.provider.send("evm_snapshot", []);
+        await ethers.provider.send('evm_revert', [snapshotId]);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
 
     describe('getProtocolFeeMultiplier()', () => {
         it('returns the protocol fee multiplier', async () => {
             try {
-                const nativeOrdersFeature = await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress());
+                const nativeOrdersFeature = await ethers.getContractAt(
+                    'INativeOrdersFeature',
+                    await zeroEx.getAddress(),
+                );
                 const r = await nativeOrdersFeature.getProtocolFeeMultiplier();
                 expect(r).to.eq(PROTOCOL_FEE_MULTIPLIER);
             } catch (error) {
@@ -238,7 +245,9 @@ describe('NativeOrdersFeature', () => {
     describe('getLimitOrderHash()', () => {
         it('returns the correct hash', async () => {
             const order = await getTestLimitOrder();
-            const hash = await (await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())).getLimitOrderHash(order);
+            const hash = await (
+                await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())
+            ).getLimitOrderHash(order);
             expect(hash).to.eq(order.getHash());
         });
     });
@@ -246,13 +255,14 @@ describe('NativeOrdersFeature', () => {
     describe('getRfqOrderHash()', () => {
         it('returns the correct hash', async () => {
             const order = await getTestRfqOrder();
-            const hash = await (await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())).getRfqOrderHash(order);
+            const hash = await (
+                await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress())
+            ).getRfqOrderHash(order);
             expect(hash).to.eq(order.getHash());
         });
     });
 
     describe('getLimitOrderInfo()', () => {
-
         it('unfilled order', async () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const order = await getTestLimitOrder();
@@ -365,7 +375,6 @@ describe('NativeOrdersFeature', () => {
     });
 
     describe('getRfqOrderInfo()', () => {
-
         it('unfilled order', async () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const order = await getTestRfqOrder();
@@ -493,7 +502,6 @@ describe('NativeOrdersFeature', () => {
     });
 
     describe('cancelLimitOrder()', async () => {
-
         it('can cancel an unfilled order', async () => {
             const order = await getTestLimitOrder();
             const nativeOrdersFeature = await getNativeOrdersFeature();
@@ -578,8 +586,12 @@ describe('NativeOrdersFeature', () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const notMakerSigner = await env.provider.getSigner(notMaker);
             const tx = nativeOrdersFeature.connect(notMakerSigner).cancelLimitOrder(order);
-            const expectedError = new RevertErrors.NativeOrders.OnlyOrderMakerAllowed(order.getHash(), notMaker, order.maker);
-            
+            const expectedError = new RevertErrors.NativeOrders.OnlyOrderMakerAllowed(
+                order.getHash(),
+                notMaker,
+                order.maker,
+            );
+
             await expect(tx).to.be.rejected;
             try {
                 await tx;
@@ -590,7 +602,6 @@ describe('NativeOrdersFeature', () => {
     });
 
     describe('cancelRfqOrder()', async () => {
-
         it('can cancel an unfilled order', async () => {
             const order = await getTestRfqOrder();
             const nativeOrdersFeature = await getNativeOrdersFeature();
@@ -675,8 +686,12 @@ describe('NativeOrdersFeature', () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const notMakerSigner = await env.provider.getSigner(notMaker);
             const tx = nativeOrdersFeature.connect(notMakerSigner).cancelRfqOrder(order);
-            const expectedError = new RevertErrors.NativeOrders.OnlyOrderMakerAllowed(order.getHash(), notMaker, order.maker);
-            
+            const expectedError = new RevertErrors.NativeOrders.OnlyOrderMakerAllowed(
+                order.getHash(),
+                notMaker,
+                order.maker,
+            );
+
             await expect(tx).to.be.rejected;
             try {
                 await tx;
@@ -687,7 +702,6 @@ describe('NativeOrdersFeature', () => {
     });
 
     describe('batchCancelLimitOrders()', async () => {
-
         it('can cancel multiple orders', async () => {
             const orders = await Promise.all([...new Array(3)].map(() => getTestLimitOrder()));
             const nativeOrdersFeature = await getNativeOrdersFeature();
@@ -708,8 +722,12 @@ describe('NativeOrdersFeature', () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const notMakerSigner = await env.provider.getSigner(notMaker);
             const tx = nativeOrdersFeature.connect(notMakerSigner).batchCancelLimitOrders(orders);
-            const expectedError = new RevertErrors.NativeOrders.OnlyOrderMakerAllowed(orders[0].getHash(), notMaker, orders[0].maker);
-            
+            const expectedError = new RevertErrors.NativeOrders.OnlyOrderMakerAllowed(
+                orders[0].getHash(),
+                notMaker,
+                orders[0].maker,
+            );
+
             await expect(tx).to.be.rejected;
             try {
                 await tx;
@@ -720,7 +738,6 @@ describe('NativeOrdersFeature', () => {
     });
 
     describe('batchCancelRfqOrders()', async () => {
-
         it('can cancel multiple orders', async () => {
             const orders = await Promise.all([...new Array(3)].map(() => getTestRfqOrder()));
             const nativeOrdersFeature = await getNativeOrdersFeature();
@@ -741,8 +758,12 @@ describe('NativeOrdersFeature', () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const notMakerSigner = await env.provider.getSigner(notMaker);
             const tx = nativeOrdersFeature.connect(notMakerSigner).batchCancelRfqOrders(orders);
-            const expectedError = new RevertErrors.NativeOrders.OnlyOrderMakerAllowed(orders[0].getHash(), notMaker, orders[0].maker);
-            
+            const expectedError = new RevertErrors.NativeOrders.OnlyOrderMakerAllowed(
+                orders[0].getHash(),
+                notMaker,
+                orders[0].maker,
+            );
+
             await expect(tx).to.be.rejected;
             try {
                 await tx;
@@ -753,18 +774,17 @@ describe('NativeOrdersFeature', () => {
     });
 
     describe('cancelPairOrders()', async () => {
-
         it('can cancel multiple limit orders of the same pair with salt < minValidSalt', async () => {
-            const orders = await Promise.all([...new Array(3)].map((_v, i) => getTestLimitOrder().then(o => o.clone({ salt: BigInt(i) }))));
+            const orders = await Promise.all(
+                [...new Array(3)].map((_v, i) => getTestLimitOrder().then(o => o.clone({ salt: BigInt(i) }))),
+            );
             // Cancel the first two orders.
             const minValidSalt = orders[2].salt;
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const makerSigner = await env.provider.getSigner(maker);
-            await nativeOrdersFeature.connect(makerSigner).cancelPairLimitOrders(
-                await makerToken.getAddress(), 
-                await takerToken.getAddress(), 
-                minValidSalt
-            );
+            await nativeOrdersFeature
+                .connect(makerSigner)
+                .cancelPairLimitOrders(await makerToken.getAddress(), await takerToken.getAddress(), minValidSalt);
             // TODO: 修复事件验证
             // verifyEventsFromLogs(
             //     receipt.logs,
@@ -778,8 +798,8 @@ describe('NativeOrdersFeature', () => {
             //     ],
             //     IZeroExEvents.PairCancelledLimitOrders,
             // );
-            const statuses = (await Promise.all(orders.map(o => nativeOrdersFeature.getLimitOrderInfo(o)))).map(
-                oi => Number(oi.status),
+            const statuses = (await Promise.all(orders.map(o => nativeOrdersFeature.getLimitOrderInfo(o)))).map(oi =>
+                Number(oi.status),
             );
             expect(statuses).to.deep.eq([OrderStatus.Cancelled, OrderStatus.Cancelled, OrderStatus.Fillable]);
         });
@@ -791,11 +811,9 @@ describe('NativeOrdersFeature', () => {
             const minValidSalt = order.salt + 1n;
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const makerSigner = await env.provider.getSigner(maker);
-            await nativeOrdersFeature.connect(makerSigner).cancelPairLimitOrders(
-                await takerToken.getAddress(), 
-                await makerToken.getAddress(), 
-                minValidSalt
-            );
+            await nativeOrdersFeature
+                .connect(makerSigner)
+                .cancelPairLimitOrders(await takerToken.getAddress(), await makerToken.getAddress(), minValidSalt);
             const { status } = await nativeOrdersFeature.getLimitOrderInfo(order);
             expect(Number(status)).to.eq(OrderStatus.Fillable);
         });
@@ -807,11 +825,9 @@ describe('NativeOrdersFeature', () => {
             const minValidSalt = orders[2].salt;
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const makerSigner = await env.provider.getSigner(maker);
-            await nativeOrdersFeature.connect(makerSigner).cancelPairRfqOrders(
-                await makerToken.getAddress(), 
-                await takerToken.getAddress(), 
-                minValidSalt
-            );
+            await nativeOrdersFeature
+                .connect(makerSigner)
+                .cancelPairRfqOrders(await makerToken.getAddress(), await takerToken.getAddress(), minValidSalt);
             // TODO: 修复事件验证
             // verifyEventsFromLogs(
             //     receipt.logs,
@@ -838,18 +854,15 @@ describe('NativeOrdersFeature', () => {
             const minValidSalt = order.salt + 1n;
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const makerSigner = await env.provider.getSigner(maker);
-            await nativeOrdersFeature.connect(makerSigner).cancelPairRfqOrders(
-                await takerToken.getAddress(), 
-                await makerToken.getAddress(), 
-                minValidSalt
-            );
+            await nativeOrdersFeature
+                .connect(makerSigner)
+                .cancelPairRfqOrders(await takerToken.getAddress(), await makerToken.getAddress(), minValidSalt);
             const { status } = await nativeOrdersFeature.getRfqOrderInfo(order);
             expect(status).to.eq(OrderStatus.Fillable);
         });
     });
 
     describe('batchCancelPairOrders()', async () => {
-
         it('can cancel multiple limit order pairs', async () => {
             const orders = [
                 await getTestLimitOrder({ salt: BigInt(1) }),
@@ -863,11 +876,13 @@ describe('NativeOrdersFeature', () => {
             const minValidSalt = BigInt(2);
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const makerSigner = await env.provider.getSigner(maker);
-            await nativeOrdersFeature.connect(makerSigner).batchCancelPairLimitOrders(
-                [await makerToken.getAddress(), await takerToken.getAddress()],
-                [await takerToken.getAddress(), await makerToken.getAddress()],
-                [minValidSalt, minValidSalt]
-            );
+            await nativeOrdersFeature
+                .connect(makerSigner)
+                .batchCancelPairLimitOrders(
+                    [await makerToken.getAddress(), await takerToken.getAddress()],
+                    [await takerToken.getAddress(), await makerToken.getAddress()],
+                    [minValidSalt, minValidSalt],
+                );
             // TODO: 修复事件验证
             // verifyEventsFromLogs(
             //     receipt.logs,
@@ -887,8 +902,8 @@ describe('NativeOrdersFeature', () => {
             //     ],
             //     IZeroExEvents.PairCancelledLimitOrders,
             // );
-            const statuses = (await Promise.all(orders.map(o => nativeOrdersFeature.getLimitOrderInfo(o)))).map(
-                oi => Number(oi.status),
+            const statuses = (await Promise.all(orders.map(o => nativeOrdersFeature.getLimitOrderInfo(o)))).map(oi =>
+                Number(oi.status),
             );
             expect(statuses).to.deep.eq([OrderStatus.Cancelled, OrderStatus.Cancelled]);
         });
@@ -906,11 +921,13 @@ describe('NativeOrdersFeature', () => {
             const minValidSalt = BigInt(2);
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const makerSigner = await env.provider.getSigner(maker);
-            await nativeOrdersFeature.connect(makerSigner).batchCancelPairRfqOrders(
-                [await makerToken.getAddress(), await takerToken.getAddress()],
-                [await takerToken.getAddress(), await makerToken.getAddress()],
-                [minValidSalt, minValidSalt]
-            );
+            await nativeOrdersFeature
+                .connect(makerSigner)
+                .batchCancelPairRfqOrders(
+                    [await makerToken.getAddress(), await takerToken.getAddress()],
+                    [await takerToken.getAddress(), await makerToken.getAddress()],
+                    [minValidSalt, minValidSalt],
+                );
             // TODO: 修复事件验证
             // verifyEventsFromLogs(
             //     receipt.logs,
@@ -971,7 +988,6 @@ describe('NativeOrdersFeature', () => {
     }
 
     describe('fillLimitOrder()', () => {
-
         it('can fully fill an order', async () => {
             const order = await getTestLimitOrder();
             const receipt = await testUtils.fillLimitOrderAsync(order);
@@ -1087,8 +1103,11 @@ describe('NativeOrdersFeature', () => {
         it('cannot fill an expired order', async () => {
             const order = await getTestLimitOrder({ expiry: await createExpiry(-60) });
             const tx = testUtils.fillLimitOrderAsync(order);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Expired);
-            
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(
+                order.getHash(),
+                OrderStatus.Expired,
+            );
+
             await expect(tx).to.be.rejected;
             try {
                 await tx;
@@ -1103,8 +1122,11 @@ describe('NativeOrdersFeature', () => {
             const makerSigner = await env.provider.getSigner(maker);
             await nativeOrdersFeature.connect(makerSigner).cancelLimitOrder(order);
             const tx = testUtils.fillLimitOrderAsync(order);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Cancelled);
-            
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(
+                order.getHash(),
+                OrderStatus.Cancelled,
+            );
+
             await expect(tx).to.be.rejected;
             try {
                 await tx;
@@ -1117,14 +1139,15 @@ describe('NativeOrdersFeature', () => {
             const order = await getTestLimitOrder();
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const makerSigner = await env.provider.getSigner(maker);
-            await nativeOrdersFeature.connect(makerSigner).cancelPairLimitOrders(
-                await makerToken.getAddress(), 
-                await takerToken.getAddress(), 
-                order.salt + 1n
-            );
+            await nativeOrdersFeature
+                .connect(makerSigner)
+                .cancelPairLimitOrders(await makerToken.getAddress(), await takerToken.getAddress(), order.salt + 1n);
             const tx = testUtils.fillLimitOrderAsync(order);
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Cancelled);
-            
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(
+                order.getHash(),
+                OrderStatus.Cancelled,
+            );
+
             await expect(tx).to.be.rejected;
             try {
                 await tx;
@@ -1136,8 +1159,12 @@ describe('NativeOrdersFeature', () => {
         it('non-taker cannot fill order', async () => {
             const order = await getTestLimitOrder({ taker });
             const tx = testUtils.fillLimitOrderAsync(order, { fillAmount: order.takerAmount, taker: notTaker });
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByTakerError(order.getHash(), notTaker, order.taker);
-            
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableByTakerError(
+                order.getHash(),
+                notTaker,
+                order.taker,
+            );
+
             await expect(tx).to.be.rejected;
             try {
                 await tx;
@@ -1149,8 +1176,12 @@ describe('NativeOrdersFeature', () => {
         it('non-sender cannot fill order', async () => {
             const order = await getTestLimitOrder({ sender: taker });
             const tx = testUtils.fillLimitOrderAsync(order, { fillAmount: order.takerAmount, taker: notTaker });
-            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableBySenderError(order.getHash(), notTaker, order.sender);
-            
+            const expectedError = new RevertErrors.NativeOrders.OrderNotFillableBySenderError(
+                order.getHash(),
+                notTaker,
+                order.sender,
+            );
+
             await expect(tx).to.be.rejected;
             try {
                 await tx;
@@ -1173,13 +1204,15 @@ describe('NativeOrdersFeature', () => {
             await testUtils.prepareBalancesForOrdersAsync([order]);
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = nativeOrdersFeature.connect(takerSigner).fillLimitOrder(
-                order,
-                await order.getSignatureWithProviderAsync(env.provider),
-                BigInt(order.takerAmount),
-                { value: ZERO_AMOUNT }
-            );
-            // 在 Hardhat 环境中，协议费用检查应该会失败  
+            const tx = nativeOrdersFeature
+                .connect(takerSigner)
+                .fillLimitOrder(
+                    order,
+                    await order.getSignatureWithProviderAsync(env.provider),
+                    BigInt(order.takerAmount),
+                    { value: ZERO_AMOUNT },
+                );
+            // 在 Hardhat 环境中，协议费用检查应该会失败
             return expect(tx).to.be.rejected;
         });
 
@@ -1197,10 +1230,8 @@ describe('NativeOrdersFeature', () => {
     });
 
     describe('registerAllowedRfqOrigins()', () => {
-
         it('cannot register through a contract', async () => {
-            const tx = testRfqOriginRegistration
-                .registerAllowedRfqOrigins(await zeroEx.getAddress(), [], true);
+            const tx = testRfqOriginRegistration.registerAllowedRfqOrigins(await zeroEx.getAddress(), [], true);
             expect(tx).to.be.revertedWith('NativeOrdersFeature/NO_CONTRACT_ORIGINS');
         });
     });
@@ -1222,7 +1253,6 @@ describe('NativeOrdersFeature', () => {
     }
 
     describe('fillRfqOrder()', () => {
-
         it('can fully fill an order', async () => {
             const order = await getTestRfqOrder();
             const receipt = await testUtils.fillRfqOrderAsync(order);
@@ -1424,11 +1454,9 @@ describe('NativeOrdersFeature', () => {
             const order = await getTestRfqOrder();
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const makerSigner = await env.provider.getSigner(maker);
-            await nativeOrdersFeature.connect(makerSigner).cancelPairRfqOrders(
-                await makerToken.getAddress(), 
-                await takerToken.getAddress(), 
-                order.salt + 1n
-            );
+            await nativeOrdersFeature
+                .connect(makerSigner)
+                .cancelPairRfqOrders(await makerToken.getAddress(), await takerToken.getAddress(), order.salt + 1n);
             const tx = testUtils.fillRfqOrderAsync(order);
             // TODO: 修复特定错误匹配 - 使用通用 revert 检查
             // const expectedError = new RevertErrors.NativeOrders.OrderNotFillableError(order.getHash(), OrderStatus.Cancelled);
@@ -1450,30 +1478,30 @@ describe('NativeOrdersFeature', () => {
             await testUtils.prepareBalancesForOrdersAsync([order], taker);
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = nativeOrdersFeature.connect(takerSigner).fillRfqOrder(
-                order, 
-                await order.getSignatureWithProviderAsync(env.provider), 
-                order.takerAmount,
-                { value: 1 }
-            );
+            const tx = nativeOrdersFeature
+                .connect(takerSigner)
+                .fillRfqOrder(order, await order.getSignatureWithProviderAsync(env.provider), order.takerAmount, {
+                    value: 1,
+                });
             // This will revert at the language level because the fill function is not payable.
             return expect(tx).to.be.rejectedWith('revert');
         });
     });
 
     describe('fillOrKillLimitOrder()', () => {
-
         it('can fully fill an order', async () => {
             const order = await getTestLimitOrder();
             await testUtils.prepareBalancesForOrdersAsync([order]);
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const takerSigner = await env.provider.getSigner(taker);
-            await nativeOrdersFeature.connect(takerSigner).fillOrKillLimitOrder(
-                order, 
-                await order.getSignatureWithProviderAsync(env.provider), 
-                order.takerAmount,
-                { value: SINGLE_PROTOCOL_FEE }
-            );
+            await nativeOrdersFeature
+                .connect(takerSigner)
+                .fillOrKillLimitOrder(
+                    order,
+                    await order.getSignatureWithProviderAsync(env.provider),
+                    order.takerAmount,
+                    { value: SINGLE_PROTOCOL_FEE },
+                );
             // TODO: 修复事件验证
             // verifyEventsFromLogs(
             //     receipt.logs,
@@ -1488,12 +1516,11 @@ describe('NativeOrdersFeature', () => {
             const fillAmount = order.takerAmount + 1n;
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = nativeOrdersFeature.connect(takerSigner).fillOrKillLimitOrder(
-                order, 
-                await order.getSignatureWithProviderAsync(env.provider), 
-                fillAmount,
-                { value: SINGLE_PROTOCOL_FEE }
-            );
+            const tx = nativeOrdersFeature
+                .connect(takerSigner)
+                .fillOrKillLimitOrder(order, await order.getSignatureWithProviderAsync(env.provider), fillAmount, {
+                    value: SINGLE_PROTOCOL_FEE,
+                });
             // TODO: Fix specific error matching - using generic revert for now
             return expect(tx).to.be.rejected;
         });
@@ -1504,12 +1531,14 @@ describe('NativeOrdersFeature', () => {
             const takerBalanceBefore = await env.provider.getBalance(taker);
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const takerSigner = await env.provider.getSigner(taker);
-            await nativeOrdersFeature.connect(takerSigner).fillOrKillLimitOrder(
-                order, 
-                await order.getSignatureWithProviderAsync(env.provider), 
-                order.takerAmount,
-                { value: SINGLE_PROTOCOL_FEE + 1n }
-            );
+            await nativeOrdersFeature
+                .connect(takerSigner)
+                .fillOrKillLimitOrder(
+                    order,
+                    await order.getSignatureWithProviderAsync(env.provider),
+                    order.takerAmount,
+                    { value: SINGLE_PROTOCOL_FEE + 1n },
+                );
             const takerBalanceAfter = await env.provider.getBalance(taker);
             // TODO: 修复 gas 费用计算 - 需要获取交易 receipt
             // const totalCost = GAS_PRICE * BigInt(receipt.gasUsed) + SINGLE_PROTOCOL_FEE;
@@ -1520,17 +1549,14 @@ describe('NativeOrdersFeature', () => {
     });
 
     describe('fillOrKillRfqOrder()', () => {
-
         it('can fully fill an order', async () => {
             const order = await getTestRfqOrder();
             await testUtils.prepareBalancesForOrdersAsync([order]);
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const takerSigner = await env.provider.getSigner(taker);
-            await nativeOrdersFeature.connect(takerSigner).fillOrKillRfqOrder(
-                order, 
-                await order.getSignatureWithProviderAsync(env.provider), 
-                order.takerAmount
-            );
+            await nativeOrdersFeature
+                .connect(takerSigner)
+                .fillOrKillRfqOrder(order, await order.getSignatureWithProviderAsync(env.provider), order.takerAmount);
             // TODO: 修复事件验证
             // verifyEventsFromLogs(
             //     receipt.logs,
@@ -1545,11 +1571,9 @@ describe('NativeOrdersFeature', () => {
             const fillAmount = order.takerAmount + 1n;
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = nativeOrdersFeature.connect(takerSigner).fillOrKillRfqOrder(
-                order, 
-                await order.getSignatureWithProviderAsync(env.provider), 
-                fillAmount
-            );
+            const tx = nativeOrdersFeature
+                .connect(takerSigner)
+                .fillOrKillRfqOrder(order, await order.getSignatureWithProviderAsync(env.provider), fillAmount);
             // TODO: Fix specific error matching - using generic revert for now
             return expect(tx).to.be.rejected;
         });
@@ -1559,12 +1583,11 @@ describe('NativeOrdersFeature', () => {
             await testUtils.prepareBalancesForOrdersAsync([order]);
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = nativeOrdersFeature.connect(takerSigner).fillOrKillRfqOrder(
-                order, 
-                await order.getSignatureWithProviderAsync(env.provider), 
-                order.takerAmount,
-                { value: 1 }
-            );
+            const tx = nativeOrdersFeature
+                .connect(takerSigner)
+                .fillOrKillRfqOrder(order, await order.getSignatureWithProviderAsync(env.provider), order.takerAmount, {
+                    value: 1,
+                });
             // This will revert at the language level because the fill function is not payable.
             return expect(tx).to.be.rejectedWith('revert');
         });
@@ -1582,15 +1605,17 @@ describe('NativeOrdersFeature', () => {
     }
 
     describe('getLimitOrderRelevantState()', () => {
-
         it('works with an empty order', async () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const order = await getTestLimitOrder({
                 takerAmount: ZERO_AMOUNT,
             });
             await fundOrderMakerAsync(order);
-            const [orderInfo, fillableTakerAmount, isSignatureValid] = await nativeOrdersFeature
-                .getLimitOrderRelevantState(order, await order.getSignatureWithProviderAsync(env.provider));
+            const [orderInfo, fillableTakerAmount, isSignatureValid] =
+                await nativeOrdersFeature.getLimitOrderRelevantState(
+                    order,
+                    await order.getSignatureWithProviderAsync(env.provider),
+                );
             const [orderHash, status, takerTokenFilledAmount] = orderInfo;
             expect({ orderHash, status, takerTokenFilledAmount }).to.deep.eq({
                 orderHash: order.getHash(),
@@ -1607,8 +1632,11 @@ describe('NativeOrdersFeature', () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const makerSigner = await env.provider.getSigner(maker);
             await nativeOrdersFeature.connect(makerSigner).cancelLimitOrder(order);
-            const [orderInfo, fillableTakerAmount, isSignatureValid] = await nativeOrdersFeature
-                .getLimitOrderRelevantState(order, await order.getSignatureWithProviderAsync(env.provider));
+            const [orderInfo, fillableTakerAmount, isSignatureValid] =
+                await nativeOrdersFeature.getLimitOrderRelevantState(
+                    order,
+                    await order.getSignatureWithProviderAsync(env.provider),
+                );
             const [orderHash, status, takerTokenFilledAmount] = orderInfo;
             expect({ orderHash, status, takerTokenFilledAmount }).to.deep.eq({
                 orderHash: order.getHash(),
@@ -1623,8 +1651,8 @@ describe('NativeOrdersFeature', () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const order = await getTestLimitOrder();
             await fundOrderMakerAsync(order);
-            const [orderInfo, fillableTakerAmount, isSignatureValid] = await nativeOrdersFeature
-                .getLimitOrderRelevantState(
+            const [orderInfo, fillableTakerAmount, isSignatureValid] =
+                await nativeOrdersFeature.getLimitOrderRelevantState(
                     order,
                     await order.clone({ maker: notMaker }).getSignatureWithProviderAsync(env.provider),
                 );
@@ -1642,8 +1670,11 @@ describe('NativeOrdersFeature', () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const order = await getTestLimitOrder();
             await fundOrderMakerAsync(order);
-            const [orderInfo, fillableTakerAmount, isSignatureValid] = await nativeOrdersFeature
-                .getLimitOrderRelevantState(order, await order.getSignatureWithProviderAsync(env.provider));
+            const [orderInfo, fillableTakerAmount, isSignatureValid] =
+                await nativeOrdersFeature.getLimitOrderRelevantState(
+                    order,
+                    await order.getSignatureWithProviderAsync(env.provider),
+                );
             const [orderHash, status, takerTokenFilledAmount] = orderInfo;
             expect({ orderHash, status, takerTokenFilledAmount }).to.deep.eq({
                 orderHash: order.getHash(),
@@ -1658,13 +1689,15 @@ describe('NativeOrdersFeature', () => {
             const order = await getTestLimitOrder();
             // Fully Fund maker and taker.
             await fundOrderMakerAsync(order);
-            await takerToken
-                .mint(taker, order.takerAmount + order.takerTokenFeeAmount);
+            await takerToken.mint(taker, order.takerAmount + order.takerTokenFeeAmount);
             await testUtils.fillLimitOrderAsync(order);
             // Partially fill the order.
             const nativeOrdersFeature = await getNativeOrdersFeature();
-            const [orderInfo, fillableTakerAmount, isSignatureValid] = await nativeOrdersFeature
-                .getLimitOrderRelevantState(order, await order.getSignatureWithProviderAsync(env.provider));
+            const [orderInfo, fillableTakerAmount, isSignatureValid] =
+                await nativeOrdersFeature.getLimitOrderRelevantState(
+                    order,
+                    await order.getSignatureWithProviderAsync(env.provider),
+                );
             const [orderHash, status, takerTokenFilledAmount] = orderInfo;
             expect({ orderHash, status, takerTokenFilledAmount }).to.deep.eq({
                 orderHash: order.getHash(),
@@ -1679,8 +1712,7 @@ describe('NativeOrdersFeature', () => {
             const order = await getTestLimitOrder();
             // Fully Fund maker and taker.
             await fundOrderMakerAsync(order);
-            await takerToken
-                .mint(taker, order.takerAmount + order.takerTokenFeeAmount);
+            await takerToken.mint(taker, order.takerAmount + order.takerTokenFeeAmount);
             // Partially fill the order.
             const fillAmount = getRandomPortion(order.takerAmount);
             await testUtils.fillLimitOrderAsync(order, { fillAmount });
@@ -1691,31 +1723,34 @@ describe('NativeOrdersFeature', () => {
             await fundOrderMakerAsync(order, balance, allowance);
             // Get order state.
             const nativeOrdersFeature = await getNativeOrdersFeature();
-            const [orderInfo, fillableTakerAmount, isSignatureValid] = await nativeOrdersFeature
-                .getLimitOrderRelevantState(order, await order.getSignatureWithProviderAsync(env.provider));
+            const [orderInfo, fillableTakerAmount, isSignatureValid] =
+                await nativeOrdersFeature.getLimitOrderRelevantState(
+                    order,
+                    await order.getSignatureWithProviderAsync(env.provider),
+                );
             const [orderHash, status, takerTokenFilledAmount] = orderInfo;
             expect({ orderHash, status, takerTokenFilledAmount }).to.deep.eq({
                 orderHash: order.getHash(),
                 status: OrderStatus.Fillable,
                 takerTokenFilledAmount: fillAmount,
             });
-            expect(fillableTakerAmount).to.eq(
-                getActualFillableTakerTokenAmount(order, balance, allowance, fillAmount),
-            );
+            expect(fillableTakerAmount).to.eq(getActualFillableTakerTokenAmount(order, balance, allowance, fillAmount));
             expect(isSignatureValid).to.eq(true);
         });
     });
 
     describe('getRfqOrderRelevantState()', () => {
-
         it('works with an empty order', async () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const order = await getTestRfqOrder({
                 takerAmount: ZERO_AMOUNT,
             });
             await fundOrderMakerAsync(order);
-            const [orderInfo, fillableTakerAmount, isSignatureValid] = await nativeOrdersFeature
-                .getRfqOrderRelevantState(order, await order.getSignatureWithProviderAsync(env.provider));
+            const [orderInfo, fillableTakerAmount, isSignatureValid] =
+                await nativeOrdersFeature.getRfqOrderRelevantState(
+                    order,
+                    await order.getSignatureWithProviderAsync(env.provider),
+                );
             const [orderHash, status, takerTokenFilledAmount] = orderInfo;
             expect({ orderHash, status, takerTokenFilledAmount }).to.deep.eq({
                 orderHash: order.getHash(),
@@ -1732,8 +1767,11 @@ describe('NativeOrdersFeature', () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const makerSigner = await env.provider.getSigner(maker);
             await nativeOrdersFeature.connect(makerSigner).cancelRfqOrder(order);
-            const [orderInfo, fillableTakerAmount, isSignatureValid] = await nativeOrdersFeature
-                .getRfqOrderRelevantState(order, await order.getSignatureWithProviderAsync(env.provider));
+            const [orderInfo, fillableTakerAmount, isSignatureValid] =
+                await nativeOrdersFeature.getRfqOrderRelevantState(
+                    order,
+                    await order.getSignatureWithProviderAsync(env.provider),
+                );
             const [orderHash, status, takerTokenFilledAmount] = orderInfo;
             expect({ orderHash, status, takerTokenFilledAmount }).to.deep.eq({
                 orderHash: order.getHash(),
@@ -1748,8 +1786,8 @@ describe('NativeOrdersFeature', () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const order = await getTestRfqOrder();
             await fundOrderMakerAsync(order);
-            const [orderInfo, fillableTakerAmount, isSignatureValid] = await nativeOrdersFeature
-                .getRfqOrderRelevantState(
+            const [orderInfo, fillableTakerAmount, isSignatureValid] =
+                await nativeOrdersFeature.getRfqOrderRelevantState(
                     order,
                     await order.clone({ maker: notMaker }).getSignatureWithProviderAsync(env.provider),
                 );
@@ -1767,8 +1805,11 @@ describe('NativeOrdersFeature', () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const order = await getTestRfqOrder();
             await fundOrderMakerAsync(order);
-            const [orderInfo, fillableTakerAmount, isSignatureValid] = await nativeOrdersFeature
-                .getRfqOrderRelevantState(order, await order.getSignatureWithProviderAsync(env.provider));
+            const [orderInfo, fillableTakerAmount, isSignatureValid] =
+                await nativeOrdersFeature.getRfqOrderRelevantState(
+                    order,
+                    await order.getSignatureWithProviderAsync(env.provider),
+                );
             const [orderHash, status, takerTokenFilledAmount] = orderInfo;
             expect({ orderHash, status, takerTokenFilledAmount }).to.deep.eq({
                 orderHash: order.getHash(),
@@ -1787,8 +1828,11 @@ describe('NativeOrdersFeature', () => {
             await takerToken.mint(taker, order.takerAmount);
             await testUtils.fillRfqOrderAsync(order);
             // Partially fill the order.
-            const [orderInfo, fillableTakerAmount, isSignatureValid] = await nativeOrdersFeature
-                .getRfqOrderRelevantState(order, await order.getSignatureWithProviderAsync(env.provider));
+            const [orderInfo, fillableTakerAmount, isSignatureValid] =
+                await nativeOrdersFeature.getRfqOrderRelevantState(
+                    order,
+                    await order.getSignatureWithProviderAsync(env.provider),
+                );
             const [orderHash, status, takerTokenFilledAmount] = orderInfo;
             expect({ orderHash, status, takerTokenFilledAmount }).to.deep.eq({
                 orderHash: order.getHash(),
@@ -1814,17 +1858,18 @@ describe('NativeOrdersFeature', () => {
             await fundOrderMakerAsync(order, balance, allowance);
             // Get order state.
             const nativeOrdersFeature = await getNativeOrdersFeature();
-            const [orderInfo, fillableTakerAmount, isSignatureValid] = await nativeOrdersFeature
-                .getRfqOrderRelevantState(order, await order.getSignatureWithProviderAsync(env.provider));
+            const [orderInfo, fillableTakerAmount, isSignatureValid] =
+                await nativeOrdersFeature.getRfqOrderRelevantState(
+                    order,
+                    await order.getSignatureWithProviderAsync(env.provider),
+                );
             const [orderHash, status, takerTokenFilledAmount] = orderInfo;
             expect({ orderHash, status, takerTokenFilledAmount }).to.deep.eq({
                 orderHash: order.getHash(),
                 status: OrderStatus.Fillable,
                 takerTokenFilledAmount: fillAmount,
             });
-            expect(fillableTakerAmount).to.eq(
-                getActualFillableTakerTokenAmount(order, balance, allowance, fillAmount),
-            );
+            expect(fillableTakerAmount).to.eq(getActualFillableTakerTokenAmount(order, balance, allowance, fillAmount));
             expect(isSignatureValid).to.eq(true);
         });
     });
@@ -1838,13 +1883,12 @@ describe('NativeOrdersFeature', () => {
     }
 
     describe('batchGetLimitOrderRelevantStates()', () => {
-
         it('works with multiple orders', async () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const orders = await Promise.all(new Array(3).fill(0).map(() => getTestLimitOrder()));
             await batchFundOrderMakerAsync(orders);
-            const [orderInfos, fillableTakerAmounts, isSignatureValids] = await nativeOrdersFeature
-                .batchGetLimitOrderRelevantStates(
+            const [orderInfos, fillableTakerAmounts, isSignatureValids] =
+                await nativeOrdersFeature.batchGetLimitOrderRelevantStates(
                     orders,
                     await Promise.all(orders.map(async o => o.getSignatureWithProviderAsync(env.provider))),
                 );
@@ -1868,8 +1912,8 @@ describe('NativeOrdersFeature', () => {
             // The second order will revert because its maker token is not valid.
             orders[1].makerToken = randomAddress();
             await batchFundOrderMakerAsync(orders);
-            const [orderInfos, fillableTakerAmounts, isSignatureValids] = await nativeOrdersFeature
-                .batchGetLimitOrderRelevantStates(
+            const [orderInfos, fillableTakerAmounts, isSignatureValids] =
+                await nativeOrdersFeature.batchGetLimitOrderRelevantStates(
                     orders,
                     await Promise.all(orders.map(async o => o.getSignatureWithProviderAsync(env.provider))),
                 );
@@ -1890,13 +1934,12 @@ describe('NativeOrdersFeature', () => {
     });
 
     describe('batchGetRfqOrderRelevantStates()', () => {
-
         it('works with multiple orders', async () => {
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const orders = await Promise.all(new Array(3).fill(0).map(() => getTestRfqOrder()));
             await batchFundOrderMakerAsync(orders);
-            const [orderInfos, fillableTakerAmounts, isSignatureValids] = await nativeOrdersFeature
-                .batchGetRfqOrderRelevantStates(
+            const [orderInfos, fillableTakerAmounts, isSignatureValids] =
+                await nativeOrdersFeature.batchGetRfqOrderRelevantStates(
                     orders,
                     await Promise.all(orders.map(async o => o.getSignatureWithProviderAsync(env.provider))),
                 );
@@ -1917,11 +1960,11 @@ describe('NativeOrdersFeature', () => {
     });
 
     describe('registerAllowedSigner()', () => {
-
-        
         it('fires appropriate events', async () => {
             const contractWalletOwnerSigner = await env.provider.getSigner(contractWalletOwner);
-            await contractWallet.connect(contractWalletOwnerSigner).registerAllowedOrderSigner(contractWalletSigner, true);
+            await contractWallet
+                .connect(contractWalletOwnerSigner)
+                .registerAllowedOrderSigner(contractWalletSigner, true);
 
             // TODO: 修复事件验证
             // verifyEventsFromLogs(
@@ -1937,7 +1980,9 @@ describe('NativeOrdersFeature', () => {
             // );
 
             // then disallow signer
-            await contractWallet.connect(contractWalletOwnerSigner).registerAllowedOrderSigner(contractWalletSigner, false);
+            await contractWallet
+                .connect(contractWalletOwnerSigner)
+                .registerAllowedOrderSigner(contractWalletSigner, false);
 
             // TODO: 修复事件验证
             // verifyEventsFromLogs(
@@ -1967,7 +2012,9 @@ describe('NativeOrdersFeature', () => {
             await makerToken.mint(await contractWallet.getAddress(), order.makerAmount);
 
             const contractWalletOwnerSigner = await env.provider.getSigner(contractWalletOwner);
-            await contractWallet.connect(contractWalletOwnerSigner).registerAllowedOrderSigner(contractWalletSigner, true);
+            await contractWallet
+                .connect(contractWalletOwnerSigner)
+                .registerAllowedOrderSigner(contractWalletSigner, true);
 
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const takerSigner = await env.provider.getSigner(taker);
@@ -1996,10 +2043,14 @@ describe('NativeOrdersFeature', () => {
 
             // first allow signer
             const contractWalletOwnerSigner = await env.provider.getSigner(contractWalletOwner);
-            await contractWallet.connect(contractWalletOwnerSigner).registerAllowedOrderSigner(contractWalletSigner, true);
+            await contractWallet
+                .connect(contractWalletOwnerSigner)
+                .registerAllowedOrderSigner(contractWalletSigner, true);
 
             // then disallow signer
-            await contractWallet.connect(contractWalletOwnerSigner).registerAllowedOrderSigner(contractWalletSigner, false);
+            await contractWallet
+                .connect(contractWalletOwnerSigner)
+                .registerAllowedOrderSigner(contractWalletSigner, false);
 
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const takerSigner = await env.provider.getSigner(taker);
@@ -2028,7 +2079,9 @@ describe('NativeOrdersFeature', () => {
             const order = await getTestRfqOrder({ maker: await contractWallet.getAddress() });
 
             const contractWalletOwnerSigner = await env.provider.getSigner(contractWalletOwner);
-            await contractWallet.connect(contractWalletOwnerSigner).registerAllowedOrderSigner(contractWalletSigner, true);
+            await contractWallet
+                .connect(contractWalletOwnerSigner)
+                .registerAllowedOrderSigner(contractWalletSigner, true);
 
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const contractWalletSignerSigner = await env.provider.getSigner(contractWalletSigner);
@@ -2053,7 +2106,9 @@ describe('NativeOrdersFeature', () => {
             const order = await getTestLimitOrder({ maker: await contractWallet.getAddress() });
 
             const contractWalletOwnerSigner = await env.provider.getSigner(contractWalletOwner);
-            await contractWallet.connect(contractWalletOwnerSigner).registerAllowedOrderSigner(contractWalletSigner, true);
+            await contractWallet
+                .connect(contractWalletOwnerSigner)
+                .registerAllowedOrderSigner(contractWalletSigner, true);
 
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const contractWalletSignerSigner = await env.provider.getSigner(contractWalletSigner);
@@ -2102,19 +2157,23 @@ describe('NativeOrdersFeature', () => {
             const order = await getTestRfqOrder({ maker: await contractWallet.getAddress(), salt: BigInt(1) });
 
             const contractWalletOwnerSigner = await env.provider.getSigner(contractWalletOwner);
-            await contractWallet.connect(contractWalletOwnerSigner).registerAllowedOrderSigner(contractWalletSigner, true);
+            await contractWallet
+                .connect(contractWalletOwnerSigner)
+                .registerAllowedOrderSigner(contractWalletSigner, true);
 
             // Cancel salts <= the order's
             const minValidSalt = order.salt + 1n;
 
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const contractWalletSignerSigner = await env.provider.getSigner(contractWalletSigner);
-            await nativeOrdersFeature.connect(contractWalletSignerSigner).cancelPairRfqOrdersWithSigner(
-                await contractWallet.getAddress(),
-                await makerToken.getAddress(),
-                await takerToken.getAddress(),
-                minValidSalt
-            );
+            await nativeOrdersFeature
+                .connect(contractWalletSignerSigner)
+                .cancelPairRfqOrdersWithSigner(
+                    await contractWallet.getAddress(),
+                    await makerToken.getAddress(),
+                    await takerToken.getAddress(),
+                    minValidSalt,
+                );
             // TODO: 修复事件验证
             // verifyEventsFromLogs(
             //     receipt.logs,
@@ -2143,12 +2202,14 @@ describe('NativeOrdersFeature', () => {
 
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const makerSigner = await env.provider.getSigner(maker);
-            const tx = nativeOrdersFeature.connect(makerSigner).cancelPairRfqOrdersWithSigner(
-                await contractWallet.getAddress(),
-                await makerToken.getAddress(),
-                await takerToken.getAddress(),
-                minValidSalt
-            );
+            const tx = nativeOrdersFeature
+                .connect(makerSigner)
+                .cancelPairRfqOrdersWithSigner(
+                    await contractWallet.getAddress(),
+                    await makerToken.getAddress(),
+                    await takerToken.getAddress(),
+                    minValidSalt,
+                );
 
             // TODO: 修复特定错误匹配 - 使用通用 revert 检查
             // const expectedError = new RevertErrors.NativeOrders.InvalidSignerError(await contractWallet.getAddress(), maker);
@@ -2160,19 +2221,23 @@ describe('NativeOrdersFeature', () => {
             const order = await getTestLimitOrder({ maker: await contractWallet.getAddress(), salt: BigInt(1) });
 
             const contractWalletOwnerSigner = await env.provider.getSigner(contractWalletOwner);
-            await contractWallet.connect(contractWalletOwnerSigner).registerAllowedOrderSigner(contractWalletSigner, true);
+            await contractWallet
+                .connect(contractWalletOwnerSigner)
+                .registerAllowedOrderSigner(contractWalletSigner, true);
 
             // Cancel salts <= the order's
             const minValidSalt = order.salt + 1n;
 
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const contractWalletSignerSigner = await env.provider.getSigner(contractWalletSigner);
-            await nativeOrdersFeature.connect(contractWalletSignerSigner).cancelPairLimitOrdersWithSigner(
-                await contractWallet.getAddress(),
-                await makerToken.getAddress(),
-                await takerToken.getAddress(),
-                minValidSalt
-            );
+            await nativeOrdersFeature
+                .connect(contractWalletSignerSigner)
+                .cancelPairLimitOrdersWithSigner(
+                    await contractWallet.getAddress(),
+                    await makerToken.getAddress(),
+                    await takerToken.getAddress(),
+                    minValidSalt,
+                );
             // TODO: 修复事件验证
             // verifyEventsFromLogs(
             //     receipt.logs,
@@ -2201,12 +2266,14 @@ describe('NativeOrdersFeature', () => {
 
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const makerSigner = await env.provider.getSigner(maker);
-            const tx = nativeOrdersFeature.connect(makerSigner).cancelPairLimitOrdersWithSigner(
-                await contractWallet.getAddress(),
-                await makerToken.getAddress(),
-                await takerToken.getAddress(),
-                minValidSalt
-            );
+            const tx = nativeOrdersFeature
+                .connect(makerSigner)
+                .cancelPairLimitOrdersWithSigner(
+                    await contractWallet.getAddress(),
+                    await makerToken.getAddress(),
+                    await takerToken.getAddress(),
+                    minValidSalt,
+                );
 
             // TODO: 修复特定错误匹配 - 使用通用 revert 检查
             // const expectedError = new RevertErrors.NativeOrders.InvalidSignerError(await contractWallet.getAddress(), maker);
@@ -2227,17 +2294,21 @@ describe('NativeOrdersFeature', () => {
             ];
 
             const contractWalletOwnerSigner = await env.provider.getSigner(contractWalletOwner);
-            await contractWallet.connect(contractWalletOwnerSigner).registerAllowedOrderSigner(contractWalletSigner, true);
+            await contractWallet
+                .connect(contractWalletOwnerSigner)
+                .registerAllowedOrderSigner(contractWalletSigner, true);
 
             const minValidSalt = BigInt(2);
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const contractWalletSignerSigner = await env.provider.getSigner(contractWalletSigner);
-            await nativeOrdersFeature.connect(contractWalletSignerSigner).batchCancelPairRfqOrdersWithSigner(
-                await contractWallet.getAddress(),
-                [await makerToken.getAddress(), await takerToken.getAddress()],
-                [await takerToken.getAddress(), await makerToken.getAddress()],
-                [minValidSalt, minValidSalt]
-            );
+            await nativeOrdersFeature
+                .connect(contractWalletSignerSigner)
+                .batchCancelPairRfqOrdersWithSigner(
+                    await contractWallet.getAddress(),
+                    [await makerToken.getAddress(), await takerToken.getAddress()],
+                    [await takerToken.getAddress(), await makerToken.getAddress()],
+                    [minValidSalt, minValidSalt],
+                );
             // TODO: 修复事件验证
             // verifyEventsFromLogs(
             //     receipt.logs,
@@ -2268,12 +2339,14 @@ describe('NativeOrdersFeature', () => {
 
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const makerSigner = await env.provider.getSigner(maker);
-            const tx = nativeOrdersFeature.connect(makerSigner).batchCancelPairRfqOrdersWithSigner(
-                await contractWallet.getAddress(),
-                [await makerToken.getAddress(), await takerToken.getAddress()],
-                [await takerToken.getAddress(), await makerToken.getAddress()],
-                [minValidSalt, minValidSalt]
-            );
+            const tx = nativeOrdersFeature
+                .connect(makerSigner)
+                .batchCancelPairRfqOrdersWithSigner(
+                    await contractWallet.getAddress(),
+                    [await makerToken.getAddress(), await takerToken.getAddress()],
+                    [await takerToken.getAddress(), await makerToken.getAddress()],
+                    [minValidSalt, minValidSalt],
+                );
 
             // TODO: 修复特定错误匹配 - 使用通用 revert 检查
             // const expectedError = new RevertErrors.NativeOrders.InvalidSignerError(await contractWallet.getAddress(), maker);
@@ -2294,17 +2367,21 @@ describe('NativeOrdersFeature', () => {
             ];
 
             const contractWalletOwnerSigner = await env.provider.getSigner(contractWalletOwner);
-            await contractWallet.connect(contractWalletOwnerSigner).registerAllowedOrderSigner(contractWalletSigner, true);
+            await contractWallet
+                .connect(contractWalletOwnerSigner)
+                .registerAllowedOrderSigner(contractWalletSigner, true);
 
             const minValidSalt = BigInt(2);
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const contractWalletSignerSigner = await env.provider.getSigner(contractWalletSigner);
-            await nativeOrdersFeature.connect(contractWalletSignerSigner).batchCancelPairLimitOrdersWithSigner(
-                await contractWallet.getAddress(),
-                [await makerToken.getAddress(), await takerToken.getAddress()],
-                [await takerToken.getAddress(), await makerToken.getAddress()],
-                [minValidSalt, minValidSalt]
-            );
+            await nativeOrdersFeature
+                .connect(contractWalletSignerSigner)
+                .batchCancelPairLimitOrdersWithSigner(
+                    await contractWallet.getAddress(),
+                    [await makerToken.getAddress(), await takerToken.getAddress()],
+                    [await takerToken.getAddress(), await makerToken.getAddress()],
+                    [minValidSalt, minValidSalt],
+                );
             // TODO: 修复事件验证
             // verifyEventsFromLogs(
             //     receipt.logs,
@@ -2324,8 +2401,8 @@ describe('NativeOrdersFeature', () => {
             //     ],
             //     IZeroExEvents.PairCancelledLimitOrders,
             // );
-            const statuses = (await Promise.all(orders.map(o => nativeOrdersFeature.getLimitOrderInfo(o)))).map(
-                oi => Number(oi.status),
+            const statuses = (await Promise.all(orders.map(o => nativeOrdersFeature.getLimitOrderInfo(o)))).map(oi =>
+                Number(oi.status),
             );
             expect(statuses).to.deep.eq([OrderStatus.Cancelled, OrderStatus.Cancelled]);
         });
@@ -2335,12 +2412,14 @@ describe('NativeOrdersFeature', () => {
 
             const nativeOrdersFeature = await getNativeOrdersFeature();
             const makerSigner = await env.provider.getSigner(maker);
-            const tx = nativeOrdersFeature.connect(makerSigner).batchCancelPairLimitOrdersWithSigner(
-                await contractWallet.getAddress(),
-                [await makerToken.getAddress(), await takerToken.getAddress()],
-                [await takerToken.getAddress(), await makerToken.getAddress()],
-                [minValidSalt, minValidSalt]
-            );
+            const tx = nativeOrdersFeature
+                .connect(makerSigner)
+                .batchCancelPairLimitOrdersWithSigner(
+                    await contractWallet.getAddress(),
+                    [await makerToken.getAddress(), await takerToken.getAddress()],
+                    [await takerToken.getAddress(), await makerToken.getAddress()],
+                    [minValidSalt, minValidSalt],
+                );
 
             // TODO: 修复特定错误匹配 - 使用通用 revert 检查
             // const expectedError = new RevertErrors.NativeOrders.InvalidSignerError(await contractWallet.getAddress(), maker);

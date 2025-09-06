@@ -19,7 +19,7 @@ describe('LibLimitOrder tests', () => {
         const accounts = await env.getAccountAddressesAsync();
         env.txDefaults.from = accounts[0];
         const signer = await env.provider.getSigner(accounts[0]);
-        
+
         const factory = new TestLibNativeOrder__factory(signer);
         testContract = await factory.deploy();
         await testContract.waitForDeployment();
@@ -28,7 +28,7 @@ describe('LibLimitOrder tests', () => {
     describe('getLimitOrderStructHash()', () => {
         it('returns the correct hash', async () => {
             const order = getRandomLimitOrder();
-            
+
             // 转换订单字段为 ethers v6 兼容格式
             const orderStruct = {
                 makerToken: order.makerToken,
@@ -44,7 +44,7 @@ describe('LibLimitOrder tests', () => {
                 expiry: order.expiry.toString(),
                 salt: order.salt.toString(),
             };
-            
+
             const structHash = await testContract.getLimitOrderStructHash(orderStruct);
             expect(structHash).to.eq(order.getStructHash());
         });
@@ -53,7 +53,7 @@ describe('LibLimitOrder tests', () => {
     describe('getRfqOrderStructHash()', () => {
         it('returns the correct hash', async () => {
             const order = getRandomRfqOrder();
-            
+
             // 转换订单字段为 ethers v6 兼容格式
             const orderStruct = {
                 makerToken: order.makerToken,
@@ -67,7 +67,7 @@ describe('LibLimitOrder tests', () => {
                 expiry: order.expiry.toString(),
                 salt: order.salt.toString(),
             };
-            
+
             const structHash = await testContract.getRfqOrderStructHash(orderStruct);
             expect(structHash).to.eq(order.getStructHash());
         });

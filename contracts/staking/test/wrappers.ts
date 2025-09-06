@@ -37,7 +37,7 @@ import {
 export * from '../src/typechain-types';
 
 // Modern contract wrapper that provides legacy deployFrom0xArtifactAsync interface
-function  createLegacyWrapper(Factory: any) {
+function createLegacyWrapper(Factory: any) {
     return class {
         public static async deployFrom0xArtifactAsync(
             artifact: any,
@@ -48,21 +48,22 @@ function  createLegacyWrapper(Factory: any) {
         ): Promise<any> {
             // Get signer from ethers
             const [deployer] = await ethers.getSigners();
-            
+
             // Create factory and deploy (Hardhat + TypeChain style)
             const factory = new Factory(deployer);
             const contract = await (factory as any).deploy(...(args as any));
-            
+
             // Add legacy method compatibility
-            const originalMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(contract))
-                .filter(name => typeof (contract as any)[name] === 'function');
-                
+            const originalMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(contract)).filter(
+                name => typeof (contract as any)[name] === 'function',
+            );
+
             for (const methodName of originalMethods) {
                 const originalMethod = (contract as any)[methodName];
                 if (typeof originalMethod === 'function') {
-                    (contract as any)[methodName] = function(...args: any[]) {
+                    (contract as any)[methodName] = function (...args: any[]) {
                         const result = originalMethod.apply(contract, args);
-                        
+
                         // Add legacy methods to transaction promises
                         if (result && typeof result.then === 'function') {
                             result.awaitTransactionSuccessAsync = async () => {
@@ -72,15 +73,15 @@ function  createLegacyWrapper(Factory: any) {
                                 }
                                 return tx;
                             };
-                            
+
                             result.callAsync = () => result;
                         }
-                        
+
                         return result;
                     };
                 }
             }
-            
+
             return contract;
         }
     };
@@ -121,7 +122,7 @@ export class StakingProxyContract {
         const [deployer] = await ethers.getSigners();
         const factory = new StakingProxy__factory(deployer);
         const contract = await (factory as any).deploy(...(args as any));
-        
+
         // Add custom methods
         (contract as any).attachStakingContract = (address: string) => {
             return {
@@ -137,14 +138,14 @@ export class StakingProxyContract {
                                 transactionHash: '0xabc',
                                 index: 0,
                                 eventName: 'StakingContractAttachedToProxy',
-                                eventArgs: { newStakingPatchContractAddress: address }
-                            }
-                        ]
+                                eventArgs: { newStakingPatchContractAddress: address },
+                            },
+                        ],
                     };
-                }
+                },
             };
         };
-        
+
         return contract;
     }
 }
@@ -167,15 +168,13 @@ export class TestStakingProxyContract {
 
 // Legacy compatibility function for filterLogsToArguments
 export function filterLogsToArguments(logs: any[], eventName: string): any[] {
-    return logs
-        .filter(log => log.eventName === eventName)
-        .map(log => log.eventArgs);
+    return logs.filter(log => log.eventName === eventName).map(log => log.eventArgs);
 }
 
-// Event definitions for backwards compatibility  
+// Event definitions for backwards compatibility
 export const StakingEvents = {
     EpochEnded: 'EpochEnded',
-    EpochFinalized: 'EpochFinalized', 
+    EpochFinalized: 'EpochFinalized',
     StakingPoolEarnedRewardsInEpoch: 'StakingPoolEarnedRewardsInEpoch',
 };
 

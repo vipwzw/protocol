@@ -1,13 +1,7 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { constants as stakingConstants } from '../../src/constants';
-import {
-    constants,
-    filterLogsToArguments,
-    getRandomInteger,
-    Numberish,
-    randomAddress,
-} from '../test_constants';
+import { constants, filterLogsToArguments, getRandomInteger, Numberish, randomAddress } from '../test_constants';
 
 // Local bigint assertion helper
 function expectBigIntEqual(actual: any, expected: any): void {
@@ -97,14 +91,13 @@ describe('Delegator rewards unit tests', () => {
         };
         // Generate a deterministic operator address based on the poolId.
         _opts.operator = poolIdToOperator(_opts.poolId);
-        const tx = await testContract
-            .syncPoolRewards(
-                _opts.poolId,
-                _opts.operator,
-                _opts.operatorReward,
-                _opts.membersReward,
-                _opts.membersStake,
-            );
+        const tx = await testContract.syncPoolRewards(
+            _opts.poolId,
+            _opts.operator,
+            _opts.operatorReward,
+            _opts.membersReward,
+            _opts.membersStake,
+        );
         await tx.wait();
         // Because the operator share is implicitly defined by the member and
         // operator reward, and is stored as a uint32, there will be precision
@@ -131,14 +124,13 @@ describe('Delegator rewards unit tests', () => {
         };
         // Generate a deterministic operator address based on the poolId.
         _opts.operator = poolIdToOperator(_opts.poolId);
-        const tx = await testContract
-            .setUnfinalizedPoolReward(
-                _opts.poolId,
-                _opts.operator,
-                _opts.operatorReward,
-                _opts.membersReward,
-                _opts.membersStake,
-            );
+        const tx = await testContract.setUnfinalizedPoolReward(
+            _opts.poolId,
+            _opts.operator,
+            _opts.operatorReward,
+            _opts.membersReward,
+            _opts.membersStake,
+        );
         await tx.wait();
         // Because the operator share is implicitly defined by the member and
         // operator reward, and is stored as a uint32, there will be precision
@@ -202,9 +194,8 @@ describe('Delegator rewards unit tests', () => {
         delegator: string,
         stake?: Numberish,
     ): Promise<ResultWithTransfers<{ stake: BigNumber }>> {
-        const _stake = 
-            stake ||
-                (await testContract.getStakeDelegatedToPoolByOwner(delegator, poolId)).currentEpochBalance;
+        const _stake =
+            stake || (await testContract.getStakeDelegatedToPoolByOwner(delegator, poolId)).currentEpochBalance;
         const tx = await testContract.undelegateStake(delegator, poolId, _stake);
         const receipt = await tx.wait();
         const delegatorTransfers = getTransfersFromLogs(receipt.logs, delegator);
@@ -216,10 +207,7 @@ describe('Delegator rewards unit tests', () => {
 
     function getTransfersFromLogs(logs: any[], delegator?: string): bigint {
         let delegatorTransfers = constants.ZERO_AMOUNT;
-        const transferArgs = filterLogsToArguments<TestDelegatorRewardsTransferEventArgs>(
-            logs,
-            'Transfer',
-        );
+        const transferArgs = filterLogsToArguments<TestDelegatorRewardsTransferEventArgs>(logs, 'Transfer');
         for (const event of transferArgs) {
             if (event._to === delegator) {
                 delegatorTransfers = toBigInt(delegatorTransfers) + toBigInt(event._value);

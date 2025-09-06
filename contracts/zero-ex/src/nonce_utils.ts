@@ -18,7 +18,7 @@ const hexUtils = {
     },
     concat: (...values: (string | number | Buffer)[]): string => {
         return '0x' + values.map(v => hexUtils.toHex(v).replace('0x', '')).join('');
-    }
+    },
 };
 import { ethers } from 'ethers';
 import * as ethjs from 'ethereumjs-util';

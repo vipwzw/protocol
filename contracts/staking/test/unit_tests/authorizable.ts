@@ -25,10 +25,7 @@ describe('Staking Authorization Tests', () => {
 
         const deployer = ownerSigner; // 使用第一个 signer 作为 owner
         const factory = new TestStaking__factory(deployer);
-        testContract = await factory.deploy(
-            constants.NULL_ADDRESS,
-            constants.NULL_ADDRESS,
-        );
+        testContract = await factory.deploy(constants.NULL_ADDRESS, constants.NULL_ADDRESS);
     });
 
     it("shouldn't have any authorized addresses initially", async () => {
@@ -61,10 +58,7 @@ describe('Staking Authorization Tests', () => {
         before(async () => {
             // 重新部署，确保没有前序授权残留
             const factory = new TestStaking__factory(ownerSigner);
-            testContract = await factory.deploy(
-                constants.NULL_ADDRESS,
-                constants.NULL_ADDRESS,
-            );
+            testContract = await factory.deploy(constants.NULL_ADDRESS, constants.NULL_ADDRESS);
             const tx = await testContract.addAuthorizedAddress(owner);
             await tx.wait();
             const authorities = await testContract.getAuthorizedAddresses();

@@ -21,19 +21,22 @@ function expectBigIntEqual(actual: any, expected: any, message?: string): void {
 // StakingRichErrors - 参考 zero-ex 的错误处理模式
 class StakingRichErrors {
     static PreviousEpochNotFinalizedError = class {
-        constructor(public unfinalizedEpoch: bigint, public unfinalizedPoolsRemaining: bigint) {}
-        
+        constructor(
+            public unfinalizedEpoch: bigint,
+            public unfinalizedPoolsRemaining: bigint,
+        ) {}
+
         // 编码为 LibRichErrors 格式的错误数据
         encode(): string {
             // bytes4(keccak256("PreviousEpochNotFinalizedError(uint256,uint256)")) = 0x614b800a
             const selector = '0x614b800a';
             const encodedParams = ethers.AbiCoder.defaultAbiCoder().encode(
-                ['uint256', 'uint256'], 
-                [this.unfinalizedEpoch, this.unfinalizedPoolsRemaining]
+                ['uint256', 'uint256'],
+                [this.unfinalizedEpoch, this.unfinalizedPoolsRemaining],
             );
             return selector + encodedParams.slice(2); // 移除 encodedParams 的 0x 前缀
         }
-        
+
         toString() {
             return `PreviousEpochNotFinalizedError: epoch=${this.unfinalizedEpoch}, pools=${this.unfinalizedPoolsRemaining}`;
         }
@@ -45,7 +48,7 @@ class StakingErrorMatcher {
     static async expectError(txPromise: Promise<any>, expectedError: any): Promise<void> {
         try {
             await txPromise;
-            throw new Error("交易应该失败但没有失败");
+            throw new Error('交易应该失败但没有失败');
         } catch (error: any) {
             if (expectedError.encode && typeof expectedError.encode === 'function') {
                 // 匹配 LibRichErrors 编码的错误
@@ -120,7 +123,10 @@ describe('Finalizer unit tests', () => {
         const mem = ethers.Wallet.createRandom();
         operatorRewardsReceiver = op.address;
         membersRewardsReceiver = mem.address;
-        const fresh = await new TestFinalizer__factory(deployer).deploy(operatorRewardsReceiver, membersRewardsReceiver);
+        const fresh = await new TestFinalizer__factory(deployer).deploy(
+            operatorRewardsReceiver,
+            membersRewardsReceiver,
+        );
         testContract = fresh;
         await (await deployer.sendTransaction({ to: await testContract.getAddress(), value: INITIAL_BALANCE })).wait();
     });
@@ -145,14 +151,13 @@ describe('Finalizer unit tests', () => {
             weightedStake: BigInt(getRandomInteger(0, 1000)) * 10n ** 18n,
             ...opts,
         };
-        const tx = await testContract
-            .addActivePool(
-                _opts.poolId,
-                Math.floor(_opts.operatorShare * testUtilsConstants.PPM_100_PERCENT),
-                toBigInt(_opts.feesCollected),
-                toBigInt(_opts.membersStake),
-                toBigInt(_opts.weightedStake),
-            );
+        const tx = await testContract.addActivePool(
+            _opts.poolId,
+            Math.floor(_opts.operatorShare * testUtilsConstants.PPM_100_PERCENT),
+            toBigInt(_opts.feesCollected),
+            toBigInt(_opts.membersStake),
+            toBigInt(_opts.weightedStake),
+        );
         await tx.wait();
         return _opts;
     }
@@ -180,7 +185,7 @@ describe('Finalizer unit tests', () => {
         const logs: any[] = [];
         for (const poolId of poolIds) {
             const receipt = await (await testContract.finalizePool(poolId)).wait();
-            logs.splice(logs.length, 0, ...((receipt?.logs) ?? []));
+            logs.splice(logs.length, 0, ...(receipt?.logs ?? []));
         }
         return logs;
     }
@@ -354,7 +359,7 @@ describe('Finalizer unit tests', () => {
 
         it('emits an `EpochEnded` event', async () => {
             const receipt = await (await testContract.endEpoch()).wait();
-            assertEpochEndedEvent((receipt?.logs) ?? [], {
+            assertEpochEndedEvent(receipt?.logs ?? [], {
                 epoch: stakingConstants.INITIAL_EPOCH,
                 numActivePools: ZERO_AMOUNT,
                 rewardsAvailable: INITIAL_BALANCE,
@@ -365,7 +370,7 @@ describe('Finalizer unit tests', () => {
 
         it('immediately finalizes if there are no pools to finalize', async () => {
             const receipt2 = await (await testContract.endEpoch()).wait();
-            assertEpochFinalizedEvent((receipt2?.logs) ?? [], {
+            assertEpochFinalizedEvent(receipt2?.logs ?? [], {
                 epoch: stakingConstants.INITIAL_EPOCH,
                 rewardsPaid: ZERO_AMOUNT,
                 rewardsRemaining: INITIAL_BALANCE,
@@ -375,10 +380,7 @@ describe('Finalizer unit tests', () => {
         it('does not immediately finalize if there is a pool to finalize', async () => {
             await addActivePoolAsync();
             const receipt3 = await (await testContract.endEpoch()).wait();
-            const events = filterLogsToArguments(
-                (receipt3?.logs) ?? [],
-                'EpochFinalized',
-            );
+            const events = filterLogsToArguments(receipt3?.logs ?? [], 'EpochFinalized');
             expect(events).to.deep.eq([]);
         });
 
@@ -458,9 +460,7 @@ describe('Finalizer unit tests', () => {
             const pool = _.sample(pools) as ActivePoolOpts;
             await (await testContract.endEpoch()).wait();
             await finalizePoolsAsync([pool.poolId]);
-            const poolState = await testContract
-                .getPoolStatsFromEpoch(stakingConstants.INITIAL_EPOCH, pool.poolId)
-                ;
+            const poolState = await testContract.getPoolStatsFromEpoch(stakingConstants.INITIAL_EPOCH, pool.poolId);
             expectBigIntEqual(toBigInt(poolState.feesCollected), 0n);
             expectBigIntEqual(toBigInt(poolState.weightedStake), 0n);
             expectBigIntEqual(toBigInt(poolState.membersStake), 0n);
@@ -469,7 +469,7 @@ describe('Finalizer unit tests', () => {
         it('`rewardsPaid` <= `rewardsAvailable` <= contract balance at the end of the epoch', async () => {
             const pools = await Promise.all(_.times(3, async () => addActivePoolAsync()));
             const receipt = await (await testContract.endEpoch()).wait();
-            const { rewardsAvailable } = getEpochEndedEvents((receipt?.logs) ?? [])[0];
+            const { rewardsAvailable } = getEpochEndedEvents(receipt?.logs ?? [])[0];
             expectBigIntLessThanOrEqual(toBigInt(rewardsAvailable), toBigInt(INITIAL_BALANCE));
             const logs = await finalizePoolsAsync(pools.map(r => r.poolId));
             const { rewardsPaid } = getEpochFinalizedEvents(logs)[0];
@@ -480,7 +480,7 @@ describe('Finalizer unit tests', () => {
             const pool1 = await addActivePoolAsync();
             const pool2 = await addActivePoolAsync(_.omit(pool1, 'poolId'));
             const receipt = await (await testContract.endEpoch()).wait();
-            const { rewardsAvailable } = getEpochEndedEvents((receipt?.logs) ?? [])[0];
+            const { rewardsAvailable } = getEpochEndedEvents(receipt?.logs ?? [])[0];
             const logs = await finalizePoolsAsync([pool1, pool2].map(r => r.poolId));
             const { rewardsPaid } = getEpochFinalizedEvents(logs)[0];
             expectBigIntLessThanOrEqual(toBigInt(rewardsPaid), toBigInt(rewardsAvailable));
@@ -493,7 +493,7 @@ describe('Finalizer unit tests', () => {
                 it(`${i + 1}/${numTests} \`rewardsPaid\` <= \`rewardsAvailable\` (${numPools} pools)`, async () => {
                     const pools = await Promise.all(_.times(numPools, async () => addActivePoolAsync()));
                     const receipt = await (await testContract.endEpoch()).wait();
-                    const { rewardsAvailable } = getEpochEndedEvents((receipt?.logs) ?? [])[0];
+                    const { rewardsAvailable } = getEpochEndedEvents(receipt?.logs ?? [])[0];
                     const logs = await finalizePoolsAsync(pools.map(r => r.poolId));
                     const { rewardsPaid } = getEpochFinalizedEvents(logs)[0];
                     expectBigIntLessThanOrEqual(toBigInt(rewardsPaid), toBigInt(rewardsAvailable));
@@ -544,7 +544,7 @@ describe('Finalizer unit tests', () => {
             const { rewardsRemaining: rolledOverRewards } = getEpochFinalizedEvents(finalizeLogs)[0];
             await Promise.all(poolIds.map(async id => addActivePoolAsync({ poolId: id })));
             const endReceipt = await (await testContract.endEpoch()).wait();
-            const { rewardsAvailable } = getEpochEndedEvents((endReceipt?.logs) ?? [])[0];
+            const { rewardsAvailable } = getEpochEndedEvents(endReceipt?.logs ?? [])[0];
             expectBigIntEqual(toBigInt(rewardsAvailable), toBigInt(rolledOverRewards));
         });
     });

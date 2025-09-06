@@ -2,13 +2,13 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { Signer } from 'ethers';
 
-// 本地 RevertReason 定义，替代 @0x/utils 
+// 本地 RevertReason 定义，替代 @0x/utils
 const RevertReason = {
     OnlyContractOwner: 'ONLY_CONTRACT_OWNER',
     TargetAlreadyAuthorized: 'TARGET_ALREADY_AUTHORIZED',
     TargetNotAuthorized: 'TARGET_NOT_AUTHORIZED',
     IndexOutOfBounds: 'INDEX_OUT_OF_BOUNDS',
-    AuthorizedAddressMismatch: 'AUTHORIZED_ADDRESS_MISMATCH'
+    AuthorizedAddressMismatch: 'AUTHORIZED_ADDRESS_MISMATCH',
 };
 
 describe('Authorizable', () => {
@@ -26,7 +26,7 @@ describe('Authorizable', () => {
         address = await signers[1].getAddress();
         notOwnerSigner = signers[2];
         notOwner = await signers[2].getAddress();
-        
+
         // Deploy fresh MixinAuthorizable contract for each test
         const factory = await ethers.getContractFactory('MixinAuthorizable');
         authorizable = await factory.deploy();
@@ -35,9 +35,9 @@ describe('Authorizable', () => {
 
     describe('addAuthorizedAddress', () => {
         it('should revert if not called by owner', async () => {
-            await expect(
-                authorizable.connect(notOwnerSigner).addAuthorizedAddress(address)
-            ).to.be.revertedWith(RevertReason.OnlyContractOwner);
+            await expect(authorizable.connect(notOwnerSigner).addAuthorizedAddress(address)).to.be.revertedWith(
+                RevertReason.OnlyContractOwner,
+            );
         });
 
         it('should allow owner to add an authorized address', async () => {
@@ -48,18 +48,18 @@ describe('Authorizable', () => {
 
         it('should revert if owner attempts to authorize a duplicate address', async () => {
             await authorizable.connect(ownerSigner).addAuthorizedAddress(address);
-            await expect(
-                authorizable.connect(ownerSigner).addAuthorizedAddress(address)
-            ).to.be.revertedWith(RevertReason.TargetAlreadyAuthorized);
+            await expect(authorizable.connect(ownerSigner).addAuthorizedAddress(address)).to.be.revertedWith(
+                RevertReason.TargetAlreadyAuthorized,
+            );
         });
     });
 
     describe('removeAuthorizedAddress', () => {
         it('should revert if not called by owner', async () => {
             await authorizable.connect(ownerSigner).addAuthorizedAddress(address);
-            await expect(
-                authorizable.connect(notOwnerSigner).removeAuthorizedAddress(address)
-            ).to.be.revertedWith(RevertReason.OnlyContractOwner);
+            await expect(authorizable.connect(notOwnerSigner).removeAuthorizedAddress(address)).to.be.revertedWith(
+                RevertReason.OnlyContractOwner,
+            );
         });
 
         it('should allow owner to remove an authorized address', async () => {
@@ -70,9 +70,9 @@ describe('Authorizable', () => {
         });
 
         it('should revert if owner attempts to remove an address that is not authorized', async () => {
-            await expect(
-                authorizable.connect(ownerSigner).removeAuthorizedAddress(address)
-            ).to.be.revertedWith(RevertReason.TargetNotAuthorized);
+            await expect(authorizable.connect(ownerSigner).removeAuthorizedAddress(address)).to.be.revertedWith(
+                RevertReason.TargetNotAuthorized,
+            );
         });
     });
 
@@ -81,14 +81,14 @@ describe('Authorizable', () => {
             await authorizable.connect(ownerSigner).addAuthorizedAddress(address);
             const index = 0;
             await expect(
-                authorizable.connect(notOwnerSigner).removeAuthorizedAddressAtIndex(address, index)
+                authorizable.connect(notOwnerSigner).removeAuthorizedAddressAtIndex(address, index),
             ).to.be.revertedWith(RevertReason.OnlyContractOwner);
         });
 
         it('should revert if index is >= authorities.length', async () => {
             const index = 1;
             await expect(
-                authorizable.connect(ownerSigner).removeAuthorizedAddressAtIndex(address, index)
+                authorizable.connect(ownerSigner).removeAuthorizedAddressAtIndex(address, index),
             ).to.be.revertedWith(RevertReason.TargetNotAuthorized);
         });
 
@@ -96,7 +96,7 @@ describe('Authorizable', () => {
             await authorizable.connect(ownerSigner).addAuthorizedAddress(address);
             const index = 0;
             await expect(
-                authorizable.connect(ownerSigner).removeAuthorizedAddressAtIndex(notOwner, index)
+                authorizable.connect(ownerSigner).removeAuthorizedAddressAtIndex(notOwner, index),
             ).to.be.revertedWith(RevertReason.TargetNotAuthorized);
         });
 
@@ -105,7 +105,7 @@ describe('Authorizable', () => {
             await authorizable.connect(ownerSigner).addAuthorizedAddress(notOwner);
             const incorrectIndex = 1;
             await expect(
-                authorizable.connect(ownerSigner).removeAuthorizedAddressAtIndex(address, incorrectIndex)
+                authorizable.connect(ownerSigner).removeAuthorizedAddressAtIndex(address, incorrectIndex),
             ).to.be.revertedWith(RevertReason.AuthorizedAddressMismatch);
         });
 

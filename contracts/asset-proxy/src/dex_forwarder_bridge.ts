@@ -16,7 +16,7 @@ export interface DexForwaderBridgeData {
 const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 const dexForwarderBridgeDataTypes = [
     'address', // inputToken
-    'tuple[]' // calls
+    'tuple[]', // calls
 ];
 
 export const dexForwarderBridgeDataEncoder = {
@@ -26,5 +26,5 @@ export const dexForwarderBridgeDataEncoder = {
     decode: (encoded: string): DexForwaderBridgeData => {
         const [inputToken, calls] = abiCoder.decode(dexForwarderBridgeDataTypes, encoded);
         return { inputToken, calls };
-    }
+    },
 };

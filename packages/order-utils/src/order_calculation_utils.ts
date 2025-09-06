@@ -19,7 +19,7 @@ export const orderCalculationUtils = {
     willOrderExpire(order: Order, secondsFromNow: number): boolean {
         const millisecondsInSecond = 1000;
         const currentUnixTimestampSec = BigInt(Math.floor(Date.now() / millisecondsInSecond));
-        return order.expirationTimeSeconds < (currentUnixTimestampSec + BigInt(secondsFromNow));
+        return order.expirationTimeSeconds < currentUnixTimestampSec + BigInt(secondsFromNow);
     },
     /**
      * Determines if the order is open and fillable by any taker.

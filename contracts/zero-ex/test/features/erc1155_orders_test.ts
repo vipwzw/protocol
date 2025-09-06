@@ -1,5 +1,5 @@
-import { ethers } from "hardhat";
-import { expect } from "chai";
+import { ethers } from 'hardhat';
+import { expect } from 'chai';
 import { ERC1155Order, NFTOrder, SignatureType, RevertErrors, SIGNATURE_ABI } from '@0x/protocol-utils';
 import { hexUtils, NULL_BYTES, verifyEventFromReceipt, ZeroExRevertErrors } from '@0x/utils';
 import { UnifiedErrorMatcher } from '../utils/unified_error_matcher';
@@ -89,11 +89,7 @@ const AbiEncoder = {
         return {
             encode: (data: any) => {
                 // data: { order, signature, unwrapNativeToken }
-                const values = [
-                    orderToTuple(data.order),
-                    signatureToTuple(data.signature),
-                    data.unwrapNativeToken,
-                ];
+                const values = [orderToTuple(data.order), signatureToTuple(data.signature), data.unwrapNativeToken];
                 return coder.encode(
                     [
                         // order
@@ -131,7 +127,7 @@ function getRandomERC1155Order(fields: Partial<any> = {}): ERC1155Order {
         verifyingContract: NULL_ADDRESS,
         ...fields,
     };
-    
+
     return new ERC1155Order(defaultFields);
 }
 
@@ -163,9 +159,11 @@ import {
     ZeroEx__factory,
 } from '../../src/wrappers';
 import { ERC1155OrdersFeature__factory } from '../../src/typechain-types/factories/contracts/src/features/nft_orders';
-import { ERC1155OrderCancelledEvent, ERC1155OrderFilledEvent } from '../../src/typechain-types/contracts/src/features/nft_orders/ERC1155OrdersFeature';
+import {
+    ERC1155OrderCancelledEvent,
+    ERC1155OrderFilledEvent,
+} from '../../src/typechain-types/contracts/src/features/nft_orders/ERC1155OrdersFeature';
 import { TestMintableERC1155Token__factory } from '../../src/typechain-types/factories/contracts/test/tokens/TestMintableERC1155Token.sol';
-
 
 import { getRandomERC1155Order } from '../utils/nft_orders';
 import { fullMigrateAsync } from '../utils/migration';
@@ -228,10 +226,7 @@ describe('ERC1155OrdersFeature', () => {
 
     async function sendEtherAsync(to: string, amount: bigint): Promise<void> {
         // 直接设置合约余额，避免没有 receive()/fallback 时转账失败以及 gas 影响
-        await ethers.provider.send('hardhat_setBalance', [
-            to,
-            '0x' + amount.toString(16),
-        ]);
+        await ethers.provider.send('hardhat_setBalance', [to, '0x' + amount.toString(16)]);
     }
 
     // 辅助函数：获取指定地址的 signer
@@ -240,20 +235,18 @@ describe('ERC1155OrdersFeature', () => {
         return signers.find(s => s.address.toLowerCase() === address.toLowerCase()) || signers[0];
     }
 
-
-
     before(async () => {
         // Useful for ETH balance accounting
         [owner, maker, taker, otherMaker, otherTaker, matcher] = await env.getAccountAddressesAsync();
         env.txDefaults.from = owner;
-        
+
         // 设置 gasPrice 为 0 以简化 ETH 余额断言，避免 gas 费用影响
         env.txDefaults.gasPrice = 0;
         const txDefaults = { ...env.txDefaults, gasPrice: 0 };
 
         const signers = await ethers.getSigners();
         const signer = signers.find(s => s.address.toLowerCase() === owner.toLowerCase()) || signers[0];
-        
+
         const wethFactory = new TestWeth__factory(signer);
         weth = await wethFactory.deploy();
         await weth.waitForDeployment();
@@ -269,7 +262,13 @@ describe('ERC1155OrdersFeature', () => {
         // Simplified deployment for testing - avoid complex migration for now
         // We'll directly deploy a ZeroEx contract and ERC1155OrdersFeature
         // 使用完整迁移获取 ZeroEx（包含基础 Feature）
-        zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {}, { wethAddress: await weth.getAddress() });
+        zeroEx = await fullMigrateAsync(
+            owner,
+            env.provider,
+            env.txDefaults,
+            {},
+            { wethAddress: await weth.getAddress() },
+        );
 
         const featureFactory = new ERC1155OrdersFeature__factory(signer);
         const zeroExAddress = await zeroEx.getAddress();
@@ -279,7 +278,11 @@ describe('ERC1155OrdersFeature', () => {
         // 通过 OwnableFeature 将 ERC1155 Feature 注册到 ZeroEx
         const ownerSigner = await env.provider.getSigner(owner);
         const OwnableFeature = await ethers.getContractAt('IOwnableFeature', zeroExAddress, ownerSigner);
-        await OwnableFeature.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
+        await OwnableFeature.migrate(
+            await featureImpl.getAddress(),
+            featureImpl.interface.encodeFunctionData('migrate'),
+            owner,
+        );
 
         erc1155Feature = await ethers.getContractAt('IERC1155OrdersFeature', zeroExAddress);
 
@@ -325,7 +328,8 @@ describe('ERC1155OrdersFeature', () => {
         amount: bigint = order.erc1155TokenAmount,
         _taker: string = taker,
     ): Promise<void> {
-        const totalFeeAmount = order.fees.length > 0 ? order.fees.map(fee => fee.amount).reduce((a, b) => a + b, 0n) : 0n;
+        const totalFeeAmount =
+            order.fees.length > 0 ? order.fees.map(fee => fee.amount).reduce((a, b) => a + b, 0n) : 0n;
         if (order.direction === NFTOrder.TradeDirection.SellNFT) {
             // 检查 maker 是否是合约地址（如 contractMaker）
             const signers = await ethers.getSigners();
@@ -351,7 +355,7 @@ describe('ERC1155OrdersFeature', () => {
             await erc1155Token.connect(signerForTaker).mint(_taker, tokenId, amount);
             // 授权 ZeroEx 合约转移 taker 的 ERC1155 代币
             await erc1155Token.connect(signerForTaker).setApprovalForAll(await zeroEx.getAddress(), true);
-            if (order.erc20Token === await weth.getAddress()) {
+            if (order.erc20Token === (await weth.getAddress())) {
                 // 检查 maker 是否是合约地址（如 contractMaker）
                 const signers = await ethers.getSigners();
                 const makerSigner = signers.find(s => s.address.toLowerCase() === order.maker.toLowerCase());
@@ -381,7 +385,9 @@ describe('ERC1155OrdersFeature', () => {
                     // maker 是合约地址，先为 owner mint，然后转给合约
                     const ownerSigner = await getSigner(owner);
                     await erc20Token.connect(ownerSigner).mint(owner, order.erc20TokenAmount + totalFeeAmount);
-                    await erc20Token.connect(ownerSigner).transfer(order.maker, order.erc20TokenAmount + totalFeeAmount);
+                    await erc20Token
+                        .connect(ownerSigner)
+                        .transfer(order.maker, order.erc20TokenAmount + totalFeeAmount);
                 }
             }
         }
@@ -401,12 +407,12 @@ describe('ERC1155OrdersFeature', () => {
         amount: bigint = order.erc1155TokenAmount,
         _taker: string = taker,
     ): Promise<void> {
-        const token = order.erc20Token === await weth.getAddress() ? weth : erc20Token;
+        const token = order.erc20Token === (await weth.getAddress()) ? weth : erc20Token;
         if (order.direction === NFTOrder.TradeDirection.SellNFT) {
             // 使用更精确的计算方法，模拟合约逻辑
             const erc20FillAmount = safeGetPartialAmountFloor(amount, order.erc1155TokenAmount, order.erc20TokenAmount);
             const erc20Balance = await token.balanceOf(order.maker);
-            
+
             // 对于部分填充，允许 1 wei 的容差，因为合约可能使用不同的舍入策略
             if (amount !== order.erc1155TokenAmount) {
                 // 部分填充情况，允许 1 wei 容差
@@ -421,7 +427,7 @@ describe('ERC1155OrdersFeature', () => {
             // 使用更精确的计算方法，模拟合约逻辑
             const erc20FillAmount = safeGetPartialAmountFloor(amount, order.erc1155TokenAmount, order.erc20TokenAmount);
             const erc20Balance = await token.balanceOf(_taker);
-            
+
             // 对于部分填充，允许 1 wei 的容差，因为合约可能使用不同的舍入策略
             if (amount !== order.erc1155TokenAmount) {
                 // 部分填充情况，允许 1 wei 容差
@@ -438,11 +444,12 @@ describe('ERC1155OrdersFeature', () => {
                 order.fees.map(async fee => {
                     const feeRecipientBalance = await token.balanceOf(fee.recipient);
                     const feeFillAmount = safeGetPartialAmountFloor(amount, order.erc1155TokenAmount, fee.amount);
-                    
+
                     // 对于部分填充的费用，也允许 1 wei 的容差
                     if (amount !== order.erc1155TokenAmount) {
                         // 部分填充情况，允许 1 wei 容差
-                        expect(feeRecipientBalance >= feeFillAmount - 1n && feeRecipientBalance <= feeFillAmount + 1n).to.be.true;
+                        expect(feeRecipientBalance >= feeFillAmount - 1n && feeRecipientBalance <= feeFillAmount + 1n)
+                            .to.be.true;
                     } else {
                         // 完全填充情况，要求精确匹配
                         expect(feeRecipientBalance).to.equal(feeFillAmount);
@@ -457,7 +464,7 @@ describe('ERC1155OrdersFeature', () => {
         const network = await ethers.provider.getNetwork();
         const actualChainId = Number(network.chainId);
         const correctVerifyingContract = await zeroEx.getAddress();
-        
+
         return getRandomERC1155Order({
             maker,
             verifyingContract: correctVerifyingContract,
@@ -477,7 +484,7 @@ describe('ERC1155OrdersFeature', () => {
     ): any {
         // 计算 ERC20 填充数量（使用 BigInt 算术）
         const erc20FillAmount = (amount * order.erc20TokenAmount) / order.erc1155TokenAmount;
-        
+
         return {
             direction: order.direction,
             maker: order.maker,
@@ -625,18 +632,25 @@ describe('ERC1155OrdersFeature', () => {
             const order = await getTestERC1155Order({
                 direction: NFTOrder.TradeDirection.BuyNFT,
             });
-            
+
             // 域分隔符验证已通过 getTestERC1155Order 中的正确设置确保
-            
+
             const signature = await order.getSignatureWithProviderAsync(env.provider);
-            
+
             // 将资产铸造到正确的地址
             await mintAssetsAsync(order);
             const takerSigner = await getSigner(taker);
-            const tx = await erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+            const tx = await erc1155Feature
+                .connect(takerSigner)
+                .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             const receipt = await tx.wait();
             await assertBalancesAsync(order);
-            verifyEventFromReceipt(receipt, [createERC1155OrderFilledEvent(order)], 'ERC1155OrderFilled', erc1155Feature);
+            verifyEventFromReceipt(
+                receipt,
+                [createERC1155OrderFilledEvent(order)],
+                'ERC1155OrderFilled',
+                erc1155Feature,
+            );
             const orderInfo = await erc1155Feature.getERC1155OrderInfo(order);
             expect(orderInfo.status).to.equal(NFTOrder.OrderStatus.Unfillable);
         });
@@ -645,10 +659,15 @@ describe('ERC1155OrdersFeature', () => {
                 direction: NFTOrder.TradeDirection.BuyNFT,
             });
             const signature = await order.getSignatureWithProviderAsync(env.provider);
-            const erc1155FillAmount = getRandomPortion(order.erc1155TokenAmount - 1n) > 1n ? getRandomPortion(order.erc1155TokenAmount - 1n) : 1n;
+            const erc1155FillAmount =
+                getRandomPortion(order.erc1155TokenAmount - 1n) > 1n
+                    ? getRandomPortion(order.erc1155TokenAmount - 1n)
+                    : 1n;
             await mintAssetsAsync(order, order.erc1155TokenId, erc1155FillAmount);
             const takerSigner = await getSigner(taker);
-            await erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, erc1155FillAmount, false, NULL_BYTES);
+            await erc1155Feature
+                .connect(takerSigner)
+                .sellERC1155(order, signature, order.erc1155TokenId, erc1155FillAmount, false, NULL_BYTES);
             await assertBalancesAsync(order, order.erc1155TokenId, erc1155FillAmount);
             const orderInfo = await erc1155Feature.getERC1155OrderInfo(order);
             expect(orderInfo.status).to.equal(NFTOrder.OrderStatus.Fillable);
@@ -660,8 +679,12 @@ describe('ERC1155OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
             const takerSigner = await getSigner(taker);
-            await erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
-            const tx = erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+            await erc1155Feature
+                .connect(takerSigner)
+                .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+            const tx = erc1155Feature
+                .connect(takerSigner)
+                .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             // 期望交易失败，因为订单已经被填充
             return expect(tx).to.be.rejected;
         });
@@ -674,7 +697,9 @@ describe('ERC1155OrdersFeature', () => {
             const makerSigner = await getSigner(maker);
             await erc1155Feature.connect(makerSigner).cancelERC1155Order(order.nonce);
             const takerSigner = await getSigner(taker);
-            const tx = erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+            const tx = erc1155Feature
+                .connect(takerSigner)
+                .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             // 期望交易失败，因为订单已被取消
             return expect(tx).to.be.rejected;
         });
@@ -686,7 +711,9 @@ describe('ERC1155OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             const takerSigner = await getSigner(taker);
             await erc1155Token.connect(takerSigner).mint(taker, order.erc1155TokenId, order.erc1155TokenAmount);
-            const tx = erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+            const tx = erc1155Feature
+                .connect(takerSigner)
+                .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             return expect(tx).to.be.revertedWith('NFTOrders::_validateBuyOrder/NATIVE_TOKEN_NOT_ALLOWED');
         });
         it('cannot fill an expired order', async () => {
@@ -697,7 +724,9 @@ describe('ERC1155OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
             const takerSigner = await getSigner(taker);
-            const tx = erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+            const tx = erc1155Feature
+                .connect(takerSigner)
+                .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
             // TODO: 找到正确的方法匹配自定义错误
             return expect(tx).to.be.rejected;
@@ -709,7 +738,9 @@ describe('ERC1155OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
             const takerSigner = await getSigner(taker);
-            const tx = erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+            const tx = erc1155Feature
+                .connect(takerSigner)
+                .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             return expect(tx).to.be.revertedWith('NFTOrders::_validateBuyOrder/WRONG_TRADE_DIRECTION');
         });
         it('reverts if the taker is not the taker address specified in the order', async () => {
@@ -720,7 +751,9 @@ describe('ERC1155OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order, order.erc1155TokenId, order.erc1155TokenAmount, otherTaker);
             const otherTakerSigner = await getSigner(otherTaker);
-            const tx = erc1155Feature.connect(otherTakerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+            const tx = erc1155Feature
+                .connect(otherTakerSigner)
+                .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             await expect(tx).to.be.rejected;
         });
         it('succeeds if the taker is the taker address specified in the order', async () => {
@@ -731,7 +764,9 @@ describe('ERC1155OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
             const takerSigner = await getSigner(taker);
-            await erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+            await erc1155Feature
+                .connect(takerSigner)
+                .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             await assertBalancesAsync(order);
         });
         it('reverts if an invalid signature is provided', async () => {
@@ -741,7 +776,9 @@ describe('ERC1155OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider, 3, otherMaker);
             await mintAssetsAsync(order);
             const takerSigner = await getSigner(taker);
-            const tx = erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+            const tx = erc1155Feature
+                .connect(takerSigner)
+                .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
             await expect(tx).to.be.rejected;
         });
         it('reverts if `unwrapNativeToken` is true and `erc20Token` is not WETH', async () => {
@@ -752,14 +789,9 @@ describe('ERC1155OrdersFeature', () => {
             await mintAssetsAsync(order);
             const takerSigner = await getSigner(taker);
             await expect(
-                erc1155Feature.connect(takerSigner).sellERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenId,
-                    order.erc1155TokenAmount,
-                    true,
-                    NULL_BYTES,
-                )
+                erc1155Feature
+                    .connect(takerSigner)
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, true, NULL_BYTES),
             ).to.be.rejected;
         });
         it('sends ETH to taker if `unwrapNativeToken` is true and `erc20Token` is WETH', async () => {
@@ -771,15 +803,11 @@ describe('ERC1155OrdersFeature', () => {
             await mintAssetsAsync(order);
             const takerSigner = await getSigner(taker);
             await expect(async () =>
-                erc1155Feature.connect(takerSigner).sellERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenId,
-                    order.erc1155TokenAmount,
-                    true,
-                    NULL_BYTES,
-                    { gasPrice: 0 }
-                )
+                erc1155Feature
+                    .connect(takerSigner)
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, true, NULL_BYTES, {
+                        gasPrice: 0,
+                    }),
             ).to.changeEtherBalance(takerSigner, order.erc20TokenAmount);
             const makerBalance = await erc1155Token.balanceOf(maker, order.erc1155TokenId);
             expect(makerBalance).to.equal(order.erc1155TokenAmount);
@@ -806,7 +834,9 @@ describe('ERC1155OrdersFeature', () => {
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
                 const takerSigner = await getSigner(taker);
-                await erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+                await erc1155Feature
+                    .connect(takerSigner)
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
                 await assertBalancesAsync(order);
             });
             it('partial fill, single fee', async () => {
@@ -821,10 +851,15 @@ describe('ERC1155OrdersFeature', () => {
                     ],
                 });
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
-                const erc1155FillAmount = getRandomPortion(order.erc1155TokenAmount - 1n) > 1n ? getRandomPortion(order.erc1155TokenAmount - 1n) : 1n;
+                const erc1155FillAmount =
+                    getRandomPortion(order.erc1155TokenAmount - 1n) > 1n
+                        ? getRandomPortion(order.erc1155TokenAmount - 1n)
+                        : 1n;
                 await mintAssetsAsync(order, order.erc1155TokenId, erc1155FillAmount);
                 const takerSigner = await getSigner(taker);
-                await erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, erc1155FillAmount, false, NULL_BYTES);
+                await erc1155Feature
+                    .connect(takerSigner)
+                    .sellERC1155(order, signature, order.erc1155TokenId, erc1155FillAmount, false, NULL_BYTES);
                 await assertBalancesAsync(order, order.erc1155TokenId, erc1155FillAmount);
             });
             it('single fee, successful callback', async () => {
@@ -841,7 +876,9 @@ describe('ERC1155OrdersFeature', () => {
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
                 const takerSigner = await getSigner(taker);
-                await erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+                await erc1155Feature
+                    .connect(takerSigner)
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
                 await assertBalancesAsync(order);
             });
             it('single fee, callback reverts', async () => {
@@ -857,7 +894,9 @@ describe('ERC1155OrdersFeature', () => {
                 });
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
-                const tx = erc1155Feature.connect(await getSigner(taker)).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+                const tx = erc1155Feature
+                    .connect(await getSigner(taker))
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
                 await expect(tx).to.be.rejected;
             });
             it('single fee, callback returns invalid value', async () => {
@@ -873,7 +912,9 @@ describe('ERC1155OrdersFeature', () => {
                 });
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
-                const tx = erc1155Feature.connect(await getSigner(taker)).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+                const tx = erc1155Feature
+                    .connect(await getSigner(taker))
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
                 await expect(tx).to.be.rejected;
             });
             it('multiple fees to EOAs', async () => {
@@ -895,7 +936,9 @@ describe('ERC1155OrdersFeature', () => {
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
                 const takerSigner = await getSigner(taker);
-                await erc1155Feature.connect(takerSigner).sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+                await erc1155Feature
+                    .connect(takerSigner)
+                    .sellERC1155(order, signature, order.erc1155TokenId, order.erc1155TokenAmount, false, NULL_BYTES);
                 await assertBalancesAsync(order);
             });
         });
@@ -904,7 +947,7 @@ describe('ERC1155OrdersFeature', () => {
 
             before(async () => {
                 const signers = await ethers.getSigners();
-        const signer = signers.find(s => s.address.toLowerCase() === owner.toLowerCase()) || signers[0];
+                const signer = signers.find(s => s.address.toLowerCase() === owner.toLowerCase()) || signers[0];
                 const propertyValidatorFactory = new TestPropertyValidator__factory(signer);
                 propertyValidator = await propertyValidatorFactory.deploy();
                 await propertyValidator.waitForDeployment();
@@ -915,14 +958,16 @@ describe('ERC1155OrdersFeature', () => {
                 });
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order, order.erc1155TokenId + 1n);
-                const tx = erc1155Feature.connect(await getSigner(taker)).sellERC1155(
-                    order,
-                    signature,
-                    order.erc1155TokenId + 1n,
-                    order.erc1155TokenAmount,
-                    false,
-                    NULL_BYTES,
-                );
+                const tx = erc1155Feature
+                    .connect(await getSigner(taker))
+                    .sellERC1155(
+                        order,
+                        signature,
+                        order.erc1155TokenId + 1n,
+                        order.erc1155TokenAmount,
+                        false,
+                        NULL_BYTES,
+                    );
                 await expect(tx).to.be.rejected;
             });
             it('Null property', async () => {
@@ -939,7 +984,9 @@ describe('ERC1155OrdersFeature', () => {
                 const tokenId = getRandomInteger(0n, MAX_UINT256);
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order, tokenId);
-                await erc1155Feature.connect(await getSigner(taker)).sellERC1155(order, signature, tokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+                await erc1155Feature
+                    .connect(await getSigner(taker))
+                    .sellERC1155(order, signature, tokenId, order.erc1155TokenAmount, false, NULL_BYTES);
                 await assertBalancesAsync(order, tokenId);
             });
             it('Reverts if property validation fails', async () => {
@@ -956,7 +1003,9 @@ describe('ERC1155OrdersFeature', () => {
                 const tokenId = getRandomInteger(0n, MAX_UINT256);
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order, tokenId);
-                const tx = erc1155Feature.connect(await getSigner(taker)).sellERC1155(order, signature, tokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+                const tx = erc1155Feature
+                    .connect(await getSigner(taker))
+                    .sellERC1155(order, signature, tokenId, order.erc1155TokenAmount, false, NULL_BYTES);
                 await expect(tx).to.be.rejected;
             });
             it('Successful property validation', async () => {
@@ -973,14 +1022,16 @@ describe('ERC1155OrdersFeature', () => {
                 const tokenId = getRandomInteger(0n, MAX_UINT256);
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order, tokenId);
-                await erc1155Feature.connect(await getSigner(taker)).sellERC1155(order, signature, tokenId, order.erc1155TokenAmount, false, NULL_BYTES);
+                await erc1155Feature
+                    .connect(await getSigner(taker))
+                    .sellERC1155(order, signature, tokenId, order.erc1155TokenAmount, false, NULL_BYTES);
                 await assertBalancesAsync(order, tokenId);
             });
         });
     });
     describe('onERC1155Received', () => {
         let dataEncoder: AbiEncoder.DataType;
-        
+
         // onERC1155Received 测试也需要余额重置
         beforeEach(async () => {
             // 重置所有相关账户的 ERC20 和 WETH 余额
@@ -988,7 +1039,7 @@ describe('ERC1155OrdersFeature', () => {
             await resetBalancesAsync(allAccounts, erc20Token);
             await resetBalancesAsync(allAccounts, weth);
         });
-        
+
         before(() => {
             dataEncoder = AbiEncoder.create(
                 [
@@ -1036,13 +1087,15 @@ describe('ERC1155OrdersFeature', () => {
             });
             await mintAssetsAsync(order);
             const takerSigner = await getSigner(taker);
-            const tx = erc1155Token.connect(takerSigner).safeTransferFrom(
-                taker,
-                await zeroEx.getAddress(),
-                order.erc1155TokenId,
-                order.erc1155TokenAmount,
-                hexUtils.random(),
-            );
+            const tx = erc1155Token
+                .connect(takerSigner)
+                .safeTransferFrom(
+                    taker,
+                    await zeroEx.getAddress(),
+                    order.erc1155TokenId,
+                    order.erc1155TokenAmount,
+                    hexUtils.random(),
+                );
             await expect(tx).to.be.rejected;
         });
         it('reverts if msg.sender != order.erc1155Token', async () => {
@@ -1129,10 +1182,17 @@ describe('ERC1155OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
             const takerSigner = await getSigner(taker);
-            const tx = await erc1155Feature.connect(takerSigner).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
+            const tx = await erc1155Feature
+                .connect(takerSigner)
+                .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
             const receipt = await tx.wait();
             await assertBalancesAsync(order);
-            verifyEventFromReceipt(receipt, [createERC1155OrderFilledEvent(order)], 'ERC1155OrderFilled', erc1155Feature);
+            verifyEventFromReceipt(
+                receipt,
+                [createERC1155OrderFilledEvent(order)],
+                'ERC1155OrderFilled',
+                erc1155Feature,
+            );
             const orderInfo = await erc1155Feature.getERC1155OrderInfo(order);
             expect(orderInfo.status).to.equal(NFTOrder.OrderStatus.Unfillable);
         });
@@ -1141,7 +1201,10 @@ describe('ERC1155OrdersFeature', () => {
                 direction: NFTOrder.TradeDirection.SellNFT,
             });
             const signature = await order.getSignatureWithProviderAsync(env.provider);
-            const erc1155FillAmount = getRandomPortion(order.erc1155TokenAmount - 1n) > 1n ? getRandomPortion(order.erc1155TokenAmount - 1n) : 1n;
+            const erc1155FillAmount =
+                getRandomPortion(order.erc1155TokenAmount - 1n) > 1n
+                    ? getRandomPortion(order.erc1155TokenAmount - 1n)
+                    : 1n;
             await mintAssetsAsync(order, order.erc1155TokenId, erc1155FillAmount);
             const takerSigner = await getSigner(taker);
             await erc1155Feature.connect(takerSigner).buyERC1155(order, signature, erc1155FillAmount, NULL_BYTES);
@@ -1156,8 +1219,12 @@ describe('ERC1155OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
             const takerSigner = await getSigner(taker);
-            await erc1155Feature.connect(takerSigner).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
-                const tx = erc1155Feature.connect(takerSigner).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
+            await erc1155Feature
+                .connect(takerSigner)
+                .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
+            const tx = erc1155Feature
+                .connect(takerSigner)
+                .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
             // 期望交易失败，因为订单已填充，不可再次填充
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
             await expect(tx).to.be.rejected;
@@ -1170,7 +1237,9 @@ describe('ERC1155OrdersFeature', () => {
             await mintAssetsAsync(order);
             const makerSigner = await getSigner(maker);
             await erc1155Feature.connect(makerSigner).cancelERC1155Order(order.nonce);
-            const tx = erc1155Feature.connect(await getSigner(taker)).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
+            const tx = erc1155Feature
+                .connect(await getSigner(taker))
+                .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
             // 期望交易失败，因为订单已取消，不可填充
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
             await expect(tx).to.be.rejected;
@@ -1183,7 +1252,9 @@ describe('ERC1155OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
             const takerSigner = await getSigner(taker);
-            const tx = erc1155Feature.connect(takerSigner).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
+            const tx = erc1155Feature
+                .connect(takerSigner)
+                .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
             // 期望交易失败，因为订单已过期，不可填充
             // 注意：理想情况下应该匹配具体的 OrderNotFillableError，但由于技术限制暂时使用通用匹配
             await expect(tx).to.be.rejected;
@@ -1194,7 +1265,9 @@ describe('ERC1155OrdersFeature', () => {
             });
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
-            const tx = erc1155Feature.connect(await getSigner(taker)).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
+            const tx = erc1155Feature
+                .connect(await getSigner(taker))
+                .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
             await expect(tx).to.be.revertedWith('NFTOrders::_validateSellOrder/WRONG_TRADE_DIRECTION');
         });
         it('reverts if the taker is not the taker address specified in the order', async () => {
@@ -1204,7 +1277,9 @@ describe('ERC1155OrdersFeature', () => {
             });
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order, order.erc1155TokenId, order.erc1155TokenAmount, otherTaker);
-            const tx = erc1155Feature.connect(await getSigner(otherTaker)).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
+            const tx = erc1155Feature
+                .connect(await getSigner(otherTaker))
+                .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
             await expect(tx).to.be.rejected;
         });
         it('succeeds if the taker is the taker address specified in the order', async () => {
@@ -1215,7 +1290,9 @@ describe('ERC1155OrdersFeature', () => {
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
             const takerSigner = await getSigner(taker);
-            await erc1155Feature.connect(takerSigner).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
+            await erc1155Feature
+                .connect(takerSigner)
+                .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
             await assertBalancesAsync(order);
         });
         it('reverts if an invalid signature is provided', async () => {
@@ -1224,7 +1301,9 @@ describe('ERC1155OrdersFeature', () => {
             });
             const signature = await order.getSignatureWithProviderAsync(env.provider, 3, otherMaker);
             await mintAssetsAsync(order);
-            const tx = erc1155Feature.connect(await getSigner(taker)).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
+            const tx = erc1155Feature
+                .connect(await getSigner(taker))
+                .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
             await expect(tx).to.be.rejected;
         });
         describe('ETH', () => {
@@ -1244,14 +1323,14 @@ describe('ERC1155OrdersFeature', () => {
                 await mintAssetsAsync(order);
                 const takerSigner = await getSigner(taker);
                 await expect(async () =>
-                    erc1155Feature.connect(takerSigner).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, {
-                        value: order.erc20TokenAmount + 1n,
-                    })
-                ).to.changeEtherBalances(
-                    [takerSigner, maker],
-                    [-order.erc20TokenAmount, order.erc20TokenAmount],
-                    { includeFee: [true, false] },
-                );
+                    erc1155Feature
+                        .connect(takerSigner)
+                        .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, {
+                            value: order.erc20TokenAmount + 1n,
+                        }),
+                ).to.changeEtherBalances([takerSigner, maker], [-order.erc20TokenAmount, order.erc20TokenAmount], {
+                    includeFee: [true, false],
+                });
             });
             it('can fill a WETH order with ETH', async () => {
                 const order = await getTestERC1155Order({
@@ -1263,10 +1342,12 @@ describe('ERC1155OrdersFeature', () => {
                 await erc1155Token.connect(makerSigner).mint(maker, order.erc1155TokenId, order.erc1155TokenAmount);
                 const takerSigner = await getSigner(taker);
                 await expect(async () =>
-                    erc1155Feature.connect(takerSigner).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, {
-                        value: order.erc20TokenAmount,
-                        gasPrice: 0,
-                    })
+                    erc1155Feature
+                        .connect(takerSigner)
+                        .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, {
+                            value: order.erc20TokenAmount,
+                            gasPrice: 0,
+                        }),
                 ).to.changeEtherBalance(takerSigner, -order.erc20TokenAmount);
                 await assertBalancesAsync(order);
             });
@@ -1281,10 +1362,12 @@ describe('ERC1155OrdersFeature', () => {
                 const makerSigner = await getSigner(maker);
                 await erc1155Token.connect(makerSigner).mint(maker, order.erc1155TokenId, order.erc1155TokenAmount);
                 await expect(async () =>
-                    erc1155Feature.connect(takerSigner).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, {
-                        value: order.erc20TokenAmount - 1n,
-                        gasPrice: 0,
-                    })
+                    erc1155Feature
+                        .connect(takerSigner)
+                        .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, {
+                            value: order.erc20TokenAmount - 1n,
+                            gasPrice: 0,
+                        }),
                 ).to.changeEtherBalance(takerSigner, 0); // 系统使用 WETH 而不是 ETH
                 await assertBalancesAsync(order);
             });
@@ -1311,7 +1394,9 @@ describe('ERC1155OrdersFeature', () => {
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
                 const takerSigner = await getSigner(taker);
-                await erc1155Feature.connect(takerSigner).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
+                await erc1155Feature
+                    .connect(takerSigner)
+                    .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
                 await assertBalancesAsync(order);
             });
             it('partial fill, single fee', async () => {
@@ -1326,7 +1411,10 @@ describe('ERC1155OrdersFeature', () => {
                     ],
                 });
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
-                const erc1155FillAmount = getRandomPortion(order.erc1155TokenAmount - 1n) > 1n ? getRandomPortion(order.erc1155TokenAmount - 1n) : 1n;
+                const erc1155FillAmount =
+                    getRandomPortion(order.erc1155TokenAmount - 1n) > 1n
+                        ? getRandomPortion(order.erc1155TokenAmount - 1n)
+                        : 1n;
                 await mintAssetsAsync(order, order.erc1155TokenId, erc1155FillAmount);
                 const takerSigner = await getSigner(taker);
                 await erc1155Feature.connect(takerSigner).buyERC1155(order, signature, erc1155FillAmount, NULL_BYTES);
@@ -1347,9 +1435,11 @@ describe('ERC1155OrdersFeature', () => {
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
                 await expect(async () =>
-                    erc1155Feature.connect(await getSigner(taker)).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, {
-                        value: order.erc20TokenAmount + order.fees[0].amount + 1n,
-                    })
+                    erc1155Feature
+                        .connect(await getSigner(taker))
+                        .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, {
+                            value: order.erc20TokenAmount + order.fees[0].amount + 1n,
+                        }),
                 ).to.changeEtherBalances(
                     [await getSigner(taker), maker, otherMaker],
                     [-(order.erc20TokenAmount + order.fees[0].amount), order.erc20TokenAmount, order.fees[0].amount],
@@ -1372,22 +1462,29 @@ describe('ERC1155OrdersFeature', () => {
                 });
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
-            const takerSigner = await getSigner(taker);
-            let receipt: any;
-            await expect(async () => {
-                const tx = await erc1155Feature.connect(takerSigner).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, {
-                    value: order.erc20TokenAmount + order.fees[0].amount + 1n,
-                    gasPrice: 0,
-                });
-                receipt = await tx.wait();
-                return tx;
-            }).to.changeEtherBalances(
-                [takerSigner, otherMaker],
-                [-(order.erc20TokenAmount + order.fees[0].amount), order.fees[0].amount],
-                { includeFee: [true, false] },
-            );
-            // 验证 ERC1155OrderFilled 事件
-            verifyEventFromReceipt(receipt, [createERC1155OrderFilledEvent(order)], 'ERC1155OrderFilled', erc1155Feature);
+                const takerSigner = await getSigner(taker);
+                let receipt: any;
+                await expect(async () => {
+                    const tx = await erc1155Feature
+                        .connect(takerSigner)
+                        .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, {
+                            value: order.erc20TokenAmount + order.fees[0].amount + 1n,
+                            gasPrice: 0,
+                        });
+                    receipt = await tx.wait();
+                    return tx;
+                }).to.changeEtherBalances(
+                    [takerSigner, otherMaker],
+                    [-(order.erc20TokenAmount + order.fees[0].amount), order.fees[0].amount],
+                    { includeFee: [true, false] },
+                );
+                // 验证 ERC1155OrderFilled 事件
+                verifyEventFromReceipt(
+                    receipt,
+                    [createERC1155OrderFilledEvent(order)],
+                    'ERC1155OrderFilled',
+                    erc1155Feature,
+                );
             });
             it('pays fees in WETH if taker uses WETH', async () => {
                 const order = await getTestERC1155Order({
@@ -1405,8 +1502,12 @@ describe('ERC1155OrdersFeature', () => {
                 const makerSigner = await getSigner(maker);
                 await erc1155Token.connect(makerSigner).mint(maker, order.erc1155TokenId, order.erc1155TokenAmount);
                 const takerSigner = await getSigner(taker);
-                await weth.connect(takerSigner).deposit({ value: order.erc20TokenAmount + order.fees[0].amount, gasPrice: 0 });
-                await erc1155Feature.connect(takerSigner).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
+                await weth
+                    .connect(takerSigner)
+                    .deposit({ value: order.erc20TokenAmount + order.fees[0].amount, gasPrice: 0 });
+                await erc1155Feature
+                    .connect(takerSigner)
+                    .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES);
                 await assertBalancesAsync(order);
             });
             it('reverts if overspent ETH', async () => {
@@ -1424,9 +1525,11 @@ describe('ERC1155OrdersFeature', () => {
                 await sendEtherAsync(await zeroEx.getAddress(), order.fees[0].amount);
                 const signature = await order.getSignatureWithProviderAsync(env.provider);
                 await mintAssetsAsync(order);
-                const tx = erc1155Feature.connect(await getSigner(taker)).buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, {
-                    value: order.erc20TokenAmount,
-                });
+                const tx = erc1155Feature
+                    .connect(await getSigner(taker))
+                    .buyERC1155(order, signature, order.erc1155TokenAmount, NULL_BYTES, {
+                        value: order.erc20TokenAmount,
+                    });
                 await expect(tx).to.be.rejected;
             });
         });
@@ -1446,13 +1549,15 @@ describe('ERC1155OrdersFeature', () => {
             });
             const signature = await order.getSignatureWithProviderAsync(env.provider);
             await mintAssetsAsync(order);
-            const tx = erc1155Feature.connect(await getSigner(taker)).batchBuyERC1155s(
-                [order],
-                [signature, signature],
-                [order.erc1155TokenAmount, order.erc1155TokenAmount],
-                [NULL_BYTES, NULL_BYTES],
-                false,
-            );
+            const tx = erc1155Feature
+                .connect(await getSigner(taker))
+                .batchBuyERC1155s(
+                    [order],
+                    [signature, signature],
+                    [order.erc1155TokenAmount, order.erc1155TokenAmount],
+                    [NULL_BYTES, NULL_BYTES],
+                    false,
+                );
             await expect(tx).to.be.revertedWith('ERC1155OrdersFeature::batchBuyERC1155s/ARRAY_LENGTH_MISMATCH');
         });
         it('successfully fills multiple orders', async () => {
@@ -1470,13 +1575,15 @@ describe('ERC1155OrdersFeature', () => {
             await erc1155Token.connect(makerSigner).mint(maker, order2.erc1155TokenId, order2.erc1155TokenAmount);
             const takerSigner = await getSigner(taker);
             await weth.connect(takerSigner).deposit({ value: order2.erc20TokenAmount, gasPrice: 0 });
-            await erc1155Feature.connect(takerSigner).batchBuyERC1155s(
-                [order1, order2],
-                [signature1, signature2],
-                [order1.erc1155TokenAmount, order2.erc1155TokenAmount],
-                [NULL_BYTES, NULL_BYTES],
-                false,
-            );
+            await erc1155Feature
+                .connect(takerSigner)
+                .batchBuyERC1155s(
+                    [order1, order2],
+                    [signature1, signature2],
+                    [order1.erc1155TokenAmount, order2.erc1155TokenAmount],
+                    [NULL_BYTES, NULL_BYTES],
+                    false,
+                );
             await assertBalancesAsync(order1);
             await assertBalancesAsync(order2);
         });
@@ -1496,13 +1603,15 @@ describe('ERC1155OrdersFeature', () => {
             await erc1155Token.connect(makerSigner).mint(maker, order2.erc1155TokenId, order2.erc1155TokenAmount);
             const takerSigner = await getSigner(taker);
             await weth.connect(takerSigner).deposit({ value: order2.erc20TokenAmount, gasPrice: 0 });
-            const tx = erc1155Feature.connect(takerSigner).batchBuyERC1155s(
-                [order1, order2],
-                [signature1, signature2],
-                [order1.erc1155TokenAmount, order2.erc1155TokenAmount],
-                [NULL_BYTES, NULL_BYTES],
-                false,
-            );
+            const tx = erc1155Feature
+                .connect(takerSigner)
+                .batchBuyERC1155s(
+                    [order1, order2],
+                    [signature1, signature2],
+                    [order1.erc1155TokenAmount, order2.erc1155TokenAmount],
+                    [NULL_BYTES, NULL_BYTES],
+                    false,
+                );
             await expect(tx).not.to.be.rejected; // 部分失败不应整体 revert，应返回 successes
             await assertBalancesAsync(order1);
             const makerBalance = await erc1155Token.balanceOf(maker, order2.erc1155TokenId);
@@ -1526,13 +1635,15 @@ describe('ERC1155OrdersFeature', () => {
             await erc1155Token.connect(makerSigner).mint(maker, order2.erc1155TokenId, order2.erc1155TokenAmount);
             const takerSigner = await getSigner(taker);
             await weth.connect(takerSigner).deposit({ value: order2.erc20TokenAmount, gasPrice: 0 });
-            const tx = erc1155Feature.connect(await getSigner(taker)).batchBuyERC1155s(
-                [order1, order2],
-                [signature1, signature2],
-                [order1.erc1155TokenAmount, order2.erc1155TokenAmount],
-                [NULL_BYTES, NULL_BYTES],
-                true,
-            );
+            const tx = erc1155Feature
+                .connect(await getSigner(taker))
+                .batchBuyERC1155s(
+                    [order1, order2],
+                    [signature1, signature2],
+                    [order1.erc1155TokenAmount, order2.erc1155TokenAmount],
+                    [NULL_BYTES, NULL_BYTES],
+                    true,
+                );
             await expect(tx).to.be.rejected;
         });
         it('can fill multiple orders with ETH, refund excess ETH', async () => {
@@ -1550,18 +1661,17 @@ describe('ERC1155OrdersFeature', () => {
             const makerSigner = await getSigner(maker);
             await erc1155Token.connect(makerSigner).mint(maker, order2.erc1155TokenId, order2.erc1155TokenAmount);
             await expect(async () =>
-                erc1155Feature.connect(await getSigner(taker)).batchBuyERC1155s(
-                    [order1, order2],
-                    [signature1, signature2],
-                    [order1.erc1155TokenAmount, order2.erc1155TokenAmount],
-                    [NULL_BYTES, NULL_BYTES],
-                    true,
-                    { value: order1.erc20TokenAmount + order2.erc20TokenAmount + 1n, gasPrice: 0 },
-                )
-            ).to.changeEtherBalance(
-                await getSigner(taker),
-                -(order1.erc20TokenAmount + order2.erc20TokenAmount),
-            );
+                erc1155Feature
+                    .connect(await getSigner(taker))
+                    .batchBuyERC1155s(
+                        [order1, order2],
+                        [signature1, signature2],
+                        [order1.erc1155TokenAmount, order2.erc1155TokenAmount],
+                        [NULL_BYTES, NULL_BYTES],
+                        true,
+                        { value: order1.erc20TokenAmount + order2.erc20TokenAmount + 1n, gasPrice: 0 },
+                    ),
+            ).to.changeEtherBalance(await getSigner(taker), -(order1.erc20TokenAmount + order2.erc20TokenAmount));
             const takerBalance1 = await erc1155Token.balanceOf(taker, order1.erc1155TokenId);
             expect(takerBalance1).to.equal(order1.erc1155TokenAmount);
             const takerBalance2 = await erc1155Token.balanceOf(taker, order2.erc1155TokenId);
@@ -1578,11 +1688,11 @@ describe('ERC1155OrdersFeature', () => {
         let contractMaker: TestNFTOrderPresignerContract;
         before(async () => {
             const signers = await ethers.getSigners();
-        const signer = signers.find(s => s.address.toLowerCase() === owner.toLowerCase()) || signers[0];
+            const signer = signers.find(s => s.address.toLowerCase() === owner.toLowerCase()) || signers[0];
             const contractMakerFactory = new TestNFTOrderPresigner__factory(signer);
             contractMaker = await contractMakerFactory.deploy(await zeroEx.getAddress());
             await contractMaker.waitForDeployment();
-            
+
             await contractMaker.approveERC20(await erc20Token.getAddress());
             await contractMaker.approveERC1155(await erc1155Token.getAddress());
         });
@@ -1594,14 +1704,16 @@ describe('ERC1155OrdersFeature', () => {
             await mintAssetsAsync(order);
             await contractMaker.preSignERC1155Order(order);
             const takerSigner = await getSigner(taker);
-            await erc1155Feature.connect(takerSigner).sellERC1155(
-                order,
-                PRESIGN_SIGNATURE,
-                order.erc1155TokenId,
-                order.erc1155TokenAmount,
-                false,
-                NULL_BYTES,
-            );
+            await erc1155Feature
+                .connect(takerSigner)
+                .sellERC1155(
+                    order,
+                    PRESIGN_SIGNATURE,
+                    order.erc1155TokenId,
+                    order.erc1155TokenAmount,
+                    false,
+                    NULL_BYTES,
+                );
             await assertBalancesAsync(order);
         });
         it('cannot fill order that has not been presigned by the maker', async () => {
@@ -1610,14 +1722,16 @@ describe('ERC1155OrdersFeature', () => {
                 direction: NFTOrder.TradeDirection.BuyNFT,
             });
             await mintAssetsAsync(order);
-            const tx = erc1155Feature.connect(await getSigner(taker)).sellERC1155(
-                order,
-                PRESIGN_SIGNATURE,
-                order.erc1155TokenId,
-                order.erc1155TokenAmount,
-                false,
-                NULL_BYTES,
-            );
+            const tx = erc1155Feature
+                .connect(await getSigner(taker))
+                .sellERC1155(
+                    order,
+                    PRESIGN_SIGNATURE,
+                    order.erc1155TokenId,
+                    order.erc1155TokenAmount,
+                    false,
+                    NULL_BYTES,
+                );
             await expect(tx).to.be.rejected;
         });
         it('cannot fill order that was presigned then cancelled', async () => {
@@ -1628,14 +1742,16 @@ describe('ERC1155OrdersFeature', () => {
             await mintAssetsAsync(order);
             await contractMaker.preSignERC1155Order(order);
             await contractMaker.cancelERC1155Order(order.nonce);
-            const tx = erc1155Feature.connect(await getSigner(taker)).sellERC1155(
-                order,
-                PRESIGN_SIGNATURE,
-                order.erc1155TokenId,
-                order.erc1155TokenAmount,
-                false,
-                NULL_BYTES,
-            );
+            const tx = erc1155Feature
+                .connect(await getSigner(taker))
+                .sellERC1155(
+                    order,
+                    PRESIGN_SIGNATURE,
+                    order.erc1155TokenId,
+                    order.erc1155TokenAmount,
+                    false,
+                    NULL_BYTES,
+                );
             await expect(tx).to.be.rejected;
         });
         it('only maker can presign order', async () => {

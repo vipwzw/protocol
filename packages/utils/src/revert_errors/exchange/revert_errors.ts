@@ -219,11 +219,7 @@ export class TransactionInvalidContextError extends RevertError {
 }
 
 export class IncompleteFillError extends RevertError {
-    constructor(
-        error?: IncompleteFillErrorCode,
-        expectedAssetFillAmount?: bigint,
-        actualAssetFillAmount?: bigint,
-    ) {
+    constructor(error?: IncompleteFillErrorCode, expectedAssetFillAmount?: bigint, actualAssetFillAmount?: bigint) {
         super(
             'IncompleteFillError',
             'IncompleteFillError(uint8 error, uint256 expectedAssetFillAmount, uint256 actualAssetFillAmount)',

@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers } from 'hardhat';
 import { constants, randomAddress, ZeroExRevertErrors } from '@0x/utils';
 import { expect } from 'chai';
 import * as _ from 'lodash';
@@ -11,19 +11,19 @@ describe('Transformer (base)', () => {
         provider: ethers.provider,
         getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
     };
-    
+
     let deployer: string;
     let delegateCaller: TestDelegateCallerContract;
     let transformer: TestTransformerBaseContract;
 
     before(async () => {
         [deployer] = await env.getAccountAddressesAsync();
-        
+
         const DelegateCallerFactory = await ethers.getContractFactory('TestDelegateCaller');
-        delegateCaller = await DelegateCallerFactory.deploy() as TestDelegateCallerContract;
-        
+        delegateCaller = (await DelegateCallerFactory.deploy()) as TestDelegateCallerContract;
+
         const TransformerBaseFactory = await ethers.getContractFactory('TestTransformerBase');
-        transformer = await TransformerBaseFactory.deploy() as TestTransformerBaseContract;
+        transformer = (await TransformerBaseFactory.deploy()) as TestTransformerBaseContract;
     });
 
     describe('die()', () => {
@@ -37,7 +37,9 @@ describe('Transformer (base)', () => {
         it('cannot be called outside of its own context', async () => {
             const callData = transformer.interface.encodeFunctionData('die', [randomAddress()]);
             const deployerSigner = await ethers.getImpersonatedSigner(deployer);
-            const tx = delegateCaller.connect(deployerSigner).executeDelegateCall(await transformer.getAddress(), callData);
+            const tx = delegateCaller
+                .connect(deployerSigner)
+                .executeDelegateCall(await transformer.getAddress(), callData);
             return expect(tx).to.be.rejected;
         });
 

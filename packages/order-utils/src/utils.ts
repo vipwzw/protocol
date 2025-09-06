@@ -16,7 +16,12 @@ export const hexUtils = {
     random(numBytes: number = 32): string {
         const bytes = new Uint8Array(numBytes);
         crypto.getRandomValues(bytes);
-        return '0x' + Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+        return (
+            '0x' +
+            Array.from(bytes)
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('')
+        );
     },
     toHex(value: string | Buffer | Uint8Array): string {
         if (typeof value === 'string') {
@@ -31,10 +36,15 @@ export const hexUtils = {
             return '0x' + value.toString('hex');
         }
         if (value instanceof Uint8Array) {
-            return '0x' + Array.from(value).map(b => b.toString(16).padStart(2, '0')).join('');
+            return (
+                '0x' +
+                Array.from(value)
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('')
+            );
         }
         return '0x';
-    }
+    },
 };
 
 // 签名工具，替代 @0x/utils 中的 signTypedDataUtils
@@ -42,12 +52,12 @@ export const signTypedDataUtils = {
     generateTypedDataHash(typedData: any): string {
         // 使用 ethers.js 的标准 EIP-712 哈希计算
         const { ethers } = require('ethers');
-        
+
         try {
             // 移除可能冲突的 EIP712Domain 类型定义
             const cleanTypes = { ...typedData.types };
             delete cleanTypes.EIP712Domain;
-            
+
             // 使用 ethers.TypedDataEncoder 计算标准 EIP-712 哈希
             return ethers.TypedDataEncoder.hash(typedData.domain, cleanTypes, typedData.message);
         } catch (error) {
@@ -57,10 +67,12 @@ export const signTypedDataUtils = {
                 return ethers.TypedDataEncoder.hash(typedData.domain, typedData.types, typedData.message);
             } catch (fallbackError) {
                 console.error('EIP-712 哈希计算失败:', fallbackError);
-                throw new Error(`Failed to generate EIP-712 hash: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`);
+                throw new Error(
+                    `Failed to generate EIP-712 hash: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`,
+                );
             }
         }
-    }
+    },
 };
 
 // 伪随机数生成，替代 @0x/utils
@@ -98,20 +110,19 @@ export const jsonUtils = {
     /**
      * BigInt 安全的 JSON 序列化 replacer 函数
      * 用于 JSON.stringify() 的第二个参数，将 BigInt 转换为字符串
-     * 
+     *
      * @example
      * JSON.stringify(data, jsonUtils.bigIntReplacer)
      */
-    bigIntReplacer: (key: string, value: any): any => 
-        typeof value === 'bigint' ? value.toString() : value,
+    bigIntReplacer: (key: string, value: any): any => (typeof value === 'bigint' ? value.toString() : value),
 
     /**
      * 比较两个可能包含 BigInt 的对象是否相等（序列化比较）
-     * 
+     *
      * @param obj1 第一个对象
      * @param obj2 第二个对象
      * @returns 是否相等
      */
-    isEqual: (obj1: any, obj2: any): boolean => 
-        JSON.stringify(obj1, jsonUtils.bigIntReplacer) === JSON.stringify(obj2, jsonUtils.bigIntReplacer)
+    isEqual: (obj1: any, obj2: any): boolean =>
+        JSON.stringify(obj1, jsonUtils.bigIntReplacer) === JSON.stringify(obj2, jsonUtils.bigIntReplacer),
 };

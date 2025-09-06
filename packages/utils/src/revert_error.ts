@@ -4,7 +4,7 @@ import * as ethUtil from 'ethereumjs-util';
 import * as _ from 'lodash';
 import { inspect } from 'util';
 
-import { ethers, Interface } from 'ethers';
+import { Interface } from 'ethers';
 import { toBigInt } from './configured_bigint';
 
 // tslint:disable: max-classes-per-file no-unnecessary-type-assertion
@@ -15,7 +15,7 @@ type ArgTypes =
     | number
     | boolean
     | RevertError
-    | any  // Allow legacy values for compatibility
+    | any // Allow legacy values for compatibility
     | bigint[]
     | string[]
     | number[]
@@ -547,7 +547,7 @@ function createEncoder(abi: RevertErrorAbi): (values: ObjectMap<any>) => string 
         name: abi.name,
         inputs: abi.arguments || [],
         outputs: [],
-        stateMutability: 'pure'
+        stateMutability: 'pure',
     };
     const ethersInterface = new Interface([methodAbi]);
     return (values: ObjectMap<any>): string => {
@@ -562,7 +562,7 @@ function createDecoder(abi: RevertErrorAbi): (hex: string) => ValueMap {
         name: abi.name,
         inputs: abi.arguments || [],
         outputs: [],
-        stateMutability: 'pure'
+        stateMutability: 'pure',
     };
     const ethersInterface = new Interface([methodAbi]);
     return (hex: string): ValueMap => {

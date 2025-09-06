@@ -12,7 +12,7 @@ import {
     toBigInt,
 } from '../test_constants';
 
-// getRandomPortion replacement  
+// getRandomPortion replacement
 function getRandomPortion(): number {
     return Math.random();
 }

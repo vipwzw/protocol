@@ -66,7 +66,7 @@ describe('Types with BigInt Support', () => {
         it('should perform basic bigint arithmetic', () => {
             const sum = TEST_VALUES.ONE_ETH + TEST_VALUES.HALF_ETH;
             const expected = 1500000000000000000n;
-            
+
             expectToBeBigInt(sum);
             expect(sum).to.equal(expected);
         });
@@ -82,4 +82,4 @@ describe('Types with BigInt Support', () => {
             expect(TEST_VALUES.ZERO.toString()).to.equal('0');
         });
     });
-}); 
+});

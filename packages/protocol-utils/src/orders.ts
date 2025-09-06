@@ -245,7 +245,7 @@ export class LimitOrder extends OrderBase {
     public willExpire(secondsFromNow = 0): boolean {
         const millisecondsInSecond = 1000n;
         const currentUnixTimestampSec = BigInt(Math.floor(Date.now() / Number(millisecondsInSecond)));
-        return this.expiry < (currentUnixTimestampSec + BigInt(secondsFromNow));
+        return this.expiry < currentUnixTimestampSec + BigInt(secondsFromNow);
     }
 }
 
@@ -341,7 +341,7 @@ export class RfqOrder extends OrderBase {
     public willExpire(secondsFromNow = 0): boolean {
         const millisecondsInSecond = 1000n;
         const currentUnixTimestampSec = BigInt(Math.floor(Date.now() / Number(millisecondsInSecond)));
-        return this.expiry < (currentUnixTimestampSec + BigInt(secondsFromNow));
+        return this.expiry < currentUnixTimestampSec + BigInt(secondsFromNow);
     }
 }
 
@@ -358,9 +358,9 @@ export class OtcOrder extends OrderBase {
         { type: 'uint256', name: 'expiryAndNonce' },
     ];
     public static readonly TYPE_HASH = getTypeHash(OtcOrder.STRUCT_NAME, OtcOrder.STRUCT_ABI);
-    public static readonly MAX_EXPIRY = (2n ** 64n) - 1n;
-    public static readonly MAX_NONCE_BUCKET = (2n ** 64n) - 1n;
-    public static readonly MAX_NONCE_VALUE = (2n ** 128n) - 1n;
+    public static readonly MAX_EXPIRY = 2n ** 64n - 1n;
+    public static readonly MAX_NONCE_BUCKET = 2n ** 64n - 1n;
+    public static readonly MAX_NONCE_VALUE = 2n ** 128n - 1n;
 
     public txOrigin: string;
     public expiryAndNonce: bigint;
@@ -395,9 +395,14 @@ export class OtcOrder extends OrderBase {
             throw new Error('Nonce out of range');
         }
         return BigInt(
-            '0x' + hexUtils
-                .concat(hexUtils.leftPad(expiry.toString(), 8), hexUtils.leftPad(nonceBucket.toString(), 8), hexUtils.leftPad(nonce.toString(), 16))
-                .substr(2),
+            '0x' +
+                hexUtils
+                    .concat(
+                        hexUtils.leftPad(expiry.toString(), 8),
+                        hexUtils.leftPad(nonceBucket.toString(), 8),
+                        hexUtils.leftPad(nonce.toString(), 16),
+                    )
+                    .substr(2),
         );
     }
 
@@ -406,9 +411,10 @@ export class OtcOrder extends OrderBase {
         super(_fields);
         this.txOrigin = _fields.txOrigin;
         // Convert BigNumber to bigint for internal processing
-        this.expiryAndNonce = typeof _fields.expiryAndNonce === 'bigint' 
-            ? _fields.expiryAndNonce 
-            : BigInt((_fields.expiryAndNonce as any).toString());
+        this.expiryAndNonce =
+            typeof _fields.expiryAndNonce === 'bigint'
+                ? _fields.expiryAndNonce
+                : BigInt((_fields.expiryAndNonce as any).toString());
         const { expiry, nonceBucket, nonce } = OtcOrder.parseExpiryAndNonce(this.expiryAndNonce);
         this.expiry = expiry;
         this.nonceBucket = nonceBucket;

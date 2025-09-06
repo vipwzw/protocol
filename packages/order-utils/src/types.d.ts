@@ -33,4 +33,4 @@ declare module '@0x/contract-artifacts' {
 }
 
 // ethers v6 支持的 Provider 类型
-declare type SupportedProvider = any; 
+declare type SupportedProvider = any;

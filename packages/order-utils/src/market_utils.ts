@@ -100,20 +100,17 @@ export const marketUtils = {
             orders,
             (accFees, order, index) => {
                 const makerAssetAmountAvailable = remainingFillableMakerAssetAmounts[index];
-                const feeToFillMakerAssetAmountAvailable = 
+                const feeToFillMakerAssetAmountAvailable =
                     (makerAssetAmountAvailable * order.takerFee) / order.makerAssetAmount;
                 return accFees + feeToFillMakerAssetAmountAvailable;
             },
             constants.ZERO_AMOUNT,
         );
-        const {
-            resultOrders,
-            remainingFillAmount,
-            ordersRemainingFillableMakerAssetAmounts,
-        } = marketUtils.findOrdersThatCoverMakerAssetFillAmount(feeOrders, totalFeeAmount, {
-            remainingFillableMakerAssetAmounts: remainingFillableFeeAmounts,
-            slippageBufferAmount,
-        });
+        const { resultOrders, remainingFillAmount, ordersRemainingFillableMakerAssetAmounts } =
+            marketUtils.findOrdersThatCoverMakerAssetFillAmount(feeOrders, totalFeeAmount, {
+                remainingFillableMakerAssetAmounts: remainingFillableFeeAmounts,
+                slippageBufferAmount,
+            });
         return {
             resultFeeOrders: resultOrders,
             remainingFeeAmount: remainingFillAmount,
@@ -153,11 +150,19 @@ function findOrdersThatCoverAssetFillAmount<T extends Order>(
     // iterate through the orders input from left to right until we have enough makerAsset to fill totalFillAmount
     const result = _.reduce(
         orders,
-        ({ resultOrders, remainingFillAmount, ordersRemainingFillableAssetAmounts }: {
-            resultOrders: T[];
-            remainingFillAmount: bigint;
-            ordersRemainingFillableAssetAmounts: bigint[];
-        }, order: T, index: number) => {
+        (
+            {
+                resultOrders,
+                remainingFillAmount,
+                ordersRemainingFillableAssetAmounts,
+            }: {
+                resultOrders: T[];
+                remainingFillAmount: bigint;
+                ordersRemainingFillableAssetAmounts: bigint[];
+            },
+            order: T,
+            index: number,
+        ) => {
             if (remainingFillAmount <= constants.ZERO_AMOUNT) {
                 return {
                     resultOrders,
@@ -175,7 +180,8 @@ function findOrdersThatCoverAssetFillAmount<T extends Order>(
                     ordersRemainingFillableAssetAmounts: shouldIncludeOrder
                         ? _.concat(ordersRemainingFillableAssetAmounts, assetAmountAvailable)
                         : ordersRemainingFillableAssetAmounts,
-                    remainingFillAmount: newRemainingAmount > constants.ZERO_AMOUNT ? newRemainingAmount : constants.ZERO_AMOUNT,
+                    remainingFillAmount:
+                        newRemainingAmount > constants.ZERO_AMOUNT ? newRemainingAmount : constants.ZERO_AMOUNT,
                 };
             }
         },

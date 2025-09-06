@@ -10,7 +10,7 @@ const constants = {
 };
 
 const AssetProxyId = {
-    ERC20Bridge: '0xdc1600f3'
+    ERC20Bridge: '0xdc1600f3',
 };
 
 // 工具函数
@@ -37,7 +37,7 @@ const hexUtils = {
         const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex;
         const targetLength = length || 64; // 默认32字节 = 64 hex 字符
         return '0x' + cleanHex.padStart(targetLength, '0');
-    }
+    },
 };
 
 type Numberish = string | number | bigint;
@@ -90,9 +90,7 @@ describe('UniswapBridge unit tests', () => {
     describe('isValidSignature()', () => {
         it('returns success bytes', async () => {
             const LEGACY_WALLET_MAGIC_VALUE = '0xb0671381';
-            const result = await testContract
-                .isValidSignature(hexUtils.random(), hexUtils.random(_.random(0, 32)))
-                ;
+            const result = await testContract.isValidSignature(hexUtils.random(), hexUtils.random(_.random(0, 32)));
             expect(result).to.eq(LEGACY_WALLET_MAGIC_VALUE);
         });
     });
@@ -135,45 +133,47 @@ describe('UniswapBridge unit tests', () => {
         async function withdrawToAsync(opts?: Partial<WithdrawToOpts>): Promise<WithdrawToResult> {
             const _opts = createWithdrawToOpts(opts);
             const callValue = BigInt(_opts.exchangeFillAmount);
-            
+
             // Create the "from" token and exchange.
             const [fromTokenAddr] = await testContract.createTokenAndExchange.staticCall(
                 _opts.fromTokenAddress,
                 _opts.exchangeRevertReason,
-                { value: callValue }
+                { value: callValue },
             );
-            await testContract.createTokenAndExchange(
-                _opts.fromTokenAddress,
-                _opts.exchangeRevertReason,
-                { value: callValue }
-            );
+            await testContract.createTokenAndExchange(_opts.fromTokenAddress, _opts.exchangeRevertReason, {
+                value: callValue,
+            });
             _opts.fromTokenAddress = fromTokenAddr;
 
             // Create the "to" token and exchange.
             const [toTokenAddr] = await testContract.createTokenAndExchange.staticCall(
                 _opts.toTokenAddress,
                 _opts.exchangeRevertReason,
-                { value: callValue }
+                { value: callValue },
             );
-            await testContract.createTokenAndExchange(
-                _opts.toTokenAddress,
-                _opts.exchangeRevertReason,
-                { value: callValue }
-            );
+            await testContract.createTokenAndExchange(_opts.toTokenAddress, _opts.exchangeRevertReason, {
+                value: callValue,
+            });
             _opts.toTokenAddress = toTokenAddr;
 
             // Set token revert reasons
-            const setToTokenTx = await testContract.setTokenRevertReason(_opts.toTokenAddress, _opts.toTokenRevertReason);
+            const setToTokenTx = await testContract.setTokenRevertReason(
+                _opts.toTokenAddress,
+                _opts.toTokenRevertReason,
+            );
             await setToTokenTx.wait();
-            
-            const setFromTokenTx = await testContract.setTokenRevertReason(_opts.fromTokenAddress, _opts.fromTokenRevertReason);
+
+            const setFromTokenTx = await testContract.setTokenRevertReason(
+                _opts.fromTokenAddress,
+                _opts.fromTokenRevertReason,
+            );
             await setFromTokenTx.wait();
             // Set the token balance for the token we're converting from.
             const setBalanceTx = await testContract.setTokenBalance(_opts.fromTokenAddress, {
                 value: BigInt(_opts.fromTokenBalance),
             });
             await setBalanceTx.wait();
-            
+
             // Call bridgeTransferFrom() and get the return value
             const returnValue = await testContract.bridgeTransferFrom.staticCall(
                 // The "to" token address.
@@ -187,7 +187,7 @@ describe('UniswapBridge unit tests', () => {
                 // ABI-encoded "from" token address.
                 hexUtils.leftPad(_opts.fromTokenAddress),
             );
-            
+
             // Execute the actual transaction to get logs
             const bridgeTransferFromTx = await testContract.bridgeTransferFrom(
                 _opts.toTokenAddress,
@@ -197,11 +197,11 @@ describe('UniswapBridge unit tests', () => {
                 hexUtils.leftPad(_opts.fromTokenAddress),
             );
             const receipt = await bridgeTransferFromTx.wait();
-            
+
             // 使用通用日志解析工具
             const decodedLogs = await parseContractLogs(testContract, receipt);
             const blockTime = await getBlockTimestamp(receipt.blockNumber);
-            
+
             return {
                 opts: _opts,
                 result: returnValue, // 使用实际的返回值
@@ -227,7 +227,7 @@ describe('UniswapBridge unit tests', () => {
                 toTokenAddress: tokenAddress,
             });
             expect(result).to.eq(AssetProxyId.ERC20Bridge);
-            
+
             // 使用通用验证工具验证 TokenTransfer 事件
             verifyTokenTransfer(logs, {
                 token: tokenAddress,
@@ -241,7 +241,7 @@ describe('UniswapBridge unit tests', () => {
             it('calls `IUniswapExchange.tokenToTokenTransferInput()', async () => {
                 const { opts, logs, blockTime } = await withdrawToAsync();
                 const exchangeAddress = await getExchangeForTokenAsync(opts.fromTokenAddress);
-                
+
                 // 使用通用验证工具验证 TokenToTokenTransferInput 事件
                 verifyTokenToTokenTransferInput(logs, {
                     exchange: exchangeAddress,
@@ -257,7 +257,7 @@ describe('UniswapBridge unit tests', () => {
             it('sets allowance for "from" token', async () => {
                 const { opts, logs } = await withdrawToAsync();
                 const exchangeAddress = await getExchangeForTokenAsync(opts.fromTokenAddress);
-                
+
                 // 使用通用验证工具验证 TokenApprove 事件
                 verifyTokenApprove(logs, {
                     spender: exchangeAddress,
@@ -269,7 +269,7 @@ describe('UniswapBridge unit tests', () => {
                 const { opts } = await withdrawToAsync();
                 const { logs } = await withdrawToAsync(opts);
                 const exchangeAddress = await getExchangeForTokenAsync(opts.fromTokenAddress);
-                
+
                 // 使用通用验证工具验证 TokenApprove 事件
                 verifyTokenApprove(logs, {
                     spender: exchangeAddress,
@@ -303,20 +303,20 @@ describe('UniswapBridge unit tests', () => {
                     toTokenAddress: wethTokenAddress,
                 });
                 const exchangeAddress = await getExchangeForTokenAsync(opts.fromTokenAddress);
-                
+
                 // 验证 TokenToEthSwapInput 事件
-                verifyEvent<any>(logs, ContractEvents.TokenToEthSwapInput, (call) => {
+                verifyEvent<any>(logs, ContractEvents.TokenToEthSwapInput, call => {
                     expect(call.exchange).to.eq(exchangeAddress);
                     expect(call.tokensSold).to.equal(BigInt(opts.fromTokenBalance));
                     expect(call.minEthBought).to.equal(BigInt(opts.amount));
                     expect(call.deadline).to.equal(blockTime);
                 });
-                
+
                 // 验证 WethDeposit 事件
-                verifyEvent<any>(logs, ContractEvents.WethDeposit, (call) => {
+                verifyEvent<any>(logs, ContractEvents.WethDeposit, call => {
                     expect(call.amount).to.equal(BigInt(opts.exchangeFillAmount));
                 });
-                
+
                 // 验证 TokenTransfer 事件
                 verifyTokenTransfer(logs, {
                     token: opts.toTokenAddress,
@@ -331,7 +331,7 @@ describe('UniswapBridge unit tests', () => {
                     toTokenAddress: wethTokenAddress,
                 });
                 const exchangeAddress = await getExchangeForTokenAsync(opts.fromTokenAddress);
-                
+
                 // 使用通用验证工具验证 TokenApprove 事件
                 verifyTokenApprove(logs, {
                     spender: exchangeAddress,
@@ -345,7 +345,7 @@ describe('UniswapBridge unit tests', () => {
                 });
                 const { logs } = await withdrawToAsync(opts);
                 const exchangeAddress = await getExchangeForTokenAsync(opts.fromTokenAddress);
-                
+
                 // 使用通用验证工具验证 TokenApprove 事件
                 verifyTokenApprove(logs, {
                     spender: exchangeAddress,
@@ -389,14 +389,14 @@ describe('UniswapBridge unit tests', () => {
                     fromTokenAddress: wethTokenAddress,
                 });
                 const exchangeAddress = await getExchangeForTokenAsync(opts.toTokenAddress);
-                
+
                 // 验证 WethWithdraw 事件
-                verifyEvent<any>(logs, ContractEvents.WethWithdraw, (call) => {
+                verifyEvent<any>(logs, ContractEvents.WethWithdraw, call => {
                     expect(call.amount).to.equal(BigInt(opts.fromTokenBalance));
                 });
-                
+
                 // 验证 EthToTokenTransferInput 事件
-                verifyEvent<any>(logs, ContractEvents.EthToTokenTransferInput, (call) => {
+                verifyEvent<any>(logs, ContractEvents.EthToTokenTransferInput, call => {
                     expect(call.exchange).to.eq(exchangeAddress);
                     expect(call.minTokensBought).to.equal(BigInt(opts.amount));
                     expect(call.deadline).to.equal(blockTime);
@@ -408,7 +408,7 @@ describe('UniswapBridge unit tests', () => {
                 const { logs } = await withdrawToAsync({
                     fromTokenAddress: wethTokenAddress,
                 });
-                
+
                 // 验证没有 TokenApprove 事件
                 const approvals = filterLogsToArguments<TokenApproveArgs>(logs, ContractEvents.TokenApprove);
                 expect(approvals).to.be.empty;

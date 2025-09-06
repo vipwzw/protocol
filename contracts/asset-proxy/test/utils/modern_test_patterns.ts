@@ -18,7 +18,7 @@ export const ModernConstants = {
 // 本地 AssetProxyId 定义
 export const AssetProxyId = {
     ERC20Proxy: '0xf47261b0',
-    ERC721Proxy: '0x02571792', 
+    ERC721Proxy: '0x02571792',
     ERC1155Proxy: '0xa7cb5fb7',
     ERC20Bridge: '0xdc1600f3',
     StaticCall: '0xc339d10a',
@@ -41,7 +41,7 @@ export function randomAddress(): string {
 }
 
 /**
- * 现代化的随机整数生成  
+ * 现代化的随机整数生成
  */
 export function getRandomInteger(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -85,10 +85,7 @@ export class ModernDeploymentHelper {
     /**
      * 使用 TypeChain 工厂部署合约的通用方法
      */
-    async deployContractAsync<T extends Contract>(
-        FactoryClass: any,
-        ...constructorArgs: any[]
-    ): Promise<T> {
+    async deployContractAsync<T extends Contract>(FactoryClass: any, ...constructorArgs: any[]): Promise<T> {
         const factory = new FactoryClass(this.deployer);
         const contract = await factory.deploy(...constructorArgs);
         await contract.waitForDeployment();
@@ -161,7 +158,11 @@ export class AssertionHelper {
     /**
      * 检查事务回滚并包含自定义错误
      */
-    static async expectRevertWithCustomError(txPromise: Promise<any>, contract: Contract, errorName: string): Promise<void> {
+    static async expectRevertWithCustomError(
+        txPromise: Promise<any>,
+        contract: Contract,
+        errorName: string,
+    ): Promise<void> {
         await expect(txPromise).to.be.revertedWithCustomError(contract, errorName);
     }
 
@@ -179,7 +180,7 @@ export class AssertionHelper {
         tokenContract: Contract,
         address: string,
         expectedChange: bigint,
-        txPromise: Promise<any>
+        txPromise: Promise<any>,
     ): Promise<void> {
         const balanceBefore = await tokenContract.balanceOf(address);
         await txPromise;
@@ -262,7 +263,7 @@ export abstract class ModernTestSuite {
         this.signers = await ethers.getSigners();
         this.deploymentHelper = await ModernDeploymentHelper.createAsync();
         this.blockchain = new BlockchainLifecycle();
-        
+
         await this.blockchain.startAsync();
         console.log('✅ Modern test environment initialized');
     }

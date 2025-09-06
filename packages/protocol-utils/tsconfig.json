@@ -6,8 +6,5 @@
         "composite": true
     },
     "include": ["src/**/*", "test/**/*"],
-    "references": [
-        { "path": "../utils" },
-        { "path": "../contract-addresses" }
-    ]
+    "references": [{ "path": "../utils" }, { "path": "../contract-addresses" }]
 }

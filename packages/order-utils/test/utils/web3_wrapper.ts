@@ -38,7 +38,7 @@ const web3Wrapper = {
             // 使用 ethers v6 的 signTypedData 方法
             // 需要正确解析 EIP712 结构
             let domain, types, value;
-            
+
             if (typedData.domain && typedData.types && (typedData.message || typedData.value)) {
                 // 标准 EIP712 结构
                 domain = typedData.domain;
@@ -53,7 +53,7 @@ const web3Wrapper = {
                 delete types.EIP712Domain;
                 value = typedData;
             }
-            
+
             return await testSigner.signTypedData(domain, types, value);
         } catch (error) {
             throw new Error(`Failed to sign typed data: ${error}`);
@@ -66,7 +66,7 @@ const web3Wrapper = {
             return [testWallet.address];
         }
         return provider.send(method, params);
-    }
+    },
 };
 
 export { provider, web3Wrapper };

@@ -12,16 +12,20 @@ import { hexUtils, OwnableRevertErrors, ZeroExRevertErrors } from '@0x/utils';
 import { ethers } from 'hardhat';
 import * as ethjs from 'ethereumjs-util';
 
-import { 
-    IZeroExContract, 
+import {
+    IZeroExContract,
     TransformERC20FeatureContract,
     TestTransformERC20__factory,
     TestMintableERC20Token__factory,
-    TestMintTokenERC20Transformer__factory
+    TestMintTokenERC20Transformer__factory,
 } from '../../src/wrappers';
 import { artifacts } from '../artifacts';
 import { abis } from '../utils/abis';
-import { expectIncompleteTransformERC20Error, expectNegativeTransformERC20OutputError, expectTransformerFailedError } from '../utils/rich_error_matcher';
+import {
+    expectIncompleteTransformERC20Error,
+    expectNegativeTransformERC20OutputError,
+    expectTransformerFailedError,
+} from '../utils/rich_error_matcher';
 
 import { fullMigrateAsync } from '../utils/migration';
 import {
@@ -55,7 +59,7 @@ describe('TransformERC20 feature', () => {
         const testTransformFactory = new TestTransformERC20__factory(signer);
         const testTransformContract = await testTransformFactory.deploy();
         await testTransformContract.waitForDeployment();
-        
+
         zeroEx = await fullMigrateAsync(
             owner,
             env.provider,
@@ -66,17 +70,19 @@ describe('TransformERC20 feature', () => {
             { transformerDeployer },
         );
         // 🔧 使用ethers.getContractAt替代constructor
-        feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress()) as TransformERC20FeatureContract;
+        feature = (await ethers.getContractAt(
+            'ITransformERC20Feature',
+            await zeroEx.getAddress(),
+        )) as TransformERC20FeatureContract;
         // 🔧 使用ethers.getContractAt获取FlashWallet
         const flashWalletAddress = await feature.getTransformWallet();
-        wallet = await ethers.getContractAt('IFlashWallet', flashWalletAddress) as FlashWalletContract;
+        wallet = (await ethers.getContractAt('IFlashWallet', flashWalletAddress)) as FlashWalletContract;
         const ownerSigner = await env.provider.getSigner(owner);
         await feature.connect(ownerSigner).setQuoteSigner(callDataSigner);
-        
+
         // 创建初始快照
         snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
-
 
     const { MAX_UINT256, ZERO_AMOUNT } = constants;
 
@@ -97,7 +103,7 @@ describe('TransformERC20 feature', () => {
             const [, , notOwner] = await env.getAccountAddressesAsync(); // 使用实际账户
             const notOwnerSigner = await env.provider.getSigner(notOwner);
             const tx = feature.connect(notOwnerSigner).createTransformWallet(); // 🔧 修复API语法
-            
+
             // 🔧 修复错误验证，保持测试意图
             try {
                 await tx;
@@ -118,15 +124,9 @@ describe('TransformERC20 feature', () => {
         it('owner can set the transformer deployer with `setTransformerDeployer()`', async () => {
             const newDeployer = randomAddress();
             const ownerSigner = await env.provider.getSigner(owner);
-            const tx = await feature
-                .connect(ownerSigner)
-                .setTransformerDeployer(newDeployer);
+            const tx = await feature.connect(ownerSigner).setTransformerDeployer(newDeployer);
             const receipt = await tx.wait();
-            verifyEventsFromLogs(
-                receipt.logs,
-                [{ transformerDeployer: newDeployer }],
-                'TransformerDeployerUpdated',
-            );
+            verifyEventsFromLogs(receipt.logs, [{ transformerDeployer: newDeployer }], 'TransformerDeployerUpdated');
             const actualDeployer = await feature.getTransformerDeployer(); // 🔧 修复API语法
             expect(actualDeployer).to.eq(newDeployer);
         });
@@ -159,11 +159,7 @@ describe('TransformERC20 feature', () => {
             const ownerSigner = await env.provider.getSigner(owner);
             const tx = await feature.connect(ownerSigner).setQuoteSigner(newSigner);
             const receipt = await tx.wait();
-            verifyEventsFromLogs(
-                receipt.logs,
-                [{ quoteSigner: newSigner }],
-                'QuoteSignerUpdated',
-            );
+            verifyEventsFromLogs(receipt.logs, [{ quoteSigner: newSigner }], 'QuoteSignerUpdated');
             const actualSigner = await feature.getQuoteSigner(); // 🔧 修复API语法
             expect(actualSigner).to.eq(newSigner);
         });
@@ -197,10 +193,10 @@ describe('TransformERC20 feature', () => {
             await ethers.provider.send('evm_revert', [snapshotId]);
             // 重新创建快照供下次使用
             snapshotId = await ethers.provider.send('evm_snapshot', []);
-            
+
             // 🔧 在每次测试前重新部署 token 合约（因为状态重置会清除合约）
             const signer = await env.provider.getSigner(owner);
-            
+
             const inputTokenFactory = new TestMintableERC20Token__factory(signer);
             inputToken = await inputTokenFactory.deploy();
             await inputToken.waitForDeployment();
@@ -210,7 +206,7 @@ describe('TransformERC20 feature', () => {
             await outputToken.waitForDeployment();
 
             transformerNonce = await ethers.provider.getTransactionCount(transformerDeployer);
-            
+
             const transformerDeployerSigner = await env.provider.getSigner(transformerDeployer);
             const mintTransformerFactory = new TestMintTokenERC20Transformer__factory(transformerDeployerSigner);
             mintTransformer = await mintTransformerFactory.deploy();
@@ -224,7 +220,9 @@ describe('TransformERC20 feature', () => {
 
         // 使用 ethers v6 的 AbiCoder 替代 AbiEncoder
         const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-        const transformDataType = ['tuple(address inputToken, address outputToken, uint256 burnAmount, uint256 mintAmount, uint256 feeAmount)'];
+        const transformDataType = [
+            'tuple(address inputToken, address outputToken, uint256 burnAmount, uint256 mintAmount, uint256 feeAmount)',
+        ];
 
         async function createMintTokenTransformation(
             opts: Partial<{
@@ -249,13 +247,15 @@ describe('TransformERC20 feature', () => {
             };
             return {
                 deploymentNonce: _opts.deploymentNonce,
-                data: abiCoder.encode(transformDataType, [{
-                    inputToken: _opts.inputTokenAddress,
-                    outputToken: _opts.outputTokenAddress,
-                    burnAmount: _opts.inputTokenBurnAmunt,
-                    mintAmount: _opts.outputTokenMintAmount,
-                    feeAmount: _opts.outputTokenFeeAmount,
-                }]),
+                data: abiCoder.encode(transformDataType, [
+                    {
+                        inputToken: _opts.inputTokenAddress,
+                        outputToken: _opts.outputTokenAddress,
+                        burnAmount: _opts.inputTokenBurnAmunt,
+                        mintAmount: _opts.outputTokenMintAmount,
+                        feeAmount: _opts.outputTokenFeeAmount,
+                    },
+                ]),
             };
         }
 
@@ -266,28 +266,30 @@ describe('TransformERC20 feature', () => {
                 await outputToken.mint(taker, startingOutputTokenBalance);
                 await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
-                
+
                 // 🔧 添加必要的 token 授权（由于状态重置，需要重新授权）
                 const takerSigner = await env.provider.getSigner(taker);
                 await inputToken.connect(takerSigner).approve(await zeroEx.getAddress(), constants.MAX_UINT256);
-                
+
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
                 const callValue = getRandomInteger(1, '1e18');
-                
+
                 // 🔧 获取正确的 transformer 部署 nonce
                 const actualTransformerNonce = mintTransformer.deploymentTransaction()?.nonce || transformerNonce;
-                
+
                 const transformation = await createMintTokenTransformation({
                     outputTokenMintAmount,
                     inputTokenBurnAmunt: inputTokenAmount,
                     deploymentNonce: actualTransformerNonce,
                 });
-                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+                const transformERC20Feature = await ethers.getContractAt(
+                    'ITransformERC20Feature',
+                    await zeroEx.getAddress(),
+                );
                 // 🔧 使用 takerSigner 调用，因为 taker 拥有 token 并已授权
-                const tx = await transformERC20Feature
-                    .connect(takerSigner)
-                    ._transformERC20({
+                const tx = await transformERC20Feature.connect(takerSigner)._transformERC20(
+                    {
                         taker,
                         inputToken: await inputToken.getAddress(),
                         outputToken: await outputToken.getAddress(),
@@ -296,7 +298,9 @@ describe('TransformERC20 feature', () => {
                         transformations: [transformation],
                         useSelfBalance: false,
                         recipient: taker,
-                    }, { value: callValue });
+                    },
+                    { value: callValue },
+                );
                 const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -332,11 +336,11 @@ describe('TransformERC20 feature', () => {
                 const startingInputTokenBalance = getRandomInteger(0, '100e18');
                 await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
-                
+
                 // 🔧 添加必要的 token 授权
                 const takerSigner = await env.provider.getSigner(taker);
                 await inputToken.connect(takerSigner).approve(await zeroEx.getAddress(), constants.MAX_UINT256);
-                
+
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
                 const callValue = outputTokenMintAmount;
@@ -346,11 +350,13 @@ describe('TransformERC20 feature', () => {
                     outputTokenAddress: ETH_TOKEN_ADDRESS,
                 });
                 const startingOutputTokenBalance = await ethers.provider.getBalance(taker);
-                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+                const transformERC20Feature = await ethers.getContractAt(
+                    'ITransformERC20Feature',
+                    await zeroEx.getAddress(),
+                );
                 // 🔧 使用 takerSigner 调用，因为 taker 拥有 token 并已授权
-                const tx = await transformERC20Feature
-                    .connect(takerSigner)
-                    ._transformERC20({
+                const tx = await transformERC20Feature.connect(takerSigner)._transformERC20(
+                    {
                         taker,
                         inputToken: await inputToken.getAddress(),
                         outputToken: ETH_TOKEN_ADDRESS,
@@ -359,7 +365,9 @@ describe('TransformERC20 feature', () => {
                         transformations: [transformation],
                         useSelfBalance: false,
                         recipient: taker,
-                    }, { value: callValue });
+                    },
+                    { value: callValue },
+                );
                 const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -404,11 +412,11 @@ describe('TransformERC20 feature', () => {
                 await outputToken.mint(taker, startingOutputTokenBalance);
                 await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
-                
+
                 // 🔧 添加必要的 token 授权
                 const takerSigner = await env.provider.getSigner(taker);
                 await inputToken.connect(takerSigner).approve(await zeroEx.getAddress(), constants.MAX_UINT256);
-                
+
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount + 1n;
                 const callValue = getRandomInteger(1, '1e18');
@@ -416,11 +424,13 @@ describe('TransformERC20 feature', () => {
                     outputTokenMintAmount,
                     inputTokenBurnAmunt: inputTokenAmount,
                 });
-                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+                const transformERC20Feature = await ethers.getContractAt(
+                    'ITransformERC20Feature',
+                    await zeroEx.getAddress(),
+                );
                 // 🔧 使用 takerSigner 调用，因为 taker 拥有 token 并已授权
-                const tx = await transformERC20Feature
-                    .connect(takerSigner)
-                    ._transformERC20({
+                const tx = await transformERC20Feature.connect(takerSigner)._transformERC20(
+                    {
                         taker,
                         inputToken: await inputToken.getAddress(),
                         outputToken: await outputToken.getAddress(),
@@ -429,7 +439,9 @@ describe('TransformERC20 feature', () => {
                         transformations: [transformation],
                         useSelfBalance: false,
                         recipient: taker,
-                    }, { value: callValue });
+                    },
+                    { value: callValue },
+                );
                 const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -467,18 +479,20 @@ describe('TransformERC20 feature', () => {
                 await outputToken.mint(taker, startingOutputTokenBalance);
                 await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
-                
+
                 // 🔧 添加必要的 token 授权
                 const takerSigner = await env.provider.getSigner(taker);
                 await inputToken.connect(takerSigner).approve(await zeroEx.getAddress(), constants.MAX_UINT256);
-                
+
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount - 1n;
                 const callValue = getRandomInteger(1, '1e18');
-                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
-                const tx = transformERC20Feature
-                    .connect(takerSigner)
-                    ._transformERC20({
+                const transformERC20Feature = await ethers.getContractAt(
+                    'ITransformERC20Feature',
+                    await zeroEx.getAddress(),
+                );
+                const tx = transformERC20Feature.connect(takerSigner)._transformERC20(
+                    {
                         taker,
                         inputToken: await inputToken.getAddress(),
                         outputToken: await outputToken.getAddress(),
@@ -492,7 +506,9 @@ describe('TransformERC20 feature', () => {
                         ],
                         useSelfBalance: false,
                         recipient: taker,
-                    }, { value: callValue });
+                    },
+                    { value: callValue },
+                );
                 // 🔧 使用优雅的 Rich Error 匹配
                 return expectIncompleteTransformERC20Error(
                     tx,
@@ -508,18 +524,20 @@ describe('TransformERC20 feature', () => {
                 await outputToken.mint(taker, startingOutputTokenBalance);
                 await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
-                
+
                 // 🔧 添加必要的 token 授权
                 const takerSigner = await env.provider.getSigner(taker);
                 await inputToken.connect(takerSigner).approve(await zeroEx.getAddress(), constants.MAX_UINT256);
-                
+
                 const minOutputTokenAmount = ZERO_AMOUNT;
                 const outputTokenFeeAmount = 1;
                 const callValue = getRandomInteger(1, '1e18');
-                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
-                const tx = transformERC20Feature
-                    .connect(takerSigner)
-                    ._transformERC20({
+                const transformERC20Feature = await ethers.getContractAt(
+                    'ITransformERC20Feature',
+                    await zeroEx.getAddress(),
+                );
+                const tx = transformERC20Feature.connect(takerSigner)._transformERC20(
+                    {
                         taker,
                         inputToken: await inputToken.getAddress(),
                         outputToken: await outputToken.getAddress(),
@@ -533,7 +551,9 @@ describe('TransformERC20 feature', () => {
                         ],
                         useSelfBalance: false,
                         recipient: taker,
-                    }, { value: callValue });
+                    },
+                    { value: callValue },
+                );
                 // 🔧 使用优雅的 Rich Error 匹配
                 return expectNegativeTransformERC20OutputError(
                     tx,
@@ -548,11 +568,11 @@ describe('TransformERC20 feature', () => {
                 await outputToken.mint(taker, startingOutputTokenBalance);
                 await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
-                
+
                 // 🔧 添加必要的 token 授权
                 const takerSigner = await env.provider.getSigner(taker);
                 await inputToken.connect(takerSigner).approve(await zeroEx.getAddress(), constants.MAX_UINT256);
-                
+
                 const minOutputTokenAmount = getRandomInteger(2, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
                 const callValue = getRandomInteger(1, '1e18');
@@ -567,11 +587,13 @@ describe('TransformERC20 feature', () => {
                         outputTokenMintAmount: outputTokenMintAmount - 1n,
                     }),
                 ];
-                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+                const transformERC20Feature = await ethers.getContractAt(
+                    'ITransformERC20Feature',
+                    await zeroEx.getAddress(),
+                );
                 // 🔧 使用 takerSigner 调用，因为 taker 拥有 token 并已授权
-                const tx = await transformERC20Feature
-                    .connect(takerSigner)
-                    ._transformERC20({
+                const tx = await transformERC20Feature.connect(takerSigner)._transformERC20(
+                    {
                         taker,
                         inputToken: await inputToken.getAddress(),
                         outputToken: await outputToken.getAddress(),
@@ -580,7 +602,9 @@ describe('TransformERC20 feature', () => {
                         transformations,
                         useSelfBalance: false,
                         recipient: taker,
-                    }, { value: callValue });
+                    },
+                    { value: callValue },
+                );
                 const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -614,18 +638,20 @@ describe('TransformERC20 feature', () => {
                 await outputToken.mint(taker, startingOutputTokenBalance);
                 await inputToken.mint(taker, startingInputTokenBalance);
                 const inputTokenAmount = getRandomPortion(startingInputTokenBalance);
-                
+
                 // 🔧 添加必要的 token 授权
                 const takerSigner = await env.provider.getSigner(taker);
                 await inputToken.connect(takerSigner).approve(await zeroEx.getAddress(), constants.MAX_UINT256);
-                
+
                 const minOutputTokenAmount = getRandomInteger(2, '1e18');
                 const callValue = getRandomInteger(1, '1e18');
                 const transformations = [await createMintTokenTransformation({ deploymentNonce: 1337 })];
-                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
-                const tx = transformERC20Feature
-                    .connect(takerSigner)
-                    ._transformERC20({
+                const transformERC20Feature = await ethers.getContractAt(
+                    'ITransformERC20Feature',
+                    await zeroEx.getAddress(),
+                );
+                const tx = transformERC20Feature.connect(takerSigner)._transformERC20(
+                    {
                         taker,
                         inputToken: await inputToken.getAddress(),
                         outputToken: await outputToken.getAddress(),
@@ -634,7 +660,9 @@ describe('TransformERC20 feature', () => {
                         transformations,
                         useSelfBalance: false,
                         recipient: taker,
-                    }, { value: callValue });
+                    },
+                    { value: callValue },
+                );
                 // 🔧 使用优雅的 Rich Error 匹配 - TransformerFailedError
                 return expectTransformerFailedError(
                     tx,
@@ -647,11 +675,11 @@ describe('TransformERC20 feature', () => {
             it('can sell entire taker balance', async () => {
                 const startingInputTokenBalance = getRandomInteger(0, '100e18');
                 await inputToken.mint(taker, startingInputTokenBalance);
-                
+
                 // 🔧 添加必要的 token 授权
                 const takerSigner = await env.provider.getSigner(taker);
                 await inputToken.connect(takerSigner).approve(await zeroEx.getAddress(), constants.MAX_UINT256);
-                
+
                 const minOutputTokenAmount = getRandomInteger(1, '1e18');
                 const outputTokenMintAmount = minOutputTokenAmount;
                 const callValue = getRandomInteger(1, '1e18');
@@ -659,11 +687,13 @@ describe('TransformERC20 feature', () => {
                     outputTokenMintAmount,
                     inputTokenBurnAmunt: startingInputTokenBalance,
                 });
-                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+                const transformERC20Feature = await ethers.getContractAt(
+                    'ITransformERC20Feature',
+                    await zeroEx.getAddress(),
+                );
                 // 🔧 使用 takerSigner 调用，因为 taker 拥有 token 并已授权
-                const tx = await transformERC20Feature
-                    .connect(takerSigner)
-                    ._transformERC20({
+                const tx = await transformERC20Feature.connect(takerSigner)._transformERC20(
+                    {
                         taker,
                         inputToken: await inputToken.getAddress(),
                         outputToken: await outputToken.getAddress(),
@@ -672,7 +702,9 @@ describe('TransformERC20 feature', () => {
                         transformations: [transformation],
                         useSelfBalance: false,
                         recipient: taker,
-                    }, { value: callValue });
+                    },
+                    { value: callValue },
+                );
                 const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -699,12 +731,14 @@ describe('TransformERC20 feature', () => {
                     inputTokenAddress: ETH_TOKEN_ADDRESS,
                     inputTokenBurnAmunt: ethAttchedAmount,
                 });
-                const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
+                const transformERC20Feature = await ethers.getContractAt(
+                    'ITransformERC20Feature',
+                    await zeroEx.getAddress(),
+                );
                 // 🔧 使用 takerSigner 调用（ETH 作为 input token 不需要授权）
                 const takerSigner = await env.provider.getSigner(taker);
-                const tx = await transformERC20Feature
-                    .connect(takerSigner)
-                    ._transformERC20({
+                const tx = await transformERC20Feature.connect(takerSigner)._transformERC20(
+                    {
                         taker,
                         inputToken: ETH_TOKEN_ADDRESS,
                         outputToken: await outputToken.getAddress(),
@@ -713,7 +747,9 @@ describe('TransformERC20 feature', () => {
                         transformations: [transformation],
                         useSelfBalance: false,
                         recipient: taker,
-                    }, { value: ethAttchedAmount });
+                    },
+                    { value: ethAttchedAmount },
+                );
                 const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,

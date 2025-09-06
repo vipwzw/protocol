@@ -7,8 +7,8 @@ import * as dirtyChai from 'dirty-chai';
 export const chaiSetup = {
     configure(): void {
         chai.config.includeStack = true;
-    }
+    },
 };
 
 chaiSetup.configure();
-export const expect = chai.expect; 
+export const expect = chai.expect;

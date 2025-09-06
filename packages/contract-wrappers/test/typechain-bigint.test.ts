@@ -5,7 +5,7 @@ import { TEST_ADDRESSES, TEST_VALUES, expectToBeBigInt, expectToEqualBigInt } fr
 
 describe('TypeChain BigInt Support', () => {
     let provider: ethers.JsonRpcProvider;
-    
+
     beforeEach(() => {
         provider = new ethers.JsonRpcProvider('http://localhost:8545');
     });
@@ -13,7 +13,7 @@ describe('TypeChain BigInt Support', () => {
     describe('DummyERC20Token Factory', () => {
         it('should create contract instance with correct interface', () => {
             const token = DummyERC20Token__factory.connect(TEST_ADDRESSES.WETH, provider);
-            
+
             expect(token).to.exist;
             expect(token.target).to.equal(TEST_ADDRESSES.WETH);
             expect(token.interface).to.exist;
@@ -21,7 +21,7 @@ describe('TypeChain BigInt Support', () => {
 
         it('should have methods that return bigint types', () => {
             const token = DummyERC20Token__factory.connect(TEST_ADDRESSES.WETH, provider);
-            
+
             // Check method signatures exist
             expect(token.balanceOf).to.be.a('function');
             expect(token.totalSupply).to.be.a('function');
@@ -31,13 +31,13 @@ describe('TypeChain BigInt Support', () => {
 
         it('should encode function data correctly', () => {
             const token = DummyERC20Token__factory.connect(TEST_ADDRESSES.WETH, provider);
-            
+
             // Test encoding with BigNumberish (should accept bigint)
             const transferData = token.interface.encodeFunctionData('transfer', [
                 TEST_ADDRESSES.USER,
                 TEST_VALUES.ONE_ETH, // bigint value
             ]);
-            
+
             expect(transferData).to.be.a('string');
             expect(transferData).to.match(/^0x/);
         });
@@ -46,14 +46,14 @@ describe('TypeChain BigInt Support', () => {
     describe('WETH9 Factory', () => {
         it('should create WETH9 contract instance', () => {
             const weth = WETH9__factory.connect(TEST_ADDRESSES.WETH, provider);
-            
+
             expect(weth).to.exist;
             expect(weth.target).to.equal(TEST_ADDRESSES.WETH);
         });
 
         it('should have deposit and withdraw methods', () => {
             const weth = WETH9__factory.connect(TEST_ADDRESSES.WETH, provider);
-            
+
             expect(weth.deposit).to.be.a('function');
             expect(weth.withdraw).to.be.a('function');
         });
@@ -62,14 +62,14 @@ describe('TypeChain BigInt Support', () => {
     describe('IZeroEx Factory', () => {
         it('should create IZeroEx contract instance', () => {
             const zeroEx = IZeroEx__factory.connect(TEST_ADDRESSES.WETH, provider);
-            
+
             expect(zeroEx).to.exist;
             expect(zeroEx.target).to.equal(TEST_ADDRESSES.WETH);
         });
 
         it('should have complex interface methods', () => {
             const zeroEx = IZeroEx__factory.connect(TEST_ADDRESSES.WETH, provider);
-            
+
             // Check some key methods exist
             expect(zeroEx.interface).to.exist;
             expect(zeroEx.interface.fragments).to.have.length.greaterThan(0);
@@ -79,15 +79,15 @@ describe('TypeChain BigInt Support', () => {
     describe('Event Types with BigInt', () => {
         it('should have Transfer event with bigint value', () => {
             const token = DummyERC20Token__factory.connect(TEST_ADDRESSES.WETH, provider);
-            
+
             // Check event filter exists
             const transferFilter = token.filters.Transfer();
             expect(transferFilter).to.exist;
-            
+
             // Check event filter with parameters
             const specificFilter = token.filters.Transfer(
                 TEST_ADDRESSES.USER,
-                TEST_ADDRESSES.SPENDER
+                TEST_ADDRESSES.SPENDER,
                 // value parameter is optional in filter
             );
             expect(specificFilter).to.exist;
@@ -95,7 +95,7 @@ describe('TypeChain BigInt Support', () => {
 
         it('should have Approval event with bigint value', () => {
             const token = DummyERC20Token__factory.connect(TEST_ADDRESSES.WETH, provider);
-            
+
             const approvalFilter = token.filters.Approval();
             expect(approvalFilter).to.exist;
         });
@@ -103,12 +103,7 @@ describe('TypeChain BigInt Support', () => {
 
     describe('BigInt Compatibility', () => {
         it('should handle bigint literals correctly', () => {
-            const values = [
-                TEST_VALUES.ZERO,
-                TEST_VALUES.ONE_ETH,
-                TEST_VALUES.HALF_ETH,
-                TEST_VALUES.MAX_UINT256,
-            ];
+            const values = [TEST_VALUES.ZERO, TEST_VALUES.ONE_ETH, TEST_VALUES.HALF_ETH, TEST_VALUES.MAX_UINT256];
 
             values.forEach(value => {
                 expectToBeBigInt(value);
@@ -128,4 +123,4 @@ describe('TypeChain BigInt Support', () => {
             expectToEqualBigInt(parsed, TEST_VALUES.ONE_ETH);
         });
     });
-}); 
+});

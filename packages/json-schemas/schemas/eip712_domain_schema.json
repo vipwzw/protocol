@@ -14,9 +14,6 @@
             "$ref": "/addressSchema"
         }
     },
-    "required": [
-        "chainId",
-        "verifyingContract"
-    ],
+    "required": ["chainId", "verifyingContract"],
     "type": "object"
 }

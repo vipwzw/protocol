@@ -13,7 +13,7 @@ import { TestFullMigration__factory } from '../src/typechain-types/factories/con
 import { ZeroEx__factory } from '../src/typechain-types/factories/contracts/src';
 import type { TestFullMigration } from '../src/typechain-types/contracts/test/TestFullMigration';
 import type { ZeroEx } from '../src/typechain-types/contracts/src/ZeroEx';
-import { 
+import {
     ITransformERC20FeatureContract,
     IMetaTransactionsFeatureContract,
     INativeOrdersFeatureContract,
@@ -21,7 +21,7 @@ import {
     ISimpleFunctionRegistryFeatureContract,
     IUniswapFeatureContract,
     IBootstrapFeatureContract,
-    TestFullMigrationContract
+    TestFullMigrationContract,
 } from './wrappers';
 
 const { NULL_ADDRESS } = constants;
@@ -30,8 +30,7 @@ describe('Full migration', () => {
     const env = {
         provider: ethers.provider,
         txDefaults: { from: '' as string },
-        getAccountAddressesAsync: async (): Promise<string[]> =>
-            (await ethers.getSigners()).map(s => s.address),
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
     };
     let owner: string;
     let zeroEx: ZeroEx;
@@ -45,23 +44,23 @@ describe('Full migration', () => {
         [owner] = await env.getAccountAddressesAsync();
         const signer = await env.provider.getSigner(owner);
         const migratorFactory = new TestFullMigration__factory(signer);
-        migrator = await migratorFactory.deploy(
-            env.txDefaults.from as string
-        );
+        migrator = await migratorFactory.deploy(env.txDefaults.from as string);
         await migrator.waitForDeployment();
         const bootstrapper = await migrator.getBootstrapper();
         const zeroExFactory = new ZeroEx__factory(signer);
         zeroEx = await zeroExFactory.deploy(bootstrapper);
         await zeroEx.waitForDeployment();
-        features = await deployAllFeaturesAsync(env.provider, env.txDefaults, {}, { zeroExAddress: await zeroEx.getAddress() });
-        await migrator
-            .migrateZeroEx(owner, await zeroEx.getAddress(), features, { transformerDeployer });
+        features = await deployAllFeaturesAsync(
+            env.provider,
+            env.txDefaults,
+            {},
+            { zeroExAddress: await zeroEx.getAddress() },
+        );
+        await migrator.migrateZeroEx(owner, await zeroEx.getAddress(), features, { transformerDeployer });
     });
 
     it('ZeroEx has the correct owner', async () => {
-        const ownableAbi = [
-            'function owner() view returns (address)'
-        ];
+        const ownableAbi = ['function owner() view returns (address)'];
         const ownable = new ethers.Contract(await zeroEx.getAddress(), ownableAbi, env.provider);
         const actualOwner = await ownable.owner();
         expect(actualOwner).to.eq(owner);
@@ -79,7 +78,7 @@ describe('Full migration', () => {
         return expect(
             migrator
                 .connect(notDeployerSigner)
-                .migrateZeroEx(owner, await zeroEx.getAddress(), features, { transformerDeployer })
+                .migrateZeroEx(owner, await zeroEx.getAddress(), features, { transformerDeployer }),
         ).to.be.revertedWith('FullMigration/INVALID_SENDER');
     });
 
@@ -214,10 +213,10 @@ describe('Full migration', () => {
                         if (!method) {
                             return;
                         }
-                        const inputs = createFakeInputs(((method as any).inputs) || []);
+                        const inputs = createFakeInputs((method as any).inputs || []);
                         const signer = await env.provider.getSigner(env.txDefaults.from as string);
                         const connected = featureContract.connect(signer) as any;
-                        await expect((connected[fn](...inputs))).to.be.reverted;
+                        await expect(connected[fn](...inputs)).to.be.reverted;
                     });
                 }
             }

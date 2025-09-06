@@ -53,7 +53,9 @@ export class PoolOperatorActor extends BaseActor {
     ): Promise<void> {
         // decrease operator share
         const signer = await this._getSigner();
-        const tx = this._stakingApiWrapper.stakingContract.connect(signer).decreaseStakingPoolOperatorShare(poolId, newOperatorShare);
+        const tx = this._stakingApiWrapper.stakingContract
+            .connect(signer)
+            .decreaseStakingPoolOperatorShare(poolId, newOperatorShare);
         if (revertError !== undefined) {
             // For LibRichErrors.rrevert calls, we need to check the error data
             try {

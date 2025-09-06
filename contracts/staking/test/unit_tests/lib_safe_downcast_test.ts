@@ -7,16 +7,16 @@ export class SafeMathRevertErrors {
     static Uint256Overflow(): Error {
         return new Error('SafeMath: uint256 overflow');
     }
-    
+
     static Uint256Underflow(): Error {
         return new Error('SafeMath: uint256 underflow');
     }
-    
+
     static DowncastErrorCodes = {
         ValueTooLargeToDowncastToUint96: 0,
         ValueTooLargeToDowncastToUint64: 1,
     };
-    
+
     static Uint256DowncastError = class extends Error {
         constructor(errorCode: number, value: bigint) {
             super(`SafeMath: downcast error ${errorCode} for value ${value}`);
@@ -40,9 +40,9 @@ describe('LibSafeDowncast unit tests', () => {
         );
     });
 
-    const MAX_UINT_64 = (2n ** 64n) - 1n;
-    const MAX_UINT_96 = (2n ** 96n) - 1n;
-    const MAX_UINT_256 = (2n ** 256n) - 1n;
+    const MAX_UINT_64 = 2n ** 64n - 1n;
+    const MAX_UINT_96 = 2n ** 96n - 1n;
+    const MAX_UINT_256 = 2n ** 256n - 1n;
 
     describe('downcastToUint96', () => {
         async function verifyCorrectDowncastAsync(n: Numberish): Promise<void> {

@@ -300,9 +300,7 @@ async function generateRollbackAsync(proxyFunctions: ProxyFunctionEntity[]): Pro
     for (const selector of selected) {
         const rollbackLength = (await zeroEx.getRollbackLength(selector).callAsync()).toNumber();
         const rollbackHistory = await Promise.all(
-            _.range(rollbackLength).map(async i =>
-                zeroEx.getRollbackEntryAtIndex(selector, BigInt(i)).callAsync(),
-            ),
+            _.range(rollbackLength).map(async i => zeroEx.getRollbackEntryAtIndex(selector, BigInt(i)).callAsync()),
         );
         const fullHistory = proxyFunctions.find(fn => fn.id === selector)!.fullHistory;
         const previousImpl = rollbackHistory[rollbackLength - 1];

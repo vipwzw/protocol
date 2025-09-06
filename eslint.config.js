@@ -52,6 +52,8 @@ module.exports = [
             'typechain-types/**',
             'generated-*/**',
             '**/*.d.ts',
+            '**/src/typechain-types/**',
+            '**/typechain-types/**',
         ],
     },
 ];

@@ -1,17 +1,12 @@
-import { ethers } from "hardhat";
-import {
-    constants,
-    getRandomInteger,
-    toBaseUnitAmount,
-    verifyEventsFromLogs,
-} from '@0x/utils';
+import { ethers } from 'hardhat';
+import { constants, getRandomInteger, toBaseUnitAmount, verifyEventsFromLogs } from '@0x/utils';
 import { expect } from 'chai';
 import { OtcOrder, RfqOrder, SIGNATURE_ABI } from '@0x/protocol-utils';
 import { hexUtils } from '@0x/utils';
 import { LogWithDecodedArgs } from 'ethereum-types';
 
-import { 
-    IZeroExContract, 
+import {
+    IZeroExContract,
     IZeroExEvents,
     OtcOrdersFeature__factory,
     LiquidityProviderSandbox__factory,
@@ -22,7 +17,7 @@ import {
     TestMintableERC20Token__factory,
     TestWeth__factory,
     TestMintTokenERC20Transformer__factory,
-    MultiplexFeature__factory
+    MultiplexFeature__factory,
 } from '../../src/wrappers';
 import { artifacts } from '../artifacts';
 import { abis } from '../utils/abis'; // 🔧 添加abis导入
@@ -115,62 +110,67 @@ describe('MultiplexFeature', () => {
     async function migrateOtcOrdersFeatureAsync(): Promise<void> {
         const signer = await env.provider.getSigner(owner);
         const featureFactory = new OtcOrdersFeature__factory(signer);
-        const featureImpl = await featureFactory.deploy(
-            await zeroEx.getAddress(),
-            await weth.getAddress()
-        );
+        const featureImpl = await featureFactory.deploy(await zeroEx.getAddress(), await weth.getAddress());
         await featureImpl.waitForDeployment();
-        
+
         const ownerSigner = await env.provider.getSigner(owner);
         const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
-        await ownableFeature.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
+        await ownableFeature.migrate(
+            await featureImpl.getAddress(),
+            featureImpl.interface.encodeFunctionData('migrate'),
+            owner,
+        );
     }
 
     async function migrateLiquidityProviderContractsAsync(): Promise<void> {
         const signer = await env.provider.getSigner(owner);
-        
+
         const sandboxFactory = new LiquidityProviderSandbox__factory(signer);
         sandbox = await sandboxFactory.deploy(await zeroEx.getAddress());
         await sandbox.waitForDeployment();
-        
+
         // 🔧 使用ethers.getContractFactory替代可能不存在的factory
         const liquidityProviderFactory = await ethers.getContractFactory('TestLiquidityProvider');
-        liquidityProvider = await liquidityProviderFactory.deploy() as TestLiquidityProviderContract;
+        liquidityProvider = (await liquidityProviderFactory.deploy()) as TestLiquidityProviderContract;
         await liquidityProvider.waitForDeployment();
     }
 
     async function migrateUniswapV2ContractsAsync(): Promise<void> {
         const signer = await env.provider.getSigner(owner);
-        
+
         // 🔧 使用ethers.getContractFactory替代可能不存在的factory
         const sushiFactoryFactory = await ethers.getContractFactory('TestUniswapV2Factory');
-        sushiFactory = await sushiFactoryFactory.deploy() as TestUniswapV2FactoryContract;
+        sushiFactory = (await sushiFactoryFactory.deploy()) as TestUniswapV2FactoryContract;
         await sushiFactory.waitForDeployment();
-        
+
         const uniV2FactoryFactory = await ethers.getContractFactory('TestUniswapV2Factory');
-        uniV2Factory = await uniV2FactoryFactory.deploy() as TestUniswapV2FactoryContract;
+        uniV2Factory = (await uniV2FactoryFactory.deploy()) as TestUniswapV2FactoryContract;
         await uniV2Factory.waitForDeployment();
     }
 
     async function migrateUniswapV3ContractsAsync(): Promise<void> {
         const signer = await env.provider.getSigner(owner);
-        
+
         // 🔧 使用ethers.getContractFactory替代可能不存在的factory
         const uniV3FactoryFactory = await ethers.getContractFactory('TestUniswapV3Factory');
-        uniV3Factory = await uniV3FactoryFactory.deploy() as TestUniswapV3FactoryContract;
+        uniV3Factory = (await uniV3FactoryFactory.deploy()) as TestUniswapV3FactoryContract;
         await uniV3Factory.waitForDeployment();
-        
+
         const featureFactory = new UniswapV3Feature__factory(signer);
         const featureImpl = await featureFactory.deploy(
             await weth.getAddress(),
             await uniV3Factory.getAddress(),
-            await uniV3Factory.POOL_INIT_CODE_HASH()
+            await uniV3Factory.POOL_INIT_CODE_HASH(),
         );
         await featureImpl.waitForDeployment();
-        
+
         const ownerSigner = await env.provider.getSigner(owner);
         const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
-        await ownableFeature.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
+        await ownableFeature.migrate(
+            await featureImpl.getAddress(),
+            featureImpl.interface.encodeFunctionData('migrate'),
+            owner,
+        );
     }
 
     //////////////// Miscellaneous utils ////////////////
@@ -203,7 +203,7 @@ describe('MultiplexFeature', () => {
         // 首先检查 pool 是否已存在
         const token0Address = await token0.getAddress();
         const token1Address = await token1.getAddress();
-        
+
         // 检查 pool 是否已存在 (getPool 是一个 mapping)
         const existingPoolAddress = await factory.getPool(token0Address, token1Address);
         if (existingPoolAddress !== ethers.ZeroAddress) {
@@ -219,7 +219,7 @@ describe('MultiplexFeature', () => {
             }
             return pool;
         }
-        
+
         // 创建新 pool
         const tx = await factory.createPool(token0Address, token1Address);
         const receipt = await tx.wait();
@@ -230,10 +230,7 @@ describe('MultiplexFeature', () => {
         if (!poolAddress) {
             throw new Error('Pool address is null in event args');
         }
-        const pool = await ethers.getContractAt(
-            'TestUniswapV2Pool',
-            poolAddress
-        );
+        const pool = await ethers.getContractAt('TestUniswapV2Pool', poolAddress);
         await mintToAsync(token0, await pool.getAddress(), balance0);
         await mintToAsync(token1, await pool.getAddress(), balance1);
         if (token0Address < token1Address) {
@@ -253,7 +250,7 @@ describe('MultiplexFeature', () => {
         // 首先检查 pool 是否已存在
         const token0Address = await token0.getAddress();
         const token1Address = await token1.getAddress();
-        
+
         // 检查 pool 是否已存在 (getPool 是一个 mapping)
         const existingPoolAddress = await uniV3Factory.getPool(token0Address, token1Address, BigInt(POOL_FEE));
         if (existingPoolAddress !== ethers.ZeroAddress) {
@@ -264,7 +261,7 @@ describe('MultiplexFeature', () => {
             await mintToAsync(token1, await pool.getAddress(), balance1);
             return pool;
         }
-        
+
         // 创建新 pool
         const tx = await uniV3Factory.createPool(token0Address, token1Address, BigInt(POOL_FEE));
         const receipt = await tx.wait();
@@ -275,10 +272,7 @@ describe('MultiplexFeature', () => {
         if (!poolAddress) {
             throw new Error('Pool address is null in event args');
         }
-        const pool = await ethers.getContractAt(
-            'TestUniswapV3Pool',
-            poolAddress
-        );
+        const pool = await ethers.getContractAt('TestUniswapV3Pool', poolAddress);
         await mintToAsync(token0, await pool.getAddress(), balance0);
         await mintToAsync(token1, await pool.getAddress(), balance1);
         return pool;
@@ -307,7 +301,7 @@ describe('MultiplexFeature', () => {
         // 使用 ethers.AbiCoder 替代 AbiEncoder
         const abiCoder = ethers.AbiCoder.defaultAbiCoder();
         const makerToken =
-            rfqOrder.makerToken === await weth.getAddress()
+            rfqOrder.makerToken === (await weth.getAddress())
                 ? weth
                 : await ethers.getContractAt('TestMintableERC20Token', rfqOrder.makerToken);
         await mintToAsync(makerToken, rfqOrder.maker, rfqOrder.makerAmount);
@@ -316,7 +310,10 @@ describe('MultiplexFeature', () => {
             id: MultiplexSubcall.Rfq,
             sellAmount,
             data: abiCoder.encode(
-                ['tuple(address,address,uint128,uint128,address,address,address,bytes32,uint64,uint256)', 'tuple(uint8,uint8,bytes32,bytes32)'],
+                [
+                    'tuple(address,address,uint128,uint128,address,address,address,bytes32,uint64,uint256)',
+                    'tuple(uint8,uint8,bytes32,bytes32)',
+                ],
                 [
                     [
                         rfqOrder.makerToken,
@@ -328,15 +325,10 @@ describe('MultiplexFeature', () => {
                         rfqOrder.txOrigin,
                         rfqOrder.pool, // 🔧 添加缺少的 pool 字段
                         rfqOrder.expiry,
-                        rfqOrder.salt
+                        rfqOrder.salt,
                     ],
-                    [
-                        signature.signatureType,
-                        signature.v,
-                        signature.r,
-                        signature.s
-                    ]
-                ]
+                    [signature.signatureType, signature.v, signature.r, signature.s],
+                ],
             ),
         };
     }
@@ -346,7 +338,7 @@ describe('MultiplexFeature', () => {
         const currentBlock = await ethers.provider.getBlock('latest');
         const blockTimestamp = Number(currentBlock?.timestamp || 0);
         const expiry = fields.expiry ?? BigInt(blockTimestamp + 300); // 区块时间 + 5分钟
-        
+
         return getRandomOtcOrder({
             maker,
             verifyingContract: await zeroEx.getAddress(),
@@ -367,7 +359,7 @@ describe('MultiplexFeature', () => {
     ): Promise<BatchSellSubcall> {
         const abiCoder = ethers.AbiCoder.defaultAbiCoder();
         const makerToken =
-            otcOrder.makerToken === await weth.getAddress()
+            otcOrder.makerToken === (await weth.getAddress())
                 ? weth
                 : await ethers.getContractAt('TestMintableERC20Token', otcOrder.makerToken);
         await mintToAsync(makerToken, otcOrder.maker, otcOrder.makerAmount);
@@ -376,7 +368,7 @@ describe('MultiplexFeature', () => {
         // 先重置授权为0，再设置为最大值，确保授权生效
         await makerToken.connect(makerSigner).approve(await zeroEx.getAddress(), 0);
         await makerToken.connect(makerSigner).approve(await zeroEx.getAddress(), constants.MAX_UINT256);
-        
+
         // 🔍 验证授权是否成功
         const allowance = await makerToken.allowance(otcOrder.maker, await zeroEx.getAddress());
         console.log(`🔧 getOtcSubcallAsync 授权检查:
@@ -386,33 +378,36 @@ describe('MultiplexFeature', () => {
   allowance: ${allowance}
   required: ${otcOrder.makerAmount}
   sufficient: ${allowance >= otcOrder.makerAmount}`);
-        
+
         if (allowance < otcOrder.makerAmount) {
             throw new Error(`Insufficient allowance: ${allowance} < ${otcOrder.makerAmount}`);
         }
         const signature = await otcOrder.getSignatureWithProviderAsync(env.provider);
-                        // 🔍 检查时间相关状态
-                const currentTimestamp = Math.floor(Date.now() / 1000);
-                const blockTimestamp = Number((await ethers.provider.getBlock('latest'))?.timestamp || 0);
-                const orderExpiry = Number(otcOrder.expiry);
-                console.log(`⏰ 时间状态检查:
+        // 🔍 检查时间相关状态
+        const currentTimestamp = Math.floor(Date.now() / 1000);
+        const blockTimestamp = Number((await ethers.provider.getBlock('latest'))?.timestamp || 0);
+        const orderExpiry = Number(otcOrder.expiry);
+        console.log(`⏰ 时间状态检查:
   currentTimestamp: ${currentTimestamp}
   blockTimestamp: ${blockTimestamp}
   order.expiry: ${orderExpiry}
   timeUntilExpiry: ${orderExpiry - blockTimestamp}s`);
 
-                console.log(`🔐 OTC Order 签名和数据:
+        console.log(`🔐 OTC Order 签名和数据:
   signature: ${signature}
   order.salt: ${otcOrder.salt}
   order.expiry: ${otcOrder.expiry}
   sellAmount: ${sellAmount}
   MultiplexSubcall.Otc: ${MultiplexSubcall.Otc}`);
-        
+
         return {
             id: MultiplexSubcall.Otc,
             sellAmount,
             data: abiCoder.encode(
-                ['tuple(address,address,uint128,uint128,address,address,address,uint256)', 'tuple(uint8,uint8,bytes32,bytes32)'],
+                [
+                    'tuple(address,address,uint128,uint128,address,address,address,uint256)',
+                    'tuple(uint8,uint8,bytes32,bytes32)',
+                ],
                 [
                     [
                         otcOrder.makerToken,
@@ -422,15 +417,10 @@ describe('MultiplexFeature', () => {
                         otcOrder.maker,
                         otcOrder.taker, // 🔧 添加缺少的 taker 字段
                         otcOrder.txOrigin, // 🔧 添加缺少的 txOrigin 字段
-                        otcOrder.expiryAndNonce // 🔧 使用完整的 expiryAndNonce 而不是分解的字段
+                        otcOrder.expiryAndNonce, // 🔧 使用完整的 expiryAndNonce 而不是分解的字段
                     ],
-                    [
-                        signature.signatureType,
-                        signature.v,
-                        signature.r,
-                        signature.s
-                    ]
-                ]
+                    [signature.signatureType, signature.v, signature.r, signature.s],
+                ],
             ),
         };
     }
@@ -485,7 +475,7 @@ describe('MultiplexFeature', () => {
         const abiCoder = ethers.AbiCoder.defaultAbiCoder();
         return {
             id: MultiplexSubcall.LiquidityProvider,
-            data: abiCoder.encode(["address", "bytes"], [await liquidityProvider.getAddress(), constants.NULL_BYTES]),
+            data: abiCoder.encode(['address', 'bytes'], [await liquidityProvider.getAddress(), constants.NULL_BYTES]),
         };
     }
     async function getLiquidityProviderBatchSubcall(
@@ -504,20 +494,17 @@ describe('MultiplexFeature', () => {
         mintAmount: bigint = getRandomInteger(1, toBaseUnitAmount(1)),
     ): BatchSellSubcall {
         const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-        
+
         // 编码内部 transform data
         const transformData = abiCoder.encode(
             ['tuple(address,address,uint256,uint256,uint256)'],
-            [[inputToken, outputToken, sellAmount, mintAmount, constants.ZERO_AMOUNT]] // 🔧 使用 sellAmount 作为 burnAmount
+            [[inputToken, outputToken, sellAmount, mintAmount, constants.ZERO_AMOUNT]], // 🔧 使用 sellAmount 作为 burnAmount
         );
-        
+
         return {
             id: MultiplexSubcall.TransformERC20,
             sellAmount,
-            data: abiCoder.encode(
-                ['tuple(uint32,bytes)[]'],
-                [[[transformerNonce, transformData]]]
-            ),
+            data: abiCoder.encode(['tuple(uint32,bytes)[]'], [[[transformerNonce, transformData]]]),
         };
     }
 
@@ -527,7 +514,7 @@ describe('MultiplexFeature', () => {
         const encodedCalls = calls.map(call => [call.id, call.sellAmount, call.data]);
         return {
             id: MultiplexSubcall.BatchSell,
-            data: abiCoder.encode(["tuple(uint8,uint256,bytes)[]"], [encodedCalls]),
+            data: abiCoder.encode(['tuple(uint8,uint256,bytes)[]'], [encodedCalls]),
         };
     }
 
@@ -550,23 +537,25 @@ describe('MultiplexFeature', () => {
         [owner, maker, taker] = await env.getAccountAddressesAsync();
         env.txDefaults.from = owner;
         zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {}, { transformerDeployer: owner });
-        
+
         const signer = await env.provider.getSigner(owner);
         const tokenFactories = [...new Array(3)].map(() => new TestMintableERC20Token__factory(signer));
-        const tokenDeployments = await Promise.all(
-            tokenFactories.map(factory => factory.deploy())
-        );
+        const tokenDeployments = await Promise.all(tokenFactories.map(factory => factory.deploy()));
         await Promise.all(tokenDeployments.map(token => token.waitForDeployment()));
         [dai, shib, zrx] = tokenDeployments;
-        
+
         const wethFactory = new TestWeth__factory(signer);
         weth = await wethFactory.deploy();
         await weth.waitForDeployment();
 
         // 🔧 部署完整的 TestNativeOrdersFeature 以支持 OTC orders（在 weth 初始化之后）
         const ownerSignerForNative = await env.provider.getSigner(owner);
-        const ownableFeatureForNative = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSignerForNative);
-        
+        const ownableFeatureForNative = await ethers.getContractAt(
+            'IOwnableFeature',
+            await zeroEx.getAddress(),
+            ownerSignerForNative,
+        );
+
         const { TestNativeOrdersFeature__factory: TestNativeOrdersFeatureFactory } = await import('../wrappers');
         const nativeOrdersImplForOtc = await new TestNativeOrdersFeatureFactory(ownerSignerForNative).deploy(
             await zeroEx.getAddress(),
@@ -576,8 +565,12 @@ describe('MultiplexFeature', () => {
             70000, // protocolFeeMultiplier - 使用标准值
         );
         await nativeOrdersImplForOtc.waitForDeployment();
-        await ownableFeatureForNative.migrate(await nativeOrdersImplForOtc.getAddress(), nativeOrdersImplForOtc.interface.encodeFunctionData('migrate'), owner);
-        
+        await ownableFeatureForNative.migrate(
+            await nativeOrdersImplForOtc.getAddress(),
+            nativeOrdersImplForOtc.interface.encodeFunctionData('migrate'),
+            owner,
+        );
+
         // 🔧 使用ITransformERC20Feature接口调用getTransformWallet
         const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
         flashWalletAddress = await transformERC20Feature.getTransformWallet();
@@ -596,12 +589,12 @@ describe('MultiplexFeature', () => {
         await migrateLiquidityProviderContractsAsync();
         await migrateUniswapV2ContractsAsync();
         await migrateUniswapV3ContractsAsync();
-        
+
         // 🔧 部署 transformer 并获取其部署 nonce
         const transformerFactory = new TestMintTokenERC20Transformer__factory(signer);
         const transformer = await transformerFactory.deploy();
         await transformer.waitForDeployment();
-        
+
         // 获取 transformer 的部署 nonce（从交易回执中获取）
         const deployTx = transformer.deploymentTransaction();
         if (deployTx) {
@@ -620,13 +613,13 @@ describe('MultiplexFeature', () => {
             await uniV2Factory.getAddress(),
             await sushiFactory.getAddress(),
             await uniV2Factory.POOL_INIT_CODE_HASH(),
-            await sushiFactory.POOL_INIT_CODE_HASH()
+            await sushiFactory.POOL_INIT_CODE_HASH(),
         );
         await featureImpl.waitForDeployment();
-        
+
         const ownerSigner = await env.provider.getSigner(owner);
         const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
-        
+
         // 🔧 先部署完整的 NativeOrdersFeature 以支持 RFQ 功能
         const { TestNativeOrdersFeature__factory } = await import('../wrappers');
         const nativeOrdersImpl = await new TestNativeOrdersFeature__factory(ownerSigner).deploy(
@@ -637,14 +630,24 @@ describe('MultiplexFeature', () => {
             0, // protocolFeeMultiplier
         );
         await nativeOrdersImpl.waitForDeployment();
-        await ownableFeature.migrate(await nativeOrdersImpl.getAddress(), nativeOrdersImpl.interface.encodeFunctionData('migrate'), owner);
-        
+        await ownableFeature.migrate(
+            await nativeOrdersImpl.getAddress(),
+            nativeOrdersImpl.interface.encodeFunctionData('migrate'),
+            owner,
+        );
+
         // 🔧 然后部署 MultiplexFeature
-        await ownableFeature.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
+        await ownableFeature.migrate(
+            await featureImpl.getAddress(),
+            featureImpl.interface.encodeFunctionData('migrate'),
+            owner,
+        );
         // 🔧 使用ethers.getContractAt替代constructor
-        multiplex = await ethers.getContractAt('IMultiplexFeature', await zeroEx.getAddress()) as MultiplexFeatureContract;
-        
-        
+        multiplex = (await ethers.getContractAt(
+            'IMultiplexFeature',
+            await zeroEx.getAddress(),
+        )) as MultiplexFeatureContract;
+
         // 创建初始快照
         snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
@@ -654,36 +657,40 @@ describe('MultiplexFeature', () => {
         await ethers.provider.send('evm_revert', [snapshotId]);
         // 重新创建快照供下次使用
         snapshotId = await ethers.provider.send('evm_snapshot', []);
-        
+
         // 🔄 第二步：彻底重置 JavaScript 变量状态
         console.log('🔄 开始彻底重置所有变量状态...');
-        
+
         // 重新获取账户地址（防止地址引用污染）
         [owner, maker, taker] = await env.getAccountAddressesAsync();
         env.txDefaults.from = owner;
-        
+
         // 🔄 重新部署所有合约实例，确保地址完全独立
         zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {}, { transformerDeployer: owner });
-        
+
         const signer = await env.provider.getSigner(owner);
-        
+
         // 重新部署所有 token 合约
         const tokenFactories = [...new Array(3)].map(() => new TestMintableERC20Token__factory(signer));
-        const tokenDeployments = await Promise.all(
-            tokenFactories.map(factory => factory.deploy())
-        );
+        const tokenDeployments = await Promise.all(tokenFactories.map(factory => factory.deploy()));
         await Promise.all(tokenDeployments.map(token => token.waitForDeployment()));
         [dai, shib, zrx] = tokenDeployments;
-        
+
         const wethFactory = new TestWeth__factory(signer);
         weth = await wethFactory.deploy();
         await weth.waitForDeployment();
 
         // 重新部署完整的 TestNativeOrdersFeature
         const ownerSignerForReset = await env.provider.getSigner(owner);
-        const ownableFeatureForReset = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSignerForReset);
-        
-        const { TestNativeOrdersFeature__factory: TestNativeOrdersFeatureFactoryForReset } = await import('../wrappers');
+        const ownableFeatureForReset = await ethers.getContractAt(
+            'IOwnableFeature',
+            await zeroEx.getAddress(),
+            ownerSignerForReset,
+        );
+
+        const { TestNativeOrdersFeature__factory: TestNativeOrdersFeatureFactoryForReset } = await import(
+            '../wrappers'
+        );
         const nativeOrdersImplForReset = await new TestNativeOrdersFeatureFactoryForReset(ownerSignerForReset).deploy(
             await zeroEx.getAddress(),
             await weth.getAddress(), // 使用新部署的 WETH 地址
@@ -692,11 +699,18 @@ describe('MultiplexFeature', () => {
             70000, // protocolFeeMultiplier - 使用标准值
         );
         await nativeOrdersImplForReset.waitForDeployment();
-        await ownableFeatureForReset.migrate(await nativeOrdersImplForReset.getAddress(), nativeOrdersImplForReset.interface.encodeFunctionData('migrate'), owner);
-        
+        await ownableFeatureForReset.migrate(
+            await nativeOrdersImplForReset.getAddress(),
+            nativeOrdersImplForReset.interface.encodeFunctionData('migrate'),
+            owner,
+        );
+
         // 重新获取 multiplex feature 引用
-        multiplex = await ethers.getContractAt('IMultiplexFeature', await zeroEx.getAddress()) as MultiplexFeatureContract;
-        
+        multiplex = (await ethers.getContractAt(
+            'IMultiplexFeature',
+            await zeroEx.getAddress(),
+        )) as MultiplexFeatureContract;
+
         // 重新获取 flashWalletAddress
         const transformERC20Feature = await ethers.getContractAt('ITransformERC20Feature', await zeroEx.getAddress());
         flashWalletAddress = await transformERC20Feature.getTransformWallet();
@@ -712,18 +726,18 @@ describe('MultiplexFeature', () => {
                 return t.connect(makerSigner).approve(await zeroEx.getAddress(), constants.MAX_UINT256);
             }),
         ]);
-        
+
         // 重新迁移其他必要的合约
         await migrateOtcOrdersFeatureAsync();
         await migrateLiquidityProviderContractsAsync();
         await migrateUniswapV2ContractsAsync();
         await migrateUniswapV3ContractsAsync();
-        
+
         // 🔧 重新部署 transformer
         const transformerFactory = new TestMintTokenERC20Transformer__factory(signer);
         const transformer = await transformerFactory.deploy();
         await transformer.waitForDeployment();
-        
+
         // 获取 transformer 的部署 nonce
         const deployTx = transformer.deploymentTransaction();
         if (deployTx) {
@@ -741,18 +755,26 @@ describe('MultiplexFeature', () => {
             await uniV2Factory.getAddress(),
             await sushiFactory.getAddress(),
             await uniV2Factory.POOL_INIT_CODE_HASH(),
-            await sushiFactory.POOL_INIT_CODE_HASH()
+            await sushiFactory.POOL_INIT_CODE_HASH(),
         );
         await featureImpl.waitForDeployment();
-        
+
         // 迁移 MultiplexFeature
-        const ownableFeatureForMultiplex = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), signer);
-        await ownableFeatureForMultiplex.migrate(await featureImpl.getAddress(), featureImpl.interface.encodeFunctionData('migrate'), owner);
-        
-                        console.log(`✅ 变量状态重置完成！新的 zeroEx 地址: ${await zeroEx.getAddress()}`);
-                
-                // 🔍 验证所有关键变量都已重新赋值
-                console.log(`🔍 重置后的关键变量:
+        const ownableFeatureForMultiplex = await ethers.getContractAt(
+            'IOwnableFeature',
+            await zeroEx.getAddress(),
+            signer,
+        );
+        await ownableFeatureForMultiplex.migrate(
+            await featureImpl.getAddress(),
+            featureImpl.interface.encodeFunctionData('migrate'),
+            owner,
+        );
+
+        console.log(`✅ 变量状态重置完成！新的 zeroEx 地址: ${await zeroEx.getAddress()}`);
+
+        // 🔍 验证所有关键变量都已重新赋值
+        console.log(`🔍 重置后的关键变量:
   dai: ${await dai.getAddress()}
   shib: ${await shib.getAddress()}
   zrx: ${await zrx.getAddress()}
@@ -762,7 +784,6 @@ describe('MultiplexFeature', () => {
   transformerNonce: ${transformerNonce}`);
     });
 
-
     describe('batch sells', () => {
         describe('multiplexBatchSellTokenForToken', () => {
             it('reverts if minBuyAmount is not satisfied', async () => {
@@ -770,12 +791,15 @@ describe('MultiplexFeature', () => {
                 const rfqSubcall = await getRfqSubcallAsync(order);
                 await mintToAsync(dai, taker, rfqSubcall.sellAmount);
                 // 授权 MultiplexFeature 转移 DAI
-                await dai.connect(await env.provider.getSigner(taker)).approve(await multiplex.getAddress(), rfqSubcall.sellAmount);
+                await dai
+                    .connect(await env.provider.getSigner(taker))
+                    .approve(await multiplex.getAddress(), rfqSubcall.sellAmount);
 
                 const tx = multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexBatchSellTokenForToken(await dai.getAddress(),
+                    .multiplexBatchSellTokenForToken(
+                        await dai.getAddress(),
                         await zrx.getAddress(),
                         [rfqSubcall],
                         order.takerAmount,
@@ -792,7 +816,8 @@ describe('MultiplexFeature', () => {
                 const tx = multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexBatchSellTokenForToken(await dai.getAddress(),
+                    .multiplexBatchSellTokenForToken(
+                        await dai.getAddress(),
                         await zrx.getAddress(),
                         [invalidSubcall],
                         invalidSubcall.sellAmount,
@@ -808,7 +833,8 @@ describe('MultiplexFeature', () => {
                 const tx = multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexBatchSellTokenForToken(await dai.getAddress(),
+                    .multiplexBatchSellTokenForToken(
+                        await dai.getAddress(),
                         await zrx.getAddress(),
                         [rfqSubcall],
                         order.takerAmount + 1n,
@@ -822,7 +848,9 @@ describe('MultiplexFeature', () => {
                 await createUniswapV2PoolAsync(uniV2Factory, dai, zrx);
                 await mintToAsync(dai, taker, rfqSubcall.sellAmount);
                 // 授权 MultiplexFeature 转移 DAI
-                await dai.connect(await env.provider.getSigner(taker)).approve(await multiplex.getAddress(), rfqSubcall.sellAmount);
+                await dai
+                    .connect(await env.provider.getSigner(taker))
+                    .approve(await multiplex.getAddress(), rfqSubcall.sellAmount);
 
                 const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
@@ -830,7 +858,13 @@ describe('MultiplexFeature', () => {
                     .multiplexBatchSellTokenForToken(
                         await dai.getAddress(),
                         await zrx.getAddress(),
-                        [rfqSubcall, getUniswapV2BatchSubcall([await dai.getAddress(), await zrx.getAddress()], order.takerAmount)],
+                        [
+                            rfqSubcall,
+                            getUniswapV2BatchSubcall(
+                                [await dai.getAddress(), await zrx.getAddress()],
+                                order.takerAmount,
+                            ),
+                        ],
                         order.takerAmount,
                         constants.ZERO_AMOUNT,
                     );
@@ -859,7 +893,9 @@ describe('MultiplexFeature', () => {
                 await createUniswapV2PoolAsync(uniV2Factory, dai, zrx);
                 await mintToAsync(dai, taker, order.takerAmount);
                 // 授权 MultiplexFeature 转移 DAI
-                await dai.connect(await env.provider.getSigner(taker)).approve(await multiplex.getAddress(), order.takerAmount);
+                await dai
+                    .connect(await env.provider.getSigner(taker))
+                    .approve(await multiplex.getAddress(), order.takerAmount);
 
                 const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
@@ -867,7 +903,13 @@ describe('MultiplexFeature', () => {
                     .multiplexBatchSellTokenForToken(
                         await dai.getAddress(),
                         await zrx.getAddress(),
-                        [otcSubcall, getUniswapV2BatchSubcall([await dai.getAddress(), await zrx.getAddress()], order.takerAmount)],
+                        [
+                            otcSubcall,
+                            getUniswapV2BatchSubcall(
+                                [await dai.getAddress(), await zrx.getAddress()],
+                                order.takerAmount,
+                            ),
+                        ],
                         order.takerAmount,
                         constants.ZERO_AMOUNT,
                     );
@@ -894,7 +936,9 @@ describe('MultiplexFeature', () => {
                 const uniswap = await createUniswapV2PoolAsync(uniV2Factory, dai, zrx);
                 await mintToAsync(dai, taker, order.takerAmount);
                 // 授权 MultiplexFeature 转移 DAI
-                await dai.connect(await env.provider.getSigner(taker)).approve(await multiplex.getAddress(), order.takerAmount);
+                await dai
+                    .connect(await env.provider.getSigner(taker))
+                    .approve(await multiplex.getAddress(), order.takerAmount);
 
                 const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
@@ -902,7 +946,13 @@ describe('MultiplexFeature', () => {
                     .multiplexBatchSellTokenForToken(
                         await dai.getAddress(),
                         await zrx.getAddress(),
-                        [rfqSubcall, getUniswapV2BatchSubcall([await dai.getAddress(), await zrx.getAddress()], order.takerAmount)],
+                        [
+                            rfqSubcall,
+                            getUniswapV2BatchSubcall(
+                                [await dai.getAddress(), await zrx.getAddress()],
+                                order.takerAmount,
+                            ),
+                        ],
                         order.takerAmount,
                         constants.ZERO_AMOUNT,
                     );
@@ -943,7 +993,9 @@ describe('MultiplexFeature', () => {
                 // OTC 过期，所以 UniswapV2 需要处理全部数量
                 await mintToAsync(dai, taker, order.takerAmount);
                 // 授权 MultiplexFeature 转移 DAI
-                await dai.connect(await env.provider.getSigner(taker)).approve(await multiplex.getAddress(), order.takerAmount);
+                await dai
+                    .connect(await env.provider.getSigner(taker))
+                    .approve(await multiplex.getAddress(), order.takerAmount);
 
                 const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
@@ -951,7 +1003,13 @@ describe('MultiplexFeature', () => {
                     .multiplexBatchSellTokenForToken(
                         await dai.getAddress(),
                         await zrx.getAddress(),
-                        [otcSubcall, getUniswapV2BatchSubcall([await dai.getAddress(), await zrx.getAddress()], order.takerAmount)],
+                        [
+                            otcSubcall,
+                            getUniswapV2BatchSubcall(
+                                [await dai.getAddress(), await zrx.getAddress()],
+                                order.takerAmount,
+                            ),
+                        ],
                         order.takerAmount,
                         constants.ZERO_AMOUNT,
                     );
@@ -988,13 +1046,18 @@ describe('MultiplexFeature', () => {
             it('expired RFQ, fallback(TransformERC20)', async () => {
                 const order = await getTestRfqOrder({ expiry: constants.ZERO_AMOUNT });
                 const rfqSubcall = await getRfqSubcallAsync(order);
-                const transformERC20Subcall = getTransformERC20Subcall(await dai.getAddress(), await zrx.getAddress(), order.takerAmount);
+                const transformERC20Subcall = getTransformERC20Subcall(
+                    await dai.getAddress(),
+                    await zrx.getAddress(),
+                    order.takerAmount,
+                );
                 await mintToAsync(dai, taker, order.takerAmount);
 
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexBatchSellTokenForToken(await dai.getAddress(),
+                    .multiplexBatchSellTokenForToken(
+                        await dai.getAddress(),
                         await zrx.getAddress(),
                         [rfqSubcall, transformERC20Subcall],
                         order.takerAmount,
@@ -1053,15 +1116,21 @@ describe('MultiplexFeature', () => {
                 const uniV3 = await createUniswapV3PoolAsync(dai, zrx);
                 const liquidityProviderSubcall = await getLiquidityProviderBatchSubcall();
                 const uniV3Subcall = await getUniswapV3BatchSubcall([dai, zrx]);
-                const sushiswapSubcall = getUniswapV2BatchSubcall([await dai.getAddress(), await zrx.getAddress()], undefined, true);
-                const sellAmount = [liquidityProviderSubcall, uniV3Subcall, sushiswapSubcall]
-                    .map(c => BigInt(c.sellAmount))
-                    .reduce((a, b) => a + b, 0n) - 1n;
+                const sushiswapSubcall = getUniswapV2BatchSubcall(
+                    [await dai.getAddress(), await zrx.getAddress()],
+                    undefined,
+                    true,
+                );
+                const sellAmount =
+                    [liquidityProviderSubcall, uniV3Subcall, sushiswapSubcall]
+                        .map(c => BigInt(c.sellAmount))
+                        .reduce((a, b) => a + b, 0n) - 1n;
                 await mintToAsync(dai, taker, sellAmount);
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexBatchSellTokenForToken(await dai.getAddress(),
+                    .multiplexBatchSellTokenForToken(
+                        await dai.getAddress(),
                         await zrx.getAddress(),
                         [liquidityProviderSubcall, uniV3Subcall, sushiswapSubcall],
                         sellAmount,
@@ -1123,7 +1192,8 @@ describe('MultiplexFeature', () => {
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexBatchSellTokenForToken(await dai.getAddress(),
+                    .multiplexBatchSellTokenForToken(
+                        await dai.getAddress(),
                         await zrx.getAddress(),
                         [rfqSubcall, uniswapV2Subcall],
                         sellAmount,
@@ -1136,7 +1206,7 @@ describe('MultiplexFeature', () => {
                             token: await dai.getAddress(),
                             from: taker,
                             to: order.maker,
-                            value: sellAmount * BigInt(Math.floor(rfqFillProportion * 1e18)) / BigInt(1e18),
+                            value: (sellAmount * BigInt(Math.floor(rfqFillProportion * 1e18))) / BigInt(1e18),
                         },
                         {
                             token: await zrx.getAddress(),
@@ -1147,7 +1217,8 @@ describe('MultiplexFeature', () => {
                             token: await dai.getAddress(),
                             from: taker,
                             to: await uniswap.getAddress(),
-                            value: sellAmount - sellAmount * BigInt(Math.floor(rfqFillProportion * 1e18)) / BigInt(1e18),
+                            value:
+                                sellAmount - (sellAmount * BigInt(Math.floor(rfqFillProportion * 1e18))) / BigInt(1e18),
                         },
                         {
                             token: await zrx.getAddress(),
@@ -1175,7 +1246,8 @@ describe('MultiplexFeature', () => {
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexBatchSellTokenForToken(await dai.getAddress(),
+                    .multiplexBatchSellTokenForToken(
+                        await dai.getAddress(),
                         await zrx.getAddress(),
                         [rfqSubcall, nestedMultiHopSubcall],
                         sellAmount,
@@ -1225,7 +1297,9 @@ describe('MultiplexFeature', () => {
                 const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
                     .connect(takerSigner)
-                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [rfqSubcall], constants.ZERO_AMOUNT, { value: order.takerAmount });
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [rfqSubcall], constants.ZERO_AMOUNT, {
+                        value: order.takerAmount,
+                    });
                 const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -1253,7 +1327,7 @@ describe('MultiplexFeature', () => {
             });
             it('OTC', async () => {
                 console.log('\n🔍 === multiplexBatchSellEthForToken OTC 测试开始 ===');
-                
+
                 // 🔍 检查环境状态
                 console.log(`🌍 环境检查:
   owner: ${owner}
@@ -1262,13 +1336,15 @@ describe('MultiplexFeature', () => {
   zeroEx: ${await zeroEx.getAddress()}
   multiplex: ${await multiplex.getAddress()}
   env.txDefaults.from: ${env.txDefaults.from}`);
-                
+
                 // 🔍 检查合约状态
-                const zeroExOwner = await (await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress())).owner();
+                const zeroExOwner = await (
+                    await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress())
+                ).owner();
                 console.log(`🏢 合约状态:
   zeroEx.owner: ${zeroExOwner}
   expected owner: ${owner}`);
-                
+
                 // 🔍 检查账户 nonce
                 const ownerNonce = await env.provider.getTransactionCount(owner);
                 const makerNonce = await env.provider.getTransactionCount(maker);
@@ -1288,7 +1364,10 @@ describe('MultiplexFeature', () => {
 
                 // 🔍 检查关键合约的内部状态
                 try {
-                    const nativeOrdersFeature = await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress());
+                    const nativeOrdersFeature = await ethers.getContractAt(
+                        'INativeOrdersFeature',
+                        await zeroEx.getAddress(),
+                    );
                     const protocolFeeMultiplier = await nativeOrdersFeature.getProtocolFeeMultiplier();
                     console.log(`🏢 NativeOrdersFeature 状态:
   protocolFeeMultiplier: ${protocolFeeMultiplier}`);
@@ -1318,7 +1397,7 @@ describe('MultiplexFeature', () => {
                 console.log(`💰 ETH 余额状态:
   maker: ${makerEthBalance}
   taker: ${takerEthBalance}`);
-                
+
                 const order = await getTestOtcOrder({ takerToken: await weth.getAddress() });
                 console.log(`📋 OTC Order:
   maker: ${order.maker}
@@ -1327,7 +1406,7 @@ describe('MultiplexFeature', () => {
   takerToken: ${order.takerToken} (WETH)
   makerAmount: ${order.makerAmount}
   takerAmount: ${order.takerAmount}`);
-                
+
                 const otcSubcall = await getOtcSubcallAsync(order);
                 console.log(`📦 OTC Subcall:
   id: ${otcSubcall.id}
@@ -1347,7 +1426,9 @@ describe('MultiplexFeature', () => {
                 console.log(`🚀 执行 multiplexBatchSellEthForToken...`);
                 const tx = await multiplex
                     .connect(takerSigner)
-                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [otcSubcall], constants.ZERO_AMOUNT, { value: order.takerAmount });
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [otcSubcall], constants.ZERO_AMOUNT, {
+                        value: order.takerAmount,
+                    });
                 const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -1380,7 +1461,9 @@ describe('MultiplexFeature', () => {
                 const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
                     .connect(takerSigner)
-                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [uniswapV2Subcall], constants.ZERO_AMOUNT, { value: uniswapV2Subcall.sellAmount });
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [uniswapV2Subcall], constants.ZERO_AMOUNT, {
+                        value: uniswapV2Subcall.sellAmount,
+                    });
                 const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -1411,7 +1494,9 @@ describe('MultiplexFeature', () => {
                 const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
                     .connect(takerSigner)
-                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [uniswapV3Subcall], constants.ZERO_AMOUNT, { value: uniswapV3Subcall.sellAmount });
+                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [uniswapV3Subcall], constants.ZERO_AMOUNT, {
+                        value: uniswapV3Subcall.sellAmount,
+                    });
                 const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -1441,7 +1526,12 @@ describe('MultiplexFeature', () => {
                 const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
                     .connect(takerSigner)
-                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [liquidityProviderSubcall], constants.ZERO_AMOUNT, { value: liquidityProviderSubcall.sellAmount });
+                    .multiplexBatchSellEthForToken(
+                        await zrx.getAddress(),
+                        [liquidityProviderSubcall],
+                        constants.ZERO_AMOUNT,
+                        { value: liquidityProviderSubcall.sellAmount },
+                    );
                 const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -1471,7 +1561,12 @@ describe('MultiplexFeature', () => {
                 const takerSigner = await env.provider.getSigner(taker);
                 const tx = await multiplex
                     .connect(takerSigner)
-                    .multiplexBatchSellEthForToken(await zrx.getAddress(), [transformERC20Subcall], constants.ZERO_AMOUNT, { value: transformERC20Subcall.sellAmount });
+                    .multiplexBatchSellEthForToken(
+                        await zrx.getAddress(),
+                        [transformERC20Subcall],
+                        constants.ZERO_AMOUNT,
+                        { value: transformERC20Subcall.sellAmount },
+                    );
                 const receipt = await tx.wait();
                 verifyEventsFromLogs(
                     receipt.logs,
@@ -1502,7 +1597,10 @@ describe('MultiplexFeature', () => {
                 );
             });
             it('RFQ, MultiHop(UniV3, UniV2)', async () => {
-                const order = await getTestRfqOrder({ takerToken: await weth.getAddress(), makerToken: await zrx.getAddress() });
+                const order = await getTestRfqOrder({
+                    takerToken: await weth.getAddress(),
+                    makerToken: await zrx.getAddress(),
+                });
                 const rfqSubcall = await getRfqSubcallAsync(order);
                 const uniV3 = await createUniswapV3PoolAsync(weth, shib);
                 const uniV3Subcall = await getUniswapV3MultiHopSubcall([weth, shib]);
@@ -1514,12 +1612,11 @@ describe('MultiplexFeature', () => {
                 );
                 const sellAmount = rfqSubcall.sellAmount + nestedMultiHopSubcall.sellAmount;
 
-                const tx = await multiplex
-                    .multiplexBatchSellEthForToken(
-                        await zrx.getAddress(),
-                        [rfqSubcall, nestedMultiHopSubcall],
-                        constants.ZERO_AMOUNT,
-                    );
+                const tx = await multiplex.multiplexBatchSellEthForToken(
+                    await zrx.getAddress(),
+                    [rfqSubcall, nestedMultiHopSubcall],
+                    constants.ZERO_AMOUNT,
+                );
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress(), value: sellAmount }], 'Deposit');
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
@@ -1565,7 +1662,12 @@ describe('MultiplexFeature', () => {
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexBatchSellTokenForEth(await dai.getAddress(), [rfqSubcall], order.takerAmount, constants.ZERO_AMOUNT);
+                    .multiplexBatchSellTokenForEth(
+                        await dai.getAddress(),
+                        [rfqSubcall],
+                        order.takerAmount,
+                        constants.ZERO_AMOUNT,
+                    );
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress() }], 'Withdrawal');
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
@@ -1588,7 +1690,7 @@ describe('MultiplexFeature', () => {
             });
             it('OTC', async () => {
                 console.log('\n🔍 === multiplexBatchSellTokenForEth OTC 测试开始 ===');
-                
+
                 const order = await getTestOtcOrder({ makerToken: await weth.getAddress() });
                 console.log(`📋 OTC Order:
   maker: ${order.maker}
@@ -1597,7 +1699,7 @@ describe('MultiplexFeature', () => {
   takerToken: ${order.takerToken} (DAI)
   makerAmount: ${order.makerAmount}
   takerAmount: ${order.takerAmount}`);
-                
+
                 const otcSubcall = await getOtcSubcallAsync(order);
                 console.log(`📦 OTC Subcall:
   id: ${otcSubcall.id}
@@ -1605,7 +1707,7 @@ describe('MultiplexFeature', () => {
   data length: ${otcSubcall.data.length}`);
 
                 await mintToAsync(dai, taker, order.takerAmount);
-                
+
                 // 检查关键状态
                 const makerTokenContract = await ethers.getContractAt('TestWeth', order.makerToken);
                 const makerBalance = await makerTokenContract.balanceOf(order.maker);
@@ -1625,7 +1727,12 @@ describe('MultiplexFeature', () => {
                 console.log(`🚀 执行 multiplexBatchSellTokenForEth...`);
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
-                    .multiplexBatchSellTokenForEth(await dai.getAddress(), [otcSubcall], order.takerAmount, constants.ZERO_AMOUNT);
+                    .multiplexBatchSellTokenForEth(
+                        await dai.getAddress(),
+                        [otcSubcall],
+                        order.takerAmount,
+                        constants.ZERO_AMOUNT,
+                    );
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress() }], 'Withdrawal');
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
@@ -1654,7 +1761,8 @@ describe('MultiplexFeature', () => {
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexBatchSellTokenForEth(await dai.getAddress(),
+                    .multiplexBatchSellTokenForEth(
+                        await dai.getAddress(),
                         [uniswapV2Subcall],
                         uniswapV2Subcall.sellAmount,
                         constants.ZERO_AMOUNT,
@@ -1686,7 +1794,8 @@ describe('MultiplexFeature', () => {
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexBatchSellTokenForEth(await dai.getAddress(),
+                    .multiplexBatchSellTokenForEth(
+                        await dai.getAddress(),
                         [uniswapV3Subcall],
                         uniswapV3Subcall.sellAmount,
                         constants.ZERO_AMOUNT,
@@ -1717,7 +1826,8 @@ describe('MultiplexFeature', () => {
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexBatchSellTokenForEth(await dai.getAddress(),
+                    .multiplexBatchSellTokenForEth(
+                        await dai.getAddress(),
                         [liquidityProviderSubcall],
                         liquidityProviderSubcall.sellAmount,
                         constants.ZERO_AMOUNT,
@@ -1753,7 +1863,8 @@ describe('MultiplexFeature', () => {
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexBatchSellTokenForEth(await dai.getAddress(),
+                    .multiplexBatchSellTokenForEth(
+                        await dai.getAddress(),
                         [transformERC20Subcall],
                         transformERC20Subcall.sellAmount,
                         constants.ZERO_AMOUNT,
@@ -1783,7 +1894,10 @@ describe('MultiplexFeature', () => {
                 );
             });
             it('RFQ, MultiHop(UniV3, UniV2)', async () => {
-                const order = await getTestRfqOrder({ takerToken: await dai.getAddress(), makerToken: await weth.getAddress() });
+                const order = await getTestRfqOrder({
+                    takerToken: await dai.getAddress(),
+                    makerToken: await weth.getAddress(),
+                });
                 const rfqSubcall = await getRfqSubcallAsync(order);
                 const uniV3 = await createUniswapV3PoolAsync(dai, shib);
                 const uniV3Subcall = await getUniswapV3MultiHopSubcall([dai, shib]);
@@ -1799,7 +1913,8 @@ describe('MultiplexFeature', () => {
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexBatchSellTokenForEth(await dai.getAddress(),
+                    .multiplexBatchSellTokenForEth(
+                        await dai.getAddress(),
                         [rfqSubcall, nestedMultiHopSubcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
@@ -1869,7 +1984,8 @@ describe('MultiplexFeature', () => {
                 const tx = multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexMultiHopSellTokenForToken([await dai.getAddress(), await zrx.getAddress()],
+                    .multiplexMultiHopSellTokenForToken(
+                        [await dai.getAddress(), await zrx.getAddress()],
                         [uniswapV2Subcall],
                         sellAmount,
                         constants.MAX_UINT256,
@@ -1885,12 +2001,15 @@ describe('MultiplexFeature', () => {
                 const tx = multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexMultiHopSellTokenForToken([await dai.getAddress(), await zrx.getAddress()],
+                    .multiplexMultiHopSellTokenForToken(
+                        [await dai.getAddress(), await zrx.getAddress()],
                         [uniswapV2Subcall, uniswapV2Subcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
                     );
-                return expect(tx).to.be.revertedWith('MultiplexFeature::_multiplexMultiHopSell/MISMATCHED_ARRAY_LENGTHS');
+                return expect(tx).to.be.revertedWith(
+                    'MultiplexFeature::_multiplexMultiHopSell/MISMATCHED_ARRAY_LENGTHS',
+                );
             });
             it('UniswapV2 -> LiquidityProvider', async () => {
                 const sellAmount = getRandomInteger(1, toBaseUnitAmount(1));
@@ -1904,7 +2023,8 @@ describe('MultiplexFeature', () => {
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexMultiHopSellTokenForToken([await dai.getAddress(), await shib.getAddress(), await zrx.getAddress()],
+                    .multiplexMultiHopSellTokenForToken(
+                        [await dai.getAddress(), await shib.getAddress(), await zrx.getAddress()],
                         [uniswapV2Subcall, liquidityProviderSubcall],
                         sellAmount,
                         buyAmount,
@@ -1938,14 +2058,18 @@ describe('MultiplexFeature', () => {
                 const shibAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const liquidityProviderSubcall = await getLiquidityProviderMultiHopSubcall();
                 const sushiswap = await createUniswapV2PoolAsync(sushiFactory, shib, zrx);
-                const sushiswapSubcall = getUniswapV2MultiHopSubcall([await shib.getAddress(), await zrx.getAddress()], true);
+                const sushiswapSubcall = getUniswapV2MultiHopSubcall(
+                    [await shib.getAddress(), await zrx.getAddress()],
+                    true,
+                );
                 await mintToAsync(dai, taker, sellAmount);
                 await mintToAsync(shib, await liquidityProvider.getAddress(), shibAmount);
 
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexMultiHopSellTokenForToken([await dai.getAddress(), await shib.getAddress(), await zrx.getAddress()],
+                    .multiplexMultiHopSellTokenForToken(
+                        [await dai.getAddress(), await shib.getAddress(), await zrx.getAddress()],
                         [liquidityProviderSubcall, sushiswapSubcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
@@ -1979,7 +2103,10 @@ describe('MultiplexFeature', () => {
                 await mintToAsync(dai, taker, sellAmount);
                 const uniV3 = await createUniswapV3PoolAsync(dai, shib);
                 const uniV3Subcall = await getUniswapV3MultiHopSubcall([dai, shib]);
-                const rfqOrder = await getTestRfqOrder({ takerToken: await shib.getAddress(), makerToken: await zrx.getAddress() });
+                const rfqOrder = await getTestRfqOrder({
+                    takerToken: await shib.getAddress(),
+                    makerToken: await zrx.getAddress(),
+                });
                 const rfqFillProportion = 0.42;
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, encodeFractionalFillAmount(rfqFillProportion));
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, shib, zrx);
@@ -1992,7 +2119,8 @@ describe('MultiplexFeature', () => {
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexMultiHopSellTokenForToken([await dai.getAddress(), await shib.getAddress(), await zrx.getAddress()],
+                    .multiplexMultiHopSellTokenForToken(
+                        [await dai.getAddress(), await shib.getAddress(), await zrx.getAddress()],
                         [uniV3Subcall, nestedBatchSellSubcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
@@ -2036,7 +2164,10 @@ describe('MultiplexFeature', () => {
                 );
             });
             it('BatchSell(RFQ, UniswapV2) -> UniswapV3', async () => {
-                const rfqOrder = await getTestRfqOrder({ takerToken: await dai.getAddress(), makerToken: await shib.getAddress() });
+                const rfqOrder = await getTestRfqOrder({
+                    takerToken: await dai.getAddress(),
+                    makerToken: await shib.getAddress(),
+                });
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, rfqOrder.takerAmount);
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, dai, shib);
                 const uniV2Subcall = getUniswapV2BatchSubcall([await dai.getAddress(), await shib.getAddress()]);
@@ -2050,7 +2181,8 @@ describe('MultiplexFeature', () => {
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexMultiHopSellTokenForToken([await dai.getAddress(), await shib.getAddress(), await zrx.getAddress()],
+                    .multiplexMultiHopSellTokenForToken(
+                        [await dai.getAddress(), await shib.getAddress(), await zrx.getAddress()],
                         [nestedBatchSellSubcall, uniV3Subcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
@@ -2110,7 +2242,7 @@ describe('MultiplexFeature', () => {
                         [await dai.getAddress(), await zrx.getAddress()],
                         [uniswapV2Subcall],
                         constants.ZERO_AMOUNT,
-                        { value: sellAmount }
+                        { value: sellAmount },
                     );
                 return expect(tx).to.be.revertedWith('MultiplexFeature::multiplexMultiHopSellEthForToken/NOT_WETH');
             });
@@ -2118,17 +2250,19 @@ describe('MultiplexFeature', () => {
                 const sellAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const buyAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const uniswap = await createUniswapV2PoolAsync(uniV2Factory, weth, shib);
-                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([await weth.getAddress(), await shib.getAddress()]);
+                const uniswapV2Subcall = getUniswapV2MultiHopSubcall([
+                    await weth.getAddress(),
+                    await shib.getAddress(),
+                ]);
                 const liquidityProviderSubcall = await getLiquidityProviderMultiHopSubcall();
                 await mintToAsync(zrx, await liquidityProvider.getAddress(), buyAmount);
 
-                const tx = await multiplex
-                    .multiplexMultiHopSellEthForToken(
-                        [await weth.getAddress(), await shib.getAddress(), await zrx.getAddress()],
-                        [uniswapV2Subcall, liquidityProviderSubcall],
-                        buyAmount,
-                        { value: sellAmount }
-                    );
+                const tx = await multiplex.multiplexMultiHopSellEthForToken(
+                    [await weth.getAddress(), await shib.getAddress(), await zrx.getAddress()],
+                    [uniswapV2Subcall, liquidityProviderSubcall],
+                    buyAmount,
+                    { value: sellAmount },
+                );
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress(), value: sellAmount }], 'Deposit');
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
@@ -2159,15 +2293,17 @@ describe('MultiplexFeature', () => {
                 const shibAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const liquidityProviderSubcall = await getLiquidityProviderMultiHopSubcall();
                 const sushiswap = await createUniswapV2PoolAsync(sushiFactory, shib, zrx);
-                const sushiswapSubcall = getUniswapV2MultiHopSubcall([await shib.getAddress(), await zrx.getAddress()], true);
+                const sushiswapSubcall = getUniswapV2MultiHopSubcall(
+                    [await shib.getAddress(), await zrx.getAddress()],
+                    true,
+                );
                 await mintToAsync(shib, await liquidityProvider.getAddress(), shibAmount);
 
-                const tx = await multiplex
-                    .multiplexMultiHopSellEthForToken(
-                        [await weth.getAddress(), await shib.getAddress(), await zrx.getAddress()],
-                        [liquidityProviderSubcall, sushiswapSubcall],
-                        constants.ZERO_AMOUNT,
-                    );
+                const tx = await multiplex.multiplexMultiHopSellEthForToken(
+                    [await weth.getAddress(), await shib.getAddress(), await zrx.getAddress()],
+                    [liquidityProviderSubcall, sushiswapSubcall],
+                    constants.ZERO_AMOUNT,
+                );
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress(), value: sellAmount }], 'Deposit');
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
@@ -2197,7 +2333,10 @@ describe('MultiplexFeature', () => {
                 const sellAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const uniV3 = await createUniswapV3PoolAsync(weth, shib);
                 const uniV3Subcall = await getUniswapV3MultiHopSubcall([weth, shib]);
-                const rfqOrder = await getTestRfqOrder({ takerToken: await shib.getAddress(), makerToken: await zrx.getAddress() });
+                const rfqOrder = await getTestRfqOrder({
+                    takerToken: await shib.getAddress(),
+                    makerToken: await zrx.getAddress(),
+                });
                 const rfqFillProportion = 0.42;
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, encodeFractionalFillAmount(rfqFillProportion));
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, shib, zrx);
@@ -2207,12 +2346,11 @@ describe('MultiplexFeature', () => {
                 );
                 const nestedBatchSellSubcall = getNestedBatchSellSubcall([rfqSubcall, uniV2Subcall]);
 
-                const tx = await multiplex
-                    .multiplexMultiHopSellEthForToken(
-                        [await weth.getAddress(), await shib.getAddress(), await zrx.getAddress()],
-                        [uniV3Subcall, nestedBatchSellSubcall],
-                        constants.ZERO_AMOUNT,
-                    );
+                const tx = await multiplex.multiplexMultiHopSellEthForToken(
+                    [await weth.getAddress(), await shib.getAddress(), await zrx.getAddress()],
+                    [uniV3Subcall, nestedBatchSellSubcall],
+                    constants.ZERO_AMOUNT,
+                );
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress(), value: sellAmount }], 'Deposit');
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
@@ -2253,7 +2391,10 @@ describe('MultiplexFeature', () => {
                 );
             });
             it('BatchSell(RFQ, UniswapV2) -> UniswapV3', async () => {
-                const rfqOrder = await getTestRfqOrder({ takerToken: await weth.getAddress(), makerToken: await shib.getAddress() });
+                const rfqOrder = await getTestRfqOrder({
+                    takerToken: await weth.getAddress(),
+                    makerToken: await shib.getAddress(),
+                });
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, rfqOrder.takerAmount);
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, weth, shib);
                 const uniV2Subcall = getUniswapV2BatchSubcall([await weth.getAddress(), await shib.getAddress()]);
@@ -2263,12 +2404,11 @@ describe('MultiplexFeature', () => {
                 const uniV3 = await createUniswapV3PoolAsync(shib, zrx);
                 const uniV3Subcall = await getUniswapV3MultiHopSubcall([shib, zrx]);
 
-                const tx = await multiplex
-                    .multiplexMultiHopSellEthForToken(
-                        [await weth.getAddress(), await shib.getAddress(), await zrx.getAddress()],
-                        [nestedBatchSellSubcall, uniV3Subcall],
-                        constants.ZERO_AMOUNT,
-                    );
+                const tx = await multiplex.multiplexMultiHopSellEthForToken(
+                    [await weth.getAddress(), await shib.getAddress(), await zrx.getAddress()],
+                    [nestedBatchSellSubcall, uniV3Subcall],
+                    constants.ZERO_AMOUNT,
+                );
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress(), value: sellAmount }], 'Deposit');
                 verifyEventsFromLogs<TransferEvent>(
                     tx.logs,
@@ -2321,7 +2461,8 @@ describe('MultiplexFeature', () => {
                 const tx = multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexMultiHopSellTokenForEth([await zrx.getAddress(), await dai.getAddress()],
+                    .multiplexMultiHopSellTokenForEth(
+                        [await zrx.getAddress(), await dai.getAddress()],
                         [uniswapV2Subcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
@@ -2340,7 +2481,8 @@ describe('MultiplexFeature', () => {
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexMultiHopSellTokenForEth([await dai.getAddress(), await shib.getAddress(), await weth.getAddress()],
+                    .multiplexMultiHopSellTokenForEth(
+                        [await dai.getAddress(), await shib.getAddress(), await weth.getAddress()],
                         [uniswapV2Subcall, liquidityProviderSubcall],
                         sellAmount,
                         buyAmount,
@@ -2375,14 +2517,18 @@ describe('MultiplexFeature', () => {
                 const shibAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const liquidityProviderSubcall = await getLiquidityProviderMultiHopSubcall();
                 const sushiswap = await createUniswapV2PoolAsync(sushiFactory, shib, weth);
-                const sushiswapSubcall = getUniswapV2MultiHopSubcall([await shib.getAddress(), await weth.getAddress()], true);
+                const sushiswapSubcall = getUniswapV2MultiHopSubcall(
+                    [await shib.getAddress(), await weth.getAddress()],
+                    true,
+                );
                 await mintToAsync(dai, taker, sellAmount);
                 await mintToAsync(shib, await liquidityProvider.getAddress(), shibAmount);
 
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexMultiHopSellTokenForEth([await dai.getAddress(), await shib.getAddress(), await weth.getAddress()],
+                    .multiplexMultiHopSellTokenForEth(
+                        [await dai.getAddress(), await shib.getAddress(), await weth.getAddress()],
                         [liquidityProviderSubcall, sushiswapSubcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
@@ -2416,7 +2562,10 @@ describe('MultiplexFeature', () => {
                 const sellAmount = getRandomInteger(1, toBaseUnitAmount(1));
                 const uniV3 = await createUniswapV3PoolAsync(dai, shib);
                 const uniV3Subcall = await getUniswapV3MultiHopSubcall([dai, shib]);
-                const rfqOrder = await getTestRfqOrder({ takerToken: await shib.getAddress(), makerToken: await weth.getAddress() });
+                const rfqOrder = await getTestRfqOrder({
+                    takerToken: await shib.getAddress(),
+                    makerToken: await weth.getAddress(),
+                });
                 const rfqFillProportion = 0.42;
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, encodeFractionalFillAmount(rfqFillProportion));
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, shib, weth);
@@ -2430,7 +2579,8 @@ describe('MultiplexFeature', () => {
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexMultiHopSellTokenForEth([await dai.getAddress(), await shib.getAddress(), await weth.getAddress()],
+                    .multiplexMultiHopSellTokenForEth(
+                        [await dai.getAddress(), await shib.getAddress(), await weth.getAddress()],
                         [uniV3Subcall, nestedBatchSellSubcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,
@@ -2475,7 +2625,10 @@ describe('MultiplexFeature', () => {
                 verifyEventsFromLogs(tx.logs, [{ owner: await zeroEx.getAddress() }], 'Withdrawal');
             });
             it('BatchSell(RFQ, UniswapV2) -> UniswapV3', async () => {
-                const rfqOrder = await getTestRfqOrder({ takerToken: await dai.getAddress(), makerToken: await shib.getAddress() });
+                const rfqOrder = await getTestRfqOrder({
+                    takerToken: await dai.getAddress(),
+                    makerToken: await shib.getAddress(),
+                });
                 const rfqSubcall = await getRfqSubcallAsync(rfqOrder, rfqOrder.takerAmount);
                 const uniV2 = await createUniswapV2PoolAsync(uniV2Factory, dai, shib);
                 const uniV2Subcall = getUniswapV2BatchSubcall([await dai.getAddress(), await shib.getAddress()]);
@@ -2488,7 +2641,8 @@ describe('MultiplexFeature', () => {
                 const tx = await multiplex
                     .connect(await env.provider.getSigner(taker))
 
-                    .multiplexMultiHopSellTokenForEth([await dai.getAddress(), await shib.getAddress(), await weth.getAddress()],
+                    .multiplexMultiHopSellTokenForEth(
+                        [await dai.getAddress(), await shib.getAddress(), await weth.getAddress()],
                         [nestedBatchSellSubcall, uniV3Subcall],
                         sellAmount,
                         constants.ZERO_AMOUNT,

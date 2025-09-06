@@ -10,20 +10,20 @@ export class BaseActor {
         this._stakingApiWrapper = stakingApiWrapper;
         this._signer = null; // Will be set asynchronously
     }
-    
+
     protected async _getSigner(): Promise<any> {
         if (this._signer) {
             return this._signer;
         }
-        
+
         const { ethers } = require('hardhat');
         const signers = await ethers.getSigners();
         const signer = signers.find((s: any) => s.address.toLowerCase() === this._owner.toLowerCase());
-        
+
         if (!signer) {
             throw new Error(`Could not find signer for address: ${this._owner}`);
         }
-        
+
         return signer;
     }
     public getOwner(): string {

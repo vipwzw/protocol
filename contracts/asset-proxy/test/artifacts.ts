@@ -65,7 +65,7 @@ import * as LibBytes from '../artifacts/@0x/contracts-utils/contracts/src/LibByt
 
 // Note: Test contracts are not available in compiled artifacts
 // The following would be test contracts if they existed:
-// TestBancorBridge, TestChaiBridge, TestDexForwarderBridge, TestDydxBridge, 
+// TestBancorBridge, TestChaiBridge, TestDexForwarderBridge, TestDydxBridge,
 // TestERC20Bridge, TestEth2DaiBridge, TestKyberBridge, TestStaticCallTarget,
 // TestUniswapBridge, TestUniswapV2Bridge
 

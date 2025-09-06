@@ -51,23 +51,23 @@ export function isRoundingErrorFloor(numerator: bigint, denominator: bigint, tar
     if (numerator === 0n || target === 0n) {
         return false;
     }
-    
+
     // Check for overflow in numerator * target (same as Solidity uint256 max)
     const MAX_UINT256 = 2n ** 256n - 1n;
     if (numerator > 0n && target > MAX_UINT256 / numerator) {
         throw new Error('Arithmetic operation overflowed');
     }
-    
+
     const remainder = (numerator * target) % denominator;
     // Need to do this separately because solidity evaluates RHS of the comparison expression first.
     const rhs = numerator * target;
     const lhs = remainder * 1000n;
-    
+
     // Check for overflow in remainder * 1000n
     if (remainder > MAX_UINT256 / 1000n) {
         throw new Error('Arithmetic operation overflowed');
     }
-    
+
     return lhs >= rhs;
 }
 
@@ -81,13 +81,13 @@ export function isRoundingErrorCeil(numerator: bigint, denominator: bigint, targ
     if (numerator === 0n || target === 0n) {
         return false;
     }
-    
+
     // Check for overflow in numerator * target (same as Solidity uint256 max)
     const MAX_UINT256 = 2n ** 256n - 1n;
     if (numerator > 0n && target > MAX_UINT256 / numerator) {
         throw new Error('Arithmetic operation overflowed');
     }
-    
+
     let remainder = (numerator * target) % denominator;
     if (remainder === 0n) {
         return false;
@@ -95,12 +95,12 @@ export function isRoundingErrorCeil(numerator: bigint, denominator: bigint, targ
     remainder = denominator - remainder;
     const rhs = numerator * target;
     const lhs = remainder * 1000n;
-    
+
     // Check for overflow in remainder * 1000n
     if (remainder > MAX_UINT256 / 1000n) {
         throw new Error('Arithmetic operation overflowed');
     }
-    
+
     return lhs >= rhs;
 }
 
@@ -129,22 +129,22 @@ export function safeGetPartialAmountCeil(numerator: bigint, denominator: bigint,
     if (isRoundingErrorCeil(numerator, denominator, target)) {
         throw createRoundingError(numerator, denominator, target);
     }
-    
+
     const MAX_UINT256 = 2n ** 256n - 1n;
-    
+
     // Check for overflow in numerator * target
     if (numerator > 0n && target > MAX_UINT256 / numerator) {
         throw new Error('Arithmetic operation overflowed');
     }
-    
+
     const product = numerator * target;
-    
+
     // Check for overflow in product + denominator (intermediate calculation)
     // This simulates Solidity's intermediate calculation overflow
     if (product > MAX_UINT256 - denominator) {
         throw new Error('Arithmetic operation overflowed');
     }
-    
+
     return (product + denominator - 1n) / denominator;
 }
 
@@ -155,13 +155,13 @@ export function getPartialAmountFloor(numerator: bigint, denominator: bigint, ta
     if (denominator === 0n) {
         throw new Error('DivisionByZeroError');
     }
-    
+
     // Check for overflow in numerator * target (same as Solidity uint256 max)
     const MAX_UINT256 = 2n ** 256n - 1n;
     if (numerator > 0n && target > MAX_UINT256 / numerator) {
         throw new Error('Arithmetic operation overflowed');
     }
-    
+
     return (numerator * target) / denominator;
 }
 
@@ -172,23 +172,23 @@ export function getPartialAmountCeil(numerator: bigint, denominator: bigint, tar
     if (denominator === 0n) {
         throw new Error('DivisionByZeroError');
     }
-    
+
     const MAX_UINT256 = 2n ** 256n - 1n;
-    
+
     // Simulate Solidity's exact calculation: (numerator * target + denominator - 1) / denominator
     // Check for overflow in numerator * target
     if (numerator > 0n && target > MAX_UINT256 / numerator) {
         throw new Error('Arithmetic operation overflowed');
     }
-    
+
     const product = numerator * target;
-    
+
     // Check for overflow in product + denominator (intermediate calculation)
     // This simulates Solidity's intermediate calculation overflow
     if (product > MAX_UINT256 - denominator) {
         throw new Error('Arithmetic operation overflowed');
     }
-    
+
     return (product + denominator - 1n) / denominator;
 }
 
@@ -351,7 +351,7 @@ export const LibFractions = {
         if (n2.isZero()) {
             return [n1, d1];
         }
-            const numerator = n1.times(d2).plus(n2.times(d1));
+        const numerator = n1.times(d2).plus(n2.times(d1));
         const denominator = d1.times(d2);
         return [numerator, denominator];
     },

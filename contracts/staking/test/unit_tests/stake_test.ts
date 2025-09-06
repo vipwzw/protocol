@@ -1,13 +1,7 @@
 import { expect } from 'chai';
-import {
-    filterLogsToArguments,
-    getRandomInteger,
-    Numberish,
-    shortZip,
-    hexUtils,
-} from '../test_constants';
+import { filterLogsToArguments, getRandomInteger, Numberish, shortZip, hexUtils } from '../test_constants';
 
-// StakingRevertErrors replacement  
+// StakingRevertErrors replacement
 export class StakingRevertErrors {
     static InsufficientBalanceError(): Error {
         return new Error('Staking: insufficient balance');
@@ -92,12 +86,11 @@ describe('MixinStake unit tests', env => {
             currentEpochBalance: Numberish,
             nextEpochBalance: Numberish,
         ): Promise<void> {
-            await testContract
-                .setOwnerStakeByStatus(staker, StakeStatus.Undelegated, {
-                    currentEpoch,
-                    currentEpochBalance: currentEpochBalance,
-                    nextEpochBalance: nextEpochBalance,
-                });
+            await testContract.setOwnerStakeByStatus(staker, StakeStatus.Undelegated, {
+                currentEpoch,
+                currentEpochBalance: currentEpochBalance,
+                nextEpochBalance: nextEpochBalance,
+            });
         }
 
         it('throws if not enough undelegated stake in the current epoch', async () => {
@@ -172,57 +165,48 @@ describe('MixinStake unit tests', env => {
 
         before(async () => {
             delegatedStakeToPoolByOwnerSlots = await Promise.all(
-                VALID_POOL_IDS.map(async poolId =>
-                    testContract.getDelegatedStakeToPoolByOwnerSlot(poolId, staker),
-                ),
+                VALID_POOL_IDS.map(async poolId => testContract.getDelegatedStakeToPoolByOwnerSlot(poolId, staker)),
             );
             delegatedStakeByPoolIdSlots = await Promise.all(
                 VALID_POOL_IDS.map(async poolId => testContract.getDelegatedStakeByPoolIdSlot(poolId)),
             );
             globalDelegatedStakeSlot = await testContract.getGlobalStakeByStatusSlot(StakeStatus.Delegated);
-            stakerDelegatedStakeSlot = await testContract
-                .getOwnerStakeByStatusSlot(staker, StakeStatus.Delegated)
-                ;
+            stakerDelegatedStakeSlot = await testContract.getOwnerStakeByStatusSlot(staker, StakeStatus.Delegated);
         });
 
         it('throws if the "from" pool is invalid', async () => {
-            const tx = testContract
-                .moveStake(
-                    { status: StakeStatus.Delegated, poolId: INVALID_POOL_ID },
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
-                    BigInt(getRandomInteger(0, 100)) * 10n ** 18n,
-                );
+            const tx = testContract.moveStake(
+                { status: StakeStatus.Delegated, poolId: INVALID_POOL_ID },
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
+                BigInt(getRandomInteger(0, 100)) * 10n ** 18n,
+            );
             return expect(tx).to.be.reverted;
         });
 
         it('throws if the "to" pool is invalid', async () => {
-            const tx = testContract
-                .moveStake(
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
-                    { status: StakeStatus.Delegated, poolId: INVALID_POOL_ID },
-                    BigInt(getRandomInteger(0, 100)) * 10n ** 18n,
-                );
+            const tx = testContract.moveStake(
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
+                { status: StakeStatus.Delegated, poolId: INVALID_POOL_ID },
+                BigInt(getRandomInteger(0, 100)) * 10n ** 18n,
+            );
             return expect(tx).to.be.reverted;
         });
 
         it('throws if the "from" and "to" pools are invalid', async () => {
-            const tx = testContract
-                .moveStake(
-                    { status: StakeStatus.Delegated, poolId: INVALID_POOL_ID },
-                    { status: StakeStatus.Delegated, poolId: INVALID_POOL_ID },
-                    BigInt(getRandomInteger(0, 100)) * 10n ** 18n,
-                );
+            const tx = testContract.moveStake(
+                { status: StakeStatus.Delegated, poolId: INVALID_POOL_ID },
+                { status: StakeStatus.Delegated, poolId: INVALID_POOL_ID },
+                BigInt(getRandomInteger(0, 100)) * 10n ** 18n,
+            );
             return expect(tx).to.be.reverted;
         });
 
         it('withdraws delegator rewards when "from" stake is delegated', async () => {
-            const tx = await testContract
-                .moveStake(
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
-                    { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
-                    BigInt(getRandomInteger(0, 100)) * 10n ** 18n,
-                )
-                ;
+            const tx = await testContract.moveStake(
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
+                { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
+                BigInt(getRandomInteger(0, 100)) * 10n ** 18n,
+            );
             const receipt = await tx.wait();
             const { logs } = receipt;
             const events = filterLogsToArguments<WithdrawAndSyncDelegatorRewardsEventArgs>(
@@ -235,13 +219,11 @@ describe('MixinStake unit tests', env => {
         });
 
         it('withdraws delegator rewards when "to" stake is delegated', async () => {
-            const tx = await testContract
-                .moveStake(
-                    { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
-                    BigInt(getRandomInteger(0, 100)) * 10n ** 18n,
-                )
-                ;
+            const tx = await testContract.moveStake(
+                { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
+                BigInt(getRandomInteger(0, 100)) * 10n ** 18n,
+            );
             const receipt = await tx.wait();
             const { logs } = receipt;
             const events = filterLogsToArguments<WithdrawAndSyncDelegatorRewardsEventArgs>(
@@ -254,13 +236,11 @@ describe('MixinStake unit tests', env => {
         });
 
         it('withdraws delegator rewards when both stakes are both delegated', async () => {
-            const tx = await testContract
-                .moveStake(
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
-                    BigInt(getRandomInteger(0, 100)) * 10n ** 18n,
-                )
-                ;
+            const tx = await testContract.moveStake(
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
+                BigInt(getRandomInteger(0, 100)) * 10n ** 18n,
+            );
             const receipt = await tx.wait();
             const { logs } = receipt;
             const events = filterLogsToArguments<WithdrawAndSyncDelegatorRewardsEventArgs>(
@@ -275,13 +255,11 @@ describe('MixinStake unit tests', env => {
         });
 
         it('does not withdraw delegator rewards when both stakes are both undelegated', async () => {
-            const tx = await testContract
-                .moveStake(
-                    { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
-                    { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
-                    BigInt(getRandomInteger(0, 100)) * 10n ** 18n,
-                )
-                ;
+            const tx = await testContract.moveStake(
+                { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
+                { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
+                BigInt(getRandomInteger(0, 100)) * 10n ** 18n,
+            );
             const receipt = await tx.wait();
             const { logs } = receipt;
             const events = filterLogsToArguments<WithdrawAndSyncDelegatorRewardsEventArgs>(
@@ -293,13 +271,11 @@ describe('MixinStake unit tests', env => {
 
         it('decreases pool and global delegated stake counters when "from" stake is delegated', async () => {
             const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
-            const tx = await testContract
-                .moveStake(
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
-                    { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
-                    amount,
-                )
-                ;
+            const tx = await testContract.moveStake(
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
+                { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
+                amount,
+            );
             const receipt = await tx.wait();
             const { logs } = receipt;
             const decreaseNextBalanceEvents = filterLogsToArguments<DecreaseNextBalanceEventArgs>(
@@ -320,13 +296,11 @@ describe('MixinStake unit tests', env => {
 
         it('increases pool and global delegated stake counters when "to" stake is delegated', async () => {
             const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
-            const tx = await testContract
-                .moveStake(
-                    { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
-                    amount,
-                )
-                ;
+            const tx = await testContract.moveStake(
+                { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
+                amount,
+            );
             const receipt = await tx.wait();
             const { logs } = receipt;
             const increaseNextBalanceEvents = filterLogsToArguments<IncreaseNextBalanceEventArgs>(
@@ -347,13 +321,11 @@ describe('MixinStake unit tests', env => {
 
         it('decreases then increases pool and global delegated stake counters when both stakes are delegated', async () => {
             const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
-            const tx = await testContract
-                .moveStake(
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
-                    amount,
-                )
-                ;
+            const tx = await testContract.moveStake(
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
+                amount,
+            );
             const receipt = await tx.wait();
             const { logs } = receipt;
             const decreaseNextBalanceEvents = filterLogsToArguments<DecreaseNextBalanceEventArgs>(
@@ -393,13 +365,11 @@ describe('MixinStake unit tests', env => {
 
         it('does not change pool and global delegated stake counters when both stakes are undelegated', async () => {
             const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
-            const tx = await testContract
-                .moveStake(
-                    { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
-                    { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
-                    amount,
-                )
-                ;
+            const tx = await testContract.moveStake(
+                { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
+                { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
+                amount,
+            );
             const receipt = await tx.wait();
             const { logs } = receipt;
             const decreaseNextBalanceEvents = filterLogsToArguments<DecreaseNextBalanceEventArgs>(
@@ -416,13 +386,11 @@ describe('MixinStake unit tests', env => {
 
         it('does nothing when moving the owner stake from undelegated to undelegated', async () => {
             const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
-            const tx = await testContract
-                .moveStake(
-                    { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
-                    { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
-                    amount,
-                )
-                ;
+            const tx = await testContract.moveStake(
+                { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
+                { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
+                amount,
+            );
             const receipt = await tx.wait();
             const { logs } = receipt;
             const events = filterLogsToArguments<MoveStakeStorageEventArgs>(logs, 'MoveStakeStorage');
@@ -431,13 +399,11 @@ describe('MixinStake unit tests', env => {
 
         it('does nothing when moving zero stake', async () => {
             const amount = 0n;
-            const tx = await testContract
-                .moveStake(
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
-                    amount,
-                )
-                ;
+            const tx = await testContract.moveStake(
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
+                amount,
+            );
             const receipt = await tx.wait();
             const { logs } = receipt;
             const events = filterLogsToArguments<MoveStakeStorageEventArgs>(logs, 'MoveStakeStorage');
@@ -446,13 +412,11 @@ describe('MixinStake unit tests', env => {
 
         it('moves the owner stake between the same pointer when both are delegated', async () => {
             const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
-            const tx = await testContract
-                .moveStake(
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
-                    amount,
-                )
-                ;
+            const tx = await testContract.moveStake(
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
+                amount,
+            );
             const receipt = await tx.wait();
             const { logs } = receipt;
             const events = filterLogsToArguments<MoveStakeStorageEventArgs>(logs, 'MoveStakeStorage');
@@ -464,13 +428,11 @@ describe('MixinStake unit tests', env => {
 
         it('moves the owner stake between different pointers when "from" is undelegated and "to" is delegated', async () => {
             const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
-            const tx = await testContract
-                .moveStake(
-                    { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
-                    amount,
-                )
-                ;
+            const tx = await testContract.moveStake(
+                { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
+                amount,
+            );
             const receipt = await tx.wait();
             const { logs } = receipt;
             const events = filterLogsToArguments<MoveStakeStorageEventArgs>(logs, 'MoveStakeStorage');
@@ -482,13 +444,11 @@ describe('MixinStake unit tests', env => {
 
         it('moves the owner stake between different pointers when "from" is delegated and "to" is undelegated', async () => {
             const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
-            const tx = await testContract
-                .moveStake(
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
-                    { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
-                    amount,
-                )
-                ;
+            const tx = await testContract.moveStake(
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[0] },
+                { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[1] },
+                amount,
+            );
             const receipt = await tx.wait();
             const { logs } = receipt;
             const events = filterLogsToArguments<MoveStakeStorageEventArgs>(logs, 'MoveStakeStorage');
@@ -500,13 +460,11 @@ describe('MixinStake unit tests', env => {
 
         it('emits a `MoveStake` event', async () => {
             const amount = BigInt(getRandomInteger(0, 100)) * 10n ** 18n;
-            const tx = await testContract
-                .moveStake(
-                    { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
-                    { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
-                    amount,
-                )
-                ;
+            const tx = await testContract.moveStake(
+                { status: StakeStatus.Undelegated, poolId: VALID_POOL_IDS[0] },
+                { status: StakeStatus.Delegated, poolId: VALID_POOL_IDS[1] },
+                amount,
+            );
             const receipt = await tx.wait();
             const { logs } = receipt;
             const events = filterLogsToArguments<MoveStakeEventArgs>(logs, 'MoveStake');

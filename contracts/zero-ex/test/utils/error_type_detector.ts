@@ -1,13 +1,12 @@
-import { ethers } from "ethers";
+import { ethers } from 'ethers';
 import { RevertError } from '@0x/utils';
 
 /**
  * 错误类型检测工具
- * 
+ *
  * 自动分析合约错误并识别错误类型，帮助选择正确的匹配策略
  */
 export class ErrorTypeDetector {
-    
     /**
      * 分析错误数据并识别错误类型
      */
@@ -16,13 +15,13 @@ export class ErrorTypeDetector {
             return {
                 type: 'string_error',
                 message: error.message,
-                suggestion: '使用 expectStringError() 或标准 chai 匹配器'
+                suggestion: '使用 expectStringError() 或标准 chai 匹配器',
             };
         }
 
         const selector = error.data.slice(0, 10);
         const errorInfo = this.getErrorInfoBySelector(selector);
-        
+
         if (errorInfo) {
             return {
                 type: 'rich_error',
@@ -30,9 +29,10 @@ export class ErrorTypeDetector {
                 errorName: errorInfo.name,
                 errorType: errorInfo.type,
                 parameters: this.decodeErrorParameters(error.data, errorInfo.abi),
-                suggestion: errorInfo.type === 'dynamic' 
-                    ? '使用 UnifiedErrorMatcher.expectMetaTransactionsError() 处理动态参数'
-                    : '使用 UnifiedErrorMatcher.expectNativeOrdersError() 或直接比较 .encode()'
+                suggestion:
+                    errorInfo.type === 'dynamic'
+                        ? '使用 UnifiedErrorMatcher.expectMetaTransactionsError() 处理动态参数'
+                        : '使用 UnifiedErrorMatcher.expectNativeOrdersError() 或直接比较 .encode()',
             };
         }
 
@@ -40,7 +40,7 @@ export class ErrorTypeDetector {
             type: 'unknown_error',
             selector,
             rawData: error.data,
-            suggestion: '未知错误类型，需要手动分析'
+            suggestion: '未知错误类型，需要手动分析',
         };
     }
 
@@ -54,49 +54,49 @@ export class ErrorTypeDetector {
                 name: 'MetaTransactionExpiredError',
                 type: 'dynamic', // block.timestamp 真正动态
                 abi: ['bytes32', 'uint256', 'uint256'],
-                paramNames: ['mtxHash', 'blockTimestamp', 'expirationTimeSeconds']
+                paramNames: ['mtxHash', 'blockTimestamp', 'expirationTimeSeconds'],
             },
             '0x618fb3e2': {
-                name: 'MetaTransactionAlreadyExecutedError', 
+                name: 'MetaTransactionAlreadyExecutedError',
                 type: 'dynamic', // block.number 真正动态
                 abi: ['bytes32', 'uint256'],
-                paramNames: ['mtxHash', 'blockNumber']
+                paramNames: ['mtxHash', 'blockNumber'],
             },
             '0x4c7607a3': {
                 name: 'SignatureValidationError',
                 type: 'business_logic', // 基于业务逻辑可构造，但需要特殊处理
                 abi: ['uint8', 'bytes32', 'address', 'bytes'],
-                paramNames: ['code', 'hash', 'signerAddress', 'signature']
+                paramNames: ['code', 'hash', 'signerAddress', 'signature'],
             },
             '0x5c5c3d37': {
                 name: 'MetaTransactionCallFailedError',
                 type: 'business_logic', // callData 已知，returnData 可分析
                 abi: ['bytes32', 'bytes', 'bytes'],
-                paramNames: ['mtxHash', 'callData', 'returnData']
+                paramNames: ['mtxHash', 'callData', 'returnData'],
             },
             '0x8c4e5de5': {
                 name: 'MetaTransactionWrongSenderError',
                 type: 'static', // 所有参数都可预测
                 abi: ['bytes32', 'address', 'address'],
-                paramNames: ['mtxHash', 'sender', 'expectedSender']
+                paramNames: ['mtxHash', 'sender', 'expectedSender'],
             },
             '0x1c18f846': {
                 name: 'MetaTransactionUnsupportedFunctionError',
                 type: 'static', // 所有参数都可预测
                 abi: ['bytes32', 'bytes4'],
-                paramNames: ['mtxHash', 'selector']
+                paramNames: ['mtxHash', 'selector'],
             },
             '0x9c4ae9c0': {
                 name: 'MetaTransactionInsufficientEthError',
                 type: 'static', // 所有参数都可预测
                 abi: ['bytes32', 'uint256', 'uint256'],
-                paramNames: ['mtxHash', 'ethSent', 'ethRequired']
+                paramNames: ['mtxHash', 'ethSent', 'ethRequired'],
             },
             '0x7e6b1ba9': {
                 name: 'MetaTransactionGasPriceError',
                 type: 'static', // 所有参数都可预测
                 abi: ['bytes32', 'uint256', 'uint256', 'uint256'],
-                paramNames: ['mtxHash', 'gasPrice', 'minGasPrice', 'maxGasPrice']
+                paramNames: ['mtxHash', 'gasPrice', 'minGasPrice', 'maxGasPrice'],
             },
 
             // Native Orders Rich Errors - 基于业务逻辑分析
@@ -104,44 +104,44 @@ export class ErrorTypeDetector {
                 name: 'BatchFillIncompleteError',
                 type: 'business_logic', // 填充数量基于业务逻辑可计算
                 abi: ['bytes32', 'uint256', 'uint256'],
-                paramNames: ['orderHash', 'takerTokenFilledAmount', 'takerTokenFillAmount']
+                paramNames: ['orderHash', 'takerTokenFilledAmount', 'takerTokenFillAmount'],
             },
             '0x7e5a2318': {
                 name: 'OnlyOrderMakerAllowed',
                 type: 'static',
                 abi: ['bytes32', 'address', 'address'],
-                paramNames: ['orderHash', 'sender', 'maker']
+                paramNames: ['orderHash', 'sender', 'maker'],
             },
             '0x82e2a6b1': {
                 name: 'OrderNotFillableError',
                 type: 'static',
                 abi: ['bytes32', 'uint8'],
-                paramNames: ['orderHash', 'orderStatus']
+                paramNames: ['orderHash', 'orderStatus'],
             },
             '0x70d43d15': {
                 name: 'OrderNotFillableByTakerError',
                 type: 'static',
                 abi: ['bytes32', 'address', 'address'],
-                paramNames: ['orderHash', 'taker', 'orderTaker']
+                paramNames: ['orderHash', 'taker', 'orderTaker'],
             },
             '0x5f4d6c81': {
                 name: 'OrderNotFillableBySenderError',
                 type: 'static',
                 abi: ['bytes32', 'address', 'address'],
-                paramNames: ['orderHash', 'sender', 'orderSender']
+                paramNames: ['orderHash', 'sender', 'orderSender'],
             },
             '0x2e0c0f91': {
                 name: 'OrderNotFillableByOriginError',
                 type: 'static',
                 abi: ['bytes32', 'address', 'address'],
-                paramNames: ['orderHash', 'txOrigin', 'orderTxOrigin']
+                paramNames: ['orderHash', 'txOrigin', 'orderTxOrigin'],
             },
             '0x4a1b7bdc': {
                 name: 'OrderNotSignedByMakerError',
                 type: 'static',
                 abi: ['bytes32', 'address', 'address'],
-                paramNames: ['orderHash', 'signer', 'maker']
-            }
+                paramNames: ['orderHash', 'signer', 'maker'],
+            },
         };
 
         return errorMap[selector] || null;
@@ -165,7 +165,7 @@ export class ErrorTypeDetector {
      */
     static generateMatchingCode(error: any, testContext?: string): string {
         const analysis = this.analyzeError(error);
-        
+
         switch (analysis.type) {
             case 'rich_error':
                 if (analysis.errorType === 'dynamic') {
@@ -188,7 +188,7 @@ export class ErrorTypeDetector {
     private static generateDynamicErrorCode(analysis: ErrorAnalysis, testContext?: string): string {
         const errorName = analysis.errorName;
         const className = this.getErrorClassName(errorName!);
-        
+
         return `
 // 🔧 使用 UnifiedErrorMatcher 处理动态参数错误
 await UnifiedErrorMatcher.expectMetaTransactionsError(
@@ -210,7 +210,7 @@ await UnifiedErrorMatcher.expectMetaTransactionsError(
      */
     private static generateBusinessLogicErrorCode(analysis: ErrorAnalysis, testContext?: string): string {
         const errorName = analysis.errorName;
-        
+
         switch (errorName) {
             case 'BatchFillIncompleteError':
                 return `
@@ -225,7 +225,7 @@ await UnifiedErrorMatcher.expectNativeOrdersError(
         originalOrder.takerAmount // takerTokenFillAmount: 请求填充的完整数量
     )
 );`;
-            
+
             case 'SignatureValidationError':
                 return `
 // 🔧 业务逻辑分析：SignatureValidationError  
@@ -239,7 +239,7 @@ await UnifiedErrorMatcher.expectMetaTransactionsError(
         '0x' // 签名数据，通常为空或无效签名
     )
 );`;
-            
+
             case 'MetaTransactionCallFailedError':
                 return `
 // 🔧 业务逻辑分析：MetaTransactionCallFailedError
@@ -252,7 +252,7 @@ await UnifiedErrorMatcher.expectMetaTransactionsError(
         expectedReturnData // 分析失败调用的返回数据
     )
 );`;
-            
+
             default:
                 return `
 // 🔧 业务逻辑错误：${errorName}
@@ -271,7 +271,7 @@ await UnifiedErrorMatcher.expectError(
     private static generateStaticErrorCode(analysis: ErrorAnalysis, testContext?: string): string {
         const errorName = analysis.errorName;
         const isNativeOrders = errorName!.includes('Order') || errorName === 'OnlyOrderMakerAllowed';
-        
+
         if (isNativeOrders) {
             return `
 // 🔧 使用 RevertErrors 对象进行直接匹配
@@ -323,39 +323,41 @@ await expect(${testContext || 'txPromise'}).to.be.revertedWith("${analysis.messa
      * 生成参数占位符
      */
     private static generateParameterPlaceholders(paramNames: string[]): string {
-        return paramNames.map(name => {
-            switch (name) {
-                case 'mtxHash':
-                case 'orderHash':
-                    return `${name} // bytes32`;
-                case 'blockTimestamp':
-                case 'expirationTimeSeconds':
-                case 'blockNumber':
-                    return `${name} // uint256 - 动态值`;
-                case 'sender':
-                case 'maker':
-                case 'taker':
-                case 'signerAddress':
-                    return `${name} // address`;
-                case 'code':
-                case 'orderStatus':
-                    return `${name} // uint8`;
-                case 'signature':
-                case 'callData':
-                case 'returnData':
-                    return `${name} // bytes`;
-                case 'selector':
-                    return `${name} // bytes4`;
-                case 'ethSent':
-                case 'ethRequired':
-                case 'gasPrice':
-                case 'minGasPrice':
-                case 'maxGasPrice':
-                    return `${name} // uint256`;
-                default:
-                    return `${name} // 请根据实际类型填写`;
-            }
-        }).join(',\n        ');
+        return paramNames
+            .map(name => {
+                switch (name) {
+                    case 'mtxHash':
+                    case 'orderHash':
+                        return `${name} // bytes32`;
+                    case 'blockTimestamp':
+                    case 'expirationTimeSeconds':
+                    case 'blockNumber':
+                        return `${name} // uint256 - 动态值`;
+                    case 'sender':
+                    case 'maker':
+                    case 'taker':
+                    case 'signerAddress':
+                        return `${name} // address`;
+                    case 'code':
+                    case 'orderStatus':
+                        return `${name} // uint8`;
+                    case 'signature':
+                    case 'callData':
+                    case 'returnData':
+                        return `${name} // bytes`;
+                    case 'selector':
+                        return `${name} // bytes4`;
+                    case 'ethSent':
+                    case 'ethRequired':
+                    case 'gasPrice':
+                    case 'minGasPrice':
+                    case 'maxGasPrice':
+                        return `${name} // uint256`;
+                    default:
+                        return `${name} // 请根据实际类型填写`;
+                }
+            })
+            .join(',\n        ');
     }
 
     /**
@@ -368,7 +370,7 @@ await expect(${testContext || 'txPromise'}).to.be.revertedWith("${analysis.messa
             filePath,
             totalErrors: 0,
             errorsByType: {},
-            suggestions: []
+            suggestions: [],
         };
     }
 }

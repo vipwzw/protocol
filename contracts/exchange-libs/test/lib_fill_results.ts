@@ -1,8 +1,4 @@
-import {
-    constants,
-    testCombinatoriallyWithReferenceFunc,
-    uint256Values,
-} from '@0x/utils';
+import { constants, testCombinatoriallyWithReferenceFunc, uint256Values } from '@0x/utils';
 import { expect } from 'chai';
 import { SafeMathRevertErrors } from '@0x/contracts-utils';
 import { FillResults, MatchedFillResults, Order } from '@0x/utils';
@@ -141,9 +137,9 @@ describe('LibFillResults', () => {
             it('matches the output of the reference function', async () => {
                 const order = makeOrder({
                     makerAssetAmount: ONE_ETHER,
-                                takerAssetAmount: ethers.parseEther('2'),
-            makerFee: ethers.parseEther('0.0023'),
-            takerFee: ethers.parseEther('0.0025'),
+                    takerAssetAmount: ethers.parseEther('2'),
+                    makerFee: ethers.parseEther('0.0023'),
+                    takerFee: ethers.parseEther('0.0025'),
                 });
                 const takerAssetFilledAmount = ethers.parseEther('1') / 3n;
                 const expected = calculateFillResults(
@@ -158,7 +154,7 @@ describe('LibFillResults', () => {
                     DEFAULT_PROTOCOL_FEE_MULTIPLIER,
                     DEFAULT_GAS_PRICE,
                 );
-                
+
                 // 转换合约返回的数组为 FillResults 对象
                 const actualConverted = {
                     makerAssetFilledAmount: BigInt(actual[0].toString()),
@@ -167,7 +163,7 @@ describe('LibFillResults', () => {
                     takerFeePaid: BigInt(actual[3].toString()),
                     protocolFeePaid: BigInt(actual[4].toString()),
                 };
-                
+
                 expect(actualConverted).to.deep.eq(expected);
             });
 
@@ -179,13 +175,12 @@ describe('LibFillResults', () => {
                 });
                 const takerAssetFilledAmount = MAX_UINT256_ROOT;
                 await expect(
-                    libsContract
-                        .calculateFillResults(
-                            order,
-                            takerAssetFilledAmount,
-                            DEFAULT_PROTOCOL_FEE_MULTIPLIER,
-                            DEFAULT_GAS_PRICE,
-                        )
+                    libsContract.calculateFillResults(
+                        order,
+                        takerAssetFilledAmount,
+                        DEFAULT_PROTOCOL_FEE_MULTIPLIER,
+                        DEFAULT_GAS_PRICE,
+                    ),
                 ).to.be.revertedWithPanic(0x11); // Arithmetic operation overflowed
             });
 
@@ -203,13 +198,12 @@ describe('LibFillResults', () => {
                     order.makerAssetAmount,
                 );
                 await expect(
-                    libsContract
-                        .calculateFillResults(
-                            order,
-                            takerAssetFilledAmount,
-                            DEFAULT_PROTOCOL_FEE_MULTIPLIER,
-                            DEFAULT_GAS_PRICE,
-                        )
+                    libsContract.calculateFillResults(
+                        order,
+                        takerAssetFilledAmount,
+                        DEFAULT_PROTOCOL_FEE_MULTIPLIER,
+                        DEFAULT_GAS_PRICE,
+                    ),
                 ).to.be.revertedWithPanic(0x11); // Arithmetic operation overflowed
             });
 
@@ -222,13 +216,12 @@ describe('LibFillResults', () => {
                 });
                 const takerAssetFilledAmount = MAX_UINT256_ROOT / 10n;
                 await expect(
-                    libsContract
-                        .calculateFillResults(
-                            order,
-                            takerAssetFilledAmount,
-                            DEFAULT_PROTOCOL_FEE_MULTIPLIER,
-                            DEFAULT_GAS_PRICE,
-                        )
+                    libsContract.calculateFillResults(
+                        order,
+                        takerAssetFilledAmount,
+                        DEFAULT_PROTOCOL_FEE_MULTIPLIER,
+                        DEFAULT_GAS_PRICE,
+                    ),
                 ).to.be.revertedWithPanic(0x11); // Arithmetic operation overflowed
             });
 
@@ -239,13 +232,12 @@ describe('LibFillResults', () => {
                 });
                 const takerAssetFilledAmount = ONE_ETHER;
                 await expect(
-                    libsContract
-                        .calculateFillResults(
-                            order,
-                            takerAssetFilledAmount,
-                            DEFAULT_PROTOCOL_FEE_MULTIPLIER,
-                            DEFAULT_GAS_PRICE,
-                        )
+                    libsContract.calculateFillResults(
+                        order,
+                        takerAssetFilledAmount,
+                        DEFAULT_PROTOCOL_FEE_MULTIPLIER,
+                        DEFAULT_GAS_PRICE,
+                    ),
                 ).to.be.reverted;
             });
 
@@ -254,15 +246,14 @@ describe('LibFillResults', () => {
                     makerAssetAmount: 100n,
                     takerAssetAmount: ONE_ETHER,
                 });
-                const takerAssetFilledAmount = order.takerAssetAmount/ 3n;
+                const takerAssetFilledAmount = order.takerAssetAmount / 3n;
                 await expect(
-                    libsContract
-                        .calculateFillResults(
-                            order,
-                            takerAssetFilledAmount,
-                            DEFAULT_PROTOCOL_FEE_MULTIPLIER,
-                            DEFAULT_GAS_PRICE,
-                        )
+                    libsContract.calculateFillResults(
+                        order,
+                        takerAssetFilledAmount,
+                        DEFAULT_PROTOCOL_FEE_MULTIPLIER,
+                        DEFAULT_GAS_PRICE,
+                    ),
                 ).to.be.reverted;
             });
 
@@ -272,7 +263,7 @@ describe('LibFillResults', () => {
                     takerAssetAmount: ONE_ETHER,
                     makerFee: 100n,
                 });
-                const takerAssetFilledAmount = order.takerAssetAmount/ 3n;
+                const takerAssetFilledAmount = order.takerAssetAmount / 3n;
                 const makerAssetFilledAmount = getPartialAmountFloor(
                     takerAssetFilledAmount,
                     order.takerAssetAmount,
@@ -284,13 +275,12 @@ describe('LibFillResults', () => {
                     order.makerFee,
                 );
                 await expect(
-                    libsContract
-                        .calculateFillResults(
-                            order,
-                            takerAssetFilledAmount,
-                            DEFAULT_PROTOCOL_FEE_MULTIPLIER,
-                            DEFAULT_GAS_PRICE,
-                        )
+                    libsContract.calculateFillResults(
+                        order,
+                        takerAssetFilledAmount,
+                        DEFAULT_PROTOCOL_FEE_MULTIPLIER,
+                        DEFAULT_GAS_PRICE,
+                    ),
                 ).to.be.reverted;
             });
 
@@ -300,7 +290,7 @@ describe('LibFillResults', () => {
                     takerAssetAmount: ONE_ETHER,
                     takerFee: 100n,
                 });
-                const takerAssetFilledAmount = order.takerAssetAmount/ 3n;
+                const takerAssetFilledAmount = order.takerAssetAmount / 3n;
                 const makerAssetFilledAmount = getPartialAmountFloor(
                     takerAssetFilledAmount,
                     order.takerAssetAmount,
@@ -312,27 +302,25 @@ describe('LibFillResults', () => {
                     order.takerFee,
                 );
                 await expect(
-                    libsContract
-                        .calculateFillResults(
-                            order,
-                            takerAssetFilledAmount,
-                            DEFAULT_PROTOCOL_FEE_MULTIPLIER,
-                            DEFAULT_GAS_PRICE,
-                        )
+                    libsContract.calculateFillResults(
+                        order,
+                        takerAssetFilledAmount,
+                        DEFAULT_PROTOCOL_FEE_MULTIPLIER,
+                        DEFAULT_GAS_PRICE,
+                    ),
                 ).to.be.reverted;
             });
 
             it('reverts if computing `fillResults.protocolFeePaid` overflows', async () => {
                 const order = makeOrder({
                     makerAssetAmount: ONE_ETHER,
-                                takerAssetAmount: ethers.parseEther('2'),
-            makerFee: ethers.parseEther('0.0023'),
-            takerFee: ethers.parseEther('0.0025'),
+                    takerAssetAmount: ethers.parseEther('2'),
+                    makerFee: ethers.parseEther('0.0023'),
+                    takerFee: ethers.parseEther('0.0025'),
                 });
                 const takerAssetFilledAmount = ethers.parseEther('1') / 3n;
                 await expect(
-                    libsContract
-                        .calculateFillResults(order, takerAssetFilledAmount, MAX_UINT256, DEFAULT_GAS_PRICE)
+                    libsContract.calculateFillResults(order, takerAssetFilledAmount, MAX_UINT256, DEFAULT_GAS_PRICE),
                 ).to.be.revertedWithPanic(0x11); // Arithmetic operation overflowed
             });
 
@@ -342,7 +330,7 @@ describe('LibFillResults', () => {
                     takerAssetAmount: ONE_ETHER,
                     makerFee: 100n,
                 });
-                const takerAssetFilledAmount = order.takerAssetAmount/ 3n;
+                const takerAssetFilledAmount = order.takerAssetAmount / 3n;
                 const makerAssetFilledAmount = getPartialAmountFloor(
                     takerAssetFilledAmount,
                     order.takerAssetAmount,
@@ -354,13 +342,12 @@ describe('LibFillResults', () => {
                     order.makerFee,
                 );
                 await expect(
-                    libsContract
-                        .calculateFillResults(
-                            order,
-                            takerAssetFilledAmount,
-                            DEFAULT_PROTOCOL_FEE_MULTIPLIER,
-                            DEFAULT_GAS_PRICE,
-                        )
+                    libsContract.calculateFillResults(
+                        order,
+                        takerAssetFilledAmount,
+                        DEFAULT_PROTOCOL_FEE_MULTIPLIER,
+                        DEFAULT_GAS_PRICE,
+                    ),
                 ).to.be.reverted;
             });
         });
@@ -389,7 +376,7 @@ describe('LibFillResults', () => {
                 const [a, b] = DEFAULT_FILL_RESULTS;
                 const expected = addFillResults(a, b);
                 const actual = await libsContract.addFillResults(a, b);
-                
+
                 // 转换合约返回的结果为 bigint 以便比较
                 const actualConverted = {
                     makerAssetFilledAmount: BigInt(actual.makerAssetFilledAmount.toString()),
@@ -398,7 +385,7 @@ describe('LibFillResults', () => {
                     takerFeePaid: BigInt(actual.takerFeePaid.toString()),
                     protocolFeePaid: BigInt(actual.protocolFeePaid.toString()),
                 };
-                
+
                 expect(actualConverted).to.deep.equal(expected);
             });
 
@@ -445,10 +432,8 @@ describe('LibFillResults', () => {
         const matchedFillResults = EMPTY_MATCHED_FILL_RESULTS;
         matchedFillResults.left = _.assign({}, EMPTY_FILL_RESULTS, partialMatchedFillResults.left);
         matchedFillResults.right = _.assign({}, EMPTY_FILL_RESULTS, partialMatchedFillResults.right);
-        matchedFillResults.profitInLeftMakerAsset =
-            partialMatchedFillResults.profitInLeftMakerAsset || 0n;
-        matchedFillResults.profitInRightMakerAsset =
-            partialMatchedFillResults.profitInRightMakerAsset || 0n;
+        matchedFillResults.profitInLeftMakerAsset = partialMatchedFillResults.profitInLeftMakerAsset || 0n;
+        matchedFillResults.profitInRightMakerAsset = partialMatchedFillResults.profitInRightMakerAsset || 0n;
         return matchedFillResults;
     }
 
@@ -466,17 +451,16 @@ describe('LibFillResults', () => {
             gasPrice: BigNumber,
             from?: string,
         ): Promise<void> {
-            const rawResult = await libsContract
-                .calculateMatchedFillResults(
-                    leftOrder,
-                    rightOrder,
-                    leftOrderTakerAssetFilledAmount,
-                    rightOrderTakerAssetFilledAmount,
-                    protocolFeeMultiplier,
-                    gasPrice,
-                    false,
-                );
-            
+            const rawResult = await libsContract.calculateMatchedFillResults(
+                leftOrder,
+                rightOrder,
+                leftOrderTakerAssetFilledAmount,
+                rightOrderTakerAssetFilledAmount,
+                protocolFeeMultiplier,
+                gasPrice,
+                false,
+            );
+
             // Convert Result objects to plain objects for comparison
             const actualMatchedFillResults = {
                 left: {
@@ -496,7 +480,7 @@ describe('LibFillResults', () => {
                 profitInLeftMakerAsset: BigInt(rawResult[2].toString()),
                 profitInRightMakerAsset: BigInt(rawResult[3].toString()),
             };
-            
+
             expect(actualMatchedFillResults).to.be.deep.eq(expectedMatchedFillResults);
         }
 
@@ -1161,17 +1145,16 @@ describe('LibFillResults', () => {
             gasPrice: BigNumber,
             from?: string,
         ): Promise<void> {
-            const rawResult = await libsContract
-                .calculateMatchedFillResults(
-                    leftOrder,
-                    rightOrder,
-                    leftOrderTakerAssetFilledAmount,
-                    rightOrderTakerAssetFilledAmount,
-                    protocolFeeMultiplier,
-                    gasPrice,
-                    true,
-                );
-            
+            const rawResult = await libsContract.calculateMatchedFillResults(
+                leftOrder,
+                rightOrder,
+                leftOrderTakerAssetFilledAmount,
+                rightOrderTakerAssetFilledAmount,
+                protocolFeeMultiplier,
+                gasPrice,
+                true,
+            );
+
             // Convert Result objects to plain objects for comparison
             const actualMatchedFillResults = {
                 left: {
@@ -1191,7 +1174,7 @@ describe('LibFillResults', () => {
                 profitInLeftMakerAsset: BigInt(rawResult[2].toString()),
                 profitInRightMakerAsset: BigInt(rawResult[3].toString()),
             };
-            
+
             expect(actualMatchedFillResults).to.be.deep.eq(expectedMatchedFillResults);
         }
 

@@ -1,10 +1,24 @@
-lib
-deps
-.nyc_output
-generated-artifacts/
-generated-wrappers/
-foundry-artifacts/
-out/
-cache/
-package.json
-packages
+# Ignore Solidity files (use solhint for formatting)
+**/*.sol
+
+# Ignore generated files
+**/typechain-types/**
+**/generated-*/**
+**/artifacts/**
+**/cache/**
+**/out/**
+**/lib/**
+**/build/**
+**/dist/**
+
+# Ignore node_modules
+node_modules/
+
+# Ignore test results and logs
+*.log
+*.json
+test_results*.txt
+test_output*.txt
+
+# Ignore git files
+.git/

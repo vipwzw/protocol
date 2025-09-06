@@ -26,21 +26,13 @@ describe('MixinStakeBalances unit tests', () => {
     }
 
     function randomStoredBalance(): StoredBalance {
-        return new StoredBalance(
-            randomAmount(),
-            randomAmount(),
-            INITIAL_EPOCH
-        );
+        return new StoredBalance(randomAmount(), randomAmount(), INITIAL_EPOCH);
     }
 
     // Mirrors the behavior of the `_loadCurrentBalance()` override in
     // `TestMixinStakeBalances`.
     function toCurrentBalance(balance: StoredBalance): StoredBalance {
-        return new StoredBalance(
-            balance.currentEpochBalance,
-            balance.nextEpochBalance,
-            balance.epoch + 1n
-        );
+        return new StoredBalance(balance.currentEpochBalance, balance.nextEpochBalance, balance.epoch + 1n);
     }
 
     // Convert StoredBalance to the struct format expected by TypeChain
@@ -71,12 +63,17 @@ describe('MixinStakeBalances unit tests', () => {
 
     describe('getGlobalStakeByStatus()', () => {
         const delegatedBalance = randomStoredBalance();
-        const zrxVaultBalance = randomAmount() + 
-            (delegatedBalance.currentEpochBalance > delegatedBalance.nextEpochBalance ? 
-                delegatedBalance.currentEpochBalance : delegatedBalance.nextEpochBalance);
+        const zrxVaultBalance =
+            randomAmount() +
+            (delegatedBalance.currentEpochBalance > delegatedBalance.nextEpochBalance
+                ? delegatedBalance.currentEpochBalance
+                : delegatedBalance.nextEpochBalance);
 
         before(async () => {
-            const tx1 = await testContract.setGlobalStakeByStatus(StakeStatus.Delegated, toStoredBalanceStruct(delegatedBalance));
+            const tx1 = await testContract.setGlobalStakeByStatus(
+                StakeStatus.Delegated,
+                toStoredBalanceStruct(delegatedBalance),
+            );
             await tx1.wait();
             const tx2 = await testContract.setBalanceOfZrxVault(zrxVaultBalance);
             await tx2.wait();
@@ -101,8 +98,10 @@ describe('MixinStakeBalances unit tests', () => {
         });
 
         it('undelegated stake throws if the zrx vault balance is below the delegated stake balance', async () => {
-            const _zrxVaultBalance = (delegatedBalance.currentEpochBalance < delegatedBalance.nextEpochBalance ?
-                delegatedBalance.currentEpochBalance : delegatedBalance.nextEpochBalance) - 1n;
+            const _zrxVaultBalance =
+                (delegatedBalance.currentEpochBalance < delegatedBalance.nextEpochBalance
+                    ? delegatedBalance.currentEpochBalance
+                    : delegatedBalance.nextEpochBalance) - 1n;
             const tx1 = await testContract.setBalanceOfZrxVault(_zrxVaultBalance);
             await tx1.wait();
             const tx = testContract.getGlobalStakeByStatus(StakeStatus.Undelegated);
@@ -123,9 +122,17 @@ describe('MixinStakeBalances unit tests', () => {
         const undelegatedStake = randomStoredBalance();
 
         before(async () => {
-            const tx1 = await testContract.setOwnerStakeByStatus(staker, StakeStatus.Delegated, toStoredBalanceStruct(delegatedStake));
+            const tx1 = await testContract.setOwnerStakeByStatus(
+                staker,
+                StakeStatus.Delegated,
+                toStoredBalanceStruct(delegatedStake),
+            );
             await tx1.wait();
-            const tx2 = await testContract.setOwnerStakeByStatus(staker, StakeStatus.Undelegated, toStoredBalanceStruct(undelegatedStake));
+            const tx2 = await testContract.setOwnerStakeByStatus(
+                staker,
+                StakeStatus.Undelegated,
+                toStoredBalanceStruct(undelegatedStake),
+            );
             await tx2.wait();
         });
 
@@ -190,7 +197,11 @@ describe('MixinStakeBalances unit tests', () => {
         const delegatedBalance = randomStoredBalance();
 
         before(async () => {
-            const tx = await testContract.setDelegatedStakeToPoolByOwner(staker, poolId, toStoredBalanceStruct(delegatedBalance));
+            const tx = await testContract.setDelegatedStakeToPoolByOwner(
+                staker,
+                poolId,
+                toStoredBalanceStruct(delegatedBalance),
+            );
             await tx.wait();
         });
 

@@ -1,23 +1,22 @@
-import { ethers } from "hardhat";
+import { ethers } from 'hardhat';
 import { constants, verifyEventsFromLogs, NULL_ADDRESS } from '@0x/utils';
 import { expect } from 'chai';
 import { OrderStatus, OtcOrder, RevertErrors, SignatureType } from '@0x/protocol-utils';
-import { 
-    expectOrderNotFillableByOriginError, 
+import {
+    expectOrderNotFillableByOriginError,
     expectOrderNotFillableByTakerError,
     expectOrderNotFillableError,
-    expectOrderNotSignedByMakerError
+    expectOrderNotSignedByMakerError,
 } from '../utils/rich_error_matcher';
 
-
-import { 
-    IOwnableFeatureContract, 
-    IZeroExContract, 
+import {
+    IOwnableFeatureContract,
+    IZeroExContract,
     IZeroExEvents,
     TestMintableERC20Token__factory,
     TestWeth__factory,
     OtcOrdersFeature__factory,
-    TestOrderSignerRegistryWithContractWallet__factory
+    TestOrderSignerRegistryWithContractWallet__factory,
 } from '../../src/wrappers';
 import { artifacts } from '../artifacts';
 
@@ -72,23 +71,27 @@ describe('OtcOrdersFeature', () => {
             await env.getAccountAddressesAsync();
         env.txDefaults.from = owner;
         const txDefaults = { ...env.txDefaults, gasPrice: 0 };
-        
+
         const signer = await env.provider.getSigner(owner);
         const tokenFactories = [...new Array(2)].map(() => new TestMintableERC20Token__factory(signer));
-        const tokenDeployments = await Promise.all(
-            tokenFactories.map(factory => factory.deploy())
-        );
+        const tokenDeployments = await Promise.all(tokenFactories.map(factory => factory.deploy()));
         await Promise.all(tokenDeployments.map(token => token.waitForDeployment()));
         [makerToken, takerToken] = tokenDeployments;
 
         const wethFactory = new TestWeth__factory(signer);
         wethToken = await wethFactory.deploy();
         await wethToken.waitForDeployment();
-        zeroEx = await fullMigrateAsync(owner, env.provider, txDefaults, {}, { wethAddress: await wethToken.getAddress() });
-        
+        zeroEx = await fullMigrateAsync(
+            owner,
+            env.provider,
+            txDefaults,
+            {},
+            { wethAddress: await wethToken.getAddress() },
+        );
+
         const ownerSigner = await env.provider.getSigner(owner);
         const ownableFeature = await ethers.getContractAt('IOwnableFeature', await zeroEx.getAddress(), ownerSigner);
-        
+
         // 🔧 首先部署完整的 TestNativeOrdersFeature 以支持 registerAllowedRfqOrigins
         const { TestNativeOrdersFeature__factory } = await import('../wrappers');
         const nativeOrdersImpl = await new TestNativeOrdersFeature__factory(ownerSigner).deploy(
@@ -99,17 +102,22 @@ describe('OtcOrdersFeature', () => {
             0, // protocolFeeMultiplier
         );
         await nativeOrdersImpl.waitForDeployment();
-        await ownableFeature.migrate(await nativeOrdersImpl.getAddress(), nativeOrdersImpl.interface.encodeFunctionData('migrate'), owner);
-        
+        await ownableFeature.migrate(
+            await nativeOrdersImpl.getAddress(),
+            nativeOrdersImpl.interface.encodeFunctionData('migrate'),
+            owner,
+        );
+
         // 🔧 然后部署 OtcOrdersFeature
         const otcFeatureFactory = new OtcOrdersFeature__factory(signer);
-        const otcFeatureImpl = await otcFeatureFactory.deploy(
-            await zeroEx.getAddress(),
-            await wethToken.getAddress()
-        );
+        const otcFeatureImpl = await otcFeatureFactory.deploy(await zeroEx.getAddress(), await wethToken.getAddress());
         await otcFeatureImpl.waitForDeployment();
-        await ownableFeature.migrate(await otcFeatureImpl.getAddress(), otcFeatureImpl.interface.encodeFunctionData('migrate'), owner);
-        
+        await ownableFeature.migrate(
+            await otcFeatureImpl.getAddress(),
+            otcFeatureImpl.interface.encodeFunctionData('migrate'),
+            owner,
+        );
+
         // 创建不同接口的实例以访问不同的功能
         otcOrdersFeature = await ethers.getContractAt('IOtcOrdersFeature', await zeroEx.getAddress());
         nativeOrdersFeature = await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress());
@@ -119,7 +127,7 @@ describe('OtcOrdersFeature', () => {
         const notMakerSigner = await env.provider.getSigner(notMaker);
         const takerSigner = await env.provider.getSigner(taker);
         const notTakerSigner = await env.provider.getSigner(notTaker);
-        
+
         await Promise.all([
             makerToken.connect(makerSigner).approve(await zeroEx.getAddress(), MAX_UINT256),
             makerToken.connect(notMakerSigner).approve(await zeroEx.getAddress(), MAX_UINT256),
@@ -145,8 +153,17 @@ describe('OtcOrdersFeature', () => {
             .connect(contractWalletOwnerSigner)
             .approveERC20(await takerToken.getAddress(), await zeroEx.getAddress(), MAX_UINT256);
 
-        testUtils = new NativeOrdersTestEnvironment(maker, taker, makerToken, takerToken, otcOrdersFeature, ZERO, ZERO, env);
-        
+        testUtils = new NativeOrdersTestEnvironment(
+            maker,
+            taker,
+            makerToken,
+            takerToken,
+            otcOrdersFeature,
+            ZERO,
+            ZERO,
+            env,
+        );
+
         // 创建初始快照
         snapshotId = await ethers.provider.send('evm_snapshot', []);
     });
@@ -259,11 +276,7 @@ describe('OtcOrdersFeature', () => {
         it('can fully fill an order', async () => {
             const order = await getTestOtcOrder();
             const receipt = await testUtils.fillOtcOrderAsync(order);
-            verifyEventsFromLogs(
-                receipt.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(receipt.logs, [testUtils.createOtcOrderFilledEventArgs(order)], 'OtcOrderFilled');
             await assertExpectedFinalBalancesFromOtcOrderFillAsync(order);
         });
 
@@ -347,7 +360,7 @@ describe('OtcOrdersFeature', () => {
             // signature.
             const modifiedOrder = order.clone({ chainId: 1234 });
             const tx = testUtils.fillOtcOrderAsync(modifiedOrder);
-            
+
             // 当chainId不同时，从签名中恢复的地址会不同于实际的maker
             // 我们无法预先知道恢复的地址，所以使用通用的revert检查
             return expect(tx).to.be.rejected;
@@ -360,7 +373,9 @@ describe('OtcOrdersFeature', () => {
             const takerSigner = await env.provider.getSigner(taker);
             const tx = otcOrdersFeature
                 .connect(takerSigner)
-                .fillOtcOrder(order, await order.getSignatureWithProviderAsync(env.provider), order.takerAmount, { value: 1 });
+                .fillOtcOrder(order, await order.getSignatureWithProviderAsync(env.provider), order.takerAmount, {
+                    value: 1,
+                });
             // This will revert at the language level because the fill function is not payable.
             return expect(tx).to.be.rejectedWith('revert');
         });
@@ -394,49 +409,32 @@ describe('OtcOrdersFeature', () => {
         it('can fill two orders that use the same nonce bucket and increasing nonces', async () => {
             const order1 = await getTestOtcOrder();
             const tx1 = await testUtils.fillOtcOrderAsync(order1);
-            verifyEventsFromLogs(
-                tx1.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order1)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(tx1.logs, [testUtils.createOtcOrderFilledEventArgs(order1)], 'OtcOrderFilled');
             const order2 = await getTestOtcOrder({ nonceBucket: order1.nonceBucket, nonce: order1.nonce + 1n });
             const tx2 = await testUtils.fillOtcOrderAsync(order2);
-            verifyEventsFromLogs(
-                tx2.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order2)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(tx2.logs, [testUtils.createOtcOrderFilledEventArgs(order2)], 'OtcOrderFilled');
         });
 
         it('can fill two orders that use the same nonce but different nonce buckets', async () => {
             const order1 = await getTestOtcOrder();
             const tx1 = await testUtils.fillOtcOrderAsync(order1);
-            verifyEventsFromLogs(
-                tx1.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order1)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(tx1.logs, [testUtils.createOtcOrderFilledEventArgs(order1)], 'OtcOrderFilled');
             const order2 = await getTestOtcOrder({ nonce: order1.nonce });
             const tx2 = await testUtils.fillOtcOrderAsync(order2);
-            verifyEventsFromLogs(
-                tx2.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order2)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(tx2.logs, [testUtils.createOtcOrderFilledEventArgs(order2)], 'OtcOrderFilled');
         });
 
         it('can fill a WETH buy order and receive ETH', async () => {
             const takerEthBalanceBefore = await ethers.provider.getBalance(taker);
-            const order = await getTestOtcOrder({ makerToken: await wethToken.getAddress(), makerAmount: ethers.parseEther('1') });
+            const order = await getTestOtcOrder({
+                makerToken: await wethToken.getAddress(),
+                makerAmount: ethers.parseEther('1'),
+            });
             // 🔧 修复API语法，保持测试意图：maker deposit ETH获得WETH
             const makerSigner = await env.provider.getSigner(maker);
             await wethToken.connect(makerSigner).deposit({ value: order.makerAmount });
             const receipt = await testUtils.fillOtcOrderAsync(order, order.takerAmount, taker, true);
-            verifyEventsFromLogs(
-                receipt.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(receipt.logs, [testUtils.createOtcOrderFilledEventArgs(order)], 'OtcOrderFilled');
             const takerEthBalanceAfter = await ethers.provider.getBalance(taker);
             const ethBalanceChange = takerEthBalanceAfter - takerEthBalanceBefore;
             // 允许一定的 gas 费用容差（约 0.01 ETH）
@@ -467,15 +465,9 @@ describe('OtcOrdersFeature', () => {
                 .registerAllowedOrderSigner(contractWalletSigner, true);
             // fill should succeed
             const takerSigner = await env.provider.getSigner(taker);
-            const tx = await otcOrdersFeature
-                .connect(takerSigner)
-                .fillOtcOrder(order, sig, order.takerAmount);
+            const tx = await otcOrdersFeature.connect(takerSigner).fillOtcOrder(order, sig, order.takerAmount);
             const receipt = await tx.wait();
-            verifyEventsFromLogs(
-                receipt.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(receipt.logs, [testUtils.createOtcOrderFilledEventArgs(order)], 'OtcOrderFilled');
             await assertExpectedFinalBalancesFromOtcOrderFillAsync(order);
         });
 
@@ -526,28 +518,20 @@ describe('OtcOrdersFeature', () => {
         it('Can fill an order with ETH (takerToken=WETH)', async () => {
             const order = await getTestOtcOrder({ takerToken: await wethToken.getAddress() });
             const receipt = await testUtils.fillOtcOrderWithEthAsync(order);
-            verifyEventsFromLogs(
-                receipt.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(receipt.logs, [testUtils.createOtcOrderFilledEventArgs(order)], 'OtcOrderFilled');
             await assertExpectedFinalBalancesFromOtcOrderFillAsync(order);
         });
         it('Can fill an order with ETH (takerToken=ETH)', async () => {
             const order = await getTestOtcOrder({ takerToken: ETH_TOKEN_ADDRESS });
             const makerEthBalanceBefore = await ethers.provider.getBalance(maker);
             const receipt = await testUtils.fillOtcOrderWithEthAsync(order);
-            verifyEventsFromLogs(
-                receipt.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order)],
-                'OtcOrderFilled',
-            );
-            const takerBalance = await (await ethers.getContractAt('TestMintableERC20Token', order.makerToken)).balanceOf(taker);
+            verifyEventsFromLogs(receipt.logs, [testUtils.createOtcOrderFilledEventArgs(order)], 'OtcOrderFilled');
+            const takerBalance = await (
+                await ethers.getContractAt('TestMintableERC20Token', order.makerToken)
+            ).balanceOf(taker);
             expect(takerBalance, 'taker balance').to.eq(order.makerAmount);
             const makerEthBalanceAfter = await ethers.provider.getBalance(maker);
-            expect(makerEthBalanceAfter - makerEthBalanceBefore, 'maker balance').to.equal(
-                order.takerAmount,
-            );
+            expect(makerEthBalanceAfter - makerEthBalanceBefore, 'maker balance').to.equal(order.takerAmount);
         });
         it('Can partially fill an order with ETH (takerToken=WETH)', async () => {
             const order = await getTestOtcOrder({ takerToken: await wethToken.getAddress() });
@@ -571,23 +555,19 @@ describe('OtcOrdersFeature', () => {
                 'OtcOrderFilled',
             );
             const { makerTokenFilledAmount, takerTokenFilledAmount } = computeOtcOrderFilledAmounts(order, fillAmount);
-            const takerBalance = await (await ethers.getContractAt('TestMintableERC20Token', order.makerToken)).balanceOf(taker);
+            const takerBalance = await (
+                await ethers.getContractAt('TestMintableERC20Token', order.makerToken)
+            ).balanceOf(taker);
             expect(takerBalance, 'taker balance').to.eq(makerTokenFilledAmount);
             const makerEthBalanceAfter = await ethers.provider.getBalance(maker);
-            expect(makerEthBalanceAfter - makerEthBalanceBefore, 'maker balance').to.equal(
-                takerTokenFilledAmount,
-            );
+            expect(makerEthBalanceAfter - makerEthBalanceBefore, 'maker balance').to.equal(takerTokenFilledAmount);
         });
         it('Can refund excess ETH is msg.value > order.takerAmount (takerToken=WETH)', async () => {
             const order = await getTestOtcOrder({ takerToken: await wethToken.getAddress() });
             const fillAmount = order.takerAmount + 420n;
             const takerEthBalanceBefore = await ethers.provider.getBalance(taker);
             const receipt = await testUtils.fillOtcOrderWithEthAsync(order, fillAmount);
-            verifyEventsFromLogs(
-                receipt.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(receipt.logs, [testUtils.createOtcOrderFilledEventArgs(order)], 'OtcOrderFilled');
             const takerEthBalanceAfter = await ethers.provider.getBalance(taker);
             const ethSpent = takerEthBalanceBefore - takerEthBalanceAfter;
             // 允许 gas 费用容差，但应该接近 order.takerAmount（不包括多余的 420 wei）
@@ -600,22 +580,18 @@ describe('OtcOrdersFeature', () => {
             const takerEthBalanceBefore = await ethers.provider.getBalance(taker);
             const makerEthBalanceBefore = await ethers.provider.getBalance(maker);
             const receipt = await testUtils.fillOtcOrderWithEthAsync(order, fillAmount);
-            verifyEventsFromLogs(
-                receipt.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(receipt.logs, [testUtils.createOtcOrderFilledEventArgs(order)], 'OtcOrderFilled');
             const takerEthBalanceAfter = await ethers.provider.getBalance(taker);
             const ethSpent = takerEthBalanceBefore - takerEthBalanceAfter;
             const gasCost = BigInt(receipt.gasUsed) * BigInt(receipt.gasPrice || 0);
             // 🔧 精确匹配：ethSpent 应该等于 order.takerAmount + gasCost（多余的420 wei被退回）
             expect(ethSpent, 'taker eth balance').to.equal(order.takerAmount + gasCost);
-            const takerBalance = await (await ethers.getContractAt('TestMintableERC20Token', order.makerToken)).balanceOf(taker);
+            const takerBalance = await (
+                await ethers.getContractAt('TestMintableERC20Token', order.makerToken)
+            ).balanceOf(taker);
             expect(takerBalance, 'taker balance').to.eq(order.makerAmount);
             const makerEthBalanceAfter = await ethers.provider.getBalance(maker);
-            expect(makerEthBalanceAfter - makerEthBalanceBefore, 'maker balance').to.equal(
-                order.takerAmount,
-            );
+            expect(makerEthBalanceAfter - makerEthBalanceBefore, 'maker balance').to.equal(order.takerAmount);
         });
         it('Cannot fill an order if taker token is not ETH or WETH', async () => {
             const order = await getTestOtcOrder();
@@ -628,11 +604,7 @@ describe('OtcOrdersFeature', () => {
         it('can fully fill an order', async () => {
             const order = await getTestOtcOrder({ taker, txOrigin });
             const receipt = await testUtils.fillTakerSignedOtcOrderAsync(order);
-            verifyEventsFromLogs(
-                receipt.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(receipt.logs, [testUtils.createOtcOrderFilledEventArgs(order)], 'OtcOrderFilled');
             await assertExpectedFinalBalancesFromOtcOrderFillAsync(order);
         });
 
@@ -656,12 +628,8 @@ describe('OtcOrdersFeature', () => {
             const order = await getTestOtcOrder({ taker, txOrigin });
             const nativeOrdersFeature = await ethers.getContractAt('INativeOrdersFeature', await zeroEx.getAddress());
             const txOriginSigner = await env.provider.getSigner(txOrigin);
-            await nativeOrdersFeature
-                .connect(txOriginSigner)
-                .registerAllowedRfqOrigins([notTxOrigin], true);
-            await nativeOrdersFeature
-                .connect(txOriginSigner)
-                .registerAllowedRfqOrigins([notTxOrigin], false);
+            await nativeOrdersFeature.connect(txOriginSigner).registerAllowedRfqOrigins([notTxOrigin], true);
+            await nativeOrdersFeature.connect(txOriginSigner).registerAllowedRfqOrigins([notTxOrigin], false);
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order, notTxOrigin);
             // 🔧 使用优雅的 Rich Error 匹配
             return expectOrderNotFillableByOriginError(tx, order.getHash(), notTxOrigin, txOrigin);
@@ -692,12 +660,11 @@ describe('OtcOrdersFeature', () => {
             const order = await getTestOtcOrder({ taker, txOrigin });
             const anotherOrder = await getTestOtcOrder({ taker, txOrigin });
             await testUtils.prepareBalancesForOrdersAsync([order], taker);
-            const tx = otcOrdersFeature
-                .fillTakerSignedOtcOrder(
-                    order,
-                    await anotherOrder.getSignatureWithProviderAsync(env.provider),
-                    await order.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, taker),
-                );
+            const tx = otcOrdersFeature.fillTakerSignedOtcOrder(
+                order,
+                await anotherOrder.getSignatureWithProviderAsync(env.provider),
+                await order.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, taker),
+            );
 
             // 使用了错误的maker签名，签名验证会失败
             // 由于签名恢复的复杂性，使用通用的revert检查
@@ -715,7 +682,7 @@ describe('OtcOrdersFeature', () => {
                     order,
                     await order.getSignatureWithProviderAsync(env.provider),
                     await order.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, taker),
-                    { value: 1 }
+                    { value: 1 },
                 );
             // This will revert at the language level because the fill function is not payable.
             return expect(tx).to.be.rejectedWith('revert');
@@ -732,7 +699,12 @@ describe('OtcOrdersFeature', () => {
         it('cannot fill two orders with the same nonceBucket and nonce', async () => {
             const order1 = await getTestOtcOrder({ taker, txOrigin });
             await testUtils.fillTakerSignedOtcOrderAsync(order1);
-            const order2 = await getTestOtcOrder({ taker, txOrigin, nonceBucket: order1.nonceBucket, nonce: order1.nonce });
+            const order2 = await getTestOtcOrder({
+                taker,
+                txOrigin,
+                nonceBucket: order1.nonceBucket,
+                nonce: order1.nonce,
+            });
             const tx = testUtils.fillTakerSignedOtcOrderAsync(order2);
             // 🔧 使用优雅的 Rich Error 匹配
             return expectOrderNotFillableError(tx, order2.getHash(), OrderStatus.Invalid);
@@ -755,11 +727,7 @@ describe('OtcOrdersFeature', () => {
         it('can fill two orders that use the same nonce bucket and increasing nonces', async () => {
             const order1 = await getTestOtcOrder({ taker, txOrigin });
             const tx1 = await testUtils.fillTakerSignedOtcOrderAsync(order1);
-            verifyEventsFromLogs(
-                tx1.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order1)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(tx1.logs, [testUtils.createOtcOrderFilledEventArgs(order1)], 'OtcOrderFilled');
             const order2 = await getTestOtcOrder({
                 taker,
                 txOrigin,
@@ -767,28 +735,16 @@ describe('OtcOrdersFeature', () => {
                 nonce: order1.nonce + 1n,
             });
             const tx2 = await testUtils.fillTakerSignedOtcOrderAsync(order2);
-            verifyEventsFromLogs(
-                tx2.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order2)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(tx2.logs, [testUtils.createOtcOrderFilledEventArgs(order2)], 'OtcOrderFilled');
         });
 
         it('can fill two orders that use the same nonce but different nonce buckets', async () => {
             const order1 = await getTestOtcOrder({ taker, txOrigin });
             const tx1 = await testUtils.fillTakerSignedOtcOrderAsync(order1);
-            verifyEventsFromLogs(
-                tx1.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order1)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(tx1.logs, [testUtils.createOtcOrderFilledEventArgs(order1)], 'OtcOrderFilled');
             const order2 = await getTestOtcOrder({ taker, txOrigin, nonce: order1.nonce });
             const tx2 = await testUtils.fillTakerSignedOtcOrderAsync(order2);
-            verifyEventsFromLogs(
-                tx2.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order2)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(tx2.logs, [testUtils.createOtcOrderFilledEventArgs(order2)], 'OtcOrderFilled');
         });
 
         it('can fill a WETH buy order and receive ETH', async () => {
@@ -803,11 +759,7 @@ describe('OtcOrdersFeature', () => {
             const makerSigner = await env.provider.getSigner(maker);
             await wethToken.connect(makerSigner).deposit({ value: order.makerAmount });
             const receipt = await testUtils.fillTakerSignedOtcOrderAsync(order, txOrigin, taker, true);
-            verifyEventsFromLogs(
-                receipt.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order)],
-                'OtcOrderFilled',
-            );
+            verifyEventsFromLogs(receipt.logs, [testUtils.createOtcOrderFilledEventArgs(order)], 'OtcOrderFilled');
             const takerEthBalanceAfter = await ethers.provider.getBalance(taker);
             const ethBalanceChange = takerEthBalanceAfter - takerEthBalanceBefore;
             // 允许一定的 gas 费用容差（约 0.01 ETH）
@@ -833,19 +785,18 @@ describe('OtcOrdersFeature', () => {
             await testUtils.prepareBalancesForOrdersAsync([order1], taker);
             await testUtils.prepareBalancesForOrdersAsync([order2], notTaker);
             const otcOrdersFeature = await ethers.getContractAt('IOtcOrdersFeature', await zeroEx.getAddress());
-            const tx = await otcOrdersFeature
-                .batchFillTakerSignedOtcOrders(
-                    [order1, order2],
-                    [
-                        await order1.getSignatureWithProviderAsync(env.provider),
-                        await order2.getSignatureWithProviderAsync(env.provider),
-                    ],
-                    [
-                        await order1.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, taker),
-                        await order2.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, notTaker),
-                    ],
-                    [false, false],
-                );
+            const tx = await otcOrdersFeature.batchFillTakerSignedOtcOrders(
+                [order1, order2],
+                [
+                    await order1.getSignatureWithProviderAsync(env.provider),
+                    await order2.getSignatureWithProviderAsync(env.provider),
+                ],
+                [
+                    await order1.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, taker),
+                    await order2.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, notTaker),
+                ],
+                [false, false],
+            );
             verifyEventsFromLogs(
                 tx.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order1), testUtils.createOtcOrderFilledEventArgs(order2)],
@@ -867,19 +818,18 @@ describe('OtcOrdersFeature', () => {
             const makerSigner = await env.provider.getSigner(maker);
             await wethToken.connect(makerSigner).deposit({ value: order2.makerAmount });
             const otcOrdersFeature = await ethers.getContractAt('IOtcOrdersFeature', await zeroEx.getAddress());
-            const tx = await otcOrdersFeature
-                .batchFillTakerSignedOtcOrders(
-                    [order1, order2],
-                    [
-                        await order1.getSignatureWithProviderAsync(env.provider),
-                        await order2.getSignatureWithProviderAsync(env.provider),
-                    ],
-                    [
-                        await order1.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, taker),
-                        await order2.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, notTaker),
-                    ],
-                    [false, true],
-                );
+            const tx = await otcOrdersFeature.batchFillTakerSignedOtcOrders(
+                [order1, order2],
+                [
+                    await order1.getSignatureWithProviderAsync(env.provider),
+                    await order2.getSignatureWithProviderAsync(env.provider),
+                ],
+                [
+                    await order1.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, taker),
+                    await order2.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, notTaker),
+                ],
+                [false, true],
+            );
             verifyEventsFromLogs(
                 tx.logs,
                 [testUtils.createOtcOrderFilledEventArgs(order1), testUtils.createOtcOrderFilledEventArgs(order2)],
@@ -897,24 +847,19 @@ describe('OtcOrdersFeature', () => {
             await testUtils.prepareBalancesForOrdersAsync([order1], taker);
             await testUtils.prepareBalancesForOrdersAsync([order2], notTaker);
             const otcOrdersFeature = await ethers.getContractAt('IOtcOrdersFeature', await zeroEx.getAddress());
-            const tx = await otcOrdersFeature
-                .batchFillTakerSignedOtcOrders(
-                    [order1, order2],
-                    [
-                        await order1.getSignatureWithProviderAsync(env.provider),
-                        await order2.getSignatureWithProviderAsync(env.provider),
-                    ],
-                    [
-                        await order1.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, taker),
-                        await order2.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, taker), // Invalid signature for order2
-                    ],
-                    [false, false],
-                );
-            verifyEventsFromLogs(
-                tx.logs,
-                [testUtils.createOtcOrderFilledEventArgs(order1)],
-                'OtcOrderFilled',
+            const tx = await otcOrdersFeature.batchFillTakerSignedOtcOrders(
+                [order1, order2],
+                [
+                    await order1.getSignatureWithProviderAsync(env.provider),
+                    await order2.getSignatureWithProviderAsync(env.provider),
+                ],
+                [
+                    await order1.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, taker),
+                    await order2.getSignatureWithProviderAsync(env.provider, SignatureType.EthSign, taker), // Invalid signature for order2
+                ],
+                [false, false],
             );
+            verifyEventsFromLogs(tx.logs, [testUtils.createOtcOrderFilledEventArgs(order1)], 'OtcOrderFilled');
         });
     });
 });

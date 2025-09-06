@@ -4,14 +4,14 @@
 const logUtils = {
     warn: (message: any) => {
         console.warn('[SubscriptionManager]', message);
-    }
+    },
 };
 
 // Simple interval utility replacement
 const intervalUtils = {
     clearAsyncExcludingInterval: (intervalId: NodeJS.Timeout) => {
         clearInterval(intervalId);
-    }
+    },
 };
 
 // Simple ABI decoder replacement using ethers
@@ -36,13 +36,13 @@ class AbiDecoder {
             try {
                 const parsed = iface.parseLog({
                     topics: log.topics,
-                    data: log.data
+                    data: log.data,
                 });
                 if (parsed) {
                     return {
                         ...log,
                         event: parsed.name,
-                        args: parsed.args
+                        args: parsed.args,
                     };
                 }
             } catch (error) {
@@ -108,7 +108,7 @@ export class SubscriptionManager<ContractEventArgs extends DecodedLogArgs, Contr
     ): string {
         const filterToken = filterUtils.generateUUID();
         const filter = filterUtils.getFilter(
-            '',  // address - empty for now
+            '', // address - empty for now
             eventName,
             indexFilterValues,
             this.abi,
@@ -163,9 +163,7 @@ export class SubscriptionManager<ContractEventArgs extends DecodedLogArgs, Contr
             (blockHash: string, rawLogs: Log[]) => this._onLogStateChanged<ContractEventArgs>(rawLogs as any, true),
         );
         // Start the block and log stream
-        this._blockAndLogStreamerIfExists.reconcileNewBlock((
-            this._blockAndLogStreamerIfExists as any
-        )._latestBlock);
+        this._blockAndLogStreamerIfExists.reconcileNewBlock((this._blockAndLogStreamerIfExists as any)._latestBlock);
     }
     private _stopBlockAndLogStream(): void {
         if (this._blockAndLogStreamerIfExists === undefined) {
@@ -179,23 +177,24 @@ export class SubscriptionManager<ContractEventArgs extends DecodedLogArgs, Contr
             intervalUtils.clearAsyncExcludingInterval(this._blockAndLogStreamIntervalIfExists);
         }
     }
-    private _onLogStateChanged<ArgsType extends ContractEventArgs>(
-        rawLogs: RawLogEntry[],
-        isRemoved: boolean,
-    ): void {
+    private _onLogStateChanged<ArgsType extends ContractEventArgs>(rawLogs: RawLogEntry[], isRemoved: boolean): void {
         // Convert raw logs to LogEntry format - simple unmarshalling replacement
         const logs: LogEntry[] = rawLogs.map(rawLog => ({
             ...rawLog,
-            logIndex: typeof rawLog.logIndex === 'string' ? parseInt(rawLog.logIndex) : (rawLog.logIndex || 0),
-            transactionIndex: typeof rawLog.transactionIndex === 'string' ? parseInt(rawLog.transactionIndex) : (rawLog.transactionIndex || 0),
+            logIndex: typeof rawLog.logIndex === 'string' ? parseInt(rawLog.logIndex) : rawLog.logIndex || 0,
+            transactionIndex:
+                typeof rawLog.transactionIndex === 'string'
+                    ? parseInt(rawLog.transactionIndex)
+                    : rawLog.transactionIndex || 0,
             transactionHash: rawLog.transactionHash || '',
             blockHash: rawLog.blockHash || '',
-            blockNumber: typeof rawLog.blockNumber === 'string' ? parseInt(rawLog.blockNumber) : (rawLog.blockNumber || 0),
+            blockNumber:
+                typeof rawLog.blockNumber === 'string' ? parseInt(rawLog.blockNumber) : rawLog.blockNumber || 0,
             address: rawLog.address || '',
             data: rawLog.data || '',
             topics: rawLog.topics || [],
         }));
-        
+
         logs.forEach(log => {
             Object.entries(this._filters).forEach(([filterToken, filter]) => {
                 if (filterUtils.matchesFilter(log, filter)) {

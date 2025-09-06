@@ -18,13 +18,15 @@ describe('Assertion library', () => {
                 await assert.isSenderAddressAsync(varName, address, web3Wrapper as any);
                 expect.fail('Expected function to throw');
             } catch (error) {
-                expect((error as Error).message).to.include(`Expected ${varName} to be of type ETHAddressHex, encountered: ${address}`);
+                expect((error as Error).message).to.include(
+                    `Expected ${varName} to be of type ETHAddressHex, encountered: ${address}`,
+                );
             }
         });
         it('throws when address is unavailable', async () => {
             const validUnrelatedAddress = '0x8b0292b11a196601eddce54b665cafeca0347d42';
             const varName = 'address';
-            
+
             try {
                 await assert.isSenderAddressAsync(varName, validUnrelatedAddress, web3Wrapper as any);
                 expect.fail('Expected function to throw');

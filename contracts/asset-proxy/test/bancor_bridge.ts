@@ -1,8 +1,4 @@
-import {
-    constants,
-    getRandomInteger,
-    randomAddress,
-} from '@0x/utils';
+import { constants, getRandomInteger, randomAddress } from '@0x/utils';
 import { expect } from 'chai';
 import { AssetProxyId } from '@0x/utils';
 import { hexUtils } from '@0x/utils';
@@ -53,9 +49,7 @@ describe('Bancor unit tests', () => {
     describe('isValidSignature()', () => {
         it('returns success bytes', async () => {
             const LEGACY_WALLET_MAGIC_VALUE = '0xb0671381';
-            const result = await testContract
-                .isValidSignature(hexUtils.random(), hexUtils.random(_.random(0, 32)))
-                ;
+            const result = await testContract.isValidSignature(hexUtils.random(), hexUtils.random(_.random(0, 32)));
             expect(result).to.eq(LEGACY_WALLET_MAGIC_VALUE);
         });
     });
@@ -94,8 +88,8 @@ describe('Bancor unit tests', () => {
         // 使用 ethers AbiCoder 替代 AbiEncoder
         const abiCoder = ethers.AbiCoder.defaultAbiCoder();
         const bridgeDataEncoder = {
-            encode: (path: string[], affiliateAccount: string): string => 
-                abiCoder.encode(['address[]', 'address'], [path, affiliateAccount])
+            encode: (path: string[], affiliateAccount: string): string =>
+                abiCoder.encode(['address[]', 'address'], [path, affiliateAccount]),
         };
 
         async function transferFromAsync(opts?: Partial<TransferFromOpts>): Promise<TransferFromResult> {
@@ -116,7 +110,10 @@ describe('Bancor unit tests', () => {
             }
 
             // Set the token balance for the token we're converting from.
-            const setBalanceTx = await testContract.setTokenBalance(_opts.tokenAddressesPath[0], _opts.fromTokenBalance);
+            const setBalanceTx = await testContract.setTokenBalance(
+                _opts.tokenAddressesPath[0],
+                _opts.fromTokenBalance,
+            );
             await setBalanceTx.wait();
 
             // Set revert reason for the router.
@@ -134,13 +131,10 @@ describe('Bancor unit tests', () => {
                 // Transfer amount.
                 _opts.amount,
                 // ABI-encode the input token address as the bridge data.
-                bridgeDataEncoder.encode(
-                    _opts.tokenAddressesPath,
-                    await testContract.getNetworkAddress()
-                ),
+                bridgeDataEncoder.encode(_opts.tokenAddressesPath, await testContract.getNetworkAddress()),
             );
             const receipt = await bridgeTransferFromTx.wait();
-            
+
             return {
                 opts: _opts,
                 result: AssetProxyId.ERC20Bridge, // 假设成功返回代理ID
@@ -158,35 +152,35 @@ describe('Bancor unit tests', () => {
             it('calls BancorNetwork.convertByPath()', async () => {
                 const { opts, result, logs } = await transferFromAsync();
                 expect(result).to.eq(AssetProxyId.ERC20Bridge, 'asset proxy id');
-                
+
                 // 使用 ethers 方式解析事件
                 const contractInterface = testContract.interface;
-                const convertByPathEvents = logs.filter(log => {
-                    try {
+                const convertByPathEvents = logs
+                    .filter(log => {
+                        try {
+                            const parsed = contractInterface.parseLog({
+                                topics: log.topics,
+                                data: log.data,
+                            });
+                            return parsed?.name === 'ConvertByPathInput';
+                        } catch {
+                            return false;
+                        }
+                    })
+                    .map(log => {
                         const parsed = contractInterface.parseLog({
                             topics: log.topics,
-                            data: log.data
+                            data: log.data,
                         });
-                        return parsed?.name === 'ConvertByPathInput';
-                    } catch {
-                        return false;
-                    }
-                }).map(log => {
-                    const parsed = contractInterface.parseLog({
-                        topics: log.topics,
-                        data: log.data
+                        return {
+                            amountIn: parsed.args[0],
+                            amountOutMin: parsed.args[1],
+                            toTokenAddress: parsed.args[2],
+                            to: parsed.args[3],
+                            feeRecipient: parsed.args[4],
+                            feeAmount: parsed.args[5],
+                        };
                     });
-                    return {
-                        amountIn: parsed.args[0],
-                        amountOutMin: parsed.args[1],
-                        toTokenAddress: parsed.args[2],
-                        to: parsed.args[3],
-                        feeRecipient: parsed.args[4],
-                        feeAmount: parsed.args[5]
-                    };
-                });
-                
-
 
                 expect(convertByPathEvents.length).to.eq(1);
                 expect(convertByPathEvents[0].toTokenAddress).to.eq(
@@ -202,30 +196,31 @@ describe('Bancor unit tests', () => {
 
             it('sets allowance for "from" token', async () => {
                 const { logs } = await transferFromAsync();
-                
+
                 // 使用 ethers 方式解析 TokenApprove 事件
                 const contractInterface = testContract.interface;
-                const tokenApproveEvents = logs.filter(log => {
-                    try {
+                const tokenApproveEvents = logs
+                    .filter(log => {
+                        try {
+                            const parsed = contractInterface.parseLog({
+                                topics: log.topics,
+                                data: log.data,
+                            });
+                            return parsed?.name === 'TokenApprove';
+                        } catch {
+                            return false;
+                        }
+                    })
+                    .map(log => {
                         const parsed = contractInterface.parseLog({
                             topics: log.topics,
-                            data: log.data
+                            data: log.data,
                         });
-                        return parsed?.name === 'TokenApprove';
-                    } catch {
-                        return false;
-                    }
-                }).map(log => {
-                    const parsed = contractInterface.parseLog({
-                        topics: log.topics,
-                        data: log.data
+                        return {
+                            spender: parsed.args[0],
+                            allowance: parsed.args[1],
+                        };
                     });
-                    return {
-                        spender: parsed.args[0],
-                        allowance: parsed.args[1]
-                    };
-                });
-                
 
                 const networkAddress = await testContract.getNetworkAddress();
                 expect(tokenApproveEvents.length).to.eq(1);
@@ -247,33 +242,35 @@ describe('Bancor unit tests', () => {
                     tokenAddressesPath: Array(5).fill(constants.NULL_ADDRESS),
                 });
                 expect(result).to.eq(AssetProxyId.ERC20Bridge, 'asset proxy id');
-                
+
                 // 使用 ethers 方式解析事件
                 const contractInterface = testContract.interface;
-                const convertByPathEvents = logs.filter(log => {
-                    try {
+                const convertByPathEvents = logs
+                    .filter(log => {
+                        try {
+                            const parsed = contractInterface.parseLog({
+                                topics: log.topics,
+                                data: log.data,
+                            });
+                            return parsed?.name === 'ConvertByPathInput';
+                        } catch {
+                            return false;
+                        }
+                    })
+                    .map(log => {
                         const parsed = contractInterface.parseLog({
                             topics: log.topics,
-                            data: log.data
+                            data: log.data,
                         });
-                        return parsed?.name === 'ConvertByPathInput';
-                    } catch {
-                        return false;
-                    }
-                }).map(log => {
-                    const parsed = contractInterface.parseLog({
-                        topics: log.topics,
-                        data: log.data
+                        return {
+                            amountIn: parsed.args[0],
+                            amountOutMin: parsed.args[1],
+                            toTokenAddress: parsed.args[2],
+                            to: parsed.args[3],
+                            feeRecipient: parsed.args[4],
+                            feeAmount: parsed.args[5],
+                        };
                     });
-                    return {
-                        amountIn: parsed.args[0],
-                        amountOutMin: parsed.args[1],
-                        toTokenAddress: parsed.args[2],
-                        to: parsed.args[3],
-                        feeRecipient: parsed.args[4],
-                        feeAmount: parsed.args[5]
-                    };
-                });
 
                 expect(convertByPathEvents.length).to.eq(1);
                 expect(convertByPathEvents[0].toTokenAddress).to.eq(

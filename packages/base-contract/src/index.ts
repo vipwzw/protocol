@@ -1,14 +1,9 @@
 // Re-export Ethers v6 Contract as BaseContract for backward compatibility
 import { Contract, ContractTransactionResponse, ContractRunner } from 'ethers';
-import type { 
-    Interface, 
-    ContractTransaction,
-    TransactionRequest,
-    TransactionResponse
-} from 'ethers';
+import type { Interface, ContractTransaction, TransactionRequest, TransactionResponse } from 'ethers';
 
 // Re-export core Ethers classes and types
-export { 
+export {
     Contract as BaseContract,
     Contract,
     ContractTransactionResponse,
@@ -16,7 +11,7 @@ export {
     Interface,
     ContractTransaction,
     TransactionRequest,
-    TransactionResponse
+    TransactionResponse,
 } from 'ethers';
 
 // Re-export legacy types for backward compatibility
@@ -48,9 +43,7 @@ export interface TxOpts {
 export class LegacyUtils {
     static removeUndefinedProperties<T extends object>(obj: T): T {
         const clone = { ...obj };
-        return Object.fromEntries(
-            Object.entries(clone).filter(([_, v]) => v !== undefined)
-        ) as T;
+        return Object.fromEntries(Object.entries(clone).filter(([_, v]) => v !== undefined)) as T;
     }
 
     static lowercaseAddress(type: string, value: string): string {

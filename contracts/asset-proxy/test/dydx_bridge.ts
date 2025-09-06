@@ -74,9 +74,7 @@ describe('DydxBridge unit tests', () => {
     before(async () => {
         // Get accounts
         const signers = await ethers.getSigners();
-        [owner, authorized, accountOwner, receiver] = await Promise.all(
-            signers.slice(0, 4).map(s => s.getAddress())
-        );
+        [owner, authorized, accountOwner, receiver] = await Promise.all(signers.slice(0, 4).map(s => s.getAddress()));
 
         // Deploy dydx bridge - 直接使用 ethers 部署
         const TestDydxBridgeFactory = await ethers.getContractFactory('TestDydxBridge');
@@ -85,7 +83,7 @@ describe('DydxBridge unit tests', () => {
         // Deploy test erc20 bridge proxy
         const ERC20BridgeProxyFactory = await ethers.getContractFactory('ERC20BridgeProxy');
         testProxyContract = await ERC20BridgeProxyFactory.deploy();
-        
+
         // Add authorized address
         await testProxyContract.addAuthorizedAddress(authorized);
 
@@ -102,27 +100,26 @@ describe('DydxBridge unit tests', () => {
             sender?: string, // 可选参数，默认使用当前 signer
         ): Promise<string> => {
             let contractToUse = testContract;
-            
+
             // 如果指定了 sender，则从该地址调用
             if (sender) {
                 // 使用 Hardhat 的 impersonateAccount 功能
                 await ethers.provider.send('hardhat_impersonateAccount', [sender]);
                 await ethers.provider.send('hardhat_setBalance', [sender, '0x1000000000000000000']); // 给账户一些 ETH
-                
+
                 const impersonatedSigner = await ethers.getSigner(sender);
                 contractToUse = testContract.connect(impersonatedSigner);
             }
-            
+
             try {
                 // 使用 staticCall 进行只读调用（不改变状态）
-                const returnValue = await contractToUse
-                    .bridgeTransferFrom.staticCall(
-                        constants.NULL_ADDRESS,
-                        from,
-                        to,
-                        amount,
-                        dydxBridgeDataEncoder.encode(bridgeData),
-                    );
+                const returnValue = await contractToUse.bridgeTransferFrom.staticCall(
+                    constants.NULL_ADDRESS,
+                    from,
+                    to,
+                    amount,
+                    dydxBridgeDataEncoder.encode(bridgeData),
+                );
                 return returnValue;
             } finally {
                 // 清理：停止 impersonation
@@ -139,16 +136,15 @@ describe('DydxBridge unit tests', () => {
             sender: string,
         ): Promise<void> => {
             // Execute transaction.
-            const tx = await testContract
-                .bridgeTransferFrom(
-                    constants.NULL_ADDRESS,
-                    from,
-                    to,
-                    amount,
-                    dydxBridgeDataEncoder.encode(bridgeData),
-                );
+            const tx = await testContract.bridgeTransferFrom(
+                constants.NULL_ADDRESS,
+                from,
+                to,
+                amount,
+                dydxBridgeDataEncoder.encode(bridgeData),
+            );
             const txReceipt = await tx.wait();
-            
+
             // 使用通用日志解析工具
             const decodedLogs = await parseContractLogs(testContract, txReceipt);
 
@@ -161,13 +157,15 @@ describe('DydxBridge unit tests', () => {
                 });
             }
             // 从日志中过滤 OperateAccount 事件
-            const operateAccountLogs = txReceipt ? filterLogs(txReceipt.logs, TestDydxBridgeEvents.OperateAccount, testContract.interface) : [];
+            const operateAccountLogs = txReceipt
+                ? filterLogs(txReceipt.logs, TestDydxBridgeEvents.OperateAccount, testContract.interface)
+                : [];
             verifyEvents(
                 operateAccountLogs,
                 expectedOperateAccountEvents.map(args => ({
                     event: TestDydxBridgeEvents.OperateAccount,
-                    args
-                }))
+                    args,
+                })),
             );
 
             // Verify `OperateAction` event.
@@ -181,9 +179,10 @@ describe('DydxBridge unit tests', () => {
                     amountSign: action.actionType === DydxBridgeActionType.Deposit ? true : false,
                     amountDenomination: weiDenomination,
                     amountRef: deltaAmountRef,
-                    amountValue: action.conversionRateDenominator > 0
-                        ? (amount * action.conversionRateNumerator) / action.conversionRateDenominator
-                        : amount,
+                    amountValue:
+                        action.conversionRateDenominator > 0
+                            ? (amount * action.conversionRateNumerator) / action.conversionRateDenominator
+                            : amount,
                     primaryMarketId: marketId,
                     secondaryMarketId: constants.ZERO_AMOUNT,
                     otherAddress: action.actionType === DydxBridgeActionType.Deposit ? from : to,
@@ -192,13 +191,15 @@ describe('DydxBridge unit tests', () => {
                 });
             }
             // 从日志中过滤 OperateAction 事件
-            const operateActionLogs = txReceipt ? filterLogs(txReceipt.logs, TestDydxBridgeEvents.OperateAction, testContract.interface) : [];
+            const operateActionLogs = txReceipt
+                ? filterLogs(txReceipt.logs, TestDydxBridgeEvents.OperateAction, testContract.interface)
+                : [];
             verifyEvents(
                 operateActionLogs,
                 expectedOperateActionEvents.map(args => ({
                     event: TestDydxBridgeEvents.OperateAction,
-                    args
-                }))
+                    args,
+                })),
             );
         };
         it('succeeds when calling with zero amount', async () => {
@@ -367,7 +368,7 @@ describe('DydxBridge unit tests', () => {
                 accountNumbers: [defaultAccountNumber],
                 actions: [defaultDepositAction],
             };
-            
+
             // 首先验证正常调用（非 address(1)）应该成功
             const normalCallResult = await callBridgeTransferFrom(
                 accountOwner,
@@ -378,16 +379,16 @@ describe('DydxBridge unit tests', () => {
             );
             // 正常调用应该返回魔术字节，说明权限检查通过
             expect(normalCallResult).to.not.be.undefined;
-            
+
             // 然后验证从 address(1) 调用应该失败
             const callBridgeTransferFromPromise = callBridgeTransferFrom(
                 accountOwner,
                 receiver,
                 defaultAmount,
                 bridgeData,
-                notAuthorized,  // 从 address(1) 调用
+                notAuthorized, // 从 address(1) 调用
             );
-            
+
             const expectedError = RevertReason.DydxBridgeOnlyCallableByErc20BridgeProxy;
             return expect(callBridgeTransferFromPromise).to.be.revertedWith(expectedError);
         });
@@ -444,7 +445,7 @@ describe('DydxBridge unit tests', () => {
                 amount,
                 dydxBridgeDataEncoder.encode(bridgeData),
             );
-            
+
             // 接受多种可能的错误格式（字符串或自定义错误）
             return expect(txPromise).to.be.reverted;
         });
@@ -463,7 +464,7 @@ describe('DydxBridge unit tests', () => {
             const abiCoder = ethers.AbiCoder.defaultAbiCoder();
             const encodedData = abiCoder.encode(
                 ['address', 'address', 'bytes'],
-                [tokenAddress, bridgeAddress, bridgeData]
+                [tokenAddress, bridgeAddress, bridgeData],
             );
             // 在前面加上 PROXY_ID (4 bytes) - ERC20Bridge 的 proxy ID
             const PROXY_ID = '0xf47261b0'; // ERC20Bridge proxy ID
@@ -475,17 +476,17 @@ describe('DydxBridge unit tests', () => {
             const testTokenTx = await testContract.getTestToken();
             const receipt = await testTokenTx.wait();
             const contractAddress = await testContract.getAddress();
-            
+
             // 从交易回执中获取返回值，或者直接从合约状态中读取
             // 由于 getTestToken 实际上返回 _testTokenAddress，我们可以直接读取它
             // 或者我们可以通过部署时的日志获取 token 地址
-            
+
             // 让我们尝试从构造函数中获取创建的 token 地址
             // 由于在构造函数中创建了 TestDydxBridgeToken，我们需要找到它的地址
-            
+
             // 暂时使用一个简单的方法：调用静态调用来获取地址
             const testTokenAddress = await testContract.getTestToken.staticCall();
-            
+
             // 使用正确的编码器编码 bridge data
             const encodedBridgeData = dydxBridgeDataEncoder.encode(bridgeData);
             // 使用正确的 asset data 编码
@@ -495,10 +496,10 @@ describe('DydxBridge unit tests', () => {
         it('should succeed if `bridgeTransferFrom` succeeds', async () => {
             // 确保 revert 标志被重置
             await testContract.setRevertOnOperate(false);
-            
+
             // 需要使用授权的 signer 调用
             const authorizedSigner = await ethers.getSigner(authorized);
-            
+
             await testProxyContract
                 .connect(authorizedSigner)
                 .transferFrom(assetData, accountOwner, receiver, defaultAmount);
@@ -508,7 +509,7 @@ describe('DydxBridge unit tests', () => {
             await testContract.setRevertOnOperate(true);
             // 需要使用授权的 signer 调用
             const authorizedSigner = await ethers.getSigner(authorized);
-            
+
             const tx = testProxyContract
                 .connect(authorizedSigner)
                 .transferFrom(assetData, accountOwner, receiver, defaultAmount);

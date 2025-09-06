@@ -28,7 +28,7 @@ const signTypedDataUtils = {
         };
         const domainHash = ethers.TypedDataEncoder.hashDomain(domainData);
         return Buffer.from(domainHash.slice(2), 'hex');
-    }
+    },
 };
 
 describe('LibEIP712ExchangeDomain', () => {

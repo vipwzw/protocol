@@ -12,7 +12,7 @@ import {
     PayTakerTransformerData,
     AffiliateFeeTransformerData,
     PositiveSlippageFeeTransformerData,
-    jsonUtils
+    jsonUtils,
 } from '../src';
 
 // 将对象按照 ABI 组件顺序转换为数组
@@ -60,14 +60,14 @@ describe('Encoder Equivalence Tests', () => {
                         makerAssetData: '0xabcd',
                         takerAssetData: '0xefab',
                         makerFeeAssetData: '0x1234',
-                        takerFeeAssetData: '0x5678'
-                    }
+                        takerFeeAssetData: '0x5678',
+                    },
                 ],
                 signatures: ['0x1234', '0x5678'],
                 maxOrderFillAmounts: [500n, 1000n],
                 fillAmount: 1500n,
                 refundReceiver: '0x5555555555555555555555555555555555555555',
-                rfqtTakerAddress: '0x6666666666666666666666666666666666666666'
+                rfqtTakerAddress: '0x6666666666666666666666666666666666666666',
             };
 
             // 定义组件结构
@@ -75,34 +75,39 @@ describe('Encoder Equivalence Tests', () => {
                 { name: 'side', type: 'uint8' },
                 { name: 'sellToken', type: 'address' },
                 { name: 'buyToken', type: 'address' },
-                { name: 'orders', type: 'tuple[]', components: [
-                    { name: 'makerAddress', type: 'address' },
-                    { name: 'takerAddress', type: 'address' },
-                    { name: 'feeRecipientAddress', type: 'address' },
-                    { name: 'senderAddress', type: 'address' },
-                    { name: 'makerAssetAmount', type: 'uint256' },
-                    { name: 'takerAssetAmount', type: 'uint256' },
-                    { name: 'makerFee', type: 'uint256' },
-                    { name: 'takerFee', type: 'uint256' },
-                    { name: 'expirationTimeSeconds', type: 'uint256' },
-                    { name: 'salt', type: 'uint256' },
-                    { name: 'makerAssetData', type: 'bytes' },
-                    { name: 'takerAssetData', type: 'bytes' },
-                    { name: 'makerFeeAssetData', type: 'bytes' },
-                    { name: 'takerFeeAssetData', type: 'bytes' }
-                ]},
+                {
+                    name: 'orders',
+                    type: 'tuple[]',
+                    components: [
+                        { name: 'makerAddress', type: 'address' },
+                        { name: 'takerAddress', type: 'address' },
+                        { name: 'feeRecipientAddress', type: 'address' },
+                        { name: 'senderAddress', type: 'address' },
+                        { name: 'makerAssetAmount', type: 'uint256' },
+                        { name: 'takerAssetAmount', type: 'uint256' },
+                        { name: 'makerFee', type: 'uint256' },
+                        { name: 'takerFee', type: 'uint256' },
+                        { name: 'expirationTimeSeconds', type: 'uint256' },
+                        { name: 'salt', type: 'uint256' },
+                        { name: 'makerAssetData', type: 'bytes' },
+                        { name: 'takerAssetData', type: 'bytes' },
+                        { name: 'makerFeeAssetData', type: 'bytes' },
+                        { name: 'takerFeeAssetData', type: 'bytes' },
+                    ],
+                },
                 { name: 'signatures', type: 'bytes[]' },
                 { name: 'maxOrderFillAmounts', type: 'uint256[]' },
                 { name: 'fillAmount', type: 'uint256' },
                 { name: 'refundReceiver', type: 'address' },
-                { name: 'rfqtTakerAddress', type: 'address' }
+                { name: 'rfqtTakerAddress', type: 'address' },
             ];
 
             // 新的 JSON ABI 方式 (当前实现) - 编码器接收对象格式
             const newEncoded = fillQuoteTransformerDataEncoder.encode([testData]);
 
             // 旧的硬编码字符串方式 - 转换为数组格式
-            const oldTypeString = 'tuple(uint8,address,address,tuple(address,address,address,address,uint256,uint256,uint256,uint256,uint256,uint256,bytes,bytes,bytes,bytes)[],bytes[],uint256[],uint256,address,address)';
+            const oldTypeString =
+                'tuple(uint8,address,address,tuple(address,address,address,address,uint256,uint256,uint256,uint256,uint256,uint256,bytes,bytes,bytes,bytes)[],bytes[],uint256[],uint256,address,address)';
             const arrayData = convertToArrayFormat(testData, fillQuoteComponents);
             const oldEncoded = abiCoder.encode([oldTypeString], [arrayData]);
 
@@ -115,7 +120,9 @@ describe('Encoder Equivalence Tests', () => {
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
 
             // 使用 BigInt 安全的序列化方法
-            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify([oldDecoded[0]], jsonUtils.bigIntReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(
+                JSON.stringify([oldDecoded[0]], jsonUtils.bigIntReplacer),
+            );
         });
     });
 
@@ -123,13 +130,13 @@ describe('Encoder Equivalence Tests', () => {
         it('should produce identical encoding results', () => {
             const testData: WethTransformerData = {
                 token: '0x1234567890123456789012345678901234567890',
-                amount: 1000000000000000000n // 1 ETH
+                amount: 1000000000000000000n, // 1 ETH
             };
 
             // 定义组件结构
             const wethComponents = [
                 { name: 'token', type: 'address' },
-                { name: 'amount', type: 'uint256' }
+                { name: 'amount', type: 'uint256' },
             ];
 
             // 新的 JSON ABI 方式 - 编码器接收对象格式
@@ -149,24 +156,23 @@ describe('Encoder Equivalence Tests', () => {
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
 
             // 使用 BigInt 安全的序列化方法
-            expect(JSON.stringify(newDecoded.data, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded[0], jsonUtils.bigIntReplacer));
+            expect(JSON.stringify(newDecoded.data, jsonUtils.bigIntReplacer)).to.equal(
+                JSON.stringify(oldDecoded[0], jsonUtils.bigIntReplacer),
+            );
         });
     });
 
     describe('PayTakerTransformerDataEncoder', () => {
         it('should produce identical encoding results', () => {
             const testData: PayTakerTransformerData = {
-                tokens: [
-                    '0x1234567890123456789012345678901234567890',
-                    '0x0987654321098765432109876543210987654321'
-                ],
-                amounts: [1000n, 2000n]
+                tokens: ['0x1234567890123456789012345678901234567890', '0x0987654321098765432109876543210987654321'],
+                amounts: [1000n, 2000n],
             };
 
             // 定义组件结构
             const payTakerComponents = [
                 { name: 'tokens', type: 'address[]' },
-                { name: 'amounts', type: 'uint256[]' }
+                { name: 'amounts', type: 'uint256[]' },
             ];
 
             // 新的 JSON ABI 方式 - 编码器接收对象格式
@@ -186,7 +192,9 @@ describe('Encoder Equivalence Tests', () => {
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
 
             // 使用 BigInt 安全的序列化方法
-            expect(JSON.stringify(newDecoded.data, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded[0], jsonUtils.bigIntReplacer));
+            expect(JSON.stringify(newDecoded.data, jsonUtils.bigIntReplacer)).to.equal(
+                JSON.stringify(oldDecoded[0], jsonUtils.bigIntReplacer),
+            );
         });
     });
 
@@ -197,23 +205,27 @@ describe('Encoder Equivalence Tests', () => {
                     {
                         token: '0x1234567890123456789012345678901234567890',
                         amount: 100n,
-                        recipient: '0x1111111111111111111111111111111111111111'
+                        recipient: '0x1111111111111111111111111111111111111111',
                     },
                     {
                         token: '0x0987654321098765432109876543210987654321',
                         amount: 200n,
-                        recipient: '0x2222222222222222222222222222222222222222'
-                    }
-                ]
+                        recipient: '0x2222222222222222222222222222222222222222',
+                    },
+                ],
             };
 
             // 定义组件结构
             const affiliateFeeComponents = [
-                { name: 'fees', type: 'tuple[]', components: [
-                    { name: 'token', type: 'address' },
-                    { name: 'amount', type: 'uint256' },
-                    { name: 'recipient', type: 'address' }
-                ]}
+                {
+                    name: 'fees',
+                    type: 'tuple[]',
+                    components: [
+                        { name: 'token', type: 'address' },
+                        { name: 'amount', type: 'uint256' },
+                        { name: 'recipient', type: 'address' },
+                    ],
+                },
             ];
 
             // 新的 JSON ABI 方式 - 编码器接收对象格式
@@ -224,7 +236,7 @@ describe('Encoder Equivalence Tests', () => {
             const feeComponents = [
                 { name: 'token', type: 'address' },
                 { name: 'amount', type: 'uint256' },
-                { name: 'recipient', type: 'address' }
+                { name: 'recipient', type: 'address' },
             ];
             const feesAsArrays = testData.fees.map(fee => convertToArrayFormat(fee, feeComponents));
             const oldEncoded = abiCoder.encode([oldTypeString], [[feesAsArrays]]);
@@ -238,7 +250,9 @@ describe('Encoder Equivalence Tests', () => {
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
 
             // 使用 BigInt 安全的序列化方法
-            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded[0], jsonUtils.bigIntReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(
+                JSON.stringify(oldDecoded[0], jsonUtils.bigIntReplacer),
+            );
         });
     });
 
@@ -247,14 +261,14 @@ describe('Encoder Equivalence Tests', () => {
             const testData: PositiveSlippageFeeTransformerData = {
                 token: '0x1234567890123456789012345678901234567890',
                 bestCaseAmount: 1500000000000000000n, // 1.5 ETH
-                recipient: '0x1111111111111111111111111111111111111111'
+                recipient: '0x1111111111111111111111111111111111111111',
             };
 
             // 定义组件结构
             const positiveSlippageFeeComponents = [
                 { name: 'token', type: 'address' },
                 { name: 'bestCaseAmount', type: 'uint256' },
-                { name: 'recipient', type: 'address' }
+                { name: 'recipient', type: 'address' },
             ];
 
             // 新的 JSON ABI 方式 - 编码器接收对象格式
@@ -274,7 +288,9 @@ describe('Encoder Equivalence Tests', () => {
             const oldDecoded = abiCoder.decode([oldTypeString], oldEncoded);
 
             // 使用 BigInt 安全的序列化方法
-            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(JSON.stringify(oldDecoded[0], jsonUtils.bigIntReplacer));
+            expect(JSON.stringify(newDecoded, jsonUtils.bigIntReplacer)).to.equal(
+                JSON.stringify(oldDecoded[0], jsonUtils.bigIntReplacer),
+            );
         });
     });
 
@@ -302,14 +318,14 @@ describe('Encoder Equivalence Tests', () => {
                         makerAssetData: '0xdeadbeef',
                         takerAssetData: '0xcafebabe',
                         makerFeeAssetData: '0x12345678',
-                        takerFeeAssetData: '0x87654321'
-                    }
+                        takerFeeAssetData: '0x87654321',
+                    },
                 ],
                 signatures: ['0xfeedface', '0xbaddcafe'],
                 maxOrderFillAmounts: [111111n, 222222n],
                 fillAmount: 333333n,
                 refundReceiver: '0x5555555555555555555555555555555555555555',
-                rfqtTakerAddress: '0x6666666666666666666666666666666666666666'
+                rfqtTakerAddress: '0x6666666666666666666666666666666666666666',
             };
 
             // 定义组件结构（与之前的测试保持一致）
@@ -317,38 +333,42 @@ describe('Encoder Equivalence Tests', () => {
                 { name: 'side', type: 'uint8' },
                 { name: 'sellToken', type: 'address' },
                 { name: 'buyToken', type: 'address' },
-                { name: 'orders', type: 'tuple[]', components: [
-                    { name: 'makerAddress', type: 'address' },
-                    { name: 'takerAddress', type: 'address' },
-                    { name: 'feeRecipientAddress', type: 'address' },
-                    { name: 'senderAddress', type: 'address' },
-                    { name: 'makerAssetAmount', type: 'uint256' },
-                    { name: 'takerAssetAmount', type: 'uint256' },
-                    { name: 'makerFee', type: 'uint256' },
-                    { name: 'takerFee', type: 'uint256' },
-                    { name: 'expirationTimeSeconds', type: 'uint256' },
-                    { name: 'salt', type: 'uint256' },
-                    { name: 'makerAssetData', type: 'bytes' },
-                    { name: 'takerAssetData', type: 'bytes' },
-                    { name: 'makerFeeAssetData', type: 'bytes' },
-                    { name: 'takerFeeAssetData', type: 'bytes' }
-                ]},
+                {
+                    name: 'orders',
+                    type: 'tuple[]',
+                    components: [
+                        { name: 'makerAddress', type: 'address' },
+                        { name: 'takerAddress', type: 'address' },
+                        { name: 'feeRecipientAddress', type: 'address' },
+                        { name: 'senderAddress', type: 'address' },
+                        { name: 'makerAssetAmount', type: 'uint256' },
+                        { name: 'takerAssetAmount', type: 'uint256' },
+                        { name: 'makerFee', type: 'uint256' },
+                        { name: 'takerFee', type: 'uint256' },
+                        { name: 'expirationTimeSeconds', type: 'uint256' },
+                        { name: 'salt', type: 'uint256' },
+                        { name: 'makerAssetData', type: 'bytes' },
+                        { name: 'takerAssetData', type: 'bytes' },
+                        { name: 'makerFeeAssetData', type: 'bytes' },
+                        { name: 'takerFeeAssetData', type: 'bytes' },
+                    ],
+                },
                 { name: 'signatures', type: 'bytes[]' },
                 { name: 'maxOrderFillAmounts', type: 'uint256[]' },
                 { name: 'fillAmount', type: 'uint256' },
                 { name: 'refundReceiver', type: 'address' },
-                { name: 'rfqtTakerAddress', type: 'address' }
+                { name: 'rfqtTakerAddress', type: 'address' },
             ];
 
             // 转换为数组格式并进行完整的 round-trip 测试
             const encoded = fillQuoteTransformerDataEncoder.encode([fillQuoteData]);
             const decoded = fillQuoteTransformerDataEncoder.decode(encoded);
-            
+
             // 验证编码结果有效（非空且正确格式）
             expect(encoded).to.be.a('string');
             expect(encoded).to.match(/^0x[0-9a-fA-F]+$/);
             expect(encoded.length).to.be.greaterThan(2);
-            
+
             // 验证解码后的数据完整性
             expect(decoded[0].side).to.equal(fillQuoteData.side);
             expect(decoded[0].sellToken).to.equal(fillQuoteData.sellToken);
@@ -365,7 +385,7 @@ describe('Encoder Equivalence Tests', () => {
             // 比较数组字段
             expect(decoded[0].signatures).to.deep.equal(fillQuoteData.signatures);
             expect(decoded[0].maxOrderFillAmounts).to.deep.equal(fillQuoteData.maxOrderFillAmounts);
-            
+
             console.log('✅ Round-trip 编码解码测试通过');
         });
     });

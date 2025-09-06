@@ -40,13 +40,16 @@ describe('mtxs v2', () => {
             salt: 2001n,
             callData: '0x12345678',
             feeToken: '0xcc3c7ea403427154ec908203ba6c418bd699f7ce',
-            fees: [{
-                recipient: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-                amount: 1000000n,
-            }, {
-                recipient: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-                amount: 1000n,
-            }],
+            fees: [
+                {
+                    recipient: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                    amount: 1000000n,
+                },
+                {
+                    recipient: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+                    amount: 1000n,
+                },
+            ],
             chainId: 8008,
             verifyingContract: '0x6701704d2421c64ee9aa93ec7f96ede81c4be77d',
         });

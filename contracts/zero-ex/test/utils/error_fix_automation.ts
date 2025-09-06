@@ -4,11 +4,10 @@ import { ErrorTypeDetector } from './error_type_detector';
 
 /**
  * 错误处理自动化修复工具
- * 
+ *
  * 扫描测试文件，识别错误处理模式，并生成修复建议或自动修复
  */
 export class ErrorFixAutomation {
-    
     /**
      * 扫描测试目录，找出所有需要修复的错误处理
      */
@@ -17,7 +16,7 @@ export class ErrorFixAutomation {
             totalFiles: 0,
             filesWithErrors: 0,
             errorPatterns: {},
-            fixSuggestions: []
+            fixSuggestions: [],
         };
 
         const testFiles = this.findTestFiles(testDir);
@@ -28,7 +27,7 @@ export class ErrorFixAutomation {
             if (fileAnalysis.issues.length > 0) {
                 results.filesWithErrors++;
                 results.fixSuggestions.push(fileAnalysis);
-                
+
                 // 统计错误模式
                 for (const issue of fileAnalysis.issues) {
                     const pattern = issue.pattern;
@@ -56,7 +55,7 @@ export class ErrorFixAutomation {
         return {
             filePath,
             issues,
-            suggestions: issues.map(issue => this.generateFixSuggestion(issue))
+            suggestions: issues.map(issue => this.generateFixSuggestion(issue)),
         };
     }
 
@@ -76,7 +75,7 @@ export class ErrorFixAutomation {
                     line: index + 1,
                     content: line.trim(),
                     severity: 'error',
-                    message: '使用了通用的 .to.be.reverted，应该匹配具体错误'
+                    message: '使用了通用的 .to.be.reverted，应该匹配具体错误',
                 });
             }
 
@@ -84,11 +83,11 @@ export class ErrorFixAutomation {
             if (line.includes('.to.be.rejected')) {
                 issues.push({
                     type: 'generic_revert',
-                    pattern: 'generic_rejected_usage', 
+                    pattern: 'generic_rejected_usage',
                     line: index + 1,
                     content: line.trim(),
                     severity: 'warning',
-                    message: '使用了通用的 .to.be.rejected，建议匹配具体错误'
+                    message: '使用了通用的 .to.be.rejected，建议匹配具体错误',
                 });
             }
         });
@@ -107,31 +106,30 @@ export class ErrorFixAutomation {
             // 检测可能的错误匹配问题
             if (line.includes('revertedWith') && line.includes('new ')) {
                 // 检查是否直接传递了错误对象而不是 .encode()
-                if (!line.includes('.encode()') && (
-                    line.includes('ZeroExRevertErrors') || 
-                    line.includes('RevertErrors')
-                )) {
+                if (
+                    !line.includes('.encode()') &&
+                    (line.includes('ZeroExRevertErrors') || line.includes('RevertErrors'))
+                ) {
                     issues.push({
                         type: 'incorrect_matching',
                         pattern: 'missing_encode_call',
                         line: index + 1,
                         content: line.trim(),
                         severity: 'error',
-                        message: '错误对象需要调用 .encode() 方法'
+                        message: '错误对象需要调用 .encode() 方法',
                     });
                 }
             }
 
             // 检测可能的动态参数错误
-            if (line.includes('MetaTransactionExpiredError') || 
-                line.includes('MetaTransactionAlreadyExecutedError')) {
+            if (line.includes('MetaTransactionExpiredError') || line.includes('MetaTransactionAlreadyExecutedError')) {
                 issues.push({
                     type: 'dynamic_parameter',
                     pattern: 'dynamic_parameter_error',
                     line: index + 1,
                     content: line.trim(),
                     severity: 'warning',
-                    message: '这是动态参数错误，建议使用 UnifiedErrorMatcher'
+                    message: '这是动态参数错误，建议使用 UnifiedErrorMatcher',
                 });
             }
         });
@@ -148,15 +146,17 @@ export class ErrorFixAutomation {
 
         lines.forEach((line, index) => {
             // 检测可能需要错误处理但没有的情况
-            if (line.includes('// TODO:') && 
-                (line.includes('error') || line.includes('revert') || line.includes('fail'))) {
+            if (
+                line.includes('// TODO:') &&
+                (line.includes('error') || line.includes('revert') || line.includes('fail'))
+            ) {
                 issues.push({
                     type: 'missing_handling',
                     pattern: 'todo_error_handling',
                     line: index + 1,
                     content: line.trim(),
                     severity: 'info',
-                    message: 'TODO 注释表明需要完善错误处理'
+                    message: 'TODO 注释表明需要完善错误处理',
                 });
             }
         });
@@ -175,7 +175,7 @@ export class ErrorFixAutomation {
             { pattern: '.sendTransactionAsync()', replacement: 'await contract.method()' },
             { pattern: '.address', replacement: 'await getAddress()' },
             { pattern: 'getBalanceInWeiAsync', replacement: 'provider.getBalance()' },
-            { pattern: 'getAccountNonceAsync', replacement: 'provider.getTransactionCount()' }
+            { pattern: 'getAccountNonceAsync', replacement: 'provider.getTransactionCount()' },
         ];
 
         lines.forEach((line, index) => {
@@ -187,7 +187,7 @@ export class ErrorFixAutomation {
                         line: index + 1,
                         content: line.trim(),
                         severity: 'warning',
-                        message: `过时的 API: ${pattern}，建议使用: ${replacement}`
+                        message: `过时的 API: ${pattern}，建议使用: ${replacement}`,
                     });
                 }
             });
@@ -206,7 +206,7 @@ export class ErrorFixAutomation {
                     issue,
                     fixType: 'replace',
                     suggestion: '使用 UnifiedErrorMatcher.expectError() 或具体的错误匹配',
-                    codeExample: this.getGenericRevertFixExample(issue)
+                    codeExample: this.getGenericRevertFixExample(issue),
                 };
 
             case 'incorrect_matching':
@@ -214,7 +214,7 @@ export class ErrorFixAutomation {
                     issue,
                     fixType: 'modify',
                     suggestion: '添加 .encode() 调用或使用 UnifiedErrorMatcher',
-                    codeExample: this.getIncorrectMatchingFixExample(issue)
+                    codeExample: this.getIncorrectMatchingFixExample(issue),
                 };
 
             case 'dynamic_parameter':
@@ -222,7 +222,7 @@ export class ErrorFixAutomation {
                     issue,
                     fixType: 'replace',
                     suggestion: '使用 UnifiedErrorMatcher 处理动态参数',
-                    codeExample: this.getDynamicParameterFixExample(issue)
+                    codeExample: this.getDynamicParameterFixExample(issue),
                 };
 
             case 'deprecated_api':
@@ -230,7 +230,7 @@ export class ErrorFixAutomation {
                     issue,
                     fixType: 'replace',
                     suggestion: '更新到 ethers v6 API',
-                    codeExample: this.getDeprecatedApiFixExample(issue)
+                    codeExample: this.getDeprecatedApiFixExample(issue),
                 };
 
             default:
@@ -238,7 +238,7 @@ export class ErrorFixAutomation {
                     issue,
                     fixType: 'manual',
                     suggestion: '需要手动检查和修复',
-                    codeExample: '// 请手动分析并修复此问题'
+                    codeExample: '// 请手动分析并修复此问题',
                 };
         }
     }
@@ -306,12 +306,12 @@ await UnifiedErrorMatcher.expectMetaTransactionsError(
      */
     private static getDeprecatedApiFixExample(issue: ErrorIssue): string {
         let fixedContent = issue.content;
-        
+
         // 替换常见的过时 API
         fixedContent = fixedContent.replace('.sendTransactionAsync()', '()');
         fixedContent = fixedContent.replace('.address', 'await getAddress()');
         fixedContent = fixedContent.replace('getBalanceInWeiAsync', 'provider.getBalance');
-        
+
         return `
 // ❌ 过时的 API
 ${issue.content}
@@ -325,14 +325,14 @@ ${fixedContent}`;
      */
     private static findTestFiles(dir: string): string[] {
         const files: string[] = [];
-        
+
         const scan = (currentDir: string) => {
             const entries = fs.readdirSync(currentDir);
-            
+
             for (const entry of entries) {
                 const fullPath = path.join(currentDir, entry);
                 const stat = fs.statSync(fullPath);
-                
+
                 if (stat.isDirectory() && !entry.includes('node_modules')) {
                     scan(fullPath);
                 } else if (stat.isFile() && entry.endsWith('_test.ts')) {
@@ -340,7 +340,7 @@ ${fixedContent}`;
                 }
             }
         };
-        
+
         scan(dir);
         return files;
     }
@@ -350,18 +350,18 @@ ${fixedContent}`;
      */
     static generateFixReport(scanResult: ScanResult): string {
         let report = `# 错误处理修复报告\n\n`;
-        
+
         report += `## 📊 总体统计\n`;
         report += `- 总文件数: ${scanResult.totalFiles}\n`;
         report += `- 有问题的文件: ${scanResult.filesWithErrors}\n`;
-        report += `- 修复率: ${((scanResult.totalFiles - scanResult.filesWithErrors) / scanResult.totalFiles * 100).toFixed(1)}%\n\n`;
-        
+        report += `- 修复率: ${(((scanResult.totalFiles - scanResult.filesWithErrors) / scanResult.totalFiles) * 100).toFixed(1)}%\n\n`;
+
         report += `## 🔍 错误模式分布\n`;
         for (const [pattern, count] of Object.entries(scanResult.errorPatterns)) {
             report += `- ${pattern}: ${count} 个\n`;
         }
         report += `\n`;
-        
+
         report += `## 📝 修复建议\n`;
         for (const fileAnalysis of scanResult.fixSuggestions) {
             report += `### ${fileAnalysis.filePath}\n`;
@@ -370,7 +370,7 @@ ${fixedContent}`;
                 report += `\`\`\`typescript\n${suggestion.codeExample}\n\`\`\`\n\n`;
             }
         }
-        
+
         return report;
     }
 
@@ -387,13 +387,13 @@ ${fixedContent}`;
             {
                 pattern: /\.to\.be\.reverted(?!With)/g,
                 replacement: '.to.be.rejected // TODO: 使用具体错误匹配',
-                description: '替换通用 revert 检查'
+                description: '替换通用 revert 检查',
             },
             {
                 pattern: /\.sendTransactionAsync\(\)/g,
                 replacement: '()',
-                description: '移除过时的 sendTransactionAsync 调用'
-            }
+                description: '移除过时的 sendTransactionAsync 调用',
+            },
         ];
 
         for (const { pattern, replacement, description } of simpleReplacements) {
@@ -412,7 +412,7 @@ ${fixedContent}`;
             originalContent: content,
             fixedContent,
             appliedFixes,
-            hasChanges: fixedContent !== content
+            hasChanges: fixedContent !== content,
         };
     }
 }

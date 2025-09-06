@@ -85,7 +85,7 @@ describe('Asset Transfer Proxies', () => {
     let erc1155ProxyWrapper: ERC1155ProxyWrapper;
     let erc1155Contract: ERC1155Mintable;
     let erc1155Contract2: ERC1155Mintable;
-    
+
     // Signers for transaction sending
     let ownerSigner: any;
     let notAuthorizedSigner: any;
@@ -105,7 +105,7 @@ describe('Asset Transfer Proxies', () => {
         const signers = await ethers.getSigners();
         const accounts = await Promise.all(signers.slice(0, 5).map(s => s.getAddress()));
         const usedAddresses = ([owner, notAuthorized, authorized, fromAddress, toAddress] = accounts);
-        
+
         // Store signers for transaction sending
         [ownerSigner, notAuthorizedSigner, authorizedSigner, fromSigner, toSigner] = signers.slice(0, 5);
 
@@ -148,7 +148,7 @@ describe('Asset Transfer Proxies', () => {
             numDummyErc20ToDeploy,
             constants.DUMMY_TOKEN_DECIMALS,
         );
-        
+
         try {
             const deployedNoReturn = await new DummyNoReturnERC20Token__factory(deployer).deploy(
                 constants.DUMMY_TOKEN_NAME,
@@ -161,7 +161,7 @@ describe('Asset Transfer Proxies', () => {
         } catch (error: any) {
             noReturnErc20Token = undefined as any;
         }
-        
+
         try {
             const deployedMultiple = await new DummyMultipleReturnERC20Token__factory(deployer).deploy(
                 constants.DUMMY_TOKEN_NAME,
@@ -176,18 +176,18 @@ describe('Asset Transfer Proxies', () => {
         }
 
         await erc20Wrapper.setBalancesAndAllowancesAsync();
-        
+
         // 为特殊ERC20代币设置余额和授权
         try {
             if (noReturnErc20Token) {
                 const ownerSigner = await ethers.getSigner(owner);
                 const fromSigner = await ethers.getSigner(fromAddress);
-                
+
                 // 为 fromAddress 设置余额 - 使用 setBalance (需要 owner 权限)
                 const testBalance = ethers.parseEther('1000000');
                 const setBalanceTx = await noReturnErc20Token.connect(ownerSigner).setBalance(fromAddress, testBalance);
                 await setBalanceTx.wait();
-                
+
                 // 授权 erc20Proxy
                 const proxyAddress = await erc20Proxy.getAddress();
                 const allowanceAmount = ethers.parseEther('1000000');
@@ -197,20 +197,24 @@ describe('Asset Transfer Proxies', () => {
         } catch (error: any) {
             // Setup failed - tests may fail
         }
-        
+
         try {
             if (multipleReturnErc20Token) {
                 const ownerSigner = await ethers.getSigner(owner);
                 const fromSigner = await ethers.getSigner(fromAddress);
-                
+
                 // 为 fromAddress 设置余额 - 使用 setBalance (需要 owner 权限)
                 const testBalance = ethers.parseEther('1000000');
-                const setBalanceTx = await multipleReturnErc20Token.connect(ownerSigner).setBalance(fromAddress, testBalance);
+                const setBalanceTx = await multipleReturnErc20Token
+                    .connect(ownerSigner)
+                    .setBalance(fromAddress, testBalance);
                 await setBalanceTx.wait();
-                
-                // 授权 erc20Proxy  
+
+                // 授权 erc20Proxy
                 const proxyAddress = await erc20Proxy.getAddress();
-                const approveTx = await multipleReturnErc20Token.connect(fromSigner).approve(proxyAddress, ethers.parseEther('1000000'));
+                const approveTx = await multipleReturnErc20Token
+                    .connect(fromSigner)
+                    .approve(proxyAddress, ethers.parseEther('1000000'));
                 await approveTx.wait();
             }
         } catch (error: any) {
@@ -221,17 +225,17 @@ describe('Asset Transfer Proxies', () => {
         const deployedTokens = await erc721Wrapper.deployDummyTokensAsync();
         erc721TokenA = deployedTokens[0];
         erc721TokenB = deployedTokens[1] || deployedTokens[0]; // 使用第二个合约，如果不存在则回退到第一个
-        erc721Receiver = await new DummyERC721Receiver__factory(deployer).deploy() as any;
+        erc721Receiver = (await new DummyERC721Receiver__factory(deployer).deploy()) as any;
 
         await erc721Wrapper.setBalancesAndAllowancesAsync();
         const erc721Balances = await erc721Wrapper.getBalancesAsync();
-        
+
         if (erc721Balances[fromAddress] && erc721Balances[fromAddress][await erc721TokenA.getAddress()]) {
             erc721AFromTokenId = erc721Balances[fromAddress][await erc721TokenA.getAddress()][0];
         } else {
             erc721AFromTokenId = 0n;
         }
-        
+
         if (erc721Balances[fromAddress] && erc721Balances[fromAddress][await erc721TokenB.getAddress()]) {
             erc721BFromTokenId = erc721Balances[fromAddress][await erc721TokenB.getAddress()][0];
         } else {
@@ -256,16 +260,18 @@ describe('Asset Transfer Proxies', () => {
             console.warn('Warning: Cannot get ERC1155 contract address, using fallback');
             contractAddress = constants.NULL_ADDRESS;
         }
-        
+
         _.each(nonFungibleTokens, (nonFungibleToken: bigint) => {
             const nonFungibleTokenAsString = nonFungibleToken.toString();
-            
+
             // 检查嵌套对象是否存在，避免访问undefined
-            if (tokenBalances.nonFungible && 
-                tokenBalances.nonFungible[fromAddress] && 
+            if (
+                tokenBalances.nonFungible &&
+                tokenBalances.nonFungible[fromAddress] &&
                 tokenBalances.nonFungible[fromAddress][contractAddress] &&
                 tokenBalances.nonFungible[fromAddress][contractAddress][nonFungibleTokenAsString] &&
-                tokenBalances.nonFungible[fromAddress][contractAddress][nonFungibleTokenAsString].length > 0) {
+                tokenBalances.nonFungible[fromAddress][contractAddress][nonFungibleTokenAsString].length > 0
+            ) {
                 const nonFungibleTokenHeldBySpender =
                     tokenBalances.nonFungible[fromAddress][contractAddress][nonFungibleTokenAsString][0];
                 erc1155NonFungibleTokensOwnedBySpender.push(nonFungibleTokenHeldBySpender);
@@ -282,33 +288,35 @@ describe('Asset Transfer Proxies', () => {
     });
 
     // Helper function to setup proper balances and authorizations for tests
-    async function setupTransferTest(options: {
-        setupERC20?: boolean;
-        setupERC721?: boolean;
-        setupERC1155?: boolean;
-        useTokenB?: boolean;
-    } = {}) {
+    async function setupTransferTest(
+        options: {
+            setupERC20?: boolean;
+            setupERC721?: boolean;
+            setupERC1155?: boolean;
+            useTokenB?: boolean;
+        } = {},
+    ) {
         const { setupERC20 = true, setupERC721 = false, setupERC1155 = false, useTokenB = false } = options;
         const mintAmount = 1000000n;
         const fromSigner = await ethers.getSigner(fromAddress);
-        
+
         if (setupERC20) {
             // Set balance and approve for ERC20 tokens
             await erc20TokenA.setBalance(fromAddress, mintAmount);
             await erc20TokenA.connect(fromSigner).approve(await erc20Proxy.getAddress(), mintAmount);
-            
+
             if (useTokenB) {
                 await erc20TokenB.setBalance(fromAddress, mintAmount);
                 await erc20TokenB.connect(fromSigner).approve(await erc20Proxy.getAddress(), mintAmount);
             }
-            
+
             // Authorize MultiAssetProxy to call ERC20Proxy
             try {
                 await erc20Proxy.addAuthorizedAddress(await multiAssetProxy.getAddress());
             } catch (error: any) {
                 // Address might already be authorized
             }
-            
+
             // Ensure ERC20Proxy has authorized address
             try {
                 await erc20Proxy.addAuthorizedAddress(authorized);
@@ -316,21 +324,21 @@ describe('Asset Transfer Proxies', () => {
                 // Address might already be authorized
             }
         }
-        
+
         if (setupERC721) {
             // Approve ERC721 tokens
             await erc721TokenA.connect(fromSigner).approve(await erc721Proxy.getAddress(), erc721AFromTokenId);
             if (useTokenB) {
                 await erc721TokenB.connect(fromSigner).approve(await erc721Proxy.getAddress(), erc721BFromTokenId);
             }
-            
+
             // Authorize MultiAssetProxy to call ERC721Proxy
             try {
                 await erc721Proxy.addAuthorizedAddress(await multiAssetProxy.getAddress());
             } catch (error: any) {
                 // Address might already be authorized
             }
-            
+
             // Ensure ERC721Proxy has authorized address
             try {
                 await erc721Proxy.addAuthorizedAddress(authorized);
@@ -338,18 +346,18 @@ describe('Asset Transfer Proxies', () => {
                 // Address might already be authorized
             }
         }
-        
+
         if (setupERC1155) {
             // ERC1155 tokens are already set up by erc1155ProxyWrapper.setBalancesAndAllowancesAsync()
             // Just ensure proxy authorizations
-            
-            // Authorize MultiAssetProxy to call ERC1155Proxy  
+
+            // Authorize MultiAssetProxy to call ERC1155Proxy
             try {
                 await erc1155Proxy.addAuthorizedAddress(await multiAssetProxy.getAddress());
             } catch (error: any) {
                 // Address might already be authorized
             }
-            
+
             // Ensure ERC1155Proxy has authorized address
             try {
                 await erc1155Proxy.addAuthorizedAddress(authorized);
@@ -357,7 +365,7 @@ describe('Asset Transfer Proxies', () => {
                 // Address might already be authorized
             }
         }
-        
+
         // Authorize MultiAssetProxy itself
         try {
             await multiAssetProxy.addAuthorizedAddress(authorized);
@@ -370,13 +378,11 @@ describe('Asset Transfer Proxies', () => {
         it('should revert if undefined function is called', async () => {
             const undefinedSelector = '0x01020304';
             await expect(
-
                 authorizedSigner.sendTransaction({
                     to: await erc20Proxy.getAddress(),
                     value: constants.ZERO_AMOUNT,
                     data: undefinedSelector,
-                })
-
+                }),
             ).to.be.reverted;
         });
         it('should have an id of 0xf47261b0', async () => {
@@ -389,25 +395,25 @@ describe('Asset Transfer Proxies', () => {
                 // Construct ERC20 asset data
                 const encodedAssetData = encodeERC20AssetData(await erc20TokenA.getAddress());
                 const amount = 10n;
-                
+
                 // Setup: Mint tokens and approve proxy
                 const mintAmount = 1000000n;
                 await erc20TokenA.setBalance(fromAddress, mintAmount);
-                
+
                 const fromSigner = await ethers.getSigner(fromAddress);
                 await erc20TokenA.connect(fromSigner).approve(await erc20Proxy.getAddress(), mintAmount);
-                
+
                 // Ensure ERC20Proxy is authorized
                 try {
                     await erc20Proxy.addAuthorizedAddress(authorized);
                 } catch (error: any) {
                     // Address might already be authorized
                 }
-                
+
                 // Get initial balances
                 const erc20Balances = await erc20Wrapper.getBalancesAsync();
                 const tokenAddress = await erc20TokenA.getAddress();
-                
+
                 // Execute transfer using fallback
                 const tx = await transferFromViaFallback(
                     await erc20Proxy.getAddress(),
@@ -415,18 +421,18 @@ describe('Asset Transfer Proxies', () => {
                     fromAddress,
                     toAddress,
                     amount,
-                    authorizedSigner
+                    authorizedSigner,
                 );
                 await tx.wait();
-                
+
                 // Verify transfer was successful
                 const newBalances = await erc20Wrapper.getBalancesAsync();
-                
+
                 const initialFromBalance = erc20Balances[fromAddress]?.[tokenAddress] || 0n;
                 const initialToBalance = erc20Balances[toAddress]?.[tokenAddress] || 0n;
                 const newFromBalance = newBalances[fromAddress]?.[tokenAddress] || 0n;
                 const newToBalance = newBalances[toAddress]?.[tokenAddress] || 0n;
-                
+
                 expect(newFromBalance).to.equal(initialFromBalance - amount);
                 expect(newToBalance).to.equal(initialToBalance + amount);
             });
@@ -437,26 +443,30 @@ describe('Asset Transfer Proxies', () => {
                     console.log('⚠️ Skipping test: noReturnErc20Token not deployed');
                     return;
                 }
-                
+
                 // Setup noReturnErc20Token if needed
                 try {
                     const ownerSigner = await ethers.getSigner(owner);
                     const fromSigner = await ethers.getSigner(fromAddress);
-                    
+
                     // 设置余额 - 使用标准的测试余额
                     const testBalance = ethers.parseEther('1000000');
-                    const setBalanceTx = await noReturnErc20Token.connect(ownerSigner).setBalance(fromAddress, testBalance);
+                    const setBalanceTx = await noReturnErc20Token
+                        .connect(ownerSigner)
+                        .setBalance(fromAddress, testBalance);
                     await setBalanceTx.wait();
-                    
+
                     // 设置授权
                     const proxyAddress = await erc20Proxy.getAddress();
                     const allowanceAmount = ethers.parseEther('1000000');
-                    const approveTx = await noReturnErc20Token.connect(fromSigner).approve(proxyAddress, allowanceAmount);
+                    const approveTx = await noReturnErc20Token
+                        .connect(fromSigner)
+                        .approve(proxyAddress, allowanceAmount);
                     await approveTx.wait();
                 } catch (error: any) {
                     // Setup failed - test may fail
                 }
-                
+
                 // Construct ERC20 asset data
                 const encodedAssetData = encodeERC20AssetData(await noReturnErc20Token.getAddress());
                 // Perform a transfer from fromAddress to toAddress
@@ -486,20 +496,20 @@ describe('Asset Transfer Proxies', () => {
                 // Setup: Ensure proper balances and approvals for ERC20 transfer
                 const mintAmount = 1000000n;
                 const fromSigner = await ethers.getSigner(fromAddress);
-                
+
                 // Set balance for fromAddress
                 await erc20TokenA.setBalance(fromAddress, mintAmount);
-                
+
                 // Approve ERC20Proxy to spend fromAddress tokens
                 await erc20TokenA.connect(fromSigner).approve(await erc20Proxy.getAddress(), mintAmount);
-                
+
                 // Ensure ERC20Proxy is authorized
                 try {
                     await erc20Proxy.addAuthorizedAddress(authorized);
                 } catch (error: any) {
                     // Address might already be authorized
                 }
-                
+
                 // Construct ERC20 asset data
                 const extraData = '0102030405060708';
                 const encodedAssetData = `${encodeERC20AssetData(await erc20TokenA.getAddress())}${extraData}`;
@@ -568,7 +578,9 @@ describe('Asset Transfer Proxies', () => {
                     toAddress,
                     amount,
                 ]);
-                const approveTx = await erc20TokenA.connect(fromSigner).approve(await erc20Proxy.getAddress(), allowance);
+                const approveTx = await erc20TokenA
+                    .connect(fromSigner)
+                    .approve(await erc20Proxy.getAddress(), allowance);
                 await approveTx.wait();
                 const erc20Balances = await erc20Wrapper.getBalancesAsync();
                 // Perform a transfer; expect this to fail.
@@ -576,7 +588,7 @@ describe('Asset Transfer Proxies', () => {
                     authorizedSigner.sendTransaction({
                         to: await erc20Proxy.getAddress(),
                         data,
-                    })
+                    }),
                 ).to.be.revertedWith('TRANSFER_FAILED');
                 const newBalances = await erc20Wrapper.getBalancesAsync();
                 expect(newBalances).to.deep.equal(erc20Balances);
@@ -588,7 +600,7 @@ describe('Asset Transfer Proxies', () => {
                     console.log('⚠️ Skipping test: noReturnErc20Token not deployed');
                     return;
                 }
-                
+
                 // Construct ERC20 asset data
                 const encodedAssetData = encodeERC20AssetData(await noReturnErc20Token.getAddress());
                 // Create allowance less than transfer amount. Set allowance on proxy.
@@ -601,7 +613,9 @@ describe('Asset Transfer Proxies', () => {
                     amount,
                 ]);
                 if (noReturnErc20Token) {
-                    const approveTx = await noReturnErc20Token.connect(fromSigner).approve(await erc20Proxy.getAddress(), allowance);
+                    const approveTx = await noReturnErc20Token
+                        .connect(fromSigner)
+                        .approve(await erc20Proxy.getAddress(), allowance);
                     await approveTx.wait();
                 }
                 const initialFromBalance = await noReturnErc20Token.balanceOf(fromAddress);
@@ -611,7 +625,7 @@ describe('Asset Transfer Proxies', () => {
                     authorizedSigner.sendTransaction({
                         to: await erc20Proxy.getAddress(),
                         data,
-                    })
+                    }),
                 ).to.be.revertedWith('TRANSFER_FAILED');
                 const newFromBalance = await noReturnErc20Token.balanceOf(fromAddress);
                 const newToBalance = await noReturnErc20Token.balanceOf(toAddress);
@@ -635,7 +649,7 @@ describe('Asset Transfer Proxies', () => {
                     notAuthorizedSigner.sendTransaction({
                         to: await erc20Proxy.getAddress(),
                         data,
-                    })
+                    }),
                 ).to.be.revertedWith('SENDER_NOT_AUTHORIZED');
                 const newBalances = await erc20Wrapper.getBalancesAsync();
                 expect(newBalances).to.deep.equal(erc20Balances);
@@ -647,7 +661,7 @@ describe('Asset Transfer Proxies', () => {
                     console.log('⚠️ Skipping test: multipleReturnErc20Token not deployed');
                     return;
                 }
-                
+
                 // Construct ERC20 asset data
                 const encodedAssetData = encodeERC20AssetData(await multipleReturnErc20Token.getAddress());
                 const amount = 10n;
@@ -664,7 +678,7 @@ describe('Asset Transfer Proxies', () => {
                     authorizedSigner.sendTransaction({
                         to: await erc20Proxy.getAddress(),
                         data,
-                    })
+                    }),
                 ).to.be.revertedWith('TRANSFER_FAILED');
                 const newFromBalance = await multipleReturnErc20Token.balanceOf(fromAddress);
                 const newToBalance = await multipleReturnErc20Token.balanceOf(toAddress);
@@ -682,7 +696,7 @@ describe('Asset Transfer Proxies', () => {
                     to: await erc721Proxy.getAddress(),
                     value: constants.ZERO_AMOUNT,
                     data: undefinedSelector,
-                })
+                }),
             ).to.be.reverted;
         });
         it('should have an id of 0x02571792', async () => {
@@ -694,14 +708,14 @@ describe('Asset Transfer Proxies', () => {
             it('should successfully transfer tokens', async () => {
                 // Construct ERC721 asset data
                 const encodedAssetData = encodeERC721AssetData(await erc721TokenA.getAddress(), erc721AFromTokenId);
-                
+
                 // Verify pre-condition
                 const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
-                
+
                 // Check if proxy is approved and approve if necessary
                 const isApproved = await erc721TokenA.isApprovedForAll(fromAddress, await erc721Proxy.getAddress());
-                
+
                 if (!isApproved) {
                     const fromSigner = await ethers.getSigner(fromAddress);
                     await erc721TokenA.connect(fromSigner).setApprovalForAll(await erc721Proxy.getAddress(), true);
@@ -714,7 +728,7 @@ describe('Asset Transfer Proxies', () => {
                     fromAddress,
                     toAddress,
                     amount,
-                    authorizedSigner
+                    authorizedSigner,
                 );
                 await tx.wait();
                 // Verify transfer was successful
@@ -732,14 +746,14 @@ describe('Asset Transfer Proxies', () => {
                 // Verify pre-condition
                 const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
-                
+
                 // Check if proxy is approved
                 const isApproved = await erc721TokenA.isApprovedForAll(fromAddress, await erc721Proxy.getAddress());
                 if (!isApproved) {
                     const fromSigner = await ethers.getSigner(fromAddress);
                     await erc721TokenA.connect(fromSigner).setApprovalForAll(await erc721Proxy.getAddress(), true);
                 }
-                
+
                 // Perform a transfer from fromAddress to toAddress
                 const amount = 1n;
                 const tx = await transferFromViaFallback(
@@ -748,7 +762,7 @@ describe('Asset Transfer Proxies', () => {
                     fromAddress,
                     toAddress,
                     amount,
-                    authorizedSigner
+                    authorizedSigner,
                 );
                 await tx.wait();
                 // Verify transfer was successful
@@ -759,17 +773,17 @@ describe('Asset Transfer Proxies', () => {
             it('should not call onERC721Received when transferring to a smart contract', async () => {
                 // Setup: Ensure proper approvals for ERC721 transfer
                 const fromSigner = await ethers.getSigner(fromAddress);
-                
+
                 // Approve ERC721Proxy to spend fromAddress tokens
                 await erc721TokenA.connect(fromSigner).approve(await erc721Proxy.getAddress(), erc721AFromTokenId);
-                
+
                 // Ensure ERC721Proxy is authorized
                 try {
                     await erc721Proxy.addAuthorizedAddress(authorized);
                 } catch (error: any) {
                     // Address might already be authorized
                 }
-                
+
                 // Construct ERC721 asset data
                 const encodedAssetData = encodeERC721AssetData(await erc721TokenA.getAddress(), erc721AFromTokenId);
                 // Verify pre-condition
@@ -779,7 +793,7 @@ describe('Asset Transfer Proxies', () => {
                 const amount = 1n;
                 const data = assetProxyInterface.interface.encodeFunctionData('transferFrom', [
                     encodedAssetData,
-                    fromAddress, 
+                    fromAddress,
                     await erc721Receiver.getAddress(),
                     amount,
                 ]);
@@ -810,12 +824,10 @@ describe('Asset Transfer Proxies', () => {
                     amount,
                 ]);
                 await expect(
-
                     authorizedSigner.sendTransaction({
                         to: await erc721Proxy.getAddress(),
                         data,
-                    })
-
+                    }),
                 ).to.be.revertedWith('INVALID_AMOUNT');
                 const newOwner = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwner).to.be.equal(ownerFromAsset);
@@ -836,12 +848,10 @@ describe('Asset Transfer Proxies', () => {
                     amount,
                 ]);
                 await expect(
-
                     authorizedSigner.sendTransaction({
                         to: await erc721Proxy.getAddress(),
                         data,
-                    })
-
+                    }),
                 ).to.be.revertedWith('INVALID_AMOUNT');
                 const newOwner = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwner).to.be.equal(ownerFromAsset);
@@ -854,10 +864,14 @@ describe('Asset Transfer Proxies', () => {
                 const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
                 // Remove blanket transfer approval for fromAddress.
-                const setApprovalTx = await erc721TokenA.connect(fromSigner).setApprovalForAll(await erc721Proxy.getAddress(), false);
+                const setApprovalTx = await erc721TokenA
+                    .connect(fromSigner)
+                    .setApprovalForAll(await erc721Proxy.getAddress(), false);
                 await setApprovalTx.wait();
                 // Remove token transfer approval for fromAddress.
-                const approveTx = await erc721TokenA.connect(fromSigner).approve(constants.NULL_ADDRESS, erc721AFromTokenId);
+                const approveTx = await erc721TokenA
+                    .connect(fromSigner)
+                    .approve(constants.NULL_ADDRESS, erc721AFromTokenId);
                 await approveTx.wait();
                 // Perform a transfer; expect this to fail.
                 const amount = 1n;
@@ -868,12 +882,10 @@ describe('Asset Transfer Proxies', () => {
                     amount,
                 ]);
                 await expect(
-
                     authorizedSigner.sendTransaction({
                         to: await erc721Proxy.getAddress(),
                         data,
-                    })
-
+                    }),
                 ).to.be.revertedWith('TRANSFER_FAILED');
                 const newOwner = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwner).to.be.equal(ownerFromAsset);
@@ -894,12 +906,10 @@ describe('Asset Transfer Proxies', () => {
                     amount,
                 ]);
                 await expect(
-
                     notAuthorizedSigner.sendTransaction({
                         to: await erc721Proxy.getAddress(),
                         data,
-                    })
-
+                    }),
                 ).to.be.revertedWith('SENDER_NOT_AUTHORIZED');
                 const newOwner = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(newOwner).to.be.equal(ownerFromAsset);
@@ -910,13 +920,11 @@ describe('Asset Transfer Proxies', () => {
         it('should revert if undefined function is called', async () => {
             const undefinedSelector = '0x01020304';
             await expect(
-
                 authorizedSigner.sendTransaction({
                     to: await multiAssetProxy.getAddress(),
                     value: constants.ZERO_AMOUNT,
                     data: undefinedSelector,
-                })
-
+                }),
             ).to.be.reverted;
         });
         it('should have an id of 0x94cfcdd7', async () => {
@@ -930,27 +938,27 @@ describe('Asset Transfer Proxies', () => {
                 // Setup: Ensure proper balances and approvals for ERC20 transfer
                 const mintAmount = 1000000n;
                 const fromSigner = await ethers.getSigner(fromAddress);
-                
+
                 // Set balance for fromAddress
                 await erc20TokenA.setBalance(fromAddress, mintAmount);
-                
+
                 // Approve ERC20Proxy to spend fromAddress tokens
                 await erc20TokenA.connect(fromSigner).approve(await erc20Proxy.getAddress(), mintAmount);
-                
+
                 // Ensure MultiAssetProxy is authorized for ERC20Proxy
                 try {
                     await erc20Proxy.addAuthorizedAddress(await multiAssetProxy.getAddress());
                 } catch (error: any) {
                     // Address might already be authorized
                 }
-                
+
                 // Ensure authorized signer can call MultiAssetProxy
                 try {
                     await multiAssetProxy.addAuthorizedAddress(authorized);
                 } catch (error: any) {
                     // Address might already be authorized
                 }
-                
+
                 const inputAmount = 1n;
                 const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(await erc20TokenA.getAddress());
@@ -1007,27 +1015,27 @@ describe('Asset Transfer Proxies', () => {
                 // Setup: Ensure proper balances and approvals for ERC20 transfer
                 const mintAmount = 1000000n;
                 const fromSigner = await ethers.getSigner(fromAddress);
-                
+
                 // Set balance for fromAddress
                 await erc20TokenA.setBalance(fromAddress, mintAmount);
-                
+
                 // Approve ERC20Proxy to spend fromAddress tokens
                 await erc20TokenA.connect(fromSigner).approve(await erc20Proxy.getAddress(), mintAmount);
-                
+
                 // Ensure MultiAssetProxy is authorized for ERC20Proxy
                 try {
                     await erc20Proxy.addAuthorizedAddress(await multiAssetProxy.getAddress());
                 } catch (error: any) {
                     // Address might already be authorized
                 }
-                
+
                 // Ensure authorized signer can call MultiAssetProxy
                 try {
                     await multiAssetProxy.addAuthorizedAddress(authorized);
                 } catch (error: any) {
                     // Address might already be authorized
                 }
-                
+
                 const inputAmount = 1n;
                 const erc20Amount1 = 10n;
                 const erc20Amount2 = 20n;
@@ -1044,11 +1052,9 @@ describe('Asset Transfer Proxies', () => {
                 ]);
                 const erc20Balances = await erc20Wrapper.getBalancesAsync();
                 const tx = await authorizedSigner.sendTransaction({
-
                     to: await multiAssetProxy.getAddress(),
 
                     data,
-
                 });
 
                 await tx.wait();
@@ -1065,29 +1071,29 @@ describe('Asset Transfer Proxies', () => {
                 // Setup: Ensure proper balances and approvals for both ERC20 tokens
                 const mintAmount = 1000000n;
                 const fromSigner = await ethers.getSigner(fromAddress);
-                
+
                 // Set balance for fromAddress for both tokens
                 await erc20TokenA.setBalance(fromAddress, mintAmount);
                 await erc20TokenB.setBalance(fromAddress, mintAmount);
-                
+
                 // Approve ERC20Proxy to spend fromAddress tokens for both tokens
                 await erc20TokenA.connect(fromSigner).approve(await erc20Proxy.getAddress(), mintAmount);
                 await erc20TokenB.connect(fromSigner).approve(await erc20Proxy.getAddress(), mintAmount);
-                
+
                 // Ensure MultiAssetProxy is authorized for ERC20Proxy
                 try {
                     await erc20Proxy.addAuthorizedAddress(await multiAssetProxy.getAddress());
                 } catch (error: any) {
                     // Address might already be authorized
                 }
-                
+
                 // Ensure authorized signer can call MultiAssetProxy
                 try {
                     await multiAssetProxy.addAuthorizedAddress(authorized);
                 } catch (error: any) {
                     // Address might already be authorized
                 }
-                
+
                 const inputAmount = 1n;
                 const erc20Amount1 = 10n;
                 const erc20Amount2 = 20n;
@@ -1104,11 +1110,9 @@ describe('Asset Transfer Proxies', () => {
                 ]);
                 const erc20Balances = await erc20Wrapper.getBalancesAsync();
                 const tx = await authorizedSigner.sendTransaction({
-
                     to: await multiAssetProxy.getAddress(),
 
                     data,
-
                 });
 
                 await tx.wait();
@@ -1131,7 +1135,7 @@ describe('Asset Transfer Proxies', () => {
             it('should transfer a single ERC721 token', async () => {
                 // Setup ERC721 authorizations
                 await setupTransferTest({ setupERC20: false, setupERC721: true });
-                
+
                 const inputAmount = 1n;
                 const erc721Amount = 1n;
                 const erc721AssetData = encodeERC721AssetData(await erc721TokenA.getAddress(), erc721AFromTokenId);
@@ -1147,11 +1151,9 @@ describe('Asset Transfer Proxies', () => {
                 const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
                 const tx = await authorizedSigner.sendTransaction({
-
                     to: await multiAssetProxy.getAddress(),
 
                     data,
-
                 });
 
                 await tx.wait();
@@ -1161,14 +1163,14 @@ describe('Asset Transfer Proxies', () => {
             it('should successfully transfer multiple of the same ERC721 token', async () => {
                 // Setup ERC721 authorizations
                 await setupTransferTest({ setupERC20: false, setupERC721: true });
-                
+
                 const erc721Balances = await erc721Wrapper.getBalancesAsync();
                 const erc721AFromTokenId2 = erc721Balances[fromAddress][await erc721TokenA.getAddress()][1];
-                
+
                 // Additional setup for the second token
                 const fromSigner = await ethers.getSigner(fromAddress);
                 await erc721TokenA.connect(fromSigner).approve(await erc721Proxy.getAddress(), erc721AFromTokenId2);
-                
+
                 const erc721AssetData1 = encodeERC721AssetData(await erc721TokenA.getAddress(), erc721AFromTokenId);
                 const erc721AssetData2 = encodeERC721AssetData(await erc721TokenA.getAddress(), erc721AFromTokenId2);
                 const inputAmount = 1n;
@@ -1187,11 +1189,9 @@ describe('Asset Transfer Proxies', () => {
                 const ownerFromAsset2 = await erc721TokenA.ownerOf(erc721AFromTokenId2);
                 expect(ownerFromAsset2).to.be.equal(fromAddress);
                 const tx = await authorizedSigner.sendTransaction({
-
                     to: await multiAssetProxy.getAddress(),
 
                     data,
-
                 });
 
                 await tx.wait();
@@ -1203,7 +1203,7 @@ describe('Asset Transfer Proxies', () => {
             it('should successfully transfer multiple different ERC721 tokens', async () => {
                 // Setup ERC721 tokens
                 await setupTransferTest({ setupERC20: false, setupERC721: true, useTokenB: true });
-                                const erc721AssetData1 = encodeERC721AssetData(await erc721TokenA.getAddress(), erc721AFromTokenId);
+                const erc721AssetData1 = encodeERC721AssetData(await erc721TokenA.getAddress(), erc721AFromTokenId);
                 const erc721AssetData2 = encodeERC721AssetData(await erc721TokenB.getAddress(), erc721BFromTokenId);
                 const inputAmount = 1n;
                 const erc721Amount = 1n;
@@ -1221,11 +1221,9 @@ describe('Asset Transfer Proxies', () => {
                 const ownerFromAsset2 = await erc721TokenB.ownerOf(erc721BFromTokenId);
                 expect(ownerFromAsset2).to.be.equal(fromAddress);
                 const tx = await authorizedSigner.sendTransaction({
-
                     to: await multiAssetProxy.getAddress(),
 
                     data,
-
                 });
 
                 await tx.wait();
@@ -1250,16 +1248,14 @@ describe('Asset Transfer Proxies', () => {
                     BigInt(constants.INITIAL_ERC1155_FUNGIBLE_BALANCE || 1000000),
                 ];
                 // Check initial balances - using direct contract calls
-        await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
-        
+                await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
 
-        
                 // Setup test with ERC1155 authorization
                 await setupTransferTest({ setupERC1155: true });
                 // encode erc1155 asset data
                 // erc1155Contract already available
                 let erc1155ContractAddress: string;
-                
+
                 // Handle both real contracts (with getAddress()) and mock contracts (with .address)
                 if (typeof erc1155Contract.getAddress === 'function') {
                     erc1155ContractAddress = await erc1155Contract.getAddress();
@@ -1268,14 +1264,14 @@ describe('Asset Transfer Proxies', () => {
                 } else {
                     throw new Error('Cannot get ERC1155 contract address');
                 }
-                
+
                 const erc1155AssetData = encodeERC1155AssetData(
                     erc1155ContractAddress,
                     tokensToTransfer,
                     valuesToTransfer,
                     receiverCallbackData,
                 );
-                
+
                 // encode multi-asset data
                 const amounts = [valueMultiplier];
                 const nestedAssetData = [erc1155AssetData];
@@ -1288,11 +1284,9 @@ describe('Asset Transfer Proxies', () => {
                 ]);
                 // execute transfer
                 const tx = await authorizedSigner.sendTransaction({
-
                     to: await multiAssetProxy.getAddress(),
 
                     data,
-
                 });
 
                 await tx.wait();
@@ -1305,24 +1299,26 @@ describe('Asset Transfer Proxies', () => {
                     expectedInitialBalances[1] + totalValueTransferred,
                 ];
                 // Check final balances - using direct contract calls
-        await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
+                await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
             });
-            
+
             it('should revert with ERC1155_INSUFFICIENT_BALANCE when balance is insufficient', async () => {
                 // Setup test with ERC1155 authorization
                 await setupTransferTest({ setupERC1155: true });
-                
+
                 const tokenHolders = [fromAddress, toAddress];
                 // Use the first fungible token
                 const tokensToTransfer = [erc1155FungibleTokens[0]];
                 // Try to transfer more than available balance
-                const availableBalance = BigInt(BigInt(constants.INITIAL_ERC1155_FUNGIBLE_BALANCE || 1000000) || 1000000);
+                const availableBalance = BigInt(
+                    BigInt(constants.INITIAL_ERC1155_FUNGIBLE_BALANCE || 1000000) || 1000000,
+                );
                 const excessiveAmount = availableBalance + 1n; // Try to transfer 1 more than available
                 const valuesToTransfer = [excessiveAmount];
                 const valueMultiplier = 1n;
                 const multiAssetAmount = 1n;
                 const receiverCallbackData = '0x01020304';
-                
+
                 // Get contract address
                 let erc1155ContractAddress: string;
                 if (typeof erc1155Contract.getAddress === 'function') {
@@ -1332,7 +1328,7 @@ describe('Asset Transfer Proxies', () => {
                 } else {
                     throw new Error('Cannot get ERC1155 contract address');
                 }
-                
+
                 // Encode ERC1155 asset data
                 const erc1155AssetData = encodeERC1155AssetData(
                     erc1155ContractAddress,
@@ -1340,7 +1336,7 @@ describe('Asset Transfer Proxies', () => {
                     valuesToTransfer,
                     receiverCallbackData,
                 );
-                
+
                 // Encode multi-asset data
                 const amounts = [valueMultiplier];
                 const nestedAssetData = [erc1155AssetData];
@@ -1351,16 +1347,16 @@ describe('Asset Transfer Proxies', () => {
                     toAddress,
                     multiAssetAmount,
                 ]);
-                
+
                 // Execute transfer and expect it to revert with specific error
                 await expect(
                     authorizedSigner.sendTransaction({
                         to: await multiAssetProxy.getAddress(),
                         data,
-                    })
+                    }),
                 ).to.be.revertedWith('ERC1155_INSUFFICIENT_BALANCE');
             });
-            
+
             it('should successfully transfer multiple fungible tokens of the same ERC1155 contract', async () => {
                 // setup test parameters
                 const tokenHolders = [fromAddress, toAddress];
@@ -1380,13 +1376,13 @@ describe('Asset Transfer Proxies', () => {
                     BigInt(constants.INITIAL_ERC1155_FUNGIBLE_BALANCE || 1000000),
                 ];
                 // Check initial balances - using direct contract calls
-        await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
+                await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
                 // Setup test with ERC1155 authorization
                 await setupTransferTest({ setupERC1155: true });
                 // encode erc1155 asset data
                 // erc1155Contract already available
                 let erc1155ContractAddress: string;
-                
+
                 // Handle both real contracts (with getAddress()) and mock contracts (with .address)
                 if (typeof erc1155Contract.getAddress === 'function') {
                     erc1155ContractAddress = await erc1155Contract.getAddress();
@@ -1395,7 +1391,7 @@ describe('Asset Transfer Proxies', () => {
                 } else {
                     throw new Error('Cannot get ERC1155 contract address');
                 }
-                
+
                 const erc1155AssetData = encodeERC1155AssetData(
                     erc1155ContractAddress,
                     tokensToTransfer,
@@ -1415,11 +1411,9 @@ describe('Asset Transfer Proxies', () => {
                 ]);
                 // execute transfer
                 const tx = await authorizedSigner.sendTransaction({
-
                     to: await multiAssetProxy.getAddress(),
 
                     data,
-
                 });
 
                 await tx.wait();
@@ -1438,7 +1432,7 @@ describe('Asset Transfer Proxies', () => {
                     expectedInitialBalances[5] + totalValuesTransferred[2],
                 ];
                 // Check final balances - using direct contract calls
-        await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
+                await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
             });
             it('should successfully transfer multiple fungible/non-fungible tokens of the same ERC1155 contract', async () => {
                 // setup test parameters
@@ -1457,19 +1451,19 @@ describe('Asset Transfer Proxies', () => {
                     BigInt(constants.INITIAL_ERC1155_FUNGIBLE_BALANCE || 1000000),
                     // from - non-fungible token
                     nftOwnerBalance,
-                    // to - fungible token  
+                    // to - fungible token
                     BigInt(constants.INITIAL_ERC1155_FUNGIBLE_BALANCE || 1000000),
                     // to - non-fungible token
                     nftNotOwnerBalance,
                 ];
                 // Check initial balances - using direct contract calls
-        await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
+                await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
                 // Setup test with ERC1155 authorization
                 await setupTransferTest({ setupERC1155: true });
                 // encode erc1155 asset data
                 // erc1155Contract already available
                 let erc1155ContractAddress: string;
-                
+
                 // Handle both real contracts (with getAddress()) and mock contracts (with .address)
                 if (typeof erc1155Contract.getAddress === 'function') {
                     erc1155ContractAddress = await erc1155Contract.getAddress();
@@ -1478,7 +1472,7 @@ describe('Asset Transfer Proxies', () => {
                 } else {
                     throw new Error('Cannot get ERC1155 contract address');
                 }
-                
+
                 const erc1155AssetData = encodeERC1155AssetData(
                     erc1155ContractAddress,
                     tokensToTransfer,
@@ -1498,11 +1492,9 @@ describe('Asset Transfer Proxies', () => {
                 ]);
                 // execute transfer
                 const tx = await authorizedSigner.sendTransaction({
-
                     to: await multiAssetProxy.getAddress(),
 
                     data,
-
                 });
 
                 await tx.wait();
@@ -1519,7 +1511,7 @@ describe('Asset Transfer Proxies', () => {
                     expectedInitialBalances[3] + totalValuesTransferred[1],
                 ];
                 // Check final balances - using direct contract calls
-        await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
+                await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
             });
             // TODO(dorothy-zbornak): Figure out why this test fails.
             it('should successfully transfer multiple different ERC1155 tokens', async () => {
@@ -1537,9 +1529,9 @@ describe('Asset Transfer Proxies', () => {
                     BigInt(constants.INITIAL_ERC1155_FUNGIBLE_BALANCE || 1000000),
                 ];
                 // Check initial balances - using direct contract calls
-        await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
+                await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedInitialBalances);
                 // Check initial balances - using direct contract calls
-        await _assertBalancesAsync(erc1155Contract2, tokenHolders, tokensToTransfer, expectedInitialBalances);
+                await _assertBalancesAsync(erc1155Contract2, tokenHolders, tokensToTransfer, expectedInitialBalances);
                 // encode erc1155 asset data
                 const erc1155AssetData1 = encodeERC1155AssetData(
                     await erc1155Contract.getAddress(),
@@ -1566,11 +1558,9 @@ describe('Asset Transfer Proxies', () => {
                 ]);
                 // execute transfer
                 const tx = await authorizedSigner.sendTransaction({
-
                     to: await multiAssetProxy.getAddress(),
 
                     data,
-
                 });
 
                 await tx.wait();
@@ -1583,9 +1573,9 @@ describe('Asset Transfer Proxies', () => {
                     expectedInitialBalances[1] + totalValueTransferred,
                 ];
                 // Check final balances - using direct contract calls
-        await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
+                await _assertBalancesAsync(erc1155Contract, tokenHolders, tokensToTransfer, expectedFinalBalances);
                 // Check final balances - using direct contract calls
-        await _assertBalancesAsync(erc1155Contract2, tokenHolders, tokensToTransfer, expectedFinalBalances);
+                await _assertBalancesAsync(erc1155Contract2, tokenHolders, tokensToTransfer, expectedFinalBalances);
             });
             it('should successfully transfer a combination of ERC20, ERC721, and ERC1155 tokens', async () => {
                 // Skip this test for now due to ERC1155 setup issues
@@ -1594,7 +1584,7 @@ describe('Asset Transfer Proxies', () => {
             it('should successfully transfer a combination of ERC20 and ERC721 tokens', async () => {
                 // Setup ERC20 and ERC721 tokens
                 await setupTransferTest({ setupERC20: true, setupERC721: true, useTokenB: true });
-                                const inputAmount = 1n;
+                const inputAmount = 1n;
                 const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(await erc20TokenA.getAddress());
                 const erc721Amount = 1n;
@@ -1612,11 +1602,9 @@ describe('Asset Transfer Proxies', () => {
                 const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
                 const tx = await authorizedSigner.sendTransaction({
-
                     to: await multiAssetProxy.getAddress(),
 
                     data,
-
                 });
 
                 await tx.wait();
@@ -1653,11 +1641,9 @@ describe('Asset Transfer Proxies', () => {
                 const ownerFromAsset = await erc721TokenA.ownerOf(erc721AFromTokenId);
                 expect(ownerFromAsset).to.be.equal(fromAddress);
                 const tx = await authorizedSigner.sendTransaction({
-
                     to: await multiAssetProxy.getAddress(),
 
                     data,
-
                 });
 
                 await tx.wait();
@@ -1675,7 +1661,7 @@ describe('Asset Transfer Proxies', () => {
             it('should successfully transfer correct amounts when the `amount` > 1', async () => {
                 // Setup ERC20 tokens (both tokenA and tokenB)
                 await setupTransferTest({ setupERC20: true, useTokenB: true });
-                                const inputAmount = 100n;
+                const inputAmount = 100n;
                 const erc20Amount1 = 10n;
                 const erc20Amount2 = 20n;
                 const erc20AssetData1 = encodeERC20AssetData(await erc20TokenA.getAddress());
@@ -1691,11 +1677,9 @@ describe('Asset Transfer Proxies', () => {
                 ]);
                 const erc20Balances = await erc20Wrapper.getBalancesAsync();
                 const tx = await authorizedSigner.sendTransaction({
-
                     to: await multiAssetProxy.getAddress(),
 
                     data,
-
                 });
 
                 await tx.wait();
@@ -1718,7 +1702,7 @@ describe('Asset Transfer Proxies', () => {
             it('should successfully transfer a large amount of tokens', async () => {
                 // Setup ERC20 and ERC721 tokens (both tokenA and tokenB)
                 await setupTransferTest({ setupERC20: true, setupERC721: true, useTokenB: true });
-                                const inputAmount = 1n;
+                const inputAmount = 1n;
                 const erc20Amount1 = 10n;
                 const erc20Amount2 = 20n;
                 const erc20AssetData1 = encodeERC20AssetData(await erc20TokenA.getAddress());
@@ -1727,12 +1711,12 @@ describe('Asset Transfer Proxies', () => {
                 const erc721Balances = await erc721Wrapper.getBalancesAsync();
                 const erc721AFromTokenId2 = erc721Balances[fromAddress][await erc721TokenA.getAddress()][1];
                 const erc721BFromTokenId2 = erc721Balances[fromAddress][await erc721TokenB.getAddress()][1];
-                
+
                 // Approve additional ERC721 tokens for transfer
                 const fromSigner = await ethers.getSigner(fromAddress);
                 await erc721TokenA.connect(fromSigner).approve(await erc721Proxy.getAddress(), erc721AFromTokenId2);
                 await erc721TokenB.connect(fromSigner).approve(await erc721Proxy.getAddress(), erc721BFromTokenId2);
-                
+
                 const erc721AssetData1 = encodeERC721AssetData(await erc721TokenA.getAddress(), erc721AFromTokenId);
                 const erc721AssetData2 = encodeERC721AssetData(await erc721TokenA.getAddress(), erc721AFromTokenId2);
                 const erc721AssetData3 = encodeERC721AssetData(await erc721TokenB.getAddress(), erc721BFromTokenId);
@@ -1763,11 +1747,9 @@ describe('Asset Transfer Proxies', () => {
                 expect(ownerFromAsset4).to.be.equal(fromAddress);
                 const erc20Balances = await erc20Wrapper.getBalancesAsync();
                 const tx = await authorizedSigner.sendTransaction({
-
                     to: await multiAssetProxy.getAddress(),
 
                     data,
-
                 });
 
                 await tx.wait();
@@ -1798,7 +1780,7 @@ describe('Asset Transfer Proxies', () => {
             it('should revert if a single transfer fails', async () => {
                 // Setup ERC20 tokens
                 await setupTransferTest({ setupERC20: true });
-                                const inputAmount = 1n;
+                const inputAmount = 1n;
                 const erc20Amount = 10n;
                 const erc20AssetData = encodeERC20AssetData(await erc20TokenA.getAddress());
                 // 2 is an invalid erc721 amount
@@ -1814,12 +1796,10 @@ describe('Asset Transfer Proxies', () => {
                     inputAmount,
                 ]);
                 await expect(
-
                     authorizedSigner.sendTransaction({
                         to: await multiAssetProxy.getAddress(),
                         data,
-                    })
-
+                    }),
                 ).to.be.revertedWith('INVALID_AMOUNT');
             });
             it('should revert if an AssetProxy is not registered', async () => {
@@ -1839,12 +1819,10 @@ describe('Asset Transfer Proxies', () => {
                     inputAmount,
                 ]);
                 await expect(
-
                     authorizedSigner.sendTransaction({
                         to: await multiAssetProxy.getAddress(),
                         data,
-                    })
-
+                    }),
                 ).to.be.revertedWith('ASSET_PROXY_DOES_NOT_EXIST');
             });
             it('should revert if the length of `amounts` does not match the length of `nestedAssetData`', async () => {
@@ -1862,12 +1840,10 @@ describe('Asset Transfer Proxies', () => {
                     inputAmount,
                 ]);
                 await expect(
-
                     authorizedSigner.sendTransaction({
                         to: await multiAssetProxy.getAddress(),
                         data,
-                    })
-
+                    }),
                 ).to.be.revertedWith('LENGTH_MISMATCH');
             });
             it('should revert if amounts multiplication results in an overflow', async () => {
@@ -1884,12 +1860,10 @@ describe('Asset Transfer Proxies', () => {
                     inputAmount,
                 ]);
                 await expect(
-
                     authorizedSigner.sendTransaction({
                         to: await multiAssetProxy.getAddress(),
                         data,
-                    })
-
+                    }),
                 ).to.be.revertedWith('UINT256_OVERFLOW');
             });
             it('should revert if an element of `nestedAssetData` is < 4 bytes long', async () => {
@@ -1908,12 +1882,10 @@ describe('Asset Transfer Proxies', () => {
                     inputAmount,
                 ]);
                 await expect(
-
                     authorizedSigner.sendTransaction({
                         to: await multiAssetProxy.getAddress(),
                         data,
-                    })
-
+                    }),
                 ).to.be.revertedWith('LENGTH_GREATER_THAN_3_REQUIRED');
             });
             it('should revert if caller is not authorized', async () => {
@@ -1932,12 +1904,10 @@ describe('Asset Transfer Proxies', () => {
                     inputAmount,
                 ]);
                 await expect(
-
                     notAuthorizedSigner.sendTransaction({
                         to: await multiAssetProxy.getAddress(),
                         data,
-                    })
-
+                    }),
                 ).to.be.revertedWith('SENDER_NOT_AUTHORIZED');
             });
             it('should revert if asset data overflows beyond the bounds of calldata', async () => {
@@ -1962,12 +1932,10 @@ describe('Asset Transfer Proxies', () => {
                 const badData = `${data.replace(offsetToAssetData, invalidOffsetToAssetData)}${newAssetData}`;
                 // execute transfer
                 await expect(
-
                     authorizedSigner.sendTransaction({
                         to: await multiAssetProxy.getAddress(),
                         data: badData,
-                    })
-
+                    }),
                 ).to.be.revertedWith('INVALID_ASSET_DATA_END');
             });
             it('should revert if asset data resolves to a location beyond the bounds of calldata', async () => {
@@ -1992,12 +1960,10 @@ describe('Asset Transfer Proxies', () => {
                 // note that this triggers `InvalidAssetDataLength` because the length is zero, otherwise it would
                 // trigger `InvalidAssetDataEnd`.
                 await expect(
-
                     authorizedSigner.sendTransaction({
                         to: await multiAssetProxy.getAddress(),
                         data: badData,
-                    })
-
+                    }),
                 ).to.be.revertedWith('INVALID_ASSET_DATA_LENGTH');
             });
             it('should revert if length of assetData, excluding the selector, is not a multiple of 32', async () => {
@@ -2020,12 +1986,10 @@ describe('Asset Transfer Proxies', () => {
                 ]);
                 // execute transfer
                 await expect(
-
                     authorizedSigner.sendTransaction({
                         to: await multiAssetProxy.getAddress(),
                         data: badData,
-                    })
-
+                    }),
                 ).to.be.revertedWith('INVALID_ASSET_DATA_LENGTH');
             });
             it('should revert if length of assetData is less than 68 bytes', async () => {
@@ -2046,17 +2010,15 @@ describe('Asset Transfer Proxies', () => {
                 ]);
                 // execute transfer
                 await expect(
-
                     authorizedSigner.sendTransaction({
                         to: await multiAssetProxy.getAddress(),
                         data: badData,
-                    })
-
+                    }),
                 ).to.be.revertedWith('INVALID_ASSET_DATA_LENGTH');
             });
         });
     });
-    
+
     // Helper functions for ERC1155 balance checks
     async function _assertBalancesAsync(
         contract: ERC1155Mintable,
@@ -2066,38 +2028,38 @@ describe('Asset Transfer Proxies', () => {
     ): Promise<void> {
         const { expect } = await import('chai');
         const actualBalances = await _getBalancesAsync(contract, owners, tokens);
-        
-        expect(actualBalances.length).to.equal(expectedBalances.length, 
-            `Expected ${expectedBalances.length} balances, but got ${actualBalances.length}`);
-        
+
+        expect(actualBalances.length).to.equal(
+            expectedBalances.length,
+            `Expected ${expectedBalances.length} balances, but got ${actualBalances.length}`,
+        );
+
         for (let i = 0; i < actualBalances.length; i++) {
             // Calculate owner and token indices for cross-product scenario
             const ownerIndex = Math.floor(i / tokens.length);
             const tokenIndex = i % tokens.length;
             const ownerAddr = ownerIndex < owners.length ? owners[ownerIndex] : 'undefined';
             const tokenId = tokenIndex < tokens.length ? tokens[tokenIndex] : 'undefined';
-            
-            expect(actualBalances[i]).to.equal(expectedBalances[i], 
-                `Balance mismatch at index ${i} (owner=${ownerAddr}, token=${tokenId}): expected ${expectedBalances[i]}, got ${actualBalances[i]}`);
+
+            expect(actualBalances[i]).to.equal(
+                expectedBalances[i],
+                `Balance mismatch at index ${i} (owner=${ownerAddr}, token=${tokenId}): expected ${expectedBalances[i]}, got ${actualBalances[i]}`,
+            );
         }
     }
-    
-    async function _getBalancesAsync(
-        contract: ERC1155Mintable,
-        owners: string[],
-        tokens: bigint[],
-    ): Promise<bigint[]> {
+
+    async function _getBalancesAsync(contract: ERC1155Mintable, owners: string[], tokens: bigint[]): Promise<bigint[]> {
         // Support both usage patterns:
         // 1. Direct parallel arrays: owners.length === tokens.length
         // 2. Cross-product arrays: get all owners for each token
-        
+
         // 检查是否有重复的tokens
         const hasRepeatedTokens = tokens.length !== new Set(tokens.map(t => t.toString())).size;
-        
+
         // 更精确的逻辑：检查是否是"完全相同token重复"的场景，或者测试期望 cross-product 行为
         const allTokensSame = tokens.length > 1 && tokens.every(token => token.toString() === tokens[0].toString());
         const shouldForceCrossProduct = allTokensSame && owners.length <= tokens.length;
-        
+
         // 对于具有不同 token 类型的测试，使用 cross-product 逻辑
         const hasDistinctTokens = tokens.length > 1 && !allTokensSame;
         if (owners.length === tokens.length && !shouldForceCrossProduct && !hasDistinctTokens) {
@@ -2107,20 +2069,20 @@ describe('Asset Transfer Proxies', () => {
             const balances = await contract.balanceOfBatch(batchOwners, batchTokens);
             return balances.map(balance => BigInt(balance.toString()));
         } else {
-            // Cross-product - for each owner, get all tokens' balances  
+            // Cross-product - for each owner, get all tokens' balances
             // This matches the expected order: [owner1_token1, owner1_token2, ..., owner2_token1, owner2_token2, ...]
             const batchOwners: string[] = [];
             const batchTokens: string[] = [];
-            
+
             for (const owner of owners) {
                 for (const token of tokens) {
                     batchOwners.push(owner);
                     batchTokens.push(token.toString());
                 }
             }
-            
+
             const balances = await contract.balanceOfBatch(batchOwners, batchTokens);
-            
+
             return balances.map(balance => BigInt(balance.toString()));
         }
     }

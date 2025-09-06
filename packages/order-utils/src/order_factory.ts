@@ -79,7 +79,7 @@ export const orderFactory = {
         } catch {
             chainId = 1; // 出错时默认主网
         }
-        
+
         const order = orderFactory.createOrder(
             makerAddress,
             makerAssetAmount,

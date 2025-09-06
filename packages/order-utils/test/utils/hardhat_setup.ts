@@ -11,22 +11,22 @@ let accounts: string[];
 export async function setupHardhatEnvironment() {
     // 获取 hardhat 内置的 provider
     provider = ethers.provider;
-    
+
     // 获取测试账户
     signers = await ethers.getSigners();
     accounts = signers.map(signer => signer.address);
-    
+
     console.log(`🔧 Hardhat 环境已初始化:`);
     console.log(`  - Provider: ${provider.constructor.name}`);
     console.log(`  - 账户数量: ${accounts.length}`);
     console.log(`  - 第一个账户: ${accounts[0]}`);
-    
+
     return {
         provider,
         signers,
         accounts,
         defaultAccount: accounts[0],
-        defaultSigner: signers[0]
+        defaultSigner: signers[0],
     };
 }
 
@@ -68,37 +68,37 @@ export function getTestSigner(index: number = 0): HardhatEthersSigner {
  */
 export function createWeb3Wrapper() {
     const testSigner = getTestSigner();
-    
+
     return {
         async getAccountsAsync(): Promise<string[]> {
             return getTestAccounts();
         },
-        
+
         async getAvailableAddressesAsync(): Promise<string[]> {
             return getTestAccounts();
         },
-        
+
         async signMessageAsync(address: string, message: string): Promise<string> {
             // 找到对应地址的签名器
             const targetSigner = signers.find(s => s.address.toLowerCase() === address.toLowerCase());
             if (!targetSigner) {
                 throw new Error(`No signer available for address ${address}`);
             }
-            
+
             // 使用 ethers 的 signMessage 方法
             return await targetSigner.signMessage(ethers.getBytes(message));
         },
-        
+
         async signTypedDataAsync(address: string, typedData: any): Promise<string> {
             // 找到对应地址的签名器
             const targetSigner = signers.find(s => s.address.toLowerCase() === address.toLowerCase());
             if (!targetSigner) {
                 throw new Error(`No signer available for address ${address}`);
             }
-            
+
             // 处理 EIP712 结构
             let domain, types, value;
-            
+
             if (typedData.domain && typedData.types && (typedData.message || typedData.value)) {
                 domain = typedData.domain;
                 types = { ...typedData.types };
@@ -111,8 +111,8 @@ export function createWeb3Wrapper() {
                 delete types.EIP712Domain;
                 value = typedData;
             }
-            
+
             return await targetSigner.signTypedData(domain, types, value);
-        }
+        },
     };
-} 
+}

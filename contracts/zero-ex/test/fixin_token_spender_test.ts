@@ -1,9 +1,5 @@
-import { ethers } from "hardhat";
-import {
-    getRandomInteger,
-    randomAddress,
-    verifyEventsFromLogs,
-} from '@0x/utils';
+import { ethers } from 'hardhat';
+import { getRandomInteger, randomAddress, verifyEventsFromLogs } from '@0x/utils';
 import { expect } from 'chai';
 import { hexUtils, RawRevertError, StringRevertError } from '@0x/utils';
 
@@ -29,11 +25,11 @@ describe('FixinTokenSpender', () => {
         const [deployer] = await env.getAccountAddressesAsync();
         env.txDefaults.from = deployer;
         const signer = await env.provider.getSigner(deployer);
-        
+
         const tokenFactory = new TestTokenSpenderERC20Token__factory(signer);
         token = await tokenFactory.deploy();
         await token.waitForDeployment();
-        
+
         const greedyTokenFactory = new TestTokenSpenderERC20Token__factory(signer);
         greedyToken = await greedyTokenFactory.deploy();
         await greedyToken.waitForDeployment();
@@ -55,8 +51,12 @@ describe('FixinTokenSpender', () => {
             const tokenFrom = randomAddress();
             const tokenTo = randomAddress();
             const tokenAmount = 123456n;
-            const tx = await tokenSpender
-                .transferERC20TokensFrom(await token.getAddress(), tokenFrom, tokenTo, tokenAmount);
+            const tx = await tokenSpender.transferERC20TokensFrom(
+                await token.getAddress(),
+                tokenFrom,
+                tokenTo,
+                tokenAmount,
+            );
             const receipt = await tx.wait();
             verifyEventsFromLogs(
                 receipt.logs,
@@ -71,7 +71,7 @@ describe('FixinTokenSpender', () => {
                             amount: tokenAmount,
                         },
                     },
-                ]
+                ],
             );
         });
 
@@ -79,8 +79,12 @@ describe('FixinTokenSpender', () => {
             const tokenFrom = randomAddress();
             const tokenTo = randomAddress();
             const tokenAmount = BigInt(EMPTY_RETURN_AMOUNT);
-            const tx = await tokenSpender
-                .transferERC20TokensFrom(await token.getAddress(), tokenFrom, tokenTo, tokenAmount);
+            const tx = await tokenSpender.transferERC20TokensFrom(
+                await token.getAddress(),
+                tokenFrom,
+                tokenTo,
+                tokenAmount,
+            );
             const receipt = await tx.wait();
             verifyEventsFromLogs(
                 receipt.logs,
@@ -95,7 +99,7 @@ describe('FixinTokenSpender', () => {
                             amount: tokenAmount,
                         },
                     },
-                ]
+                ],
             );
         });
 
@@ -105,7 +109,7 @@ describe('FixinTokenSpender', () => {
             const tokenAmount = BigInt(REVERT_RETURN_AMOUNT);
             const expectedError = new StringRevertError('TestTokenSpenderERC20Token/Revert');
             return expect(
-                tokenSpender.transferERC20TokensFrom(await token.getAddress(), tokenFrom, tokenTo, tokenAmount)
+                tokenSpender.transferERC20TokensFrom(await token.getAddress(), tokenFrom, tokenTo, tokenAmount),
             ).to.be.revertedWith('TestTokenSpenderERC20Token/Revert');
         });
 
@@ -114,7 +118,7 @@ describe('FixinTokenSpender', () => {
             const tokenTo = randomAddress();
             const tokenAmount = BigInt(FALSE_RETURN_AMOUNT);
             return expect(
-                tokenSpender.transferERC20TokensFrom(await token.getAddress(), tokenFrom, tokenTo, tokenAmount)
+                tokenSpender.transferERC20TokensFrom(await token.getAddress(), tokenFrom, tokenTo, tokenAmount),
             ).to.be.reverted;
         });
 
@@ -123,8 +127,12 @@ describe('FixinTokenSpender', () => {
             const tokenTo = randomAddress();
             const tokenAmount = BigInt(EXTRA_RETURN_TRUE_AMOUNT);
 
-            const tx = await tokenSpender
-                .transferERC20TokensFrom(await token.getAddress(), tokenFrom, tokenTo, tokenAmount);
+            const tx = await tokenSpender.transferERC20TokensFrom(
+                await token.getAddress(),
+                tokenFrom,
+                tokenTo,
+                tokenAmount,
+            );
             const receipt = await tx.wait();
             verifyEventsFromLogs(
                 receipt.logs,
@@ -139,7 +147,7 @@ describe('FixinTokenSpender', () => {
                             amount: tokenAmount,
                         },
                     },
-                ]
+                ],
             );
         });
 
@@ -149,7 +157,7 @@ describe('FixinTokenSpender', () => {
             const tokenAmount = BigInt(EXTRA_RETURN_FALSE_AMOUNT);
 
             return expect(
-                tokenSpender.transferERC20TokensFrom(await token.getAddress(), tokenFrom, tokenTo, tokenAmount)
+                tokenSpender.transferERC20TokensFrom(await token.getAddress(), tokenFrom, tokenTo, tokenAmount),
             ).to.be.reverted;
         });
 
@@ -159,7 +167,7 @@ describe('FixinTokenSpender', () => {
             const tokenAmount = 123456n;
 
             return expect(
-                tokenSpender.transferERC20TokensFrom(await tokenSpender.getAddress(), tokenFrom, tokenTo, tokenAmount)
+                tokenSpender.transferERC20TokensFrom(await tokenSpender.getAddress(), tokenFrom, tokenTo, tokenAmount),
             ).to.be.revertedWith('FixinTokenSpender/CANNOT_INVOKE_SELF');
         });
     });
@@ -169,10 +177,11 @@ describe('FixinTokenSpender', () => {
             const balance = getRandomInteger(1, '1e18');
             const allowance = getRandomInteger(1, '1e18');
             const tokenOwner = randomAddress();
-            await token
-                .setBalanceAndAllowanceOf(tokenOwner, balance, await tokenSpender.getAddress(), allowance);
-            const spendableBalance = await tokenSpender
-                .getSpendableERC20BalanceOf(await token.getAddress(), tokenOwner);
+            await token.setBalanceAndAllowanceOf(tokenOwner, balance, await tokenSpender.getAddress(), allowance);
+            const spendableBalance = await tokenSpender.getSpendableERC20BalanceOf(
+                await token.getAddress(),
+                tokenOwner,
+            );
             expect(spendableBalance).to.eq(balance < allowance ? balance : allowance);
         });
     });

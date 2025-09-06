@@ -17,7 +17,7 @@ function getSchemaValidator(): SchemaValidator {
             // 如果创建失败，返回一个简单的模拟实现
             const mockValidator = {
                 isValid: () => true,
-                validate: () => ({ errors: [] })
+                validate: () => ({ errors: [] }),
             } as any;
             globalSchemaValidator = mockValidator;
         }
@@ -63,10 +63,12 @@ const baseAssert = {
         const isValid = validator.isValid(value, schema);
         if (!isValid) {
             const validationResult = validator.validate(value, schema);
-            throw new Error(`Expected ${variableName} to conform to schema, but validation failed: ${JSON.stringify(validationResult.errors)}`);
+            throw new Error(
+                `Expected ${variableName} to conform to schema, but validation failed: ${JSON.stringify(validationResult.errors)}`,
+            );
         }
         // 注意：subSchemas 参数在这里被接受但不处理，保持兼容性
-    }
+    },
 };
 
 export const assert = {
@@ -97,7 +99,7 @@ export const assert = {
                     baseAssert.isETHAddressHex(variableName, senderAddressHex);
                     return; // 早期返回，避免继续执行下面的账户检查
                 }
-                
+
                 // 检查地址是否在账户列表中（统一转为小写比较）
                 const normalizedSenderAddress = senderAddressHex.toLowerCase();
                 const normalizedAccounts = accounts.map(addr => addr.toLowerCase());
@@ -109,10 +111,11 @@ export const assert = {
             }
         } catch (error) {
             // 如果错误消息已经包含我们想要的信息，直接重新抛出
-            if (error instanceof Error && (
-                error.message.includes('isn\'t available through the supplied web3 provider') ||
-                error.message.includes('doesn\'t match signer address')
-            )) {
+            if (
+                error instanceof Error &&
+                (error.message.includes("isn't available through the supplied web3 provider") ||
+                    error.message.includes("doesn't match signer address"))
+            ) {
                 throw error;
             }
             throw new Error(

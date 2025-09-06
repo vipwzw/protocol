@@ -67,8 +67,10 @@ export class CumulativeRewardTrackingSimulation {
         expect(logs.length).to.be.equal(expectedSequence.length);
         // Normalize epochs so the first observed epoch maps to the minimum expected epoch
         const baseEpoch = logs.length > 0 ? logs[0].epoch : undefined;
-        const minExpectedEpoch = expectedSequence.length > 0 ? Math.min(...expectedSequence.map(e => e.epoch)) : undefined;
-        const epochOffset = baseEpoch !== undefined && minExpectedEpoch !== undefined ? (minExpectedEpoch - baseEpoch) : 0;
+        const minExpectedEpoch =
+            expectedSequence.length > 0 ? Math.min(...expectedSequence.map(e => e.epoch)) : undefined;
+        const epochOffset =
+            baseEpoch !== undefined && minExpectedEpoch !== undefined ? minExpectedEpoch - baseEpoch : 0;
         for (let i = 0; i < expectedSequence.length; i++) {
             const expectedLog = expectedSequence[i];
             const actualLog = logs[i];
@@ -77,7 +79,9 @@ export class CumulativeRewardTrackingSimulation {
                 expectedLog.event,
             );
             const actualEpochNormalized = actualLog.epoch + epochOffset;
-            expect(actualEpochNormalized, `testing epoch of ${JSON.stringify(expectedLog)}`).to.be.equal(expectedLog.epoch);
+            expect(actualEpochNormalized, `testing epoch of ${JSON.stringify(expectedLog)}`).to.be.equal(
+                expectedLog.epoch,
+            );
         }
     }
 
@@ -141,7 +145,7 @@ export class CumulativeRewardTrackingSimulation {
     ): Promise<void> {
         await this._executeActionsAsync(initActions);
         const tx = await this._stakingApiWrapper.stakingProxyContract.attachStakingContract(
-            await this.getTestCumulativeRewardTrackingContract().getAddress()
+            await this.getTestCumulativeRewardTrackingContract().getAddress(),
         );
         await tx.wait();
         const testLogs = await this._executeActionsAsync(testActions);
@@ -169,25 +173,33 @@ export class CumulativeRewardTrackingSimulation {
                 case TestAction.Delegate:
                     {
                         const signers = await ethers.getSigners();
-                        const stakerSigner = signers.find(s => s.address.toLowerCase() === this._staker.toLowerCase()) || signers[0];
+                        const stakerSigner =
+                            signers.find(s => s.address.toLowerCase() === this._staker.toLowerCase()) || signers[0];
                         // Ensure ZRX balance and approval for ERC20Proxy
                         const zrxToken = this._stakingApiWrapper.zrxTokenContract.connect(signers[0]);
                         await (await zrxToken.setBalance(this._staker, this._amountToStake * 10n)).wait();
                         const zrxProxyAddress = await this._stakingApiWrapper.zrxVaultContract.zrxAssetProxy();
-                        await (await this._stakingApiWrapper.zrxTokenContract
+                        await (
+                            await this._stakingApiWrapper.zrxTokenContract
+                                .connect(stakerSigner)
+                                .approve(zrxProxyAddress, this._amountToStake * 10n)
+                        ).wait();
+                        const stakeTx = await this._stakingApiWrapper.stakingContract
                             .connect(stakerSigner)
-                            .approve(zrxProxyAddress, this._amountToStake * 10n)).wait();
-                        const stakeTx = await this._stakingApiWrapper.stakingContract.connect(stakerSigner).stake(this._amountToStake);
+                            .stake(this._amountToStake);
                         await stakeTx.wait();
                     }
                     {
                         const signers = await ethers.getSigners();
-                        const stakerSigner = signers.find(s => s.address.toLowerCase() === this._staker.toLowerCase()) || signers[0];
-                        const moveStakeTx = await this._stakingApiWrapper.stakingContract.connect(stakerSigner).moveStake(
-                            new StakeInfo(StakeStatus.Undelegated),
-                            new StakeInfo(StakeStatus.Delegated, this._poolId),
-                            this._amountToStake,
-                        );
+                        const stakerSigner =
+                            signers.find(s => s.address.toLowerCase() === this._staker.toLowerCase()) || signers[0];
+                        const moveStakeTx = await this._stakingApiWrapper.stakingContract
+                            .connect(stakerSigner)
+                            .moveStake(
+                                new StakeInfo(StakeStatus.Undelegated),
+                                new StakeInfo(StakeStatus.Delegated, this._poolId),
+                                this._amountToStake,
+                            );
                         receipt = await moveStakeTx.wait();
                         const decoded = await this._stakingApiWrapper.parseContractLogs(
                             this.getTestCumulativeRewardTrackingContract(),
@@ -200,12 +212,15 @@ export class CumulativeRewardTrackingSimulation {
                 case TestAction.Undelegate:
                     {
                         const signers = await ethers.getSigners();
-                        const stakerSigner = signers.find(s => s.address.toLowerCase() === this._staker.toLowerCase()) || signers[0];
-                        const undelegateTx = await this._stakingApiWrapper.stakingContract.connect(stakerSigner).moveStake(
-                            new StakeInfo(StakeStatus.Delegated, this._poolId),
-                            new StakeInfo(StakeStatus.Undelegated),
-                            this._amountToStake,
-                        );
+                        const stakerSigner =
+                            signers.find(s => s.address.toLowerCase() === this._staker.toLowerCase()) || signers[0];
+                        const undelegateTx = await this._stakingApiWrapper.stakingContract
+                            .connect(stakerSigner)
+                            .moveStake(
+                                new StakeInfo(StakeStatus.Delegated, this._poolId),
+                                new StakeInfo(StakeStatus.Undelegated),
+                                this._amountToStake,
+                            );
                         receipt = await undelegateTx.wait();
                         const decoded = await this._stakingApiWrapper.parseContractLogs(
                             this.getTestCumulativeRewardTrackingContract(),
@@ -218,13 +233,14 @@ export class CumulativeRewardTrackingSimulation {
                 case TestAction.PayProtocolFee:
                     {
                         const signers = await ethers.getSigners();
-                        const exchangeSigner = signers.find(s => s.address.toLowerCase() === this._exchangeAddress.toLowerCase()) || signers[0];
-                        const payFeeTx = await this._stakingApiWrapper.stakingContract.connect(exchangeSigner).payProtocolFee(
-                            this._poolOperator,
-                            this._takerAddress,
-                            this._protocolFee,
-                            { value: this._protocolFee }
-                        );
+                        const exchangeSigner =
+                            signers.find(s => s.address.toLowerCase() === this._exchangeAddress.toLowerCase()) ||
+                            signers[0];
+                        const payFeeTx = await this._stakingApiWrapper.stakingContract
+                            .connect(exchangeSigner)
+                            .payProtocolFee(this._poolOperator, this._takerAddress, this._protocolFee, {
+                                value: this._protocolFee,
+                            });
                         receipt = await payFeeTx.wait();
                         const decoded = await this._stakingApiWrapper.parseContractLogs(
                             this.getTestCumulativeRewardTrackingContract(),
@@ -237,7 +253,11 @@ export class CumulativeRewardTrackingSimulation {
                 case TestAction.CreatePool:
                     {
                         // Use API helper to ensure correct operator signer and stable poolId resolution
-                        this._poolId = await this._stakingApiWrapper.utils.createStakingPoolAsync(this._poolOperator, 0, true);
+                        this._poolId = await this._stakingApiWrapper.utils.createStakingPoolAsync(
+                            this._poolOperator,
+                            0,
+                            true,
+                        );
                     }
                     break;
 

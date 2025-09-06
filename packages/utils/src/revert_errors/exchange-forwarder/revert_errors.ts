@@ -10,10 +10,7 @@ export class UnregisteredAssetProxyError extends RevertError {
 }
 
 export class CompleteBuyFailedError extends RevertError {
-    constructor(
-        expectedAssetBuyAmount?: bigint | number | string,
-        actualAssetBuyAmount?: bigint | number | string,
-    ) {
+    constructor(expectedAssetBuyAmount?: bigint | number | string, actualAssetBuyAmount?: bigint | number | string) {
         super(
             'CompleteBuyFailedError',
             'CompleteBuyFailedError(uint256 expectedAssetBuyAmount, uint256 actualAssetBuyAmount)',
@@ -23,10 +20,7 @@ export class CompleteBuyFailedError extends RevertError {
 }
 
 export class CompleteSellFailedError extends RevertError {
-    constructor(
-        expectedAssetSellAmount?: bigint | number | string,
-        actualAssetSellAmount?: bigint | number | string,
-    ) {
+    constructor(expectedAssetSellAmount?: bigint | number | string, actualAssetSellAmount?: bigint | number | string) {
         super(
             'CompleteSellFailedError',
             'CompleteSellFailedError(uint256 expectedAssetSellAmount, uint256 actualAssetSellAmount)',

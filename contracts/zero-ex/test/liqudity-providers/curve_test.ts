@@ -38,15 +38,13 @@ describe('CurveLiquidityProvider feature', () => {
         [, taker] = await env.getAccountAddressesAsync();
         env.txDefaults.from = taker;
         [sellToken, buyToken] = await Promise.all(
-            new Array(2)
-                .fill(0)
-                .map(async () => {
-                    const signer = await env.provider.getSigner(taker);
-                    const factory = new TestMintableERC20Token__factory(signer);
-                    const token = await factory.deploy();
-                    await token.waitForDeployment();
-                    return token;
-                }),
+            new Array(2).fill(0).map(async () => {
+                const signer = await env.provider.getSigner(taker);
+                const factory = new TestMintableERC20Token__factory(signer);
+                const token = await factory.deploy();
+                await token.waitForDeployment();
+                return token;
+            }),
         );
         // 使用 TypeChain 工厂部署 TestCurve
         const signer = await env.provider.getSigner(taker);
@@ -55,7 +53,7 @@ describe('CurveLiquidityProvider feature', () => {
             await sellToken.getAddress(),
             await buyToken.getAddress(),
             BUY_AMOUNT,
-            { value: BUY_AMOUNT }
+            { value: BUY_AMOUNT },
         );
         await testCurve.waitForDeployment();
         // 使用 TypeChain 工厂部署 CurveLiquidityProvider
@@ -116,23 +114,19 @@ describe('CurveLiquidityProvider feature', () => {
         expect(boughtAmount).to.be.closeTo(BUY_AMOUNT, 100n); // 🎯 使用closeTo精确检查
         // 仅解析 TestCurve 的 CurveCalled 事件
         const curveContract = testCurve as unknown as ethers.Contract;
-        verifyEventsFromLogs(
-            logs,
-            curveContract,
-            [
-                {
-                    event: 'CurveCalled',
-                    args: {
-                        value: ZERO_AMOUNT,
-                        selector: SWAP_SELECTOR,
-                        fromCoinIdx: Number(SELL_TOKEN_COIN_IDX),
-                        toCoinIdx: Number(BUY_TOKEN_COIN_IDX),
-                        sellAmount: SELL_AMOUNT,
-                        minBuyAmount: BUY_AMOUNT,
-                    }
+        verifyEventsFromLogs(logs, curveContract, [
+            {
+                event: 'CurveCalled',
+                args: {
+                    value: ZERO_AMOUNT,
+                    selector: SWAP_SELECTOR,
+                    fromCoinIdx: Number(SELL_TOKEN_COIN_IDX),
+                    toCoinIdx: Number(BUY_TOKEN_COIN_IDX),
+                    sellAmount: SELL_AMOUNT,
+                    minBuyAmount: BUY_AMOUNT,
                 },
-            ],
-        );
+            },
+        ]);
     });
 
     it('can swap ERC20->ETH', async () => {
@@ -148,13 +142,19 @@ describe('CurveLiquidityProvider feature', () => {
         const boughtAmount = BUY_AMOUNT;
         expect(boughtAmount).to.be.closeTo(BUY_AMOUNT, 100n); // 🎯 使用closeTo精确检查
         const curveContract = testCurve as unknown as ethers.Contract;
-        verifyEventsFromLogs(
-            logs,
-            curveContract,
-            [
-                { event: 'CurveCalled', args: { value: ZERO_AMOUNT, selector: SWAP_SELECTOR, fromCoinIdx: Number(SELL_TOKEN_COIN_IDX), toCoinIdx: Number(ETH_COIN_IDX), sellAmount: SELL_AMOUNT, minBuyAmount: BUY_AMOUNT } },
-            ],
-        );
+        verifyEventsFromLogs(logs, curveContract, [
+            {
+                event: 'CurveCalled',
+                args: {
+                    value: ZERO_AMOUNT,
+                    selector: SWAP_SELECTOR,
+                    fromCoinIdx: Number(SELL_TOKEN_COIN_IDX),
+                    toCoinIdx: Number(ETH_COIN_IDX),
+                    sellAmount: SELL_AMOUNT,
+                    minBuyAmount: BUY_AMOUNT,
+                },
+            },
+        ]);
     });
 
     it('can swap ETH->ERC20', async () => {
@@ -170,13 +170,19 @@ describe('CurveLiquidityProvider feature', () => {
         const boughtAmount = BUY_AMOUNT;
         expect(boughtAmount).to.be.closeTo(BUY_AMOUNT, 100n); // 🎯 使用closeTo精确检查
         const curveContract = testCurve as unknown as ethers.Contract;
-        verifyEventsFromLogs(
-            logs,
-            curveContract,
-            [
-                { event: 'CurveCalled', args: { value: SELL_AMOUNT, selector: SWAP_SELECTOR, fromCoinIdx: Number(ETH_COIN_IDX), toCoinIdx: Number(BUY_TOKEN_COIN_IDX), sellAmount: SELL_AMOUNT, minBuyAmount: BUY_AMOUNT } },
-            ],
-        );
+        verifyEventsFromLogs(logs, curveContract, [
+            {
+                event: 'CurveCalled',
+                args: {
+                    value: SELL_AMOUNT,
+                    selector: SWAP_SELECTOR,
+                    fromCoinIdx: Number(ETH_COIN_IDX),
+                    toCoinIdx: Number(BUY_TOKEN_COIN_IDX),
+                    sellAmount: SELL_AMOUNT,
+                    minBuyAmount: BUY_AMOUNT,
+                },
+            },
+        ]);
     });
 
     it('can swap ETH->ERC20 with attached ETH', async () => {
@@ -185,20 +191,26 @@ describe('CurveLiquidityProvider feature', () => {
             RECIPIENT,
             BUY_AMOUNT,
             await encodeCurveData({ fromCoinIdx: ETH_COIN_IDX }),
-            { value: SELL_AMOUNT }
+            { value: SELL_AMOUNT },
         );
         const receipt = await tx.wait();
         const { logs } = receipt;
         const boughtAmount = BUY_AMOUNT;
         expect(boughtAmount).to.be.closeTo(BUY_AMOUNT, 100n); // 🎯 使用closeTo精确检查
         const curveContract = testCurve as unknown as ethers.Contract;
-        verifyEventsFromLogs(
-            logs,
-            curveContract,
-            [
-                { event: 'CurveCalled', args: { value: SELL_AMOUNT, selector: SWAP_SELECTOR, fromCoinIdx: Number(ETH_COIN_IDX), toCoinIdx: Number(BUY_TOKEN_COIN_IDX), sellAmount: SELL_AMOUNT, minBuyAmount: BUY_AMOUNT } },
-            ],
-        );
+        verifyEventsFromLogs(logs, curveContract, [
+            {
+                event: 'CurveCalled',
+                args: {
+                    value: SELL_AMOUNT,
+                    selector: SWAP_SELECTOR,
+                    fromCoinIdx: Number(ETH_COIN_IDX),
+                    toCoinIdx: Number(BUY_TOKEN_COIN_IDX),
+                    sellAmount: SELL_AMOUNT,
+                    minBuyAmount: BUY_AMOUNT,
+                },
+            },
+        ]);
     });
 
     it('can swap with a pool that returns bought amount', async () => {
@@ -215,13 +227,19 @@ describe('CurveLiquidityProvider feature', () => {
         const boughtAmount = BUY_AMOUNT;
         expect(boughtAmount).to.be.closeTo(BUY_AMOUNT, 100n); // 🎯 使用closeTo精确检查
         const curveContract = testCurve as unknown as ethers.Contract;
-        verifyEventsFromLogs(
-            logs,
-            curveContract,
-            [
-                { event: 'CurveCalled', args: { value: ZERO_AMOUNT, selector: SWAP_WITH_RETURN_SELECTOR, fromCoinIdx: Number(SELL_TOKEN_COIN_IDX), toCoinIdx: Number(BUY_TOKEN_COIN_IDX), sellAmount: SELL_AMOUNT, minBuyAmount: BUY_AMOUNT } },
-            ],
-        );
+        verifyEventsFromLogs(logs, curveContract, [
+            {
+                event: 'CurveCalled',
+                args: {
+                    value: ZERO_AMOUNT,
+                    selector: SWAP_WITH_RETURN_SELECTOR,
+                    fromCoinIdx: Number(SELL_TOKEN_COIN_IDX),
+                    toCoinIdx: Number(BUY_TOKEN_COIN_IDX),
+                    sellAmount: SELL_AMOUNT,
+                    minBuyAmount: BUY_AMOUNT,
+                },
+            },
+        ]);
     });
 
     it('reverts if pool reverts', async () => {
@@ -233,7 +251,7 @@ describe('CurveLiquidityProvider feature', () => {
                 RECIPIENT,
                 BUY_AMOUNT,
                 await encodeCurveData({ exchangeFunctionSelector: REVERTING_SELECTOR }),
-            )
+            ),
         ).to.be.revertedWith('TestCurve/REVERT');
     });
 
@@ -246,7 +264,7 @@ describe('CurveLiquidityProvider feature', () => {
                 RECIPIENT,
                 BUY_AMOUNT + 1n,
                 await encodeCurveData(),
-            )
+            ),
         ).to.be.revertedWith('CurveLiquidityProvider/UNDERBOUGHT');
     });
 
@@ -259,7 +277,7 @@ describe('CurveLiquidityProvider feature', () => {
                 RECIPIENT,
                 BUY_AMOUNT,
                 await encodeCurveData(),
-            )
+            ),
         ).to.be.revertedWith('CurveLiquidityProvider/INVALID_ARGS');
     });
 
@@ -272,21 +290,21 @@ describe('CurveLiquidityProvider feature', () => {
                 RECIPIENT,
                 BUY_AMOUNT,
                 await encodeCurveData(),
-            )
+            ),
         ).to.be.revertedWith('CurveLiquidityProvider/INVALID_ARGS');
     });
 
     it('reverts if ERC20->ETH receives an ETH input token', async () => {
         await fundProviderContractAsync(SELL_TOKEN_COIN_IDX);
         await expect(
-            lp.sellTokenForEth(ETH_TOKEN_ADDRESS, RECIPIENT, BUY_AMOUNT, await encodeCurveData())
+            lp.sellTokenForEth(ETH_TOKEN_ADDRESS, RECIPIENT, BUY_AMOUNT, await encodeCurveData()),
         ).to.be.revertedWith('CurveLiquidityProvider/INVALID_ARGS');
     });
 
     it('reverts if ETH->ERC20 receives an ETH output token', async () => {
         await fundProviderContractAsync(ETH_COIN_IDX);
         await expect(
-            lp.sellEthForToken(ETH_TOKEN_ADDRESS, RECIPIENT, BUY_AMOUNT, await encodeCurveData())
+            lp.sellEthForToken(ETH_TOKEN_ADDRESS, RECIPIENT, BUY_AMOUNT, await encodeCurveData()),
         ).to.be.revertedWith('CurveLiquidityProvider/INVALID_ARGS');
     });
 
@@ -302,12 +320,18 @@ describe('CurveLiquidityProvider feature', () => {
         const receipt = await tx.wait();
         const { logs } = receipt;
         const curveContract = testCurve as unknown as ethers.Contract;
-        verifyEventsFromLogs(
-            logs,
-            curveContract,
-            [
-                { event: 'CurveCalled', args: { value: ZERO_AMOUNT, selector: SWAP_SELECTOR, fromCoinIdx: Number(SELL_TOKEN_COIN_IDX), toCoinIdx: Number(BUY_TOKEN_COIN_IDX), sellAmount: SELL_AMOUNT, minBuyAmount: BUY_AMOUNT } },
-            ],
-        );
+        verifyEventsFromLogs(logs, curveContract, [
+            {
+                event: 'CurveCalled',
+                args: {
+                    value: ZERO_AMOUNT,
+                    selector: SWAP_SELECTOR,
+                    fromCoinIdx: Number(SELL_TOKEN_COIN_IDX),
+                    toCoinIdx: Number(BUY_TOKEN_COIN_IDX),
+                    sellAmount: SELL_AMOUNT,
+                    minBuyAmount: BUY_AMOUNT,
+                },
+            },
+        ]);
     });
 });
