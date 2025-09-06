@@ -16,4 +16,8 @@ evm_version = "cancun"
 fs_permissions = [
     { access = "read", path = "./" },
     { access = "read", path = "../" }
-] 
+]
+
+[profile.default.lint]
+# 禁用 asm-keccak256 lint 规则，因为项目中使用标准的 keccak256() 函数
+exclude = ["asm-keccak256"] 

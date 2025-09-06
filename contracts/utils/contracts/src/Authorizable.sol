@@ -41,7 +41,9 @@ contract Authorizable is Ownable, IAuthorizable {
     address[] public override authorities;
 
     /// @dev Initializes the `owner` address.
-    constructor() Ownable() {}
+    constructor() Ownable() {
+        // Constructor body
+    }
 
     /// @dev Authorizes an address.
     /// @param target Address to authorize.
