@@ -1,4 +1,4 @@
-import { ethers } from 'hardhat';
+const { ethers } = require('hardhat');
 
 // Test account from hardhat config
 const TEST_ADDRESS = '0x5409ED021D9299bf6814279A6A1411A7e866A631';
@@ -28,7 +28,7 @@ export const web3Factory = {
             getSigner: async (address: string) => {
                 // 对于测试地址，返回对应的 signer
                 const signers = await ethers.getSigners();
-                const targetSigner = signers.find(s => s.address.toLowerCase() === address.toLowerCase());
+                const targetSigner = signers.find((s: any) => s.address.toLowerCase() === address.toLowerCase());
                 if (targetSigner) {
                     return targetSigner;
                 }

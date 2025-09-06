@@ -13,7 +13,7 @@
         "prettier": "prettier --write '**/*.{ts,tsx,json,sol}' --config .prettierrc",
         "prettier:ci": "./scripts/lint-prettier.sh",
         "install:all": "yarn install",
-        "submodule:init": "./init-submodules.sh",
+        "submodule:init": "./scripts/init-submodules.sh",
 
         "wsrun": "wsrun",
         "build": "yarn install && yarn submodule:init && yarn build:step1 && yarn build:step2 && yarn build:step3 && yarn build:step4 && yarn build:step5",
