@@ -16,6 +16,7 @@
         "test": "yarn test:hardhat",
         "test:hardhat": "npx hardhat test",
         "test:ci": "yarn test",
+        "test:coverage": "nyc --reporter=text --reporter=html --reporter=lcov yarn test",
         "rebuild_and_test": "run-s build test",
         "run_mocha": "npx mocha test/*.ts --require ts-node/register",
         "clean": "shx rm -rf lib generated_docs coverage .nyc_output *.log",

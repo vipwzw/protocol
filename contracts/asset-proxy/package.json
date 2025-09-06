@@ -26,6 +26,7 @@
         "test:hardhat:grep": "npx hardhat test --grep",
         "test:forge:match": "forge test --match-test",
         "test:ci": "yarn test",
+        "test:coverage": "nyc --reporter=text --reporter=html --reporter=lcov yarn test:hardhat",
         "clean": "shx rm -rf lib generated_docs test/generated-wrappers test/typechain-types src/typechain-types artifacts cache out",
         "clean:node-modules": "shx rm -rf node_modules",
         "clean:all": "yarn clean && yarn clean:node-modules",

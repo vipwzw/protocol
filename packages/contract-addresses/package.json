@@ -16,6 +16,7 @@
         "test": "yarn test:hardhat",
         "test:hardhat": "npx hardhat test",
         "test:ci": "yarn test",
+        "test:coverage": "nyc --reporter=text --reporter=html --reporter=lcov yarn test",
         "clean": "shx rm -rf lib generated_docs coverage .nyc_output *.log",
         "clean:node-modules": "shx rm -rf node_modules",
         "clean:all": "yarn clean && yarn clean:node-modules",

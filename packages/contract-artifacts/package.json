@@ -18,6 +18,7 @@
         "test": "yarn test:hardhat",
         "test:hardhat": "npx hardhat test",
         "test:ci": "yarn test",
+        "test:coverage": "nyc --reporter=text --reporter=html --reporter=lcov yarn test",
         "run_mocha": "npx mocha test/*.ts --require ts-node/register",
         "clean": "shx rm -rf lib artifacts coverage .nyc_output *.log",
         "clean:node-modules": "shx rm -rf node_modules",

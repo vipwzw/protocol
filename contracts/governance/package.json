@@ -11,6 +11,7 @@
     "test": "run-s test:hardhat test:forge",
     "test:forge": "MAINNET_RPC_URL=https://mainnet.infura.io/v3/0857bcc1582548068e92f1423f781d30 forge test --skip GovernanceE2E",
     "test:hardhat": "npx hardhat test",
+    "test:coverage": "nyc --reporter=text --reporter=html --reporter=lcov yarn test:hardhat",
     "test:ci": "yarn test",
     "build": "forge build && npx hardhat compile",
     "build:ts": "npx hardhat compile",

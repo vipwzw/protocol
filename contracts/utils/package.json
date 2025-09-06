@@ -18,6 +18,7 @@
         "test:legacy": "npx hardhat test",
         "test:forge": "forge test",
         "test:hardhat": "npx hardhat test",
+        "test:coverage": "nyc --reporter=text --reporter=html --reporter=lcov yarn test:hardhat",
         "rebuild_and_test": "run-s build test",
         "test:trace": "SOLIDITY_REVERT_TRACE=true run-s build run_mocha",
         "run_mocha": "npx hardhat test",

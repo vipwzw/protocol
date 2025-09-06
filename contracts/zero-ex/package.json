@@ -19,6 +19,7 @@
         "test:integration": "forge test -vvv",
         "test:forge": "forge test",
         "test:hardhat": "npx hardhat test",
+        "test:coverage": "nyc --reporter=text --reporter=html --reporter=lcov yarn test:hardhat",
         "rebuild_and_test": "run-s build test",
         "fix:errors": "npx ts-node scripts/fix_error_handling.ts",
         "fix:errors:scan": "npx ts-node scripts/fix_error_handling.ts --scan",
