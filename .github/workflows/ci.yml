@@ -64,6 +64,7 @@ jobs:
                       contracts/*/node_modules
                       packages/*/lib
                       contracts/*/lib
+                      packages/*/artifacts
                       contracts/*/out
                       contracts/*/cache
                       contracts/*/artifacts
@@ -108,6 +109,7 @@ jobs:
                       contracts/*/node_modules
                       packages/*/lib
                       contracts/*/lib
+                      packages/*/artifacts
                       contracts/*/out
                       contracts/*/cache
                       contracts/*/artifacts
@@ -187,6 +189,7 @@ jobs:
                       contracts/*/node_modules
                       packages/*/lib
                       contracts/*/lib
+                      packages/*/artifacts
                       contracts/*/out
                       contracts/*/cache
                       contracts/*/artifacts
@@ -269,6 +272,7 @@ jobs:
                       contracts/*/node_modules
                       packages/*/lib
                       contracts/*/lib
+                      packages/*/artifacts
                       contracts/*/out
                       contracts/*/cache
                       contracts/*/artifacts
@@ -351,6 +355,7 @@ jobs:
                       contracts/*/node_modules
                       packages/*/lib
                       contracts/*/lib
+                      packages/*/artifacts
                       contracts/*/out
                       contracts/*/cache
                       contracts/*/artifacts
@@ -406,6 +411,7 @@ jobs:
                       contracts/*/node_modules
                       packages/*/lib
                       contracts/*/lib
+                      packages/*/artifacts
                       contracts/*/out
                       contracts/*/cache
                       contracts/*/artifacts
