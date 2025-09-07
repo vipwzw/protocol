@@ -651,10 +651,11 @@ describe('ERC1155OrdersFeature', () => {
     describe('sellERC1155', () => {
         // 需要余额重置的测试组
         beforeEach(async () => {
-            // 重置所有相关账户的 ERC20 和 WETH 余额
+            // 重置所有相关账户的 ERC20、WETH 和 ERC1155 余额
             const allAccounts = [owner, maker, taker, otherMaker, otherTaker, matcher];
             await resetBalancesAsync(allAccounts, erc20Token);
             await resetBalancesAsync(allAccounts, weth);
+            await resetERC1155BalancesAsync(allAccounts, erc1155Token);
         });
 
         it('can fully fill a ERC1155 buy order', async () => {
@@ -847,6 +848,7 @@ describe('ERC1155OrdersFeature', () => {
                 const allAccounts = [owner, maker, taker, otherMaker, otherTaker, matcher];
                 await resetBalancesAsync(allAccounts, erc20Token);
                 await resetBalancesAsync(allAccounts, weth);
+                await resetERC1155BalancesAsync(allAccounts, erc1155Token);
             });
 
             it('single fee to EOA', async () => {
@@ -1063,10 +1065,11 @@ describe('ERC1155OrdersFeature', () => {
 
         // onERC1155Received 测试也需要余额重置
         beforeEach(async () => {
-            // 重置所有相关账户的 ERC20 和 WETH 余额
+            // 重置所有相关账户的 ERC20、WETH 和 ERC1155 余额
             const allAccounts = [owner, maker, taker, otherMaker, otherTaker, matcher];
             await resetBalancesAsync(allAccounts, erc20Token);
             await resetBalancesAsync(allAccounts, weth);
+            await resetERC1155BalancesAsync(allAccounts, erc1155Token);
         });
 
         before(() => {
@@ -1198,10 +1201,11 @@ describe('ERC1155OrdersFeature', () => {
     describe('buyERC1155', () => {
         // 需要余额重置的测试组
         beforeEach(async () => {
-            // 重置所有相关账户的 ERC20 和 WETH 余额
+            // 重置所有相关账户的 ERC20、WETH 和 ERC1155 余额
             const allAccounts = [owner, maker, taker, otherMaker, otherTaker, matcher];
             await resetBalancesAsync(allAccounts, erc20Token);
             await resetBalancesAsync(allAccounts, weth);
+            await resetERC1155BalancesAsync(allAccounts, erc1155Token);
         });
 
         it('can fill a ERC1155 sell order', async () => {
@@ -1341,6 +1345,7 @@ describe('ERC1155OrdersFeature', () => {
                 const allAccounts = [owner, maker, taker, otherMaker, otherTaker, matcher];
                 await resetBalancesAsync(allAccounts, erc20Token);
                 await resetBalancesAsync(allAccounts, weth);
+                await resetERC1155BalancesAsync(allAccounts, erc1155Token);
             });
 
             it('can fill an order with ETH (and refunds excess ETH)', async () => {
@@ -1407,6 +1412,7 @@ describe('ERC1155OrdersFeature', () => {
                 const allAccounts = [owner, maker, taker, otherMaker, otherTaker, matcher];
                 await resetBalancesAsync(allAccounts, erc20Token);
                 await resetBalancesAsync(allAccounts, weth);
+                await resetERC1155BalancesAsync(allAccounts, erc1155Token);
             });
 
             it('single fee to EOA', async () => {
