@@ -6,9 +6,32 @@
 
 [website-url]: https://0x.org
 
-[![Coverage Status](https://coveralls.io/repos/github/0xProject/protocol/badge.svg?branch=development)](https://coveralls.io/github/0xProject/protocol?branch=development)
+[![Coverage Status](https://codecov.io/gh/vipwzw/protocol/branch/main/graph/badge.svg)](https://codecov.io/gh/vipwzw/protocol)
+[![CI Status](https://github.com/vipwzw/protocol/workflows/Continuous%20Integration/badge.svg)](https://github.com/vipwzw/protocol/actions)
 [![Discord](https://img.shields.io/badge/chat-discord.chat-yellow.svg?style=flat)](https://discordapp.com/invite/d3FTX3M)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+## 📊 测试覆盖率
+
+本项目使用 Codecov 进行测试覆盖率跟踪，覆盖率数据会在每次 CI 运行后自动更新。
+
+### 整体覆盖率
+[![Coverage Graph](https://codecov.io/gh/vipwzw/protocol/branch/main/graphs/tree.svg)](https://codecov.io/gh/vipwzw/protocol)
+
+### 主要模块覆盖率
+
+| 模块 | 覆盖率 | 状态 |
+|------|--------|------|
+| **Contracts** | [![codecov](https://codecov.io/gh/vipwzw/protocol/branch/main/graph/badge.svg?flag=contracts)](https://codecov.io/gh/vipwzw/protocol?flag=contracts) | 🔄 自动更新 |
+| **Packages** | [![codecov](https://codecov.io/gh/vipwzw/protocol/branch/main/graph/badge.svg?flag=packages)](https://codecov.io/gh/vipwzw/protocol?flag=packages) | 🔄 自动更新 |
+| **Zero-Ex** | [![codecov](https://codecov.io/gh/vipwzw/protocol/branch/main/graph/badge.svg?flag=zero-ex)](https://codecov.io/gh/vipwzw/protocol?flag=zero-ex) | 🔄 自动更新 |
+| **Governance** | [![codecov](https://codecov.io/gh/vipwzw/protocol/branch/main/graph/badge.svg?flag=governance)](https://codecov.io/gh/vipwzw/protocol?flag=governance) | 🔄 自动更新 |
+| **Treasury** | [![codecov](https://codecov.io/gh/vipwzw/protocol/branch/main/graph/badge.svg?flag=treasury)](https://codecov.io/gh/vipwzw/protocol?flag=treasury) | 🔄 自动更新 |
+
+### 覆盖率趋势
+[![Coverage Trend](https://codecov.io/gh/vipwzw/protocol/branch/main/graphs/commits.svg)](https://codecov.io/gh/vipwzw/protocol)
+
+> 💡 **提示**: 点击任何覆盖率徽章可查看详细的覆盖率报告，包括文件级别的覆盖率分析。
 
 ## 🏗️ 0x Protocol 合约结构总览
 
@@ -299,3 +322,29 @@ PKG=@0x/protocol-utils yarn test
 ```bash
 yarn test:contracts
 ```
+
+### 测试覆盖率
+
+生成测试覆盖率报告：
+
+```bash
+yarn test:coverage
+```
+
+查看覆盖率报告：
+
+```bash
+# 生成 HTML 报告
+yarn coverage:report
+
+# 查看 LCOV 报告
+yarn coverage:report:lcov
+```
+
+运行特定包的覆盖率测试：
+
+```bash
+PKG=@0x/protocol-utils yarn test:coverage
+```
+
+> 📊 **覆盖率数据**: 所有测试覆盖率数据会自动上传到 [Codecov](https://codecov.io/gh/vipwzw/protocol)，并在每次 CI 运行后更新。
