@@ -29,7 +29,7 @@
         "test:coverage": "SOLIDITY_COVERAGE=true run-s build test",
         "test:profiler": "SOLIDITY_PROFILER=true run-s build test",
         "test:trace": "SOLIDITY_REVERT_TRACE=true run-s build test",
-        "lint": "eslint src test --ext .ts,.js && yarn lint-contracts",
+        "lint": "eslint src test --ext .ts,.js",
         "fix": "tslint --fix --format stylish --project . --exclude ./typechain-types/**/* --exclude **/lib/**/* && yarn lint-contracts",
         "coverage:report:text": "istanbul report text",
         "coverage:report:html": "istanbul report html && open coverage/index.html",

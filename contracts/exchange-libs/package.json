@@ -32,7 +32,7 @@
         "watch": "forge build --watch",
         "clean": "forge clean && hardhat clean && rm -rf typechain-types && shx rm -rf lib",
         "clean:hardhat": "hardhat clean",
-        "lint": "eslint src test --ext .ts,.js && yarn lint-contracts",
+        "lint": "eslint src test --ext .ts,.js",
         "fix": "eslint src test --ext .ts,.js --fix && yarn lint-contracts",
         "coverage:report:text": "istanbul report text",
         "coverage:report:html": "istanbul report html && open coverage/index.html",

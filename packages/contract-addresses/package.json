@@ -20,7 +20,9 @@
         "clean": "shx rm -rf lib generated_docs coverage .nyc_output *.log",
         "clean:node-modules": "shx rm -rf node_modules",
         "clean:all": "yarn clean && yarn clean:node-modules",
-        "publish:private": "yarn build && echo 'gitpkg publish disabled'"
+        "publish:private": "yarn build && echo 'gitpkg publish disabled'",
+        "lint": "eslint src test --ext .ts,.js",
+        "lint:fix": "eslint src test --ext .ts,.js --fix"
     },
     "repository": {
         "type": "git",

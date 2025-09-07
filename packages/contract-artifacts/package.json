@@ -22,7 +22,9 @@
         "run_mocha": "npx mocha test/*.ts --require ts-node/register",
         "clean": "shx rm -rf lib artifacts coverage .nyc_output *.log",
         "clean:node-modules": "shx rm -rf node_modules",
-        "clean:all": "yarn clean && yarn clean:node-modules"
+        "clean:all": "yarn clean && yarn clean:node-modules",
+        "lint": "eslint src test --ext .ts,.js",
+        "lint:fix": "eslint src test --ext .ts,.js --fix"
     },
     "repository": {
         "type": "git",
