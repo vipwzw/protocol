@@ -69,7 +69,8 @@
         "ts-node": "^10.9.1",
         "typechain": "^8.3.2",
         "typedoc": "~0.16.11",
-        "typescript": "^5.0.0"
+        "typescript": "^5.0.0",
+        "nyc": "^15.1.0"
     },
     "dependencies": {
         "ethereum-types": "^3.7.1",
