@@ -322,12 +322,41 @@ describe('ERC1155OrdersFeature', () => {
         }
     }
 
+    // 跟踪使用过的 tokenId，以便在测试间重置余额
+    const usedTokenIds = new Set<bigint>();
+
+    async function resetERC1155BalancesAsync(accounts: string[], erc1155Contract: any): Promise<void> {
+        for (const account of accounts) {
+            // 只重置我们跟踪的 tokenId
+            for (const tokenId of usedTokenIds) {
+                try {
+                    const balance = await erc1155Contract.balanceOf(account, tokenId);
+                    if (balance > 0n) {
+                        const accountSigner = await getSigner(account);
+                        await erc1155Contract.connect(accountSigner).safeTransferFrom(
+                            account,
+                            owner,
+                            tokenId,
+                            balance,
+                            '0x'
+                        );
+                    }
+                } catch (error) {
+                    // 忽略转移错误，可能是余额不足或其他问题
+                    console.warn(`Cannot reset ERC1155 balance for ${account}, tokenId ${tokenId}: ${error.message}`);
+                }
+            }
+        }
+    }
+
     async function mintAssetsAsync(
         order: ERC1155Order,
         tokenId: bigint = order.erc1155TokenId,
         amount: bigint = order.erc1155TokenAmount,
         _taker: string = taker,
     ): Promise<void> {
+        // 跟踪使用的 tokenId
+        usedTokenIds.add(tokenId);
         const totalFeeAmount =
             order.fees.length > 0 ? order.fees.map(fee => fee.amount).reduce((a, b) => a + b, 0n) : 0n;
         if (order.direction === NFTOrder.TradeDirection.SellNFT) {
@@ -1537,10 +1566,11 @@ describe('ERC1155OrdersFeature', () => {
     describe('batchBuyERC1155s', () => {
         // 批量购买测试需要余额重置
         beforeEach(async () => {
-            // 重置所有相关账户的 ERC20 和 WETH 余额
+            // 重置所有相关账户的 ERC20、WETH 和 ERC1155 余额
             const allAccounts = [owner, maker, taker, otherMaker, otherTaker, matcher];
             await resetBalancesAsync(allAccounts, erc20Token);
             await resetBalancesAsync(allAccounts, weth);
+            await resetERC1155BalancesAsync(allAccounts, erc1155Token);
         });
 
         it('reverts if arrays are different lengths', async () => {
