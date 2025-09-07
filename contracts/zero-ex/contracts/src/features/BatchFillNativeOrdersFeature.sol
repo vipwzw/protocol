@@ -12,12 +12,10 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibMathV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/LibMath.sol";
 import "../errors/LibNativeOrdersRichErrors.sol";
 import "../fixins/FixinCommon.sol";
 import "../fixins/FixinEIP712.sol";
@@ -30,9 +28,7 @@ import "./libs/LibSignature.sol";
 
 /// @dev Feature for batch/market filling limit and RFQ orders.
 contract BatchFillNativeOrdersFeature is IFeature, IBatchFillNativeOrdersFeature, FixinCommon, FixinEIP712 {
-    using LibSafeMathV06 for uint128;
-    using LibSafeMathV06 for uint256;
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev Name of this feature.
     string public constant override FEATURE_NAME = "BatchFill";
@@ -75,9 +71,7 @@ contract BatchFillNativeOrdersFeature is IFeature, IBatchFillNativeOrdersFeature
         );
         takerTokenFilledAmounts = new uint128[](orders.length);
         makerTokenFilledAmounts = new uint128[](orders.length);
-        uint256 protocolFee = uint256(INativeOrdersFeature(address(this)).getProtocolFeeMultiplier()).safeMul(
-            tx.gasprice
-        );
+        uint256 protocolFee = uint256(INativeOrdersFeature(address(this)).getProtocolFeeMultiplier()) * tx.gasprice;
         uint256 ethProtocolFeePaid;
         for (uint256 i = 0; i != orders.length; i++) {
             try
@@ -94,7 +88,7 @@ contract BatchFillNativeOrdersFeature is IFeature, IBatchFillNativeOrdersFeature
                     takerTokenFilledAmount,
                     makerTokenFilledAmount
                 );
-                ethProtocolFeePaid = ethProtocolFeePaid.safeAdd(protocolFee);
+                ethProtocolFeePaid = ethProtocolFeePaid + protocolFee;
             } catch {}
 
             if (revertIfIncomplete && takerTokenFilledAmounts[i] < takerTokenFillAmounts[i]) {

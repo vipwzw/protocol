@@ -12,18 +12,15 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-utils/contracts/src/LibMath.sol";
 import "../../fixins/FixinEIP712.sol";
 import "../interfaces/IMultiplexFeature.sol";
 import "../interfaces/IOtcOrdersFeature.sol";
 import "../libs/LibNativeOrder.sol";
 
 abstract contract MultiplexOtc is FixinEIP712 {
-    using LibSafeMathV06 for uint256;
-
     event ExpiredOtcOrder(bytes32 orderHash, address maker, uint64 expiry);
 
     function _batchSellOtcOrder(
@@ -54,15 +51,15 @@ abstract contract MultiplexOtc is FixinEIP712 {
             IOtcOrdersFeature(address(this))._fillOtcOrder(
                 order,
                 signature,
-                sellAmount.safeDowncastToUint128(),
-                params.payer,
+                LibMath.safeDowncastToUint128(sellAmount),
+                order.taker, // 🔧 使用订单指定的 taker 而不是 params.payer
                 params.useSelfBalance,
                 params.recipient
             )
         returns (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount) {
             // Increment the sold and bought amounts.
-            state.soldAmount = state.soldAmount.safeAdd(takerTokenFilledAmount);
-            state.boughtAmount = state.boughtAmount.safeAdd(makerTokenFilledAmount);
+            state.soldAmount = state.soldAmount + takerTokenFilledAmount;
+            state.boughtAmount = state.boughtAmount + makerTokenFilledAmount;
         } catch {}
     }
 
@@ -87,7 +84,7 @@ abstract contract MultiplexOtc is FixinEIP712 {
             ._fillOtcOrder(
                 order,
                 signature,
-                state.outputTokenAmount.safeDowncastToUint128(),
+                LibMath.safeDowncastToUint128(state.outputTokenAmount),
                 state.from,
                 params.useSelfBalance,
                 state.to

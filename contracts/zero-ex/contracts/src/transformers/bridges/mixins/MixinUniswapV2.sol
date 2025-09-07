@@ -12,38 +12,15 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../IBridgeAdapter.sol";
-
-/*
-    UniswapV2
-*/
-interface IUniswapV2Router02 {
-    /// @dev Swaps an exact amount of input tokens for as many output tokens as possible, along the route determined by
-    /// the path. The first element of path is the input token, the last is the output token, and any intermediate
-    /// elements represent intermediate pairs to trade through (if, for example, a direct pair does not exist).
-    /// @param amountIn The amount of input tokens to send.
-    /// @param amountOutMin The minimum amount of output tokens that must be received for the transaction not to revert.
-    /// @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of addresses
-    /// must exist and have liquidity.
-    /// @param to Recipient of the output tokens.
-    /// @param deadline Unix timestamp after which the transaction will revert.
-    /// @return amounts The input token amount and all subsequent output token amounts.
-    function swapExactTokensForTokens(
-        uint256 amountIn,
-        uint256 amountOutMin,
-        IERC20Token[] calldata path,
-        address to,
-        uint256 deadline
-    ) external returns (uint256[] memory amounts);
-}
+import "../../../vendor/IUniswapV2Router02.sol";
 
 contract MixinUniswapV2 {
-    using LibERC20TokenV06 for IERC20Token;
+    using LibERC20Token for IERC20Token;
 
     function _tradeUniswapV2(
         IERC20Token buyToken,
@@ -51,20 +28,13 @@ contract MixinUniswapV2 {
         bytes memory bridgeData
     ) internal returns (uint256 boughtAmount) {
         IUniswapV2Router02 router;
-        IERC20Token[] memory path;
-        {
-            address[] memory _path;
-            (router, _path) = abi.decode(bridgeData, (IUniswapV2Router02, address[]));
-            // To get around `abi.decode()` not supporting interface array types.
-            assembly {
-                path := _path
-            }
-        }
+        address[] memory path;
+        (router, path) = abi.decode(bridgeData, (IUniswapV2Router02, address[]));
 
         require(path.length >= 2, "MixinUniswapV2/PATH_LENGTH_MUST_BE_AT_LEAST_TWO");
-        require(path[path.length - 1] == buyToken, "MixinUniswapV2/LAST_ELEMENT_OF_PATH_MUST_MATCH_OUTPUT_TOKEN");
+        require(path[path.length - 1] == address(buyToken), "MixinUniswapV2/LAST_ELEMENT_OF_PATH_MUST_MATCH_OUTPUT_TOKEN");
         // Grant the Uniswap router an allowance to sell the first token.
-        path[0].approveIfBelow(address(router), sellAmount);
+        IERC20Token(path[0]).approve(address(router), sellAmount);
 
         uint256[] memory amounts = router.swapExactTokensForTokens(
             // Sell all tokens we hold.

@@ -17,11 +17,10 @@
 
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../IBridgeAdapter.sol";
 
 /*
@@ -50,7 +49,7 @@ interface IKyberDmmRouter {
 }
 
 contract MixinKyberDmm {
-    using LibERC20TokenV06 for IERC20Token;
+    using LibERC20Token for IERC20Token;
 
     function _tradeKyberDmm(
         IERC20Token buyToken,
@@ -69,7 +68,7 @@ contract MixinKyberDmm {
             "MixinKyberDmm/LAST_ELEMENT_OF_PATH_MUST_MATCH_OUTPUT_TOKEN"
         );
         // Grant the KyberDmm router an allowance to sell the first token.
-        IERC20Token(path[0]).approveIfBelow(address(router), sellAmount);
+        IERC20Token(path[0]).approve(address(router), sellAmount);
 
         uint256[] memory amounts = IKyberDmmRouter(router).swapExactTokensForTokens(
             // Sell all tokens we hold.

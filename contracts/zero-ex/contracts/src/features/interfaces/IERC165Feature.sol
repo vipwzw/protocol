@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 /// @dev Implements the ERC165 `supportsInterface` function
 interface IERC165Feature {

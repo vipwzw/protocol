@@ -12,11 +12,10 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../../fixins/FixinERC721Spender.sol";
 import "../../migrations/LibMigrate.sol";
 import "../../storage/LibERC721OrdersStorage.sol";
@@ -28,7 +27,7 @@ import "./NFTOrders.sol";
 
 /// @dev Feature for interacting with ERC721 orders.
 contract ERC721OrdersFeature is IFeature, IERC721OrdersFeature, FixinERC721Spender, NFTOrders {
-    using LibSafeMathV06 for uint256;
+    using LibRichErrors for bytes;
     using LibNFTOrder for LibNFTOrder.ERC721Order;
     using LibNFTOrder for LibNFTOrder.NFTOrder;
 
@@ -108,7 +107,7 @@ contract ERC721OrdersFeature is IFeature, IERC721OrdersFeature, FixinERC721Spend
         LibSignature.Signature memory signature,
         bytes memory callbackData
     ) public payable override {
-        uint256 ethBalanceBefore = address(this).balance.safeSub(msg.value);
+        uint256 ethBalanceBefore = address(this).balance - msg.value;
         _buyERC721(sellOrder, signature, msg.value, callbackData);
         uint256 ethBalanceAfter = address(this).balance;
         // Cannot use pre-existing ETH balance
@@ -118,7 +117,7 @@ contract ERC721OrdersFeature is IFeature, IERC721OrdersFeature, FixinERC721Spend
                 .rrevert();
         }
         // Refund
-        _transferEth(msg.sender, ethBalanceAfter - ethBalanceBefore);
+        _transferEth(payable(msg.sender), ethBalanceAfter - ethBalanceBefore);
     }
 
     /// @dev Cancel a single ERC721 order by its nonce. The caller
@@ -166,16 +165,11 @@ contract ERC721OrdersFeature is IFeature, IERC721OrdersFeature, FixinERC721Spend
         );
         successes = new bool[](sellOrders.length);
 
-        uint256 ethBalanceBefore = address(this).balance.safeSub(msg.value);
+        uint256 ethBalanceBefore = address(this).balance - msg.value;
         if (revertIfIncomplete) {
             for (uint256 i = 0; i < sellOrders.length; i++) {
                 // Will revert if _buyERC721 reverts.
-                _buyERC721(
-                    sellOrders[i],
-                    signatures[i],
-                    address(this).balance.safeSub(ethBalanceBefore),
-                    callbackData[i]
-                );
+                _buyERC721(sellOrders[i], signatures[i], address(this).balance - (ethBalanceBefore), callbackData[i]);
                 successes[i] = true;
             }
         } else {
@@ -189,7 +183,7 @@ contract ERC721OrdersFeature is IFeature, IERC721OrdersFeature, FixinERC721Spend
                         this._buyERC721.selector,
                         sellOrders[i],
                         signatures[i],
-                        address(this).balance.safeSub(ethBalanceBefore), // Remaining ETH available
+                        address(this).balance - (ethBalanceBefore), // Remaining ETH available
                         callbackData[i]
                     )
                 );
@@ -205,7 +199,7 @@ contract ERC721OrdersFeature is IFeature, IERC721OrdersFeature, FixinERC721Spend
         }
 
         // Refund
-        _transferEth(msg.sender, ethBalanceAfter - ethBalanceBefore);
+        _transferEth(payable(msg.sender), ethBalanceAfter - ethBalanceBefore);
     }
 
     /// @dev Matches a pair of complementary orders that have
@@ -321,7 +315,7 @@ contract ERC721OrdersFeature is IFeature, IERC721OrdersFeature, FixinERC721Spend
             //         the profit from matching these two orders.
             profit = spread - sellOrderFees;
             if (profit > 0) {
-                _transferEth(msg.sender, profit);
+                _transferEth(payable(msg.sender), profit);
             }
         } else {
             // ERC20 tokens must match

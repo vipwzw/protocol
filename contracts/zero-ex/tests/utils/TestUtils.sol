@@ -12,12 +12,11 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import "src/transformers/LibERC20Transformer.sol";
+import "contracts/src/transformers/LibERC20Transformer.sol";
 
 contract TestUtils is Test {
     address private constant ZERO_ADDRESS = 0x0000000000000000000000000000000000000000;

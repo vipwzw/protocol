@@ -1,5 +1,4 @@
 import { ContractAddresses } from '@0x/contract-addresses';
-import { BigNumber } from '@0x/utils';
 
 export enum ForwarderError {
     CompleteFillFailed = 'COMPLETE_FILL_FAILED',
@@ -28,7 +27,7 @@ export enum ContractError {
  */
 export interface ContractWrappersConfig {
     chainId: number;
-    gasPrice?: BigNumber;
+    gasPrice?: bigint;
     contractAddresses?: ContractAddresses;
     blockPollingIntervalMs?: number;
 }
@@ -36,7 +35,7 @@ export interface ContractWrappersConfig {
 export interface OrderInfo {
     orderStatus: OrderStatus;
     orderHash: string;
-    orderTakerAssetFilledAmount: BigNumber;
+    orderTakerAssetFilledAmount: bigint;
 }
 
 export enum OrderStatus {
@@ -50,14 +49,14 @@ export enum OrderStatus {
 }
 
 export interface TraderInfo {
-    makerBalance: BigNumber;
-    makerAllowance: BigNumber;
-    takerBalance: BigNumber;
-    takerAllowance: BigNumber;
-    makerZrxBalance: BigNumber;
-    makerZrxAllowance: BigNumber;
-    takerZrxBalance: BigNumber;
-    takerZrxAllowance: BigNumber;
+    makerBalance: bigint;
+    makerAllowance: bigint;
+    takerBalance: bigint;
+    takerAllowance: bigint;
+    makerZrxBalance: bigint;
+    makerZrxAllowance: bigint;
+    takerZrxBalance: bigint;
+    takerZrxAllowance: bigint;
 }
 
 export interface OrderAndTraderInfo {

@@ -1,4 +1,5 @@
-export { ZeroExRevertErrors } from '@0x/utils';
+// 移除对 @0x/utils 的依赖
+// export { ZeroExRevertErrors } from '@0x/utils';
 export {
     AbiDefinition,
     CompilerOpts,
@@ -35,27 +36,9 @@ export * from './nonce_utils';
 export * from './bloom_filter_utils';
 export { GREEDY_TOKENS } from './constants';
 export {
-    AffiliateFeeTransformerContract,
-    AvalancheBridgeAdapterContract,
-    BSCBridgeAdapterContract,
-    CeloBridgeAdapterContract,
-    EthereumBridgeAdapterContract,
-    FantomBridgeAdapterContract,
-    FillQuoteTransformerContract,
-    IOwnableFeatureContract,
-    IOwnableFeatureEvents,
-    ISimpleFunctionRegistryFeatureContract,
-    ISimpleFunctionRegistryFeatureEvents,
-    ITransformERC20FeatureContract,
-    IZeroExContract,
-    LogMetadataTransformerContract,
-    MultiplexFeatureContract,
-    OptimismBridgeAdapterContract,
-    PayTakerTransformerContract,
-    PolygonBridgeAdapterContract,
-    PositiveSlippageFeeTransformerContract,
-    TransformERC20FeatureContract,
-    WethTransformerContract,
-    ZeroExContract,
+    ZeroEx as ZeroExContract,
+    ZeroExOptimized as ZeroExOptimizedContract,
+    FullMigration as FullMigrationContract,
+    InitialMigration as InitialMigrationContract,
 } from './wrappers';
-export { EIP712TypedData } from '@0x/types';
+// export type { EIP712TypedData } from '@0x/utils'; // 暂时注释掉，因为编译问题

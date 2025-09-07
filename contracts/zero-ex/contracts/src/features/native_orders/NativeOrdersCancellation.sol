@@ -12,11 +12,10 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../../errors/LibNativeOrdersRichErrors.sol";
 import "../../storage/LibNativeOrdersStorage.sol";
 import "../interfaces/INativeOrdersEvents.sol";
@@ -26,7 +25,7 @@ import "./NativeOrdersInfo.sol";
 
 /// @dev Feature for cancelling limit and RFQ orders.
 abstract contract NativeOrdersCancellation is INativeOrdersEvents, NativeOrdersInfo {
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev Highest bit of a uint256, used to flag cancelled orders.
     uint256 private constant HIGH_BIT = 1 << 255;

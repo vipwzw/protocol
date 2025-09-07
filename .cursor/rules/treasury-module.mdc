@@ -1,0 +1,107 @@
+---
+description: Treasury module development guide and reference implementation
+globs: "contracts/treasury/**"
+---
+
+# Treasury 模块开发指南
+
+## 模块概述
+
+Treasury 模块 ([contracts/treasury/](mdc:contracts/treasury/)) 是完全升级到 Solidity 0.8.28 的参考实现，包含：
+
+### 核心合约
+- **ZrxTreasury.sol** ([contracts/treasury/contracts/src/ZrxTreasury.sol](mdc:contracts/treasury/contracts/src/ZrxTreasury.sol)) - 主要国库合约
+- **DefaultPoolOperator.sol** ([contracts/treasury/contracts/src/DefaultPoolOperator.sol](mdc:contracts/treasury/contracts/src/DefaultPoolOperator.sol)) - 默认池操作器
+- **IStaking.sol** ([contracts/treasury/contracts/src/IStaking.sol](mdc:contracts/treasury/contracts/src/IStaking.sol)) - Staking 接口
+- **IZrxTreasury.sol** ([contracts/treasury/contracts/src/IZrxTreasury.sol](mdc:contracts/treasury/contracts/src/IZrxTreasury.sol)) - Treasury 接口
+
+## 现代化特性
+
+### Solidity 0.8.28 升级
+1. **移除 SafeMath**: 使用内置溢出检查
+   ```solidity
+   // 旧版本 (0.6.x)
+   votingPower = delegatedBalance.safeAdd(balanceDelegatedToDefaultPool).safeDiv(2);
+   
+   // 新版本 (0.8.28)
+   votingPower = (delegatedBalance + balanceDelegatedToDefaultPool) / 2;
+   ```
+
+2. **移除实验性编码器**:
+   ```solidity
+   // 移除了这一行
+   // pragma experimental ABIEncoderV2;
+   ```
+
+3. **现代化构造函数**:
+   ```solidity
+   // 旧版本
+   constructor(...) public { }
+   
+   // 新版本  
+   constructor(...) { }
+   ```
+
+4. **修复函数可见性**:
+   ```solidity
+   // chainid() 需要 view 而不是 pure
+   function _getChainId() private view returns (uint256) {
+       uint256 chainId;
+       assembly {
+           chainId := chainid()
+       }
+       return chainId;
+   }
+   ```
+
+## 配置参考
+
+### Foundry 配置 ([contracts/treasury/foundry.toml](mdc:contracts/treasury/foundry.toml))
+```toml
+[profile.default]
+src = 'contracts/src'
+out = 'foundry-artifacts'
+test = 'test'
+libs = ["lib/", "../utils/", "../erc20/", "../zero-ex/"]
+remappings = [
+    '@0x/contracts-utils/=../utils/',
+    '@0x/contracts-erc20/=../erc20/',
+    '@0x/contracts-zero-ex/=../zero-ex/',
+]
+solc_version = "0.8.28"
+optimizer = true
+optimizer_runs = 1000000
+fs_permissions = [
+    { access = "read", path = "./" },
+    { access = "read", path = "../" },
+    { access = "read", path = "../../" }
+]
+evm_version = "shanghai"
+```
+
+## 开发最佳实践
+
+### 依赖管理
+- 使用 v08 版本的 utils 库: `@0x/contracts-utils/contracts/src/v08/`
+- 避免使用 v06 版本的库
+- 确保所有导入都兼容 0.8.28
+
+### 错误处理
+- 使用 `LibRichErrorsV08` 而不是 `LibRichErrorsV06`
+- 使用 `require()` 进行基本检查
+- 使用 `revert()` 进行复杂错误处理
+
+### 测试
+- 测试文件应放在 `test/` 目录
+- 使用 Foundry 测试框架
+- 确保所有测试在 0.8.28 下通过
+
+## 作为参考模板
+
+其他模块升级时应参考 Treasury 模块的实现：
+1. 查看具体的语法变更
+2. 了解依赖库的升级方式
+3. 参考配置文件的设置
+4. 学习现代化的最佳实践
+
+Treasury 模块成功编译并通过了所有兼容性测试，是其他模块升级的可靠参考。

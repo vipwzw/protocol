@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "../src/ZeroEx.sol";
 import "../src/features/interfaces/IBootstrapFeature.sol";
@@ -32,7 +31,7 @@ contract TestInitialMigration is InitialMigration {
     function bootstrap(address owner, BootstrapFeatures memory features) public override returns (bytes4 success) {
         success = InitialMigration.bootstrap(owner, features);
         // Snoop the bootstrap feature contract.
-        bootstrapFeature = ZeroEx(address(uint160(address(this)))).getFunctionImplementation(
+        bootstrapFeature = ZeroEx(payable(address(this))).getFunctionImplementation(
             IBootstrapFeature.bootstrap.selector
         );
     }

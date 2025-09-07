@@ -12,10 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
-
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+pragma solidity ^0.8.0;
 
 interface IERC721Receiver {
     /// @notice Handle the receipt of an NFT
@@ -39,8 +36,6 @@ interface IERC721Receiver {
 }
 
 contract TestMintableERC721Token {
-    using LibSafeMathV06 for uint256;
-
     /// @dev This emits when ownership of any NFT changes by any mechanism.
     ///      This event emits when NFTs are created (`from` == 0) and destroyed
     ///      (`to` == 0). Exception: during contract creation, any number of NFTs
@@ -85,7 +80,7 @@ contract TestMintableERC721Token {
         require(owner == address(0), "ERC721_OWNER_ALREADY_EXISTS");
 
         owners[_tokenId] = _to;
-        balances[_to] = balances[_to].safeAdd(1);
+        balances[_to] = balances[_to] + 1;
 
         emit Transfer(address(0), _to, _tokenId);
     }
@@ -101,7 +96,7 @@ contract TestMintableERC721Token {
         require(owner == _owner, "ERC721_OWNER_MISMATCH");
 
         owners[_tokenId] = address(0);
-        balances[_owner] = balances[_owner].safeSub(1);
+        balances[_owner] = balances[_owner] - 1;
 
         emit Transfer(_owner, address(0), _tokenId);
     }
@@ -213,8 +208,8 @@ contract TestMintableERC721Token {
         }
 
         owners[_tokenId] = _to;
-        balances[_from] = balances[_from].safeSub(1);
-        balances[_to] = balances[_to].safeAdd(1);
+        balances[_from] = balances[_from] - 1;
+        balances[_to] = balances[_to] + 1;
 
         emit Transfer(_from, _to, _tokenId);
     }

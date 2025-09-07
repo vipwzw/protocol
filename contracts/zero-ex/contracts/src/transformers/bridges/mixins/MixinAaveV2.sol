@@ -12,11 +12,10 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 
 // Minimal Aave V2 LendingPool interface
 interface ILendingPool {
@@ -48,7 +47,7 @@ interface ILendingPool {
 }
 
 contract MixinAaveV2 {
-    using LibERC20TokenV06 for IERC20Token;
+    using LibERC20Token for IERC20Token;
 
     function _tradeAaveV2(
         IERC20Token sellToken,
@@ -58,7 +57,7 @@ contract MixinAaveV2 {
     ) internal returns (uint256) {
         (ILendingPool lendingPool, address aToken) = abi.decode(bridgeData, (ILendingPool, address));
 
-        sellToken.approveIfBelow(address(lendingPool), sellAmount);
+        sellToken.approve(address(lendingPool), sellAmount);
 
         if (address(buyToken) == aToken) {
             lendingPool.deposit(address(sellToken), sellAmount, address(this), 0);

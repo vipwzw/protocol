@@ -12,12 +12,11 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
 
 /*
     BancorV3
@@ -41,7 +40,7 @@ interface IBancorV3 {
 }
 
 contract MixinBancorV3 {
-    using LibERC20TokenV06 for IERC20Token;
+    using LibERC20Token for IERC20Token;
 
     IERC20Token public constant BANCORV3_ETH_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     IEtherToken private immutable WETH;
@@ -80,7 +79,7 @@ contract MixinBancorV3 {
             _path[0] = address(BANCORV3_ETH_ADDRESS);
         } else {
             // Grant the BancorV3 router an allowance to sell the first token.
-            path[0].approveIfBelow(address(router), sellAmount);
+            path[0].approve(address(router), sellAmount);
         }
 
         // if we are buying WETH we need to swap to ETH and deposit into WETH after the swap

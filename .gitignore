@@ -62,16 +62,15 @@ typings/
 # dotenv environment variables file
 .env
 
-# built library using in commonjs module syntax
-contracts/erc20/lib/
-contracts/test-utils/lib/
-contracts/treasury/lib/
-contracts/utils/lib/
-contracts/zero-ex/lib/
-packages/contract-addresses/lib/
-packages/contract-artifacts/lib/
-packages/contract-wrappers/lib/
-packages/protocol-utils/lib/
+# built library using in commonjs module syntax (TypeScript compiled output)
+
+# TypeScript build info files
+*.tsbuildinfo
+
+# TypeChain generated types
+**/typechain-types/
+typechain-types/
+test/typechain-types/
 
 # UMD bundles that export the global variable
 _bundles
@@ -97,6 +96,10 @@ generated-wrappers/
 # forge std-lib
 contracts/zero-ex/contracts/deps/forge-std
 
+# lib directories in contracts and packages (use root lib/ instead)
+contracts/*/lib/
+packages/*/lib/
+
 # foundry artifacts
 foundry-artifacts/
 
@@ -106,6 +109,13 @@ foundry-cache/
 
 #foundry output artifacts
 out/
+
+# hardhat artifacts (temporary build output)
+**/artifacts/
+artifacts/
+
+# hardhat build-info (very large files)
+**/artifacts/build-info/
 
 # typechain wrappers
 contracts/zero-ex/typechain-wrappers/

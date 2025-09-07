@@ -12,11 +12,11 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../vendor/IUniswapV3Pool.sol";
 import "../migrations/LibMigrate.sol";
 import "../fixins/FixinCommon.sol";
@@ -26,6 +26,7 @@ import "./interfaces/IUniswapV3Feature.sol";
 
 /// @dev VIP uniswap fill functions.
 contract UniswapV3Feature is IFeature, IUniswapV3Feature, FixinCommon, FixinTokenSpender {
+    using LibRichErrors for bytes;
     /// @dev Name of this feature.
     string public constant override FEATURE_NAME = "UniswapV3Feature";
     /// @dev Version of this feature.
@@ -59,7 +60,7 @@ contract UniswapV3Feature is IFeature, IUniswapV3Feature, FixinCommon, FixinToke
     /// @param poolInitCodeHash The UniswapV3 pool init code hash.
     constructor(IEtherToken weth, address uniFactory, bytes32 poolInitCodeHash) public {
         WETH = weth;
-        UNI_FF_FACTORY_ADDRESS = bytes32((uint256(0xff) << 248) | (uint256(uniFactory) << 88));
+        UNI_FF_FACTORY_ADDRESS = bytes32((uint256(0xff) << 248) | (uint256(uint160(uniFactory)) << 88));
         UNI_POOL_INIT_CODE_HASH = poolInitCodeHash;
     }
 
@@ -246,7 +247,7 @@ contract UniswapV3Feature is IFeature, IUniswapV3Feature, FixinCommon, FixinToke
                     swapCallbackData
                 );
                 {
-                    int256 _buyAmount = -(zeroForOne ? amount1 : amount0);
+                    int256 _buyAmount = zeroForOne ? -amount1 : -amount0;
                     require(_buyAmount >= 0, "UniswapV3Feature/INVALID_BUY_AMOUNT");
                     buyAmount = uint256(_buyAmount);
                 }

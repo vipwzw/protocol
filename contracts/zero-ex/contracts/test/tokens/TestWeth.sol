@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "./TestMintableERC20Token.sol";
 
@@ -34,7 +33,7 @@ contract TestWeth is TestMintableERC20Token {
     function withdraw(uint256 amount) external {
         require(balanceOf[msg.sender] >= amount, "TestWeth/INSUFFICIENT_FUNDS");
         balanceOf[msg.sender] -= amount;
-        msg.sender.transfer(amount);
+        payable(msg.sender).transfer(amount);
         emit Withdrawal(msg.sender, amount);
     }
 }

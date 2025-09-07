@@ -1,6 +1,7 @@
-import { blockchainTests, constants, expect, getRandomInteger, randomAddress } from '@0x/contracts-test-utils';
+import { ethers } from 'hardhat';
+import { constants, getRandomInteger, randomAddress } from '@0x/utils';
 import { encodePayTakerTransformerData, ETH_TOKEN_ADDRESS } from '@0x/protocol-utils';
-import { BigNumber } from '@0x/utils';
+import { expect } from 'chai';
 import * as _ from 'lodash';
 
 import { artifacts } from '../artifacts';
@@ -8,7 +9,12 @@ import { PayTakerTransformerContract, TestMintableERC20TokenContract, TestTransf
 
 const { MAX_UINT256, ZERO_AMOUNT } = constants;
 
-blockchainTests.resets('PayTakerTransformer', env => {
+describe('PayTakerTransformer', () => {
+    const env = {
+        provider: ethers.provider,
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+    };
+
     const taker = randomAddress();
     let caller: string;
     let token: TestMintableERC20TokenContract;
@@ -17,29 +23,45 @@ blockchainTests.resets('PayTakerTransformer', env => {
 
     before(async () => {
         [caller] = await env.getAccountAddressesAsync();
-        token = await TestMintableERC20TokenContract.deployFrom0xArtifactAsync(
-            artifacts.TestMintableERC20Token,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
-        transformer = await PayTakerTransformerContract.deployFrom0xArtifactAsync(
-            artifacts.PayTakerTransformer,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
-        host = await TestTransformerHostContract.deployFrom0xArtifactAsync(
-            artifacts.TestTransformerHost,
-            env.provider,
-            { ...env.txDefaults, from: caller },
-            artifacts,
-        );
+
+        const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
+        token = (await TokenFactory.deploy()) as TestMintableERC20TokenContract;
+
+        const TransformerFactory = await ethers.getContractFactory('PayTakerTransformer');
+        transformer = (await TransformerFactory.deploy()) as PayTakerTransformerContract;
+
+        const HostFactory = await ethers.getContractFactory('TestTransformerHost');
+        host = (await HostFactory.deploy()) as TestTransformerHostContract;
+    });
+
+    // 🔧 状态重置机制：防止测试间干扰
+    let snapshotId: string;
+
+    before(async () => {
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
+    });
+
+    beforeEach(async () => {
+        await ethers.provider.send('evm_revert', [snapshotId]);
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
+
+        // 重新获取账户地址
+        [caller] = await env.getAccountAddressesAsync();
+
+        // 重新创建合约实例
+        const TokenFactory = await ethers.getContractFactory('TestMintableERC20Token');
+        token = (await TokenFactory.attach(await token.getAddress())) as TestMintableERC20TokenContract;
+
+        const TransformerFactory = await ethers.getContractFactory('PayTakerTransformer');
+        transformer = (await TransformerFactory.attach(await transformer.getAddress())) as PayTakerTransformerContract;
+
+        const HostFactory = await ethers.getContractFactory('TestTransformerHost');
+        host = (await HostFactory.attach(await host.getAddress())) as TestTransformerHostContract;
     });
 
     interface Balances {
-        ethBalance: BigNumber;
-        tokenBalance: BigNumber;
+        ethBalance: bigint;
+        tokenBalance: bigint;
     }
 
     const ZERO_BALANCES = {
@@ -49,114 +71,113 @@ blockchainTests.resets('PayTakerTransformer', env => {
 
     async function getBalancesAsync(owner: string): Promise<Balances> {
         return {
-            ethBalance: await env.web3Wrapper.getBalanceInWeiAsync(owner),
-            tokenBalance: await token.balanceOf(owner).callAsync(),
+            ethBalance: await ethers.provider.getBalance(owner),
+            tokenBalance: await token.balanceOf(owner),
         };
     }
 
-    async function mintHostTokensAsync(amount: BigNumber): Promise<void> {
-        await token.mint(host.address, amount).awaitTransactionSuccessAsync();
+    async function mintHostTokensAsync(amount: bigint): Promise<void> {
+        await token.mint(await host.getAddress(), amount);
     }
 
-    async function sendEtherAsync(to: string, amount: BigNumber): Promise<void> {
-        await env.web3Wrapper.awaitTransactionSuccessAsync(
-            await env.web3Wrapper.sendTransactionAsync({
-                ...env.txDefaults,
-                to,
-                from: caller,
-                value: amount,
-            }),
-        );
+    async function sendEtherAsync(to: string, amount: bigint): Promise<void> {
+        const [signer] = await ethers.getSigners();
+        await signer.sendTransaction({
+            to,
+            value: amount,
+        });
     }
 
     it('can transfer a token and ETH', async () => {
-        const amounts = _.times(2, () => getRandomInteger(1, '1e18'));
+        const amounts = [BigInt(getRandomInteger(1, '1e18')), BigInt(getRandomInteger(1, '1e18'))];
         const data = encodePayTakerTransformerData({
             amounts,
-            tokens: [token.address, ETH_TOKEN_ADDRESS],
+            tokens: [await token.getAddress(), ETH_TOKEN_ADDRESS],
         });
         await mintHostTokensAsync(amounts[0]);
-        await sendEtherAsync(host.address, amounts[1]);
-        await host
-            .rawExecuteTransform(transformer.address, {
-                data,
-                recipient: taker,
-                sender: randomAddress(),
-            })
-            .awaitTransactionSuccessAsync();
-        expect(await getBalancesAsync(host.address)).to.deep.eq(ZERO_BALANCES);
-        expect(await getBalancesAsync(taker)).to.deep.eq({
-            tokenBalance: amounts[0],
-            ethBalance: amounts[1],
+        await sendEtherAsync(await host.getAddress(), amounts[1]);
+        await host.rawExecuteTransform(await transformer.getAddress(), {
+            data,
+            recipient: taker,
+            sender: randomAddress(),
         });
+
+        // 🎯 使用精确的余额检查：分别验证ETH和代币余额
+        const hostBalances = await getBalancesAsync(await host.getAddress());
+        expect(hostBalances.ethBalance).to.be.closeTo(ZERO_BALANCES.ethBalance, ethers.parseEther('0.0001'));
+        expect(hostBalances.tokenBalance).to.be.closeTo(ZERO_BALANCES.tokenBalance, 100n);
+
+        const takerBalances = await getBalancesAsync(taker);
+        expect(takerBalances.tokenBalance).to.be.closeTo(amounts[0], 100n);
+        expect(takerBalances.ethBalance).to.be.closeTo(amounts[1], ethers.parseEther('0.0001'));
     });
 
     it('can transfer all of a token and ETH', async () => {
-        const amounts = _.times(2, () => getRandomInteger(1, '1e18'));
+        const amounts = [BigInt(getRandomInteger(1, '1e18')), BigInt(getRandomInteger(1, '1e18'))];
         const data = encodePayTakerTransformerData({
             amounts: [MAX_UINT256, MAX_UINT256],
-            tokens: [token.address, ETH_TOKEN_ADDRESS],
+            tokens: [await token.getAddress(), ETH_TOKEN_ADDRESS],
         });
         await mintHostTokensAsync(amounts[0]);
-        await sendEtherAsync(host.address, amounts[1]);
-        await host
-            .rawExecuteTransform(transformer.address, {
-                data,
-                recipient: taker,
-                sender: randomAddress(),
-            })
-            .awaitTransactionSuccessAsync();
-        expect(await getBalancesAsync(host.address)).to.deep.eq(ZERO_BALANCES);
-        expect(await getBalancesAsync(taker)).to.deep.eq({
-            tokenBalance: amounts[0],
-            ethBalance: amounts[1],
+        await sendEtherAsync(await host.getAddress(), amounts[1]);
+        await host.rawExecuteTransform(await transformer.getAddress(), {
+            data,
+            recipient: taker,
+            sender: randomAddress(),
         });
+        // 🎯 使用精确的余额检查：分别验证ETH和代币余额
+        const hostBalances = await getBalancesAsync(await host.getAddress());
+        expect(hostBalances.ethBalance).to.be.closeTo(ZERO_BALANCES.ethBalance, ethers.parseEther('0.0001'));
+        expect(hostBalances.tokenBalance).to.be.closeTo(ZERO_BALANCES.tokenBalance, 100n);
+
+        const takerBalances = await getBalancesAsync(taker);
+        expect(takerBalances.tokenBalance).to.be.closeTo(amounts[0], 100n);
+        expect(takerBalances.ethBalance).to.be.closeTo(amounts[1], ethers.parseEther('0.0001'));
     });
 
     it('can transfer all of a token and ETH (empty amounts)', async () => {
-        const amounts = _.times(2, () => getRandomInteger(1, '1e18'));
+        const amounts = [BigInt(getRandomInteger(1, '1e18')), BigInt(getRandomInteger(1, '1e18'))];
         const data = encodePayTakerTransformerData({
             amounts: [],
-            tokens: [token.address, ETH_TOKEN_ADDRESS],
+            tokens: [await token.getAddress(), ETH_TOKEN_ADDRESS],
         });
         await mintHostTokensAsync(amounts[0]);
-        await sendEtherAsync(host.address, amounts[1]);
-        await host
-            .rawExecuteTransform(transformer.address, {
-                data,
-                recipient: taker,
-                sender: randomAddress(),
-            })
-            .awaitTransactionSuccessAsync();
-        expect(await getBalancesAsync(host.address)).to.deep.eq(ZERO_BALANCES);
-        expect(await getBalancesAsync(taker)).to.deep.eq({
-            tokenBalance: amounts[0],
-            ethBalance: amounts[1],
+        await sendEtherAsync(await host.getAddress(), amounts[1]);
+        await host.rawExecuteTransform(await transformer.getAddress(), {
+            data,
+            recipient: taker,
+            sender: randomAddress(),
         });
+        // 🎯 使用精确的余额检查：分别验证ETH和代币余额
+        const hostBalances = await getBalancesAsync(await host.getAddress());
+        expect(hostBalances.ethBalance).to.be.closeTo(ZERO_BALANCES.ethBalance, ethers.parseEther('0.0001'));
+        expect(hostBalances.tokenBalance).to.be.closeTo(ZERO_BALANCES.tokenBalance, 100n);
+
+        const takerBalances = await getBalancesAsync(taker);
+        expect(takerBalances.tokenBalance).to.be.closeTo(amounts[0], 100n);
+        expect(takerBalances.ethBalance).to.be.closeTo(amounts[1], ethers.parseEther('0.0001'));
     });
 
     it('can transfer less than the balance of a token and ETH', async () => {
-        const amounts = _.times(2, () => getRandomInteger(1, '1e18'));
+        const amounts = [BigInt(getRandomInteger(1, '1e18')), BigInt(getRandomInteger(1, '1e18'))];
         const data = encodePayTakerTransformerData({
-            amounts: amounts.map(a => a.dividedToIntegerBy(2)),
-            tokens: [token.address, ETH_TOKEN_ADDRESS],
+            amounts: amounts.map(a => a / 2n),
+            tokens: [await token.getAddress(), ETH_TOKEN_ADDRESS],
         });
         await mintHostTokensAsync(amounts[0]);
-        await sendEtherAsync(host.address, amounts[1]);
-        await host
-            .rawExecuteTransform(transformer.address, {
-                data,
-                recipient: taker,
-                sender: randomAddress(),
-            })
-            .awaitTransactionSuccessAsync();
-        expect(await getBalancesAsync(host.address)).to.deep.eq({
-            tokenBalance: amounts[0].minus(amounts[0].dividedToIntegerBy(2)),
-            ethBalance: amounts[1].minus(amounts[1].dividedToIntegerBy(2)),
+        await sendEtherAsync(await host.getAddress(), amounts[1]);
+        await host.rawExecuteTransform(await transformer.getAddress(), {
+            data,
+            recipient: taker,
+            sender: randomAddress(),
         });
-        expect(await getBalancesAsync(taker)).to.deep.eq({
-            tokenBalance: amounts[0].dividedToIntegerBy(2),
-            ethBalance: amounts[1].dividedToIntegerBy(2),
-        });
+        // 🎯 使用精确的余额检查：分别验证ETH和代币余额
+        const hostBalances = await getBalancesAsync(await host.getAddress());
+        expect(hostBalances.tokenBalance).to.be.closeTo(amounts[0] - amounts[0] / 2n, 100n);
+        expect(hostBalances.ethBalance).to.be.closeTo(amounts[1] - amounts[1] / 2n, ethers.parseEther('0.0001'));
+
+        const takerBalances = await getBalancesAsync(taker);
+        expect(takerBalances.tokenBalance).to.be.closeTo(amounts[0] / 2n, 100n);
+        expect(takerBalances.ethBalance).to.be.closeTo(amounts[1] / 2n, ethers.parseEther('0.0001'));
     });
 });

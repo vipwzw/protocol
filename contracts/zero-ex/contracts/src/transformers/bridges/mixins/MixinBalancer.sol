@@ -12,10 +12,10 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 
 interface IBalancerPool {
     /// @dev Sell `tokenAmountIn` of `tokenIn` and receive `tokenOut`.
@@ -37,7 +37,7 @@ interface IBalancerPool {
 }
 
 contract MixinBalancer {
-    using LibERC20TokenV06 for IERC20Token;
+    using LibERC20Token for IERC20Token;
 
     function _tradeBalancer(
         IERC20Token sellToken,
@@ -47,14 +47,14 @@ contract MixinBalancer {
     ) internal returns (uint256 boughtAmount) {
         // Decode the bridge data.
         IBalancerPool pool = abi.decode(bridgeData, (IBalancerPool));
-        sellToken.approveIfBelow(address(pool), sellAmount);
+        sellToken.approve(address(pool), sellAmount);
         // Sell all of this contract's `sellToken` token balance.
         (boughtAmount, ) = pool.swapExactAmountIn(
             sellToken, // tokenIn
             sellAmount, // tokenAmountIn
             buyToken, // tokenOut
             1, // minAmountOut
-            uint256(-1) // maxPrice
+            type(uint256).max // maxPrice
         );
         return boughtAmount;
     }

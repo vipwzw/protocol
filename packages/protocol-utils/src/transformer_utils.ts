@@ -1,4 +1,5 @@
-import { AbiEncoder, BigNumber, hexUtils, NULL_ADDRESS } from '@0x/utils';
+import { hexUtils, NULL_ADDRESS } from '@0x/utils';
+import { ethers } from 'ethers';
 import * as ethjs from 'ethereumjs-util';
 
 import { LimitOrder, LimitOrderFields, OtcOrder, OtcOrderFields, RfqOrder, RfqOrderFields } from './orders';
@@ -54,42 +55,111 @@ const OTC_ORDER_INFO_ABI_COMPONENTS = [
 ];
 
 /**
- * ABI encoder for `FillQuoteTransformer.TransformData`
+ * 将对象格式的数据转换为数组格式（用于 ethers.js v6 兼容性）
  */
-export const fillQuoteTransformerDataEncoder = AbiEncoder.create([
+function convertToArrayFormat(obj: any, components: any[]): any {
+    if (Array.isArray(obj)) {
+        return obj.map(item => convertToArrayFormat(item, components));
+    }
+
+    if (typeof obj === 'object' && obj !== null) {
+        return components.map(component => {
+            const value = obj[component.name];
+
+            // 处理 bytes 类型（string）
+            if (component.type === 'bytes') {
+                // 如果值是空数组或 undefined/null，返回 '0x'
+                if (Array.isArray(value) && value.length === 0) {
+                    return '0x';
+                }
+                return value || '0x'; // 确保 bytes 类型至少是 '0x'
+            }
+
+            if (component.components && Array.isArray(value)) {
+                // 处理嵌套的 tuple 数组
+                return value.map(item => convertToArrayFormat(item, component.components));
+            } else if (component.components && typeof value === 'object') {
+                // 处理嵌套的 tuple 对象
+                return convertToArrayFormat(value, component.components);
+            }
+
+            // 🔧 处理 null/undefined 值 - 为不同类型提供默认值
+            if (value === null || value === undefined) {
+                if (component.type.startsWith('uint') || component.type.startsWith('int')) {
+                    return '0';
+                } else if (component.type === 'address') {
+                    return '0x0000000000000000000000000000000000000000';
+                } else if (component.type === 'bytes32') {
+                    return '0x0000000000000000000000000000000000000000000000000000000000000000';
+                } else if (component.type === 'bool') {
+                    return false;
+                } else if (component.type.endsWith('[]')) {
+                    return []; // 空数组作为默认值
+                } else {
+                    console.warn(`🔍 为未知类型 "${component.type}" 的字段 "${component.name}" 设置默认值 "0"`);
+                    return '0';
+                }
+            }
+
+            return value;
+        });
+    }
+
+    return obj;
+}
+
+/**
+ * ABI encoder for `FillQuoteTransformer.TransformData`
+ * 使用 ethers AbiCoder 替代 AbiEncoder
+ */
+const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+
+// 定义 FillQuoteTransformerData 的完整 ABI (匹配 Solidity 合约结构)
+const FILL_QUOTE_TRANSFORMER_DATA_ABI = {
+    type: 'tuple',
+    components: [
+        { name: 'side', type: 'uint8' },
+        { name: 'sellToken', type: 'address' },
+        { name: 'buyToken', type: 'address' },
+        { name: 'bridgeOrders', type: 'tuple[]', components: BRIDGE_ORDER_ABI_COMPONENTS },
+        { name: 'limitOrders', type: 'tuple[]', components: LIMIT_ORDER_INFO_ABI_COMPONENTS },
+        { name: 'rfqOrders', type: 'tuple[]', components: RFQ_ORDER_INFO_ABI_COMPONENTS }, // 修复：使用正确的 RFQ 结构
+        { name: 'fillSequence', type: 'uint8[]' },
+        { name: 'fillAmount', type: 'uint256' },
+        { name: 'refundReceiver', type: 'address' },
+        { name: 'otcOrders', type: 'tuple[]', components: OTC_ORDER_INFO_ABI_COMPONENTS }, // 修复：使用正确的 OTC 结构
+    ],
+};
+
+// 创建 ethers Interface 用于编码/解码
+const fillQuoteInterface = new ethers.Interface([
     {
-        name: 'data',
-        type: 'tuple',
-        components: [
-            { name: 'side', type: 'uint8' },
-            { name: 'sellToken', type: 'address' },
-            { name: 'buyToken', type: 'address' },
-            {
-                name: 'bridgeOrders',
-                type: 'tuple[]',
-                components: BRIDGE_ORDER_ABI_COMPONENTS,
-            },
-            {
-                name: 'limitOrders',
-                type: 'tuple[]',
-                components: LIMIT_ORDER_INFO_ABI_COMPONENTS,
-            },
-            {
-                name: 'rfqOrders',
-                type: 'tuple[]',
-                components: RFQ_ORDER_INFO_ABI_COMPONENTS,
-            },
-            { name: 'fillSequence', type: 'uint8[]' },
-            { name: 'fillAmount', type: 'uint256' },
-            { name: 'refundReceiver', type: 'address' },
-            {
-                name: 'otcOrders',
-                type: 'tuple[]',
-                components: OTC_ORDER_INFO_ABI_COMPONENTS,
-            },
-        ],
+        type: 'function',
+        name: 'encodeFillQuoteData',
+        inputs: [FILL_QUOTE_TRANSFORMER_DATA_ABI],
     },
 ]);
+
+export const fillQuoteTransformerDataEncoder = {
+    encode: (data: FillQuoteTransformerData): string => {
+        // 转换为数组格式以兼容 ethers.js v6
+        const arrayData = convertToArrayFormat(data, FILL_QUOTE_TRANSFORMER_DATA_ABI.components);
+        // 使用 ethers Interface 编码，去掉函数选择器（前4字节）
+        const encoded = fillQuoteInterface.encodeFunctionData('encodeFillQuoteData', [arrayData]);
+        return '0x' + encoded.slice(10); // 去掉 '0x' + 4字节函数选择器
+    },
+    decode: (encoded: string): FillQuoteTransformerData => {
+        // 添加正确的函数选择器进行解码
+        const func = fillQuoteInterface.getFunction('encodeFillQuoteData');
+        if (!func) {
+            throw new Error('Function encodeFillQuoteData not found in interface');
+        }
+        const funcSelector = func.selector;
+        const withSelector = funcSelector + encoded.slice(2);
+        const decoded = fillQuoteInterface.decodeFunctionData('encodeFillQuoteData', withSelector);
+        return decoded[0] as FillQuoteTransformerData;
+    },
+};
 
 /**
  * Market operation for `FillQuoteTransformerData`.
@@ -110,19 +180,20 @@ export enum FillQuoteTransformerOrderType {
 }
 
 /**
- * `FillQuoteTransformer.TransformData`
+ * Transform data for `FillQuoteTransformer.transform()`.
+ * 注意：这个结构匹配 Solidity 合约期望的格式
  */
 export interface FillQuoteTransformerData {
     side: FillQuoteTransformerSide;
     sellToken: string;
     buyToken: string;
     bridgeOrders: FillQuoteTransformerBridgeOrder[];
-    limitOrders: FillQuoteTransformerLimitOrderInfo[];
-    rfqOrders: FillQuoteTransformerRfqOrderInfo[];
-    otcOrders: FillQuoteTransformerOtcOrderInfo[];
+    limitOrders: FillQuoteTransformerLimitOrderInfo[]; // 数组，匹配合约
+    rfqOrders: FillQuoteTransformerRfqOrderInfo[]; // 数组，匹配合约
     fillSequence: FillQuoteTransformerOrderType[];
-    fillAmount: BigNumber;
+    fillAmount: bigint;
     refundReceiver: string;
+    otcOrders: FillQuoteTransformerOtcOrderInfo[]; // 数组，匹配合约
 }
 
 /**
@@ -178,8 +249,8 @@ export interface FillQuoteTransformerBridgeOrder {
     // protocol ID and the lower 16 bytes are a bytes16, left-aligned,
     // ASCII source name.
     source: string;
-    takerTokenAmount: BigNumber;
-    makerTokenAmount: BigNumber;
+    takerTokenAmount: bigint;
+    makerTokenAmount: bigint;
     bridgeData: string;
 }
 
@@ -190,7 +261,7 @@ export interface FillQuoteTransformerBridgeOrder {
 interface FillQuoteTransformerNativeOrderInfo<T> {
     order: T;
     signature: Signature;
-    maxTakerTokenFillAmount: BigNumber;
+    maxTakerTokenFillAmount: bigint;
 }
 
 /**
@@ -212,36 +283,44 @@ export type FillQuoteTransformerOtcOrderInfo = FillQuoteTransformerNativeOrderIn
  * ABI-encode a `FillQuoteTransformer.TransformData` type.
  */
 export function encodeFillQuoteTransformerData(data: FillQuoteTransformerData): string {
-    return fillQuoteTransformerDataEncoder.encode([data]);
+    return fillQuoteTransformerDataEncoder.encode(data);
 }
 
 /**
  * ABI-decode a `FillQuoteTransformer.TransformData` type.
  */
 export function decodeFillQuoteTransformerData(encoded: string): FillQuoteTransformerData {
-    return fillQuoteTransformerDataEncoder.decode(encoded).data;
+    return fillQuoteTransformerDataEncoder.decode(encoded);
 }
 
 /**
  * ABI encoder for `WethTransformer.TransformData`
+ * 使用 ethers AbiCoder 替代 AbiEncoder
  */
-export const wethTransformerDataEncoder = AbiEncoder.create([
-    {
-        name: 'data',
-        type: 'tuple',
-        components: [
-            { name: 'token', type: 'address' },
-            { name: 'amount', type: 'uint256' },
-        ],
+// WETH Transformer Data ABI 组件
+const WETH_TRANSFORMER_DATA_ABI_COMPONENTS = [
+    { name: 'token', type: 'address' },
+    { name: 'amount', type: 'uint256' },
+];
+
+export const wethTransformerDataEncoder = {
+    encode: (data: [WethTransformerData]): string => {
+        // 转换为数组格式以兼容 ethers.js v6
+        const arrayData = convertToArrayFormat(data[0], WETH_TRANSFORMER_DATA_ABI_COMPONENTS);
+        return abiCoder.encode(['tuple(address,uint256)'], [arrayData]);
     },
-]);
+    decode: (encoded: string): [WethTransformerData] => {
+        const [decoded] = abiCoder.decode(['tuple(address,uint256)'], encoded);
+        return [decoded as WethTransformerData];
+    },
+};
 
 /**
  * `WethTransformer.TransformData`
  */
 export interface WethTransformerData {
     token: string;
-    amount: BigNumber;
+    amount: bigint;
 }
 
 /**
@@ -255,29 +334,37 @@ export function encodeWethTransformerData(data: WethTransformerData): string {
  * ABI-decode a `WethTransformer.TransformData` type.
  */
 export function decodeWethTransformerData(encoded: string): WethTransformerData {
-    return wethTransformerDataEncoder.decode(encoded).data;
+    return wethTransformerDataEncoder.decode(encoded)[0];
 }
 
 /**
  * ABI encoder for `PayTakerTransformer.TransformData`
+ * 使用 ethers AbiCoder 替代 AbiEncoder
  */
-export const payTakerTransformerDataEncoder = AbiEncoder.create([
-    {
-        name: 'data',
-        type: 'tuple',
-        components: [
-            { name: 'tokens', type: 'address[]' },
-            { name: 'amounts', type: 'uint256[]' },
-        ],
+// PayTaker Transformer Data ABI 组件
+const PAY_TAKER_TRANSFORMER_DATA_ABI_COMPONENTS = [
+    { name: 'tokens', type: 'address[]' },
+    { name: 'amounts', type: 'uint256[]' },
+];
+
+export const payTakerTransformerDataEncoder = {
+    encode: (data: [PayTakerTransformerData]): string => {
+        // 转换为数组格式以兼容 ethers.js v6
+        const arrayData = convertToArrayFormat(data[0], PAY_TAKER_TRANSFORMER_DATA_ABI_COMPONENTS);
+        return abiCoder.encode(['tuple(address[],uint256[])'], [arrayData]);
     },
-]);
+    decode: (encoded: string): [PayTakerTransformerData] => {
+        const [decoded] = abiCoder.decode(['tuple(address[],uint256[])'], encoded);
+        return [decoded as PayTakerTransformerData];
+    },
+};
 
 /**
  * `PayTakerTransformer.TransformData`
  */
 export interface PayTakerTransformerData {
     tokens: string[];
-    amounts: BigNumber[];
+    amounts: bigint[];
 }
 
 /**
@@ -291,27 +378,37 @@ export function encodePayTakerTransformerData(data: PayTakerTransformerData): st
  * ABI-decode a `PayTakerTransformer.TransformData` type.
  */
 export function decodePayTakerTransformerData(encoded: string): PayTakerTransformerData {
-    return payTakerTransformerDataEncoder.decode(encoded).data;
+    return payTakerTransformerDataEncoder.decode(encoded)[0];
 }
 
 /**
  * ABI encoder for `affiliateFeetransformer.TransformData`
+ * 使用 ethers AbiCoder 替代 AbiEncoder
  */
-export const affiliateFeeTransformerDataEncoder = AbiEncoder.create({
-    name: 'data',
-    type: 'tuple',
-    components: [
-        {
-            name: 'fees',
-            type: 'tuple[]',
-            components: [
-                { name: 'token', type: 'address' },
-                { name: 'amount', type: 'uint256' },
-                { name: 'recipient', type: 'address' },
-            ],
-        },
-    ],
-});
+// AffiliateFee Transformer Data ABI 组件
+const AFFILIATE_FEE_TRANSFORMER_DATA_ABI_COMPONENTS = [
+    {
+        name: 'fees',
+        type: 'tuple[]',
+        components: [
+            { name: 'token', type: 'address' },
+            { name: 'amount', type: 'uint256' },
+            { name: 'recipient', type: 'address' },
+        ],
+    },
+];
+
+export const affiliateFeeTransformerDataEncoder = {
+    encode: (data: AffiliateFeeTransformerData): string => {
+        // 转换为数组格式以兼容 ethers.js v6
+        const arrayData = convertToArrayFormat(data, AFFILIATE_FEE_TRANSFORMER_DATA_ABI_COMPONENTS);
+        return abiCoder.encode(['tuple(tuple(address,uint256,address)[])'], [arrayData]);
+    },
+    decode: (encoded: string): AffiliateFeeTransformerData => {
+        const [decoded] = abiCoder.decode(['tuple(tuple(address,uint256,address)[])'], encoded);
+        return decoded as AffiliateFeeTransformerData;
+    },
+};
 
 /**
  * `AffiliateFeeTransformer.TransformData`
@@ -319,7 +416,7 @@ export const affiliateFeeTransformerDataEncoder = AbiEncoder.create({
 export interface AffiliateFeeTransformerData {
     fees: Array<{
         token: string;
-        amount: BigNumber;
+        amount: bigint;
         recipient: string;
     }>;
 }
@@ -366,23 +463,33 @@ export function getTransformerAddress(deployer: string, nonce: number): string {
 
 /**
  * ABI encoder for `PositiveSlippageFeeTransformer.TransformData`
+ * 使用 ethers AbiCoder 替代 AbiEncoder
  */
-export const positiveSlippageFeeTransformerDataEncoder = AbiEncoder.create({
-    name: 'data',
-    type: 'tuple',
-    components: [
-        { name: 'token', type: 'address' },
-        { name: 'bestCaseAmount', type: 'uint256' },
-        { name: 'recipient', type: 'address' },
-    ],
-});
+// PositiveSlippageFee Transformer Data ABI 组件
+const POSITIVE_SLIPPAGE_FEE_TRANSFORMER_DATA_ABI_COMPONENTS = [
+    { name: 'token', type: 'address' },
+    { name: 'bestCaseAmount', type: 'uint256' },
+    { name: 'recipient', type: 'address' },
+];
+
+export const positiveSlippageFeeTransformerDataEncoder = {
+    encode: (data: PositiveSlippageFeeTransformerData): string => {
+        // 转换为数组格式以兼容 ethers.js v6
+        const arrayData = convertToArrayFormat(data, POSITIVE_SLIPPAGE_FEE_TRANSFORMER_DATA_ABI_COMPONENTS);
+        return abiCoder.encode(['tuple(address,uint256,address)'], [arrayData]);
+    },
+    decode: (encoded: string): PositiveSlippageFeeTransformerData => {
+        const [decoded] = abiCoder.decode(['tuple(address,uint256,address)'], encoded);
+        return decoded as PositiveSlippageFeeTransformerData;
+    },
+};
 
 /**
  * `PositiveSlippageFeeTransformer.TransformData`
  */
 export interface PositiveSlippageFeeTransformerData {
     token: string;
-    bestCaseAmount: BigNumber;
+    bestCaseAmount: bigint;
     recipient: string;
 }
 

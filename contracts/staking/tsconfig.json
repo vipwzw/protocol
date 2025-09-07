@@ -1,0 +1,25 @@
+{
+    "extends": "../../tsconfig",
+    "compilerOptions": {
+        "outDir": "lib",
+        "rootDir": ".",
+        "resolveJsonModule": true,
+        "composite": true
+    },
+    "include": ["./src/**/*", "./artifacts/**/*.json", "./src/typechain-types/**/*"],
+    "exclude": [
+        "./node_modules/**/*",
+        "./lib/**/*",
+        "./cache/**/*",
+        "./out/**/*",
+        "./generated-artifacts/**/*",
+        "./generated-wrappers/**/*"
+    ],
+    "references": [
+        // 暂时移除依赖引用，避免编译依赖模块的错误
+        // { "path": "../asset-proxy" },
+        // { "path": "../erc20" },
+        // { "path": "../exchange-libs" },
+        // { "path": "../utils" }
+    ]
+}

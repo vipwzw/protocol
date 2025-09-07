@@ -12,10 +12,9 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../tokens/TestMintableERC20Token.sol";
 
 contract TestCurve {
@@ -40,7 +39,7 @@ contract TestCurve {
     IERC20Token public sellToken;
     TestMintableERC20Token public buyToken;
 
-    constructor(IERC20Token sellToken_, TestMintableERC20Token buyToken_, uint256 buyAmount_) public payable {
+    constructor(IERC20Token sellToken_, TestMintableERC20Token buyToken_, uint256 buyAmount_) payable {
         sellToken = sellToken_;
         buyToken = buyToken_;
         buyAmount = buyAmount_;
@@ -63,12 +62,12 @@ contract TestCurve {
         if (toCoinIdx == BUY_TOKEN_COIN_IDX) {
             buyToken.mint(msg.sender, buyAmount);
         } else if (toCoinIdx == ETH_COIN_IDX) {
-            msg.sender.transfer(buyAmount);
+            payable(msg.sender).transfer(buyAmount);
         }
         emit CurveCalled(msg.value, selector, fromCoinIdx, toCoinIdx, sellAmount, minBuyAmount);
         if (shouldReturnBoughtAmount) {
             assembly {
-                mstore(0, sload(buyAmount_slot))
+                mstore(0, sload(buyAmount.slot))
                 return(0, 32)
             }
         }

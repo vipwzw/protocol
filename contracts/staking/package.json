@@ -1,0 +1,85 @@
+{
+    "name": "@0x/contracts-staking",
+    "version": "2.0.44",
+    "engines": {
+        "node": ">=6.12"
+    },
+    "description": "Staking contracts used by 0x protocol",
+    "main": "lib/src/index.js",
+    "directories": {
+        "test": "test"
+    },
+    "scripts": {
+        "build": "forge build && npx hardhat compile && npx hardhat typechain && tsc -b",
+        "build:ts": "tsc -b",
+        "build:forge": "forge build",
+        "build:ci": "yarn build",
+        "compile": "forge build && npx hardhat compile",
+        "typechain": "npx hardhat typechain",
+        "generate_contract_wrappers": "npx hardhat typechain",
+        "generate_contract_wrappers:force": "rm -rf typechain-types && npx hardhat typechain",
+        "test": "run-s compile generate_contract_wrappers test:hardhat test:forge",
+        "test:forge": "forge test",
+        "test:hardhat": "yarn compile && yarn generate_contract_wrappers && npx hardhat test",
+        "test:ci": "yarn test",
+        "clean": "hardhat clean && rm -rf typechain-types lib artifacts cache out src/typechain-types generated-* test/generated-* test/typechain-types",
+        "clean:node-modules": "shx rm -rf node_modules",
+        "clean:all": "yarn clean && yarn clean:node-modules",
+        "rebuild_and_test": "run-s build test",
+        "test:coverage": "SOLIDITY_COVERAGE=true run-s build test",
+        "test:profiler": "SOLIDITY_PROFILER=true run-s build test",
+        "test:trace": "SOLIDITY_REVERT_TRACE=true run-s build test",
+        "lint": "eslint src test --ext .ts,.js",
+        "fix": "tslint --fix --format stylish --project . --exclude ./typechain-types/**/* --exclude **/lib/**/* && yarn lint-contracts",
+        "coverage:report:text": "istanbul report text",
+        "coverage:report:html": "istanbul report html && open coverage/index.html",
+        "profiler:report:html": "istanbul report html && open coverage/index.html",
+        "coverage:report:lcov": "istanbul report lcov",
+        "test:circleci": "yarn test",
+        "lint-contracts": "solhint -c ../.solhint.json contracts/**/**/**/**/*.sol",
+        "docs:md": "ts-doc-gen --sourceDir='$PROJECT_FILES' --output=$MD_FILE_DIR --fileExtension=mdx --tsconfig=./typedoc-tsconfig.json",
+        "docs:json": "typedoc --excludePrivate --excludeExternals --excludeProtected --ignoreCompilerErrors --target ES5 --tsconfig typedoc-tsconfig.json --json $JSON_FILE_PATH $PROJECT_FILES"
+    },
+    "config": {
+        "publicInterfaceContracts": "IStaking,IStakingEvents,IStakingProxy,IZrxVault,LibStakingRichErrors,Staking,StakingProxy,ZrxVault,TestStaking"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/0xProject/protocol.git"
+    },
+    "license": "Apache-2.0",
+    "bugs": {
+        "url": "https://github.com/0xProject/protocol/issues"
+    },
+    "homepage": "https://github.com/0xProject/protocol/tree/main/contracts/tokens",
+    "devDependencies": {
+        "@typechain/ethers-v6": "^0.5.1",
+        "@typechain/hardhat": "^9.1.0",
+        "@types/lodash": "4.14.104",
+        "@types/node": "12.12.54",
+        "chai": "^4.0.1",
+        "chai-bignumber": "^3.0.0",
+        "decimal.js": "^10.2.0",
+        "dirty-chai": "^2.0.1",
+        "hardhat": "^2.19.4",
+        "js-combinatorics": "^0.5.3",
+        "lodash": "^4.17.11",
+        "make-promises-safe": "^1.1.0",
+        "mocha": "^4.1.0",
+        "npm-run-all": "^4.1.2",
+        "shx": "^0.2.2",
+        "solhint": "^1.4.1",
+        "tslint": "5.11.0",
+        "typechain": "^8.3.2",
+        "typedoc": "~0.16.11",
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "ethereum-types": "^3.5.0",
+        "ethereumjs-util": "^7.0.10"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "gitHead": "4f91bfd907996b2f4dd383778b50c479c2602b56"
+}

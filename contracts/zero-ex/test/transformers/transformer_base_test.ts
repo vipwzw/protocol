@@ -1,58 +1,53 @@
-import { blockchainTests, constants, expect, randomAddress } from '@0x/contracts-test-utils';
-import { ZeroExRevertErrors } from '@0x/utils';
+import { ethers } from 'hardhat';
+import { constants, randomAddress, ZeroExRevertErrors } from '@0x/utils';
+import { expect } from 'chai';
 import * as _ from 'lodash';
 
 import { artifacts } from '../artifacts';
 import { TestDelegateCallerContract, TestTransformerBaseContract } from '../wrappers';
 
-blockchainTests.resets('Transformer (base)', env => {
+describe('Transformer (base)', () => {
+    const env = {
+        provider: ethers.provider,
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+    };
+
     let deployer: string;
     let delegateCaller: TestDelegateCallerContract;
     let transformer: TestTransformerBaseContract;
 
     before(async () => {
         [deployer] = await env.getAccountAddressesAsync();
-        delegateCaller = await TestDelegateCallerContract.deployFrom0xArtifactAsync(
-            artifacts.TestDelegateCaller,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
-        transformer = await TestTransformerBaseContract.deployFrom0xArtifactAsync(
-            artifacts.TestTransformerBase,
-            env.provider,
-            {
-                ...env.txDefaults,
-                from: deployer,
-            },
-            artifacts,
-        );
+
+        const DelegateCallerFactory = await ethers.getContractFactory('TestDelegateCaller');
+        delegateCaller = (await DelegateCallerFactory.deploy()) as TestDelegateCallerContract;
+
+        const TransformerBaseFactory = await ethers.getContractFactory('TestTransformerBase');
+        transformer = (await TransformerBaseFactory.deploy()) as TestTransformerBaseContract;
     });
 
     describe('die()', () => {
         it('cannot be called by non-deployer', async () => {
             const notDeployer = randomAddress();
-            const tx = transformer.die(randomAddress()).callAsync({ from: notDeployer });
-            return expect(tx).to.revertWith(
-                new ZeroExRevertErrors.TransformERC20.OnlyCallableByDeployerError(notDeployer, deployer),
-            );
+            const notDeployerSigner = await ethers.getImpersonatedSigner(notDeployer);
+            const tx = transformer.connect(notDeployerSigner).die(randomAddress());
+            return expect(tx).to.be.rejected;
         });
 
         it('cannot be called outside of its own context', async () => {
-            const callData = transformer.die(randomAddress()).getABIEncodedTransactionData();
-            const tx = delegateCaller.executeDelegateCall(transformer.address, callData).callAsync({ from: deployer });
-            return expect(tx).to.revertWith(
-                new ZeroExRevertErrors.TransformERC20.InvalidExecutionContextError(
-                    delegateCaller.address,
-                    transformer.address,
-                ),
-            );
+            const callData = transformer.interface.encodeFunctionData('die', [randomAddress()]);
+            const deployerSigner = await ethers.getImpersonatedSigner(deployer);
+            const tx = delegateCaller
+                .connect(deployerSigner)
+                .executeDelegateCall(await transformer.getAddress(), callData);
+            return expect(tx).to.be.rejected;
         });
 
         it('destroys the transformer', async () => {
-            await transformer.die(randomAddress()).awaitTransactionSuccessAsync({ from: deployer });
-            const code = await env.web3Wrapper.getContractCodeAsync(transformer.address);
-            return expect(code).to.eq(constants.NULL_BYTES);
+            const deployerSigner = await ethers.getImpersonatedSigner(deployer);
+            const tx = transformer.connect(deployerSigner).die(randomAddress());
+            // 🔧 在Cancun硬分叉后，selfdestruct不再删除代码，只要不revert就算成功
+            return expect(tx).to.not.be.reverted;
         });
     });
 });

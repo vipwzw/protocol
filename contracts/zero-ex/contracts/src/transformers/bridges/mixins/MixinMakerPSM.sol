@@ -12,12 +12,10 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 
 interface IPSM {
     // @dev Get the fee for selling USDC to DAI in PSM
@@ -48,8 +46,7 @@ interface IPSM {
 }
 
 contract MixinMakerPSM {
-    using LibERC20TokenV06 for IERC20Token;
-    using LibSafeMathV06 for uint256;
+    using LibERC20Token for IERC20Token;
 
     struct MakerPsmBridgeData {
         address psmAddress;
@@ -79,18 +76,18 @@ contract MixinMakerPSM {
         IPSM psm = IPSM(data.psmAddress);
 
         if (address(sellToken) == data.gemTokenAddres) {
-            sellToken.approveIfBelow(psm.gemJoin(), sellAmount);
+            sellToken.approve(psm.gemJoin(), sellAmount);
 
             psm.sellGem(address(this), sellAmount);
         } else if (address(buyToken) == data.gemTokenAddres) {
-            uint256 feeDivisor = WAD.safeAdd(psm.tout()); // eg. 1.001 * 10 ** 18 with 0.1% fee [tout is in wad];
-            uint256 buyTokenBaseUnit = uint256(10) ** uint256(buyToken.decimals());
-            uint256 gemAmount = sellAmount.safeMul(buyTokenBaseUnit).safeDiv(feeDivisor);
+            uint256 feeDivisor = WAD + (psm.tout()); // eg. 1.001 * 10 ** 18 with 0.1% fee [tout is in wad];
+            uint256 buyTokenBaseUnit = uint256(10) ** uint256(LibERC20Token.decimals(address(buyToken)));
+            uint256 gemAmount = (sellAmount * buyTokenBaseUnit) / feeDivisor;
 
-            sellToken.approveIfBelow(data.psmAddress, sellAmount);
+            sellToken.approve(data.psmAddress, sellAmount);
             psm.buyGem(address(this), gemAmount);
         }
 
-        return buyToken.balanceOf(address(this)).safeSub(beforeBalance);
+        return buyToken.balanceOf(address(this)) - (beforeBalance);
     }
 }

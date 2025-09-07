@@ -4,36 +4,43 @@
     "engines": {
         "node": ">=6.12"
     },
-    "description": "Wrappers for 0x smart contract wrappers generated using @0x/abi-gen",
+    "description": "Wrappers for 0x smart contract wrappers generated using TypeChain",
     "keywords": [
         "0xproject",
         "ethereum",
         "tokens",
-        "exchange"
+        "exchange",
+        "typechain"
     ],
     "main": "lib/src/index.js",
     "types": "lib/src/index.d.ts",
     "scripts": {
-        "build": "tsc -b",
-        "rebuild": "yarn wrappers:clean && yarn wrappers:generate && yarn wrappers:prettier && yarn build",
+        "build": "yarn typechain:generate && tsc -b",
+        "rebuild": "yarn typechain:clean && yarn typechain:generate && yarn typechain:prettier && yarn build",
         "build:ci": "yarn build",
         "publish:private": "yarn rebuild && echo 'gitpkg publish disabled'",
-        "lint": "eslint src",
+        "lint": "eslint src --ext .ts,.js",
         "fix": "eslint --fix src",
         "prettier": "prettier --write **/* --config ../../.prettierrc",
-        "clean": "shx rm -rf lib generated_docs",
-        "docs_test": "typedoc --excludePrivate --excludeExternals --target ES5 --tsconfig typedoc-tsconfig.json --out generated_docs ./src/generated-wrappers/*",
+        "clean": "shx rm -rf lib generated_docs coverage .nyc_output *.log",
+        "clean:node-modules": "shx rm -rf node_modules",
+        "clean:all": "yarn clean && yarn clean:node-modules",
+        "docs_test": "typedoc --excludePrivate --excludeExternals --target ES5 --tsconfig typedoc-tsconfig.json --out generated_docs ./src/typechain-types/*",
         "diff_docs": "git diff --exit-code ./docs",
         "s3:sync_md_docs": "aws s3 sync ./docs s3://docs-markdown/${npm_package_name}/v${npm_package_version} --profile 0xproject --region us-east-1 --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers",
         "docs:md": "ts-doc-gen --sourceDir='$PROJECT_FILES' --output=$MD_FILE_DIR --fileExtension=mdx --tsconfig=./typedoc-tsconfig.json",
         "docs:json": "typedoc --excludePrivate --excludeExternals --excludeProtected --ignoreCompilerErrors --target ES5 --tsconfig typedoc-tsconfig.json --json $JSON_FILE_PATH $PROJECT_FILES",
-        "wrappers:prettier": "prettier --write src/generated-wrappers/* --config ../../.prettierrc",
-        "wrappers:clean": "rm -rf src/generated-wrappers",
-        "wrappers:generate": "abi-gen --abis  ${npm_package_config_abis} --output src/generated-wrappers --backend ethers"
+        "typechain:prettier": "if [ -d \"src/typechain-types\" ] && [ \"$(ls -A src/typechain-types)\" ]; then prettier --write src/typechain-types/* --config ../../.prettierrc; fi",
+        "typechain:clean": "rm -rf src/typechain-types",
+        "typechain:generate": "npx typechain --target ethers-v6 --out-dir src/typechain-types '../contract-artifacts/artifacts/*.json'",
+        "test": "yarn typechain:generate && yarn test:hardhat",
+        "test:hardhat": "yarn typechain:generate && npx hardhat test",
+        "test:ci": "yarn typechain:generate && yarn test",
+        "test:coverage": "nyc --reporter=text --reporter=html --reporter=lcov yarn test && echo '\nCoverage report generated in coverage/ directory'"
     },
     "config": {
         "abis": "../contract-artifacts/artifacts/@(DevUtils|ERC20Token|ERC721Token|Exchange|Forwarder|IAssetData|LibTransactionDecoder|WETH9|Coordinator|Staking|StakingProxy|GodsUnchainedValidator|Broker|ILiquidityProvider|ILiquidityProviderRegistry|MaximumGasPrice|ITransformERC20|IZeroEx).json"
-          },
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/0xProject/protocol.git"
@@ -44,24 +51,18 @@
     },
     "homepage": "https://github.com/0xProject/protocol/tree/main/packages/contract-wrappers",
     "devDependencies": {
-        "@0x/ts-doc-gen": "^0.0.28",
-        "@typescript-eslint/eslint-plugin": "^5.38.0",
-        "@typescript-eslint/parser": "^5.38.0",
-        "eslint": "^8.23.1",
-                "eslint-config-prettier": "^8.5.0",
+        "@typechain/ethers-v6": "^0.5.1",
+        "@typechain/hardhat": "^9.1.0",
+        "chai": "^4.5.0",
+        "hardhat": "^2.26.1",
+        "shx": "^0.4.0",
+        "typechain": "^8.3.2",
         "typedoc": "~0.16.11",
-        "typescript": "4.6.3"
+        "typescript": "^5.0.0"
     },
     "dependencies": {
-        "@0x/assert": "^3.0.36",
-        "@0x/base-contract": "^7.0.0",
-        "@0x/contract-addresses": "^8.12.0",
-        "@0x/json-schemas": "^6.4.4",
-        "@0x/types": "^3.3.7",
-        "@0x/utils": "^7.0.0",
-        "@0x/web3-wrapper": "^8.0.1",
         "ethereum-types": "^3.7.1",
-        "ethers": "~4.0.4"
+        "ethers": "^6.15.0"
     },
     "publishConfig": {
         "access": "public"

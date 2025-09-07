@@ -1,68 +1,88 @@
-import * as chai from 'chai';
-import { get } from 'lodash';
+import * as artifacts from '../src';
+
+import { expect } from 'chai';
 import 'mocha';
 
-import * as artifacts from '../src/index';
+// Test that all artifacts are in Hardhat format and have required properties
+describe('@0x/contract-artifacts', () => {
+    it('should export artifacts in Hardhat native format', () => {
+        expect(artifacts).to.be.an('object');
 
-import { FORBIDDEN_PROPERTIES, REQUIRED_PROPERTIES } from '../src/transform';
+        // Test key artifacts
+        const keyArtifacts = ['IERC20Token', 'IZeroEx', 'WETH9', 'ZRXToken'];
 
-const expect = chai.expect;
+        for (const artifactName of keyArtifacts) {
+            const artifact = (artifacts as any)[artifactName];
+            expect(artifact, `${artifactName} should exist`).to.exist;
 
-interface ObjectMap<T> {
-    [name: string]: T;
-}
-
-// For pure functions, we use local EVM execution in `@0x/base-contract` instead
-// of making an eth_call. This requires the `deployedBytecode` from compiler output.
-const CONTRACTS_WITH_PURE_FNS = [
-    // 'Coordinator', // missing deployedBytecode
-    'DevUtils',
-    'ERC1155Proxy',
-    'ERC20Proxy',
-    'ERC721Proxy',
-    'IAssetProxy',
-    'MultiAssetProxy',
-    'StaticCallProxy',
-];
-
-describe('Contract Artifacts', () => {
-    it('should not include forbidden attributes', () => {
-        const forbiddenPropertiesByArtifact: { [name: string]: string[] } = {};
-        for (const [artifactName, artifact] of Object.entries(artifacts)) {
-            for (const forbiddenProperty of FORBIDDEN_PROPERTIES) {
-                const rejectedValue = get(artifact, forbiddenProperty);
-                if (rejectedValue) {
-                    const previousForbidden = forbiddenPropertiesByArtifact[artifactName];
-                    forbiddenPropertiesByArtifact[artifactName] = previousForbidden
-                        ? [...previousForbidden, forbiddenProperty]
-                        : [forbiddenProperty];
-                }
-            }
+            // Check Hardhat format
+            expect(artifact._format, `${artifactName} should have _format`).to.equal('hh-sol-artifact-1');
+            expect(artifact.contractName, `${artifactName} should have contractName`).to.be.a('string');
+            expect(artifact.sourceName, `${artifactName} should have sourceName`).to.be.a('string');
+            expect(artifact.abi, `${artifactName} should have abi`).to.be.an('array');
+            expect(artifact.bytecode, `${artifactName} should have bytecode`).to.be.a('string');
+            expect(artifact.deployedBytecode, `${artifactName} should have deployedBytecode`).to.be.a('string');
         }
-        expect(forbiddenPropertiesByArtifact).to.eql({});
     });
-    it('should include all required attributes', () => {
-        const missingRequiredPropertiesByArtifact: ObjectMap<string[]> = {};
-        for (const [artifactName, artifact] of Object.entries(artifacts)) {
-            for (const requiredProperty of REQUIRED_PROPERTIES) {
-                // HACK (xianny): Remove after `compiler` field is added in v3.
-                if (requiredProperty === 'compiler' && artifact.schemaVersion === '2.0.0') {
-                    continue;
-                }
-                if (requiredProperty === 'compilerOutput.evm.deployedBytecode.object') {
-                    if (!CONTRACTS_WITH_PURE_FNS.includes(artifactName)) {
-                        continue;
-                    }
-                }
-                const requiredValue = get(artifact, requiredProperty);
-                if (requiredValue === undefined || requiredValue === '') {
-                    const previousMissing = missingRequiredPropertiesByArtifact[artifactName];
-                    missingRequiredPropertiesByArtifact[artifactName] = previousMissing
-                        ? [...previousMissing, requiredProperty]
-                        : [requiredProperty];
-                }
-            }
-        }
-        expect(missingRequiredPropertiesByArtifact).to.eql({});
+
+    it('IERC20Token should have correct contract structure', () => {
+        const IERC20Token = (artifacts as any).IERC20Token;
+
+        expect(IERC20Token.contractName).to.equal('IERC20Token');
+        expect(IERC20Token.sourceName).to.include('IERC20Token.sol');
+        expect(IERC20Token.abi).to.be.an('array');
+        expect(IERC20Token.abi.length).to.be.greaterThan(0);
+
+        // Check for standard ERC20 functions in ABI
+        const functionNames = IERC20Token.abi
+            .filter((item: any) => item.type === 'function')
+            .map((item: any) => item.name);
+
+        expect(functionNames).to.include('balanceOf');
+        expect(functionNames).to.include('transfer');
+        expect(functionNames).to.include('allowance');
+        expect(functionNames).to.include('approve');
+    });
+
+    it('IZeroEx should have correct contract structure', () => {
+        const IZeroEx = (artifacts as any).IZeroEx;
+
+        expect(IZeroEx.contractName).to.equal('IZeroEx');
+        expect(IZeroEx.sourceName).to.include('IZeroEx.sol');
+        expect(IZeroEx.abi).to.be.an('array');
+        expect(IZeroEx.abi.length).to.be.greaterThan(0);
+    });
+
+    it('should not have legacy abi-gen format properties', () => {
+        const IERC20Token = (artifacts as any).IERC20Token;
+
+        // These should NOT exist (old abi-gen format)
+        expect(IERC20Token.schemaVersion).to.be.undefined;
+        expect(IERC20Token.compilerOutput).to.be.undefined;
+        expect(IERC20Token.compiler).to.be.undefined;
+
+        // These SHOULD exist (Hardhat format)
+        expect(IERC20Token._format).to.exist;
+        expect(IERC20Token.abi).to.exist;
+        expect(IERC20Token.bytecode).to.exist;
+    });
+
+    it('should have optimal properties for TypeChain', () => {
+        const IERC20Token = (artifacts as any).IERC20Token;
+
+        // Essential properties for TypeChain
+        expect(IERC20Token._format).to.equal('hh-sol-artifact-1');
+        expect(IERC20Token.contractName).to.be.a('string');
+        expect(IERC20Token.abi).to.be.an('array');
+        expect(IERC20Token.bytecode).to.be.a('string');
+        expect(IERC20Token.deployedBytecode).to.be.a('string');
+        expect(IERC20Token.linkReferences).to.be.an('object');
+        expect(IERC20Token.deployedLinkReferences).to.be.an('object');
+
+        // Should not have unnecessary properties (optimized for bundle size)
+        expect(IERC20Token.metadata).to.be.undefined;
+        expect(IERC20Token.userdoc).to.be.undefined;
+        expect(IERC20Token.devdoc).to.be.undefined;
+        expect(IERC20Token.storageLayout).to.be.undefined;
     });
 });

@@ -1,0 +1,134 @@
+#!/bin/bash
+
+# Pre-commit hook: 防止提交大文件和不当文件
+# 
+# 安装方法：
+# 1. 自动安装（推荐）: npm run setup-hooks
+# 2. 手动安装: cp .githooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+# 颜色定义
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# 配置
+MAX_FILE_SIZE=10485760  # 10MB in bytes
+MAX_FILE_SIZE_MB=10     # 用于显示
+
+echo -e "${GREEN}🔍 执行提交前检查...${NC}"
+
+# 获取将要提交的文件列表
+files=$(git diff --cached --name-only --diff-filter=ACM)
+
+# 如果没有文件要提交，直接通过
+if [ -z "$files" ]; then
+    exit 0
+fi
+
+# 标记是否发现问题
+found_issues=0
+large_files=""
+build_info_files=""
+suspicious_files=""
+
+# 检查每个文件
+while IFS= read -r file; do
+    # 跳过已删除的文件
+    if [ ! -f "$file" ]; then
+        continue
+    fi
+    
+    # 获取文件大小
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        file_size=$(stat -f%z "$file" 2>/dev/null)
+    else
+        # Linux
+        file_size=$(stat -c%s "$file" 2>/dev/null)
+    fi
+    
+    # 检查文件大小
+    if [ -n "$file_size" ] && [ "$file_size" -gt "$MAX_FILE_SIZE" ]; then
+        # 转换为 MB
+        if command -v bc &> /dev/null; then
+            size_mb=$(echo "scale=2; $file_size / 1048576" | bc)
+        else
+            size_mb=$((file_size / 1048576))
+        fi
+        large_files="${large_files}\n  ❌ $file (${size_mb}MB)"
+        found_issues=1
+    fi
+    
+    # 检查 build-info 文件
+    if echo "$file" | grep -qE "artifacts/build-info/.*\.json$"; then
+        build_info_files="${build_info_files}\n  ❌ $file"
+        found_issues=1
+    fi
+    
+    # 检查其他不应该提交的文件
+    case "$file" in
+        *node_modules/*|*.log|*coverage/*|*dist/*|*build/*|*.tmp|*.bak|.DS_Store|.env|.env.*)
+            suspicious_files="${suspicious_files}\n  ⚠️  $file"
+            ;;
+    esac
+done <<< "$files"
+
+# 报告问题
+if [ -n "$large_files" ]; then
+    echo -e "\n${RED}❌ 发现大于 ${MAX_FILE_SIZE_MB}MB 的文件：${NC}"
+    echo -e "$large_files"
+fi
+
+if [ -n "$build_info_files" ]; then
+    echo -e "\n${RED}❌ 发现 build-info 文件：${NC}"
+    echo -e "$build_info_files"
+    echo -e "${YELLOW}这些文件不应该被提交。请确保 .gitignore 包含: **/artifacts/build-info/${NC}"
+fi
+
+if [ -n "$suspicious_files" ]; then
+    echo -e "\n${YELLOW}⚠️  警告：检测到可能不应该提交的文件：${NC}"
+    echo -e "$suspicious_files"
+fi
+
+# 如果发现严重问题，阻止提交
+if [ "$found_issues" -eq 1 ]; then
+    echo -e "\n${RED}❌ 提交被阻止${NC}"
+    echo -e "\n${GREEN}建议：${NC}"
+    echo "1. 对于大文件："
+    echo "   - 使用 Git LFS: git lfs track '<pattern>'"
+    echo "   - 或添加到 .gitignore"
+    echo ""
+    echo "2. 从暂存区移除文件："
+    echo "   git reset HEAD <file>"
+    echo ""
+    echo "3. 如果确实需要提交，可以跳过检查："
+    echo "   git commit --no-verify"
+    echo ""
+    exit 1
+fi
+
+# 额外检查：文件名规范
+echo -e "${GREEN}✅ 文件大小检查通过${NC}"
+
+# 检查是否有敏感信息（可选）
+if command -v grep &> /dev/null; then
+    sensitive_patterns=(
+        "password.*=.*['\"]"
+        "api[_-]?key.*=.*['\"]"
+        "secret.*=.*['\"]"
+        "private[_-]?key"
+    )
+    
+    for pattern in "${sensitive_patterns[@]}"; do
+        matches=$(git diff --cached --name-only | xargs grep -l -i "$pattern" 2>/dev/null || true)
+        if [ -n "$matches" ]; then
+            echo -e "\n${YELLOW}⚠️  警告：检测到可能的敏感信息：${NC}"
+            echo "$matches"
+            echo "请确认这些是否应该提交。"
+        fi
+    done
+fi
+
+echo -e "${GREEN}✅ 所有检查通过${NC}"
+exit 0 

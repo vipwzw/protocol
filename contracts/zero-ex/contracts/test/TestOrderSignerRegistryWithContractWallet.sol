@@ -12,17 +12,16 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/contracts/src/v06/OwnableV06.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-utils/contracts/src/Ownable.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../src/IZeroEx.sol";
 
-contract TestOrderSignerRegistryWithContractWallet is OwnableV06 {
+contract TestOrderSignerRegistryWithContractWallet is Ownable {
     IZeroEx immutable zeroex;
 
-    constructor(IZeroEx _zeroex) public {
+    constructor(IZeroEx _zeroex) {
         zeroex = _zeroex;
     }
 

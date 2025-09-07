@@ -12,12 +12,10 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../errors/LibLiquidityProviderRichErrors.sol";
 import "../external/ILiquidityProviderSandbox.sol";
 import "../external/LiquidityProviderSandbox.sol";
@@ -29,8 +27,7 @@ import "./interfaces/IFeature.sol";
 import "./interfaces/ILiquidityProviderFeature.sol";
 
 contract LiquidityProviderFeature is IFeature, ILiquidityProviderFeature, FixinCommon, FixinTokenSpender {
-    using LibSafeMathV06 for uint256;
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev Name of this feature.
     string public constant override FEATURE_NAME = "LiquidityProviderFeature";
@@ -91,15 +88,15 @@ contract LiquidityProviderFeature is IFeature, ILiquidityProviderFeature, FixinC
         if (LibERC20Transformer.isTokenETH(inputToken)) {
             uint256 balanceBefore = outputToken.balanceOf(recipient);
             sandbox.executeSellEthForToken(provider, outputToken, recipient, minBuyAmount, auxiliaryData);
-            boughtAmount = IERC20Token(outputToken).balanceOf(recipient).safeSub(balanceBefore);
+            boughtAmount = IERC20Token(outputToken).balanceOf(recipient) - balanceBefore;
         } else if (LibERC20Transformer.isTokenETH(outputToken)) {
             uint256 balanceBefore = recipient.balance;
             sandbox.executeSellTokenForEth(provider, inputToken, recipient, minBuyAmount, auxiliaryData);
-            boughtAmount = recipient.balance.safeSub(balanceBefore);
+            boughtAmount = recipient.balance - balanceBefore;
         } else {
             uint256 balanceBefore = outputToken.balanceOf(recipient);
             sandbox.executeSellTokenForToken(provider, inputToken, outputToken, recipient, minBuyAmount, auxiliaryData);
-            boughtAmount = outputToken.balanceOf(recipient).safeSub(balanceBefore);
+            boughtAmount = outputToken.balanceOf(recipient) - balanceBefore;
         }
 
         if (boughtAmount < minBuyAmount) {

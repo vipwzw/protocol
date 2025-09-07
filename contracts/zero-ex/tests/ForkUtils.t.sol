@@ -12,27 +12,24 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-
-pragma experimental ABIEncoderV2;
-
-import "utils/ForkUtils.sol";
-import "utils/TestUtils.sol";
-import "src/IZeroEx.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "src/features/TransformERC20Feature.sol";
-import "src/external/TransformerDeployer.sol";
-import "src/transformers/WethTransformer.sol";
-import "src/transformers/FillQuoteTransformer.sol";
-import "src/transformers/bridges/BridgeProtocols.sol";
-import "src/transformers/bridges/EthereumBridgeAdapter.sol";
-import "src/transformers/bridges/PolygonBridgeAdapter.sol";
-import "src/transformers/bridges/ArbitrumBridgeAdapter.sol";
-import "src/transformers/bridges/OptimismBridgeAdapter.sol";
-import "src/transformers/bridges/AvalancheBridgeAdapter.sol";
-import "src/transformers/bridges/FantomBridgeAdapter.sol";
-import "src/transformers/bridges/CeloBridgeAdapter.sol";
-import "src/features/OtcOrdersFeature.sol";
+pragma solidity ^0.8.0;
+import "./utils/ForkUtils.sol";
+import "./utils/TestUtils.sol";
+import "contracts/src/IZeroEx.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import "contracts/src/features/TransformERC20Feature.sol";
+import "contracts/src/external/TransformerDeployer.sol";
+import "contracts/src/transformers/WethTransformer.sol";
+import "contracts/src/transformers/FillQuoteTransformer.sol";
+import "contracts/src/transformers/bridges/BridgeProtocols.sol";
+import "contracts/src/transformers/bridges/EthereumBridgeAdapter.sol";
+import "contracts/src/transformers/bridges/PolygonBridgeAdapter.sol";
+import "contracts/src/transformers/bridges/ArbitrumBridgeAdapter.sol";
+import "contracts/src/transformers/bridges/OptimismBridgeAdapter.sol";
+import "contracts/src/transformers/bridges/AvalancheBridgeAdapter.sol";
+import "contracts/src/transformers/bridges/FantomBridgeAdapter.sol";
+import "contracts/src/transformers/bridges/CeloBridgeAdapter.sol";
+import "contracts/src/features/OtcOrdersFeature.sol";
 
 contract ForkUtilsTest is Test, ForkUtils, TestUtils {
     function setUp() public {
@@ -42,7 +39,7 @@ contract ForkUtilsTest is Test, ForkUtils, TestUtils {
     function test_addressesExist() public {}
 
     function logAddresses(string memory chainName, string memory chainId) public {
-        bytes memory details = json.parseRaw(chainId);
+        bytes memory details = vm.parseJson(json, chainId);
         addresses = abi.decode(details, (ContractAddresses));
     }
 }

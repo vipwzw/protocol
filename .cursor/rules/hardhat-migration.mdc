@@ -1,0 +1,112 @@
+# Hardhat 测试框架迁移指南
+
+## 项目状态
+✅ **已完成迁移**: 项目已从 Mocha + Ganache 完全迁移到 Hardhat 测试框架
+
+## 测试配置标准
+
+### Hardhat 配置文件模板 ([hardhat.config.js](mdc:hardhat.config.js))
+```javascript
+require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-ethers");
+
+module.exports = {
+  solidity: {
+    version: "0.8.28",
+    settings: {
+      optimizer: { enabled: true, runs: 1000000 },
+      evmVersion: "cancun",
+    },
+  },
+  networks: {
+    hardhat: { chainId: 1337 },
+    localhost: { url: "http://localhost:8545" },
+  },
+  paths: {
+    sources: "./contracts/src",
+    tests: "./lib/test",  // 编译后的JS文件
+    cache: "./cache/hardhat",
+    artifacts: "./artifacts",
+  },
+  mocha: { timeout: 100000 },
+};
+```
+
+### Package.json 测试脚本标准
+```json
+{
+  "scripts": {
+    "test": "npx hardhat test",
+    "run_mocha": "npx hardhat test"
+  }
+}
+```
+
+## 已迁移模块
+
+### ✅ 完全迁移
+- **@0x/contract-addresses** - 24个测试通过
+- **@0x/contract-artifacts** - 2个测试通过  
+- **@0x/protocol-utils** - 27个测试通过
+- **@0x/contracts-erc20** - 使用forge test
+- **@0x/contracts-utils** - 已配置Hardhat
+- **@0x/contracts-zero-ex** - 已配置Hardhat
+- **@0x/contracts-treasury** - 已配置Hardhat
+
+### ⚠️ 部分问题
+- **@0x/contracts-test-utils** - Chai兼容性问题
+
+## 网络配置
+
+### 本地开发网络
+- **网络ID**: 1337 (原Ganache网络，现为Hardhat)
+- **ChainId**: `ChainId.Hardhat = 1337`
+- **地址配置**: [packages/contract-addresses/addresses.json](mdc:packages/contract-addresses/addresses.json)
+
+## 最佳实践
+
+### 新模块开发
+1. 使用标准Hardhat配置模板
+2. 测试脚本统一为 `npx hardhat test`
+3. Solidity版本统一为 0.8.28
+4. EVM版本使用 cancun
+
+### 测试文件结构
+```
+module/
+├── hardhat.config.js     # Hardhat配置
+├── contracts/src/        # Solidity源码
+├── test/                 # TypeScript测试源码
+├── lib/test/            # 编译后的JS测试文件
+└── package.json         # 测试脚本配置
+```
+
+### 依赖清理
+- ❌ **已移除**: ganache-cli依赖和脚本
+- ✅ **使用**: Hardhat内置网络进行测试
+- ✅ **保持**: 网络ID 1337的兼容性
+
+## 故障排除
+
+### 常见问题
+1. **路径配置**: 确保 `tests: "./lib/test"` 指向编译后的JS文件
+2. **remapping错误**: 合约模块可能需要额外的路径配置  
+3. **依赖冲突**: 使用 `yarn install --check-files` 清理
+4. **Chai断言**: 新版本可能需要更新断言语法
+
+### 编译问题
+- TypeScript编译错误会阻止测试运行
+- 确保先运行 `yarn build` 生成lib目录
+- 检查导入路径和依赖版本
+
+## 升级指南
+
+如需为新模块添加Hardhat支持：
+1. 复制标准配置文件
+2. 更新package.json测试脚本
+3. 确保路径指向正确的测试目录
+4. 验证编译和测试运行正常
+description:
+globs:
+alwaysApply: false
+---

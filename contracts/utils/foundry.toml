@@ -1,0 +1,23 @@
+[profile.default]
+src = 'contracts/src'
+out = 'out'
+test = 'tests'
+# Include test contracts for ABI generation
+extra_output_files = ["abi"]
+libs = ['../../lib', "../erc20/contracts/", "../governance/contracts/"]
+remappings = [
+    '@0x/contracts-erc20/=../erc20/',
+    '@0x/contracts-governance/=../governance/',
+]
+solc_version = "0.8.28"
+optimizer = true
+optimizer_runs = 200
+evm_version = "cancun"
+fs_permissions = [
+    { access = "read", path = "./" },
+    { access = "read", path = "../" }
+]
+
+[profile.default.lint]
+# 禁用 asm-keccak256 lint 规则，因为项目中使用标准的 keccak256() 函数
+exclude = ["asm-keccak256"] 

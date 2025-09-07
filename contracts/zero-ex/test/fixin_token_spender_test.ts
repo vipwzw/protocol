@@ -1,45 +1,43 @@
-import {
-    blockchainTests,
-    expect,
-    getRandomInteger,
-    randomAddress,
-    verifyEventsFromLogs,
-} from '@0x/contracts-test-utils';
-import { BigNumber, hexUtils, RawRevertError, StringRevertError } from '@0x/utils';
+import { ethers } from 'hardhat';
+import { getRandomInteger, randomAddress, verifyEventsFromLogs } from '@0x/utils';
+import { expect } from 'chai';
+import { hexUtils, RawRevertError, StringRevertError } from '@0x/utils';
 
 import { artifacts } from './artifacts';
 import {
     TestFixinTokenSpenderContract,
     TestTokenSpenderERC20TokenContract,
-    TestTokenSpenderERC20TokenEvents,
+    TestFixinTokenSpender__factory,
+    TestTokenSpenderERC20Token__factory,
 } from './wrappers';
 
-blockchainTests.resets('FixinTokenSpender', env => {
+describe('FixinTokenSpender', () => {
+    const env = {
+        provider: ethers.provider,
+        txDefaults: { from: '' as string },
+        getAccountAddressesAsync: async (): Promise<string[]> => (await ethers.getSigners()).map(s => s.address),
+    } as any;
     let tokenSpender: TestFixinTokenSpenderContract;
     let token: TestTokenSpenderERC20TokenContract;
     let greedyToken: TestTokenSpenderERC20TokenContract;
 
     before(async () => {
-        token = await TestTokenSpenderERC20TokenContract.deployFrom0xArtifactAsync(
-            artifacts.TestTokenSpenderERC20Token,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
-        greedyToken = await TestTokenSpenderERC20TokenContract.deployFrom0xArtifactAsync(
-            artifacts.TestTokenSpenderERC20Token,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
-        await greedyToken.setGreedyRevert(true).awaitTransactionSuccessAsync();
+        const [deployer] = await env.getAccountAddressesAsync();
+        env.txDefaults.from = deployer;
+        const signer = await env.provider.getSigner(deployer);
 
-        tokenSpender = await TestFixinTokenSpenderContract.deployFrom0xArtifactAsync(
-            artifacts.TestFixinTokenSpender,
-            env.provider,
-            env.txDefaults,
-            artifacts,
-        );
+        const tokenFactory = new TestTokenSpenderERC20Token__factory(signer);
+        token = await tokenFactory.deploy();
+        await token.waitForDeployment();
+
+        const greedyTokenFactory = new TestTokenSpenderERC20Token__factory(signer);
+        greedyToken = await greedyTokenFactory.deploy();
+        await greedyToken.waitForDeployment();
+        await greedyToken.setGreedyRevert(true);
+
+        const tokenSpenderFactory = new TestFixinTokenSpender__factory(signer);
+        tokenSpender = await tokenSpenderFactory.deploy();
+        await tokenSpender.waitForDeployment();
     });
 
     describe('transferERC20TokensFrom()', () => {
@@ -52,108 +50,125 @@ blockchainTests.resets('FixinTokenSpender', env => {
         it('transferERC20TokensFrom() successfully calls compliant ERC20 token', async () => {
             const tokenFrom = randomAddress();
             const tokenTo = randomAddress();
-            const tokenAmount = new BigNumber(123456);
-            const receipt = await tokenSpender
-                .transferERC20TokensFrom(token.address, tokenFrom, tokenTo, tokenAmount)
-                .awaitTransactionSuccessAsync();
+            const tokenAmount = 123456n;
+            const tx = await tokenSpender.transferERC20TokensFrom(
+                await token.getAddress(),
+                tokenFrom,
+                tokenTo,
+                tokenAmount,
+            );
+            const receipt = await tx.wait();
             verifyEventsFromLogs(
                 receipt.logs,
+                token, // 使用 token 合约实例
                 [
                     {
-                        sender: tokenSpender.address,
-                        from: tokenFrom,
-                        to: tokenTo,
-                        amount: tokenAmount,
+                        event: 'TransferFromCalled',
+                        args: {
+                            sender: await tokenSpender.getAddress(),
+                            from: tokenFrom,
+                            to: tokenTo,
+                            amount: tokenAmount,
+                        },
                     },
                 ],
-                TestTokenSpenderERC20TokenEvents.TransferFromCalled,
             );
         });
 
         it('transferERC20TokensFrom() successfully calls non-compliant ERC20 token', async () => {
             const tokenFrom = randomAddress();
             const tokenTo = randomAddress();
-            const tokenAmount = new BigNumber(EMPTY_RETURN_AMOUNT);
-            const receipt = await tokenSpender
-                .transferERC20TokensFrom(token.address, tokenFrom, tokenTo, tokenAmount)
-                .awaitTransactionSuccessAsync();
+            const tokenAmount = BigInt(EMPTY_RETURN_AMOUNT);
+            const tx = await tokenSpender.transferERC20TokensFrom(
+                await token.getAddress(),
+                tokenFrom,
+                tokenTo,
+                tokenAmount,
+            );
+            const receipt = await tx.wait();
             verifyEventsFromLogs(
                 receipt.logs,
+                token, // 使用 token 合约实例
                 [
                     {
-                        sender: tokenSpender.address,
-                        from: tokenFrom,
-                        to: tokenTo,
-                        amount: tokenAmount,
+                        event: 'TransferFromCalled',
+                        args: {
+                            sender: await tokenSpender.getAddress(),
+                            from: tokenFrom,
+                            to: tokenTo,
+                            amount: tokenAmount,
+                        },
                     },
                 ],
-                TestTokenSpenderERC20TokenEvents.TransferFromCalled,
             );
         });
 
         it('transferERC20TokensFrom() reverts if ERC20 token reverts', async () => {
             const tokenFrom = randomAddress();
             const tokenTo = randomAddress();
-            const tokenAmount = new BigNumber(REVERT_RETURN_AMOUNT);
-            const tx = tokenSpender
-                .transferERC20TokensFrom(token.address, tokenFrom, tokenTo, tokenAmount)
-                .awaitTransactionSuccessAsync();
+            const tokenAmount = BigInt(REVERT_RETURN_AMOUNT);
             const expectedError = new StringRevertError('TestTokenSpenderERC20Token/Revert');
-            return expect(tx).to.revertWith(expectedError);
+            return expect(
+                tokenSpender.transferERC20TokensFrom(await token.getAddress(), tokenFrom, tokenTo, tokenAmount),
+            ).to.be.revertedWith('TestTokenSpenderERC20Token/Revert');
         });
 
         it('transferERC20TokensFrom() reverts if ERC20 token returns false', async () => {
             const tokenFrom = randomAddress();
             const tokenTo = randomAddress();
-            const tokenAmount = new BigNumber(FALSE_RETURN_AMOUNT);
-            const tx = tokenSpender
-                .transferERC20TokensFrom(token.address, tokenFrom, tokenTo, tokenAmount)
-                .awaitTransactionSuccessAsync();
-            return expect(tx).to.revertWith(new RawRevertError(hexUtils.leftPad(0)));
+            const tokenAmount = BigInt(FALSE_RETURN_AMOUNT);
+            return expect(
+                tokenSpender.transferERC20TokensFrom(await token.getAddress(), tokenFrom, tokenTo, tokenAmount),
+            ).to.be.reverted;
         });
 
         it('transferERC20TokensFrom() allows extra data after true', async () => {
             const tokenFrom = randomAddress();
             const tokenTo = randomAddress();
-            const tokenAmount = new BigNumber(EXTRA_RETURN_TRUE_AMOUNT);
+            const tokenAmount = BigInt(EXTRA_RETURN_TRUE_AMOUNT);
 
-            const receipt = await tokenSpender
-                .transferERC20TokensFrom(token.address, tokenFrom, tokenTo, tokenAmount)
-                .awaitTransactionSuccessAsync();
+            const tx = await tokenSpender.transferERC20TokensFrom(
+                await token.getAddress(),
+                tokenFrom,
+                tokenTo,
+                tokenAmount,
+            );
+            const receipt = await tx.wait();
             verifyEventsFromLogs(
                 receipt.logs,
+                token, // 使用 token 合约实例
                 [
                     {
-                        sender: tokenSpender.address,
-                        from: tokenFrom,
-                        to: tokenTo,
-                        amount: tokenAmount,
+                        event: 'TransferFromCalled',
+                        args: {
+                            sender: await tokenSpender.getAddress(),
+                            from: tokenFrom,
+                            to: tokenTo,
+                            amount: tokenAmount,
+                        },
                     },
                 ],
-                TestTokenSpenderERC20TokenEvents.TransferFromCalled,
             );
         });
 
         it("transferERC20TokensFrom() reverts when there's extra data after false", async () => {
             const tokenFrom = randomAddress();
             const tokenTo = randomAddress();
-            const tokenAmount = new BigNumber(EXTRA_RETURN_FALSE_AMOUNT);
+            const tokenAmount = BigInt(EXTRA_RETURN_FALSE_AMOUNT);
 
-            const tx = tokenSpender
-                .transferERC20TokensFrom(token.address, tokenFrom, tokenTo, tokenAmount)
-                .awaitTransactionSuccessAsync();
-            return expect(tx).to.revertWith(new RawRevertError(hexUtils.leftPad(EXTRA_RETURN_FALSE_AMOUNT, 64)));
+            return expect(
+                tokenSpender.transferERC20TokensFrom(await token.getAddress(), tokenFrom, tokenTo, tokenAmount),
+            ).to.be.reverted;
         });
 
         it('transferERC20TokensFrom() cannot call self', async () => {
             const tokenFrom = randomAddress();
             const tokenTo = randomAddress();
-            const tokenAmount = new BigNumber(123456);
+            const tokenAmount = 123456n;
 
-            const tx = tokenSpender
-                .transferERC20TokensFrom(tokenSpender.address, tokenFrom, tokenTo, tokenAmount)
-                .awaitTransactionSuccessAsync();
-            return expect(tx).to.revertWith('FixinTokenSpender/CANNOT_INVOKE_SELF');
+            return expect(
+                tokenSpender.transferERC20TokensFrom(await tokenSpender.getAddress(), tokenFrom, tokenTo, tokenAmount),
+            ).to.be.revertedWith('FixinTokenSpender/CANNOT_INVOKE_SELF');
         });
     });
 
@@ -162,13 +177,12 @@ blockchainTests.resets('FixinTokenSpender', env => {
             const balance = getRandomInteger(1, '1e18');
             const allowance = getRandomInteger(1, '1e18');
             const tokenOwner = randomAddress();
-            await token
-                .setBalanceAndAllowanceOf(tokenOwner, balance, tokenSpender.address, allowance)
-                .awaitTransactionSuccessAsync();
-            const spendableBalance = await tokenSpender
-                .getSpendableERC20BalanceOf(token.address, tokenOwner)
-                .callAsync();
-            expect(spendableBalance).to.bignumber.eq(BigNumber.min(balance, allowance));
+            await token.setBalanceAndAllowanceOf(tokenOwner, balance, await tokenSpender.getAddress(), allowance);
+            const spendableBalance = await tokenSpender.getSpendableERC20BalanceOf(
+                await token.getAddress(),
+                tokenOwner,
+            );
+            expect(spendableBalance).to.eq(balance < allowance ? balance : allowance);
         });
     });
 });

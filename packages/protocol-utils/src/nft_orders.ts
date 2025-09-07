@@ -1,12 +1,12 @@
 import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses';
 import { SupportedProvider } from 'ethereum-types';
-import { EIP712TypedData } from '@0x/types';
-import { BigNumber, hexUtils, NULL_ADDRESS } from '@0x/utils';
+import { EIP712TypedData } from '@0x/utils';
+import { hexUtils, NULL_ADDRESS } from '@0x/utils';
 
 import { ZERO } from './constants';
 import {
     createExchangeProxyEIP712Domain,
-    EIP712_DOMAIN_PARAMETERS,
+    // EIP712_DOMAIN_PARAMETERS,
     getExchangeProxyEIP712Hash,
     getTypeHash,
 } from './eip712_utils';
@@ -33,7 +33,7 @@ export enum OrderStatus {
 
 interface Fee {
     recipient: string;
-    amount: BigNumber;
+    amount: bigint;
     feeData: string;
 }
 
@@ -108,10 +108,10 @@ export abstract class NFTOrder {
     public direction: TradeDirection;
     public maker: string;
     public taker: string;
-    public expiry: BigNumber;
-    public nonce: BigNumber;
+    public expiry: bigint;
+    public nonce: bigint;
     public erc20Token: string;
-    public erc20TokenAmount: BigNumber;
+    public erc20TokenAmount: bigint;
     public fees: Fee[];
     public chainId: number;
     public verifyingContract: string;
@@ -136,8 +136,8 @@ export abstract class NFTOrder {
 
     public willExpire(secondsFromNow = 0): boolean {
         const millisecondsInSecond = 1000;
-        const currentUnixTimestampSec = new BigNumber(Date.now() / millisecondsInSecond).integerValue();
-        return this.expiry.isLessThan(currentUnixTimestampSec.plus(secondsFromNow));
+        const currentUnixTimestampSec = BigInt(Math.floor(Date.now() / millisecondsInSecond));
+        return this.expiry < currentUnixTimestampSec + BigInt(secondsFromNow);
     }
 
     public getHash(): string {
@@ -194,7 +194,7 @@ export abstract class NFTOrder {
                         hexUtils.concat(
                             hexUtils.leftPad(NFTOrder.FEE_TYPE_HASH),
                             hexUtils.leftPad(fee.recipient),
-                            hexUtils.leftPad(fee.amount),
+                            hexUtils.leftPad(fee.amount.toString()),
                             hexUtils.hash(fee.feeData),
                         ),
                     ),
@@ -226,7 +226,7 @@ export class ERC721Order extends NFTOrder {
     });
 
     public erc721Token: string;
-    public erc721TokenId: BigNumber;
+    public erc721TokenId: bigint;
     public erc721TokenProperties: Property[];
 
     constructor(fields: Partial<ERC721OrderFields> = {}) {
@@ -263,13 +263,13 @@ export class ERC721Order extends NFTOrder {
                 hexUtils.leftPad(this.direction),
                 hexUtils.leftPad(this.maker),
                 hexUtils.leftPad(this.taker),
-                hexUtils.leftPad(this.expiry),
-                hexUtils.leftPad(this.nonce),
+                hexUtils.leftPad(this.expiry.toString()),
+                hexUtils.leftPad(this.nonce.toString()),
                 hexUtils.leftPad(this.erc20Token),
-                hexUtils.leftPad(this.erc20TokenAmount),
+                hexUtils.leftPad(this.erc20TokenAmount.toString()),
                 this._getFeesHash(),
                 hexUtils.leftPad(this.erc721Token),
-                hexUtils.leftPad(this.erc721TokenId),
+                hexUtils.leftPad(this.erc721TokenId.toString()),
                 this._getPropertiesHash(),
             ),
         );
@@ -278,7 +278,6 @@ export class ERC721Order extends NFTOrder {
     public getEIP712TypedData(): EIP712TypedData {
         return {
             types: {
-                EIP712Domain: EIP712_DOMAIN_PARAMETERS,
                 [ERC721Order.STRUCT_NAME]: ERC721Order.STRUCT_ABI,
                 ['Fee']: NFTOrder.FEE_ABI,
                 ['Property']: NFTOrder.PROPERTY_ABI,
@@ -333,9 +332,9 @@ export class ERC1155Order extends NFTOrder {
     });
 
     public erc1155Token: string;
-    public erc1155TokenId: BigNumber;
+    public erc1155TokenId: bigint;
     public erc1155TokenProperties: Property[];
-    public erc1155TokenAmount: BigNumber;
+    public erc1155TokenAmount: bigint;
 
     constructor(fields: Partial<ERC1155OrderFields> = {}) {
         const _fields = { ...ERC1155_ORDER_DEFAULT_VALUES, ...fields };
@@ -373,15 +372,15 @@ export class ERC1155Order extends NFTOrder {
                 hexUtils.leftPad(this.direction),
                 hexUtils.leftPad(this.maker),
                 hexUtils.leftPad(this.taker),
-                hexUtils.leftPad(this.expiry),
-                hexUtils.leftPad(this.nonce),
+                hexUtils.leftPad(this.expiry.toString()),
+                hexUtils.leftPad(this.nonce.toString()),
                 hexUtils.leftPad(this.erc20Token),
-                hexUtils.leftPad(this.erc20TokenAmount),
+                hexUtils.leftPad(this.erc20TokenAmount.toString()),
                 this._getFeesHash(),
                 hexUtils.leftPad(this.erc1155Token),
-                hexUtils.leftPad(this.erc1155TokenId),
+                hexUtils.leftPad(this.erc1155TokenId.toString()),
                 this._getPropertiesHash(),
-                hexUtils.leftPad(this.erc1155TokenAmount),
+                hexUtils.leftPad(this.erc1155TokenAmount.toString()),
             ),
         );
     }
@@ -389,7 +388,6 @@ export class ERC1155Order extends NFTOrder {
     public getEIP712TypedData(): EIP712TypedData {
         return {
             types: {
-                EIP712Domain: EIP712_DOMAIN_PARAMETERS,
                 [ERC1155Order.STRUCT_NAME]: ERC1155Order.STRUCT_ABI,
                 ['Fee']: NFTOrder.FEE_ABI,
                 ['Property']: NFTOrder.PROPERTY_ABI,

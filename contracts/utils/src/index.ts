@@ -1,8 +1,7 @@
 export { artifacts } from './artifacts';
 export * from './wrappers';
-
-import * as ReferenceFunctionsToExport from './reference_functions';
-export import ReferenceFunctions = ReferenceFunctionsToExport;
+export * from './types';
+export * from './reference_functions';
 
 export {
     AuthorizableRevertErrors,

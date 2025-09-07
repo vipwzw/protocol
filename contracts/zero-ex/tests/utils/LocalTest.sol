@@ -12,21 +12,20 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
-import {IERC20Token} from "@0x/contracts-erc20/src/IERC20Token.sol";
-import {IEtherToken} from "@0x/contracts-erc20/src/IEtherToken.sol";
-import {WETH9V06} from "@0x/contracts-erc20/src/v06/WETH9V06.sol";
-import {IFlashWallet} from "src/external/IFlashWallet.sol";
-import {LibERC20Transformer} from "src/transformers/LibERC20Transformer.sol";
-import {LibNativeOrder} from "src/features/libs/LibNativeOrder.sol";
-import {LibSignature} from "src/features/libs/LibSignature.sol";
-import {IMultiplexFeature} from "src/features/interfaces/IMultiplexFeature.sol";
-import {ITransformERC20Feature} from "src/features/interfaces/ITransformERC20Feature.sol";
-import {TestUtils} from "utils/TestUtils.sol";
-import {DeployZeroEx} from "utils/DeployZeroEx.sol";
+import {IERC20Token} from "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import {IEtherToken} from "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import {WETH9} from "@0x/contracts-erc20/contracts/src/WETH9.sol";
+import {IFlashWallet} from "contracts/src/external/IFlashWallet.sol";
+import {LibERC20Transformer} from "contracts/src/transformers/LibERC20Transformer.sol";
+import {LibNativeOrder} from "contracts/src/features/libs/LibNativeOrder.sol";
+import {LibSignature} from "contracts/src/features/libs/LibSignature.sol";
+import {IMultiplexFeature} from "contracts/src/features/interfaces/IMultiplexFeature.sol";
+import {ITransformERC20Feature} from "contracts/src/features/interfaces/ITransformERC20Feature.sol";
+import {TestUtils} from "./TestUtils.sol";
+import {DeployZeroEx} from "./DeployZeroEx.sol";
 import {TestMintTokenERC20Transformer} from "../../contracts/test/TestMintTokenERC20Transformer.sol";
 import {TestMintableERC20Token} from "../../contracts/test/tokens/TestMintableERC20Token.sol";
 import {TestUniswapV2Factory} from "../../contracts/test/integration/TestUniswapV2Factory.sol";
@@ -117,7 +116,7 @@ contract LocalTest is Test, TestUtils {
     function _mintTo(address token, address recipient, uint256 amount) internal {
         if (token == address(weth)) {
             IEtherToken(token).deposit{value: amount}();
-            WETH9V06(payable(token)).transfer(recipient, amount);
+            WETH9(payable(token)).transfer(recipient, amount);
         } else {
             TestMintableERC20Token(token).mint(recipient, amount);
         }

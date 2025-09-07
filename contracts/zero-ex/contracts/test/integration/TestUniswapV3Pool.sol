@@ -12,9 +12,8 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+pragma solidity ^0.8.0;
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../../src/vendor/IUniswapV3Pool.sol";
 
 interface IUniswapV3PoolDeployer {

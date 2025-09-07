@@ -12,12 +12,11 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibMathV06.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import "@0x/contracts-utils/contracts/src/LibMath.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../errors/LibNativeOrdersRichErrors.sol";
 import "../fixins/FixinCommon.sol";
 import "../fixins/FixinEIP712.sol";
@@ -32,8 +31,7 @@ import "./libs/LibSignature.sol";
 
 /// @dev Feature for interacting with OTC orders.
 contract OtcOrdersFeature is IFeature, IOtcOrdersFeature, FixinCommon, FixinEIP712, FixinTokenSpender {
-    using LibSafeMathV06 for uint256;
-    using LibSafeMathV06 for uint128;
+    using LibRichErrors for bytes;
 
     /// @dev Name of this feature.
     string public constant override FEATURE_NAME = "OtcOrders";
@@ -123,7 +121,7 @@ contract OtcOrdersFeature is IFeature, IOtcOrdersFeature, FixinCommon, FixinEIP7
         // Unwrap WETH
         WETH.withdraw(makerTokenFilledAmount);
         // Transfer ETH to taker
-        _transferEth(msg.sender, makerTokenFilledAmount);
+        _transferEth(payable(msg.sender), makerTokenFilledAmount);
 
         emit OtcOrderFilled(
             orderInfo.orderHash,
@@ -161,7 +159,7 @@ contract OtcOrdersFeature is IFeature, IOtcOrdersFeature, FixinCommon, FixinEIP7
 
         (takerTokenFilledAmount, makerTokenFilledAmount) = _settleOtcOrder(
             order,
-            msg.value.safeDowncastToUint128(),
+            LibMath.safeDowncastToUint128(msg.value),
             address(this),
             msg.sender
         );
@@ -171,7 +169,7 @@ contract OtcOrdersFeature is IFeature, IOtcOrdersFeature, FixinCommon, FixinEIP7
                 WETH.withdraw(refundAmount);
             }
             // Refund unused ETH
-            _transferEth(msg.sender, refundAmount);
+            _transferEth(payable(msg.sender), refundAmount);
         }
 
         emit OtcOrderFilled(
@@ -386,12 +384,12 @@ contract OtcOrdersFeature is IFeature, IOtcOrdersFeature, FixinCommon, FixinEIP7
             makerTokenFilledAmount = order.makerAmount;
         } else {
             // Clamp the taker token fill amount to the fillable amount.
-            takerTokenFilledAmount = LibSafeMathV06.min128(takerTokenFillAmount, order.takerAmount);
+            takerTokenFilledAmount = LibMath.min128(takerTokenFillAmount, order.takerAmount);
             // Compute the maker token amount.
             // This should never overflow because the values are all clamped to
             // (2^128-1).
             makerTokenFilledAmount = uint128(
-                LibMathV06.getPartialAmountFloor(
+                LibMath.getPartialAmountFloor(
                     uint256(takerTokenFilledAmount),
                     uint256(order.takerAmount),
                     uint256(order.makerAmount)

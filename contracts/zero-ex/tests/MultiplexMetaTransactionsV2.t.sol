@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import {LocalTest} from "utils/LocalTest.sol";
-import {MultiplexUtils} from "utils/MultiplexUtils.sol";
-import {LibSignature} from "src/features/libs/LibSignature.sol";
-import {LibNativeOrder} from "src/features/libs/LibNativeOrder.sol";
-import {IMetaTransactionsFeatureV2} from "src/features/interfaces/IMetaTransactionsFeatureV2.sol";
+import {LocalTest} from "./utils/LocalTest.sol";
+import {MultiplexUtils} from "./utils/MultiplexUtils.sol";
+import {LibSignature} from "contracts/src/features/libs/LibSignature.sol";
+import {LibNativeOrder} from "contracts/src/features/libs/LibNativeOrder.sol";
+import {IMetaTransactionsFeatureV2} from "contracts/src/features/interfaces/IMetaTransactionsFeatureV2.sol";
 
 contract MultiplexMetaTransactionsV2 is LocalTest, MultiplexUtils {
     function _makeMetaTransactionV2(

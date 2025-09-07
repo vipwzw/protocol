@@ -11,12 +11,19 @@
     },
     "scripts": {
         "build": "yarn tsc -b",
+        "build:ts": "tsc -b",
         "build:ci": "yarn build",
-        "test": "mocha --require source-map-support/register  'lib/test/**/*_test.js' --timeout 10000 --bail --exit",
-        "test:ci": "yarn test",
-        "clean": "shx rm -rf lib",
-        "publish:private": "yarn build && echo 'gitpkg publish disabled'"
-          },
+        "test": "yarn build && yarn test:hardhat",
+        "test:hardhat": "yarn build && npx hardhat test",
+        "test:ci": "yarn build && yarn test",
+        "test:coverage": "nyc --reporter=text --reporter=html --reporter=lcov yarn test",
+        "clean": "shx rm -rf lib generated_docs coverage .nyc_output *.log",
+        "clean:node-modules": "shx rm -rf node_modules",
+        "clean:all": "yarn clean && yarn clean:node-modules",
+        "publish:private": "yarn build && echo 'gitpkg publish disabled'",
+        "lint": "eslint src test --ext .ts,.js",
+        "lint:fix": "eslint src test --ext .ts,.js --fix"
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/0xProject/protocol.git"
@@ -27,13 +34,13 @@
     },
     "homepage": "https://github.com/0xProject/protocol/tree/main/packages/contract-addresses",
     "devDependencies": {
-        "@types/minimatch": "^3.0.5",
         "@types/mocha": "^5.2.7",
-        "chai": "^4.0.1",
-                "ethereumjs-util": "^7.1.5",
-        "mocha": "^6.2.0",
-        "shx": "^0.2.2",
-        "typescript": "4.6.3"
+        "chai": "^4.5.0",
+        "ethereumjs-util": "^7.1.5",
+        "mocha": "^10.2.0",
+        "shx": "^0.4.0",
+        "ts-node": "^10.9.0",
+        "typescript": "^5.0.0"
     },
     "publishConfig": {
         "access": "public"

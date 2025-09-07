@@ -12,32 +12,30 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-
-pragma experimental ABIEncoderV2;
-
+pragma solidity ^0.8.0;
 import "../utils/ForkUtils.sol";
 import "../utils/TestUtils.sol";
-import "src/IZeroEx.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "src/features/TransformERC20Feature.sol";
-import "src/features/multiplex/MultiplexFeature.sol";
-import "src/external/TransformerDeployer.sol";
-import "src/transformers/WethTransformer.sol";
-import "src/transformers/FillQuoteTransformer.sol";
-import "src/transformers/bridges/BridgeProtocols.sol";
-import "src/features/OtcOrdersFeature.sol";
+import "contracts/src/IZeroEx.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "contracts/src/features/TransformERC20Feature.sol";
+import "contracts/src/features/multiplex/MultiplexFeature.sol";
+import "contracts/src/external/TransformerDeployer.sol";
+import "contracts/src/transformers/WethTransformer.sol";
+import "contracts/src/transformers/FillQuoteTransformer.sol";
+import "contracts/src/transformers/bridges/BridgeProtocols.sol";
+import "contracts/src/features/OtcOrdersFeature.sol";
 
 contract MultiplexRfqtTest is Test, ForkUtils, TestUtils {
-    using LibERC20TokenV06 for IERC20Token;
-    using LibERC20TokenV06 for IEtherToken;
+    using LibERC20Token for IERC20Token;
+    using LibERC20Token for IEtherToken;
 
     function setUp() public {
         _setup();
     }
 
     function test_swapEthForUSDTThroughFqtOtcs() public {
-        log_string("SwapEthForUSDTThroughFqtOtc");
+        emit log_string("SwapEthForUSDTThroughFqtOtc");
         /* */
         for (uint256 i = 0; i < 1; i++) {
             //skip fantom/avax failing test
@@ -45,7 +43,7 @@ contract MultiplexRfqtTest is Test, ForkUtils, TestUtils {
                 continue;
             }
             vm.selectFork(forkIds[chains[i]]);
-            log_named_string("  Selecting Fork On", chains[i]);
+            emit log_named_string("  Selecting Fork On", chains[i]);
             vm.deal(address(this), 1e18);
             labelAddresses(
                 chains[i],
@@ -107,7 +105,7 @@ contract MultiplexRfqtTest is Test, ForkUtils, TestUtils {
 
         deal(tradeTokens[0], address(this), 1e18);
 
-        tokens.WrappedNativeToken.approveIfBelow(addresses.exchangeProxy, uint(-1));
+        LibERC20Token.approveIfBelow(address(tokens.WrappedNativeToken), addresses.exchangeProxy, type(uint256).max);
         uint inputAmount = 1e18;
         uint outputAmount = 5e17;
 
@@ -192,7 +190,7 @@ contract MultiplexRfqtTest is Test, ForkUtils, TestUtils {
         deal(address(order.takerToken), order.maker, 2e20);
 
         vm.startPrank(order.maker);
-        IERC20Token(order.makerToken).approveIfBelow(addresses.exchangeProxy, 2e20);
+        LibERC20Token.approveIfBelow(address(order.makerToken), addresses.exchangeProxy, 2e20);
 
         order.taker = address(0);
         order.txOrigin = address(tx.origin);

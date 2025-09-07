@@ -12,18 +12,17 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "../errors/LibOwnableRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibOwnableRichErrors.sol";
 
 library LibMigrate {
     /// @dev Magic bytes returned by a migrator to indicate success.
     ///      This is `keccack('MIGRATE_SUCCESS')`.
     bytes4 internal constant MIGRATE_SUCCESS = 0x2c64c5ef;
 
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev Perform a delegatecall and ensure it returns the magic bytes.
     /// @param target The call target.

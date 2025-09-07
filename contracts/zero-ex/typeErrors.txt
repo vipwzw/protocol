@@ -1,0 +1,93 @@
+  1) FundRecovery
+       "before all" hook in "FundRecovery":
+     TypeError: zeroEx.connect(...).migrate is not a function
+      at Context.<anonymous> (test/features/fund_recovery_tests.ts:44:14)
+
+  2) LiquidityProvider feature
+       "before all" hook in "LiquidityProvider feature":
+     TypeError: invalid address (argument="address", value="", code=INVALID_ARGUMENT, version=6.15.0)
+      at makeError (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at getAddress (/Users/king/javascript/protocol/node_modules/ethers/src.ts/address/address.ts:147:19)
+      at new HardhatEthersSigner (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:97:30)
+--
+  3) MetaTransactions feature
+       "before all" hook in "MetaTransactions feature":
+     TypeError: wrappers_1.MetaTransactionsFeatureContract is not a constructor
+      at Context.<anonymous> (test/features/meta_transactions_test.ts:75:19)
+
+  4) MultiplexFeature
+       "before all" hook in "MultiplexFeature":
+     TypeError: zeroEx.getTransformWallet is not a function
+      at Context.<anonymous> (test/features/multiplex_test.ts:476:43)
+
+  5) OtcOrdersFeature
+       "before all" hook in "OtcOrdersFeature":
+     TypeError: contractWallet.approveERC20(...) is not a function
+      at Context.<anonymous> (test/features/otc_orders_test.ts:112:97)
+
+  6) Ownable feature
+       migrate()
+         can successfully execute a migration:
+--
+  10) SimpleFunctionRegistry feature
+       owner can add a new function with `extend()`:
+     TypeError: testFeature.testFn is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:92:37)
+
+  11) SimpleFunctionRegistry feature
+       owner can replace add a function with `extend()`:
+     TypeError: testFeature.testFn is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:100:37)
+
+  12) SimpleFunctionRegistry feature
+       owner can zero a function with `extend()`:
+     TypeError: testFeature.testFn is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:108:35)
+
+  13) SimpleFunctionRegistry feature
+       can query rollback history:
+
+--
+  15) SimpleFunctionRegistry feature
+       owner can rollback a function to the prior version:
+     TypeError: registry.extend(...) is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:149:83)
+
+  16) SimpleFunctionRegistry feature
+       owner can rollback a zero function to the prior version:
+     TypeError: registry.extend(...) is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:159:83)
+
+  17) SimpleFunctionRegistry feature
+       owner can rollback a function to a much older version:
+     TypeError: registry.extend(...) is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:170:83)
+
+  18) SimpleFunctionRegistry feature
+       owner cannot rollback a function to a version not in history:
+     AssertionError: Expected transaction to be reverted with reason 'NotInRollbackHistoryError', but it didn't revert
+--
+  19) TransformERC20 feature
+       "before all" hook in "TransformERC20 feature":
+     TypeError: wrappers_1.TransformERC20FeatureContract is not a constructor
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:68:19)
+
+  20) UniswapV3Feature
+       "before all" hook in "UniswapV3Feature":
+     TypeError: invalid BytesLike value (argument="value", value="0x608060405234801561001057600080fd5b50603f80601e6000396000f3fe6080604052600080fdfea26469706673582212207d1b3d2d0c5e6a5d8b9e2f5a8e5c6d4a3b2c1e0f9a8b7c6d5e4f3a2b1c0e9d8f7e6d4c3b2a164736f6c63430008000033", code=INVALID_ARGUMENT, version=6.15.0)
+      at makeError (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at _getBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/data.ts:44:19)
+      at getBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/data.ts:55:12)
+--
+       Ownable feature
+         "before all" hook for "has the correct owner":
+     TypeError: wrappers_1.IOwnableFeatureContract is not a constructor
+      at Context.<anonymous> (test/initial_migration_test.ts:88:23)
+
+  24) Initial migration
+       SimpleFunctionRegistry feature
+         "before all" hook for "_extendSelf() is deregistered":

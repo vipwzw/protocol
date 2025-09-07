@@ -12,20 +12,17 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-
-pragma experimental ABIEncoderV2;
-
+pragma solidity ^0.8.0;
 import "../utils/ForkUtils.sol";
 import "../utils/TestUtils.sol";
-import "src/IZeroEx.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "src/features/TransformERC20Feature.sol";
-import "src/external/TransformerDeployer.sol";
-import "src/transformers/WethTransformer.sol";
-import "src/transformers/FillQuoteTransformer.sol";
-import "src/transformers/bridges/BridgeProtocols.sol";
-import "src/features/OtcOrdersFeature.sol";
+import "contracts/src/IZeroEx.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import "contracts/src/features/TransformERC20Feature.sol";
+import "contracts/src/external/TransformerDeployer.sol";
+import "contracts/src/transformers/WethTransformer.sol";
+import "contracts/src/transformers/FillQuoteTransformer.sol";
+import "contracts/src/transformers/bridges/BridgeProtocols.sol";
+import "contracts/src/features/OtcOrdersFeature.sol";
 
 contract RfqtV2Test is Test, ForkUtils, TestUtils {
     function setUp() public {
@@ -33,7 +30,7 @@ contract RfqtV2Test is Test, ForkUtils, TestUtils {
     }
 
     function test_swapEthForUSDTThroughFqtOtcs() public {
-        log_string("SwapEthForUSDTThroughFqtOtc");
+        emit log_string("SwapEthForUSDTThroughFqtOtc");
         /* */
         for (uint256 i = 0; i < 1; i++) {
             //skip fantom/avax failing test
@@ -41,7 +38,7 @@ contract RfqtV2Test is Test, ForkUtils, TestUtils {
                 continue;
             }
             vm.selectFork(forkIds[chains[i]]);
-            log_named_string("  Selecting Fork On", chains[i]);
+            emit log_named_string("  Selecting Fork On", chains[i]);
             vm.deal(address(this), 1e18);
             labelAddresses(
                 chains[i],
@@ -79,7 +76,7 @@ contract RfqtV2Test is Test, ForkUtils, TestUtils {
             address(fillQuoteTransformer),
             address(addresses.exchangeProxyTransformerDeployer)
         );
-        log_named_uint("           FillQuoteTransformer nonce", transformations[1].deploymentNonce);
+        emit log_named_uint("           FillQuoteTransformer nonce", transformations[1].deploymentNonce);
         // Set up the FillQuoteTransformer data
         FillQuoteTransformer.TransformData memory fqtData;
         fqtData.side = FillQuoteTransformer.Side.Sell;
@@ -130,7 +127,7 @@ contract RfqtV2Test is Test, ForkUtils, TestUtils {
 
         fqtData.otcOrders[0] = orderInfo;
         transformations[1].data = abi.encode(fqtData);
-        log_string("        Successful fill, makerTokens bought");
+        emit log_string("        Successful fill, makerTokens bought");
         IZERO_EX.transformERC20{value: 1e18}(
             // input token
             IERC20Token(LibERC20Transformer.ETH_TOKEN_ADDRESS),

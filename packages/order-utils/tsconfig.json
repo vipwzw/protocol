@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "outDir": "lib",
+        "rootDir": ".",
+        "target": "es2020",
+        "lib": ["es2020"],
+        "module": "commonjs",
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "strict": true,
+        "resolveJsonModule": true,
+        "allowSyntheticDefaultImports": true,
+        "composite": true
+    },
+    "include": ["src/**/*", "src/types.d.ts", "test/**/*"],
+    "exclude": ["node_modules", "lib"],
+    "references": [{ "path": "../utils" }, { "path": "../contract-addresses" }, { "path": "../json-schemas" }]
+}

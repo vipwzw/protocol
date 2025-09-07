@@ -1,6 +1,7 @@
-import { chaiSetup, web3Factory, Web3Wrapper } from '@0x/dev-utils';
-import { Web3ProviderEngine } from '@0x/subproviders';
-import { BigNumber } from '@0x/utils';
+import { chaiSetup } from './chai_setup';
+import { web3Factory } from './web3_factory';
+import { JsonRpcProvider } from 'ethers';
+
 import { expect } from 'chai';
 import * as ethjs from 'ethereumjs-util';
 
@@ -10,30 +11,31 @@ import { SignatureType } from '../src/signature_utils';
 chaiSetup.configure();
 
 describe('orders', () => {
-    let provider: Web3ProviderEngine;
+    let provider: any;
     let providerMaker: string;
     const key = '0xee094b79aa0315914955f2f09be9abe541dcdc51f0aae5bec5453e9f73a471a6';
     const keyMaker = ethjs.bufferToHex(ethjs.privateToAddress(ethjs.toBuffer(key)));
 
     before(async () => {
-        provider = web3Factory.getRpcProvider({ shouldUseInProcessGanache: true });
-        [providerMaker] = await new Web3Wrapper(provider).getAvailableAddressesAsync();
+        provider = web3Factory.getRpcProvider();
+        // Use a test address from Hardhat's default accounts
+        providerMaker = '0x5409ED021D9299bf6814279A6A1411A7e866A631';
     });
 
     describe('LimitOrder', () => {
         const order = new LimitOrder({
             makerToken: '0x349e8d89e8b37214d9ce3949fc5754152c525bc3',
             takerToken: '0x83c62b2e67dea0df2a27be0def7a22bd7102642c',
-            makerAmount: new BigNumber(1234),
-            takerAmount: new BigNumber(5678),
-            takerTokenFeeAmount: new BigNumber(9101112),
+            makerAmount: 1234n,
+            takerAmount: 5678n,
+            takerTokenFeeAmount: 9101112n,
             maker: '0x8d5e5b5b5d187bdce2e0143eb6b3cc44eef3c0cb',
             taker: '0x615312fb74c31303eab07dea520019bb23f4c6c2',
             sender: '0x70f2d6c7acd257a6700d745b76c602ceefeb8e20',
             feeRecipient: '0xcc3c7ea403427154ec908203ba6c418bd699f7ce',
             pool: '0x0bbff69b85a87da39511aefc3211cb9aff00e1a1779dc35b8f3635d8b5ea2680',
-            expiry: new BigNumber(1001),
-            salt: new BigNumber(2001),
+            expiry: 1001n,
+            salt: 2001n,
             chainId: 8008,
             verifyingContract: '0x6701704d2421c64ee9aa93ec7f96ede81c4be77d',
         });
@@ -88,14 +90,14 @@ describe('orders', () => {
         const order = new RfqOrder({
             makerToken: '0x349e8d89e8b37214d9ce3949fc5754152c525bc3',
             takerToken: '0x83c62b2e67dea0df2a27be0def7a22bd7102642c',
-            makerAmount: new BigNumber(1234),
-            takerAmount: new BigNumber(5678),
+            makerAmount: 1234n,
+            takerAmount: 5678n,
             maker: '0x8d5e5b5b5d187bdce2e0143eb6b3cc44eef3c0cb',
             taker: '0x615312fb74c31303eab07dea520019bb23f4c6c2',
             txOrigin: '0x70f2d6c7acd257a6700d745b76c602ceefeb8e20',
             pool: '0x0bbff69b85a87da39511aefc3211cb9aff00e1a1779dc35b8f3635d8b5ea2680',
-            expiry: new BigNumber(1001),
-            salt: new BigNumber(2001),
+            expiry: 1001n,
+            salt: 2001n,
             chainId: 8008,
             verifyingContract: '0x6701704d2421c64ee9aa93ec7f96ede81c4be77d',
         });

@@ -12,13 +12,11 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibBytesV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/LibBytes.sol";
 import "../errors/LibMetaTransactionsRichErrors.sol";
 import "../fixins/FixinCommon.sol";
 import "../fixins/FixinReentrancyGuard.sol";
@@ -42,8 +40,8 @@ contract MetaTransactionsFeatureV2 is
     FixinEIP712,
     FixinTokenSpender
 {
-    using LibBytesV06 for bytes;
-    using LibRichErrorsV06 for bytes;
+    using LibBytes for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev Describes the state of a meta transaction.
     struct ExecuteState {
@@ -253,7 +251,7 @@ contract MetaTransactionsFeatureV2 is
         } else {
             LibMetaTransactionsRichErrors.MetaTransactionUnsupportedFunctionError(state.hash, state.selector).rrevert();
         }
-        emit MetaTransactionExecuted(state.hash, state.selector, state.mtx.signer, state.mtx.sender);
+        emit MetaTransactionExecutedV2(state.hash, state.selector, state.mtx.signer, state.mtx.sender);
     }
 
     /// @dev Validate that a meta-transaction is executable.
@@ -342,7 +340,7 @@ contract MetaTransactionsFeatureV2 is
                 // Start copying after the struct offset.
                 toMem := add(encodedStructArgs, 64)
             }
-            LibBytesV06.memCopy(toMem, fromMem, fromCallData.length - 4);
+            LibBytes.memCopy(toMem, fromMem, fromCallData.length - 4);
             // Decode call args for `ITransformERC20Feature.transformERC20()` as a struct.
             args = abi.decode(encodedStructArgs, (ExternalTransformERC20Args));
         }
@@ -380,7 +378,7 @@ contract MetaTransactionsFeatureV2 is
             toMem := add(args, 32) // write after length prefix
         }
 
-        LibBytesV06.memCopy(toMem, fromMem, args.length);
+        LibBytes.memCopy(toMem, fromMem, args.length);
 
         return args;
     }

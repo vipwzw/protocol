@@ -12,17 +12,13 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
 import "../../fixins/FixinTokenSpender.sol";
 import "../interfaces/IMultiplexFeature.sol";
 import "../interfaces/IUniswapV3Feature.sol";
 
 abstract contract MultiplexUniswapV3 is FixinTokenSpender {
-    using LibSafeMathV06 for uint256;
-
     function _batchSellUniswapV3(
         IMultiplexFeature.BatchSellState memory state,
         IMultiplexFeature.BatchSellParams memory params,
@@ -62,8 +58,8 @@ abstract contract MultiplexUniswapV3 is FixinTokenSpender {
             // Decode the output token amount on success.
             uint256 outputTokenAmount = abi.decode(resultData, (uint256));
             // Increment the sold and bought amounts.
-            state.soldAmount = state.soldAmount.safeAdd(sellAmount);
-            state.boughtAmount = state.boughtAmount.safeAdd(outputTokenAmount);
+            state.soldAmount = state.soldAmount + sellAmount;
+            state.boughtAmount = state.boughtAmount + outputTokenAmount;
         }
     }
 

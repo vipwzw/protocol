@@ -2,7 +2,7 @@
 
 This package contains contracts for the ZeroEx extensible contract architecture.
 
-> **_NOTE:_**  This repo is undergoing a tooling change. If adding a contract, you will need to
+> **_NOTE:_** This repo is undergoing a tooling change. If adding a contract, you will need to
 > add it to `compiler.json`. You can generate the entire list by running the following:
 > `find . -type f -name "*.sol" | grep -v foundry | grep -v "contracts/dep" | grep -v "node_modules"`
 
@@ -69,6 +69,7 @@ yarn test
 ```
 
 ### Run Integration Tests
+
 you will need to create a .env that the root of `/contracts/zero-ex` containing rpc's for all 7 chains the tests will be run on
 
 ```sh

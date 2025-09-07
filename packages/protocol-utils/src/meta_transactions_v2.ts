@@ -1,17 +1,17 @@
 import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses';
-import { EIP712TypedData } from '@0x/types';
-import { BigNumber, hexUtils, NULL_ADDRESS } from '@0x/utils';
+import { EIP712TypedData } from '@0x/utils';
+import { hexUtils, NULL_ADDRESS } from '@0x/utils';
 import { ZERO } from './constants';
 import {
     createExchangeProxyEIP712Domain,
-    EIP712_DOMAIN_PARAMETERS,
+    // EIP712_DOMAIN_PARAMETERS,
     getExchangeProxyEIP712Hash,
     getTypeHash,
 } from './eip712_utils';
 
 export interface MetaTransactionV2Fee {
-    recipient: string,
-    amount: BigNumber,
+    recipient: string;
+    amount: bigint;
 }
 
 const MTX_DEFAULT_VALUES = {
@@ -29,12 +29,15 @@ const MTX_DEFAULT_VALUES = {
 export type MetaTransactionV2Fields = typeof MTX_DEFAULT_VALUES;
 
 export class MetaTransactionV2 {
-	public static readonly FEE_STRUCT_NAME = 'MetaTransactionFeeData';
+    public static readonly FEE_STRUCT_NAME = 'MetaTransactionFeeData';
     public static readonly FEE_STRUCT_ABI = [
         { type: 'address', name: 'recipient' },
         { type: 'uint256', name: 'amount' },
     ];
-    public static readonly FEE_TYPE_HASH = getTypeHash(MetaTransactionV2.FEE_STRUCT_NAME, MetaTransactionV2.FEE_STRUCT_ABI);
+    public static readonly FEE_TYPE_HASH = getTypeHash(
+        MetaTransactionV2.FEE_STRUCT_NAME,
+        MetaTransactionV2.FEE_STRUCT_ABI,
+    );
 
     public static readonly MTX_STRUCT_NAME = 'MetaTransactionDataV2';
     public static readonly MTX_STRUCT_ABI = [
@@ -49,13 +52,13 @@ export class MetaTransactionV2 {
     public static readonly MTX_TYPE_HASH = getTypeHash(
         MetaTransactionV2.MTX_STRUCT_NAME,
         MetaTransactionV2.MTX_STRUCT_ABI,
-        { [MetaTransactionV2.FEE_STRUCT_NAME]: MetaTransactionV2.FEE_STRUCT_ABI }
+        { [MetaTransactionV2.FEE_STRUCT_NAME]: MetaTransactionV2.FEE_STRUCT_ABI },
     );
 
     public signer: string;
     public sender: string;
-    public expirationTimeSeconds: BigNumber;
-    public salt: BigNumber;
+    public expirationTimeSeconds: bigint;
+    public salt: bigint;
     public callData: string;
     public feeToken: string;
     public fees: MetaTransactionV2Fee[];
@@ -91,21 +94,27 @@ export class MetaTransactionV2 {
     }
 
     public getStructHash(): string {
-        const feesHash = hexUtils.hash(hexUtils.concat(
-            ...this.fees.map((fee) => hexUtils.hash(hexUtils.concat(
-                hexUtils.leftPad(MetaTransactionV2.FEE_TYPE_HASH),
-                hexUtils.leftPad(fee.recipient),
-                hexUtils.leftPad(fee.amount),
-            )))
-        ));
+        const feesHash = hexUtils.hash(
+            hexUtils.concat(
+                ...this.fees.map(fee =>
+                    hexUtils.hash(
+                        hexUtils.concat(
+                            hexUtils.leftPad(MetaTransactionV2.FEE_TYPE_HASH),
+                            hexUtils.leftPad(fee.recipient),
+                            hexUtils.leftPad(fee.amount.toString()),
+                        ),
+                    ),
+                ),
+            ),
+        );
 
         return hexUtils.hash(
             hexUtils.concat(
                 hexUtils.leftPad(MetaTransactionV2.MTX_TYPE_HASH),
                 hexUtils.leftPad(this.signer),
                 hexUtils.leftPad(this.sender),
-                hexUtils.leftPad(this.expirationTimeSeconds),
-                hexUtils.leftPad(this.salt),
+                hexUtils.leftPad(this.expirationTimeSeconds.toString()),
+                hexUtils.leftPad(this.salt.toString()),
                 hexUtils.hash(this.callData),
                 hexUtils.leftPad(this.feeToken),
                 hexUtils.leftPad(feesHash),
@@ -116,7 +125,6 @@ export class MetaTransactionV2 {
     public getEIP712TypedData(): EIP712TypedData {
         return {
             types: {
-                EIP712Domain: EIP712_DOMAIN_PARAMETERS,
                 [MetaTransactionV2.MTX_STRUCT_NAME]: MetaTransactionV2.MTX_STRUCT_ABI,
                 [MetaTransactionV2.FEE_STRUCT_NAME]: MetaTransactionV2.FEE_STRUCT_ABI,
             },
@@ -129,7 +137,7 @@ export class MetaTransactionV2 {
                 salt: this.salt.toString(10),
                 callData: this.callData,
                 feeToken: this.feeToken,
-                fees: this.fees.map(({recipient, amount}) => ({
+                fees: this.fees.map(({ recipient, amount }) => ({
                     recipient,
                     amount: amount.toString(10),
                 })) as any,

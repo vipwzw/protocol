@@ -12,9 +12,8 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+pragma solidity ^0.8.0;
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "./TestUniswapV2Pool.sol";
 
 contract TestUniswapV2Factory {
@@ -35,7 +34,7 @@ contract TestUniswapV2Factory {
 
     function createPool(IERC20Token tokenA, IERC20Token tokenB) external returns (TestUniswapV2Pool pool) {
         (IERC20Token token0, IERC20Token token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        require(getPool[token0][token1] == TestUniswapV2Pool(0), "TestUniswapV2Factory/POOL_ALREADY_EXISTS");
+        require(getPool[token0][token1] == TestUniswapV2Pool(address(0)), "TestUniswapV2Factory/POOL_ALREADY_EXISTS");
         creationParameters = CreationParameters({token0: token0, token1: token1});
         pool = new TestUniswapV2Pool{salt: keccak256(abi.encodePacked(token0, token1))}();
         getPool[token0][token1] = pool;

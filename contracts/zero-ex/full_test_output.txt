@@ -1,0 +1,2056 @@
+
+
+  BatchFillNativeOrdersFeature
+    batchFillLimitOrders
+      ✔ Fully fills multiple orders (69ms)
+      ✔ Partially fills multiple orders (57ms)
+      ✔ Fills multiple orders and refunds excess ETH (57ms)
+      ✔ Skips over unfillable orders and refunds excess ETH (75ms)
+      ✔ Fills multiple orders with revertIfIncomplete=true (57ms)
+      ✔ If revertIfIncomplete==true, reverts on an unfillable order (69ms)
+      ✔ If revertIfIncomplete==true, reverts on an incomplete fill  (69ms)
+    batchFillRfqOrders
+      ✔ Fully fills multiple orders (48ms)
+      ✔ Partially fills multiple orders (49ms)
+      ✔ Skips over unfillable orders (63ms)
+      ✔ Fills multiple orders with revertIfIncomplete=true (50ms)
+      ✔ If revertIfIncomplete==true, reverts on an unfillable order (54ms)
+      ✔ If revertIfIncomplete==true, reverts on an incomplete fill  (59ms)
+
+  ERC1155OrdersFeature
+    getERC1155OrderHash()
+      ✔ returns the correct hash for order with no fees or properties
+      ✔ returns the correct hash for order with null property
+      ✔ returns the correct hash for order with 1 fee, 1 property
+      ✔ returns the correct hash for order with 2 fees, 2 properties
+    validateERC1155OrderSignature
+      ✔ succeeds for a valid EthSign signature
+      ✔ reverts for an invalid EthSign signature
+      ✔ succeeds for a valid EIP-712 signature
+      ✔ reverts for an invalid EIP-712 signature
+    cancelERC1155Order
+      ✔ can cancel an order
+      ✔ cancelling an order twice silently succeeds
+    sellERC1155
+      ✔ can fully fill a ERC1155 buy order
+      ✔ can partially fill a ERC1155 buy order
+      ✔ cannot fill the same order twice
+      ✔ cannot fill a cancelled order
+      ✔ cannot fill an invalid order (erc20Token == ETH)
+      ✔ cannot fill an expired order
+      ✔ reverts if a sell order is provided
+      ✔ reverts if the taker is not the taker address specified in the order
+      ✔ succeeds if the taker is the taker address specified in the order
+      ✔ reverts if an invalid signature is provided
+      ✔ reverts if `unwrapNativeToken` is true and `erc20Token` is not WETH
+      ✔ sends ETH to taker if `unwrapNativeToken` is true and `erc20Token` is WETH
+      fees
+        ✔ single fee to EOA
+        ✔ partial fill, single fee
+        ✔ single fee, successful callback
+        ✔ single fee, callback reverts
+        ✔ single fee, callback returns invalid value
+        ✔ multiple fees to EOAs
+      properties
+        ✔ Checks tokenId if no properties are provided
+        ✔ Null property
+        ✔ Reverts if property validation fails
+        ✔ Successful property validation
+    onERC1155Received
+      ✔ throws if data is not encoded correctly
+      ✔ reverts if msg.sender != order.erc1155Token
+      ✔ reverts if transferred tokenId does not match order.erc1155TokenId
+      ✔ can sell ERC1155 without approval
+    buyERC1155
+      ✔ can fill a ERC1155 sell order
+      ✔ can partially fill a ERC1155 sell order
+      ✔ cannot fill the same order twice
+      ✔ cannot fill a cancelled order
+      ✔ cannot fill an expired order
+      ✔ reverts if a buy order is provided
+      ✔ reverts if the taker is not the taker address specified in the order
+      ✔ succeeds if the taker is the taker address specified in the order
+      ✔ reverts if an invalid signature is provided
+      ETH
+        ✔ can fill an order with ETH (and refunds excess ETH)
+        1) can fill a WETH order with ETH
+        ✔ uses WETH if not enough ETH to fill WETH order
+      fees
+        ✔ single fee to EOA
+        ✔ partial fill, single fee
+        ✔ pays fees in ETH if erc20Token == ETH
+        ✔ pays fees in ETH if erc20Token == WETH but taker uses ETH
+        ✔ pays fees in WETH if taker uses WETH
+        ✔ reverts if overspent ETH
+    batchBuyERC1155s
+      ✔ reverts if arrays are different lengths
+      ✔ successfully fills multiple orders
+      ✔ catches revert if one order fails
+      ✔ bubbles up revert if one order fails and `revertIfIncomplete == true`
+      ✔ can fill multiple orders with ETH, refund excess ETH
+    preSignERC1155Order
+      ✔ can fill order that has been presigned by the maker
+      ✔ cannot fill order that has not been presigned by the maker
+      ✔ cannot fill order that was presigned then cancelled
+      ✔ only maker can presign order
+
+  ERC721OrdersFeature
+    getERC721OrderHash()
+      ✔ returns the correct hash for order with no fees or properties
+      ✔ returns the correct hash for order with null property
+      ✔ returns the correct hash for order with 1 fee, 1 property
+      ✔ returns the correct hash for order with 2 fees, 2 properties
+    validateERC721OrderSignature
+      ✔ succeeds for a valid EthSign signature
+      ✔ reverts for an invalid EthSign signature
+      ✔ succeeds for a valid EIP-712 signature
+      ✔ reverts for an invalid EIP-712 signature
+    cancelERC721Order
+      ✔ can cancel an order
+      ✔ cancelling an order twice silently succeeds
+    sellERC721
+      - can fill a ERC721 buy order
+      - cannot fill the same order twice
+      - can fill two orders from the same maker with different nonces
+      - cannot fill a cancelled order
+      - cannot fill an invalid order (erc20Token == ETH)
+      - cannot fill an expired order
+      - reverts if a sell order is provided
+      - reverts if the taker is not the taker address specified in the order
+      - succeeds if the taker is the taker address specified in the order
+      - reverts if an invalid signature is provided
+      - reverts if `unwrapNativeToken` is true and `erc20Token` is not WETH
+      - sends ETH to taker if `unwrapNativeToken` is true and `erc20Token` is WETH
+      fees
+        - single fee to EOA
+        - single fee, successful callback
+        - single fee, callback reverts
+        - single fee, callback returns invalid value
+        - multiple fees to EOAs
+      properties
+        - Checks tokenId if no properties are provided
+        - Null property
+        - Reverts if property validation fails
+        - Successful property validation
+    onERC721Received
+      ✔ throws if data is not encoded correctly
+      ✔ reverts if msg.sender != order.erc721Token
+      ✔ reverts if transferred tokenId does not match order.erc721TokenId
+      ✔ can sell ERC721 without approval
+    buyERC721
+      ✔ can fill a ERC721 sell order
+      ✔ cannot fill the same order twice
+      ✔ cannot fill a cancelled order
+      ✔ cannot fill an expired order
+      ✔ reverts if a buy order is provided
+      ✔ reverts if the taker is not the taker address specified in the order
+      ✔ succeeds if the taker is the taker address specified in the order
+      ✔ reverts if an invalid signature is provided
+      ETH
+        ✔ can fill an order with ETH (and refunds excess ETH)
+        ✔ can fill a WETH order with ETH
+        ✔ uses WETH if not enough ETH to fill WETH order
+      fees
+        ✔ single fee to EOA (buyERC721)
+        ✔ pays fees in ETH if erc20Token == ETH
+        ✔ pays fees in ETH if erc20Token == WETH but taker uses ETH
+        ✔ pays fees in WETH if taker uses WETH
+        ✔ reverts if overspent ETH
+    batchBuyERC721s
+      ✔ reverts if arrays are different lengths
+      ✔ successfully fills multiple orders
+      ✔ catches revert if one order fails
+      ✔ bubbles up revert if one order fails and `revertIfIncomplete == true`
+      ✔ can fill multiple orders with ETH, refund excess ETH
+    preSignERC721Order
+      ✔ can fill order that has been presigned by the maker
+      ✔ cannot fill order that has not been presigned by the maker
+Cannot reset balance for 0x82EdA215Fa92B45a3a76837C65Ab862b6C7564a8: Unknown account 0x82EdA215Fa92B45a3a76837C65Ab862b6C7564a8
+      ✔ cannot fill order that was presigned then cancelled
+    matchERC721Orders
+      ✔ cannot match two sell orders
+      ✔ cannot match two buy orders
+      ✔ erc721TokenId must match
+      ✔ erc721Token must match
+      ✔ erc20Token must match
+      ✔ reverts if spread is negative
+      ✔ matches two orders and sends profit to matcher
+      ✔ matches two ETH/WETH orders and sends profit to matcher
+      ✔ matches two orders (with fees) and sends profit to matcher
+      ✔ matches two ETH/WETH (with fees) orders and sends profit to matcher
+      ✔ reverts if sell order fees exceed spread
+      ✔ reverts if sell order fees exceed spread (ETH/WETH)
+
+  FundRecovery
+    Should delegatecall `transferTrappedTokensTo` from the exchange proxy
+      ✔ Tranfers an arbitrary ERC-20 Token
+      ✔ Amount -1 transfers entire balance of ERC-20
+      ✔ Amount -1 transfers entire balance of ETH
+      ✔ Transfers ETH 
+      ✔ Feature `transferTrappedTokensTo` can only be called by owner
+
+  LiquidityProvider feature
+    2) "before all" hook in "LiquidityProvider feature"
+
+  MetaTransactions feature
+🔮 预测的 ZeroEx 地址: 0xA9e6Bfa2BF53dE88FEb19761D9b2eE2e821bF1Bf
+✅ 实际的 ZeroEx 地址: 0xA9e6Bfa2BF53dE88FEb19761D9b2eE2e821bF1Bf
+🎯 地址预测 成功
+    getMetaTransactionHash()
+      ✔ generates the correct hash
+    executeMetaTransaction()
+      3) can call NativeOrders.fillLimitOrder()
+      4) can call NativeOrders.fillRfqOrder()
+      5) can call `TransformERC20.transformERC20()`
+      6) can call `TransformERC20.transformERC20()` with calldata
+      7) can call with any sender if `sender == 0`
+      8) works without fee
+      ✔ fails if the translated call fails
+      9) fails with unsupported function
+      10) cannot execute the same mtx twice
+      11) fails if not enough ETH provided
+      - fails if gas price too low
+      - fails if gas price too high
+      ✔ fails if expired
+      ✔ fails if wrong sender
+      12) fails if signature is wrong
+      13) cannot reenter `executeMetaTransaction()`
+      14) cannot reenter `batchExecuteMetaTransactions()`
+      15) cannot reduce initial ETH balance
+    batchExecuteMetaTransactions()
+      16) can execute multiple transactions
+      17) cannot execute the same transaction twice
+      18) fails if a meta-transaction fails
+      19) cannot reenter `executeMetaTransaction()`
+      20) cannot reenter `batchExecuteMetaTransactions()`
+      21) cannot reduce initial ETH balance
+    getMetaTransactionExecutedBlock()
+      ✔ returns zero for an unexecuted mtx
+      22) returns the block it was executed in
+    getMetaTransactionHashExecutedBlock()
+      ✔ returns zero for an unexecuted mtx
+      23) returns the block it was executed in
+
+  MultiplexFeature
+    batch sells
+      multiplexBatchSellTokenForToken
+        24) reverts if minBuyAmount is not satisfied
+        25) reverts if given an invalid subcall type
+        26) reverts if the full sell amount is not sold
+        27) RFQ, fallback(UniswapV2)
+        28) OTC, fallback(UniswapV2)
+        29) expired RFQ, fallback(UniswapV2)
+        30) expired OTC, fallback(UniswapV2)
+        31) expired RFQ, fallback(TransformERC20)
+        32) LiquidityProvider, UniV3, Sushiswap
+        33) proportional fill amounts
+        34) RFQ, MultiHop(UniV3, UniV2)
+      multiplexBatchSellEthForToken
+        35) RFQ
+        36) OTC
+        37) UniswapV2
+        38) UniswapV3
+        39) LiquidityProvider
+        40) TransformERC20
+        41) RFQ, MultiHop(UniV3, UniV2)
+      multiplexBatchSellTokenForEth
+        42) RFQ
+        43) OTC
+        44) UniswapV2
+        45) UniswapV3
+        46) LiquidityProvider
+        47) TransformERC20
+        48) RFQ, MultiHop(UniV3, UniV2)
+    multihop sells
+      multiplexMultiHopSellTokenForToken
+        49) reverts if given an invalid subcall type
+        50) reverts if minBuyAmount is not satisfied
+        51) reverts if array lengths are mismatched
+        52) UniswapV2 -> LiquidityProvider
+        53) LiquidityProvider -> Sushiswap
+        54) UniswapV3 -> BatchSell(RFQ, UniswapV2)
+        55) BatchSell(RFQ, UniswapV2) -> UniswapV3
+      multiplexMultiHopSellEthForToken
+        56) reverts if first token is not WETH
+        57) UniswapV2 -> LiquidityProvider
+        58) LiquidityProvider -> Sushiswap
+        59) UniswapV3 -> BatchSell(RFQ, UniswapV2)
+        60) BatchSell(RFQ, UniswapV2) -> UniswapV3
+      multiplexMultiHopSellTokenForEth
+        61) reverts if last token is not WETH
+        62) UniswapV2 -> LiquidityProvider
+        63) LiquidityProvider -> Sushiswap
+        64) UniswapV3 -> BatchSell(RFQ, UniswapV2)
+        65) BatchSell(RFQ, UniswapV2) -> UniswapV3
+
+  NativeOrdersFeature
+    getProtocolFeeMultiplier()
+      ✔ returns the protocol fee multiplier
+    getLimitOrderHash()
+      ✔ returns the correct hash
+    getRfqOrderHash()
+      ✔ returns the correct hash
+    getLimitOrderInfo()
+      ✔ unfilled order
+      ✔ unfilled cancelled order
+      ✔ unfilled expired order
+      ✔ filled then expired order
+      ✔ filled order
+      ✔ partially filled order
+      ✔ filled then cancelled order
+      ✔ partially filled then cancelled order
+    getRfqOrderInfo()
+      ✔ unfilled order
+      ✔ unfilled cancelled order
+      ✔ unfilled expired order
+      ✔ filled then expired order
+      ✔ filled order
+      ✔ partially filled order
+      ✔ filled then cancelled order
+      ✔ partially filled then cancelled order
+      ✔ invalid origin
+    cancelLimitOrder()
+      ✔ can cancel an unfilled order
+      ✔ can cancel a fully filled order
+      ✔ can cancel a partially filled order
+      ✔ can cancel an expired order
+      ✔ can cancel a cancelled order
+      ✔ cannot cancel someone else's order
+    cancelRfqOrder()
+      ✔ can cancel an unfilled order
+      ✔ can cancel a fully filled order
+      ✔ can cancel a partially filled order
+      ✔ can cancel an expired order
+      ✔ can cancel a cancelled order
+      ✔ cannot cancel someone else's order
+    batchCancelLimitOrders()
+      ✔ can cancel multiple orders (52ms)
+      ✔ cannot cancel someone else's orders (47ms)
+    batchCancelRfqOrders()
+      ✔ can cancel multiple orders (43ms)
+      ✔ cannot cancel someone else's orders (42ms)
+    cancelPairOrders()
+      ✔ can cancel multiple limit orders of the same pair with salt < minValidSalt (49ms)
+      ✔ does not cancel limit orders of a different pair
+      ✔ can cancel multiple RFQ orders of the same pair with salt < minValidSalt
+      ✔ does not cancel RFQ orders of a different pair
+    batchCancelPairOrders()
+      ✔ can cancel multiple limit order pairs
+      ✔ can cancel multiple RFQ order pairs
+    fillLimitOrder()
+      ✔ can fully fill an order
+      ✔ can partially fill an order
+      ✔ can fully fill an order in two steps
+      ✔ clamps fill amount to remaining available
+      ✔ clamps fill amount to remaining available in partial filled order
+      ✔ cannot fill an expired order
+      ✔ cannot fill a cancelled order
+      ✔ cannot fill a salt/pair cancelled order
+      ✔ non-taker cannot fill order
+      ✔ non-sender cannot fill order
+      ✔ cannot fill order with bad signature
+      ✔ fails if no protocol fee attached
+      ✔ refunds excess protocol fee
+    registerAllowedRfqOrigins()
+      ✔ cannot register through a contract
+    fillRfqOrder()
+      ✔ can fully fill an order
+      ✔ can partially fill an order
+      ✔ can fully fill an order in two steps
+      ✔ clamps fill amount to remaining available
+      ✔ clamps fill amount to remaining available in partial filled order
+      ✔ cannot fill an order with wrong tx.origin
+      ✔ can fill an order from a different tx.origin if registered
+      ✔ cannot fill an order with registered then unregistered tx.origin
+      ✔ cannot fill an order with a zero tx.origin
+      ✔ non-taker cannot fill order
+      ✔ cannot fill an expired order
+      ✔ cannot fill a cancelled order
+      ✔ cannot fill a salt/pair cancelled order
+      ✔ cannot fill order with bad signature
+      ✔ fails if ETH is attached
+    fillOrKillLimitOrder()
+      ✔ can fully fill an order
+      ✔ reverts if cannot fill the exact amount
+      ✔ refunds excess protocol fee
+    fillOrKillRfqOrder()
+      ✔ can fully fill an order
+      ✔ reverts if cannot fill the exact amount
+      ✔ fails if ETH is attached
+    getLimitOrderRelevantState()
+      ✔ works with an empty order
+      ✔ works with cancelled order
+      ✔ works with a bad signature
+      ✔ works with an unfilled order
+      ✔ works with a fully filled order
+      ✔ works with an under-funded, partially-filled order
+    getRfqOrderRelevantState()
+      ✔ works with an empty order
+      ✔ works with cancelled order
+      ✔ works with a bad signature
+      ✔ works with an unfilled order
+      ✔ works with a fully filled order
+      ✔ works with an under-funded, partially-filled order
+    batchGetLimitOrderRelevantStates()
+      ✔ works with multiple orders (53ms)
+      ✔ swallows reverts (54ms)
+    batchGetRfqOrderRelevantStates()
+      ✔ works with multiple orders (44ms)
+    registerAllowedSigner()
+      ✔ fires appropriate events
+      ✔ allows for fills on orders signed by a approved signer
+      ✔ disallows fills if the signer is revoked
+      ✔ doesn't allow fills with an unapproved signer
+      ✔ allows an approved signer to cancel an RFQ order
+      ✔ allows an approved signer to cancel a limit order
+      ✔ doesn't allow an unapproved signer to cancel an RFQ order
+      ✔ doesn't allow an unapproved signer to cancel a limit order
+      ✔ allows a signer to cancel pair RFQ orders
+      ✔ doesn't allow an unapproved signer to cancel pair RFQ orders
+      ✔ allows a signer to cancel pair limit orders
+      ✔ doesn't allow an unapproved signer to cancel pair limit orders
+      ✔ allows a signer to cancel multiple RFQ order pairs
+      ✔ doesn't allow an unapproved signer to batch cancel pair rfq orders
+      ✔ allows a signer to cancel multiple limit order pairs
+      ✔ doesn't allow an unapproved signer to batch cancel pair limit orders
+
+  OtcOrdersFeature
+    getOtcOrderHash()
+      ✔ returns the correct hash
+    lastOtcTxOriginNonce()
+      66) returns 0 if bucket is unused
+      67) returns the last nonce used in a bucket
+    getOtcOrderInfo()
+      68) unfilled order
+      69) unfilled expired order
+      70) filled then expired order
+      71) filled order
+    fillOtcOrder()
+      72) can fully fill an order
+      73) can partially fill an order
+      74) clamps fill amount to remaining available
+      75) cannot fill an order with wrong tx.origin
+      76) cannot fill an order with wrong taker
+      77) can fill an order from a different tx.origin if registered
+      78) cannot fill an order with registered then unregistered tx.origin
+      79) cannot fill an order with a zero tx.origin
+      80) cannot fill an expired order
+      81) cannot fill order with bad signature
+      82) fails if ETH is attached
+      83) cannot fill the same order twice
+      84) cannot fill two orders with the same nonceBucket and nonce
+      85) cannot fill an order whose nonce is less than the nonce last used in that bucket
+      86) can fill two orders that use the same nonce bucket and increasing nonces
+      87) can fill two orders that use the same nonce but different nonce buckets
+      88) can fill a WETH buy order and receive ETH
+      89) reverts if `unwrapWeth` is true but maker token is not WETH
+      90) allows for fills on orders signed by a approved signer
+      91) disallows fills if the signer is revoked
+      92) doesn't allow fills with an unapproved signer
+    fillOtcOrderWithEth()
+      93) Can fill an order with ETH (takerToken=WETH)
+      94) Can fill an order with ETH (takerToken=ETH)
+      95) Can partially fill an order with ETH (takerToken=WETH)
+      96) Can partially fill an order with ETH (takerToken=ETH)
+      97) Can refund excess ETH is msg.value > order.takerAmount (takerToken=WETH)
+      98) Can refund excess ETH is msg.value > order.takerAmount (takerToken=ETH)
+      99) Cannot fill an order if taker token is not ETH or WETH
+    fillTakerSignedOtcOrder()
+      100) can fully fill an order
+      101) cannot fill an order with wrong tx.origin
+      102) can fill an order from a different tx.origin if registered
+      103) cannot fill an order with registered then unregistered tx.origin
+      104) cannot fill an order with a zero tx.origin
+      105) cannot fill an expired order
+      106) cannot fill an order with bad taker signature
+      107) cannot fill order with bad maker signature
+      108) fails if ETH is attached
+      109) cannot fill the same order twice
+      110) cannot fill two orders with the same nonceBucket and nonce
+      111) cannot fill an order whose nonce is less than the nonce last used in that bucket
+      112) can fill two orders that use the same nonce bucket and increasing nonces
+      113) can fill two orders that use the same nonce but different nonce buckets
+      114) can fill a WETH buy order and receive ETH
+      115) reverts if `unwrapWeth` is true but maker token is not WETH
+    batchFillTakerSignedOtcOrders()
+      116) Fills multiple orders
+      117) Fills multiple orders and unwraps WETH
+      118) Skips over unfillable orders
+
+  Ownable feature
+    transferOwnership()
+      ✔ non-owner cannot transfer ownership
+      ✔ owner can transfer ownership
+    migrate()
+      ✔ non-owner cannot call migrate()
+      ✔ can successfully execute a migration
+      ✔ failing migration reverts
+      ✔ reverting migration reverts
+
+  Selector collision test
+    - Function selectors do not collide
+
+  SimpleFunctionRegistry feature
+    ✔ `extend()` cannot be called by a non-owner
+    ✔ `rollback()` cannot be called by a non-owner
+    119) `rollback()` to non-zero impl reverts for unregistered function
+    ✔ `rollback()` to zero impl succeeds for unregistered function
+    120) owner can add a new function with `extend()`
+    121) owner can replace add a function with `extend()`
+    122) owner can zero a function with `extend()`
+    ✔ can query rollback history
+    123) owner can rollback a function to zero
+    124) owner can rollback a function to the prior version
+    125) owner can rollback a zero function to the prior version
+    126) owner can rollback a function to a much older version
+    127) owner cannot rollback a function to a version not in history
+
+  TransformERC20 feature
+    wallets
+      128) createTransformWallet() replaces the current wallet
+      ✔ createTransformWallet() cannot be called by non-owner
+    transformer deployer
+      ✔ `getTransformerDeployer()` returns the transformer deployer
+      129) owner can set the transformer deployer with `setTransformerDeployer()`
+      130) non-owner cannot set the transformer deployer with `setTransformerDeployer()`
+    quote signer
+      131) `getQuoteSigner()` returns the quote signer
+      132) owner can set the quote signer with `setQuoteSigner()`
+      133) non-owner cannot set the quote signer with `setQuoteSigner()`
+    _transformERC20()/transformERC20()
+      _transformERC20()
+        134) succeeds if taker's output token balance increases by exactly minOutputTokenAmount
+        135) succeeds if taker's output token balance increases by exactly minOutputTokenAmount, with ETH
+        136) succeeds if taker's output token balance increases by more than minOutputTokenAmount
+        137) throws if taker's output token balance increases by less than minOutputTokenAmount
+        138) throws if taker's output token balance decreases
+        139) can call multiple transformers
+        140) fails with invalid transformer nonce
+        141) can sell entire taker balance
+        142) can sell entire taker balance with ETH (but not really)
+
+  UniswapV3Feature
+    sellTokenForTokenToUniswapV3()
+      ✔ 1-hop swap
+      ✔ 2-hop swap
+      ✔ 1-hop underbuy fails
+      ✔ 2-hop underbuy fails
+      ✔ null recipient is sender
+    sellEthForTokenToUniswapV3()
+      ✔ 1-hop swap
+      ✔ null recipient is sender
+    sellTokenForEthToUniswapV3()
+      ✔ 1-hop swap
+      ✔ null recipient is sender
+      ✔ fails if receipient cannot receive ETH
+
+  FixinTokenSpender
+    transferERC20TokensFrom()
+      ✔ transferERC20TokensFrom() successfully calls compliant ERC20 token
+      ✔ transferERC20TokensFrom() successfully calls non-compliant ERC20 token
+      ✔ transferERC20TokensFrom() reverts if ERC20 token reverts
+      ✔ transferERC20TokensFrom() reverts if ERC20 token returns false
+      ✔ transferERC20TokensFrom() allows extra data after true
+      ✔ transferERC20TokensFrom() reverts when there's extra data after false
+      ✔ transferERC20TokensFrom() cannot call self
+    getSpendableERC20BalanceOf()
+      ✔ returns the minimum of the owner's balance and allowance
+
+  Full migration
+    ✔ ZeroEx has the correct owner
+    ✔ FullMigration contract self-destructs
+    ✔ Non-deployer cannot call migrateZeroEx()
+    TransformERC20 feature
+      ✔ _transformERC20 is registered
+      ✔ _transformERC20 cannot be called from outside
+      ✔ createTransformWallet is registered
+      ✔ getTransformWallet is registered
+      ✔ setTransformerDeployer is registered
+      ✔ getQuoteSigner is registered
+      ✔ setQuoteSigner is registered
+    MetaTransactions feature
+      ✔ executeMetaTransaction is registered
+      ✔ batchExecuteMetaTransactions is registered
+      ✔ getMetaTransactionExecutedBlock is registered
+      ✔ getMetaTransactionHashExecutedBlock is registered
+      ✔ getMetaTransactionHash is registered
+    NativeOrdersFeature feature
+      ✔ transferProtocolFeesForPools is registered
+      ✔ fillLimitOrder is registered
+      ✔ fillRfqOrder is registered
+      ✔ fillOrKillLimitOrder is registered
+      ✔ fillOrKillRfqOrder is registered
+      ✔ _fillLimitOrder is registered
+      ✔ _fillLimitOrder cannot be called from outside
+      ✔ _fillRfqOrder is registered
+      ✔ _fillRfqOrder cannot be called from outside
+      ✔ cancelLimitOrder is registered
+      ✔ cancelRfqOrder is registered
+      ✔ batchCancelLimitOrders is registered
+      ✔ batchCancelRfqOrders is registered
+      ✔ cancelPairLimitOrders is registered
+      ✔ batchCancelPairLimitOrders is registered
+      ✔ cancelPairRfqOrders is registered
+      ✔ batchCancelPairRfqOrders is registered
+      ✔ getLimitOrderInfo is registered
+      ✔ getRfqOrderInfo is registered
+      ✔ getLimitOrderHash is registered
+      ✔ getRfqOrderHash is registered
+      ✔ getProtocolFeeMultiplier is registered
+      ✔ registerAllowedRfqOrigins is registered
+      ✔ getLimitOrderRelevantState is registered
+      ✔ getRfqOrderRelevantState is registered
+      ✔ batchGetLimitOrderRelevantStates is registered
+      ✔ batchGetRfqOrderRelevantStates is registered
+    TransformERC20
+      ✔ has the correct transformer deployer
+
+  Initial migration
+    ✔ Self-destructs after deployment
+    ✔ Non-deployer cannot call initializeZeroEx()
+    ✔ External contract cannot call die()
+    bootstrapping
+      ✔ Migrator cannot call bootstrap() again
+      ✔ Bootstrap feature self destructs after deployment
+    Ownable feature
+      143) "before all" hook for "has the correct owner"
+    SimpleFunctionRegistry feature
+      144) "before all" hook for "_extendSelf() is deregistered"
+
+  LibLimitOrder tests
+    getLimitOrderStructHash()
+      ✔ returns the correct hash
+    getRfqOrderStructHash()
+      ✔ returns the correct hash
+
+  LibSignature library
+    getSignerOfHash()
+      ✔ can recover the signer of an EIP712 signature
+      ✔ can recover the signer of an EthSign signature
+      ✔ throws if the signature type is out of range
+      ✔ throws if the signature data is malformed
+      ✔ throws if an EC value is out of range
+      ✔ throws if the type is Illegal
+      ✔ throws if the type is Invalid
+
+  CurveLiquidityProvider feature
+    ✔ can swap ERC20->ERC20
+    ✔ can swap ERC20->ETH
+    ✔ can swap ETH->ERC20
+    ✔ can swap ETH->ERC20 with attached ETH
+    ✔ can swap with a pool that returns bought amount
+    ✔ reverts if pool reverts
+    ✔ reverts if underbought
+    ✔ reverts if ERC20->ERC20 receives an ETH input token
+    ✔ reverts if ERC20->ERC20 receives an ETH output token
+    ✔ reverts if ERC20->ETH receives an ETH input token
+    ✔ reverts if ETH->ERC20 receives an ETH output token
+    ✔ emits a LiquidityProviderFill event
+
+  MooniswapLiquidityProvider feature
+    ✔ can swap ERC20->ERC20
+    ✔ can swap ERC20->ETH
+    ✔ can swap ETH->ERC20
+    ✔ can swap ETH->ERC20 with attached ETH
+    ✔ can swap ERC20->WETH
+    ✔ can swap WETH->ERC20
+    ✔ reverts if pool reverts
+    ✔ reverts if ERC20->ERC20 is the same token
+    ✔ reverts if ERC20->ERC20 receives an ETH input token
+    ✔ reverts if ERC20->ERC20 receives an ETH output token
+    ✔ reverts if ERC20->ETH receives an ETH input token
+    ✔ reverts if ETH->ERC20 receives an ETH output token
+    ✔ emits a LiquidityProviderFill event
+
+  PermissionlessTransformerDeployer
+    deploy()
+      ✔ can deploy safe contract
+      ✔ deploys at predictable address
+      ✔ cannot deploy suicidal contract
+      ✔ can deploy safe contract with value
+      ✔ reverts if constructor throws
+      ✔ can retrieve deployment salt from contract address
+      ✔ can retrieve deployment init code hash from contract address
+
+  ProtocolFees
+    FeeCollector
+      ✔ should disallow unauthorized initialization
+    _collectProtocolFee()
+      ✔ should revert if insufficient ETH transferred
+      ✔ should accept ETH fee
+      ✔ should accept ETH after first transfer
+      ✔ should attribute fees correctly
+
+  Storage ID uniqueness test
+    ✔ all StorageId references are unique in storage libraries
+
+  TransformerDeployer
+    deploy()
+      ✔ non-authority cannot call
+      ✔ authority can deploy
+      ✔ authority can deploy with value
+      ✔ reverts if constructor throws
+      ✔ updates nonce
+      ✔ nonce can predict deployment address
+      ✔ can retrieve deployment nonce from contract address
+    kill()
+      ✔ non-authority cannot call
+      ✔ authority can kill a contract
+
+  FillQuoteTransformer
+    sell quotes
+      ✔ can fully sell to a single bridge order with -1 fillAmount
+      ✔ can partially sell to a single bridge order with a fractional fillAmount
+      ✔ fails if incomplete sell
+      ✔ can fully sell to a single bridge order
+      ✔ can fully sell to a single limit order
+      145) can partial sell to a single limit order
+      ✔ can fully sell to a single limit order without fees
+      ✔ can partial sell to a single limit order without fees
+      ✔ can fully sell to a single RFQ order
+      ✔ can partially sell to a single RFQ order
+      ✔ can fully sell to one of each order type
+      ✔ can partially sell to one of each order type
+      ✔ can fully sell to multiple of each order type (79ms)
+      ✔ can recover from a failed order
+      ✔ can recover from a slipped order
+      ✔ skips limit orders when not enough protocol fee balance
+    buy quotes
+      ✔ fails if incomplete buy
+      ✔ can fully buy to a single bridge order
+      ✔ can fully buy to a single limit order
+      ✔ can partial buy to a single limit order
+      ✔ can fully buy to a single limit order without fees
+      ✔ can partial buy to a single limit order without fees
+      ✔ can fully buy to a single RFQ order
+      ✔ can partially buy to a single RFQ order
+      ✔ can fully buy to one of each order type
+      ✔ can recover from a failed order
+      ✔ can recover from a slipped order
+
+  PayTakerTransformer
+    ✔ can transfer a token and ETH
+    ✔ can transfer all of a token and ETH
+    ✔ can transfer all of a token and ETH (empty amounts)
+    ✔ can transfer less than the balance of a token and ETH
+
+  Transformer (base)
+    die()
+      ✔ cannot be called by non-deployer
+      ✔ cannot be called outside of its own context
+      ✔ destroys the transformer
+
+  WethTransformer
+    ✔ fails if the token is neither ETH or WETH
+    ✔ can unwrap WETH
+    ✔ can unwrap all WETH
+    ✔ can unwrap some WETH
+    ✔ can wrap ETH
+    ✔ can wrap all ETH
+    ✔ can wrap some ETH
+
+
+  419 passing (8s)
+  24 pending
+  145 failing
+
+  1) ERC1155OrdersFeature
+       buyERC1155
+         ETH
+           can fill a WETH order with ETH:
+
+      AssertionError: expected 81 to equal 46.
+      + expected - actual
+
+      -81
+      +46
+      
+      at assertBalancesAsync (test/features/erc1155_orders_test.ts:419:39)
+      at async Context.<anonymous> (test/features/erc1155_orders_test.ts:1271:17)
+
+  2) LiquidityProvider feature
+       "before all" hook in "LiquidityProvider feature":
+     TypeError: wrappers_1.TestLiquidityProvider__factory is not a constructor
+      at Context.<anonymous> (test/features/liquidity_provider_test.ts:80:42)
+
+  3) MetaTransactions feature
+       executeMetaTransaction()
+         can call NativeOrders.fillLimitOrder():
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0xbea726ef228b67f3a5f218a67259d6b870fa4aa27e3d4dad9dc5d46afdc70edae563bbb30000000000000000000000000000000000000000000000000000000068b7fad90000000000000000000000000000000000000000000000000000000068b7f8ea)
+    at MetaTransactionsFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at MetaTransactionsFeature.nonReentrant (contracts/src/fixins/FixinReentrancyGuard.sol:38)
+    at MetaTransactionsFeature._executeMetaTransactionPrivate (contracts/src/features/MetaTransactionsFeature.sol:227)
+    at MetaTransactionsFeature.executeMetaTransaction (contracts/src/features/MetaTransactionsFeature.sol:146)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeMetaTransaction (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/meta_transactions_test.ts:304:24)
+  
+
+  4) MetaTransactions feature
+       executeMetaTransaction()
+         can call NativeOrders.fillRfqOrder():
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0xbea726ef7184c531e42d87cdce8a523b1c9477ea52bffa5ee14c5e4d8ae89962118e52390000000000000000000000000000000000000000000000000000000068b7fad90000000000000000000000000000000000000000000000000000000068b7f8ea)
+    at MetaTransactionsFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at MetaTransactionsFeature.nonReentrant (contracts/src/fixins/FixinReentrancyGuard.sol:38)
+    at MetaTransactionsFeature._executeMetaTransactionPrivate (contracts/src/features/MetaTransactionsFeature.sol:227)
+    at MetaTransactionsFeature.executeMetaTransaction (contracts/src/features/MetaTransactionsFeature.sol:146)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeMetaTransaction (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/meta_transactions_test.ts:332:24)
+  
+
+  5) MetaTransactions feature
+       executeMetaTransaction()
+         can call `TransformERC20.transformERC20()`:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0xbea726ef6c34f807134c2658d3f9e4e061525397a4a6f389207269c30afe5dd3ae88266a0000000000000000000000000000000000000000000000000000000068b7fad90000000000000000000000000000000000000000000000000000000068b7f8ea)
+    at MetaTransactionsFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at MetaTransactionsFeature.nonReentrant (contracts/src/fixins/FixinReentrancyGuard.sol:38)
+    at MetaTransactionsFeature._executeMetaTransactionPrivate (contracts/src/features/MetaTransactionsFeature.sol:227)
+    at MetaTransactionsFeature.executeMetaTransaction (contracts/src/features/MetaTransactionsFeature.sol:146)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeMetaTransaction (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/meta_transactions_test.ts:363:24)
+  
+
+  6) MetaTransactions feature
+       executeMetaTransaction()
+         can call `TransformERC20.transformERC20()` with calldata:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0xbea726eff657ccd44d0d4b7109d7d000bfa2e6aad4079640e6ff42e6776429e1945c1b0d0000000000000000000000000000000000000000000000000000000068b7fad90000000000000000000000000000000000000000000000000000000068b7f8ea)
+    at MetaTransactionsFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at MetaTransactionsFeature.nonReentrant (contracts/src/fixins/FixinReentrancyGuard.sol:38)
+    at MetaTransactionsFeature._executeMetaTransactionPrivate (contracts/src/features/MetaTransactionsFeature.sol:227)
+    at MetaTransactionsFeature.executeMetaTransaction (contracts/src/features/MetaTransactionsFeature.sol:146)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeMetaTransaction (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/meta_transactions_test.ts:400:24)
+  
+
+  7) MetaTransactions feature
+       executeMetaTransaction()
+         can call with any sender if `sender == 0`:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0xbea726effd4d9aa31282bb9e5839f65304c56d2bf60a5eb58db954f31d19d52488a9f6450000000000000000000000000000000000000000000000000000000068b7fad80000000000000000000000000000000000000000000000000000000068b7f8ea)
+    at MetaTransactionsFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at MetaTransactionsFeature.nonReentrant (contracts/src/fixins/FixinReentrancyGuard.sol:38)
+    at MetaTransactionsFeature._executeMetaTransactionPrivate (contracts/src/features/MetaTransactionsFeature.sol:227)
+    at MetaTransactionsFeature.executeMetaTransaction (contracts/src/features/MetaTransactionsFeature.sol:146)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async staticCallResult (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:337:22)
+    at async executeMetaTransaction.staticCall (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:303:24)
+    at async Context.<anonymous> (test/features/meta_transactions_test.ts:437:31)
+  
+
+  8) MetaTransactions feature
+       executeMetaTransaction()
+         works without fee:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0xbea726efe2af6e33bce9c36886d7dcf1ee227caba2b24a0bc05d8257c7599fc19b5a40b50000000000000000000000000000000000000000000000000000000068b7fad80000000000000000000000000000000000000000000000000000000068b7f8ea)
+    at MetaTransactionsFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at MetaTransactionsFeature.nonReentrant (contracts/src/fixins/FixinReentrancyGuard.sol:38)
+    at MetaTransactionsFeature._executeMetaTransactionPrivate (contracts/src/features/MetaTransactionsFeature.sol:227)
+    at MetaTransactionsFeature.executeMetaTransaction (contracts/src/features/MetaTransactionsFeature.sol:146)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async staticCallResult (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:337:22)
+    at async executeMetaTransaction.staticCall (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:303:24)
+    at async Context.<anonymous> (test/features/meta_transactions_test.ts:456:31)
+  
+
+  9) MetaTransactions feature
+       executeMetaTransaction()
+         fails with unsupported function:
+     Error: 错误编码不匹配。期望: 0x547a32a34382d5ac4fc3f980e56c8aa783809106faf99a12881aa04635f33df1ddaadc0c287b071b00000000000000000000000000000000000000000000000000000000, 实际: 0xbea726ef4382d5ac4fc3f980e56c8aa783809106faf99a12881aa04635f33df1ddaadc0c0000000000000000000000000000000000000000000000000000000068b7fad90000000000000000000000000000000000000000000000000000000068b7f8ea
+      at CorrectMetaTransactionsMatcher.expectMetaTransactionUnsupportedFunctionError (test/utils/correct_meta_transactions_matcher.ts:131:23)
+      at async Context.<anonymous> (test/features/meta_transactions_test.ts:502:13)
+
+  10) MetaTransactions feature
+       executeMetaTransaction()
+         cannot execute the same mtx twice:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0xbea726efaa594230bf121f047e220bc39a5a49db0fd91234b39009bd2eb8efbb42284acb0000000000000000000000000000000000000000000000000000000068b7fad90000000000000000000000000000000000000000000000000000000068b7f8ea)
+    at MetaTransactionsFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at MetaTransactionsFeature.nonReentrant (contracts/src/fixins/FixinReentrancyGuard.sol:38)
+    at MetaTransactionsFeature._executeMetaTransactionPrivate (contracts/src/features/MetaTransactionsFeature.sol:227)
+    at MetaTransactionsFeature.executeMetaTransaction (contracts/src/features/MetaTransactionsFeature.sol:146)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeMetaTransaction (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/meta_transactions_test.ts:521:24)
+  
+
+  11) MetaTransactions feature
+       executeMetaTransaction()
+         fails if not enough ETH provided:
+     Error: 错误编码不匹配。期望: 0x0a5ade452a0a0a19e45c750d1594a6704583094924dfd6289d9fd9638af6212bcc31e17b0000000000000000000000000000000000000000000000000244cb71cfa9bc320000000000000000000000000000000000000000000000000244cb71cfa9bc33, 实际: 0xbea726ef2a0a0a19e45c750d1594a6704583094924dfd6289d9fd9638af6212bcc31e17b0000000000000000000000000000000000000000000000000000000068b7fad90000000000000000000000000000000000000000000000000000000068b7f8ea
+      at CorrectMetaTransactionsMatcher.expectMetaTransactionInsufficientEthError (test/utils/correct_meta_transactions_matcher.ts:163:23)
+      at async Context.<anonymous> (test/features/meta_transactions_test.ts:543:13)
+
+  12) MetaTransactions feature
+       executeMetaTransaction()
+         fails if signature is wrong:
+     RangeError: data out-of-bounds (buffer=0x843d1e3bd926125c24e28cdcc44049acefb24c9fc834b71ed825dcf0fae903830000000000000000000000000000000000000000000000000000000068b7fad90000000000000000000000000000000000000000000000000000000068b7f8ea, length=96, offset=128, code=BUFFER_OVERRUN, version=6.15.0)
+      at makeError (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:695:21)
+      at assert (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at Reader.#peekBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:507:23)
+      at Reader.readBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:526:36)
+      at Reader.readIndex (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:539:30)
+      at /Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/array.ts:90:33
+      at Array.forEach (<anonymous>)
+      at unpack (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/array.ts:86:12)
+      at TupleCoder.decode (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/tuple.ts:66:22)
+      at AbiCoder.decode (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/abi-coder.ts:209:22)
+
+  13) MetaTransactions feature
+       executeMetaTransaction()
+         cannot reenter `executeMetaTransaction()`:
+     RangeError: data out-of-bounds (buffer=0x, length=0, offset=32, code=BUFFER_OVERRUN, version=6.15.0)
+      at makeError (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:695:21)
+      at assert (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at Reader.#peekBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:507:23)
+      at Reader.readBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:526:36)
+      at Reader.readIndex (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:539:30)
+      at BytesCoder.decode (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/bytes.ts:28:40)
+      at BytesCoder.decode (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/bytes.ts:41:30)
+      at /Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/array.ts:93:31
+      at Array.forEach (<anonymous>)
+      at unpack (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/array.ts:86:12)
+
+  14) MetaTransactions feature
+       executeMetaTransaction()
+         cannot reenter `batchExecuteMetaTransactions()`:
+     RangeError: data out-of-bounds (buffer=0x, length=0, offset=32, code=BUFFER_OVERRUN, version=6.15.0)
+      at makeError (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:695:21)
+      at assert (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at Reader.#peekBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:507:23)
+      at Reader.readBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:526:36)
+      at Reader.readIndex (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:539:30)
+      at BytesCoder.decode (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/bytes.ts:28:40)
+      at BytesCoder.decode (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/bytes.ts:41:30)
+      at /Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/array.ts:93:31
+      at Array.forEach (<anonymous>)
+      at unpack (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/array.ts:86:12)
+
+  15) MetaTransactions feature
+       executeMetaTransaction()
+         cannot reduce initial ETH balance:
+     AssertionError: Expected transaction to be reverted with reason 'MetaTransactionsFeature/ETH_LEAK', but it reverted with a custom error
+  
+
+  16) MetaTransactions feature
+       batchExecuteMetaTransactions()
+         can execute multiple transactions:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0xbea726efd85aa1bff1c64eabd903fc1b9f0debeefb272648c2b7cc57ccf6863a545f234a0000000000000000000000000000000000000000000000000000000068b7fad80000000000000000000000000000000000000000000000000000000068b7f8ea)
+    at MetaTransactionsFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at MetaTransactionsFeature.nonReentrant (contracts/src/fixins/FixinReentrancyGuard.sol:38)
+    at MetaTransactionsFeature._executeMetaTransactionPrivate (contracts/src/features/MetaTransactionsFeature.sol:227)
+    at MetaTransactionsFeature.batchExecuteMetaTransactions (contracts/src/features/MetaTransactionsFeature.sol:178)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async staticCallResult (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:337:22)
+    at async batchExecuteMetaTransactions.staticCall (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:303:24)
+    at async Context.<anonymous> (test/features/meta_transactions_test.ts:738:32)
+  
+
+  17) MetaTransactions feature
+       batchExecuteMetaTransactions()
+         cannot execute the same transaction twice:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0xbea726efffcb678dd264e1ce1272fd225e343f7f38fc1a2b11d43f377e957b77ea9e6bb80000000000000000000000000000000000000000000000000000000068b7fad90000000000000000000000000000000000000000000000000000000068b7f8ea)
+    at MetaTransactionsFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at MetaTransactionsFeature.nonReentrant (contracts/src/fixins/FixinReentrancyGuard.sol:38)
+    at MetaTransactionsFeature._executeMetaTransactionPrivate (contracts/src/features/MetaTransactionsFeature.sol:227)
+    at MetaTransactionsFeature.batchExecuteMetaTransactions (contracts/src/features/MetaTransactionsFeature.sol:178)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.batchExecuteMetaTransactions (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/meta_transactions_test.ts:761:29)
+  
+
+  18) MetaTransactions feature
+       batchExecuteMetaTransactions()
+         fails if a meta-transaction fails:
+     RangeError: data out-of-bounds (buffer=0x, length=0, offset=32, code=BUFFER_OVERRUN, version=6.15.0)
+      at makeError (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:695:21)
+      at assert (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at Reader.#peekBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:507:23)
+      at Reader.readBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:526:36)
+      at Reader.readIndex (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:539:30)
+      at BytesCoder.decode (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/bytes.ts:28:40)
+      at BytesCoder.decode (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/bytes.ts:41:30)
+      at /Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/array.ts:93:31
+      at Array.forEach (<anonymous>)
+      at unpack (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/array.ts:86:12)
+
+  19) MetaTransactions feature
+       batchExecuteMetaTransactions()
+         cannot reenter `executeMetaTransaction()`:
+     RangeError: data out-of-bounds (buffer=0x, length=0, offset=32, code=BUFFER_OVERRUN, version=6.15.0)
+      at makeError (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:695:21)
+      at assert (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at Reader.#peekBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:507:23)
+      at Reader.readBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:526:36)
+      at Reader.readIndex (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:539:30)
+      at BytesCoder.decode (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/bytes.ts:28:40)
+      at BytesCoder.decode (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/bytes.ts:41:30)
+      at /Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/array.ts:93:31
+      at Array.forEach (<anonymous>)
+      at unpack (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/array.ts:86:12)
+
+  20) MetaTransactions feature
+       batchExecuteMetaTransactions()
+         cannot reenter `batchExecuteMetaTransactions()`:
+     RangeError: data out-of-bounds (buffer=0x, length=0, offset=32, code=BUFFER_OVERRUN, version=6.15.0)
+      at makeError (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:695:21)
+      at assert (/Users/king/javascript/protocol/node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at Reader.#peekBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:507:23)
+      at Reader.readBytes (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:526:36)
+      at Reader.readIndex (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/abstract-coder.ts:539:30)
+      at BytesCoder.decode (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/bytes.ts:28:40)
+      at BytesCoder.decode (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/bytes.ts:41:30)
+      at /Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/array.ts:93:31
+      at Array.forEach (<anonymous>)
+      at unpack (/Users/king/javascript/protocol/node_modules/ethers/src.ts/abi/coders/array.ts:86:12)
+
+  21) MetaTransactions feature
+       batchExecuteMetaTransactions()
+         cannot reduce initial ETH balance:
+     AssertionError: Expected transaction to be reverted with reason 'MetaTransactionsFeature/ETH_LEAK', but it reverted with a custom error
+  
+
+  22) MetaTransactions feature
+       getMetaTransactionExecutedBlock()
+         returns the block it was executed in:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0xbea726ef4e345ead42a5db25e110ee1072a9dd61427317f9a0cf5420bafd547e202fc57b0000000000000000000000000000000000000000000000000000000068b7fad90000000000000000000000000000000000000000000000000000000068b7f8ea)
+    at MetaTransactionsFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at MetaTransactionsFeature.nonReentrant (contracts/src/fixins/FixinReentrancyGuard.sol:38)
+    at MetaTransactionsFeature._executeMetaTransactionPrivate (contracts/src/features/MetaTransactionsFeature.sol:227)
+    at MetaTransactionsFeature.executeMetaTransaction (contracts/src/features/MetaTransactionsFeature.sol:146)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeMetaTransaction (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/meta_transactions_test.ts:883:29)
+  
+
+  23) MetaTransactions feature
+       getMetaTransactionHashExecutedBlock()
+         returns the block it was executed in:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0xbea726efc047825ff242350d6448e25b1f5d47accf2514d7a34200b70df3ad566c2497ba0000000000000000000000000000000000000000000000000000000068b7fad90000000000000000000000000000000000000000000000000000000068b7f8ea)
+    at MetaTransactionsFeature.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at MetaTransactionsFeature.nonReentrant (contracts/src/fixins/FixinReentrancyGuard.sol:38)
+    at MetaTransactionsFeature._executeMetaTransactionPrivate (contracts/src/features/MetaTransactionsFeature.sol:227)
+    at MetaTransactionsFeature.executeMetaTransaction (contracts/src/features/MetaTransactionsFeature.sol:146)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:47)
+    at ZeroEx.<fallback> (contracts/src/ZeroEx.sol:49)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeMetaTransaction (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async Context.<anonymous> (test/features/meta_transactions_test.ts:908:29)
+  
+
+  24) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForToken
+           reverts if minBuyAmount is not satisfied:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getRfqSubcallAsync (test/features/multiplex_test.ts:255:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:539:42)
+
+  25) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForToken
+           reverts if given an invalid subcall type:
+     TypeError: multiplex.multiplexBatchSellTokenForToken(...) is not a function
+      at Context.<anonymous> (test/features/multiplex_test.ts:566:22)
+      at processImmediate (node:internal/timers:505:21)
+
+  26) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForToken
+           reverts if the full sell amount is not sold:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getRfqSubcallAsync (test/features/multiplex_test.ts:255:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:572:42)
+
+  27) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForToken
+           RFQ, fallback(UniswapV2):
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getRfqSubcallAsync (test/features/multiplex_test.ts:255:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:588:42)
+
+  28) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForToken
+           OTC, fallback(UniswapV2):
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getOtcSubcallAsync (test/features/multiplex_test.ts:292:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:620:42)
+
+  29) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForToken
+           expired RFQ, fallback(UniswapV2):
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getRfqSubcallAsync (test/features/multiplex_test.ts:255:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:651:42)
+
+  30) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForToken
+           expired OTC, fallback(UniswapV2):
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getOtcSubcallAsync (test/features/multiplex_test.ts:292:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:695:42)
+
+  31) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForToken
+           expired RFQ, fallback(TransformERC20):
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getRfqSubcallAsync (test/features/multiplex_test.ts:255:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:739:42)
+
+  32) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForToken
+           LiquidityProvider, UniV3, Sushiswap:
+     TypeError: factory.createPool(...) is not a function
+      at createUniswapV2PoolAsync (test/features/multiplex_test.ts:201:75)
+      at Context.<anonymous> (test/features/multiplex_test.ts:799:41)
+
+  33) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForToken
+           proportional fill amounts:
+     TypeError: factory.createPool(...) is not a function
+      at createUniswapV2PoolAsync (test/features/multiplex_test.ts:201:75)
+      at Context.<anonymous> (test/features/multiplex_test.ts:859:39)
+
+  34) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForToken
+           RFQ, MultiHop(UniV3, UniV2):
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getRfqSubcallAsync (test/features/multiplex_test.ts:255:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:910:42)
+
+  35) MultiplexFeature
+       batch sells
+         multiplexBatchSellEthForToken
+           RFQ:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getRfqSubcallAsync (test/features/multiplex_test.ts:255:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:970:42)
+
+  36) MultiplexFeature
+       batch sells
+         multiplexBatchSellEthForToken
+           OTC:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getOtcSubcallAsync (test/features/multiplex_test.ts:292:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1001:42)
+
+  37) MultiplexFeature
+       batch sells
+         multiplexBatchSellEthForToken
+           UniswapV2:
+     TypeError: factory.createPool(...) is not a function
+      at createUniswapV2PoolAsync (test/features/multiplex_test.ts:201:75)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1031:39)
+
+  38) MultiplexFeature
+       batch sells
+         multiplexBatchSellEthForToken
+           UniswapV3:
+     TypeError: uniV3Factory.createPool(...) is not a function
+      at createUniswapV3PoolAsync (test/features/multiplex_test.ts:224:74)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1061:37)
+
+  39) MultiplexFeature
+       batch sells
+         multiplexBatchSellEthForToken
+           LiquidityProvider:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getLiquidityProviderMultiHopSubcall (test/features/multiplex_test.ts:360:43)
+      at getLiquidityProviderBatchSubcall (test/features/multiplex_test.ts:376:16)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1090:50)
+
+  40) MultiplexFeature
+       batch sells
+         multiplexBatchSellEthForToken
+           TransformERC20:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getTransformERC20Subcall (test/features/multiplex_test.ts:387:50)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1118:47)
+
+  41) MultiplexFeature
+       batch sells
+         multiplexBatchSellEthForToken
+           RFQ, MultiHop(UniV3, UniV2):
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getRfqSubcallAsync (test/features/multiplex_test.ts:255:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1152:42)
+
+  42) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForEth
+           RFQ:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getRfqSubcallAsync (test/features/multiplex_test.ts:255:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1210:42)
+
+  43) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForEth
+           OTC:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getOtcSubcallAsync (test/features/multiplex_test.ts:292:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1237:42)
+
+  44) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForEth
+           UniswapV2:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getUniswapV2MultiHopSubcall (test/features/multiplex_test.ts:312:47)
+      at getUniswapV2BatchSubcall (test/features/multiplex_test.ts:327:16)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1263:42)
+
+  45) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForEth
+           UniswapV3:
+     Error: Cannot convert undefined to BigInt
+      at toBigInt (/Users/king/javascript/protocol/packages/utils/src/configured_bigint.ts:57:11)
+      at Object.toHex (/Users/king/javascript/protocol/packages/utils/src/hex_utils.ts:102:22)
+      at Object.leftPad (/Users/king/javascript/protocol/packages/utils/src/hex_utils.ts:43:80)
+      at /Users/king/javascript/protocol/contracts/zero-ex/test/features/multiplex_test.ts:340:33
+      at Array.forEach (<anonymous>)
+      at getUniswapV3MultiHopSubcall (test/features/multiplex_test.ts:336:17)
+      at getUniswapV3BatchSubcall (test/features/multiplex_test.ts:354:16)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1295:42)
+
+  46) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForEth
+           LiquidityProvider:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getLiquidityProviderMultiHopSubcall (test/features/multiplex_test.ts:360:43)
+      at getLiquidityProviderBatchSubcall (test/features/multiplex_test.ts:376:16)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1327:50)
+
+  47) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForEth
+           TransformERC20:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getTransformERC20Subcall (test/features/multiplex_test.ts:387:50)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1358:47)
+
+  48) MultiplexFeature
+       batch sells
+         multiplexBatchSellTokenForEth
+           RFQ, MultiHop(UniV3, UniV2):
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getRfqSubcallAsync (test/features/multiplex_test.ts:255:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1400:42)
+
+  49) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellTokenForToken
+           reverts if given an invalid subcall type:
+     TypeError: multiplex.multiplexMultiHopSellTokenForToken(...) is not a function
+      at Context.<anonymous> (test/features/multiplex_test.ts:1471:22)
+      at processImmediate (node:internal/timers:505:21)
+
+  50) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellTokenForToken
+           reverts if minBuyAmount is not satisfied:
+     TypeError: factory.createPool(...) is not a function
+      at createUniswapV2PoolAsync (test/features/multiplex_test.ts:201:75)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1477:23)
+
+  51) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellTokenForToken
+           reverts if array lengths are mismatched:
+     TypeError: factory.createPool(...) is not a function
+      at createUniswapV2PoolAsync (test/features/multiplex_test.ts:201:75)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1493:23)
+
+  52) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellTokenForToken
+           UniswapV2 -> LiquidityProvider:
+     TypeError: factory.createPool(...) is not a function
+      at createUniswapV2PoolAsync (test/features/multiplex_test.ts:201:75)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1510:39)
+
+  53) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellTokenForToken
+           LiquidityProvider -> Sushiswap:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getLiquidityProviderMultiHopSubcall (test/features/multiplex_test.ts:360:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1551:50)
+
+  54) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellTokenForToken
+           UniswapV3 -> BatchSell(RFQ, UniswapV2):
+     TypeError: token.mint(...) is not a function
+      at mintToAsync (test/features/multiplex_test.ts:188:48)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1591:23)
+
+  55) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellTokenForToken
+           BatchSell(RFQ, UniswapV2) -> UniswapV3:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getRfqSubcallAsync (test/features/multiplex_test.ts:255:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1652:42)
+
+  56) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellEthForToken
+           reverts if first token is not WETH:
+     TypeError: factory.createPool(...) is not a function
+      at createUniswapV2PoolAsync (test/features/multiplex_test.ts:201:75)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1714:23)
+
+  57) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellEthForToken
+           UniswapV2 -> LiquidityProvider:
+     TypeError: factory.createPool(...) is not a function
+      at createUniswapV2PoolAsync (test/features/multiplex_test.ts:201:75)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1730:39)
+
+  58) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellEthForToken
+           LiquidityProvider -> Sushiswap:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getLiquidityProviderMultiHopSubcall (test/features/multiplex_test.ts:360:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1770:50)
+
+  59) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellEthForToken
+           UniswapV3 -> BatchSell(RFQ, UniswapV2):
+     TypeError: uniV3Factory.createPool(...) is not a function
+      at createUniswapV3PoolAsync (test/features/multiplex_test.ts:224:74)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1809:37)
+
+  60) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellEthForToken
+           BatchSell(RFQ, UniswapV2) -> UniswapV3:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getRfqSubcallAsync (test/features/multiplex_test.ts:255:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1869:42)
+
+  61) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellTokenForEth
+           reverts if last token is not WETH:
+     TypeError: factory.createPool(...) is not a function
+      at createUniswapV2PoolAsync (test/features/multiplex_test.ts:201:75)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1930:23)
+
+  62) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellTokenForEth
+           UniswapV2 -> LiquidityProvider:
+     TypeError: factory.createPool(...) is not a function
+      at createUniswapV2PoolAsync (test/features/multiplex_test.ts:201:75)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1947:39)
+
+  63) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellTokenForEth
+           LiquidityProvider -> Sushiswap:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getLiquidityProviderMultiHopSubcall (test/features/multiplex_test.ts:360:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:1989:50)
+
+  64) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellTokenForEth
+           UniswapV3 -> BatchSell(RFQ, UniswapV2):
+     TypeError: uniV3Factory.createPool(...) is not a function
+      at createUniswapV3PoolAsync (test/features/multiplex_test.ts:224:74)
+      at Context.<anonymous> (test/features/multiplex_test.ts:2030:37)
+
+  65) MultiplexFeature
+       multihop sells
+         multiplexMultiHopSellTokenForEth
+           BatchSell(RFQ, UniswapV2) -> UniswapV3:
+     TypeError: Cannot read properties of undefined (reading 'create')
+      at getRfqSubcallAsync (test/features/multiplex_test.ts:255:43)
+      at Context.<anonymous> (test/features/multiplex_test.ts:2092:42)
+
+  66) OtcOrdersFeature
+       lastOtcTxOriginNonce()
+         returns 0 if bucket is unused:
+     TypeError: zeroEx.lastOtcTxOriginNonce is not a function
+      at Context.<anonymous> (test/features/otc_orders_test.ts:147:40)
+      at processImmediate (node:internal/timers:505:21)
+
+  67) OtcOrdersFeature
+       lastOtcTxOriginNonce()
+         returns the last nonce used in a bucket:
+     TypeError: this.zeroEx.connect(...).fillOtcOrder is not a function
+      at NativeOrdersTestEnvironment.fillOtcOrderAsync (test/utils/orders.ts:181:18)
+      at async Context.<anonymous> (test/features/otc_orders_test.ts:152:13)
+
+  68) OtcOrdersFeature
+       getOtcOrderInfo()
+         unfilled order:
+     TypeError: zeroEx.getOtcOrderInfo is not a function
+      at Context.<anonymous> (test/features/otc_orders_test.ts:161:39)
+
+  69) OtcOrdersFeature
+       getOtcOrderInfo()
+         unfilled expired order:
+     TypeError: zeroEx.getOtcOrderInfo is not a function
+      at Context.<anonymous> (test/features/otc_orders_test.ts:171:39)
+
+  70) OtcOrdersFeature
+       getOtcOrderInfo()
+         filled then expired order:
+     TypeError: this.zeroEx.connect(...).fillOtcOrder is not a function
+      at NativeOrdersTestEnvironment.fillOtcOrderAsync (test/utils/orders.ts:181:18)
+      at async Context.<anonymous> (test/features/otc_orders_test.ts:181:13)
+
+  71) OtcOrdersFeature
+       getOtcOrderInfo()
+         filled order:
+     TypeError: this.zeroEx.connect(...).fillOtcOrder is not a function
+      at NativeOrdersTestEnvironment.fillOtcOrderAsync (test/utils/orders.ts:181:18)
+      at async Context.<anonymous> (test/features/otc_orders_test.ts:195:13)
+
+  72) OtcOrdersFeature
+       fillOtcOrder()
+         can fully fill an order:
+     TypeError: this.zeroEx.connect(...).fillOtcOrder is not a function
+      at NativeOrdersTestEnvironment.fillOtcOrderAsync (test/utils/orders.ts:181:18)
+      at async Context.<anonymous> (test/features/otc_orders_test.ts:225:29)
+
+  73) OtcOrdersFeature
+       fillOtcOrder()
+         can partially fill an order:
+     TypeError: this.zeroEx.connect(...).fillOtcOrder is not a function
+      at NativeOrdersTestEnvironment.fillOtcOrderAsync (test/utils/orders.ts:181:18)
+      at async Context.<anonymous> (test/features/otc_orders_test.ts:237:29)
+
+  74) OtcOrdersFeature
+       fillOtcOrder()
+         clamps fill amount to remaining available:
+     TypeError: Cannot mix BigInt and other types, use explicit conversions
+      at Context.<anonymous> (test/features/otc_orders_test.ts:248:49)
+
+  75) OtcOrdersFeature
+       fillOtcOrder()
+         cannot fill an order with wrong tx.origin:
+     TypeError: Expected the revert reason to be a string or a regular expression
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-chai-matchers/src/internal/reverted/revertedWith.ts:26:15)
+      at Proxy.methodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/addMethod.js:57:25)
+      at doAsserterAsyncAndAddThen (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:289:22)
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:255:20)
+      at Proxy.overwritingMethodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/overwriteMethod.js:78:33)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:261:37)
+
+  76) OtcOrdersFeature
+       fillOtcOrder()
+         cannot fill an order with wrong taker:
+     TypeError: Expected the revert reason to be a string or a regular expression
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-chai-matchers/src/internal/reverted/revertedWith.ts:26:15)
+      at Proxy.methodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/addMethod.js:57:25)
+      at doAsserterAsyncAndAddThen (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:289:22)
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:255:20)
+      at Proxy.overwritingMethodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/overwriteMethod.js:78:33)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:269:37)
+
+  77) OtcOrdersFeature
+       fillOtcOrder()
+         can fill an order from a different tx.origin if registered:
+     TypeError: zeroEx.connect(...).registerAllowedRfqOrigins is not a function
+      at Context.<anonymous> (test/features/otc_orders_test.ts:278:47)
+
+  78) OtcOrdersFeature
+       fillOtcOrder()
+         cannot fill an order with registered then unregistered tx.origin:
+     TypeError: zeroEx.connect(...).registerAllowedRfqOrigins is not a function
+      at Context.<anonymous> (test/features/otc_orders_test.ts:286:47)
+
+  79) OtcOrdersFeature
+       fillOtcOrder()
+         cannot fill an order with a zero tx.origin:
+     TypeError: Expected the revert reason to be a string or a regular expression
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-chai-matchers/src/internal/reverted/revertedWith.ts:26:15)
+      at Proxy.methodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/addMethod.js:57:25)
+      at doAsserterAsyncAndAddThen (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:289:22)
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:255:20)
+      at Proxy.overwritingMethodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/overwriteMethod.js:78:33)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:297:37)
+
+  80) OtcOrdersFeature
+       fillOtcOrder()
+         cannot fill an expired order:
+     TypeError: Expected the revert reason to be a string or a regular expression
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-chai-matchers/src/internal/reverted/revertedWith.ts:26:15)
+      at Proxy.methodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/addMethod.js:57:25)
+      at doAsserterAsyncAndAddThen (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:289:22)
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:255:20)
+      at Proxy.overwritingMethodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/overwriteMethod.js:78:33)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:305:37)
+
+  81) OtcOrdersFeature
+       fillOtcOrder()
+         cannot fill order with bad signature:
+     TypeError: Expected the revert reason to be a string or a regular expression
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-chai-matchers/src/internal/reverted/revertedWith.ts:26:15)
+      at Proxy.methodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/addMethod.js:57:25)
+      at doAsserterAsyncAndAddThen (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:289:22)
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:255:20)
+      at Proxy.overwritingMethodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/overwriteMethod.js:78:33)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:315:37)
+
+  82) OtcOrdersFeature
+       fillOtcOrder()
+         fails if ETH is attached:
+     TypeError: zeroEx.fillOtcOrder is not a function
+      at Context.<anonymous> (test/features/otc_orders_test.ts:324:18)
+
+  83) OtcOrdersFeature
+       fillOtcOrder()
+         cannot fill the same order twice:
+     TypeError: this.zeroEx.connect(...).fillOtcOrder is not a function
+      at NativeOrdersTestEnvironment.fillOtcOrderAsync (test/utils/orders.ts:181:18)
+      at async Context.<anonymous> (test/features/otc_orders_test.ts:332:13)
+
+  84) OtcOrdersFeature
+       fillOtcOrder()
+         cannot fill two orders with the same nonceBucket and nonce:
+     TypeError: Cannot mix BigInt and other types, use explicit conversions
+      at /Users/king/javascript/protocol/contracts/zero-ex/test/utils/orders.ts:101:105
+      at Array.reduce (<anonymous>)
+      at NativeOrdersTestEnvironment.prepareBalancesForOrdersAsync (test/utils/orders.ts:101:87)
+      at NativeOrdersTestEnvironment.fillOtcOrderAsync (test/utils/orders.ts:167:20)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:341:29)
+
+  85) OtcOrdersFeature
+       fillOtcOrder()
+         cannot fill an order whose nonce is less than the nonce last used in that bucket:
+     TypeError: Cannot mix BigInt and other types, use explicit conversions
+      at /Users/king/javascript/protocol/contracts/zero-ex/test/utils/orders.ts:101:105
+      at Array.reduce (<anonymous>)
+      at NativeOrdersTestEnvironment.prepareBalancesForOrdersAsync (test/utils/orders.ts:101:87)
+      at NativeOrdersTestEnvironment.fillOtcOrderAsync (test/utils/orders.ts:167:20)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:351:29)
+
+  86) OtcOrdersFeature
+       fillOtcOrder()
+         can fill two orders that use the same nonce bucket and increasing nonces:
+     TypeError: Cannot mix BigInt and other types, use explicit conversions
+      at /Users/king/javascript/protocol/contracts/zero-ex/test/utils/orders.ts:101:105
+      at Array.reduce (<anonymous>)
+      at NativeOrdersTestEnvironment.prepareBalancesForOrdersAsync (test/utils/orders.ts:101:87)
+      at NativeOrdersTestEnvironment.fillOtcOrderAsync (test/utils/orders.ts:167:20)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:361:41)
+
+  87) OtcOrdersFeature
+       fillOtcOrder()
+         can fill two orders that use the same nonce but different nonce buckets:
+     TypeError: Cannot mix BigInt and other types, use explicit conversions
+      at /Users/king/javascript/protocol/contracts/zero-ex/test/utils/orders.ts:101:105
+      at Array.reduce (<anonymous>)
+      at NativeOrdersTestEnvironment.prepareBalancesForOrdersAsync (test/utils/orders.ts:101:87)
+      at NativeOrdersTestEnvironment.fillOtcOrderAsync (test/utils/orders.ts:167:20)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:378:41)
+
+  88) OtcOrdersFeature
+       fillOtcOrder()
+         can fill a WETH buy order and receive ETH:
+     TypeError: this.zeroEx.connect(...).fillOtcOrderForEth is not a function
+      at NativeOrdersTestEnvironment.fillOtcOrderAsync (test/utils/orders.ts:172:18)
+      at async Context.<anonymous> (test/features/otc_orders_test.ts:399:29)
+
+  89) OtcOrdersFeature
+       fillOtcOrder()
+         reverts if `unwrapWeth` is true but maker token is not WETH:
+     TypeError: this.zeroEx.connect(...).fillOtcOrderForEth is not a function
+      at NativeOrdersTestEnvironment.fillOtcOrderAsync (test/utils/orders.ts:172:18)
+
+  90) OtcOrdersFeature
+       fillOtcOrder()
+         allows for fills on orders signed by a approved signer:
+     Error: Cannot convert undefined to BigInt
+      at toBigInt (/Users/king/javascript/protocol/packages/utils/src/configured_bigint.ts:57:11)
+      at Object.toHex (/Users/king/javascript/protocol/packages/utils/src/hex_utils.ts:102:22)
+      at Object.leftPad (/Users/king/javascript/protocol/packages/utils/src/hex_utils.ts:43:80)
+      at OtcOrder.getStructHash (/Users/king/javascript/protocol/packages/protocol-utils/src/orders.ts:440:26)
+      at OtcOrder.getHash (/Users/king/javascript/protocol/packages/protocol-utils/src/orders.ts:114:48)
+      at OtcOrder.getSignatureWithProviderAsync (/Users/king/javascript/protocol/packages/protocol-utils/src/orders.ts:126:58)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:417:37)
+
+  91) OtcOrdersFeature
+       fillOtcOrder()
+         disallows fills if the signer is revoked:
+     Error: Cannot convert undefined to BigInt
+      at toBigInt (/Users/king/javascript/protocol/packages/utils/src/configured_bigint.ts:57:11)
+      at Object.toHex (/Users/king/javascript/protocol/packages/utils/src/hex_utils.ts:102:22)
+      at Object.leftPad (/Users/king/javascript/protocol/packages/utils/src/hex_utils.ts:43:80)
+      at OtcOrder.getStructHash (/Users/king/javascript/protocol/packages/protocol-utils/src/orders.ts:440:26)
+      at OtcOrder.getHash (/Users/king/javascript/protocol/packages/protocol-utils/src/orders.ts:114:48)
+      at OtcOrder.getSignatureWithProviderAsync (/Users/king/javascript/protocol/packages/protocol-utils/src/orders.ts:126:58)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:444:37)
+
+  92) OtcOrdersFeature
+       fillOtcOrder()
+         doesn't allow fills with an unapproved signer:
+     Error: Cannot convert undefined to BigInt
+      at toBigInt (/Users/king/javascript/protocol/packages/utils/src/configured_bigint.ts:57:11)
+      at Object.toHex (/Users/king/javascript/protocol/packages/utils/src/hex_utils.ts:102:22)
+      at Object.leftPad (/Users/king/javascript/protocol/packages/utils/src/hex_utils.ts:43:80)
+      at OtcOrder.getStructHash (/Users/king/javascript/protocol/packages/protocol-utils/src/orders.ts:440:26)
+      at OtcOrder.getHash (/Users/king/javascript/protocol/packages/protocol-utils/src/orders.ts:114:48)
+      at OtcOrder.getSignatureWithProviderAsync (/Users/king/javascript/protocol/packages/protocol-utils/src/orders.ts:126:58)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:476:37)
+
+  93) OtcOrdersFeature
+       fillOtcOrderWithEth()
+         Can fill an order with ETH (takerToken=WETH):
+     TypeError: this.zeroEx.connect(...).fillOtcOrderWithEth is not a function
+      at NativeOrdersTestEnvironment.fillOtcOrderWithEthAsync (test/utils/orders.ts:228:14)
+      at async Context.<anonymous> (test/features/otc_orders_test.ts:493:29)
+
+  94) OtcOrdersFeature
+       fillOtcOrderWithEth()
+         Can fill an order with ETH (takerToken=ETH):
+     TypeError: this.zeroEx.connect(...).fillOtcOrderWithEth is not a function
+      at NativeOrdersTestEnvironment.fillOtcOrderWithEthAsync (test/utils/orders.ts:228:14)
+      at async Context.<anonymous> (test/features/otc_orders_test.ts:504:29)
+
+  95) OtcOrdersFeature
+       fillOtcOrderWithEth()
+         Can partially fill an order with ETH (takerToken=WETH):
+     TypeError: this.zeroEx.connect(...).fillOtcOrderWithEth is not a function
+      at NativeOrdersTestEnvironment.fillOtcOrderWithEthAsync (test/utils/orders.ts:228:14)
+      at async Context.<anonymous> (test/features/otc_orders_test.ts:522:29)
+
+  96) OtcOrdersFeature
+       fillOtcOrderWithEth()
+         Can partially fill an order with ETH (takerToken=ETH):
+     TypeError: this.zeroEx.connect(...).fillOtcOrderWithEth is not a function
+      at NativeOrdersTestEnvironment.fillOtcOrderWithEthAsync (test/utils/orders.ts:228:14)
+      at async Context.<anonymous> (test/features/otc_orders_test.ts:534:29)
+
+  97) OtcOrdersFeature
+       fillOtcOrderWithEth()
+         Can refund excess ETH is msg.value > order.takerAmount (takerToken=WETH):
+     TypeError: Cannot mix BigInt and other types, use explicit conversions
+      at Context.<anonymous> (test/features/otc_orders_test.ts:552:49)
+
+  98) OtcOrdersFeature
+       fillOtcOrderWithEth()
+         Can refund excess ETH is msg.value > order.takerAmount (takerToken=ETH):
+     TypeError: Cannot mix BigInt and other types, use explicit conversions
+      at Context.<anonymous> (test/features/otc_orders_test.ts:566:49)
+
+  99) OtcOrdersFeature
+       fillOtcOrderWithEth()
+         Cannot fill an order if taker token is not ETH or WETH:
+     TypeError: this.zeroEx.connect(...).fillOtcOrderWithEth is not a function
+      at NativeOrdersTestEnvironment.fillOtcOrderWithEthAsync (test/utils/orders.ts:228:14)
+
+  100) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         can fully fill an order:
+     TypeError: this.zeroEx.connect(...).fillTakerSignedOtcOrder is not a function
+      at NativeOrdersTestEnvironment.fillTakerSignedOtcOrderAsync (test/utils/orders.ts:210:18)
+      at async Context.<anonymous> (test/features/otc_orders_test.ts:598:29)
+
+  101) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         cannot fill an order with wrong tx.origin:
+     TypeError: Expected the revert reason to be a string or a regular expression
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-chai-matchers/src/internal/reverted/revertedWith.ts:26:15)
+      at Proxy.methodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/addMethod.js:57:25)
+      at doAsserterAsyncAndAddThen (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:289:22)
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:255:20)
+      at Proxy.overwritingMethodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/overwriteMethod.js:78:33)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:610:37)
+
+  102) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         can fill an order from a different tx.origin if registered:
+     TypeError: zeroEx.registerAllowedRfqOrigins is not a function
+      at Context.<anonymous> (test/features/otc_orders_test.ts:618:18)
+
+  103) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         cannot fill an order with registered then unregistered tx.origin:
+     TypeError: zeroEx.registerAllowedRfqOrigins is not a function
+      at Context.<anonymous> (test/features/otc_orders_test.ts:626:18)
+
+  104) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         cannot fill an order with a zero tx.origin:
+     TypeError: Expected the revert reason to be a string or a regular expression
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-chai-matchers/src/internal/reverted/revertedWith.ts:26:15)
+      at Proxy.methodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/addMethod.js:57:25)
+      at doAsserterAsyncAndAddThen (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:289:22)
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:255:20)
+      at Proxy.overwritingMethodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/overwriteMethod.js:78:33)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:640:37)
+
+  105) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         cannot fill an expired order:
+     TypeError: Expected the revert reason to be a string or a regular expression
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-chai-matchers/src/internal/reverted/revertedWith.ts:26:15)
+      at Proxy.methodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/addMethod.js:57:25)
+      at doAsserterAsyncAndAddThen (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:289:22)
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:255:20)
+      at Proxy.overwritingMethodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/overwriteMethod.js:78:33)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:648:37)
+
+  106) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         cannot fill an order with bad taker signature:
+     TypeError: Expected the revert reason to be a string or a regular expression
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-chai-matchers/src/internal/reverted/revertedWith.ts:26:15)
+      at Proxy.methodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/addMethod.js:57:25)
+      at doAsserterAsyncAndAddThen (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:289:22)
+      at Proxy.<anonymous> (/Users/king/javascript/protocol/node_modules/chai-as-promised/lib/chai-as-promised.js:255:20)
+      at Proxy.overwritingMethodWrapper (/Users/king/javascript/protocol/node_modules/chai/lib/chai/utils/overwriteMethod.js:78:33)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:656:37)
+
+  107) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         cannot fill order with bad maker signature:
+     TypeError: anotherOrder.getSignatureWithProviderAsync is not a function
+      at Context.<anonymous> (test/features/otc_orders_test.ts:668:40)
+
+  108) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         fails if ETH is attached:
+     TypeError: zeroEx.fillTakerSignedOtcOrder is not a function
+      at Context.<anonymous> (test/features/otc_orders_test.ts:682:18)
+
+  109) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         cannot fill the same order twice:
+     TypeError: this.zeroEx.connect(...).fillTakerSignedOtcOrder is not a function
+      at NativeOrdersTestEnvironment.fillTakerSignedOtcOrderAsync (test/utils/orders.ts:210:18)
+      at async Context.<anonymous> (test/features/otc_orders_test.ts:694:13)
+
+  110) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         cannot fill two orders with the same nonceBucket and nonce:
+     TypeError: Cannot mix BigInt and other types, use explicit conversions
+      at /Users/king/javascript/protocol/contracts/zero-ex/test/utils/orders.ts:101:105
+      at Array.reduce (<anonymous>)
+      at NativeOrdersTestEnvironment.prepareBalancesForOrdersAsync (test/utils/orders.ts:101:87)
+      at NativeOrdersTestEnvironment.fillTakerSignedOtcOrderAsync (test/utils/orders.ts:196:20)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:703:29)
+
+  111) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         cannot fill an order whose nonce is less than the nonce last used in that bucket:
+     TypeError: Cannot mix BigInt and other types, use explicit conversions
+      at /Users/king/javascript/protocol/contracts/zero-ex/test/utils/orders.ts:101:105
+      at Array.reduce (<anonymous>)
+      at NativeOrdersTestEnvironment.prepareBalancesForOrdersAsync (test/utils/orders.ts:101:87)
+      at NativeOrdersTestEnvironment.fillTakerSignedOtcOrderAsync (test/utils/orders.ts:196:20)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:713:29)
+
+  112) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         can fill two orders that use the same nonce bucket and increasing nonces:
+     TypeError: Cannot mix BigInt and other types, use explicit conversions
+      at /Users/king/javascript/protocol/contracts/zero-ex/test/utils/orders.ts:101:105
+      at Array.reduce (<anonymous>)
+      at NativeOrdersTestEnvironment.prepareBalancesForOrdersAsync (test/utils/orders.ts:101:87)
+      at NativeOrdersTestEnvironment.fillTakerSignedOtcOrderAsync (test/utils/orders.ts:196:20)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:728:41)
+
+  113) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         can fill two orders that use the same nonce but different nonce buckets:
+     TypeError: Cannot mix BigInt and other types, use explicit conversions
+      at /Users/king/javascript/protocol/contracts/zero-ex/test/utils/orders.ts:101:105
+      at Array.reduce (<anonymous>)
+      at NativeOrdersTestEnvironment.prepareBalancesForOrdersAsync (test/utils/orders.ts:101:87)
+      at NativeOrdersTestEnvironment.fillTakerSignedOtcOrderAsync (test/utils/orders.ts:196:20)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:750:41)
+
+  114) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         can fill a WETH buy order and receive ETH:
+     TypeError: this.zeroEx.connect(...).fillTakerSignedOtcOrderForEth is not a function
+      at NativeOrdersTestEnvironment.fillTakerSignedOtcOrderAsync (test/utils/orders.ts:201:18)
+      at async Context.<anonymous> (test/features/otc_orders_test.ts:776:29)
+
+  115) OtcOrdersFeature
+       fillTakerSignedOtcOrder()
+         reverts if `unwrapWeth` is true but maker token is not WETH:
+     TypeError: this.zeroEx.connect(...).fillTakerSignedOtcOrderForEth is not a function
+      at NativeOrdersTestEnvironment.fillTakerSignedOtcOrderAsync (test/utils/orders.ts:201:18)
+
+  116) OtcOrdersFeature
+       batchFillTakerSignedOtcOrders()
+         Fills multiple orders:
+     TypeError: Cannot mix BigInt and other types, use explicit conversions
+      at /Users/king/javascript/protocol/contracts/zero-ex/test/utils/orders.ts:101:105
+      at Array.reduce (<anonymous>)
+      at NativeOrdersTestEnvironment.prepareBalancesForOrdersAsync (test/utils/orders.ts:101:87)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:802:29)
+
+  117) OtcOrdersFeature
+       batchFillTakerSignedOtcOrders()
+         Fills multiple orders and unwraps WETH:
+     TypeError: Cannot mix BigInt and other types, use explicit conversions
+      at /Users/king/javascript/protocol/contracts/zero-ex/test/utils/orders.ts:101:105
+      at Array.reduce (<anonymous>)
+      at NativeOrdersTestEnvironment.prepareBalancesForOrdersAsync (test/utils/orders.ts:101:87)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:834:29)
+
+  118) OtcOrdersFeature
+       batchFillTakerSignedOtcOrders()
+         Skips over unfillable orders:
+     TypeError: Cannot mix BigInt and other types, use explicit conversions
+      at /Users/king/javascript/protocol/contracts/zero-ex/test/utils/orders.ts:101:105
+      at Array.reduce (<anonymous>)
+      at NativeOrdersTestEnvironment.prepareBalancesForOrdersAsync (test/utils/orders.ts:101:87)
+      at Context.<anonymous> (test/features/otc_orders_test.ts:865:29)
+
+  119) SimpleFunctionRegistry feature
+       `rollback()` to non-zero impl reverts for unregistered function:
+     AssertionError: expected 'VM Exception while processing transac…' to match /rollback|history|not.*found/i
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:111:38)
+
+  120) SimpleFunctionRegistry feature
+       owner can add a new function with `extend()`:
+     TypeError: testFeature.testFn is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:133:37)
+
+  121) SimpleFunctionRegistry feature
+       owner can replace add a function with `extend()`:
+     TypeError: testFeature.testFn is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:141:37)
+
+  122) SimpleFunctionRegistry feature
+       owner can zero a function with `extend()`:
+     TypeError: testFeature.testFn is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:149:35)
+
+  123) SimpleFunctionRegistry feature
+       owner can rollback a function to zero:
+     TypeError: testFeature.testFn is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:184:35)
+
+  124) SimpleFunctionRegistry feature
+       owner can rollback a function to the prior version:
+     TypeError: registry.extend(...) is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:190:83)
+
+  125) SimpleFunctionRegistry feature
+       owner can rollback a zero function to the prior version:
+     TypeError: registry.extend(...) is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:200:83)
+
+  126) SimpleFunctionRegistry feature
+       owner can rollback a function to a much older version:
+     TypeError: registry.extend(...) is not a function
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:211:83)
+
+  127) SimpleFunctionRegistry feature
+       owner cannot rollback a function to a version not in history:
+     AssertionError: expected 'VM Exception while processing transac…' to match /rollback|history|not.*found/i
+      at Context.<anonymous> (test/features/simple_function_registry_test.ts:233:38)
+
+  128) TransformERC20 feature
+       wallets
+         createTransformWallet() replaces the current wallet:
+     AssertionError: expected '0x325E31CfF0c4f11c87C5fb7c6432077f099…' to equal ContractTransactionResponse{ …(21) }
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:86:66)
+
+  129) TransformERC20 feature
+       transformer deployer
+         owner can set the transformer deployer with `setTransformerDeployer()`:
+     TypeError: feature.setTransformerDeployer(...) is not a function
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:115:53)
+      at processImmediate (node:internal/timers:505:21)
+
+  130) TransformERC20 feature
+       transformer deployer
+         non-owner cannot set the transformer deployer with `setTransformerDeployer()`:
+     TypeError: feature.setTransformerDeployer(...) is not a function
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:129:67)
+      at processImmediate (node:internal/timers:505:21)
+
+  131) TransformERC20 feature
+       quote signer
+         `getQuoteSigner()` returns the quote signer:
+
+      AssertionError: expected '0x061FB883da0ebDb741252C6784Efcad71a34265E' to equal '0x061fb883da0ebdb741252c6784efcad71a34265e'.
+      + expected - actual
+
+      -0x061FB883da0ebDb741252C6784Efcad71a34265E
+      +0x061fb883da0ebdb741252c6784efcad71a34265e
+      
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:137:37)
+
+  132) TransformERC20 feature
+       quote signer
+         owner can set the quote signer with `setQuoteSigner()`:
+     TypeError: feature.setQuoteSigner(...) is not a function
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:142:68)
+      at processImmediate (node:internal/timers:505:21)
+
+  133) TransformERC20 feature
+       quote signer
+         non-owner cannot set the quote signer with `setQuoteSigner()`:
+     TypeError: feature.setQuoteSigner(...) is not a function
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:155:57)
+      at processImmediate (node:internal/timers:505:21)
+
+  134) TransformERC20 feature
+       _transformERC20()/transformERC20()
+         _transformERC20()
+           succeeds if taker's output token balance increases by exactly minOutputTokenAmount:
+     TypeError: outputToken.mint(...) is not a function
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:234:74)
+      at processImmediate (node:internal/timers:505:21)
+
+  135) TransformERC20 feature
+       _transformERC20()/transformERC20()
+         _transformERC20()
+           succeeds if taker's output token balance increases by exactly minOutputTokenAmount, with ETH:
+     TypeError: inputToken.mint(...) is not a function
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:288:72)
+      at processImmediate (node:internal/timers:505:21)
+
+  136) TransformERC20 feature
+       _transformERC20()/transformERC20()
+         _transformERC20()
+           succeeds if taker's output token balance increases by more than minOutputTokenAmount:
+     TypeError: outputToken.mint(...) is not a function
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:349:74)
+      at processImmediate (node:internal/timers:505:21)
+
+  137) TransformERC20 feature
+       _transformERC20()/transformERC20()
+         _transformERC20()
+           throws if taker's output token balance increases by less than minOutputTokenAmount:
+     TypeError: outputToken.mint(...) is not a function
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:404:74)
+      at processImmediate (node:internal/timers:505:21)
+
+  138) TransformERC20 feature
+       _transformERC20()/transformERC20()
+         _transformERC20()
+           throws if taker's output token balance decreases:
+     TypeError: outputToken.mint(...) is not a function
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:438:74)
+      at processImmediate (node:internal/timers:505:21)
+
+  139) TransformERC20 feature
+       _transformERC20()/transformERC20()
+         _transformERC20()
+           can call multiple transformers:
+     TypeError: outputToken.mint(...) is not a function
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:471:74)
+      at processImmediate (node:internal/timers:505:21)
+
+  140) TransformERC20 feature
+       _transformERC20()/transformERC20()
+         _transformERC20()
+           fails with invalid transformer nonce:
+     TypeError: outputToken.mint(...) is not a function
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:529:74)
+      at processImmediate (node:internal/timers:505:21)
+
+  141) TransformERC20 feature
+       _transformERC20()/transformERC20()
+         _transformERC20()
+           can sell entire taker balance:
+     TypeError: inputToken.mint(...) is not a function
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:558:72)
+      at processImmediate (node:internal/timers:505:21)
+
+  142) TransformERC20 feature
+       _transformERC20()/transformERC20()
+         _transformERC20()
+           can sell entire taker balance with ETH (but not really):
+     TypeError: inputToken.mint(...) is not a function
+      at Context.<anonymous> (test/features/transform_erc20_test.ts:595:63)
+      at processImmediate (node:internal/timers:505:21)
+
+  143) Initial migration
+       Ownable feature
+         "before all" hook for "has the correct owner":
+     TypeError: wrappers_1.IOwnableFeatureContract is not a constructor
+      at Context.<anonymous> (test/initial_migration_test.ts:90:23)
+
+  144) Initial migration
+       SimpleFunctionRegistry feature
+         "before all" hook for "_extendSelf() is deregistered":
+     ReferenceError: SimpleFunctionRegistryFeatureContract is not defined
+      at Context.<anonymous> (test/initial_migration_test.ts:103:13)
+      at processImmediate (node:internal/timers:505:21)
+
+  145) FillQuoteTransformer
+       sell quotes
+         can partial sell to a single limit order:
+     Error: VM Exception while processing transaction: reverted with an unrecognized custom error (return data: 0xadc35ca6000000000000000000000000a4ae77554847958ac0854f06601267c9f9c75dfd000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004a2360d042c1b2e)
+    at FillQuoteTransformer.rrevert (@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol:39)
+    at FillQuoteTransformer.transform (contracts/src/transformers/FillQuoteTransformer.sol:171)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:30)
+    at TestFillQuoteTransformerHost.rawExecuteTransform (contracts/test/TestTransformerHost.sol:34)
+    at EdrProviderWrapper.request (/Users/king/javascript/protocol/node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (/Users/king/javascript/protocol/node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.executeTransform (/Users/king/javascript/protocol/node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async executeTransformAsync (test/transformers/fill_quote_transformer_test.ts:692:20)
+    at async Context.<anonymous> (test/transformers/fill_quote_transformer_test.ts:854:13)
+  
+
+
+
+npm notice
+npm notice New minor version of npm available! 11.4.2 -> 11.5.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.5.2
+npm notice To update run: npm install -g npm@11.5.2
+npm notice

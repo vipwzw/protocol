@@ -12,10 +12,9 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../tokens/TestMintableERC20Token.sol";
 
 contract TestMooniswap {
@@ -45,13 +44,13 @@ contract TestMooniswap {
         boughtAmount = nextBuyAmount;
         nextBuyAmount = 0;
         require(boughtAmount >= minBuyAmount, "UNDERBOUGHT");
-        if (sellToken != IERC20Token(0)) {
+        if (sellToken != IERC20Token(address(0))) {
             sellToken.transferFrom(msg.sender, address(this), sellAmount);
         } else {
             require(sellAmount == msg.value, "NOT_ENOUGH_ETH");
         }
         if (address(buyToken) == address(0)) {
-            msg.sender.transfer(boughtAmount);
+            payable(msg.sender).transfer(boughtAmount);
         } else {
             buyToken.mint(msg.sender, boughtAmount);
         }

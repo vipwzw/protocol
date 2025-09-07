@@ -12,12 +12,10 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
 import "../../external/ILiquidityProviderSandbox.sol";
 import "../../fixins/FixinCommon.sol";
 import "../../fixins/FixinTokenSpender.sol";
@@ -25,8 +23,7 @@ import "../../vendor/ILiquidityProvider.sol";
 import "../interfaces/IMultiplexFeature.sol";
 
 abstract contract MultiplexLiquidityProvider is FixinCommon, FixinTokenSpender {
-    using LibERC20TokenV06 for IERC20Token;
-    using LibSafeMathV06 for uint256;
+    using LibERC20Token for IERC20Token;
 
     // Same event fired by LiquidityProviderFeature
     event LiquidityProviderSwap(
@@ -82,7 +79,7 @@ abstract contract MultiplexLiquidityProvider is FixinCommon, FixinTokenSpender {
         );
         // Compute amount of output token received by the
         // recipient.
-        boughtAmount = params.outputToken.balanceOf(params.recipient).safeSub(balanceBefore);
+        boughtAmount = params.outputToken.balanceOf(params.recipient) - balanceBefore;
 
         emit LiquidityProviderSwap(
             address(params.inputToken),
@@ -113,8 +110,8 @@ abstract contract MultiplexLiquidityProvider is FixinCommon, FixinTokenSpender {
             // Decode the output token amount on success.
             uint256 boughtAmount = abi.decode(resultData, (uint256));
             // Increment the sold and bought amounts.
-            state.soldAmount = state.soldAmount.safeAdd(sellAmount);
-            state.boughtAmount = state.boughtAmount.safeAdd(boughtAmount);
+            state.soldAmount = state.soldAmount + sellAmount;
+            state.boughtAmount = state.boughtAmount + boughtAmount;
         }
     }
 
@@ -148,7 +145,7 @@ abstract contract MultiplexLiquidityProvider is FixinCommon, FixinTokenSpender {
         uint256 sellAmount = state.outputTokenAmount;
         // Compute amount of output token received by the
         // recipient.
-        state.outputTokenAmount = outputToken.balanceOf(state.to).safeSub(balanceBefore);
+        state.outputTokenAmount = outputToken.balanceOf(state.to) - balanceBefore;
 
         emit LiquidityProviderSwap(
             address(inputToken),

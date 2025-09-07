@@ -12,26 +12,25 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "src/features/TransformERC20Feature.sol";
-import "src/external/TransformerDeployer.sol";
-import "src/transformers/WethTransformer.sol";
-import "src/transformers/FillQuoteTransformer.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "src/transformers/bridges/BridgeProtocols.sol";
-import "src/transformers/bridges/EthereumBridgeAdapter.sol";
-import "src/transformers/bridges/PolygonBridgeAdapter.sol";
-import "src/transformers/bridges/BSCBridgeAdapter.sol";
-import "src/transformers/bridges/ArbitrumBridgeAdapter.sol";
-import "src/transformers/bridges/OptimismBridgeAdapter.sol";
-import "src/transformers/bridges/AvalancheBridgeAdapter.sol";
-import "src/transformers/bridges/FantomBridgeAdapter.sol";
-import "src/transformers/bridges/CeloBridgeAdapter.sol";
-import "src/IZeroEx.sol";
+import "contracts/src/features/TransformERC20Feature.sol";
+import "contracts/src/external/TransformerDeployer.sol";
+import "contracts/src/transformers/WethTransformer.sol";
+import "contracts/src/transformers/FillQuoteTransformer.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "contracts/src/transformers/bridges/BridgeProtocols.sol";
+import "contracts/src/transformers/bridges/EthereumBridgeAdapter.sol";
+import "contracts/src/transformers/bridges/PolygonBridgeAdapter.sol";
+import "contracts/src/transformers/bridges/BSCBridgeAdapter.sol";
+import "contracts/src/transformers/bridges/ArbitrumBridgeAdapter.sol";
+import "contracts/src/transformers/bridges/OptimismBridgeAdapter.sol";
+import "contracts/src/transformers/bridges/AvalancheBridgeAdapter.sol";
+import "contracts/src/transformers/bridges/FantomBridgeAdapter.sol";
+import "contracts/src/transformers/bridges/CeloBridgeAdapter.sol";
+import "contracts/src/IZeroEx.sol";
 
 //contract-addresses/addresses.json interfaces
 struct Transformers {
@@ -212,6 +211,7 @@ interface IUniswapV3Pool {
 
 contract ForkUtils is Test {
     using stdJson for string;
+    using stdStorage for StdStorage;
 
     string json;
 
@@ -331,7 +331,7 @@ contract ForkUtils is Test {
         ContractAddresses memory addresses,
         LiquiditySources memory sources
     ) public {
-        log_named_string("   Using contract addresses on chain", chainName);
+        emit log_named_string("   Using contract addresses on chain", chainName);
         vm.label(addresses.transformers.affiliateFeeTransformer, "zeroEx/affiliateFeeTransformer");
         vm.label(addresses.erc20BridgeProxy, "zeroEx/erc20BridgeProxy");
         vm.label(addresses.erc20BridgeSampler, "zeroEx/erc20BridgeSampler");
@@ -796,6 +796,6 @@ contract ForkUtils is Test {
     }
 
     function writeTokenBalance(address who, address token, uint256 amt) internal {
-        stdstore.target(token).sig(IERC20Token(token).balanceOf.selector).with_key(who).checked_write(amt);
+        stdstore.target(token).sig(IERC20Token(token).balanceOf.selector).with_key(who).depth(0).checked_write(amt);
     }
 }

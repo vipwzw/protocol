@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 interface IERC1155Token {
     /// @dev Either TransferSingle or TransferBatch MUST emit when tokens are transferred,

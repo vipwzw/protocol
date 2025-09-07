@@ -12,19 +12,15 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../../fixins/FixinCommon.sol";
 import "../../fixins/FixinTokenSpender.sol";
 import "../../vendor/IUniswapV2Pair.sol";
 import "../interfaces/IMultiplexFeature.sol";
 
 abstract contract MultiplexUniswapV2 is FixinCommon, FixinTokenSpender {
-    using LibSafeMathV06 for uint256;
-
     // address of the UniswapV2Factory contract.
     address private immutable UNISWAP_FACTORY;
     // address of the (Sushiswap) UniswapV2Factory contract.
@@ -97,8 +93,8 @@ abstract contract MultiplexUniswapV2 is FixinCommon, FixinTokenSpender {
             // Decode the output token amount on success.
             uint256 boughtAmount = abi.decode(resultData, (uint256));
             // Increment the sold and bought amounts.
-            state.soldAmount = state.soldAmount.safeAdd(sellAmount);
-            state.boughtAmount = state.boughtAmount.safeAdd(boughtAmount);
+            state.soldAmount = state.soldAmount + sellAmount;
+            state.boughtAmount = state.boughtAmount + boughtAmount;
         }
     }
 
@@ -164,13 +160,15 @@ abstract contract MultiplexUniswapV2 is FixinCommon, FixinTokenSpender {
             // Use the Sushiswap factory address and codehash
             return
                 address(
-                    uint256(
-                        keccak256(
-                            abi.encodePacked(
-                                hex"ff",
-                                SUSHISWAP_FACTORY,
-                                keccak256(abi.encodePacked(token0, token1)),
-                                SUSHISWAP_PAIR_INIT_CODE_HASH
+                    uint160(
+                        uint256(
+                            keccak256(
+                                abi.encodePacked(
+                                    hex"ff",
+                                    SUSHISWAP_FACTORY,
+                                    keccak256(abi.encodePacked(token0, token1)),
+                                    SUSHISWAP_PAIR_INIT_CODE_HASH
+                                )
                             )
                         )
                     )
@@ -179,13 +177,15 @@ abstract contract MultiplexUniswapV2 is FixinCommon, FixinTokenSpender {
             // Use the Uniswap factory address and codehash
             return
                 address(
-                    uint256(
-                        keccak256(
-                            abi.encodePacked(
-                                hex"ff",
-                                UNISWAP_FACTORY,
-                                keccak256(abi.encodePacked(token0, token1)),
-                                UNISWAP_PAIR_INIT_CODE_HASH
+                    uint160(
+                        uint256(
+                            keccak256(
+                                abi.encodePacked(
+                                    hex"ff",
+                                    UNISWAP_FACTORY,
+                                    keccak256(abi.encodePacked(token0, token1)),
+                                    UNISWAP_PAIR_INIT_CODE_HASH
+                                )
                             )
                         )
                     )
@@ -212,9 +212,9 @@ abstract contract MultiplexUniswapV2 is FixinCommon, FixinTokenSpender {
             ? (reserve0, reserve1)
             : (reserve1, reserve0);
         // Compute the output amount.
-        uint256 inputAmountWithFee = inputAmount.safeMul(997);
-        uint256 numerator = inputAmountWithFee.safeMul(outputReserve);
-        uint256 denominator = inputReserve.safeMul(1000).safeAdd(inputAmountWithFee);
+        uint256 inputAmountWithFee = inputAmount * 997;
+        uint256 numerator = inputAmountWithFee * outputReserve;
+        uint256 denominator = inputReserve * 1000 + inputAmountWithFee;
         return numerator / denominator;
     }
 }

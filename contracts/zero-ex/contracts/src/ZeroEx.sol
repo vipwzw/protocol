@@ -12,10 +12,9 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/contracts/src/v06/LibBytesV06.sol";
+import "@0x/contracts-utils/contracts/src/LibBytes.sol";
 import "./migrations/LibBootstrap.sol";
 import "./features/BootstrapFeature.sol";
 import "./storage/LibProxyStorage.sol";
@@ -24,7 +23,7 @@ import "./errors/LibProxyRichErrors.sol";
 /// @dev An extensible proxy contract that serves as a universal entry point for
 ///      interacting with the 0x protocol.
 contract ZeroEx {
-    using LibBytesV06 for bytes;
+    using LibBytes for bytes;
 
     /// @dev Construct this contract and register the `BootstrapFeature` feature.
     ///      After constructing this contract, `bootstrap()` should be called

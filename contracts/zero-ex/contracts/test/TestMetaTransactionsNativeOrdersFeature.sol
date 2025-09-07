@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "../src/features/interfaces/IMetaTransactionsFeature.sol";
 import "../src/features/NativeOrdersFeature.sol";
@@ -21,11 +20,10 @@ import "./TestFeeCollectorController.sol";
 
 contract TestMetaTransactionsNativeOrdersFeature is NativeOrdersFeature {
     constructor()
-        public
         NativeOrdersFeature(
             address(0),
-            IEtherToken(0),
-            IStaking(0),
+            IEtherToken(address(0)),
+            IStaking(address(0)),
             FeeCollectorController(address(new TestFeeCollectorController())),
             0
         )

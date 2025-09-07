@@ -12,12 +12,11 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibMathV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import "@0x/contracts-utils/contracts/src/LibMath.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../../errors/LibNFTOrdersRichErrors.sol";
 import "../../fixins/FixinCommon.sol";
 import "../../fixins/FixinEIP712.sol";
@@ -30,7 +29,7 @@ import "../libs/LibNFTOrder.sol";
 
 /// @dev Abstract base contract inherited by ERC721OrdersFeature and NFTOrders
 abstract contract NFTOrders is FixinCommon, FixinEIP712, FixinTokenSpender {
-    using LibSafeMathV06 for uint256;
+    using LibRichErrors for bytes;
 
     /// @dev Native token pseudo-address.
     address internal constant NATIVE_TOKEN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -42,7 +41,7 @@ abstract contract NFTOrders is FixinCommon, FixinEIP712, FixinTokenSpender {
     /// @dev The magic return value indicating the success of a `zeroExTakerCallback`.
     bytes4 private constant TAKER_CALLBACK_MAGIC_BYTES = ITakerCallback.zeroExTakerCallback.selector;
 
-    constructor(address zeroExAddress, IEtherToken weth) public FixinEIP712(zeroExAddress) {
+    constructor(address zeroExAddress, IEtherToken weth) internal FixinEIP712(zeroExAddress) {
         WETH = weth;
     }
 
@@ -81,7 +80,7 @@ abstract contract NFTOrders is FixinCommon, FixinEIP712, FixinTokenSpender {
             erc20FillAmount = buyOrder.erc20TokenAmount;
         } else {
             // Rounding favors the order maker.
-            erc20FillAmount = LibMathV06.getPartialAmountFloor(
+            erc20FillAmount = LibMath.getPartialAmountFloor(
                 params.sellAmount,
                 orderInfo.orderAmount,
                 buyOrder.erc20TokenAmount
@@ -149,7 +148,7 @@ abstract contract NFTOrders is FixinCommon, FixinEIP712, FixinTokenSpender {
             erc20FillAmount = sellOrder.erc20TokenAmount;
         } else {
             // Rounding favors the order maker.
-            erc20FillAmount = LibMathV06.getPartialAmountCeil(
+            erc20FillAmount = LibMath.getPartialAmountCeil(
                 params.buyAmount,
                 orderInfo.orderAmount,
                 sellOrder.erc20TokenAmount
@@ -170,7 +169,7 @@ abstract contract NFTOrders is FixinCommon, FixinEIP712, FixinTokenSpender {
             );
             // Update `ethAvailable` with amount acquired during
             // the callback
-            ethAvailable = ethAvailable.safeAdd(address(this).balance.safeSub(ethBalanceBeforeCallback));
+            ethAvailable = ethAvailable + (address(this).balance - (ethBalanceBeforeCallback));
             // Check for the magic success bytes
             require(callbackResult == TAKER_CALLBACK_MAGIC_BYTES, "NFTOrders::_buyNFT/CALLBACK_FAILED");
         }
@@ -279,7 +278,7 @@ abstract contract NFTOrders is FixinCommon, FixinEIP712, FixinTokenSpender {
         // Pay fees using ETH.
         uint256 ethFees = _payFees(order, address(this), fillAmount, orderAmount, true);
         // Update amount of ETH spent.
-        ethSpent = ethSpent.safeAdd(ethFees);
+        ethSpent = ethSpent + ethFees;
         if (ethSpent > ethAvailable) {
             LibNFTOrdersRichErrors.OverspentEthError(ethSpent, ethAvailable).rrevert();
         }
@@ -308,7 +307,7 @@ abstract contract NFTOrders is FixinCommon, FixinEIP712, FixinTokenSpender {
                 feeFillAmount = fee.amount;
             } else {
                 // Round against the fee recipient
-                feeFillAmount = LibMathV06.getPartialAmountFloor(fillAmount, orderAmount, fee.amount);
+                feeFillAmount = LibMath.getPartialAmountFloor(fillAmount, orderAmount, fee.amount);
             }
             if (feeFillAmount == 0) {
                 continue;
@@ -336,7 +335,7 @@ abstract contract NFTOrders is FixinCommon, FixinEIP712, FixinTokenSpender {
                 require(callbackResult == FEE_CALLBACK_MAGIC_BYTES, "NFTOrders::_payFees/CALLBACK_FAILED");
             }
             // Sum the fees paid
-            totalFeesPaid = totalFeesPaid.safeAdd(feeFillAmount);
+            totalFeesPaid = totalFeesPaid + feeFillAmount;
         }
     }
 

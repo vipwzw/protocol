@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "./Transformer.sol";
 import "./LibERC20Transformer.sol";
@@ -23,7 +22,7 @@ contract LogMetadataTransformer is Transformer {
     event TransformerMetadata(address sender, address taker, bytes data);
 
     /// @dev Maximum uint256 value.
-    uint256 private constant MAX_UINT256 = uint256(-1);
+    uint256 private constant MAX_UINT256 = type(uint256).max;
 
     /// @dev Emits an event.
     /// @param context Context information.

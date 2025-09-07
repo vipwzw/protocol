@@ -12,12 +12,11 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
 
 /// @dev Minimal interface for minting StETH
 interface IStETH {
@@ -59,8 +58,8 @@ interface IWstETH {
 }
 
 contract MixinLido {
-    using LibERC20TokenV06 for IERC20Token;
-    using LibERC20TokenV06 for IEtherToken;
+    using LibERC20Token for IERC20Token;
+    using LibERC20Token for IEtherToken;
 
     IEtherToken private immutable WETH;
 
@@ -103,7 +102,7 @@ contract MixinLido {
     ) private returns (uint256 boughtAmount) {
         (IEtherToken stETH, IWstETH wstETH) = abi.decode(bridgeData, (IEtherToken, IWstETH));
         if (address(sellToken) == address(stETH) && address(buyToken) == address(wstETH)) {
-            sellToken.approveIfBelow(address(wstETH), sellAmount);
+            sellToken.approve(address(wstETH), sellAmount);
             return wstETH.wrap(sellAmount);
         }
         if (address(sellToken) == address(wstETH) && address(buyToken) == address(stETH)) {

@@ -12,11 +12,10 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../IBridgeAdapter.sol";
 
 interface ILBRouter {
@@ -63,7 +62,7 @@ interface ILBRouter {
 }
 
 contract MixinTraderJoeV2 {
-    using LibERC20TokenV06 for IERC20Token;
+    using LibERC20Token for IERC20Token;
 
     function _tradeTraderJoeV2(
         IERC20Token buyToken,
@@ -100,7 +99,7 @@ contract MixinTraderJoeV2 {
             "MixinTraderJoeV2/LAST_ELEMENT_OF_PATH_MUST_MATCH_OUTPUT_TOKEN"
         );
         // Grant the Trader Joe V2 router an allowance to sell the first token.
-        tokenPath[0].approveIfBelow(address(router), sellAmount);
+        tokenPath[0].approve(address(router), sellAmount);
 
         ILBRouter.Path memory path = ILBRouter.Path({
             pairBinSteps: pairBinSteps,

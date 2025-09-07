@@ -12,12 +12,10 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../IBridgeAdapter.sol";
 
 /*
@@ -36,8 +34,7 @@ interface IGmxRouter {
 }
 
 contract MixinGMX {
-    using LibERC20TokenV06 for IERC20Token;
-    using LibSafeMathV06 for uint256;
+    using LibERC20Token for IERC20Token;
 
     function _tradeGMX(
         IERC20Token buyToken,
@@ -67,7 +64,7 @@ contract MixinGMX {
         router = IGmxRouter(_router);
 
         // Grant the GMX router an allowance to sell the first token.
-        path[0].approveIfBelow(address(router), sellAmount);
+        path[0].approve(address(router), sellAmount);
 
         //track the balance to know how much we bought
         uint256 beforeBalance = buyToken.balanceOf(address(this));
@@ -83,7 +80,7 @@ contract MixinGMX {
         );
 
         //calculate the difference in balance from preswap->postswap to find how many tokens out
-        boughtAmount = buyToken.balanceOf(address(this)).safeSub(beforeBalance);
+        boughtAmount = buyToken.balanceOf(address(this)) - beforeBalance;
 
         return boughtAmount;
     }

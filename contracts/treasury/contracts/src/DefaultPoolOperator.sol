@@ -17,22 +17,25 @@
 
 */
 
-pragma solidity ^0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+interface IERC20 {
+    function balanceOf(address owner) external view returns (uint256);
+    function transfer(address to, uint256 value) external returns (bool);
+}
+
 import "./IStaking.sol";
 
 contract DefaultPoolOperator {
     // Immutables
     IStaking public immutable stakingProxy;
-    IERC20Token public immutable weth;
+    IERC20 public immutable weth;
     bytes32 public immutable poolId;
 
     /// @dev Initializes this contract and creates a staking pool.
     /// @param stakingProxy_ The 0x staking proxy contract.
     /// @param weth_ The WETH token contract.
-    constructor(IStaking stakingProxy_, IERC20Token weth_) public {
+    constructor(IStaking stakingProxy_, IERC20 weth_) {
         stakingProxy = stakingProxy_;
         weth = weth_;
         // operator share = 100%

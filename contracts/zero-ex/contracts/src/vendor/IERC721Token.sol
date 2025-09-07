@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
+pragma solidity ^0.8.0;
 
 interface IERC721Token {
     /// @dev This emits when ownership of any NFT changes by any mechanism.

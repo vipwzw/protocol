@@ -12,10 +12,9 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../src/IZeroEx.sol";
 import "../src/vendor/IERC1155Token.sol";
 import "../src/vendor/IERC721Token.sol";
@@ -47,7 +46,7 @@ contract TestNFTOrderPresigner {
     }
 
     function approveERC20(IERC20Token token) external {
-        token.approve(address(zeroEx), uint256(-1));
+        token.approve(address(zeroEx), type(uint256).max);
     }
 
     function preSignERC721Order(LibNFTOrder.ERC721Order calldata order) external {

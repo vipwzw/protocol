@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "../ZeroEx.sol";
 import "../features/interfaces/IOwnableFeature.sol";
@@ -79,7 +78,7 @@ contract FullMigration {
 
         // Perform the initial migration with the owner set to this contract.
         _initialMigration.initializeZeroEx(
-            address(uint160(address(this))),
+            payable(address(this)),
             zeroEx,
             InitialMigration.BootstrapFeatures({registry: features.registry, ownable: features.ownable})
         );

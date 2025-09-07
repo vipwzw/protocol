@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 /// @dev Helpers for computing `FeeCollector` contract addresses.
 library LibFeeCollector {
@@ -28,14 +27,18 @@ library LibFeeCollector {
     ) internal pure returns (address payable feeCollectorAddress) {
         // Compute the CREATE2 address for the fee collector.
         return
-            address(
-                uint256(
-                    keccak256(
-                        abi.encodePacked(
-                            bytes1(0xff),
-                            controller,
-                            poolId, // pool ID is salt
-                            initCodeHash
+            payable(
+                address(
+                    uint160(
+                        uint256(
+                            keccak256(
+                                abi.encodePacked(
+                                    bytes1(0xff),
+                                    controller,
+                                    poolId, // pool ID is salt
+                                    initCodeHash
+                                )
+                            )
                         )
                     )
                 )

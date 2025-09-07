@@ -17,10 +17,7 @@
 
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
-
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+pragma solidity ^0.8.0;
 
 interface IERC1155Receiver {
     /// @notice Handle the receipt of a single ERC1155 token type
@@ -65,8 +62,6 @@ interface IERC1155Receiver {
 }
 
 contract TestMintableERC1155Token {
-    using LibSafeMathV06 for uint256;
-
     /// @dev Either TransferSingle or TransferBatch MUST emit when tokens are transferred,
     ///      including zero value transfers as well as minting or burning.
     /// Operator will always be msg.sender.
@@ -110,7 +105,7 @@ contract TestMintableERC1155Token {
 
     function mint(address to, uint256 id, uint256 quantity) external {
         // Grant the items to the caller
-        balances[id][to] = quantity.safeAdd(balances[id][to]);
+        balances[id][to] = quantity + balances[id][to];
 
         // Emit the Transfer/Mint event.
         // the 0x0 source address implies a mint
@@ -154,8 +149,8 @@ contract TestMintableERC1155Token {
         require(from == msg.sender || operatorApproval[from][msg.sender] == true, "INSUFFICIENT_ALLOWANCE");
 
         // perform transfer
-        balances[id][from] = balances[id][from].safeSub(value);
-        balances[id][to] = balances[id][to].safeAdd(value);
+        balances[id][from] = balances[id][from] - value;
+        balances[id][to] = balances[id][to] + value;
 
         emit TransferSingle(msg.sender, from, to, id, value);
 
@@ -206,8 +201,8 @@ contract TestMintableERC1155Token {
             uint256 id = ids[i];
             uint256 value = values[i];
 
-            balances[id][from] = balances[id][from].safeSub(value);
-            balances[id][to] = balances[id][to].safeAdd(value);
+            balances[id][from] = balances[id][from] - value;
+            balances[id][to] = balances[id][to] + value;
         }
         emit TransferBatch(msg.sender, from, to, ids, values);
 

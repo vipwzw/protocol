@@ -31,7 +31,7 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
         for (uint256 i = 0; i < chains.length; i++) {
             chainsByChainId[chains[i]] = chainIds[i];
             indexChainsByChain[chains[i]] = indexChainIds[i];
-            bytes memory details = json.parseRaw(indexChainIds[i]);
+            bytes memory details = vm.parseJson(json, indexChainIds[i]);
             addresses = abi.decode(details, (ContractAddresses));
         }
     }
@@ -42,7 +42,7 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
             if (i == 4) {
                 continue;
             }
-            
+
             vm.selectFork(forkIds[chains[i]]);
             labelAddresses(
                 chains[i],
@@ -61,7 +61,7 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
             if (i != 3 && i != 6) {
                 continue;
             }
-            
+
             vm.selectFork(forkIds[chains[i]]);
             labelAddresses(
                 chains[i],
@@ -102,7 +102,7 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
             address(fqtData.buyToken),
             sources.TraderJoeV2Quoter
         );
-        log_named_uint("amountOut", amountOut);
+        emit log_named_uint("amountOut", amountOut);
 
         IBridgeAdapter.BridgeOrder memory order;
         {
@@ -160,7 +160,7 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
             address(sources.KyberElasticPool)
         );
 
-        log_named_uint("amountOut", amountOut);
+        emit log_named_uint("amountOut", amountOut);
 
         fqtData.bridgeOrders = new IBridgeAdapter.BridgeOrder[](1);
         IBridgeAdapter.BridgeOrder memory order;
@@ -180,12 +180,12 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
         address quoter,
         address pool
     ) private returns (uint256 makerTokenAmount, bytes memory path) {
-        log_string("       Sampling KyberElastic for tokens");
-        log_named_address("        ", takerToken);
-        log_string("           -> ");
-        log_named_address("        ", makerToken);
-        log_named_address(" quoter", quoter);
-        log_named_address("pool:", pool);
+        emit log_string("       Sampling KyberElastic for tokens");
+        emit log_named_address("        ", takerToken);
+        emit log_string("           -> ");
+        emit log_named_address("        ", makerToken);
+        emit log_named_address(" quoter", quoter);
+        emit log_named_address("pool:", pool);
         address[] memory tokenPath = new address[](2);
         tokenPath[0] = address(takerToken);
         tokenPath[1] = address(makerToken);
@@ -203,10 +203,10 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
         address makerToken,
         address quoter
     ) private returns (uint256 makerTokenAmount, uint256 binStep, uint256 version) {
-        log_string("Sampling TraderJoeV2");
-        log_named_address("takerToken", takerToken);
-        log_named_address("makerToken", makerToken);
-        log_named_address("quoter", quoter);
+        emit log_string("Sampling TraderJoeV2");
+        emit log_named_address("takerToken", takerToken);
+        emit log_named_address("makerToken", makerToken);
+        emit log_named_address("quoter", quoter);
 
         address[] memory tokenPath = new address[](2);
         tokenPath[0] = takerToken;
@@ -254,9 +254,9 @@ contract SwapERC20ForERC20Test is Test, ForkUtils, TestUtils {
             transformations
         );
 
-        log_named_uint("sellToken balance before", sellTokenBalanceBefore);
-        log_named_uint("sellToken balance after", IERC20Token(sellToken).balanceOf(address(this)));
-        log_named_uint("buyToken balance before", buyTokenBalanceBefore);
-        log_named_uint("buyToken balance after", IERC20Token(buyToken).balanceOf(address(this)));
+        emit log_named_uint("sellToken balance before", sellTokenBalanceBefore);
+        emit log_named_uint("sellToken balance after", IERC20Token(sellToken).balanceOf(address(this)));
+        emit log_named_uint("buyToken balance before", buyTokenBalanceBefore);
+        emit log_named_uint("buyToken balance after", IERC20Token(buyToken).balanceOf(address(this)));
     }
 }

@@ -1,10 +1,9 @@
 export {
     BootstrapFeatures,
     deployBootstrapFeaturesAsync,
-    deployFullFeaturesAsync,
+    deployAllFeaturesAsync,
     initialMigrateAsync,
     fullMigrateAsync,
     FullMigrationConfig,
-    FullFeaturesDeployConfig,
     FullFeatures,
 } from '../../src/migration';

@@ -1,30 +1,46 @@
 {
     "compilerOptions": {
         "module": "commonjs",
-        "target": "es6",
-        "lib": ["es2017", "dom", "esnext.asynciterable", "es2018.promise"],
+        "target": "es2022",
+        "lib": ["es2022", "dom", "esnext.asynciterable", "es2018.promise"],
         "experimentalDecorators": true,
         "downlevelIteration": true,
         "noImplicitReturns": true,
         "pretty": true,
         "skipLibCheck": true,
-        "typeRoots": ["node_modules/@0x/typescript-typings/types", "node_modules/@types"],
+        "skipDefaultLibCheck": true,
+        "typeRoots": ["node_modules/@types", "types"],
         "strict": true,
+        "useUnknownInCatchVariables": false,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
         // These settings are required for TypeScript project references
         "declaration": true,
         "declarationMap": true,
-        "sourceMap": true,
-        "useUnknownInCatchVariables": false
+        "sourceMap": true
     },
     "exclude": [],
     // The root of the project is just a list of references and does not contain
     // any top-level TypeScript code.
     "include": [],
     "references": [
-        { "path": "./contracts/test-utils" },
         { "path": "./contracts/utils" },
+        { "path": "./contracts/erc20" },
+        { "path": "./contracts/erc721" },
+        { "path": "./contracts/erc1155" },
+        { "path": "./contracts/asset-proxy" },
+        { "path": "./contracts/exchange-libs" },
+        { "path": "./contracts/staking" },
+        { "path": "./contracts/treasury" },
+        { "path": "./contracts/zero-ex" },
+
+        { "path": "./packages/utils" },
+        { "path": "./packages/base-contract" },
         { "path": "./packages/contract-addresses" },
         { "path": "./packages/contract-artifacts" },
-        { "path": "./packages/contract-wrappers" }
+        { "path": "./packages/contract-wrappers" },
+        { "path": "./packages/json-schemas" },
+        { "path": "./packages/order-utils" },
+        { "path": "./packages/protocol-utils" }
     ]
 }

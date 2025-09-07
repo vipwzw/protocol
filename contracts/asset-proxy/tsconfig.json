@@ -1,0 +1,12 @@
+{
+    "extends": "../../tsconfig",
+    "compilerOptions": {
+        "outDir": "lib",
+        "rootDir": ".",
+        "resolveJsonModule": true,
+        "composite": true
+    },
+    "include": ["./src/**/*", "./src/typechain-types/**/*", "./artifacts/**/*.json"],
+    "exclude": ["./node_modules/**/*", "./lib/**/*", "./cache/**/*", "./out/**/*"],
+    "references": [{ "path": "../erc20" }, { "path": "../erc721" }, { "path": "../erc1155" }, { "path": "../utils" }]
+}

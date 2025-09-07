@@ -1,0 +1,71 @@
+{
+    "name": "@0x/contracts-asset-proxy",
+    "version": "3.7.18",
+    "engines": {
+        "node": ">=6.12"
+    },
+    "description": "Smart contract components of 0x protocol",
+    "main": "lib/src/index.js",
+    "directories": {
+        "test": "test"
+    },
+    "scripts": {
+        "build": "run-s pre_build  build:ts",
+        "build:ci": "yarn build",
+        "build:ts": "tsc -b",
+        "build:forge": "forge build",
+        "pre_build": "run-s compile generate_contract_wrappers",
+        "compile": "forge build && npx hardhat compile",
+        "generate_contract_wrappers": "find artifacts/ -name '*.json' -not -path '*/build-info/*' -not -name '*.dbg.json' | xargs npx typechain --target ethers-v6 --out-dir src/typechain-types",
+        "generate_contract_wrappers:force": "rm -rf src/typechain-types && find artifacts/ -name '*.json' -not -path '*/build-info/*' -not -name '*.dbg.json' | xargs npx typechain --target ethers-v6 --out-dir src/typechain-types",
+        "test": "run-s pre_build test:hardhat test:forge",
+        "test:forge": "forge test",
+        "test:hardhat": "yarn pre_build && npx hardhat test",
+        "test:grep": "npx hardhat test --grep",
+        "test:match": "forge test --match-test",
+        "test:hardhat:grep": "npx hardhat test --grep",
+        "test:forge:match": "forge test --match-test",
+        "test:ci": "yarn test",
+        "test:coverage": "nyc --reporter=text --reporter=html --reporter=lcov yarn test:hardhat",
+        "clean": "shx rm -rf lib generated_docs test/generated-wrappers test/typechain-types src/typechain-types artifacts cache out",
+        "clean:node-modules": "shx rm -rf node_modules",
+        "clean:all": "yarn clean && yarn clean:node-modules",
+        "docs:md": "ts-doc-gen --sourceDir='$PROJECT_FILES' --output=$MD_FILE_DIR --fileExtension=mdx --tsconfig=./typedoc-tsconfig.json",
+        "docs:json": "typedoc --excludePrivate --excludeExternals --excludeProtected --ignoreCompilerErrors --target ES5 --tsconfig typedoc-tsconfig.json --json $JSON_FILE_PATH $PROJECT_FILES",
+        "lint": "eslint src --ext .ts",
+        "lint:fix": "eslint src --ext .ts --fix"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/0xProject/protocol.git"
+    },
+    "license": "Apache-2.0",
+    "bugs": {
+        "url": "https://github.com/0xProject/protocol/issues"
+    },
+    "homepage": "https://github.com/0xProject/protocol/tree/main/contracts/protocol",
+    "devDependencies": {
+        "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+        "@nomicfoundation/hardhat-ethers": "^3.0.0",
+        "@typechain/ethers-v6": "^0.5.1",
+        "@typechain/hardhat": "^9.1.0",
+        "chai": "^4.5.0",
+        "ethers": "^6.15.0",
+        "hardhat": "^2.19.0",
+        "npm-run-all": "^4.1.2",
+        "nyc": "^15.1.0",
+        "shx": "^0.4.0",
+        "ts-node": "^10.9.0",
+        "typechain": "^8.3.2",
+        "typedoc": "~0.16.11"
+    },
+    "dependencies": {
+        "ethereum-types": "^3.5.0",
+        "forge-std": "^1.1.2",
+        "lodash": "^4.17.11"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "gitHead": "4f91bfd907996b2f4dd383778b50c479c2602b56"
+}

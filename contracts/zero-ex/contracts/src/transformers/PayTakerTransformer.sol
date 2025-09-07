@@ -12,21 +12,18 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
 import "../errors/LibTransformERC20RichErrors.sol";
 import "./Transformer.sol";
 import "./LibERC20Transformer.sol";
 
 /// @dev A transformer that transfers tokens to the taker.
 contract PayTakerTransformer is Transformer {
-    using LibRichErrorsV06 for bytes;
-    using LibSafeMathV06 for uint256;
+    using LibRichErrors for bytes;
     using LibERC20Transformer for IERC20Token;
 
     /// @dev Transform data to ABI-encode and pass into `transform()`.
@@ -39,7 +36,7 @@ contract PayTakerTransformer is Transformer {
     }
 
     /// @dev Maximum uint256 value.
-    uint256 private constant MAX_UINT256 = uint256(-1);
+    uint256 private constant MAX_UINT256 = type(uint256).max;
 
     /// @dev Create this contract.
     constructor() public Transformer() {}
@@ -54,7 +51,7 @@ contract PayTakerTransformer is Transformer {
         for (uint256 i = 0; i < data.tokens.length; ++i) {
             // The `amounts` array can be shorter than the `tokens` array.
             // Missing elements are treated as `uint256(-1)`.
-            uint256 amount = data.amounts.length > i ? data.amounts[i] : uint256(-1);
+            uint256 amount = data.amounts.length > i ? data.amounts[i] : type(uint256).max;
             if (amount == MAX_UINT256) {
                 amount = data.tokens[i].getTokenBalanceOf(address(this));
             }

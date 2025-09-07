@@ -12,12 +12,11 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibOwnableRichErrors.sol";
 import "../errors/LibCommonRichErrors.sol";
-import "../errors/LibOwnableRichErrors.sol";
 
 /// @dev EIP712 helpers for features.
 abstract contract FixinEIP712 {

@@ -1,6 +1,7 @@
-import { chaiSetup, web3Factory, Web3Wrapper } from '@0x/dev-utils';
-import { Web3ProviderEngine } from '@0x/subproviders';
-import { BigNumber } from '@0x/utils';
+import { chaiSetup } from './chai_setup';
+import { web3Factory } from './web3_factory';
+import { JsonRpcProvider } from 'ethers';
+
 import { expect } from 'chai';
 import * as ethjs from 'ethereumjs-util';
 
@@ -9,29 +10,30 @@ import { SignatureType } from '../src/signature_utils';
 
 chaiSetup.configure();
 
-describe('mtxs', () => {
-    let provider: Web3ProviderEngine;
+describe('meta_transactions', () => {
+    let provider: any;
     let providerMaker: string;
     const key = '0xee094b79aa0315914955f2f09be9abe541dcdc51f0aae5bec5453e9f73a471a6';
     const keyMaker = ethjs.bufferToHex(ethjs.privateToAddress(ethjs.toBuffer(key)));
 
     before(async () => {
-        provider = web3Factory.getRpcProvider({ shouldUseInProcessGanache: true });
-        [providerMaker] = await new Web3Wrapper(provider).getAvailableAddressesAsync();
+        provider = web3Factory.getRpcProvider();
+        // Use a test address from Hardhat's default accounts
+        providerMaker = '0x5409ED021D9299bf6814279A6A1411A7e866A631';
     });
 
     describe('MetaTransaction', () => {
         const mtx = new MetaTransaction({
             signer: '0x349e8d89e8b37214d9ce3949fc5754152c525bc3',
             sender: '0x83c62b2e67dea0df2a27be0def7a22bd7102642c',
-            minGasPrice: new BigNumber(1234),
-            maxGasPrice: new BigNumber(5678),
-            expirationTimeSeconds: new BigNumber(9101112),
-            salt: new BigNumber(2001),
+            minGasPrice: 1234n,
+            maxGasPrice: 5678n,
+            expirationTimeSeconds: 9101112n,
+            salt: 2001n,
             callData: '0x12345678',
-            value: new BigNumber(1001),
+            value: 1001n,
             feeToken: '0xcc3c7ea403427154ec908203ba6c418bd699f7ce',
-            feeAmount: new BigNumber(9101112),
+            feeAmount: 9101112n,
             chainId: 8008,
             verifyingContract: '0x6701704d2421c64ee9aa93ec7f96ede81c4be77d',
         });

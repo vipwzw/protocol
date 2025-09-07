@@ -12,20 +12,17 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
 import "../errors/LibTransformERC20RichErrors.sol";
 import "./Transformer.sol";
 import "./LibERC20Transformer.sol";
 
 /// @dev A transformer that wraps or unwraps WETH.
 contract WethTransformer is Transformer {
-    using LibRichErrorsV06 for bytes;
-    using LibSafeMathV06 for uint256;
+    using LibRichErrors for bytes;
     using LibERC20Transformer for IERC20Token;
 
     /// @dev Transform data to ABI-encode and pass into `transform()`.
@@ -40,7 +37,7 @@ contract WethTransformer is Transformer {
     /// @dev The WETH contract address.
     IEtherToken public immutable weth;
     /// @dev Maximum uint256 value.
-    uint256 private constant MAX_UINT256 = uint256(-1);
+    uint256 private constant MAX_UINT256 = type(uint256).max;
 
     /// @dev Construct the transformer and store the WETH address in an immutable.
     /// @param weth_ The weth token.

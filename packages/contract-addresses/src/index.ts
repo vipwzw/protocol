@@ -27,7 +27,7 @@ export interface ContractAddresses {
 export enum ChainId {
     Mainnet = 1,
     Goerli = 5,
-    Ganache = 1337,
+    Hardhat = 1337,
     BSC = 56,
     Polygon = 137,
     PolygonMumbai = 80001,

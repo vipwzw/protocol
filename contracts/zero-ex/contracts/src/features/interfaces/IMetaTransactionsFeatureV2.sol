@@ -12,10 +12,9 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
 import "../libs/LibSignature.sol";
 
 /// @dev Meta-transactions feature.
@@ -51,7 +50,7 @@ interface IMetaTransactionsFeatureV2 {
     /// @param selector The selector of the function being executed.
     /// @param signer Who to execute the meta-transaction on behalf of.
     /// @param sender Who executed the meta-transaction.
-    event MetaTransactionExecuted(bytes32 hash, bytes4 indexed selector, address signer, address sender);
+    event MetaTransactionExecutedV2(bytes32 hash, bytes4 indexed selector, address signer, address sender);
 
     /// @dev Execute a single meta-transaction.
     /// @param mtx The meta-transaction.

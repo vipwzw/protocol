@@ -12,22 +12,21 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import {ForkUtils} from "utils/ForkUtils.sol";
-import "utils/TestUtils.sol";
-import "utils/DeployZeroEx.sol";
+import {ForkUtils} from "./utils/ForkUtils.sol";
+import "./utils/TestUtils.sol";
+import "./utils/DeployZeroEx.sol";
 import "forge-std/Test.sol";
-import "src/IZeroEx.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "src/features/TransformERC20Feature.sol";
-import "src/external/TransformerDeployer.sol";
-import "src/transformers/WethTransformer.sol";
-import "src/transformers/FillQuoteTransformer.sol";
-import "src/transformers/bridges/BridgeProtocols.sol";
-import "src/transformers/bridges/EthereumBridgeAdapter.sol";
-import "src/IZeroEx.sol";
+import "contracts/src/IZeroEx.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import "contracts/src/features/TransformERC20Feature.sol";
+import "contracts/src/external/TransformerDeployer.sol";
+import "contracts/src/transformers/WethTransformer.sol";
+import "contracts/src/transformers/FillQuoteTransformer.sol";
+import "contracts/src/transformers/bridges/BridgeProtocols.sol";
+import "contracts/src/transformers/bridges/EthereumBridgeAdapter.sol";
+import "contracts/src/IZeroEx.sol";
 
 contract WrapEth is Test, ForkUtils, TestUtils {
     DeployZeroEx.ZeroExDeployed zeroExDeployed;

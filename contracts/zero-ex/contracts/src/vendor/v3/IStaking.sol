@@ -12,7 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
+pragma solidity ^0.8.0;
 
 interface IStaking {
     function joinStakingPoolAsMaker(bytes32) external;

@@ -1,0 +1,25 @@
+[profile.default]
+src = 'contracts/*/src'
+out = 'out'
+test = 'contracts/*/tests'
+script = 'contracts/*/script'
+libs = ['lib']
+remappings = [
+    '@0x/contracts-utils/=contracts/utils/',
+    '@0x/contracts-erc20/=contracts/erc20/',
+    '@0x/contracts-governance/=contracts/governance/',
+    '@0x/contracts-exchange-libs/=contracts/exchange-libs/',
+    '@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/',
+    '@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/'
+]
+solc_version = "0.8.28"
+optimizer = true
+optimizer_runs = 1000000
+evm_version = "shanghai"
+fs_permissions = [
+    { access = "read", path = "./" },
+    { access = "read", path = "contracts/" },
+    { access = "read-write", path = "contracts/utils/" },
+    { access = "read-write", path = "contracts/erc20/" },
+    { access = "read-write", path = "contracts/governance/" }
+] 

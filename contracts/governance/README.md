@@ -18,31 +18,35 @@ Security council 0x979BDb496e5f0A00af078b7a45F1E9E6bcff170F
 This implementation fully decentralises governance of 0x Protocol and Treasury. This is enabled via a wrapped ZRX token and a Compound-like governors design. There are two separate governors for Protocol - `ZeroExProtocolGovernor` and Treasury - `ZeroExTreasuryGovernor` respectively working with two separate Timelock instances of the same contract implementation - `ZeroExTimelock`.
 
 ### Upgradability
+
 `ZRXWrappedToken` , `ZeroExProtocolGovernor` and `ZeroExTreasuryGovernor` governors are non-upgradable by design. However the voting implementation the governors use - `ZeroExVotes` is upgradable and using the OZ `ERC1967Proxy`.
 
 ### Wrapped ZRX
+
 wZRX will be issued 1-to-1 for ZRX. No locking/vesting mechanisms will exist between wZRX and ZRX and the two will be freely interchangeable. The ZRX token is non-upgradable and same will be valid for its wrapped equivalent.
 
 The token supports delegation which allows a user to delegate their entire voting power to another account (which doesn't necessarily need to be a token holder). This is modelled on the standard OpenZeppelin `ERC20Votes` implementation. We have added logic for block number stamping delegators' balance changes stored in the `DelegateInfo.balanceLastUpdated` property. This block number information is sent in calls to `ZeroExVotes.moveVotingPower` in order to provide support for future upgrades to the vote power calculation.
 Note that for consistency `block.number` is used for the governor settings, voting checkpoints and this delegators' balance last updated property while timelock logic for the governor uses block.timestamp.
 
 ### Governors' settings
+
 Changing governors' settings for `votingDelay`, `votingPeriod` and `proposalThreshold` can be done via the normal proposal mechanism. Governors are deployed with the following initial settings:
 
-|                                | voting delay | voting period | proposal threshold |
-|-------------------|--------------|---------------|--------------------|
-| Protocol governor | 2 days            | 7 days             |  1000000e18           |
-| Treasury governor | 2 days           |  7 days             |   250000e18          |
-
+|                   | voting delay | voting period | proposal threshold |
+| ----------------- | ------------ | ------------- | ------------------ |
+| Protocol governor | 2 days       | 7 days        | 1000000e18         |
+| Treasury governor | 2 days       | 7 days        | 250000e18          |
 
 This is using standard openzeppelin `GovernorSettings` implementation.
 
 ### Quorum
+
 Quorum for Protocol is fixed at 10m (10000000e18) while for Treasury this is calculated as 10% of voting power of the total supply (see voting strategies below for quadratic voting power implementation specifics). The quorum calculations for Treasury are using OpenZeppelin's `GovernorVotesQuorumFraction`.
 
 Note that in-place updates to the quorum are not supported and will need to go through a governance upgrade. Reasoning behind this can be found in this discussion https://forum.openzeppelin.com/t/quorum-default-behaviour-on-governors/34560.
 
 ### Voting strategies
+
 The voting strategy will be linear 1-token-1-vote for Protocol and quadratic with threshold of 1000000e18 for Treasury (i.e. voting weight is linear up to 1m tokens and balance above that threshold is quadratic).
 
 Worth noting is the `Checkpoint` struct design. For packing every `Checkpoint` into a single storage slot we are using the minimum uint type size for `votes` and `quadraticVotes` members, e.g.
@@ -56,13 +60,15 @@ struct Checkpoint {
 ```
 
 since the maximum token supply is 1bn we can have maximum value for:
-`votes` : 1bn *10^18 => can be stored in 90 bits
+`votes` : 1bn \*10^18 => can be stored in 90 bits
 `quadraticVotes` : due to the likelihood of threshold changing and potentially bringing it closer to a linear vote, we are preemptively keeping this to the same size as linear votes slot.
 
 ### Time locks
+
 Governance proposals are subject to a 3 days delay for Protocol and 2 days for Treasury. This delay allows Security Council time to review passed proposals and take action where needed.
 
 ### Security Council
+
 The concept of a Security council is introduced which allows a multisig of security council members to cancel a proposal on the treasury or protocol governors and also rollback the protocol to an earlier version.
 
 When no security council is assigned the following apply:

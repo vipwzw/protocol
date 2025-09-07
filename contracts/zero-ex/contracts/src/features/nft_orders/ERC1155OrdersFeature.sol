@@ -12,11 +12,10 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../../fixins/FixinERC1155Spender.sol";
 import "../../migrations/LibMigrate.sol";
 import "../../storage/LibERC1155OrdersStorage.sol";
@@ -28,8 +27,7 @@ import "./NFTOrders.sol";
 
 /// @dev Feature for interacting with ERC1155 orders.
 contract ERC1155OrdersFeature is IFeature, IERC1155OrdersFeature, FixinERC1155Spender, NFTOrders {
-    using LibSafeMathV06 for uint256;
-    using LibSafeMathV06 for uint128;
+    using LibRichErrors for bytes;
     using LibNFTOrder for LibNFTOrder.ERC1155Order;
     using LibNFTOrder for LibNFTOrder.NFTOrder;
 
@@ -115,7 +113,7 @@ contract ERC1155OrdersFeature is IFeature, IERC1155OrdersFeature, FixinERC1155Sp
         uint128 erc1155BuyAmount,
         bytes memory callbackData
     ) public payable override {
-        uint256 ethBalanceBefore = address(this).balance.safeSub(msg.value);
+        uint256 ethBalanceBefore = address(this).balance - msg.value;
         _buyERC1155(sellOrder, signature, BuyParams(erc1155BuyAmount, msg.value, callbackData));
         uint256 ethBalanceAfter = address(this).balance;
         // Cannot use pre-existing ETH balance
@@ -125,7 +123,7 @@ contract ERC1155OrdersFeature is IFeature, IERC1155OrdersFeature, FixinERC1155Sp
                 .rrevert();
         }
         // Refund
-        _transferEth(msg.sender, ethBalanceAfter - ethBalanceBefore);
+        _transferEth(payable(msg.sender), ethBalanceAfter - ethBalanceBefore);
     }
 
     /// @dev Cancel a single ERC1155 order by its nonce. The caller
@@ -182,7 +180,7 @@ contract ERC1155OrdersFeature is IFeature, IERC1155OrdersFeature, FixinERC1155Sp
         );
         successes = new bool[](sellOrders.length);
 
-        uint256 ethBalanceBefore = address(this).balance.safeSub(msg.value);
+        uint256 ethBalanceBefore = address(this).balance - msg.value;
         if (revertIfIncomplete) {
             for (uint256 i = 0; i < sellOrders.length; i++) {
                 // Will revert if _buyERC1155 reverts.
@@ -191,7 +189,7 @@ contract ERC1155OrdersFeature is IFeature, IERC1155OrdersFeature, FixinERC1155Sp
                     signatures[i],
                     BuyParams(
                         erc1155FillAmounts[i],
-                        address(this).balance.safeSub(ethBalanceBefore), // Remaining ETH available
+                        address(this).balance - (ethBalanceBefore), // Remaining ETH available
                         callbackData[i]
                     )
                 );
@@ -210,7 +208,7 @@ contract ERC1155OrdersFeature is IFeature, IERC1155OrdersFeature, FixinERC1155Sp
                         signatures[i],
                         BuyParams(
                             erc1155FillAmounts[i],
-                            address(this).balance.safeSub(ethBalanceBefore), // Remaining ETH available
+                            address(this).balance - (ethBalanceBefore), // Remaining ETH available
                             callbackData[i]
                         )
                     )
@@ -227,7 +225,7 @@ contract ERC1155OrdersFeature is IFeature, IERC1155OrdersFeature, FixinERC1155Sp
         }
 
         // Refund
-        _transferEth(msg.sender, ethBalanceAfter - ethBalanceBefore);
+        _transferEth(payable(msg.sender), ethBalanceAfter - ethBalanceBefore);
     }
 
     /// @dev Callback for the ERC1155 `safeTransferFrom` function.
@@ -270,7 +268,7 @@ contract ERC1155OrdersFeature is IFeature, IERC1155OrdersFeature, FixinERC1155Sp
             buyOrder,
             signature,
             SellParams(
-                value.safeDowncastToUint128(),
+                LibMath.safeDowncastToUint128(value),
                 tokenId,
                 unwrapNativeToken,
                 operator, // taker
@@ -482,7 +480,7 @@ contract ERC1155OrdersFeature is IFeature, IERC1155OrdersFeature, FixinERC1155Sp
             LibERC1155OrdersStorage.Storage storage stor = LibERC1155OrdersStorage.getStorage();
 
             LibERC1155OrdersStorage.OrderState storage orderState = stor.orderState[orderInfo.orderHash];
-            orderInfo.remainingAmount = order.erc1155TokenAmount.safeSub128(orderState.filledAmount);
+            orderInfo.remainingAmount = order.erc1155TokenAmount - orderState.filledAmount;
 
             // `orderCancellationByMaker` is indexed by maker and nonce.
             uint256 orderCancellationBitVector = stor.orderCancellationByMaker[order.maker][uint248(order.nonce >> 8)];

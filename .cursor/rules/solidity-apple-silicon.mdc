@@ -1,0 +1,48 @@
+---
+description: Solidity compiler compatibility and Apple Silicon support
+globs: "*.sol,foundry.toml,*.md"
+---
+
+# Solidity Apple Silicon 兼容性指南
+
+## 版本策略
+- **目标版本**: Solidity 0.8.28 (Apple Silicon 原生支持)
+- **EVM 版本**: shanghai
+- **编译器**: Foundry 1.2.3+
+
+## 项目模块状态
+
+### ✅ 完全升级模块
+- **Treasury** ([contracts/treasury/](mdc:contracts/treasury/)): 完全升级到 0.8.28
+  - 移除 SafeMath 调用，使用内置溢出检查
+  - 移除 `pragma experimental ABIEncoderV2`
+  - 构造函数语法现代化
+- **Governance** ([contracts/governance/](mdc:contracts/governance/)): 原生 0.8.28 支持
+
+### 🔄 混合版本模块
+- **ERC20** ([contracts/erc20/](mdc:contracts/erc20/)): 现代化 + 遗留分离
+  - `src/` - 现代化合约 (0.8.28)
+  - `legacy_contracts/` - 遗留合约 (0.4.11, 0.5.9, 0.6.x)
+
+## Apple Silicon 解决方案
+
+### 问题识别
+如果遇到 `Bad CPU type in executable (os error 86)` 错误：
+- 表示尝试使用不兼容 ARM64 的低版本编译器
+- 需要升级到 0.8.0+ 版本
+
+### 处理策略
+1. **优先升级**: 升级合约到 0.8.28
+2. **分离策略**: 将不兼容合约移至 `legacy_contracts/`
+3. **文档记录**: 创建 `README_APPLE_SILICON.md` 说明
+
+## 升级清单
+升级合约时必须处理：
+- [ ] 更新 pragma 版本
+- [ ] 移除 SafeMath 库调用
+- [ ] 移除 `pragma experimental ABIEncoderV2`
+- [ ] 修复构造函数语法 (`public` → 移除)
+- [ ] 检查 `chainid()` 函数可见性 (`pure` → `view`)
+- [ ] 更新 foundry.toml 配置
+
+参考升级示例: [contracts/treasury/contracts/src/ZrxTreasury.sol](mdc:contracts/treasury/contracts/src/ZrxTreasury.sol)

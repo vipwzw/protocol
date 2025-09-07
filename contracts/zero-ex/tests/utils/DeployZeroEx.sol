@@ -12,45 +12,44 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import "src/IZeroEx.sol";
-import "src/ZeroEx.sol";
-import "src/migrations/InitialMigration.sol";
-import "src/features/OwnableFeature.sol";
-import "src/features/SimpleFunctionRegistryFeature.sol";
-import "src/features/NativeOrdersFeature.sol";
-import "src/features/BatchFillNativeOrdersFeature.sol";
-import "src/features/FundRecoveryFeature.sol";
-import "src/features/TransformERC20Feature.sol";
-import "src/features/OtcOrdersFeature.sol";
-import "src/features/MetaTransactionsFeature.sol";
-import "src/features/MetaTransactionsFeatureV2.sol";
-import "src/features/nft_orders/ERC1155OrdersFeature.sol";
-import "src/features/nft_orders/ERC721OrdersFeature.sol";
-import "src/features/UniswapFeature.sol";
-import "src/features/UniswapV3Feature.sol";
-import "src/features/multiplex/MultiplexFeature.sol";
-import "src/external/TransformerDeployer.sol";
-import "src/external/FeeCollectorController.sol";
-import "src/external/LiquidityProviderSandbox.sol";
-import "src/transformers/WethTransformer.sol";
-import "src/transformers/FillQuoteTransformer.sol";
-import "src/transformers/PayTakerTransformer.sol";
-import "src/transformers/AffiliateFeeTransformer.sol";
-import "src/transformers/PositiveSlippageFeeTransformer.sol";
-import "src/transformers/bridges/IBridgeAdapter.sol";
-import "src/transformers/bridges/EthereumBridgeAdapter.sol";
+import "contracts/src/IZeroEx.sol";
+import "contracts/src/ZeroEx.sol";
+import "contracts/src/migrations/InitialMigration.sol";
+import "contracts/src/features/OwnableFeature.sol";
+import "contracts/src/features/SimpleFunctionRegistryFeature.sol";
+import "contracts/src/features/NativeOrdersFeature.sol";
+import "contracts/src/features/BatchFillNativeOrdersFeature.sol";
+import "contracts/src/features/FundRecoveryFeature.sol";
+import "contracts/src/features/TransformERC20Feature.sol";
+import "contracts/src/features/OtcOrdersFeature.sol";
+import "contracts/src/features/MetaTransactionsFeature.sol";
+import "contracts/src/features/MetaTransactionsFeatureV2.sol";
+import "contracts/src/features/nft_orders/ERC1155OrdersFeature.sol";
+import "contracts/src/features/nft_orders/ERC721OrdersFeature.sol";
+import "contracts/src/features/UniswapFeature.sol";
+import "contracts/src/features/UniswapV3Feature.sol";
+import "contracts/src/features/multiplex/MultiplexFeature.sol";
+import "contracts/src/external/TransformerDeployer.sol";
+import "contracts/src/external/FeeCollectorController.sol";
+import "contracts/src/external/LiquidityProviderSandbox.sol";
+import "contracts/src/transformers/WethTransformer.sol";
+import "contracts/src/transformers/FillQuoteTransformer.sol";
+import "contracts/src/transformers/PayTakerTransformer.sol";
+import "contracts/src/transformers/AffiliateFeeTransformer.sol";
+import "contracts/src/transformers/PositiveSlippageFeeTransformer.sol";
+import "contracts/src/transformers/bridges/IBridgeAdapter.sol";
+import "contracts/src/transformers/bridges/EthereumBridgeAdapter.sol";
 
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-erc20/src/v06/WETH9V06.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import "@0x/contracts-erc20/contracts/src/WETH9.sol";
 
 contract DeployZeroEx is Test {
-    ZeroEx public ZERO_EX = ZeroEx(0xDef1C0ded9bec7F1a1670819833240f027b25EfF);
-    IZeroEx public IZERO_EX = IZeroEx(address(ZERO_EX));
+    ZeroEx public ZERO_EX = ZeroEx(payable(0xDef1C0ded9bec7F1a1670819833240f027b25EfF));
+    IZeroEx public IZERO_EX = IZeroEx(payable(address(ZERO_EX)));
     address VANITY_DEPLOYER_ADDRESS = 0xe750ad66DE350F8110E305fb78Ec6A9f594445E3;
     /* solhint-disable max-line-length */
     bytes deployerBytecode =
@@ -162,7 +161,7 @@ contract DeployZeroEx is Test {
             return ZERO_EX_DEPLOYED;
         }
 
-        ZERO_EX_DEPLOYED.weth = IEtherToken(address(new WETH9V06()));
+        ZERO_EX_DEPLOYED.weth = IEtherToken(address(new WETH9()));
         InitialMigration initialMigration = new InitialMigration(address(this));
         // Append the required ZeroEx constructor arguments (address bootstrapper)
         bytes memory zeroExDeploycode = abi.encodePacked(type(ZeroEx).creationCode, abi.encode(initialMigration));

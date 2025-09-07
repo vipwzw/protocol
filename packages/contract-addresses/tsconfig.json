@@ -4,7 +4,8 @@
         "outDir": "lib",
         "rootDir": ".",
         "resolveJsonModule": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "composite": true
     },
     "include": ["./src/**/*", "./test/**/*"],
     "files": ["./addresses.json"]

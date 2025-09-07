@@ -12,10 +12,9 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../fixins/FixinCommon.sol";
 import "../storage/LibProxyStorage.sol";
 import "../storage/LibSimpleFunctionRegistryStorage.sol";
@@ -31,7 +30,7 @@ contract SimpleFunctionRegistryFeature is IFeature, ISimpleFunctionRegistryFeatu
     /// @dev Version of this feature.
     uint256 public immutable override FEATURE_VERSION = _encodeVersion(1, 0, 0);
 
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev Initializes this feature, registering its own functions.
     /// @return success Magic bytes if successful.

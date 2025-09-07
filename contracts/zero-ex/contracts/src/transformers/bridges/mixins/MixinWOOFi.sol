@@ -12,14 +12,12 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
 import "../IBridgeAdapter.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
 
 /// @dev WooFI pool interface.
 interface IWooPP {
@@ -42,9 +40,8 @@ interface IWooPP {
 }
 
 contract MixinWOOFi {
-    using LibERC20TokenV06 for IERC20Token;
-    using LibERC20TokenV06 for IEtherToken;
-    using LibSafeMathV06 for uint256;
+    using LibERC20Token for IERC20Token;
+    using LibERC20Token for IEtherToken;
 
     // solhint-disable-next-line const-name-snakecase
     address constant rebateAddress = 0xBfdcBB4C05843163F491C24f9c0019c510786304;
@@ -58,7 +55,7 @@ contract MixinWOOFi {
         IWooPP _router = abi.decode(bridgeData, (IWooPP));
         uint256 beforeBalance = buyToken.balanceOf(address(this));
 
-        sellToken.approveIfBelow(address(_router), sellAmount);
+        sellToken.approve(address(_router), sellAmount);
 
         boughtAmount = _router.swap(address(sellToken), address(buyToken), sellAmount, 0, address(this), rebateAddress);
     }

@@ -12,20 +12,17 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6;
-
-pragma experimental ABIEncoderV2;
-
+pragma solidity ^0.8.0;
 import "../utils/ForkUtils.sol";
 import "../utils/TestUtils.sol";
-import "src/IZeroEx.sol";
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "src/features/TransformERC20Feature.sol";
-import "src/external/TransformerDeployer.sol";
-import "src/transformers/WethTransformer.sol";
-import "src/transformers/FillQuoteTransformer.sol";
-import "src/transformers/bridges/BridgeProtocols.sol";
-import "src/features/OtcOrdersFeature.sol";
+import "contracts/src/IZeroEx.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import "contracts/src/features/TransformERC20Feature.sol";
+import "contracts/src/external/TransformerDeployer.sol";
+import "contracts/src/transformers/WethTransformer.sol";
+import "contracts/src/transformers/FillQuoteTransformer.sol";
+import "contracts/src/transformers/bridges/BridgeProtocols.sol";
+import "contracts/src/features/OtcOrdersFeature.sol";
 
 contract SwapEthForERC20Test is Test, ForkUtils, TestUtils {
     function setUp() public {
@@ -34,14 +31,14 @@ contract SwapEthForERC20Test is Test, ForkUtils, TestUtils {
     }
 
     function swapEthForERC20OnUniswap() public {
-        log_string("SwapEthForERC20OnUniswap");
+        emit log_string("SwapEthForERC20OnUniswap");
         for (uint256 i = 0; i < chains.length; i++) {
             //skip fantom/avax failing test
             if (i == 3 || i == 4) {
                 continue;
             }
             vm.selectFork(forkIds[chains[i]]);
-            log_named_string("  Selecting Fork On", chains[i]);
+            emit log_named_string("  Selecting Fork On", chains[i]);
             labelAddresses(
                 chains[i],
                 indexChainsByChain[chains[i]],
@@ -157,10 +154,10 @@ contract SwapEthForERC20Test is Test, ForkUtils, TestUtils {
                 transformations
             );
 
-            log_named_uint("        NativeAsset balance before", balanceETHBefore);
-            log_named_uint("        ERC-20 balance before", balanceERC20Before);
-            log_named_uint("        NativeAsset balance after", balanceETHBefore - address(this).balance);
-            log_named_uint(
+            emit log_named_uint("        NativeAsset balance before", balanceETHBefore);
+            emit log_named_uint("        ERC-20 balance before", balanceERC20Before);
+            emit log_named_uint("        NativeAsset balance after", balanceETHBefore - address(this).balance);
+            emit log_named_uint(
                 "        ERC-20 balance after",
                 IERC20Token(tokens.USDT).balanceOf(address(this)) - balanceERC20Before
             );
@@ -186,10 +183,10 @@ contract SwapEthForERC20Test is Test, ForkUtils, TestUtils {
         amounts[0] = amount;
         uint256 out = sampleSellsFromUniswapV2(router, path, amounts)[0];
 
-        log_string("       Sampling Uniswap for tokens");
-        log_named_address("        ", takerToken);
-        log_string("           -> ");
-        log_named_address("        ", makerToken);
+        emit log_string("       Sampling Uniswap for tokens");
+        emit log_named_address("        ", takerToken);
+        emit log_string("           -> ");
+        emit log_named_address("        ", makerToken);
         return out;
     }
 }

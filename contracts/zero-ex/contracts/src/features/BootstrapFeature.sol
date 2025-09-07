@@ -12,10 +12,9 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../migrations/LibBootstrap.sol";
 import "../storage/LibProxyStorage.sol";
 import "./interfaces/IBootstrapFeature.sol";
@@ -32,7 +31,7 @@ contract BootstrapFeature is IBootstrapFeature {
     ///      This has to be immutable to persist across delegatecalls.
     address private immutable _bootstrapCaller;
 
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev Construct this contract and set the bootstrap migration contract.
     ///      After constructing this contract, `bootstrap()` should be called
@@ -69,6 +68,6 @@ contract BootstrapFeature is IBootstrapFeature {
         if (msg.sender != _deployer) {
             LibProxyRichErrors.InvalidDieCallerError(msg.sender, _deployer).rrevert();
         }
-        selfdestruct(msg.sender);
+        selfdestruct(payable(msg.sender));
     }
 }

@@ -1,10 +1,6 @@
-import {
-    BlockchainTestsEnvironment,
-    constants,
-    expect,
-    getRandomInteger,
-    randomAddress,
-} from '@0x/contracts-test-utils';
+import { ethers } from 'hardhat';
+import { BlockchainTestsEnvironment, constants, getRandomInteger, randomAddress } from '@0x/utils';
+import { expect } from 'chai';
 import {
     LimitOrder,
     LimitOrderFields,
@@ -15,7 +11,7 @@ import {
     RfqOrderFields,
     SignatureType,
 } from '@0x/protocol-utils';
-import { BigNumber, hexUtils } from '@0x/utils';
+import { hexUtils } from '@0x/utils';
 import { TransactionReceiptWithDecodedLogs } from 'ethereum-types';
 
 import {
@@ -26,20 +22,20 @@ import {
 } from '../../src/wrappers';
 import { artifacts } from '../artifacts';
 import { fullMigrateAsync } from '../utils/migration';
-import { TestMintableERC20TokenContract } from '../wrappers';
+import { TestMintableERC20TokenContract, TestMintableERC20Token__factory } from '../wrappers';
 
 const { ZERO_AMOUNT: ZERO, NULL_ADDRESS } = constants;
 
 interface RfqOrderFilledAmounts {
-    makerTokenFilledAmount: BigNumber;
-    takerTokenFilledAmount: BigNumber;
+    makerTokenFilledAmount: bigint;
+    takerTokenFilledAmount: bigint;
 }
 type OtcOrderFilledAmounts = RfqOrderFilledAmounts;
 
 interface LimitOrderFilledAmounts {
-    makerTokenFilledAmount: BigNumber;
-    takerTokenFilledAmount: BigNumber;
-    takerTokenFeeFilledAmount: BigNumber;
+    makerTokenFilledAmount: bigint;
+    takerTokenFilledAmount: bigint;
+    takerTokenFeeFilledAmount: bigint;
 }
 
 export enum OtcOrderWethOptions {
@@ -51,23 +47,22 @@ export enum OtcOrderWethOptions {
 export class NativeOrdersTestEnvironment {
     public static async createAsync(
         env: BlockchainTestsEnvironment,
-        gasPrice: BigNumber = new BigNumber('123e9'),
+        gasPrice: bigint = ethers.parseUnits('123', 9),
         protocolFeeMultiplier = 70e3,
     ): Promise<NativeOrdersTestEnvironment> {
         const [owner, maker, taker] = await env.getAccountAddressesAsync();
-        const [makerToken, takerToken] = await Promise.all(
-            [...new Array(2)].map(async () =>
-                TestMintableERC20TokenContract.deployFrom0xArtifactAsync(
-                    artifacts.TestMintableERC20Token,
-                    env.provider,
-                    { ...env.txDefaults, gasPrice },
-                    artifacts,
-                ),
-            ),
-        );
+        const signer = await env.provider.getSigner(owner);
+
+        // Deploy tokens
+        const tokenFactories = [...new Array(2)].map(() => new TestMintableERC20Token__factory(signer));
+        const tokenDeployments = await Promise.all(tokenFactories.map(factory => factory.deploy()));
+        await Promise.all(tokenDeployments.map(token => token.waitForDeployment()));
+        const [makerToken, takerToken] = tokenDeployments;
         const zeroEx = await fullMigrateAsync(owner, env.provider, env.txDefaults, {}, { protocolFeeMultiplier });
-        await makerToken.approve(zeroEx.address, constants.MAX_UINT256).awaitTransactionSuccessAsync({ from: maker });
-        await takerToken.approve(zeroEx.address, constants.MAX_UINT256).awaitTransactionSuccessAsync({ from: taker });
+        const makerSigner = await env.provider.getSigner(maker);
+        const takerSigner = await env.provider.getSigner(taker);
+        await makerToken.connect(makerSigner).approve(await zeroEx.getAddress(), constants.MAX_UINT256);
+        await takerToken.connect(takerSigner).approve(await zeroEx.getAddress(), constants.MAX_UINT256);
         return new NativeOrdersTestEnvironment(
             maker,
             taker,
@@ -75,7 +70,7 @@ export class NativeOrdersTestEnvironment {
             takerToken,
             zeroEx,
             gasPrice,
-            gasPrice.times(protocolFeeMultiplier),
+            gasPrice * BigInt(protocolFeeMultiplier),
             env,
         );
     }
@@ -86,8 +81,8 @@ export class NativeOrdersTestEnvironment {
         public readonly makerToken: TestMintableERC20TokenContract,
         public readonly takerToken: TestMintableERC20TokenContract,
         public readonly zeroEx: IZeroExContract,
-        public readonly gasPrice: BigNumber,
-        public readonly protocolFee: BigNumber,
+        public readonly gasPrice: bigint,
+        public readonly protocolFee: bigint,
         private readonly _env: BlockchainTestsEnvironment,
     ) {}
 
@@ -95,27 +90,28 @@ export class NativeOrdersTestEnvironment {
         orders: LimitOrder[] | RfqOrder[] | OtcOrder[],
         taker: string = this.taker,
     ): Promise<void> {
-        await this.makerToken
-            .mint(this.maker, BigNumber.sum(...(orders as OrderBase[]).map(order => order.makerAmount)))
-            .awaitTransactionSuccessAsync();
-        await this.takerToken
-            .mint(
-                taker,
-                BigNumber.sum(
-                    ...(orders as OrderBase[]).map(order =>
-                        order.takerAmount.plus(order instanceof LimitOrder ? order.takerTokenFeeAmount : 0),
-                    ),
-                ),
-            )
-            .awaitTransactionSuccessAsync();
+        await this.makerToken.mint(
+            this.maker,
+            (orders as OrderBase[]).map(order => BigInt(order.makerAmount || 0)).reduce((a, b) => a + b, 0n),
+        );
+        await this.takerToken.mint(
+            taker,
+            (orders as OrderBase[])
+                .map(
+                    order =>
+                        BigInt(order.takerAmount || 0) +
+                        (order instanceof LimitOrder ? BigInt(order.takerTokenFeeAmount || 0) : 0n),
+                )
+                .reduce((a, b) => a + b, 0n),
+        );
     }
 
     public async fillLimitOrderAsync(
         order: LimitOrder,
         opts: Partial<{
-            fillAmount: BigNumber | number;
+            fillAmount: bigint | number;
             taker: string;
-            protocolFee: BigNumber | number;
+            protocolFee: bigint | number;
         }> = {},
     ): Promise<TransactionReceiptWithDecodedLogs> {
         const { fillAmount, taker, protocolFee } = {
@@ -125,53 +121,56 @@ export class NativeOrdersTestEnvironment {
         };
         await this.prepareBalancesForOrdersAsync([order], taker);
         const value = protocolFee === undefined ? this.protocolFee : protocolFee;
-        return this.zeroEx
-            .fillLimitOrder(
-                order,
-                await order.getSignatureWithProviderAsync(this._env.provider),
-                new BigNumber(fillAmount),
-            )
-            .awaitTransactionSuccessAsync({ from: taker, value });
+        const takerSigner = await this._env.provider.getSigner(taker);
+
+        // 使用 INativeOrdersFeature 接口调用
+        const nativeOrdersFeature = await ethers.getContractAt('INativeOrdersFeature', await this.zeroEx.getAddress());
+        const tx = await nativeOrdersFeature
+            .connect(takerSigner)
+            .fillLimitOrder(order, await order.getSignatureWithProviderAsync(this._env.provider), BigInt(fillAmount), {
+                value,
+            });
+        return await tx.wait();
     }
 
     public async fillRfqOrderAsync(
         order: RfqOrder,
-        fillAmount: BigNumber | number = order.takerAmount,
+        fillAmount: bigint | number = order.takerAmount,
         taker: string = this.taker,
     ): Promise<TransactionReceiptWithDecodedLogs> {
         await this.prepareBalancesForOrdersAsync([order], taker);
-        return this.zeroEx
-            .fillRfqOrder(
-                order,
-                await order.getSignatureWithProviderAsync(this._env.provider),
-                new BigNumber(fillAmount),
-            )
-            .awaitTransactionSuccessAsync({ from: taker });
+        const takerSigner = await this._env.provider.getSigner(taker);
+
+        // 使用 INativeOrdersFeature 接口调用
+        const nativeOrdersFeature = await ethers.getContractAt('INativeOrdersFeature', await this.zeroEx.getAddress());
+        const tx = await nativeOrdersFeature
+            .connect(takerSigner)
+            .fillRfqOrder(order, await order.getSignatureWithProviderAsync(this._env.provider), BigInt(fillAmount));
+        return await tx.wait();
     }
 
     public async fillOtcOrderAsync(
         order: OtcOrder,
-        fillAmount: BigNumber | number = order.takerAmount,
+        fillAmount: bigint | number = order.takerAmount,
         taker: string = this.taker,
         unwrapWeth = false,
     ): Promise<TransactionReceiptWithDecodedLogs> {
         await this.prepareBalancesForOrdersAsync([order], taker);
+        const takerSigner = await this._env.provider.getSigner(taker);
         if (unwrapWeth) {
-            return this.zeroEx
+            const tx = await this.zeroEx
+                .connect(takerSigner)
                 .fillOtcOrderForEth(
                     order,
                     await order.getSignatureWithProviderAsync(this._env.provider),
-                    new BigNumber(fillAmount),
-                )
-                .awaitTransactionSuccessAsync({ from: taker });
+                    BigInt(fillAmount),
+                );
+            return await tx.wait();
         } else {
-            return this.zeroEx
-                .fillOtcOrder(
-                    order,
-                    await order.getSignatureWithProviderAsync(this._env.provider),
-                    new BigNumber(fillAmount),
-                )
-                .awaitTransactionSuccessAsync({ from: taker });
+            const tx = await this.zeroEx
+                .connect(takerSigner)
+                .fillOtcOrder(order, await order.getSignatureWithProviderAsync(this._env.provider), BigInt(fillAmount));
+            return await tx.wait();
         }
     }
 
@@ -182,40 +181,48 @@ export class NativeOrdersTestEnvironment {
         unwrapWeth = false,
     ): Promise<TransactionReceiptWithDecodedLogs> {
         await this.prepareBalancesForOrdersAsync([order], taker);
+        const originSigner = await this._env.provider.getSigner(origin);
         if (unwrapWeth) {
-            return this.zeroEx
+            const tx = await this.zeroEx
+                .connect(originSigner)
                 .fillTakerSignedOtcOrderForEth(
                     order,
                     await order.getSignatureWithProviderAsync(this._env.provider),
                     await order.getSignatureWithProviderAsync(this._env.provider, SignatureType.EthSign, taker),
-                )
-                .awaitTransactionSuccessAsync({ from: origin });
+                );
+            return await tx.wait();
         } else {
-            return this.zeroEx
+            const otcOrdersFeature = await ethers.getContractAt('IOtcOrdersFeature', await this.zeroEx.getAddress());
+            const tx = await otcOrdersFeature
+                .connect(originSigner)
                 .fillTakerSignedOtcOrder(
                     order,
                     await order.getSignatureWithProviderAsync(this._env.provider),
                     await order.getSignatureWithProviderAsync(this._env.provider, SignatureType.EthSign, taker),
-                )
-                .awaitTransactionSuccessAsync({ from: origin });
+                );
+            return await tx.wait();
         }
     }
 
     public async fillOtcOrderWithEthAsync(
         order: OtcOrder,
-        fillAmount: BigNumber | number = order.takerAmount,
+        fillAmount: bigint | number = order.takerAmount,
         taker: string = this.taker,
     ): Promise<TransactionReceiptWithDecodedLogs> {
         await this.prepareBalancesForOrdersAsync([order], taker);
-        return this.zeroEx
-            .fillOtcOrderWithEth(order, await order.getSignatureWithProviderAsync(this._env.provider))
-            .awaitTransactionSuccessAsync({ from: taker, value: fillAmount });
+        const takerSigner = await this._env.provider.getSigner(taker);
+        const tx = await this.zeroEx
+            .connect(takerSigner)
+            .fillOtcOrderWithEth(order, await order.getSignatureWithProviderAsync(this._env.provider), {
+                value: fillAmount,
+            });
+        return await tx.wait();
     }
 
     public createLimitOrderFilledEventArgs(
         order: LimitOrder,
-        takerTokenFillAmount: BigNumber = order.takerAmount,
-        takerTokenAlreadyFilledAmount: BigNumber = ZERO,
+        takerTokenFillAmount: bigint = order.takerAmount,
+        takerTokenAlreadyFilledAmount: bigint = ZERO,
     ): IZeroExLimitOrderFilledEventArgs {
         const { makerTokenFilledAmount, takerTokenFilledAmount, takerTokenFeeFilledAmount } =
             computeLimitOrderFilledAmounts(order, takerTokenFillAmount, takerTokenAlreadyFilledAmount);
@@ -237,8 +244,8 @@ export class NativeOrdersTestEnvironment {
 
     public createRfqOrderFilledEventArgs(
         order: RfqOrder,
-        takerTokenFillAmount: BigNumber = order.takerAmount,
-        takerTokenAlreadyFilledAmount: BigNumber = ZERO,
+        takerTokenFillAmount: bigint = order.takerAmount,
+        takerTokenAlreadyFilledAmount: bigint = ZERO,
     ): IZeroExRfqOrderFilledEventArgs {
         const { makerTokenFilledAmount, takerTokenFilledAmount } = computeRfqOrderFilledAmounts(
             order,
@@ -259,7 +266,7 @@ export class NativeOrdersTestEnvironment {
 
     public createOtcOrderFilledEventArgs(
         order: OtcOrder,
-        takerTokenFillAmount: BigNumber = order.takerAmount,
+        takerTokenFillAmount: bigint = order.takerAmount,
     ): IZeroExOtcOrderFilledEventArgs {
         const { makerTokenFilledAmount, takerTokenFilledAmount } = computeOtcOrderFilledAmounts(
             order,
@@ -292,8 +299,8 @@ export function getRandomLimitOrder(fields: Partial<LimitOrderFields> = {}): Lim
         sender: randomAddress(),
         feeRecipient: randomAddress(),
         pool: hexUtils.random(),
-        expiry: new BigNumber(Math.floor(Date.now() / 1000 + 60)),
-        salt: new BigNumber(hexUtils.random()),
+        expiry: BigInt(Math.floor(Date.now() / 1000 + 3600)), // 1小时过期时间，避免测试过程中过期
+        salt: BigInt(hexUtils.random()),
         ...fields,
     });
 }
@@ -308,10 +315,11 @@ export function getRandomRfqOrder(fields: Partial<RfqOrderFields> = {}): RfqOrde
         makerAmount: getRandomInteger('1e18', '100e18'),
         takerAmount: getRandomInteger('1e6', '100e6'),
         maker: randomAddress(),
+        taker: randomAddress(), // 添加 taker 字段
         txOrigin: randomAddress(),
         pool: hexUtils.random(),
-        expiry: new BigNumber(Math.floor(Date.now() / 1000 + 60)),
-        salt: new BigNumber(hexUtils.random()),
+        expiry: BigInt(Math.floor(Date.now() / 1000 + 3600)), // 1小时过期时间
+        salt: BigInt(hexUtils.random()),
         ...fields,
     });
 }
@@ -329,7 +337,7 @@ export function getRandomOtcOrder(fields: Partial<OtcOrder> = {}): OtcOrder {
         taker: randomAddress(),
         txOrigin: randomAddress(),
         expiryAndNonce: OtcOrder.encodeExpiryAndNonce(
-            fields.expiry ?? new BigNumber(Math.floor(Date.now() / 1000 + 60)), // expiry
+            fields.expiry ?? BigInt(Math.floor(Date.now() / 1000 + 60)), // expiry
             fields.nonceBucket ?? getRandomInteger(0, OtcOrder.MAX_NONCE_BUCKET), // nonceBucket
             fields.nonce ?? getRandomInteger(0, OtcOrder.MAX_NONCE_VALUE), // nonce
         ),
@@ -343,16 +351,18 @@ export function getRandomOtcOrder(fields: Partial<OtcOrder> = {}): OtcOrder {
 export function assertOrderInfoEquals(actual: OrderInfo, expected: OrderInfo): void {
     expect(actual.status, 'Order status').to.eq(expected.status);
     expect(actual.orderHash, 'Order hash').to.eq(expected.orderHash);
-    expect(actual.takerTokenFilledAmount, 'Order takerTokenFilledAmount').to.bignumber.eq(
-        expected.takerTokenFilledAmount,
-    );
+    expect(actual.takerTokenFilledAmount, 'Order takerTokenFilledAmount').to.eq(expected.takerTokenFilledAmount);
 }
 
 /**
  * Creates an order expiry field.
+ * Uses blockchain time instead of JavaScript time to avoid issues
+ * when previous tests have advanced blockchain time with increaseTimeAsync.
  */
-export function createExpiry(deltaSeconds = 60): BigNumber {
-    return new BigNumber(Math.floor(Date.now() / 1000) + deltaSeconds);
+export async function createExpiry(deltaSeconds = 60): Promise<bigint> {
+    // 使用区块链时间而不是 JavaScript 时间
+    const currentBlock = await ethers.provider.getBlock('latest');
+    return BigInt(currentBlock.timestamp + deltaSeconds);
 }
 
 /**
@@ -361,22 +371,13 @@ export function createExpiry(deltaSeconds = 60): BigNumber {
  */
 export function computeLimitOrderFilledAmounts(
     order: LimitOrder,
-    takerTokenFillAmount: BigNumber = order.takerAmount,
-    takerTokenAlreadyFilledAmount: BigNumber = ZERO,
+    takerTokenFillAmount: bigint = order.takerAmount,
+    takerTokenAlreadyFilledAmount: bigint = ZERO,
 ): LimitOrderFilledAmounts {
-    const fillAmount = BigNumber.min(
-        order.takerAmount,
-        takerTokenFillAmount,
-        order.takerAmount.minus(takerTokenAlreadyFilledAmount),
-    );
-    const makerTokenFilledAmount = fillAmount
-        .times(order.makerAmount)
-        .div(order.takerAmount)
-        .integerValue(BigNumber.ROUND_DOWN);
-    const takerTokenFeeFilledAmount = fillAmount
-        .times(order.takerTokenFeeAmount)
-        .div(order.takerAmount)
-        .integerValue(BigNumber.ROUND_DOWN);
+    const candidates = [order.takerAmount, takerTokenFillAmount, order.takerAmount - takerTokenAlreadyFilledAmount];
+    const fillAmount = candidates.reduce((min, v) => (v < min ? v : min));
+    const makerTokenFilledAmount = (fillAmount * order.makerAmount) / order.takerAmount;
+    const takerTokenFeeFilledAmount = (fillAmount * order.takerTokenFeeAmount) / order.takerAmount;
     return {
         makerTokenFilledAmount,
         takerTokenFilledAmount: fillAmount,
@@ -389,18 +390,12 @@ export function computeLimitOrderFilledAmounts(
  */
 export function computeRfqOrderFilledAmounts(
     order: RfqOrder,
-    takerTokenFillAmount: BigNumber = order.takerAmount,
-    takerTokenAlreadyFilledAmount: BigNumber = ZERO,
+    takerTokenFillAmount: bigint = order.takerAmount,
+    takerTokenAlreadyFilledAmount: bigint = ZERO,
 ): RfqOrderFilledAmounts {
-    const fillAmount = BigNumber.min(
-        order.takerAmount,
-        takerTokenFillAmount,
-        order.takerAmount.minus(takerTokenAlreadyFilledAmount),
-    );
-    const makerTokenFilledAmount = fillAmount
-        .times(order.makerAmount)
-        .div(order.takerAmount)
-        .integerValue(BigNumber.ROUND_DOWN);
+    const candidates = [order.takerAmount, takerTokenFillAmount, order.takerAmount - takerTokenAlreadyFilledAmount];
+    const fillAmount = candidates.reduce((min, v) => (v < min ? v : min));
+    const makerTokenFilledAmount = (fillAmount * order.makerAmount) / order.takerAmount;
     return {
         makerTokenFilledAmount,
         takerTokenFilledAmount: fillAmount,
@@ -412,13 +407,10 @@ export function computeRfqOrderFilledAmounts(
  */
 export function computeOtcOrderFilledAmounts(
     order: OtcOrder,
-    takerTokenFillAmount: BigNumber = order.takerAmount,
+    takerTokenFillAmount: bigint = order.takerAmount,
 ): OtcOrderFilledAmounts {
-    const fillAmount = BigNumber.min(order.takerAmount, takerTokenFillAmount, order.takerAmount);
-    const makerTokenFilledAmount = fillAmount
-        .times(order.makerAmount)
-        .div(order.takerAmount)
-        .integerValue(BigNumber.ROUND_DOWN);
+    const fillAmount = takerTokenFillAmount < order.takerAmount ? takerTokenFillAmount : order.takerAmount;
+    const makerTokenFilledAmount = (fillAmount * order.makerAmount) / order.takerAmount;
     return {
         makerTokenFilledAmount,
         takerTokenFilledAmount: fillAmount,
@@ -431,13 +423,9 @@ export function computeOtcOrderFilledAmounts(
  */
 export function getFillableMakerTokenAmount(
     order: LimitOrder | RfqOrder,
-    takerTokenFilledAmount: BigNumber = ZERO,
-): BigNumber {
-    return order.takerAmount
-        .minus(takerTokenFilledAmount)
-        .times(order.makerAmount)
-        .div(order.takerAmount)
-        .integerValue(BigNumber.ROUND_DOWN);
+    takerTokenFilledAmount: bigint = ZERO,
+): bigint {
+    return ((order.takerAmount - takerTokenFilledAmount) * order.makerAmount) / order.takerAmount;
 }
 
 /**
@@ -446,13 +434,22 @@ export function getFillableMakerTokenAmount(
  */
 export function getActualFillableTakerTokenAmount(
     order: LimitOrder | RfqOrder,
-    makerBalance: BigNumber = order.makerAmount,
-    makerAllowance: BigNumber = order.makerAmount,
-    takerTokenFilledAmount: BigNumber = ZERO,
-): BigNumber {
-    const fillableMakerTokenAmount = getFillableMakerTokenAmount(order, takerTokenFilledAmount);
-    return BigNumber.min(fillableMakerTokenAmount, makerBalance, makerAllowance)
-        .times(order.takerAmount)
-        .div(order.makerAmount)
-        .integerValue(BigNumber.ROUND_UP);
+    makerBalance: bigint = order.makerAmount,
+    makerAllowance: bigint = order.makerAmount,
+    takerTokenFilledAmount: bigint = ZERO,
+): bigint {
+    // 实现与合约相同的计算逻辑，包括正确的舍入方式
+
+    // 1. 计算 fillableMakerTokenAmount (使用 Floor 舍入，与合约 getPartialAmountFloor 一致)
+    const remainingTakerAmount = order.takerAmount - takerTokenFilledAmount;
+    const fillableMakerTokenAmount = (remainingTakerAmount * order.makerAmount) / order.takerAmount;
+
+    // 2. 限制到实际可用的余额和授权 (取最小值)
+    const minCap = [fillableMakerTokenAmount, makerBalance, makerAllowance].reduce((min, v) => (v < min ? v : min));
+
+    // 3. 转换回 taker token 数量 (使用 Ceil 舍入，与合约 getPartialAmountCeil 一致)
+    // ceil(a / b) = floor((a + b - 1) / b)
+    const result = (minCap * order.takerAmount + (order.makerAmount - 1n)) / order.makerAmount;
+
+    return result;
 }

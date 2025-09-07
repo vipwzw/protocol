@@ -12,10 +12,9 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../errors/LibProxyRichErrors.sol";
 
 library LibBootstrap {
@@ -23,7 +22,7 @@ library LibBootstrap {
     ///      This is `keccack('BOOTSTRAP_SUCCESS')`.
     bytes4 internal constant BOOTSTRAP_SUCCESS = 0xd150751b;
 
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     /// @dev Perform a delegatecall and ensure it returns the magic bytes.
     /// @param target The call target.

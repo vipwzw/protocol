@@ -12,15 +12,14 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IEtherToken.sol";
-import "@0x/contracts-utils/contracts/src/v06/AuthorizableV06.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IEtherToken.sol";
+import "@0x/contracts-utils/contracts/src/Authorizable.sol";
 import "../vendor/v3/IStaking.sol";
 
 /// @dev The collector contract for protocol fees
-contract FeeCollector is AuthorizableV06 {
+contract FeeCollector is Authorizable {
     /// @dev Allow ether transfers to the collector.
     receive() external payable {}
 

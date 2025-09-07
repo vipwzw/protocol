@@ -12,8 +12,7 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 contract TestFeeRecipient {
     bytes4 private constant SUCCESS = this.receiveZeroExFeeCallback.selector;

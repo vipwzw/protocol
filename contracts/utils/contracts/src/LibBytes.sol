@@ -1,6 +1,7 @@
+// SPDX-License-Identifier: Apache-2.0
 /*
 
-  Copyright 2019 ZeroEx Intl.
+  Copyright 2020 ZeroEx Intl.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -16,10 +17,10 @@
 
 */
 
-pragma solidity ^0.5.9;
+pragma solidity ^0.8;
 
-import "./LibBytesRichErrors.sol";
-import "./LibRichErrors.sol";
+import "./errors/LibBytesRichErrors.sol";
+import "./errors/LibRichErrors.sol";
 
 library LibBytes {
     using LibBytes for bytes;
@@ -30,7 +31,7 @@ library LibBytes {
     ///         points to the header of the byte array which contains
     ///         the length.
     function rawAddress(bytes memory input) internal pure returns (uint256 memoryAddress) {
-        assembly {
+        assembly ("memory-safe") {
             memoryAddress := input
         }
         return memoryAddress;
@@ -40,7 +41,7 @@ library LibBytes {
     /// @param input Byte array to lookup.
     /// @return memoryAddress Memory address of the contents of the byte array.
     function contentAddress(bytes memory input) internal pure returns (uint256 memoryAddress) {
-        assembly {
+        assembly ("memory-safe") {
             memoryAddress := add(input, 32)
         }
         return memoryAddress;
@@ -178,11 +179,12 @@ library LibBytes {
     }
 
     /// @dev Returns a slice from a byte array without preserving the input.
+    ///      When `from == 0`, the original array will match the slice.
+    ///      In other cases its state will be corrupted.
     /// @param b The byte array to take a slice from. Will be destroyed in the process.
     /// @param from The starting index for the slice (inclusive).
     /// @param to The final index for the slice (exclusive).
     /// @return result The slice containing bytes at indices [from, to)
-    /// @dev When `from == 0`, the original array will match the slice. In other cases its state will be corrupted.
     function sliceDestructive(bytes memory b, uint256 from, uint256 to) internal pure returns (bytes memory result) {
         // Ensure that the from and to positions are valid positions for a slice within
         // the byte array that is being used.
@@ -215,7 +217,7 @@ library LibBytes {
 
     /// @dev Pops the last byte off of a byte array by modifying its length.
     /// @param b Byte array that will be modified.
-    /// @return The byte that was popped off.
+    /// @return result The byte that was popped off.
     function popLastByte(bytes memory b) internal pure returns (bytes1 result) {
         if (b.length == 0) {
             LibRichErrors.rrevert(
@@ -230,7 +232,7 @@ library LibBytes {
         // Store last byte.
         result = b[b.length - 1];
 
-        assembly {
+        assembly ("memory-safe") {
             // Decrement length of byte array.
             let newLen := sub(mload(b), 1)
             mstore(b, newLen)
@@ -241,18 +243,16 @@ library LibBytes {
     /// @dev Tests equality of two byte arrays.
     /// @param lhs First byte array to compare.
     /// @param rhs Second byte array to compare.
-    /// @return True if arrays are the same. False otherwise.
+    /// @return equal True if arrays are the same. False otherwise.
     function equals(bytes memory lhs, bytes memory rhs) internal pure returns (bool equal) {
         // Keccak gas cost is 30 + numWords * 6. This is a cheap way to compare.
-        // We early exit on unequal lengths, but keccak would also correctly
-        // handle this.
-        return lhs.length == rhs.length && keccak256(lhs) == keccak256(rhs);
+        return keccak256(lhs) == keccak256(rhs);
     }
 
     /// @dev Reads an address from a position in a byte array.
     /// @param b Byte array containing an address.
     /// @param index Index in byte array of address.
-    /// @return address from byte array.
+    /// @return result address from byte array.
     function readAddress(bytes memory b, uint256 index) internal pure returns (address result) {
         if (b.length < index + 20) {
             LibRichErrors.rrevert(
@@ -270,11 +270,10 @@ library LibBytes {
         index += 20;
 
         // Read address from array memory
-        assembly {
+        assembly ("memory-safe") {
             // 1. Add index to address of bytes array
             // 2. Load 32-byte word from memory
-            // 3. Apply 20-byte mask to obtain address
-            result := and(mload(add(b, index)), 0xffffffffffffffffffffffffffffffffffffffff)
+            result := mload(add(b, index))
         }
         return result;
     }
@@ -300,7 +299,7 @@ library LibBytes {
         index += 20;
 
         // Store address into array memory
-        assembly {
+        assembly ("memory-safe") {
             // The address occupies 20 bytes and mstore stores 32 bytes.
             // First fetch the 32-byte word where we'll be storing the address, then
             // apply a mask so we have only the bytes in the word that the address will not occupy.
@@ -326,7 +325,7 @@ library LibBytes {
     /// @dev Reads a bytes32 value from a position in a byte array.
     /// @param b Byte array containing a bytes32 value.
     /// @param index Index in byte array of bytes32 value.
-    /// @return bytes32 value from byte array.
+    /// @return result bytes32 value from byte array.
     function readBytes32(bytes memory b, uint256 index) internal pure returns (bytes32 result) {
         if (b.length < index + 32) {
             LibRichErrors.rrevert(
@@ -342,7 +341,7 @@ library LibBytes {
         index += 32;
 
         // Read the bytes32 from array memory
-        assembly {
+        assembly ("memory-safe") {
             result := mload(add(b, index))
         }
         return result;
@@ -367,7 +366,7 @@ library LibBytes {
         index += 32;
 
         // Read the bytes32 from array memory
-        assembly {
+        assembly ("memory-safe") {
             mstore(add(b, index), input)
         }
     }
@@ -375,7 +374,7 @@ library LibBytes {
     /// @dev Reads a uint256 value from a position in a byte array.
     /// @param b Byte array containing a uint256 value.
     /// @param index Index in byte array of uint256 value.
-    /// @return uint256 value from byte array.
+    /// @return result uint256 value from byte array.
     function readUint256(bytes memory b, uint256 index) internal pure returns (uint256 result) {
         result = uint256(readBytes32(b, index));
         return result;
@@ -392,7 +391,7 @@ library LibBytes {
     /// @dev Reads an unpadded bytes4 value from a position in a byte array.
     /// @param b Byte array containing a bytes4 value.
     /// @param index Index in byte array of bytes4 value.
-    /// @return bytes4 value from byte array.
+    /// @return result bytes4 value from byte array.
     function readBytes4(bytes memory b, uint256 index) internal pure returns (bytes4 result) {
         if (b.length < index + 4) {
             LibRichErrors.rrevert(
@@ -408,11 +407,8 @@ library LibBytes {
         index += 32;
 
         // Read the bytes4 from array memory
-        assembly {
+        assembly ("memory-safe") {
             result := mload(add(b, index))
-            // Solidity does not require us to clean the trailing bytes.
-            // We do it anyway
-            result := and(result, 0xFFFFFFFF00000000000000000000000000000000000000000000000000000000)
         }
         return result;
     }

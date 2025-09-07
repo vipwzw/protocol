@@ -12,23 +12,20 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-utils/contracts/src/v06/LibBytesV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibMathV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-utils/contracts/src/LibBytes.sol";
+import "@0x/contracts-utils/contracts/src/LibMath.sol";
 import "./tokens/TestMintableERC20Token.sol";
 import "../src/features/libs/LibNativeOrder.sol";
 import "../src/features/libs/LibSignature.sol";
+import "hardhat/console.sol";
 
 contract TestFillQuoteTransformerExchange {
     bytes32 public constant EIP712_EXCHANGE_DOMAIN_HASH =
         0xaa81d881b1adbbf115e15b849cb9cdc643cad3c6a90f30eb505954af943247e6;
     uint256 private constant REVERT_AMOUNT = 0xdeadbeef;
     uint256 private constant PROTOCOL_FEE_MULTIPLIER = 1337;
-
-    using LibSafeMathV06 for uint256;
 
     function fillLimitOrder(
         LibNativeOrder.LimitOrder calldata order,
@@ -45,23 +42,20 @@ contract TestFillQuoteTransformerExchange {
         }
         uint256 protocolFee = PROTOCOL_FEE_MULTIPLIER * tx.gasprice;
         // Return excess protocol fee.
-        msg.sender.transfer(msg.value - protocolFee);
-        takerTokenFilledAmount = LibSafeMathV06.min128(
-            order.takerAmount - takerTokenPreFilledAmount,
-            takerTokenFillAmount
-        );
+        payable(msg.sender).transfer(msg.value - protocolFee);
+        takerTokenFilledAmount = LibMath.min128(order.takerAmount - takerTokenPreFilledAmount, takerTokenFillAmount);
 
         // Take taker tokens.
         order.takerToken.transferFrom(msg.sender, order.maker, takerTokenFilledAmount);
 
         // Mint maker tokens.
-        makerTokenFilledAmount = LibSafeMathV06.safeDowncastToUint128(
+        makerTokenFilledAmount = LibMath.safeDowncastToUint128(
             (uint256(takerTokenFilledAmount) * uint256(order.makerAmount)) / uint256(order.takerAmount)
         );
         TestMintableERC20Token(address(order.makerToken)).mint(msg.sender, makerTokenFilledAmount);
 
         // Take taker token fee.
-        uint128 takerFee = LibSafeMathV06.safeDowncastToUint128(
+        uint128 takerFee = LibMath.safeDowncastToUint128(
             (uint256(takerTokenFilledAmount) * uint256(order.takerTokenFeeAmount)) / uint256(order.takerAmount)
         );
         order.takerToken.transferFrom(msg.sender, order.feeRecipient, takerFee);
@@ -80,16 +74,13 @@ contract TestFillQuoteTransformerExchange {
         if (takerTokenPreFilledAmount >= order.takerAmount) {
             revert("FILLED");
         }
-        takerTokenFilledAmount = LibSafeMathV06.min128(
-            order.takerAmount - takerTokenPreFilledAmount,
-            takerTokenFillAmount
-        );
+        takerTokenFilledAmount = LibMath.min128(order.takerAmount - takerTokenPreFilledAmount, takerTokenFillAmount);
 
         // Take taker tokens.
         order.takerToken.transferFrom(msg.sender, order.maker, takerTokenFilledAmount);
 
         // Mint maker tokens.
-        makerTokenFilledAmount = LibSafeMathV06.safeDowncastToUint128(
+        makerTokenFilledAmount = LibMath.safeDowncastToUint128(
             (uint256(takerTokenFilledAmount) * uint256(order.makerAmount)) / uint256(order.takerAmount)
         );
         TestMintableERC20Token(address(order.makerToken)).mint(msg.sender, makerTokenFilledAmount);

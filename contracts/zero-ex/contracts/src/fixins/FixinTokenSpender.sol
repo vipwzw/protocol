@@ -12,11 +12,10 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-utils/contracts/src/LibMath.sol";
 
 /// @dev Helpers for moving tokens around.
 abstract contract FixinTokenSpender {
@@ -122,6 +121,6 @@ abstract contract FixinTokenSpender {
     /// @param owner The owner of the tokens.
     /// @return amount The amount of tokens that can be pulled.
     function _getSpendableERC20BalanceOf(IERC20Token token, address owner) internal view returns (uint256) {
-        return LibSafeMathV06.min256(token.allowance(owner, address(this)), token.balanceOf(owner));
+        return LibMath.min256(token.allowance(owner, address(this)), token.balanceOf(owner));
     }
 }

@@ -12,14 +12,13 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-erc20/src/v06/LibERC20TokenV06.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-erc20/contracts/src/LibERC20Token.sol";
 
 library LibERC20Transformer {
-    using LibERC20TokenV06 for IERC20Token;
+    using LibERC20Token for IERC20Token;
 
     /// @dev ETH pseudo-token address.
     address internal constant ETH_TOKEN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -39,7 +38,7 @@ library LibERC20Transformer {
         if (isTokenETH(token)) {
             to.transfer(amount);
         } else {
-            token.compatTransfer(to, amount);
+            token.transfer(to, amount);
         }
     }
 
@@ -50,10 +49,9 @@ library LibERC20Transformer {
     /// @param amount The transfer amount.
     function unsafeTransformerTransfer(IERC20Token token, address payable to, uint256 amount) internal {
         if (isTokenETH(token)) {
-            (bool sent, ) = to.call{value: amount}("");
-            require(sent, "LibERC20Transformer/FAILED_TO_SEND_ETHER");
+            to.transfer(amount);
         } else {
-            token.compatTransfer(to, amount);
+            token.transfer(to, amount);
         }
     }
 
@@ -126,15 +124,17 @@ library LibERC20Transformer {
         // See: https://ethereum.stackexchange.com/questions/760/how-is-the-address-of-an-ethereum-contract-computed
         bytes memory rlpNonce = rlpEncodeNonce(deploymentNonce);
         return
-            address(
-                uint160(
-                    uint256(
-                        keccak256(
-                            abi.encodePacked(
-                                bytes1(uint8(0xC0 + 21 + rlpNonce.length)),
-                                bytes1(uint8(0x80 + 20)),
-                                deployer,
-                                rlpNonce
+            payable(
+                address(
+                    uint160(
+                        uint256(
+                            keccak256(
+                                abi.encodePacked(
+                                    bytes1(uint8(0xC0 + 21 + rlpNonce.length)),
+                                    bytes1(uint8(0x80 + 20)),
+                                    deployer,
+                                    rlpNonce
+                                )
                             )
                         )
                     )

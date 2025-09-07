@@ -12,18 +12,15 @@
   limitations under the License.
 */
 
-pragma solidity ^0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@0x/contracts-erc20/src/IERC20Token.sol";
-import "@0x/contracts-utils/contracts/src/v06/errors/LibRichErrorsV06.sol";
-import "@0x/contracts-utils/contracts/src/v06/LibSafeMathV06.sol";
+import "@0x/contracts-erc20/contracts/src/interfaces/IERC20Token.sol";
+import "@0x/contracts-utils/contracts/src/errors/LibRichErrors.sol";
 import "../../errors/LibNativeOrdersRichErrors.sol";
 
 /// @dev A library for common native order operations.
 library LibNativeOrder {
-    using LibSafeMathV06 for uint256;
-    using LibRichErrorsV06 for bytes;
+    using LibRichErrors for bytes;
 
     enum OrderStatus {
         INVALID,
@@ -282,7 +279,7 @@ library LibNativeOrder {
     /// @param ethProtocolFeePaid How much ETH was paid in protocol fees.
     function refundExcessProtocolFeeToSender(uint256 ethProtocolFeePaid) internal {
         if (msg.value > ethProtocolFeePaid && msg.sender != address(this)) {
-            uint256 refundAmount = msg.value.safeSub(ethProtocolFeePaid);
+            uint256 refundAmount = msg.value - ethProtocolFeePaid;
             (bool success, ) = msg.sender.call{value: refundAmount}("");
             if (!success) {
                 LibNativeOrdersRichErrors.ProtocolFeeRefundFailed(msg.sender, refundAmount).rrevert();

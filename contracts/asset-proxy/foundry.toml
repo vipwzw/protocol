@@ -1,0 +1,22 @@
+[profile.default]
+src = 'contracts/src'
+out = 'out'
+test = 'tests'
+# Include test contracts for ABI generation
+extra_output_files = ["abi"]
+libs = ['../../lib', '../utils/contracts/', '../erc20/contracts/', '../erc1155/contracts/', '../erc721/contracts/', '../exchange-libs/contracts/']
+remappings = [
+    '@0x/contracts-utils/=../utils/',
+    '@0x/contracts-erc20/=../erc20/',
+    '@0x/contracts-erc1155/=../erc1155/',
+    '@0x/contracts-erc721/=../erc721/',
+    '@0x/contracts-exchange-libs/=../exchange-libs/',
+]
+solc_version = "0.8.28"
+optimizer = true
+optimizer_runs = 1000000
+evm_version = "shanghai"
+fs_permissions = [
+    { access = "read", path = "./" },
+    { access = "read", path = "../" }
+]
