@@ -295,9 +295,11 @@ jobs:
                   yarn wsrun -p "${{ matrix.contract }}" --fast-exit --exclude-missing -c test:coverage || true
 
             - name: Generate Forge coverage for ${{ matrix.contract }}
-              working-directory: contracts/${{ matrix.contract }}
               run: |
-                  echo "📊 生成 Forge 覆盖率报告..."
+                  echo "📊 生成 Forge 覆盖率报告: ${{ matrix.contract }}"
+                  # 提取合约目录名（去掉 @0x/contracts- 前缀）
+                  CONTRACT_DIR=$(echo "${{ matrix.contract }}" | sed 's/@0x\/contracts-//')
+                  cd contracts/$CONTRACT_DIR
                   forge coverage --report summary --report lcov || true
 
             - name: Upload Hardhat coverage to Codecov
@@ -314,7 +316,7 @@ jobs:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   flags: ${{ matrix.contract }}-forge
                   name: ${{ matrix.contract }}-forge
-                  file: ./contracts/${{ matrix.contract }}/lcov.info
+                  file: ./contracts/$(echo "${{ matrix.contract }}" | sed 's/@0x\/contracts-//')/lcov.info
                   fail_ci_if_error: false
 
     # 第六阶段：集成测试

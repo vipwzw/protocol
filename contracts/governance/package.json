@@ -53,6 +53,7 @@
         "@openzeppelin/contracts-upgradeable": "4.8.2",
         "@types/node": "^18.0.0",
         "hardhat": "^2.22.0",
+        "nyc": "^15.1.0",
         "ts-node": "^10.9.0",
         "typescript": "^5.0.0"
     }
