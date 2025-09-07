@@ -215,7 +215,7 @@ export class SubscriptionManager<ContractEventArgs extends DecodedLogArgs, Contr
             abiDecoder.addABI(this.abi);
             const decodedLog = abiDecoder.tryToDecodeLogOrNoop(log);
             return decodedLog;
-        } catch (error) {
+        } catch (_error) {
             return log;
         }
     }

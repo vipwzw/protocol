@@ -5,7 +5,8 @@
  */
 
 import { ethers } from 'ethers';
-import { expect as chaiExpected, expect } from 'chai';
+import { expect } from 'chai';
+// import { expect as chaiExpected } from 'chai';
 
 // ========== 测试常量 ==========
 export const testConstants = {
@@ -146,7 +147,7 @@ export async function verifyEventsFromLogs(
         .map(log => {
             try {
                 return contractInterface.parseLog(log);
-            } catch (e) {
+            } catch (_e) {
                 return null;
             }
         })
@@ -234,7 +235,7 @@ export function filterLogs<T>(logs: any[], eventName: string, contractInterface:
             try {
                 const parsed = contractInterface.parseLog(log);
                 return parsed?.name === eventName ? (parsed.args as T) : null;
-            } catch (e) {
+            } catch (_e) {
                 return null;
             }
         })
@@ -499,7 +500,7 @@ export async function expectTransactionFailedWithoutReasonAsync(func: () => Prom
     try {
         await func();
         expect.fail('Expected transaction to fail without reason');
-    } catch (error: any) {
+    } catch (_error: any) {
         // 交易应该失败但不检查具体原因
     }
 }
@@ -621,7 +622,7 @@ export async function getHardhatSigner(hreOrEthers: any, addressOrIndex?: string
  * 兼容旧的占位工厂（保留向后兼容，但建议改用 getHardhatSigner）
  */
 export function createGetSignerHelper() {
-    return async function getSigner(address: string): Promise<any> {
+    return async function getSigner(_address: string): Promise<any> {
         throw new Error('[DEPRECATED] Use getHardhatSigner(hreOrEthers, addressOrIndex) instead.');
     };
 }

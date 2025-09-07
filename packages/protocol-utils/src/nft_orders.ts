@@ -6,7 +6,7 @@ import { hexUtils, NULL_ADDRESS } from '@0x/utils';
 import { ZERO } from './constants';
 import {
     createExchangeProxyEIP712Domain,
-    EIP712_DOMAIN_PARAMETERS,
+    // EIP712_DOMAIN_PARAMETERS,
     getExchangeProxyEIP712Hash,
     getTypeHash,
 } from './eip712_utils';

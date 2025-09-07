@@ -51,12 +51,12 @@ const OTC_ORDER_DEFAULT_VALUES = {
     expiryAndNonce: ZERO,
 };
 
-const BRIDGE_ORDER_DEFAULT_VALUES = {
-    source: ZERO,
-    takerTokenAmount: ZERO,
-    makerTokenAmount: ZERO,
-    bridgeData: '',
-};
+// const BRIDGE_ORDER_DEFAULT_VALUES = {
+//     source: ZERO,
+//     takerTokenAmount: ZERO,
+//     makerTokenAmount: ZERO,
+//     bridgeData: '',
+// };
 
 export type CommonOrderFields = typeof COMMON_ORDER_DEFAULT_VALUES;
 export type LimitOrderFields = typeof LIMIT_ORDER_DEFAULT_VALUES;

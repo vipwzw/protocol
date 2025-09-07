@@ -305,7 +305,7 @@ export abstract class RevertError extends Error {
                 // Try to decode nested revert errors.
                 try {
                     values[k] = RevertError.decode(values[k] as any);
-                } catch (err) {} // tslint:disable-line:no-empty
+                } catch (_err) {} // tslint:disable-line:no-empty
             }
         }
         const inner = _.isEmpty(values) ? '' : inspect(values);
@@ -489,7 +489,7 @@ function checkArgEquality(type: string, lhs: ArgTypes, rhs: ArgTypes): boolean {
     // Try to compare as decoded revert errors first.
     try {
         return RevertError.decode(lhs as any).equals(RevertError.decode(rhs as any));
-    } catch (err) {
+    } catch (_err) {
         // no-op
     }
     if (type === 'address') {
