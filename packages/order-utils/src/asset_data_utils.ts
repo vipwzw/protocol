@@ -11,7 +11,8 @@ import {
     SingleAssetData,
     StaticCallAssetData,
 } from '@0x/utils';
-import { hexUtils, NULL_ADDRESS } from './utils';
+import { hexUtils } from './utils';
+// import { NULL_ADDRESS } from './utils';
 import * as _ from 'lodash';
 
 // 使用 ethers v6 AbiCoder

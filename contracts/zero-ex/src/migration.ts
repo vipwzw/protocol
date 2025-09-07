@@ -2,8 +2,8 @@
 // import { NULL_ADDRESS } from '@0x/utils';
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 import { TxData, SupportedProvider } from 'ethereum-types';
-import { ethers } from 'ethers';
-import * as _ from 'lodash';
+// import { ethers } from 'ethers';
+// import * as _ from 'lodash';
 
 import { artifacts } from './artifacts';
 import type { HardhatArtifact, HardhatArtifacts, BootstrapFeatureArtifacts, FullFeatureArtifacts } from './types';
@@ -28,7 +28,7 @@ import {
 import { ZeroEx__factory } from './typechain-types/factories/contracts/src';
 import { TestNativeOrdersFeatureLite__factory } from './typechain-types/factories/contracts/test/lite';
 import { TestOtcOrdersFeatureLite__factory } from './typechain-types/factories/contracts/test/lite/TestOtcOrdersFeatureLite__factory';
-import { FeeCollectorController__factory } from './typechain-types/factories/contracts/src/external';
+// import { FeeCollectorController__factory } from './typechain-types/factories/contracts/src/external';
 import { TestWeth__factory } from './typechain-types/factories/contracts/test/tokens';
 import { TestStaking__factory } from './typechain-types/factories/contracts/test';
 
@@ -77,10 +77,10 @@ export async function deployBootstrapFeaturesAsync(
     features: Partial<BootstrapFeatures> = {},
     featureArtifacts: Partial<BootstrapFeatureArtifacts> = {},
 ): Promise<BootstrapFeatures> {
-    const _featureArtifacts = {
-        ...DEFAULT_BOOTSTRAP_FEATURE_ARTIFACTS,
-        ...featureArtifacts,
-    };
+    // const _featureArtifacts = {
+    //     ...DEFAULT_BOOTSTRAP_FEATURE_ARTIFACTS,
+    //     ...featureArtifacts,
+    // };
 
     // 部署 SimpleFunctionRegistryFeature
     const registry =
@@ -190,10 +190,10 @@ export async function deployAllFeaturesAsync(
     config: Partial<FullMigrationConfig> = {},
     featureArtifacts: Partial<FullFeatureArtifacts> = {},
 ): Promise<FullFeatures> {
-    const _featureArtifacts = {
-        ...DEFAULT_FULL_FEATURE_ARTIFACTS,
-        ...featureArtifacts,
-    };
+    // const _featureArtifacts = {
+    //     ...DEFAULT_FULL_FEATURE_ARTIFACTS,
+    //     ...featureArtifacts,
+    // };
 
     const signer = await (provider as any).getSigner(txDefaults.from as string);
 
@@ -214,13 +214,13 @@ export async function deployAllFeaturesAsync(
             return await c.getAddress();
         })());
 
-    const feeCollectorControllerAddress =
-        config.feeCollectorController ||
-        (await (async () => {
-            const c = await new FeeCollectorController__factory(signer).deploy(wethAddress, stakingAddress);
-            await c.waitForDeployment();
-            return await c.getAddress();
-        })());
+    // const feeCollectorControllerAddress =
+    //     config.feeCollectorController ||
+    //     (await (async () => {
+    //         const c = await new FeeCollectorController__factory(signer).deploy(wethAddress, stakingAddress);
+    //         await c.waitForDeployment();
+    //         return await c.getAddress();
+    //     })());
 
     // 引导特性
     const registry =

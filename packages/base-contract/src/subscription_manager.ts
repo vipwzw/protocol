@@ -26,7 +26,7 @@ class AbiDecoder {
         try {
             const iface = new ethers.Interface(abi);
             this._interfaces.push(iface);
-        } catch (error) {
+        } catch (_error) {
             // Ignore invalid ABIs
         }
     }
@@ -45,7 +45,7 @@ class AbiDecoder {
                         args: parsed.args,
                     };
                 }
-            } catch (error) {
+            } catch (_error) {
                 // Continue to next interface
             }
         }
@@ -56,8 +56,8 @@ class AbiDecoder {
 
 import { ethers } from 'ethers';
 import {
-    BlockParamLiteral,
-    BlockRange,
+    // BlockParamLiteral,
+    // BlockRange,
     ContractAbi,
     DecodedLogArgs,
     FilterObject,
@@ -73,7 +73,7 @@ import type { EventCallback, IndexedFilterValues } from './types';
 import { SubscriptionErrors } from './types';
 import { filterUtils } from './utils/filter_utils';
 
-const DEFAULT_BLOCK_POLLING_INTERVAL = 1000;
+// const DEFAULT_BLOCK_POLLING_INTERVAL = 1000;
 
 export class SubscriptionManager<ContractEventArgs extends DecodedLogArgs, ContractEvents extends string> {
     public abi: ContractAbi;
@@ -134,7 +134,7 @@ export class SubscriptionManager<ContractEventArgs extends DecodedLogArgs, Contr
         const filterTokens = Object.keys(this._filters);
         filterTokens.forEach(filterToken => this.unsubscribe(filterToken));
     }
-    private async _startBlockAndLogStream(isVerbose: boolean, blockPollingIntervalMs?: number): Promise<void> {
+    private async _startBlockAndLogStream(isVerbose: boolean, _blockPollingIntervalMs?: number): Promise<void> {
         if (this._blockAndLogStreamerIfExists !== undefined) {
             throw new Error(SubscriptionErrors.SubscriptionAlreadyPresent);
         }
@@ -147,20 +147,20 @@ export class SubscriptionManager<ContractEventArgs extends DecodedLogArgs, Contr
                 const logs = await this._provider.getLogs(filter);
                 return logs as any;
             },
-            (error: Error) => {
+            (_error: Error) => {
                 if (isVerbose) {
-                    logUtils.warn(error);
+                    logUtils.warn(_error);
                 }
             },
             {} as any,
         );
         // Subscribe to new logs
         this._onLogAddedSubscriptionToken = this._blockAndLogStreamerIfExists.subscribeToOnLogsAdded(
-            (blockHash: string, rawLogs: Log[]) => this._onLogStateChanged<ContractEventArgs>(rawLogs as any, false),
+            (_blockHash: string, rawLogs: Log[]) => this._onLogStateChanged<ContractEventArgs>(rawLogs as any, false),
         );
         // Subscribe to removed logs
         this._onLogRemovedSubscriptionToken = this._blockAndLogStreamerIfExists.subscribeToOnLogsRemoved(
-            (blockHash: string, rawLogs: Log[]) => this._onLogStateChanged<ContractEventArgs>(rawLogs as any, true),
+            (_blockHash: string, rawLogs: Log[]) => this._onLogStateChanged<ContractEventArgs>(rawLogs as any, true),
         );
         // Start the block and log stream
         this._blockAndLogStreamerIfExists.reconcileNewBlock((this._blockAndLogStreamerIfExists as any)._latestBlock);

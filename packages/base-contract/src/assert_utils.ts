@@ -1,5 +1,5 @@
 import { assert as chaiAssert } from 'chai';
-import { ethers } from 'ethers';
+// import { ethers } from 'ethers';
 import { SchemaValidator } from '@0x/json-schemas';
 
 // 懒加载的 SchemaValidator 实例，避免重复创建

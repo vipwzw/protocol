@@ -13,7 +13,7 @@ function getSchemaValidator(): SchemaValidator {
     if (!globalSchemaValidator) {
         try {
             globalSchemaValidator = new SchemaValidator();
-        } catch (error) {
+        } catch (_error) {
             // 如果创建失败，返回一个简单的模拟实现
             const mockValidator = {
                 isValid: () => true,
@@ -58,7 +58,7 @@ const baseAssert = {
             throw new Error(`Expected ${variableName} to be a boolean, got: ${typeof value}`);
         }
     },
-    doesConformToSchema(variableName: string, value: any, schema: object, subSchemas?: any[]): void {
+    doesConformToSchema(variableName: string, value: any, schema: object, _subSchemas?: any[]): void {
         const validator = getSchemaValidator();
         const isValid = validator.isValid(value, schema);
         if (!isValid) {
@@ -94,7 +94,7 @@ export const assert = {
                 let accounts: string[] = [];
                 try {
                     accounts = await (providerOrSigner as any).send('eth_accounts', []);
-                } catch (rpcError) {
+                } catch (_rpcError) {
                     // 如果 RPC 调用失败，只验证地址格式
                     baseAssert.isETHAddressHex(variableName, senderAddressHex);
                     return; // 早期返回，避免继续执行下面的账户检查

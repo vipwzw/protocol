@@ -4,7 +4,7 @@
  */
 
 import { BaseContract } from '@0x/base-contract';
-import { ContractAbi, TxData } from 'ethereum-types';
+import { ContractAbi } from 'ethereum-types';
 
 /**
  * Hardhat 合约 Artifact - 主要类型

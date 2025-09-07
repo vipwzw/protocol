@@ -1,5 +1,5 @@
 import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses';
-import { JsonRpcProvider } from 'ethers';
+// import { JsonRpcProvider } from 'ethers';
 
 // import { ISablier__factory } from './wrappers';
 
@@ -19,7 +19,7 @@ interface Proposal {
 class ERC20TokenContract {
     public address: string;
 
-    constructor(address: string, provider?: any) {
+    constructor(address: string, _provider?: any) {
         this.address = address;
     }
 
@@ -45,7 +45,7 @@ class ERC20TokenContract {
 const { zrxToken } = getContractAddressesForChainOrThrow(1);
 
 // Create a mock provider for contract connections (not used for actual calls)
-const provider = new JsonRpcProvider('https://eth-mainnet.alchemyapi.io/v2/demo');
+// const provider = new JsonRpcProvider('https://eth-mainnet.alchemyapi.io/v2/demo');
 
 // Create ERC20 contract instances
 const zrx = new ERC20TokenContract(zrxToken);
@@ -57,11 +57,11 @@ const sablierAddress = '0xcd18eaa163733da39c232722cbc4e8940b1d8888';
 
 // Helper function to encode sablier createStream data
 function encodeSablierCreateStream(
-    recipient: string,
-    deposit: bigint,
-    tokenAddress: string,
-    startTime: bigint,
-    stopTime: bigint,
+    _recipient: string,
+    _deposit: bigint,
+    _tokenAddress: string,
+    _startTime: bigint,
+    _stopTime: bigint,
 ): string {
     // return sablier.interface.encodeFunctionData('createStream', [
     //     recipient,
