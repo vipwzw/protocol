@@ -1,9 +1,6 @@
 import type {
-    // ContractTransactionResponse,
-    // TransactionResponse,
-    // TransactionRequest,
-    // ContractRunner,
-    // Provider,
+    ContractTransactionResponse,
+    TransactionRequest,
 } from 'ethers';
 
 // Legacy type mappings for backward compatibility

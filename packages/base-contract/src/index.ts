@@ -1,17 +1,13 @@
 // Re-export Ethers v6 Contract as BaseContract for backward compatibility
-// import { Contract } from 'ethers';
-// import type { Interface, ContractTransaction, TransactionRequest, TransactionResponse } from 'ethers';
+import { Contract } from 'ethers';
+import type { ContractTransactionResponse, TransactionRequest } from 'ethers';
 
 // Re-export core Ethers classes and types
 export {
-    // Contract as BaseContract,
-    // Contract,
-    // ContractTransactionResponse,
-    // ContractRunner,
-    // Interface,
-    // ContractTransaction,
-    // TransactionRequest,
-    // TransactionResponse,
+    Contract as BaseContract,
+    Contract,
+    ContractTransactionResponse,
+    TransactionRequest,
 } from 'ethers';
 
 // Re-export legacy types for backward compatibility
