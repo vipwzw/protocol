@@ -33,9 +33,9 @@
         "typechain:prettier": "if [ -d \"src/typechain-types\" ] && [ \"$(ls -A src/typechain-types)\" ]; then prettier --write src/typechain-types/* --config ../../.prettierrc; fi",
         "typechain:clean": "rm -rf src/typechain-types",
         "typechain:generate": "npx typechain --target ethers-v6 --out-dir src/typechain-types '../contract-artifacts/artifacts/*.json'",
-        "test": "yarn test:hardhat",
-        "test:hardhat": "npx hardhat test",
-        "test:ci": "yarn test",
+        "test": "yarn typechain:generate && yarn test:hardhat",
+        "test:hardhat": "yarn typechain:generate && npx hardhat test",
+        "test:ci": "yarn typechain:generate && yarn test",
         "test:coverage": "nyc --reporter=text --reporter=html --reporter=lcov yarn test && echo '\nCoverage report generated in coverage/ directory'"
     },
     "config": {
