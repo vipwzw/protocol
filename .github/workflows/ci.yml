@@ -68,6 +68,8 @@ jobs:
                       contracts/*/cache
                       contracts/*/artifacts
                       contracts/*/generated-*
+                      packages/*/src/typechain-types
+                      contracts/*/src/typechain-types
                       ~/.yarn
                       ~/.foundry
                   key: ${{ runner.os }}-build-complete-${{ github.sha }}
@@ -110,6 +112,8 @@ jobs:
                       contracts/*/cache
                       contracts/*/artifacts
                       contracts/*/generated-*
+                      packages/*/src/typechain-types
+                      contracts/*/src/typechain-types
                       ~/.yarn
                       ~/.foundry
                   key: ${{ runner.os }}-build-complete-${{ github.sha }}
@@ -187,6 +191,8 @@ jobs:
                       contracts/*/cache
                       contracts/*/artifacts
                       contracts/*/generated-*
+                      packages/*/src/typechain-types
+                      contracts/*/src/typechain-types
                       ~/.yarn
                       ~/.foundry
                   key: ${{ runner.os }}-build-complete-${{ github.sha }}
@@ -267,6 +273,8 @@ jobs:
                       contracts/*/cache
                       contracts/*/artifacts
                       contracts/*/generated-*
+                      packages/*/src/typechain-types
+                      contracts/*/src/typechain-types
                       ~/.yarn
                       ~/.foundry
                   key: ${{ runner.os }}-build-complete-${{ github.sha }}
@@ -345,6 +353,8 @@ jobs:
                       contracts/*/cache
                       contracts/*/artifacts
                       contracts/*/generated-*
+                      packages/*/src/typechain-types
+                      contracts/*/src/typechain-types
                       ~/.yarn
                       ~/.foundry
                   key: ${{ runner.os }}-build-complete-${{ github.sha }}
@@ -398,6 +408,8 @@ jobs:
                       contracts/*/cache
                       contracts/*/artifacts
                       contracts/*/generated-*
+                      packages/*/src/typechain-types
+                      contracts/*/src/typechain-types
                       ~/.yarn
                       ~/.foundry
                   key: ${{ runner.os }}-build-complete-${{ github.sha }}
