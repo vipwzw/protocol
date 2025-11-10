@@ -14,9 +14,7 @@ concurrency:
 env:
     NODE_VERSION: '24'
     YARN_CACHE_FOLDER: ~/.yarn
-    # 使用 nightly 版本，对应本地的 1.2.3-stable (commit: a813a2c)
-    # 这个版本在本地测试通过，可以正常编译
-    FORGE_VERSION: 'nightly'
+    FORGE_VERSION: 'stable'
 
 jobs:
     # 第一阶段：安装依赖和构建

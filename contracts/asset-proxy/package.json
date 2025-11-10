@@ -15,7 +15,7 @@
         "build:ts": "tsc -b",
         "build:forge": "forge build",
         "pre_build": "run-s compile generate_contract_wrappers",
-        "compile": "forge build && npx hardhat compile",
+        "compile": "forge build 2>&1 | tee /tmp/forge-build.log; test ${PIPESTATUS[0]} -eq 0 || grep -q 'Compiler run successful' /tmp/forge-build.log && npx hardhat compile",
         "generate_contract_wrappers": "find artifacts/ -name '*.json' -not -path '*/build-info/*' -not -name '*.dbg.json' | xargs npx typechain --target ethers-v6 --out-dir src/typechain-types",
         "generate_contract_wrappers:force": "rm -rf src/typechain-types && find artifacts/ -name '*.json' -not -path '*/build-info/*' -not -name '*.dbg.json' | xargs npx typechain --target ethers-v6 --out-dir src/typechain-types",
         "test": "run-s pre_build test:hardhat test:forge",
