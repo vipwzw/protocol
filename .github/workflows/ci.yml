@@ -14,7 +14,9 @@ concurrency:
 env:
     NODE_VERSION: '24'
     YARN_CACHE_FOLDER: ~/.yarn
-    FORGE_VERSION: 'stable'
+    # 使用 nightly-5b7e4cb3c882b28f3c32ba580de27ce7381f415a (2024-09-06) 版本
+    # 这是最后一个 linter 不会因为路径问题失败的版本
+    FORGE_VERSION: 'nightly-5b7e4cb3c882b28f3c32ba580de27ce7381f415a'
 
 jobs:
     # 第一阶段：安装依赖和构建
