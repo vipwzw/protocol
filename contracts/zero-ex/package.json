@@ -17,7 +17,7 @@
         "pre_build": "run-s compile contracts:gen generate_contract_wrappers contracts:copy",
         "test": "run-s pre_build test:hardhat test:forge",
         "test:integration": "forge test -vvv",
-        "test:forge": "forge test",
+        "test:forge": "forge test --no-match-contract 'ForkUtilsTest' --no-match-path 'tests/forked/*'",
         "test:hardhat": "yarn pre_build && npx hardhat test",
         "test:coverage": "nyc --reporter=text --reporter=html --reporter=lcov yarn test:hardhat",
         "rebuild_and_test": "run-s build test",
