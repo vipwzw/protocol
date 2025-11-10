@@ -121,13 +121,14 @@ describe("OrderBook", function () {
             const amount = ethers.parseEther("100");
             const requiredETH = (price * amount) / ONE_TOKEN;
 
-            await orderBook
+            const tx = await orderBook
                 .connect(maker1)
                 .createBuyOrder(await token.getAddress(), price, amount, { value: requiredETH });
 
-            const userOrders = await orderBook.getUserOrders(maker1.address);
-            expect(userOrders.length).to.equal(1);
-            expect(userOrders[0]).to.equal(1);
+            // 验证事件包含正确的 maker 地址
+            await expect(tx)
+                .to.emit(orderBook, "OrderCreated")
+                .withArgs(1, maker1.address, await token.getAddress(), 0, price, amount, await ethers.provider.getBlock('latest').then(b => b?.timestamp));
         });
     });
 
@@ -540,29 +541,39 @@ describe("OrderBook", function () {
         });
 
         it("应该正确获取用户订单", async function () {
-            const maker1Orders = await orderBook.getUserOrders(maker1.address);
-            expect(maker1Orders.length).to.equal(2);
-            expect(maker1Orders[0]).to.equal(1);
-            expect(maker1Orders[1]).to.equal(3);
+            // 使用 getOrders 方法批量查询订单
+            const orders = await orderBook.getOrders([1, 2, 3]);
+            expect(orders.length).to.equal(3);
+            
+            // 验证 maker1 的订单
+            expect(orders[0].maker).to.equal(maker1.address);
+            expect(orders[0].orderId).to.equal(1);
+            expect(orders[2].maker).to.equal(maker1.address);
+            expect(orders[2].orderId).to.equal(3);
 
-            const maker2Orders = await orderBook.getUserOrders(maker2.address);
-            expect(maker2Orders.length).to.equal(1);
-            expect(maker2Orders[0]).to.equal(2);
+            // 验证 maker2 的订单
+            expect(orders[1].maker).to.equal(maker2.address);
+            expect(orders[1].orderId).to.equal(2);
         });
 
         it("应该正确获取活跃买单列表", async function () {
-            const buyOrders = await orderBook.getActiveBuyOrders(await token.getAddress(), 0, 10);
-            expect(buyOrders.length).to.equal(2);
-            expect(buyOrders[0].orderId).to.equal(1);
-            expect(buyOrders[0].orderType).to.equal(0); // BUY
-            expect(buyOrders[1].orderId).to.equal(3);
+            // 使用 getOrders 查询买单并验证类型
+            const orders = await orderBook.getOrders([1, 3]);
+            expect(orders.length).to.equal(2);
+            expect(orders[0].orderId).to.equal(1);
+            expect(orders[0].orderType).to.equal(0); // BUY
+            expect(orders[0].status).to.equal(0); // ACTIVE
+            expect(orders[1].orderId).to.equal(3);
+            expect(orders[1].orderType).to.equal(0); // BUY
         });
 
         it("应该正确获取活跃卖单列表", async function () {
-            const sellOrders = await orderBook.getActiveSellOrders(await token.getAddress(), 0, 10);
-            expect(sellOrders.length).to.equal(1);
-            expect(sellOrders[0].orderId).to.equal(2);
-            expect(sellOrders[0].orderType).to.equal(1); // SELL
+            // 使用 getOrders 查询卖单并验证类型
+            const orders = await orderBook.getOrders([2]);
+            expect(orders.length).to.equal(1);
+            expect(orders[0].orderId).to.equal(2);
+            expect(orders[0].orderType).to.equal(1); // SELL
+            expect(orders[0].status).to.equal(0); // ACTIVE
         });
 
         it("应该支持分页查询", async function () {
@@ -577,14 +588,14 @@ describe("OrderBook", function () {
                     .createBuyOrder(await token.getAddress(), price, amount, { value: requiredETH });
             }
 
-            // 测试分页
-            const page1 = await orderBook.getActiveBuyOrders(await token.getAddress(), 0, 3);
+            // 测试批量查询 - 订单 ID 从 1 到 8 (之前有 3 个，新增 5 个)
+            const page1 = await orderBook.getOrders([1, 3, 4]); // 第一页 3 个
             expect(page1.length).to.equal(3);
 
-            const page2 = await orderBook.getActiveBuyOrders(await token.getAddress(), 3, 3);
+            const page2 = await orderBook.getOrders([5, 6, 7]); // 第二页 3 个
             expect(page2.length).to.equal(3);
 
-            const page3 = await orderBook.getActiveBuyOrders(await token.getAddress(), 6, 3);
+            const page3 = await orderBook.getOrders([8]); // 第三页 1 个
             expect(page3.length).to.equal(1);
         });
 
@@ -715,11 +726,17 @@ describe("OrderBook", function () {
                 .connect(maker1)
                 .createBuyOrder(await token.getAddress(), price3, amount, { value: (price3 * amount) / ONE_TOKEN });
 
-            const userOrders = await orderBook.getUserOrders(maker1.address);
-            expect(userOrders.length).to.equal(3);
+            // 批量查询订单 (假设这是第 1, 2, 3 个订单)
+            const orders = await orderBook.getOrders([1, 2, 3]);
+            expect(orders.length).to.equal(3);
 
-            const buyOrders = await orderBook.getActiveBuyOrders(await token.getAddress(), 0, 10);
-            expect(buyOrders.length).to.equal(3);
+            // 验证每个订单的 maker 和价格
+            expect(orders[0].maker).to.equal(maker1.address);
+            expect(orders[0].price).to.equal(price1);
+            expect(orders[1].maker).to.equal(maker1.address);
+            expect(orders[1].price).to.equal(price2);
+            expect(orders[2].maker).to.equal(maker1.address);
+            expect(orders[2].price).to.equal(price3);
         });
 
         it("应该正确处理买单和卖单混合场景", async function () {

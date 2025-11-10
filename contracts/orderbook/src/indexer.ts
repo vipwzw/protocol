@@ -196,7 +196,7 @@ export class OrderBookIndexer {
                 const events = await this.contract.queryFilter(filter, start, end);
                 
                 for (const event of events) {
-                    await this.processEvent(event as ethers.EventLog);
+                    await this.processEvent(event as any);
                     processedEvents++;
                 }
             }
@@ -235,7 +235,7 @@ export class OrderBookIndexer {
 
         for (const filter of createFilter) {
             this.contract.on(filter, async (orderId, maker, token, orderType, price, amount, timestamp, event) => {
-                await this.handleOrderCreated(orderId, maker, token, orderType, price, amount, timestamp, event);
+                await this.handleOrderCreated(orderId, maker, token, Number(orderType), price, amount, timestamp, event);
             });
         }
 
@@ -260,7 +260,7 @@ export class OrderBookIndexer {
     /**
      * 处理事件（通用）
      */
-    private async processEvent(event: ethers.EventLog): Promise<void> {
+    private async processEvent(event: any): Promise<void> {
         try {
             switch (event.eventName) {
                 case 'OrderCreated': {
@@ -301,7 +301,7 @@ export class OrderBookIndexer {
         price: bigint,
         amount: bigint,
         timestamp: bigint,
-        event: ethers.EventLog
+        event: any
     ): Promise<void> {
         const order: DatabaseOrder = {
             orderId: orderId.toString(),
@@ -313,8 +313,8 @@ export class OrderBookIndexer {
             filledAmount: '0',
             status: OrderStatus.ACTIVE,
             timestamp: Number(timestamp),
-            txHash: event.transactionHash,
-            blockNumber: event.blockNumber,
+            txHash: event.transactionHash || '',
+            blockNumber: event.blockNumber || 0,
         };
 
         await this.db.createOrder(order);
@@ -340,7 +340,7 @@ export class OrderBookIndexer {
         fillAmount: bigint,
         remainingAmount: bigint,
         timestamp: bigint,
-        event: ethers.EventLog
+        event: any
     ): Promise<void> {
         const orderIdStr = orderId.toString();
         
@@ -363,8 +363,8 @@ export class OrderBookIndexer {
             taker,
             fillAmount: fillAmount.toString(),
             timestamp: Number(timestamp),
-            txHash: event.transactionHash,
-            blockNumber: event.blockNumber,
+            txHash: event.transactionHash || '',
+            blockNumber: event.blockNumber || 0,
         };
         await this.db.createFill(fill);
 
@@ -384,7 +384,7 @@ export class OrderBookIndexer {
     private async handleOrderFullyFilled(
         orderId: bigint,
         timestamp: bigint,
-        event: ethers.EventLog
+        event: any
     ): Promise<void> {
         const orderIdStr = orderId.toString();
         
@@ -410,7 +410,7 @@ export class OrderBookIndexer {
         maker: string,
         refundedAmount: bigint,
         timestamp: bigint,
-        event: ethers.EventLog
+        event: any
     ): Promise<void> {
         const orderIdStr = orderId.toString();
         

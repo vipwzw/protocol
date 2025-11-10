@@ -68,11 +68,9 @@ export interface OrderBookInterface extends Interface {
       | "createBuyOrder"
       | "createSellOrder"
       | "fillOrder"
-      | "getActiveBuyOrders"
-      | "getActiveSellOrders"
       | "getOrder"
+      | "getOrders"
       | "getRemainingAmount"
-      | "getUserOrders"
       | "orderCounter"
       | "orders"
       | "sellOrderIds"
@@ -112,24 +110,16 @@ export interface OrderBookInterface extends Interface {
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "getActiveBuyOrders",
-    values: [AddressLike, BigNumberish, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getActiveSellOrders",
-    values: [AddressLike, BigNumberish, BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "getOrder",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "getRemainingAmount",
-    values: [BigNumberish]
+    functionFragment: "getOrders",
+    values: [BigNumberish[]]
   ): string;
   encodeFunctionData(
-    functionFragment: "getUserOrders",
-    values: [AddressLike]
+    functionFragment: "getRemainingAmount",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "orderCounter",
@@ -169,21 +159,10 @@ export interface OrderBookInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "fillOrder", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "getActiveBuyOrders",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getActiveSellOrders",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "getOrder", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "getOrders", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getRemainingAmount",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getUserOrders",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -377,21 +356,15 @@ export interface OrderBook extends BaseContract {
     "payable"
   >;
 
-  getActiveBuyOrders: TypedContractMethod<
-    [token: AddressLike, offset: BigNumberish, limit: BigNumberish],
-    [OrderBook.OrderStructOutput[]],
-    "view"
-  >;
-
-  getActiveSellOrders: TypedContractMethod<
-    [token: AddressLike, offset: BigNumberish, limit: BigNumberish],
-    [OrderBook.OrderStructOutput[]],
-    "view"
-  >;
-
   getOrder: TypedContractMethod<
     [orderId: BigNumberish],
     [OrderBook.OrderStructOutput],
+    "view"
+  >;
+
+  getOrders: TypedContractMethod<
+    [orderIds: BigNumberish[]],
+    [OrderBook.OrderStructOutput[]],
     "view"
   >;
 
@@ -400,8 +373,6 @@ export interface OrderBook extends BaseContract {
     [bigint],
     "view"
   >;
-
-  getUserOrders: TypedContractMethod<[user: AddressLike], [bigint[]], "view">;
 
   orderCounter: TypedContractMethod<[], [bigint], "view">;
 
@@ -488,20 +459,6 @@ export interface OrderBook extends BaseContract {
     "payable"
   >;
   getFunction(
-    nameOrSignature: "getActiveBuyOrders"
-  ): TypedContractMethod<
-    [token: AddressLike, offset: BigNumberish, limit: BigNumberish],
-    [OrderBook.OrderStructOutput[]],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "getActiveSellOrders"
-  ): TypedContractMethod<
-    [token: AddressLike, offset: BigNumberish, limit: BigNumberish],
-    [OrderBook.OrderStructOutput[]],
-    "view"
-  >;
-  getFunction(
     nameOrSignature: "getOrder"
   ): TypedContractMethod<
     [orderId: BigNumberish],
@@ -509,11 +466,15 @@ export interface OrderBook extends BaseContract {
     "view"
   >;
   getFunction(
+    nameOrSignature: "getOrders"
+  ): TypedContractMethod<
+    [orderIds: BigNumberish[]],
+    [OrderBook.OrderStructOutput[]],
+    "view"
+  >;
+  getFunction(
     nameOrSignature: "getRemainingAmount"
   ): TypedContractMethod<[orderId: BigNumberish], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "getUserOrders"
-  ): TypedContractMethod<[user: AddressLike], [bigint[]], "view">;
   getFunction(
     nameOrSignature: "orderCounter"
   ): TypedContractMethod<[], [bigint], "view">;
