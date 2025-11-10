@@ -20,5 +20,5 @@ fs_permissions = [
     { access = "read", path = "./" },
     { access = "read", path = "../" }
 ]
-# 禁用 linter 以避免 CI 中的路径问题
-lint = false
+# 跳过 linter 检查以避免 CI 中的路径问题
+skip = ["lint"]
