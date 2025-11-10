@@ -153,43 +153,10 @@ export class OrderBookClient {
     }
 
     /**
-     * 获取用户订单列表
+     * 批量获取订单信息
      */
-    public async getUserOrders(user: string): Promise<bigint[]> {
-        return this.contract.getUserOrders(user);
-    }
-
-    /**
-     * 获取活跃买单列表
-     */
-    public async getActiveBuyOrders(
-        token: string,
-        offset: bigint = 0n,
-        limit: bigint = 100n
-    ): Promise<Order[]> {
-        const orders = await this.contract.getActiveBuyOrders(token, offset, limit);
-        return orders.map(order => ({
-            orderId: order.orderId,
-            maker: order.maker,
-            token: order.token,
-            orderType: Number(order.orderType) as OrderType,
-            price: order.price,
-            amount: order.amount,
-            filledAmount: order.filledAmount,
-            timestamp: order.timestamp,
-            status: Number(order.status) as OrderStatus,
-        }));
-    }
-
-    /**
-     * 获取活跃卖单列表
-     */
-    public async getActiveSellOrders(
-        token: string,
-        offset: bigint = 0n,
-        limit: bigint = 100n
-    ): Promise<Order[]> {
-        const orders = await this.contract.getActiveSellOrders(token, offset, limit);
+    public async getOrders(orderIds: bigint[]): Promise<Order[]> {
+        const orders = await this.contract.getOrders(orderIds);
         return orders.map(order => ({
             orderId: order.orderId,
             maker: order.maker,
