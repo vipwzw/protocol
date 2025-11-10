@@ -2,7 +2,43 @@
 
 ## 📚 文档目录
 
-### 1. [eth-erc20-orderbook.md](./eth-erc20-orderbook.md)
+### 1. [DESIGN_PHILOSOPHY.md](./DESIGN_PHILOSOPHY.md) ⭐ **推荐首读**
+**设计思路文档** - 深入理解 OrderBook 的架构设计
+
+包含内容：
+- 核心设计理念和架构模式
+- 为什么选择事件驱动架构
+- 完整的数据流设计
+- 关键设计决策和权衡
+- 性能优化策略
+- 安全考虑和监控方案
+
+**适合阅读对象**：
+- 想要深入理解项目架构的开发者
+- 准备构建类似系统的架构师
+- 需要评估技术方案的决策者
+
+---
+
+### 2. [CLIENT_GUIDE.md](./CLIENT_GUIDE.md) ⭐ **实战指南**
+**客户端完整指南** - 从零到一构建实时订单簿应用
+
+包含内容：
+- 快速开始和基础使用
+- 完整的客户端 API 文档
+- 数据库集成方案（PostgreSQL/MongoDB）
+- API 服务器实现（RESTful + WebSocket）
+- 前端集成示例（HTML/React）
+- 生产环境部署方案
+
+**适合阅读对象**：
+- 构建订单簿应用的全栈开发者
+- 需要集成 OrderBook 的 DApp 开发者
+- 运维和部署工程师
+
+---
+
+### 3. [eth-erc20-orderbook.md](./eth-erc20-orderbook.md)
 **原始设计文档** - 完整的技术规格和设计方案
 
 包含内容：
@@ -21,7 +57,7 @@
 
 ---
 
-### 2. [EVENT_DRIVEN_ARCHITECTURE.md](./EVENT_DRIVEN_ARCHITECTURE.md)
+### 4. [EVENT_DRIVEN_ARCHITECTURE.md](./EVENT_DRIVEN_ARCHITECTURE.md)
 **事件驱动架构指南** - 客户端集成和实现方案
 
 包含内容：

@@ -347,8 +347,11 @@ Apache-2.0
 ## 📖 文档
 
 - **[完整文档目录](./docs/README.md)** - 所有文档的索引
+- **[设计思路文档](./docs/DESIGN_PHILOSOPHY.md)** ⭐ - 深入理解架构设计（推荐首读）
+- **[客户端完整指南](./docs/CLIENT_GUIDE.md)** ⭐ - 从零到一构建实时订单簿应用
 - **[设计文档](./docs/eth-erc20-orderbook.md)** - 完整的技术规格和设计方案
 - **[事件驱动架构](./docs/EVENT_DRIVEN_ARCHITECTURE.md)** - 客户端集成指南
+- **[实现总结](./IMPLEMENTATION_SUMMARY.md)** - 项目完整实现总结
 
 ## 🔗 相关链接
 
