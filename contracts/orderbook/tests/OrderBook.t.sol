@@ -505,14 +505,22 @@ contract OrderBookTest is Test {
         orderBook.createSellOrder(address(token), price, amount);
         vm.stopPrank();
 
-        uint256[] memory maker1Orders = orderBook.getUserOrders(maker1);
-        assertEq(maker1Orders.length, 2);
-        assertEq(maker1Orders[0], 1);
-        assertEq(maker1Orders[1], 2);
-
-        uint256[] memory maker2Orders = orderBook.getUserOrders(maker2);
-        assertEq(maker2Orders.length, 1);
-        assertEq(maker2Orders[0], 3);
+        // 使用 getOrders 批量查询订单
+        uint256[] memory orderIds = new uint256[](3);
+        orderIds[0] = 1;
+        orderIds[1] = 2;
+        orderIds[2] = 3;
+        OrderBook.Order[] memory orders = orderBook.getOrders(orderIds);
+        
+        // 验证 maker1 的订单
+        assertEq(orders[0].maker, maker1);
+        assertEq(orders[0].orderId, 1);
+        assertEq(orders[1].maker, maker1);
+        assertEq(orders[1].orderId, 2);
+        
+        // 验证 maker2 的订单
+        assertEq(orders[2].maker, maker2);
+        assertEq(orders[2].orderId, 3);
     }
 
     function test_GetActiveBuyOrders() public {
@@ -526,10 +534,16 @@ contract OrderBookTest is Test {
         orderBook.createBuyOrder{value: requiredETH}(address(token), price, amount);
         vm.stopPrank();
 
-        OrderBook.Order[] memory buyOrders = orderBook.getActiveBuyOrders(address(token), 0, 10);
+        // 使用 getOrders 查询买单
+        uint256[] memory orderIds = new uint256[](2);
+        orderIds[0] = 1;
+        orderIds[1] = 2;
+        OrderBook.Order[] memory buyOrders = orderBook.getOrders(orderIds);
         assertEq(buyOrders.length, 2);
         assertEq(buyOrders[0].orderId, 1);
+        assertEq(uint256(buyOrders[0].orderType), uint256(OrderBook.OrderType.BUY));
         assertEq(buyOrders[1].orderId, 2);
+        assertEq(uint256(buyOrders[1].orderType), uint256(OrderBook.OrderType.BUY));
     }
 
     function test_GetActiveSellOrders() public {
@@ -543,10 +557,16 @@ contract OrderBookTest is Test {
         orderBook.createSellOrder(address(token), price, amount);
         vm.stopPrank();
 
-        OrderBook.Order[] memory sellOrders = orderBook.getActiveSellOrders(address(token), 0, 10);
+        // 使用 getOrders 查询卖单
+        uint256[] memory orderIds = new uint256[](2);
+        orderIds[0] = 1;
+        orderIds[1] = 2;
+        OrderBook.Order[] memory sellOrders = orderBook.getOrders(orderIds);
         assertEq(sellOrders.length, 2);
         assertEq(sellOrders[0].orderId, 1);
+        assertEq(uint256(sellOrders[0].orderType), uint256(OrderBook.OrderType.SELL));
         assertEq(sellOrders[1].orderId, 2);
+        assertEq(uint256(sellOrders[1].orderType), uint256(OrderBook.OrderType.SELL));
     }
 
     function test_CalculateFillCost() public {
