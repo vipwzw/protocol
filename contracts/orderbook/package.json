@@ -8,6 +8,7 @@
         "build": "yarn build:contracts && yarn build:ts",
         "build:contracts": "hardhat compile --force",
         "build:ts": "tsc -b",
+        "compile": "forge build && hardhat compile",
         "generate_contract_wrappers": "typechain --target ethers-v6 --out-dir src/types './artifacts/contracts/**/*.json'",
         "generate_contract_wrappers:force": "yarn build:contracts && yarn generate_contract_wrappers",
         "test": "hardhat test",
