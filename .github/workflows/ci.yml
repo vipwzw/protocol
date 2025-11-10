@@ -14,9 +14,9 @@ concurrency:
 env:
     NODE_VERSION: '24'
     YARN_CACHE_FOLDER: ~/.yarn
-    # 使用 nightly-5b7e4cb3c882b28f3c32ba580de27ce7381f415a (2024-09-06) 版本
-    # 这是最后一个 linter 不会因为路径问题失败的版本
-    FORGE_VERSION: 'nightly-5b7e4cb3c882b28f3c32ba580de27ce7381f415a'
+    # 使用与本地相同的 Foundry 版本 (1.2.3-stable, 2025-06-08)
+    # 这个版本在本地测试通过，可以正常编译
+    FORGE_VERSION: 'nightly-a813a2cee7dd4926e7c56fd8a785b54f32e0d10f'
 
 jobs:
     # 第一阶段：安装依赖和构建
