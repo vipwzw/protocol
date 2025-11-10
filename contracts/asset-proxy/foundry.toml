@@ -6,11 +6,11 @@ test = 'tests'
 extra_output_files = ["abi"]
 libs = ['../../lib', '../utils/contracts/', '../erc20/contracts/', '../erc1155/contracts/', '../erc721/contracts/', '../exchange-libs/contracts/']
 remappings = [
-    '@0x/contracts-utils/=../utils/',
-    '@0x/contracts-erc20/=../erc20/',
-    '@0x/contracts-erc1155/=../erc1155/',
-    '@0x/contracts-erc721/=../erc721/',
-    '@0x/contracts-exchange-libs/=../exchange-libs/',
+    '@0x/contracts-utils/=../utils/contracts/',
+    '@0x/contracts-erc20/=../erc20/contracts/',
+    '@0x/contracts-erc1155/=../erc1155/contracts/',
+    '@0x/contracts-erc721/=../erc721/contracts/',
+    '@0x/contracts-exchange-libs/=../exchange-libs/contracts/',
 ]
 solc_version = "0.8.28"
 optimizer = true
