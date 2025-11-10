@@ -14,9 +14,9 @@ concurrency:
 env:
     NODE_VERSION: '24'
     YARN_CACHE_FOLDER: ~/.yarn
-    # 使用与本地相同的 Foundry 版本 (1.2.3-stable, 2025-06-08)
+    # 使用与本地相同的 Foundry 版本 (1.2.3)
     # 这个版本在本地测试通过，可以正常编译
-    FORGE_VERSION: 'nightly-a813a2cee7dd4926e7c56fd8a785b54f32e0d10f'
+    FORGE_VERSION: '1.2.3'
 
 jobs:
     # 第一阶段：安装依赖和构建
