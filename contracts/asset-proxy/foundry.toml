@@ -4,7 +4,7 @@ out = 'out'
 test = 'tests'
 # Include test contracts for ABI generation
 extra_output_files = ["abi"]
-libs = ['../../lib', '../utils/contracts/', '../erc20/contracts/', '../erc1155/contracts/', '../erc721/contracts/', '../exchange-libs/contracts/']
+libs = ['../../lib', '../utils/contracts/', '../utils/contracts/src', '../erc20/contracts/', '../erc20/contracts/src', '../erc1155/contracts/', '../erc721/contracts/', '../exchange-libs/contracts/', '../exchange-libs/contracts/src']
 remappings = [
     '@0x/contracts-utils/=../utils/',
     '@0x/contracts-erc20/=../erc20/',
@@ -20,5 +20,3 @@ fs_permissions = [
     { access = "read", path = "./" },
     { access = "read", path = "../" }
 ]
-# 跳过 linter 检查以避免 CI 中的路径问题
-skip = ["lint"]
