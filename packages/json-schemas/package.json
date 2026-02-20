@@ -48,7 +48,7 @@
     },
     "homepage": "https://github.com/0xProject/tools/tree/main/json-schemas",
     "dependencies": {
-        "ajv": "^6.12.6",
+        "ajv": "^8.18.0",
         "lodash.values": "^4.3.0"
     },
     "devDependencies": {
